@@ -16,11 +16,11 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.activeitrfetch.service;
+package com.publicissapient.kpidashboard.apis.sprinttracelog.service;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
-public interface ActiveItrFetchService {
+public interface SprintTraceLogService {
 	/**
 	 *  return the latest fetch status of sprintId
 	 * @param sprintId
