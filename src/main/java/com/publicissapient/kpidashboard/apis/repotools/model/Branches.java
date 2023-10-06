@@ -1,10 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -12,28 +15,29 @@
  * limitations under the License.
  *
  ******************************************************************************/
-package com.publicissapient.kpidashboard.apis.enums;
 
-import java.util.Arrays;
+package com.publicissapient.kpidashboard.apis.repotools.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
 import java.util.List;
+import java.util.Map;
 
-/**
- * Enum for UserBoardConfig
- *
- * @author aksshriv1
- */
-public enum UserBoardConfigEnum {
-	SCRUM_KANBAN_BOARD(Arrays.asList("Iteration", "Developer")),
-	OTHER_BOARD(Arrays.asList("Release", "Dora", "Backlog", "Kpi Maturity"));
+@Data
+public class Branches {
 
-	private final List<String> boardName;
-
-	UserBoardConfigEnum(List<String> boardName) {
-		this.boardName = boardName;
-	}
-
-	public List<String> getBoardName() {
-		return boardName;
-	}
-
+    @JsonProperty("branch__name")
+    private String branchName;
+    private String name;
+    private long count;
+    @JsonProperty("merge_requests")
+    private List<MergeRequests> mergeRequestList;
+    private Map<String, Double> mergeRequestsPT;
+    private long mergeRequests;
+    private double grade;
+    private double average;
+    private double hours;
+    @JsonProperty("lines_change")
+    private long linesChanged;
 }
