@@ -15,49 +15,30 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.common;
 
-package com.publicissapient.kpidashboard.apis.model;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
 
 /**
- * Class used for common response from All services
+ * aksshriv1
  */
-public class ServiceResponse extends BaseResponse {
+@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserTokenAuthenticationDTO {
 
-	private Object data;
-
-	// --- auth-N-auth required code starts here --------------
-	public ServiceResponse() {
-	}
-
-	// --- auth-N-auth required code end here --------------
-	/**
-	 * 
-	 * @param isSuccess
-	 * @param msg
-	 * @param data
-	 */
-	public ServiceResponse(Boolean isSuccess, String msg, Object data) {
-		super();
-		this.data = data;
-		setMessage(msg);
-		setSuccess(isSuccess);
-	}
-
-	/**
-	 * 
-	 * @return data
-	 */
-	public Object getData() {
-		return data;
-	}
-
-	/**
-	 * Sets data
-	 * 
-	 * @param data
-	 */
-	public void setData(Object data) {
-		this.data = data;
-	}
-
+	private String userName;
+	private List<String> userRoles;
+	private String authToken;
+	private String resource;
 }
