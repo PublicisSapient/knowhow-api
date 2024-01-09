@@ -15,33 +15,31 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.common;
 
-package com.publicissapient.kpidashboard.apis.common.service;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.json.simple.JSONObject;
-
-import java.util.Map;
+import java.util.List;
 
 /**
- * Interface to provide methods for analytics details
- * 
- * @author prijain3
- *
+ * aksshriv1
  */
-public interface CustomAnalyticsService {
+@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserTokenAuthenticationDTO {
 
-	/**
-	 * Creates and return JSON object containing analytics data.
-	 * 
-	 * @param httpServletResponse
-	 *            HttpServletResponse
-	 * @param username
-	 *            user name
-	 * @return JSON of analytics data
-	 */
-	Map<String, Object> addAnalyticsData(HttpServletResponse httpServletResponse, String username, String authToken);
-
-	JSONObject getAnalyticsCheck();
+	private String userName;
+	private List<String> userRoles;
+	private String authToken;
+	private String resource;
+	private boolean resourceTokenValid;
 }
