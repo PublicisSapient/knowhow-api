@@ -15,30 +15,31 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.common;
 
-package com.publicissapient.kpidashboard.apis.kpivideo.service;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.common.model.kpivideolink.KPIVideoLink;
+/**
+ * aksshriv1
+ */
+@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserTokenAuthenticationDTO {
 
-public interface KPIVideoLinkService {
-
-	/**
-	 * Modifies a video URL for a kpi id by @param id and replaces it with @param
-	 * kvl
-	 * 
-	 * @param kvl
-	 *            kpi video link.
-	 * @param kpiId
-	 *            kpi id.
-	 * 
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
-	 */
-	ServiceResponse update(String kpiId, KPIVideoLink kvl);
-
-	List<KPIVideoLink> getAllVideoLinks();
-
+	private String userName;
+	private List<String> userRoles;
+	private String authToken;
+	private String resource;
+	private boolean resourceTokenValid;
 }
