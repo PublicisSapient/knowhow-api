@@ -15,24 +15,31 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.common;
 
-package com.publicissapient.kpidashboard.apis.auth;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import org.springframework.security.core.Authentication;
-
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
- * Interface to handle authentication service response.
+ * aksshriv1
  */
-public interface AuthenticationResponseService {
+@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserTokenAuthenticationDTO {
 
-	/**
-	 * handle authentication response.
-	 * 
-	 * @param response
-	 * @param authentication
-	 */
-	void handle(HttpServletResponse response, Authentication authentication);
-
+	private String userName;
+	private List<String> userRoles;
+	private String authToken;
+	private String resource;
+	private boolean resourceTokenValid;
 }
