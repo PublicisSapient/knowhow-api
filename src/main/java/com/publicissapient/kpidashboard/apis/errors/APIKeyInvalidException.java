@@ -16,26 +16,16 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.repotools.model;
+package com.publicissapient.kpidashboard.apis.errors;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import org.springframework.security.core.AuthenticationException;
 
-import java.util.List;
+public class APIKeyInvalidException extends AuthenticationException {
 
-@Data
-public class RepoToolRepositories {
+	private static final long serialVersionUID = -8596676033265445347L;
 
-    private String name;
-    private String repository;
-    private double average;
-    @JsonProperty("commit_count")
-    private long commitCount;
-    private double repositoryGrade;
-    private List<IndividualCommitsCount> individualCommitsCount;
-    private List<Branches> branchesCommitsCount;
-    private List<Branches> branches;
-    private String filteredBranch;
-    private double repositoryReworkRateGrade;
+	public APIKeyInvalidException(String msg) {
+		super(msg);
+	}
 
 }
