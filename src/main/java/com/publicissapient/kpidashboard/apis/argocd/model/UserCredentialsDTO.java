@@ -16,31 +16,14 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.auth;
+package com.publicissapient.kpidashboard.apis.argocd.model;
 
-import static org.junit.Assert.assertNotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-import org.junit.Before;
-import org.junit.Test;
-
-public class AuthPropertiesTest {
-
-	private AuthProperties tokenAuthProperties;
-
-	@Before
-	public void setup() {
-		tokenAuthProperties = new AuthProperties();
-	}
-
-	@Test
-	public void testApplyDefaultsIfNeeded() {
-		tokenAuthProperties.setExpirationTime(null);
-		tokenAuthProperties.setSecret(null);
-
-		tokenAuthProperties.applyDefaultsIfNeeded();
-
-		assertNotNull(tokenAuthProperties.getExpirationTime());
-		assertNotNull(tokenAuthProperties.getSecret());
-	}
-
+@Data
+@AllArgsConstructor
+public class UserCredentialsDTO {
+	private String username;
+	private String password;
 }
