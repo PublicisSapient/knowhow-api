@@ -16,20 +16,16 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.auth.ldap;
+package com.publicissapient.kpidashboard.apis.errors;
 
-import static org.junit.Assert.assertEquals;
+import org.springframework.security.core.AuthenticationException;
 
-import org.junit.Test;
+public class APIKeyInvalidException extends AuthenticationException {
 
-import com.publicissapient.kpidashboard.common.constant.AuthType;
+	private static final long serialVersionUID = -8596676033265445347L;
 
-public class LdapAuthenticationDetailsSourceTest {
-
-	@Test
-	public void test() {
-		LdapAuthenticationDetailsSource detailsSource = new LdapAuthenticationDetailsSource();
-		assertEquals(AuthType.LDAP, detailsSource.buildDetails(null));
+	public APIKeyInvalidException(String msg) {
+		super(msg);
 	}
 
 }
