@@ -15,23 +15,18 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.repotools.model;
 
-package com.publicissapient.kpidashboard.apis.auth.ldap;
+import lombok.Getter;
+import lombok.Setter;
 
-import org.springframework.security.authentication.AuthenticationDetailsSource;
-
-import com.publicissapient.kpidashboard.common.constant.AuthType;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-/**
- * The type Ldap authentication details source.
- */
-public class LdapAuthenticationDetailsSource implements AuthenticationDetailsSource<HttpServletRequest, AuthType> {
-
-	@Override
-	public AuthType buildDetails(HttpServletRequest context) {
-		return AuthType.LDAP;
-	}
+@Getter
+@Setter
+public class RepoToolConnectionDetail {
+    private String email;
+    private String password;
+    private String username;
+    private String provider;
 
 }
+
