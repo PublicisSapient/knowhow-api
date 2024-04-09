@@ -15,32 +15,15 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.repotools.model;
 
-package com.publicissapient.kpidashboard.apis.auth;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-
-public class AuthPropertiesTest {
-
-	private AuthProperties tokenAuthProperties;
-
-	@Before
-	public void setup() {
-		tokenAuthProperties = new AuthProperties();
-	}
-
-	@Test
-	public void testApplyDefaultsIfNeeded() {
-		tokenAuthProperties.setExpirationTime(null);
-		tokenAuthProperties.setSecret(null);
-
-		tokenAuthProperties.applyDefaultsIfNeeded();
-
-		assertNotNull(tokenAuthProperties.getExpirationTime());
-		assertNotNull(tokenAuthProperties.getSecret());
-	}
-
+@Data
+@AllArgsConstructor
+public class RepoToolConnModel {
+	private List<RepoToolConnectionDetail> item;
 }
