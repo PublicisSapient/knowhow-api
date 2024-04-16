@@ -18,26 +18,35 @@
 
 package com.publicissapient.kpidashboard.apis.repotools.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * RepoTool kpi validation data
+ */
 @Data
-public class RepoToolRepositories {
-
-    private String name;
-    private String repository;
-    private double average;
-    @JsonProperty("commit_count")
-    private long commitCount;
-    private double repositoryGrade;
-    private List<IndividualCommitsCount> individualCommitsCount;
-    private List<Branches> branchesCommitsCount;
-    private List<Branches> branches;
-    private Map<String, Double> mergeRequestsPT;
-    private String filteredBranch;
-    private double repositoryReworkRateGrade;
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class RepoToolValidationData {
+	private String projectName;
+	private String repoUrl;
+	private String branchName;
+	private String developerName;
+	private String date;
+	private long commitCount;
+	private long mrCount;
+	private Double meanTimeToMerge;
+	private long prSize;
+	private Double pickupTime;
+	private Double reworkRate;
 
 }
