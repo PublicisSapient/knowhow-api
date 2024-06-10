@@ -1,13 +1,10 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,38 +12,24 @@
  * limitations under the License.
  *
  ******************************************************************************/
-
 package com.publicissapient.kpidashboard.apis.model;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * object used to bind iteration kpi's value
+ * This class is used to store logged work of each issue based on projectConfigId, sprintId , storyId.
+ *
+ * @author purgupta2
  */
-@EqualsAndHashCode(callSuper = true)
-@Data
-@NoArgsConstructor
-public class IterationKpiModalValue extends IssueKpiModalValue {
-
-	private Map<String, List<String>> statusLogGroup;
-	private Map<String, List<String>> workLogGroup;
-	private Map<String, List<String>> assigneeLogGroup;
-	private String timeWithUser;
-	private String timeWithStatus;
-	private Long loggedWorkInSeconds;
-	private String epicName;
-	private boolean spill;
-	private Long remainingEstimateInSeconds;
-	private Long originalEstimateInSeconds;
-	private Set<String> subTask;
-	private Set<String> parentStory;
-	private boolean preClosed;
-
+@Getter
+@Setter
+@AllArgsConstructor
+public class LoggedTimePerIssue {
+    private String projectConfigId;
+    private String sprintId;
+    private String storyId;
+    private Double loggedTimeInHours;
 }
+
