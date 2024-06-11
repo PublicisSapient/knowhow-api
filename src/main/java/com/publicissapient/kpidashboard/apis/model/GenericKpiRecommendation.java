@@ -16,17 +16,31 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.appsetting.service;
+package com.publicissapient.kpidashboard.apis.model;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-/**
- *
- * @author pansharm5
- *
- */
-public interface GlobalConfigService {
+@Data
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+public class GenericKpiRecommendation {
 
-	ServiceResponse getZephyrCloudUrlDetails();
+	private String kpiId;
+	private String kpiName;
+	private Integer maturity;
+	private String recommendationSummary;
+	private String recommendationDetails;
+	private String recommendationType;
+	private String filter;
 
 }
