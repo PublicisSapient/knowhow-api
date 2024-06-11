@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
- * Further development Copyright 2022 Sapient Corporation.
+ * Further development Copyright 2024 Sapient Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,14 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.appsetting.service;
+package com.publicissapient.kpidashboard.apis.auth.service;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import lombok.Data;
 
-/**
- *
- * @author pansharm5
- *
- */
-public interface GlobalConfigService {
+import javax.validation.constraints.NotNull;
 
-	ServiceResponse getZephyrCloudUrlDetails();
-
+@Data
+public class UserNameRequest {
+	@NotNull
+	private String userName;
 }
