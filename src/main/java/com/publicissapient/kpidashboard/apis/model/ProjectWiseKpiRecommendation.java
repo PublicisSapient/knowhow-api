@@ -16,15 +16,29 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.connection.service;
+package com.publicissapient.kpidashboard.apis.model;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.common.model.connection.Connection;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-public interface TestConnectionService {
+import java.util.List;
 
-	ServiceResponse validateConnection(Connection connection, String toolName);
+@Data
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+public class ProjectWiseKpiRecommendation {
 
-	ServiceResponse getZephyrCloudUrlDetails();
+	private String projectId;
+	private String sprintId;
+	private List<GenericKpiRecommendation> recommendations;
 
 }
