@@ -15,18 +15,19 @@
  * limitations under the License.
  *
  ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.model;
 
-package com.publicissapient.kpidashboard.apis.repotools.model;
+import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardConfigDTO;
+import lombok.Data;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public class MergeRequests {
-
-    @JsonProperty("time_to_merge")
-    private long timeToMerge;
-    @JsonProperty("created_at")
-    private String createdAt;
-    @JsonProperty("updated_at")
-    private String updatedAt;
-
+/**
+ * DTO of userboardconfigdto and ConfigDetails
+ *
+ * @author purgupta2
+ *
+ */
+@Data
+public class UserBoardDTO {
+    private UserBoardConfigDTO userBoardConfigDTO;
+    private ConfigDetails configDetails;
 }
