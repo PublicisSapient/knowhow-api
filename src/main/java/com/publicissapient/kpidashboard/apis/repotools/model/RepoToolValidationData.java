@@ -18,15 +18,35 @@
 
 package com.publicissapient.kpidashboard.apis.repotools.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-public class MergeRequests {
-
-    @JsonProperty("time_to_merge")
-    private long timeToMerge;
-    @JsonProperty("created_at")
-    private String createdAt;
-    @JsonProperty("updated_at")
-    private String updatedAt;
+/**
+ * RepoTool kpi validation data
+ */
+@Data
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+public class RepoToolValidationData {
+	private String projectName;
+	private String repoUrl;
+	private String branchName;
+	private String developerName;
+	private String date;
+	private long commitCount;
+	private long mrCount;
+	private Long meanTimeToMerge;
+	private long prSize;
+	private Double pickupTime;
+	private Double reworkRate;
 
 }
