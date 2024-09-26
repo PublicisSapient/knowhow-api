@@ -14,52 +14,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.publicissapient.kpidashboard.apis.mongock.rollback.release_950;
+package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1010;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
-import com.mongodb.client.MongoCollection;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /**
- * rollback kpiname and y-axis label
- *
- * @author aksshriv1
+ * @author shunaray
  */
-@ChangeUnit(id = "r_cod_yaxislabel", order = "09501", author = "aksshriv1", systemVersion = "9.5.0")
-
-public class CostOfDelayEnh {
+@ChangeUnit(id = "plan_release_filter", order = "101011", author = "shunaray", systemVersion = "10.1.0")
+public class ReleasePlanEnhc {
 
 	private final MongoTemplate mongoTemplate;
 
-	public CostOfDelayEnh(MongoTemplate mongoTemplate) {
+	public ReleasePlanEnhc(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Execution
 	public void execution() {
-		updatekpi113();
+		updateFieldMappingStructure("Custom Fields Mapping");
+		updateKpiFilter("radioButton");
 	}
 
-	public void updatekpi113() {
-		MongoCollection<Document> kpiMaster = mongoTemplate.getCollection("kpi_master");
-		Document filter = new Document("kpiId", "kpi113");
+	public void updateKpiFilter(String radioButton) {
+		mongoTemplate.getCollection("kpi_master").updateOne(
+				new Document("kpiId", "kpi179"),
+				new Document("$set", new Document("kpiFilter", radioButton))
+		);
+	}
 
-		Document update = new Document("$set",
-				new Document("kpiName", "Value Delivered (Cost of Delay)").append("yaxisLabel", "Count(Days)"));
-
-		// Perform the update
-		kpiMaster.updateOne(filter, update);
-
+	public void updateFieldMappingStructure(String section) {
+		mongoTemplate.getCollection("field_mapping_structure").updateOne(
+				new Document("fieldName", "startDateCountKPI150"),
+				new Document("$set", new Document("section", section)));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		// no implementation required
+		updateFieldMappingStructure("Issue Types Mapping");
+		updateKpiFilter("");
 	}
 
 }
