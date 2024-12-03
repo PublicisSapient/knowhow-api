@@ -18,16 +18,41 @@
 
 package com.publicissapient.kpidashboard.apis.common.service;
 
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-import com.publicissapient.kpidashboard.common.model.rbac.UsersLoginHistory;
+import java.time.LocalDateTime;
 
-public interface UserLoginHistoryService {
+import com.publicissapient.kpidashboard.common.constant.AuthenticationEvent;
+import com.publicissapient.kpidashboard.common.constant.Status;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import com.publicissapient.kpidashboard.common.model.rbac.UsersSession;
+
+public interface UsersSessionService {
 
 	/**
-	 *
+	 * Method to create user login history info
+	 * 
 	 * @param userInfo
+	 *            user info
 	 * @param status
-	 * @return
+	 *            event status {@link Status}
+	 * @param event
+	 *            authentication event {@link AuthenticationEvent}
+	 * @return user login history
 	 */
-	UsersLoginHistory createUserLoginHistoryInfo(UserInfo userInfo, String status);
+	UsersSession createUsersSessionInfo(UserInfo userInfo, AuthenticationEvent event, Status status);
+
+	/**
+	 * Method to get last logout of user
+	 *
+	 * @param username
+	 *            username
+	 * @return last login time
+	 */
+	LocalDateTime getLastLogoutTimeOfUser(String username);
+
+	/**
+	 * Method to audit the logout of user
+	 * @param userName username
+	 * @param status {@link Status}
+	 */
+	void auditLogout(String userName, Status status);
 }
