@@ -25,14 +25,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,20 +39,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
-import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
-import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
-import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
-import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
-import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
+import com.publicissapient.kpidashboard.apis.data.*;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationServiceR;
-import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
-import com.publicissapient.kpidashboard.apis.model.KpiElement;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
+import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -66,16 +54,17 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DefectCountByRCAServiceImplTest {
-
+public class DefectCountByServiceImplTest {
 	@InjectMocks
-	DefectCountByRCAServiceImpl defectCountByRCAService;
+	DefectCountByServiceImpl defectCountByService;
 	@Mock
 	JiraIssueRepository jiraIssueRepository;
 	@Mock
 	CacheService cacheService;
 	@Mock
 	ConfigHelperService configHelperService;
+	@Mock
+	JiraIterationServiceR jiraServiceR;
 	@Mock
 	FilterHelperService filterHelperService;
 	private KpiRequest kpiRequest;
@@ -84,21 +73,17 @@ public class DefectCountByRCAServiceImplTest {
 	private List<JiraIssue> bugList = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	private JiraIterationServiceR jiraService;
-
-	@Mock
-	FieldMapping fieldMapping;
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat(defectCountByRCAService.getQualifierType(), equalTo(KPICode.DEFECT_COUNT_BY_RCA_PIE_CHART.name()));
+		assertThat(defectCountByService.getQualifierType(),
+				equalTo(KPICode.DEFECT_COUNT_BY_ITERATION.name()));
 	}
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
-		kpiRequest = kpiRequestFactory.findKpiRequest("kpi113");
+		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
+		kpiRequest = kpiRequestFactory.findKpiRequest("kpi136");
 		kpiRequest.setLabel("PROJECT");
 		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
 				.newInstance();
@@ -112,7 +97,7 @@ public class DefectCountByRCAServiceImplTest {
 		bugList = jiraIssueDataFactory.getBugs();
 		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
 				.newInstance("/json/default/scrum_project_field_mappings.json");
-		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
+		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 	}
 
@@ -122,15 +107,12 @@ public class DefectCountByRCAServiceImplTest {
 		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
 				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		try {
-			String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-			when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
-					.thenReturn(kpiRequestTrackerId);
-			when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
+			String kpiRequestTrackerId = "Jira-Excel-RCA-track001";
+			when(jiraServiceR.getCurrentSprintDetails()).thenReturn(sprintDetails);
 			when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-			when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+			when(jiraServiceR.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 			when(jiraIssueRepository.findLinkedDefects(anyMap(), any(), anyMap())).thenReturn(bugList);
-			when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-			KpiElement kpiElement = defectCountByRCAService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
+			KpiElement kpiElement = defectCountByService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
 					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement);
 
@@ -146,10 +128,10 @@ public class DefectCountByRCAServiceImplTest {
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+		when(jiraServiceR.getCurrentSprintDetails()).thenReturn(sprintDetails);
+		when(jiraServiceR.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> returnMap = defectCountByRCAService.fetchKPIDataFromDb(leafNodeList.get(0), startDate,
+		Map<String, Object> returnMap = defectCountByService.fetchKPIDataFromDb(leafNodeList.get(0), startDate,
 				endDate, kpiRequest);
 		assertNotNull(returnMap);
 	}
