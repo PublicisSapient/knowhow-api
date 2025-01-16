@@ -1,48 +1,48 @@
+/*******************************************************************************
+ * Copyright 2014 CapitalOne, LLC.
+ * Further development Copyright 2022 Sapient Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************/
+
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
-import com.publicissapient.kpidashboard.apis.common.service.impl.CommonServiceImpl;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
-import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
-import com.publicissapient.kpidashboard.apis.model.KpiElement;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
-import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
@@ -53,13 +53,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
+public class DefectCountByServiceImpl extends JiraIterationKPIService {
 
 	public static final String UNCHECKED = "unchecked";
 	private static final String TOTAL_ISSUES = "Total Issues";
 	private static final String SPRINT_DETAILS = "SprintDetails";
 	private static final String CREATED_DURING_ITERATION = "Created during Iteration";
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+	private static final String FILTER_TYPE = "Multi";
+
 	@Autowired
 	private JiraIssueRepository jiraIssueRepository;
 
@@ -67,42 +69,17 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 	private ConfigHelperService configHelperService;
 
 	@Autowired
-	private CommonServiceImpl commonService;
-
-	@Autowired
 	private CacheService cacheService;
 
 	@Autowired
 	private FilterHelperService filterHelperService;
-
-	private static void overallPriorityCountMap(List<DataCount> dataCountListForAllPriorities,
-			Map<String, Integer> overallPriorityCountMapAggregate) {
-		for (DataCount dataCount : dataCountListForAllPriorities) {
-			Map<String, Integer> statusCountMap = (Map<String, Integer>) dataCount.getValue();
-			statusCountMap.forEach((priority, priorityCountValue) -> overallPriorityCountMapAggregate.merge(priority,
-					priorityCountValue, Integer::sum));
-		}
-	}
-
-	private static int getPriorityCount(Map<String, Integer> overallPriorityCountMap,
-			Map<String, List<JiraIssue>> priorityData, int priorityRCACount, Map<String, Integer> priorityCountMap) {
-		for (Map.Entry<String, List<JiraIssue>> rcaEntry : priorityData.entrySet()) {
-			String priority = rcaEntry.getKey();
-			List<JiraIssue> issues = rcaEntry.getValue();
-
-			priorityRCACount += issues.size();
-			priorityCountMap.put(priority, issues.size());
-			overallPriorityCountMap.merge(priority, issues.size(), Integer::sum);
-		}
-		return priorityRCACount;
-	}
 
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
 			KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
-			log.info("Defect count by Priority -> Requested sprint : {}", leafNode.getName());
+			log.info("Defect count by Status -> Requested sprint : {}", leafNode.getName());
 			String basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId().toString();
 			String sprintId = leafNode.getSprintFilter().getId();
 			List<String> defectType = new ArrayList<>();
@@ -118,7 +95,7 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 						Optional.ofNullable(fieldMapping.getJiradefecttype()).orElse(Collections.emptyList()));
 				Set<String> totalSprintReportDefects = new HashSet<>();
 				Set<String> totalSprintReportStories = new HashSet<>();
-				sprintDetails.getTotalIssues().stream().forEach(sprintIssue -> {
+				sprintDetails.getTotalIssues().forEach(sprintIssue -> {
 					if (defectTypes.contains(sprintIssue.getTypeName())) {
 						totalSprintReportDefects.add(sprintIssue.getNumber());
 					} else {
@@ -137,7 +114,8 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 						Collections.singletonList(basicProjectConfigId));
 
 				if (CollectionUtils.isNotEmpty(totalIssues)) {
-					List<JiraIssue> totalIssueList = IterationKpiHelper.getFilteredJiraIssue(totalIssues, totalJiraIssueList);
+					List<JiraIssue> totalIssueList = IterationKpiHelper.getFilteredJiraIssue(totalIssues,
+							totalJiraIssueList);
 					Set<JiraIssue> filtersIssuesList = KpiDataHelper
 							.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(sprintDetails,
 									sprintDetails.getTotalIssues(), totalIssueList);
@@ -149,12 +127,12 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 					// filter defects which is issue type not coming in sprint report
 					List<JiraIssue> subTaskDefects = linkedDefects.stream()
 							.filter(jiraIssue -> !totalSprintReportDefects.contains(jiraIssue.getNumber()))
-							.collect(Collectors.toList());
+							.toList();
 
 					List<JiraIssue> totalSubTaskTaggedToSprint = subTaskDefects.stream()
 							.filter(jiraIssue -> CollectionUtils.isNotEmpty(jiraIssue.getSprintIdList())
 									&& jiraIssue.getSprintIdList().contains(sprintId.split("_")[0]))
-							.collect(Collectors.toList());
+							.toList();
 
 					List<JiraIssue> allIssues = new ArrayList<>();
 					allIssues.addAll(filtersIssuesList);
@@ -170,25 +148,20 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 
 	@Override
 	public String getQualifierType() {
-		return KPICode.DEFECT_COUNT_BY_PRIORITY_PIE_CHART.name();
+		return KPICode.DEFECT_COUNT_BY_ITERATION.name();
 	}
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node sprintNode)
 			throws ApplicationException {
 		sprintWiseLeafNodeValue(sprintNode, kpiElement, kpiRequest);
-		log.info("DefectCountByPriorityServiceImpl -> getKpiData ->  : {}", kpiElement);
+		log.info("DefectCountByServiceImpl -> getKpiData ->  : {}", kpiElement);
 		return kpiElement;
 	}
 
 	private void sprintWiseLeafNodeValue(Node latestSprint, KpiElement kpiElement, KpiRequest kpiRequest) {
-		String requestTrackerId = getRequestTrackerId();
-		List<KPIExcelData> excelData = new ArrayList<>();
 		if (latestSprint != null) {
-			long time = System.currentTimeMillis();
 			Map<String, Object> resultMap = fetchKPIDataFromDb(latestSprint, null, null, kpiRequest);
-			log.info("DefectCountByPriority taking fetchKPIDataFromDb {}",
-					String.valueOf(System.currentTimeMillis() - time));
 			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
 					.get(latestSprint.getProjectFilter().getBasicProjectConfigId());
 			if (fieldMapping != null) {
@@ -199,81 +172,122 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 								LocalDate.parse(jiraIssue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER),
 								LocalDate.parse(sprintDetails.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER),
 								LocalDate.parse(sprintDetails.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER)))
-						.collect(Collectors.toList());
-				Map<String, Map<String, List<JiraIssue>>> priorityWiseList = getPriorityWiseIssueList(
-						allCompletedDefects, createDuringIteration);
-				List<Integer> overAllRCAIssueCount = Arrays.asList(0);
-				log.info("DefectCountByPriorityServiceImpl -> priorityWiseList ->  : {}", priorityWiseList);
-				// filterDataList will consist of IterationKpiValue which will be set for all
-				// priorities
-				List<IterationKpiValue> filterDataList = new ArrayList<>();
-				List<IterationKpiValue> sortedFilterDataList = new ArrayList<>();
-				List<DataCount> dataCountListForAllPriorities = new ArrayList<>();
-				Map<String, Integer> overallPriorityCountMap = new HashMap<>();
-				for (Map.Entry<String, Map<String, List<JiraIssue>>> entry : priorityWiseList.entrySet()) {
-					Map<String, List<JiraIssue>> priorityData = entry.getValue();
-					int priorityCount = 0;
-					Map<String, Integer> priorityCountMap = new HashMap<>();
-					// update and set the overall data
-					priorityCount = getPriorityCount(overallPriorityCountMap, priorityData, priorityCount,
-							priorityCountMap);
-					DataCount priorityDataCount = new DataCount();
-					priorityDataCount.setData(String.valueOf(priorityCount));
-					priorityDataCount.setValue(priorityCountMap);
-					List<DataCount> dataCountList = new ArrayList<>();
-					dataCountList.add(priorityDataCount);
-					dataCountListForAllPriorities.add(priorityDataCount);
+						.toList();
+				log.info("DefectCountByServiceImpl -> allCompletedDefects ->  : {}", allCompletedDefects);
+				// Creating map of modal Objects
+				Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper
+						.createMapOfIssueModal(allCompletedDefects);
+				allCompletedDefects.forEach(defect -> {
+					KPIExcelUtility.populateIssueModal(defect, fieldMapping, issueKpiModalObject);
+					IssueKpiModalValue data = issueKpiModalObject.get(defect.getNumber());
+					List<String> category = new ArrayList<>();
+					category.add(TOTAL_ISSUES);
+					data.setCreatedDuringIteration(Constant.EMPTY_STRING);
+					if (createDuringIteration.contains(defect)) {
+						category.add(CREATED_DURING_ITERATION);
+						data.setCreatedDuringIteration(Constant.EXCEL_YES);
+					}
+					data.setCategory(category);
+				});
 
-					// to make structure to create pie chart
-					List<DataCount> middleTrendValueListForPriorities = new ArrayList<>();
-					DataCount middleOverallData = new DataCount();
-					middleOverallData.setData(latestSprint.getProjectFilter().getName());
-					middleOverallData.setValue(dataCountList);
-					middleTrendValueListForPriorities.add(middleOverallData);
+				kpiElement.setSprint(latestSprint.getName());
+				kpiElement.setModalHeads(KPIExcelColumn.DEFECT_COUNT_BY_STATUS_PIE_CHART
+						.getColumns(List.of(latestSprint), cacheService, filterHelperService));
 
-					IterationKpiValue filterData = new IterationKpiValue(entry.getKey(),
-							middleTrendValueListForPriorities);
-					filterDataList.add(filterData);
-
-				}
-				Map<String, Integer> overallPriorityCountMapAggregate = new HashMap<>();
-				overallPriorityCountMap(dataCountListForAllPriorities, overallPriorityCountMapAggregate);
-				if (MapUtils.isNotEmpty(overallPriorityCountMapAggregate)) {
-
-					populateExcelDataObject(requestTrackerId, excelData, allCompletedDefects,
-							latestSprint.getSprintFilter().getName(), fieldMapping, createDuringIteration);
-
-					// filterDataList
-					kpiElement.setSprint(latestSprint.getName());
-					kpiElement.setModalHeads(KPIExcelColumn.DEFECT_COUNT_BY_PRIORITY_PIE_CHART.getColumns(List.of(latestSprint), cacheService,filterHelperService));
-					kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_COUNT_BY_PRIORITY_PIE_CHART.getColumns(List.of(latestSprint), cacheService,filterHelperService));
-					kpiElement.setExcelData(excelData);
-					sortedFilterDataList.add(filterDataList.stream()
-							.filter(iterationKpiValue -> iterationKpiValue.getFilter1()
-									.equalsIgnoreCase(CREATED_DURING_ITERATION))
-							.findFirst().orElse(new IterationKpiValue()));
-					filterDataList.removeIf(iterationKpiValue -> iterationKpiValue.getFilter1()
-							.equalsIgnoreCase(CREATED_DURING_ITERATION));
-					sortListByKey(filterDataList);
-					sortedFilterDataList.addAll(filterDataList);
-					kpiElement.setTrendValueList(sortedFilterDataList);
-					log.info("DefectCountByPriorityServiceImpl -> request id : {} total jira Issues : {}",
-							requestTrackerId, overAllRCAIssueCount.get(0));
-				}
+				kpiElement.setIssueData(new HashSet<>(issueKpiModalObject.values()));
+				kpiElement.setFilterGroup(createFilterGroup());
+				kpiElement.setDataGroup(createDataGroup());
+				kpiElement.setCategoryData(createCategoryData());
 			}
 		}
 	}
 
-	private void populateExcelDataObject(String requestTrackerId, List<KPIExcelData> excelData,
-			List<JiraIssue> sprintWiseDefectDataList, String name, FieldMapping fieldMapping,
-			List<JiraIssue> createDuringIteration) {
+	private FilterGroup createFilterGroup() {
+		FilterGroup filterGroup = new FilterGroup();
+		// for the first group by selection
+		List<Filter> filterList = new ArrayList<>();
+		filterList.add(createFilter(FILTER_TYPE, "Status", "Issue Status", 1));
+		filterList.add(createFilter(FILTER_TYPE, "Priority", "Priority", 2));
+		filterList.add(createFilter(FILTER_TYPE, "RCA", "Root Cause List", 3));
+		filterGroup.setFilterGroup1(filterList);
 
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
-				&& !Objects.isNull(sprintWiseDefectDataList) && !sprintWiseDefectDataList.isEmpty()) {
-			KPIExcelUtility.populateDefectRCAandStatusRelatedExcelData(name, sprintWiseDefectDataList,
-					createDuringIteration, excelData, fieldMapping);
-		}
+		return filterGroup;
+	}
 
+	private Filter createFilter(String type, String name, String key, Integer order) {
+		Filter filter = new Filter();
+		filter.setFilterType(type);
+		filter.setFilterName(name);
+		filter.setFilterKey(key);
+		filter.setOrder(order);
+		return filter;
+	}
+
+	/**
+	 * Creates data group that tells what kind of data will be shown on chart.
+	 *
+	 * @return
+	 */
+	private KpiDataGroup createDataGroup() {
+		KpiDataGroup dataGroup = new KpiDataGroup();
+
+		List<KpiData> dataGroup1 = new ArrayList<>();
+		dataGroup1.add(createKpiData("", "", 1, "count", ""));
+		dataGroup.setDataGroup1(dataGroup1);
+		return dataGroup;
+	}
+
+	/**
+	 * Creates kpi data object.
+	 *
+	 * @param key
+	 * @param name
+	 * @param order
+	 * @param aggregation
+	 * @param unit
+	 * @return
+	 */
+	private KpiData createKpiData(String key, String name, Integer order, String aggregation, String unit) {
+		KpiData data = new KpiData();
+		data.setKey(key);
+		data.setName(name);
+		data.setOrder(order);
+		data.setAggregation(aggregation);
+		data.setUnit(unit);
+		data.setShowAsLegend(false);
+		return data;
+	}
+
+	/**
+	 * Creates object to hold category related info.
+	 * 
+	 * @return
+	 */
+	private CategoryData createCategoryData() {
+		CategoryData categoryData = new CategoryData();
+		categoryData.setCategoryKey("Category");
+
+		List<KpiDataCategory> categoryGroup = new ArrayList<>();
+		categoryGroup.add(createKpiDataCategory(CREATED_DURING_ITERATION, "+", 1));
+		categoryGroup.add(createKpiDataCategory(TOTAL_ISSUES, "+", 2));
+		categoryData.setCategoryGroup(categoryGroup);
+		return categoryData;
+	}
+
+	/**
+	 * Creates kpi data category object.
+	 * 
+	 * @param categoryName
+	 * @param categoryValue
+	 * @param order
+	 * @return
+	 */
+	private KpiDataCategory createKpiDataCategory(String categoryName, String categoryValue, Integer order) {
+		KpiDataCategory category = new KpiDataCategory();
+		category.setCategoryName(categoryName);
+		category.setCategoryValue(categoryValue);
+		category.setOrder(order);
+		return category;
 	}
 
 	private List<JiraIssue> filterDefects(Map<String, Object> resultMap, FieldMapping fieldMapping) {
@@ -286,21 +300,5 @@ public class DefectCountByPriorityServiceImpl extends JiraIterationKPIService {
 					.filter(issue -> defectStatuses.contains(issue.getTypeName())).collect(Collectors.toList());
 		}
 		return new ArrayList<>();
-	}
-
-	private Map<String, Map<String, List<JiraIssue>>> getPriorityWiseIssueList(
-			List<JiraIssue> allCompletedIssuesExcludeStory, List<JiraIssue> createDuringIteration) {
-
-		Map<String, Map<String, List<JiraIssue>>> scopeWiseDefectsMap = new HashMap<>();
-		scopeWiseDefectsMap.put(TOTAL_ISSUES,
-				allCompletedIssuesExcludeStory.stream().collect(Collectors.groupingBy(JiraIssue::getPriority)));
-		scopeWiseDefectsMap.put(CREATED_DURING_ITERATION,
-				createDuringIteration.stream().collect(Collectors.groupingBy(JiraIssue::getPriority)));
-		return scopeWiseDefectsMap;
-
-	}
-
-	private void sortListByKey(List<IterationKpiValue> list) {
-		list.sort(Comparator.comparing(IterationKpiValue::getFilter1));
 	}
 }
