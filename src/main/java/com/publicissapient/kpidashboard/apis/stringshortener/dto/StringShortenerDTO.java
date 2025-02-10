@@ -16,26 +16,15 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.model;
+package com.publicissapient.kpidashboard.apis.stringshortener.dto;
 
-import lombok.*;
+import lombok.Data;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class KpiData {
-	private String key;
-	private String name;
-	private Double kpiValue;
-	private Integer order;
-	private String aggregation;
-	private String unit;
-	private boolean showAsLegend;
-	private String key1;
-	private String value1;
-	private Double kpiValue1;
-	private boolean showDenominator;
-	private boolean isMultipleValue;
+@Data
+public class StringShortenerDTO {
+    private String longStateFiltersString;
+    private String shortStateFiltersString;
+    private String longKPIFiltersString;
+    private String shortKPIFilterString;
+
 }
