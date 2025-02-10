@@ -16,26 +16,19 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.model;
+package com.publicissapient.kpidashboard.apis.stringshortener.model;
 
-import lombok.*;
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class KpiData {
-	private String key;
-	private String name;
-	private Double kpiValue;
-	private Integer order;
-	private String aggregation;
-	private String unit;
-	private boolean showAsLegend;
-	private String key1;
-	private String value1;
-	private Double kpiValue1;
-	private boolean showDenominator;
-	private boolean isMultipleValue;
-}
+    @Data
+    @Document(collection = "string_shorteners")
+    public class StringShortener {
+        @Id
+        private String id;
+        private String longStateFiltersString;
+        private String shortStateFiltersString;
+        private String longKPIFiltersString;
+        private String shortKPIFilterString;
+    }
