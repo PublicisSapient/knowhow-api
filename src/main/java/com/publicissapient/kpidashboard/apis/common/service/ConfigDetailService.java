@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.common.service;
 
 import com.publicissapient.kpidashboard.apis.model.ConfigDetails;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 /**
  * Contract to get kpi wise aggregation type
@@ -33,4 +34,5 @@ public interface ConfigDetailService {
 	 * @return kpi wise aggregation type
 	 */
 	ConfigDetails getConfigDetails();
+	ServiceResponse getConfigurationTemplate();
 }
