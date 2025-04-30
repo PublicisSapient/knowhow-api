@@ -29,6 +29,18 @@ jobs:
   customapi_ci:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout knowhow-common repo
+        uses: actions/checkout@v2
+        with:
+          repository: PublicisSapient/knowhow-common
+          ref: ${{ env.BRANCH }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: knowhow-common
+
+      - name: Build knowhow-common
+        working-directory: knowhow-common
+        run: mvn clean install -Ddockerfile.skip=true -X
+        
       - name: Checkout Repository
         uses: actions/checkout@v2
 
