@@ -12,7 +12,7 @@ RUN yum install -y shadow-utils \
     && useradd -u $UID -g $GID -m -s /bin/bash $USER \
     && yum clean all -y
 
-# Set the environment variables
+# Set the environment variable
 ENV CONFIG_LOCATION="/app/properties/customapi.properties" \
     certhostpath="/app/certs/" \
     keytoolalias="myknowhow" \
