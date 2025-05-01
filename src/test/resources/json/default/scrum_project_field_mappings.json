@@ -179,6 +179,7 @@
     "jiraStoryIdentificationKPI166" : [ "Story", "Enabler Story" ],
     "jiraProductionIncidentIdentification": "Labels",
     "jiraLabelsKPI14" : ["Java", "UI" ],
+    "defectRejectionLabelsKPI37" : ["Java", "UI" ],
     "jiraLabelsKPI82" : ["Java", "UI" ],
     "jiraIssueWaitStateKPI170": [ "Open", "On Hold", "Code Review" ],
     "jiraIssueClosedStateKPI170": [ "Done", "Closed", "Dropped"],

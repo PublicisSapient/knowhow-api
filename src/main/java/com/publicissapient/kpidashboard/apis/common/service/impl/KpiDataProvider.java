@@ -92,6 +92,7 @@ public class KpiDataProvider {
 	private static final String TOTALBUGKEY = "totalBugData";
 	private static final String SPRINTSTORIES = "storyData";
 	private static final String PROJFMAPPING = "projectFieldMapping";
+	public static final String DEFECT_REJECTION_LABELS = "defectRejectionLabels";
 
 	@Autowired
 	private ConfigHelperService configHelperService;
@@ -870,6 +871,10 @@ public class KpiDataProvider {
 		defectType.add(NormalizedJira.DEFECT_TYPE.getValue());
 		KpiHelperService.getDroppedDefectsFilters(defectResolutionRejectionMap, basicProjectConfigId,
 				fieldMapping.getResolutionTypeForRejectionKPI37(), fieldMapping.getJiraDefectRejectionStatusKPI37());
+		if (CollectionUtils.isNotEmpty(fieldMapping.getDefectRejectionLabelsKPI37())) {
+			defectResolutionRejectionMap.computeIfAbsent(basicProjectConfigId.toString(), k -> new HashMap<>())
+					.put(DEFECT_REJECTION_LABELS, fieldMapping.getDefectRejectionLabelsKPI37());
+		}
 		mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 				CommonUtils.convertToPatternList(defectType));
 		uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -953,7 +958,11 @@ public class KpiDataProvider {
 									&& CollectionUtils.isNotEmpty(defectStatus.get(Constant.DEFECT_REJECTION_STATUS))
 									&& defectStatus.get(Constant.DEFECT_REJECTION_STATUS).stream()
 											.map(String::toLowerCase).toList()
-											.contains(jiraIssue.getStatus().toLowerCase())))) {
+											.contains(jiraIssue.getStatus().toLowerCase()))
+							|| (CollectionUtils.isNotEmpty(defectStatus.get(DEFECT_REJECTION_LABELS))
+									&& CollectionUtils.isNotEmpty(jiraIssue.getLabels())
+									&& jiraIssue.getLabels().stream().anyMatch(label -> defectStatus
+											.get(DEFECT_REJECTION_LABELS).stream().anyMatch(label::equals))))) {
 						defectListWthDropSet.add(jiraIssue);
 					}
 				}
