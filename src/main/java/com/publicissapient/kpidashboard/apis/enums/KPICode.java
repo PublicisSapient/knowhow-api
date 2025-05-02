@@ -277,11 +277,18 @@ public enum KPICode {
 	INNOVATION_RATE("kpi185", KPISource.BITBUCKET.name()),
 	/** Defect Rate (Developer) */
 	DEFECT_RATE("kpi186", KPISource.BITBUCKET.name()),
-
+    /**
+     * Late Refinement (Iteration)
+     */
+    LATE_REFINEMENT("kpi187", KPISource.JIRA.name()),
+    /**
+     * Future Late Refinement (Iteration)
+     */
+    NEXT_SPRINT_LATE_REFINEMENT("kpi188", KPISource.JIRA.name()),
 	/**
 	 * Sprint Goals
 	 */
-	SPRINT_GOALS("kpi187", KPISource.JIRA.name()),
+	SPRINT_GOALS("kpi189", KPISource.JIRA.name()),
 
 	// do not remove below codes as they are required for test case
 	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()), TEST_JIRA("TEST_JIRA",
