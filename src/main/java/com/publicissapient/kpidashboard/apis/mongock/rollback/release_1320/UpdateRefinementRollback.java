@@ -91,7 +91,8 @@ public class UpdateRefinementRollback {
 		Document filter = new Document(KEY_KPI_ID, KPI188);
 
 		Document updateFields = new Document().append(KEY_KPI_WIDTH, 33).append(KEY_KPI_HEIGHT, 50)
-				.append(KEY_IS_RAW_DATA, false).append(KEY_CHART_TYPE, "tabular-with-donut-chart");
+				.append(KEY_IS_RAW_DATA, false).append(KEY_CHART_TYPE, "tabular-with-donut-chart")
+				.append("kpiInfo.details.0.kpiLinkDetail.link", "https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinemnt+Future+Sprint");
 		Document update = new Document("$set", updateFields);
 		kpiMaster.updateOne(filter, update);
 	}
@@ -99,7 +100,8 @@ public class UpdateRefinementRollback {
 	private static void updateKpi187(MongoCollection<Document> kpiMaster) {
 		Document filter = new Document(KEY_KPI_ID, KPI187);
 		Document updateFields = new Document().append(KEY_KPI_SUB_CATEGORY, "Iteration Review")
-				.append(KEY_KPI_WIDTH, 66).append(KEY_KPI_HEIGHT, 100).append(KEY_IS_RAW_DATA, false).append(KEY_DEFAULT_ORDER,11);
+				.append(KEY_KPI_WIDTH, 66).append(KEY_KPI_HEIGHT, 100).append(KEY_IS_RAW_DATA, false).append(KEY_DEFAULT_ORDER,11)
+				.append("kpiInfo.details.0.kpiLinkDetail.link", "https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinemnt+Current+Sprint");
 		Document update = new Document("$set", updateFields);
 		kpiMaster.updateOne(filter, update);
 		kpiMaster.updateOne(new Document(KEY_KPI_ID, "kpi133"), new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 10)));
