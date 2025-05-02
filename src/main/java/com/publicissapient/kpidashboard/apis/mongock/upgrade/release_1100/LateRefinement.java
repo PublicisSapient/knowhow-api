@@ -249,7 +249,6 @@ public class LateRefinement {
 								new Document(KEY_FIELD_NAME, "jiraRefinementCriteriaKPI188"),
 								new Document(KEY_FIELD_NAME, "jiraIssueTypeNamesKPI188"))));
 
-		// Remove KPI 187 and 188 from master
 		mongoTemplate.getCollection(KPI_MASTER).deleteMany(new Document("$or",
 				Arrays.asList(new Document(KEY_KPI_ID, "kpi187"), new Document(KEY_KPI_ID, KPI188))));
 
