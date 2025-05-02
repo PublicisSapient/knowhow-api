@@ -483,7 +483,7 @@ public class KpiDataProviderTest {
 		Map<String, Object> result = kpiDataProvider.fetchDRRData(kpiRequest, basicProjectConfigId,
 				sprintList);
 		assertThat("Rejects Defects value :", ((List<JiraIssue>) result.get("rejectedBugKey")).size(),
-				equalTo(0));
+				equalTo(12));
 	}
 
 	@Test

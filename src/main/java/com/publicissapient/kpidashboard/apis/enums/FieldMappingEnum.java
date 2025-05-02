@@ -72,7 +72,7 @@ public enum FieldMappingEnum {
 					"includeRCAForKPI34", "defectPriorityKPI34", "jiraDefectRejectionStatusKPI34")),
 
 	KPI37("Defect Rejection Rate", KPISource.JIRA.name(), Arrays.asList("resolutionTypeForRejectionKPI37",
-			"jiraDefectRejectionStatusKPI37", "jiraDodKPI37", "thresholdValueKPI37")),
+			"jiraDefectRejectionStatusKPI37", "jiraDodKPI37", "thresholdValueKPI37", "defectRejectionLabelsKPI37")),
 
 	KPI28("Defect Count By Priority (Scrum)", KPISource.JIRA.name(), Arrays.asList("jiraDefectCountlIssueTypeKPI28",
 			"resolutionTypeForRejectionKPI28", "jiraDefectRejectionStatusKPI28", "thresholdValueKPI28")),
