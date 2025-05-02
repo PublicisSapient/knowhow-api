@@ -127,7 +127,11 @@ public class UnitCoverageServiceimpl extends SonarKPIService<Double, List<Object
 
 	@Override
 	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
+		if(CollectionUtils.isNotEmpty(valueList)){
+			return calculateKpiValueForDouble(valueList, kpiId);
+		}
+		return Double.NaN;
+
 	}
 
 	@Override
@@ -201,19 +205,22 @@ public class UnitCoverageServiceimpl extends SonarKPIService<Double, List<Object
 			Map<String, Object> metricMap = sonarDetails.getMetrics().stream()
 					.filter(metricValue -> metricValue.getMetricValue() != null)
 					.collect(Collectors.toMap(SonarMetric::getMetricName, SonarMetric::getMetricValue));
-			Double coverage = metricMap.get(TEST_UNIT_COVERAGE) == null
-					? 0d
-					: Double.parseDouble(metricMap.get(TEST_UNIT_COVERAGE).toString());
+			Double coverage;
+					if(metricMap.get(TEST_UNIT_COVERAGE) == null){
+						coverage=Double.NaN;
+						coverageList.add(Constant.NOT_AVAILABLE);
+					}
+					else{
+						coverage= Double.parseDouble(metricMap.get(TEST_UNIT_COVERAGE).toString());
+						dateWiseCoverageList.add(coverage);
+						coverageList.add(metricMap.get(TEST_UNIT_COVERAGE).toString());
+					}
 			String projectDisplayName = projectNodePair.getRight();
 			String keyName = prepareSonarKeyName(projectDisplayName, sonarDetails.getName(), sonarDetails.getBranch());
 			DataCount dcObj = getDataCountObject(coverage, projectDisplayName, date, keyName);
 			projectWiseDataMap.computeIfAbsent(keyName, k -> new ArrayList<>()).add(dcObj);
 			projectList.add(keyName);
 			versionDate.add(date);
-			dateWiseCoverageList.add(coverage);
-			coverageList.add(metricMap.get(TEST_UNIT_COVERAGE) == null
-					? Constant.NOT_AVAILABLE
-					: metricMap.get(TEST_UNIT_COVERAGE).toString());
 		});
 		DataCount dcObj = getDataCountObject(calculateKpiValue(dateWiseCoverageList, KPICode.UNIT_TEST_COVERAGE.getKpiId()),
 				projectNodePair.getRight(), date, AVERAGE_COVERAGE);
@@ -226,10 +233,10 @@ public class UnitCoverageServiceimpl extends SonarKPIService<Double, List<Object
 		Map<String, SonarHistory> historyMap = new HashMap<>();
 		SonarHistory refHistory = sonarHistoryList.get(0);
 
-		SonarMetric sonarMetric = new SonarMetric();
+		/*SonarMetric sonarMetric = new SonarMetric();
 		sonarMetric.setMetricName(TEST_UNIT_COVERAGE);
 		sonarMetric.setMetricValue("0");
-		metricsList.add(sonarMetric);
+		metricsList.add(sonarMetric);*/
 
 		List<String> uniqueKeys = sonarHistoryList.stream().map(SonarHistory::getKey).distinct().toList();
 		uniqueKeys.forEach(keys -> {
@@ -243,15 +250,21 @@ public class UnitCoverageServiceimpl extends SonarKPIService<Double, List<Object
 
 	private DataCount getDataCountObject(Double value, String projectName, String date, String keyName) {
 		DataCount dataCount = new DataCount();
-		dataCount.setData(String.valueOf(value));
+		if(!Double.isNaN(value)) {
+			dataCount.setData(String.valueOf(value));
+			dataCount.setValue(value);
+		}else {
+			dataCount.setData(CommonConstant.NO_DATA);
+			dataCount.setValue(CommonConstant.NO_DATA);
+		}
+		Map<String, Object> hoverValueMap = new HashMap<>();
+		hoverValueMap.put(keyName, value);
+		dataCount.setHoverValue(hoverValueMap);
 		dataCount.setSSprintID(date);
 		dataCount.setSSprintName(date);
 		dataCount.setSProjectName(projectName);
 		dataCount.setDate(date);
-		Map<String, Object> hoverValueMap = new HashMap<>();
-		hoverValueMap.put(keyName, value);
-		dataCount.setHoverValue(hoverValueMap);
-		dataCount.setValue(value);
+
 		return dataCount;
 	}
 

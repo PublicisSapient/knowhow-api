@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -156,8 +157,8 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
 
 		log.info("[TEST-EXECUTION-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}");
-		Collections.sort(sprintLeafNodeList,
-				(Node o1, Node o2) -> o1.getSprintFilter().getStartDate().compareTo(o2.getSprintFilter().getStartDate()));
+		Collections.sort(sprintLeafNodeList, (Node o1, Node o2) -> o1.getSprintFilter().getStartDate()
+				.compareTo(o2.getSprintFilter().getStartDate()));
 		String startDate = sprintLeafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
 
@@ -175,11 +176,12 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 				setSprintNodeValue(sprintWiseDataMap.get(sprintId), resultList, trendLineName, node, excelData);
 			} else {
 				DataCount dataCount = new DataCount();
+				dataCount.setData(CommonConstant.NO_DATA);
+				dataCount.setValue(CommonConstant.NO_DATA);
+				dataCount.setLineValue(CommonConstant.NO_DATA);
+				dataCount.setHoverValue(new HashMap<>());
 				dataCount.setSubFilter(Constant.EMPTY_STRING);
 				dataCount.setSProjectName(trendLineName);
-				dataCount.setValue(0.0);
-				dataCount.setLineValue(0.0);
-				dataCount.setHoverValue(new HashMap<>());
 				dataCount.setSSprintID(node.getSprintFilter().getId());
 				dataCount.setSSprintName(node.getSprintFilter().getName());
 				resultList.add(dataCount);
@@ -251,7 +253,7 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 	public Map<String, TestExecution> createSprintWiseTestExecutionMap(List<TestExecution> resultList) {
 		return resultList.stream()
 				.filter(testExecution -> testExecution.getExecutedTestCase() != null &&
-						testExecution.getTotalTestCases() != null && testExecution.getPassedTestCase() != null)
+						testExecution.getTotalTestCases() != null && testExecution.getPassedTestCase() != null && testExecution.getTotalTestCases()>0)
 				.collect(Collectors.toMap(TestExecution::getSprintId, Function.identity()));
 	}
 

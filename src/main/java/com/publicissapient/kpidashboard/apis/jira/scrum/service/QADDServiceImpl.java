@@ -214,7 +214,7 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 							customApiConfig, node);
 				}
 			} else {
-				qaddForCurrentLeaf = 0.0d;
+				qaddForCurrentLeaf = Double.NaN;
 			}
 			// aggregated value to exclude the sprint with sum of story points
 			// is zero
@@ -224,15 +224,7 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 			log.debug("[QADD-SPRINT-WISE][{}]. QADD for sprint {}  is {}", requestTrackerId,
 					node.getSprintFilter().getName(), qaddForCurrentLeaf);
 
-			DataCount dataCount = new DataCount();
-			dataCount.setData(String.valueOf(Math.round(qaddForCurrentLeaf)));
-			dataCount.setSProjectName(trendLineName);
-			dataCount.setSSprintID(node.getSprintFilter().getId());
-			dataCount.setSSprintName(node.getSprintFilter().getName());
-			dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
-			dataCount.setSprintNames(new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
-			dataCount.setValue(qaddForCurrentLeaf);
-			dataCount.setHoverValue(sprintWiseHowerMap.get(currentNodeIdentifier));
+			DataCount dataCount = createDataCount(node, qaddForCurrentLeaf, sprintWiseHowerMap, currentNodeIdentifier, trendLineName);
 			mapTmp.get(node.getId()).setValue(new ArrayList<DataCount>(Arrays.asList(dataCount)));
 
 			trendValueList.add(dataCount);
@@ -241,6 +233,25 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(
 				KPIExcelColumn.DEFECT_DENSITY.getColumns(sprintLeafNodeList, cacheService, flterHelperService));
+	}
+
+	private static DataCount createDataCount(Node node, double qaddForCurrentLeaf, Map<Pair<String, String>, Map<String, Object>> sprintWiseHowerMap, Pair<String, String> currentNodeIdentifier, String trendLineName) {
+		DataCount dataCount = new DataCount();
+		if(!Double.isNaN(qaddForCurrentLeaf)){
+			dataCount.setData(String.valueOf(Math.round(qaddForCurrentLeaf)));
+			dataCount.setValue(qaddForCurrentLeaf);
+		}
+		else{
+			dataCount.setData(CommonConstant.NO_DATA);
+			dataCount.setValue(CommonConstant.NO_DATA);
+		}
+		dataCount.setHoverValue(sprintWiseHowerMap.get(currentNodeIdentifier));
+		dataCount.setSProjectName(trendLineName);
+		dataCount.setSSprintID(node.getSprintFilter().getId());
+		dataCount.setSSprintName(node.getSprintFilter().getName());
+		dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
+		dataCount.setSprintNames(new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
+		return dataCount;
 	}
 
 	/**
@@ -378,12 +389,11 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 			} else if (CollectionUtils.isNotEmpty(additionalFilterDefectList)) {
 				qaddForCurrentLeaf = (additionalFilterDefectList.size() / storyPointsTotal) * 100;
 			}
-		} else {
-			qaddForCurrentLeaf = -1000.0;
+			qaddList.add(qaddForCurrentLeaf);
+			sprintWiseDefectList.addAll(additionalFilterDefectList);
+			totalStoryIdList.addAll(storyIdList == null ? Collections.emptyList() : storyIdList);
 		}
-		qaddList.add(qaddForCurrentLeaf);
-		sprintWiseDefectList.addAll(additionalFilterDefectList);
-		totalStoryIdList.addAll(storyIdList == null ? Collections.emptyList() : storyIdList);
+
 	}
 
 	private void populateList(Set<JiraIssue> additionalFilterDefectList, HashMap<String, JiraIssue> mapOfStories) {
@@ -457,7 +467,11 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 
 	@Override
 	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
+		if(CollectionUtils.isNotEmpty(valueList)){
+			return calculateKpiValueForDouble(valueList, kpiId);
+		}
+		return Double.NaN;
+
 	}
 
 	@Override
