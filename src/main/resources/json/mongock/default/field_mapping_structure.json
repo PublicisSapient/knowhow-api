@@ -1621,7 +1621,7 @@
     "tooltip": {
       "definition": "Resolution types for defects that can be considered for Defect Rejection Rate calculation"
     },
-    "mandatory": true
+    "mandatory": false
   },
   {
     "fieldName": "jiraDefectRejectionStatusKPI37",
@@ -4346,5 +4346,19 @@
     "tooltip": {
       "definition": "Enabled State Backlog KPIs will populate including the active sprint data."
     }
+  },
+  {
+    "fieldName" : "defectRejectionLabelsKPI37",
+    "fieldLabel" : "Labels to filter issues in consideration",
+    "fieldType" : "chips",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Specify labels to identify and filter issues considered as rejected defects."
+    },
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 2,
+    "mandatory" : false,
+    "nodeSpecific" : false
   }
 ]
