@@ -36,6 +36,7 @@ public class UpdateRefinementRollback {
 	private static final String KPI187 = "kpi187";
 
 	// Document keys
+	private static final String KEY_DEFAULT_ORDER = "defaultOrder";
 	private static final String KEY_KPI_ID = "kpiId";
 	private static final String KEY_COLUMN_NAME = "columnName";
 	private static final String KEY_ORDER = "order";
@@ -49,7 +50,6 @@ public class UpdateRefinementRollback {
 	private static final String KEY_KPI_HEIGHT = "kpiHeight";
 	private static final String KEY_BASIC_PROJECT_CONFIG_ID = "basicProjectConfigId";
 	private static final String KEY_KPI_COLUMN_DETAILS = "kpiColumnDetails";
-	private static final String KEY_NEW_LINK = "kpiInfo.details.0.kpiLinkDetail.link";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -68,8 +68,7 @@ public class UpdateRefinementRollback {
 
 		Document filter1 = new Document(KEY_KPI_ID, KPI188);
 		Document rollbackFields = new Document().append(KEY_KPI_WIDTH, null)
-				.append(KEY_KPI_HEIGHT, null).append(KEY_IS_RAW_DATA, null).append(KEY_CHART_TYPE, null)
-				.append(KEY_NEW_LINK,"https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinement+Next+Sprint");
+				.append(KEY_KPI_HEIGHT, null).append(KEY_IS_RAW_DATA, null).append(KEY_CHART_TYPE, null);
 
 		Document rollbackUpdate188 = new Document("$set", rollbackFields);
 		kpiMaster.updateOne(filter1, rollbackUpdate188);
@@ -77,12 +76,13 @@ public class UpdateRefinementRollback {
 		Document filter2 = new Document(KEY_KPI_ID, KPI187);
 		Document rollbackfields = new Document().append(KEY_KPI_WIDTH, 100)
 				.append(KEY_KPI_HEIGHT, null).append(KEY_IS_RAW_DATA, null).append(KEY_CHART_TYPE, null)
-				.append(KEY_NEW_LINK,
-						"https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinement+Current+Sprint")
-				.append(KEY_KPI_SUB_CATEGORY,"Iteration Progress");
+				.append(KEY_KPI_SUB_CATEGORY,"Iteration Progress")
+				.append(KEY_DEFAULT_ORDER, 10);
 
 		Document rollbackUpdate187 = new Document("$set", rollbackfields);
 		kpiMaster.updateOne(filter2, rollbackUpdate187);
+
+		kpiMaster.updateOne(new Document(KEY_KPI_ID, "kpi133"), new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 11)));
 
 		mongoTemplate.getCollection(KPI_EXCEL_COLUMN_CONFIG).deleteMany(new Document(KEY_KPI_ID, KPI187));
 	}
@@ -91,8 +91,7 @@ public class UpdateRefinementRollback {
 		Document filter = new Document(KEY_KPI_ID, KPI188);
 
 		Document updateFields = new Document().append(KEY_KPI_WIDTH, 33).append(KEY_KPI_HEIGHT, 50)
-				.append(KEY_IS_RAW_DATA, false).append(KEY_CHART_TYPE, "tabular-with-donut-chart")
-				.append(KEY_NEW_LINK, "abc");
+				.append(KEY_IS_RAW_DATA, false).append(KEY_CHART_TYPE, "tabular-with-donut-chart");
 		Document update = new Document("$set", updateFields);
 		kpiMaster.updateOne(filter, update);
 	}
@@ -100,10 +99,10 @@ public class UpdateRefinementRollback {
 	private static void updateKpi187(MongoCollection<Document> kpiMaster) {
 		Document filter = new Document(KEY_KPI_ID, KPI187);
 		Document updateFields = new Document().append(KEY_KPI_SUB_CATEGORY, "Iteration Review")
-				.append(KEY_KPI_WIDTH, 66).append(KEY_KPI_HEIGHT, 100).append(KEY_IS_RAW_DATA, false)
-				.append(KEY_NEW_LINK, "abc");
+				.append(KEY_KPI_WIDTH, 66).append(KEY_KPI_HEIGHT, 100).append(KEY_IS_RAW_DATA, false).append(KEY_DEFAULT_ORDER,11);
 		Document update = new Document("$set", updateFields);
 		kpiMaster.updateOne(filter, update);
+		kpiMaster.updateOne(new Document(KEY_KPI_ID, "kpi133"), new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 10)));
 	}
 
 	private static void updateSprintGoalKPIID(MongoCollection<Document> mongoTemplate) {
@@ -140,7 +139,6 @@ public class UpdateRefinementRollback {
 								.append(KEY_IS_DEFAULT, true) });
 
 		mongoTemplate.insert(kpiColumnConfig, KPI_EXCEL_COLUMN_CONFIG);
-		log.info("Added excel column configuration for KPI 187 (Late Refinement - Future Sprint)");
 	}
 
 	@RollbackExecution

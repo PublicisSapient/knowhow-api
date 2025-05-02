@@ -2541,7 +2541,7 @@
     "maxValue" : "" ,
     "kpiUnit" : "" ,
     "isDeleted" : "False" ,
-    "defaultOrder" : 11 ,
+    "defaultOrder" : 10 ,
     "kpiCategory" : "Iteration" ,
     "kpiSubCategory" : "Iteration Review" ,
     "kpiSource": "Jira",
@@ -4888,7 +4888,7 @@
     "kpiName": "Late Refinement (Current Sprint)",
     "kpiUnit": "Count",
     "isDeleted": "False",
-    "defaultOrder": 10,
+    "defaultOrder": 11,
     "kpiCategory": "Iteration",
     "kpiSubCategory": "Iteration Review",
     "kpiSource": "Jira",
@@ -4904,7 +4904,7 @@
           "type": "link",
           "kpiLinkDetail": {
             "text": "Detailed Information at",
-            "link": "abc"
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinemnt+Current+Sprint"
           }
         }
       ]
@@ -4940,7 +4940,7 @@
           "type": "link",
           "kpiLinkDetail": {
             "text": "Detailed Information at",
-            "link": "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/159154188/Late+Refinement"
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinemnt+Future+Sprint"
           }
         }
       ]
