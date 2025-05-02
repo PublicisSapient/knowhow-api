@@ -4346,5 +4346,14 @@
     "tooltip": {
       "definition": "Enabled State Backlog KPIs will populate including the active sprint data."
     }
+  },
+  {
+    "fieldName": "jiraLabelsKPI120",
+    "fieldLabel": "Labels for Scope Change Identification",
+    "fieldType": "chips",
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "Specify labels to detect and track scope changes effectively"
+    }
   }
 ]
