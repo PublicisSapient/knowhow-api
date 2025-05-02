@@ -38,6 +38,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import java.util.concurrent.TimeUnit;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -347,10 +349,12 @@ public class BuildFrequencyServiceImpl extends JenkinsKPIService<Long, List<Obje
 				}
 			}
 
-			Integer valueForCurrentLeaf = durationList.size();
-			if (null != valueForCurrentLeaf) {
-				weekRange.put(date, valueForCurrentLeaf);
+			Integer valueForCurrentLeaf = null;
+			if(CollectionUtils.isNotEmpty(durationList)){
+				valueForCurrentLeaf = durationList.size();
+
 			}
+			weekRange.put(date, valueForCurrentLeaf);
 			weekRange.putIfAbsent(date, null);
 			endDateTime = endDateTime.minusWeeks(1);
 		}
@@ -420,11 +424,17 @@ public class BuildFrequencyServiceImpl extends JenkinsKPIService<Long, List<Obje
 	 */
 	private DataCount createDataCount(String trendLineName, Integer valueForCurrentLeaf, String date) {
 		DataCount dataCount = new DataCount();
-		dataCount.setData(String.valueOf(valueForCurrentLeaf == null ? 0L : valueForCurrentLeaf));
+		if (valueForCurrentLeaf != null) {
+			dataCount.setData(String.valueOf(valueForCurrentLeaf));
+			dataCount.setValue(valueForCurrentLeaf);
+		} else {
+			dataCount.setData(CommonConstant.NO_DATA);
+			dataCount.setValue(CommonConstant.NO_DATA);
+			dataCount.setPriority(null);
+		}
 		dataCount.setSProjectName(trendLineName);
 		dataCount.setDate(date);
 		dataCount.setHoverValue(new HashMap<>());
-		dataCount.setValue(valueForCurrentLeaf == null ? 0L : valueForCurrentLeaf);
 		return dataCount;
 	}
 
