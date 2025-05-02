@@ -266,6 +266,10 @@ public enum FieldMappingEnum {
 																																							Collections.singletonList(
 																																									"thresholdValueKPI181")),
 
+    KPI187("Late Refinement", KPISource.JIRA.name(), Arrays.asList( "jiraIssueTypeNamesKPI187", "jiraStatusKPI187")),
+    KPI188("Next Sprint Late Refinement", KPISource.JIRA.name(), Arrays.asList("jiraRefinementCriteriaKPI188", "jiraRefinementByCustomFieldKPI188", "jiraRefinementMinLengthKPI188",
+            "jiraRefinementKeywordsKPI188", "jiraIssueTypeNamesKPI188")),
+
 	/** Kanban fieldMapping Enum starts * */
 	KPI48("Net Open Ticket Count By Status", KPISource.JIRAKANBAN.name(),
 			Arrays.asList("jiraLiveStatusKPI48", "ticketCountIssueTypeKPI48", "jiraTicketClosedStatusKPI48",
