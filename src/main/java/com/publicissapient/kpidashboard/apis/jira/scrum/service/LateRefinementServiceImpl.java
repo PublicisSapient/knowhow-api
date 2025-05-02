@@ -110,86 +110,93 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, final String startDate, final String endDate,
 			final KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
-		if (null != leafNode) {
-			log.info("Late Refinement -> Requested sprint : {}", leafNode.getName());
-			SprintDetails sprintDetails = getSprintDetailsFromBaseClass();
-			if (null != sprintDetails) {
-				FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
-				List<JiraIssueCustomHistory> totalHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
-				List<JiraIssue> totalJiraIssueList = getJiraIssuesFromBaseClass();
+		if (leafNode == null)
+			return resultListMap;
 
-				// filter by typeName and DOR statuses as these both are mandatory fields
-				if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI187())
-						&& CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusKPI187())) {
-					Set<String> typeName = fieldMapping.getJiraIssueTypeNamesKPI187().stream()
-							.flatMap(name -> "Defect".equalsIgnoreCase(name)
-									? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
-									: Stream.of(name.trim().toLowerCase()))
-							.collect(Collectors.toSet());
-					totalJiraIssueList = totalJiraIssueList.stream()
-							.filter(jiraIssue -> typeName.contains(jiraIssue.getTypeName().trim().toLowerCase()))
-							.toList();
-					Set<String> jiraIssueNumber = totalJiraIssueList.stream().map(JiraIssue::getNumber)
-							.collect(Collectors.toSet());
-					totalHistoryList = totalHistoryList.stream()
-							.filter(history -> jiraIssueNumber.contains(history.getStoryID())).toList();
+		log.info("Late Refinement -> Requested sprint : {}", leafNode.getName());
 
-					// there is no need to modify sprintdetails, as there is no check for the
-					// completion status in the kpi
-					List<String> allIssues = new ArrayList<>();
-					List<String> notCompleted = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-							CommonConstant.NOT_COMPLETED_ISSUES);
-					List<String> completed = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-							CommonConstant.COMPLETED_ISSUES);
-					allIssues.addAll(notCompleted);
-					allIssues.addAll(completed);
-					allIssues.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-							CommonConstant.ADDED_ISSUES));
-					allIssues.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-							CommonConstant.PUNTED_ISSUES));
+		SprintDetails sprintDetails = getSprintDetailsFromBaseClass();
+		if (sprintDetails == null)
+			return resultListMap;
 
-					if (CollectionUtils.isNotEmpty(allIssues)) {
-						Set<SprintIssue> sprintIssues = new HashSet<>();
-						sprintIssues.addAll(checkNullList(sprintDetails.getTotalIssues()));
-						sprintIssues.addAll(checkNullList(sprintDetails.getPuntedIssues()));
-						Set<JiraIssue> totalIssueList = KpiDataHelper
-								.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(sprintDetails, sprintIssues,
-										IterationKpiHelper.getFilteredJiraIssue(allIssues, totalJiraIssueList));
-						List<JiraIssueCustomHistory> allIssuesHistory = IterationKpiHelper
-								.getFilteredJiraIssueHistory(allIssues, totalHistoryList);
-						Map<String, JiraIssueCustomHistory> historyMap = new HashMap<>();
-						Map<LocalDate, List<JiraIssue>> fullSprintIssues = new HashMap<>();
-						Map<LocalDate, List<JiraIssue>> addedIssues = new HashMap<>();
-						Map<LocalDate, List<JiraIssue>> removedIssues = new HashMap<>();
-						Map<LocalDate, List<JiraIssue>> lateRefined = createLateRefinedMap(sprintDetails);
-						allIssuesHistory.forEach(issueHistory -> {
-							historyMap.put(issueHistory.getStoryID(), issueHistory);
-							if (CollectionUtils.isNotEmpty(issueHistory.getSprintUpdationLog())) {
-								List<JiraHistoryChangeLog> sprintUpdationLog = issueHistory.getSprintUpdationLog();
-								List<JiraHistoryChangeLog> statusUpdationLog = issueHistory.getStatusUpdationLog();
-								Collections.sort(sprintUpdationLog, Comparator.comparing(getGetUpdatedOn()));
-								Collections.sort(statusUpdationLog,
-										Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
-								createAddedandRemovedIssueDateWiseMap(sprintDetails, totalIssueList, addedIssues,
-										removedIssues, fullSprintIssues, issueHistory, sprintUpdationLog);
-								createDateWiseRefinementMap(totalIssueList, issueHistory, statusUpdationLog,
-										fieldMapping, lateRefined, sprintDetails);
-							}
-						});
+		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
+				.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
-						resultListMap.put(FULL_SPRINT_ISSUES, fullSprintIssues);
-						resultListMap.put(CommonConstant.PUNTED_ISSUES, removedIssues);
-						resultListMap.put(CommonConstant.ADDED_ISSUES, addedIssues);
-						resultListMap.put(SPRINT, sprintDetails);
-						resultListMap.put(ISSUES, totalIssueList);
-						resultListMap.put(LATE_REFINED, lateRefined);
+		List<JiraIssueCustomHistory> totalHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
+		List<JiraIssue> totalJiraIssueList = getJiraIssuesFromBaseClass();
+
+		// filter by typeName and DOR statuses as these both are mandatory fields
+		if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI187())
+				&& CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusKPI187())) {
+			Set<String> typeName = getTypeNames(fieldMapping);
+			totalJiraIssueList = totalJiraIssueList.stream()
+					.filter(jiraIssue -> typeName.contains(jiraIssue.getTypeName().trim().toLowerCase())).toList();
+			Set<String> jiraIssueNumber = totalJiraIssueList.stream().map(JiraIssue::getNumber)
+					.collect(Collectors.toSet());
+			totalHistoryList = totalHistoryList.stream()
+					.filter(history -> jiraIssueNumber.contains(history.getStoryID())).toList();
+
+			// there is no need to modify sprintdetails, as there is no check for the
+			// completion status in the kpi
+			List<String> allIssues = new ArrayList<>();
+			List<String> notCompleted = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
+					CommonConstant.NOT_COMPLETED_ISSUES);
+			List<String> completed = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
+					CommonConstant.COMPLETED_ISSUES);
+			allIssues.addAll(notCompleted);
+			allIssues.addAll(completed);
+			allIssues.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
+					CommonConstant.ADDED_ISSUES));
+			allIssues.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
+					CommonConstant.PUNTED_ISSUES));
+
+			if (CollectionUtils.isNotEmpty(allIssues)) {
+				Set<SprintIssue> sprintIssues = new HashSet<>();
+				sprintIssues.addAll(checkNullList(sprintDetails.getTotalIssues()));
+				sprintIssues.addAll(checkNullList(sprintDetails.getPuntedIssues()));
+				Set<JiraIssue> totalIssueList = KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
+						sprintDetails, sprintIssues,
+						IterationKpiHelper.getFilteredJiraIssue(allIssues, totalJiraIssueList));
+				List<JiraIssueCustomHistory> allIssuesHistory = IterationKpiHelper
+						.getFilteredJiraIssueHistory(allIssues, totalHistoryList);
+				Map<String, JiraIssueCustomHistory> historyMap = new HashMap<>();
+				Map<LocalDate, List<JiraIssue>> fullSprintIssues = new HashMap<>();
+				Map<LocalDate, List<JiraIssue>> addedIssues = new HashMap<>();
+				Map<LocalDate, List<JiraIssue>> removedIssues = new HashMap<>();
+				Map<LocalDate, List<JiraIssue>> lateRefined = createLateRefinedMap(sprintDetails);
+				allIssuesHistory.forEach(issueHistory -> {
+					historyMap.put(issueHistory.getStoryID(), issueHistory);
+					if (CollectionUtils.isNotEmpty(issueHistory.getSprintUpdationLog())) {
+						List<JiraHistoryChangeLog> sprintUpdationLog = issueHistory.getSprintUpdationLog();
+						List<JiraHistoryChangeLog> statusUpdationLog = issueHistory.getStatusUpdationLog();
+						Collections.sort(sprintUpdationLog, Comparator.comparing(getGetUpdatedOn()));
+						Collections.sort(statusUpdationLog, Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
+						createAddedandRemovedIssueDateWiseMap(sprintDetails, totalIssueList, addedIssues, removedIssues,
+								fullSprintIssues, issueHistory, sprintUpdationLog);
+						createDateWiseRefinementMap(totalIssueList, issueHistory, statusUpdationLog, fieldMapping,
+								lateRefined, sprintDetails);
 					}
-				}
+				});
+
+				resultListMap.put(FULL_SPRINT_ISSUES, fullSprintIssues);
+				resultListMap.put(CommonConstant.PUNTED_ISSUES, removedIssues);
+				resultListMap.put(CommonConstant.ADDED_ISSUES, addedIssues);
+				resultListMap.put(SPRINT, sprintDetails);
+				resultListMap.put(ISSUES, totalIssueList);
+				resultListMap.put(LATE_REFINED, lateRefined);
 			}
 		}
+
 		return resultListMap;
+	}
+
+	private static Set<String> getTypeNames(FieldMapping fieldMapping) {
+		return fieldMapping.getJiraIssueTypeNamesKPI187().stream()
+				.flatMap(name -> "Defect".equalsIgnoreCase(name)
+						? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
+						: Stream.of(name.trim().toLowerCase()))
+				.collect(Collectors.toSet());
 	}
 
 	private static Function<JiraHistoryChangeLog, LocalDateTime> getGetUpdatedOn() {
@@ -394,8 +401,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 				List<JiraIssue> unRefinedData = calculateLateRefinementPercenatge(overall, lateRefinedDateWiseMap, date,
 						dataCountList, sprintName);
 				Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(overall);
-				createExcelData(unRefinedData, overall, date.toString(), sprintName, excelDataList, fieldMapping,
-						issueKpiModalObject);
+				createExcelData(unRefinedData, overall, date.toString(), fieldMapping, issueKpiModalObject);
 				issueKpiModalValueList.addAll(issueKpiModalObject.values());
 				currentSprint.setFilter(date.toString());
 				currentSprint.setValue(dataCountList);
@@ -433,9 +439,8 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		return commonIssues;
 	}
 
-	private void createExcelData(List<JiraIssue> commonIssues, List<JiraIssue> overall, String date, String sprintName,
-			List<KPIExcelData> excelData, FieldMapping fieldMapping,
-			Map<String, IssueKpiModalValue> issueKpiModalObject) {
+	private void createExcelData(List<JiraIssue> commonIssues, List<JiraIssue> overall, String date,
+			FieldMapping fieldMapping, Map<String, IssueKpiModalValue> issueKpiModalObject) {
 
 		overall.forEach(issue -> {
 			Map<String, JiraIssue> unRefinedMap = commonIssues.stream()

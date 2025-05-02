@@ -91,7 +91,6 @@ public class LateRefinement {
 	private static final String KEY_TYPE = "type";
 	private static final String KEY_KPI_LINK_DETAIL = "kpiLinkDetail";
 	private static final String KEY_LINK = "link";
-	private static final String KEY_XAXIS_LABEL = "xAxisLabel";
 	private static final String KEY_YAXIS_LABEL = "yAxisLabel";
 	private static final String KEY_IS_POSITIVE_TREND = "isPositiveTrend";
 	private static final String KEY_SHOW_TREND = "showTrend";
