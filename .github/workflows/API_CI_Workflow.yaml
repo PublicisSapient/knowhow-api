@@ -74,8 +74,8 @@ jobs:
 
       - name: Check SonarQube Quality Gate - CustomAPI
         run: |
-          chmod +x SonarDelay.sh
-          ./SonarDelay.sh ./target/sonar/report-task.txt
+          chmod +x SonarQG.sh
+          ./SonarQG.sh ./target/sonar/report-task.txt
 
 
   # ✅ Final Job to Ensure Completion
