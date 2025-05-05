@@ -496,4 +496,8 @@ public class KPIExcelData {
 	@JsonProperty("MR Comments")
 	private List<String> mrComments;
 
+    @JsonProperty("Un-Refined")
+    private String unRefined;
+
+
 }
