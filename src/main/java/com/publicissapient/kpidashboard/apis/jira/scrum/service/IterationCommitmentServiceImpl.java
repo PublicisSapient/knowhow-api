@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -344,7 +345,7 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		List<KpiDataCategory> categoryGroup = new ArrayList<>();
 		categoryGroup.add(createKpiDataCategory(INITIAL_COMMITMENT, "+", 1));
 		categoryGroup.add(createKpiDataCategory(SCOPE_ADDED, "+", 2));
-		categoryGroup.add(createKpiDataCategory(SCOPE_CHANGE, "+", 3));//todo::check it
+		categoryGroup.add(createKpiDataCategory(SCOPE_CHANGE, Constant.NOT_AVAILABLE, 3));
 		categoryGroup.add(createKpiDataCategory(SCOPE_REMOVED, "-", -1));
 		categoryData.setCategoryGroup(categoryGroup);
 		return categoryData;
