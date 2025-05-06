@@ -30,6 +30,8 @@ import io.mongock.api.annotations.RollbackExecution;
 public class ItrCommitmentChangeUnit {
 
 	public static final String JIRA_LABELS_KPI_120 = "jiraLabelsKPI120";
+	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
+	public static final String FIELD_NAME = "fieldName";
 	private final MongoTemplate mongoTemplate;
 
 	public ItrCommitmentChangeUnit(MongoTemplate mongoTemplate) {
@@ -38,23 +40,23 @@ public class ItrCommitmentChangeUnit {
 
 	@Execution
 	public void execution() {
-		Document existingDocument = mongoTemplate.getCollection("field_mapping_structure")
-				.find(new Document("fieldName", JIRA_LABELS_KPI_120)).first();
+		Document existingDocument = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE)
+				.find(new Document(FIELD_NAME, JIRA_LABELS_KPI_120)).first();
 
 		if (existingDocument == null) {
-			Document document = new Document().append("fieldName", JIRA_LABELS_KPI_120)
+			Document document = new Document().append(FIELD_NAME, JIRA_LABELS_KPI_120)
 					.append("fieldLabel", "Labels for Scope Change Identification").append("fieldType", "chips")
 					.append("section", "WorkFlow Status Mapping").append("tooltip",
 							new Document("definition", "Specify labels to detect and track scope changes effectively"));
 
-			mongoTemplate.getCollection("field_mapping_structure").insertOne(document);
+			mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(document);
 		}
 
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection("field_mapping_structure").deleteOne(new Document("fieldName", JIRA_LABELS_KPI_120));
+		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteOne(new Document(FIELD_NAME, JIRA_LABELS_KPI_120));
 
 	}
 
