@@ -231,4 +231,11 @@ public class IssueKpiModalValue implements Serializable {
 	private Integer actualTime;
 	private Map<String, List<String>> category2;
 	private Map<String, Integer> categoryWiseDelay;
+
+	@JsonProperty("Date")
+	private String date;
+
+    @JsonProperty("Un-Refined")
+    private String unRefined;
+
 }

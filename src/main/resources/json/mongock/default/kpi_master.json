@@ -2541,7 +2541,7 @@
     "maxValue" : "" ,
     "kpiUnit" : "" ,
     "isDeleted" : "False" ,
-    "defaultOrder" : 11 ,
+    "defaultOrder" : 10 ,
     "kpiCategory" : "Iteration" ,
     "kpiSubCategory" : "Iteration Review" ,
     "kpiSource": "Jira",
@@ -4885,6 +4885,74 @@
   },
   {
     "kpiId": "kpi187",
+    "kpiName": "Late Refinement (Current Sprint)",
+    "kpiUnit": "Count",
+    "isDeleted": "False",
+    "defaultOrder": 11,
+    "kpiCategory": "Iteration",
+    "kpiSubCategory": "Iteration Review",
+    "kpiSource": "Jira",
+    "combinedKpiSource": "Jira/Azure",
+    "groupId": 20,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": null,
+    "kpiInfo": {
+      "definition": "Measures the number of work items that are not adequately refined in time for development planning. This includes: Work items in the current sprint that do not meet DoR (Definition of Ready).",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinemnt+Current+Sprint"
+          }
+        }
+      ]
+    },
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": true,
+    "showTrend": false,
+    "isAdditionalFilterSupport": false,
+    "kpiWidth": 66,
+    "boxType": "chart",
+    "calculateMaturity": false,
+    "isRawData": false,
+    "kpiHeight": 100
+  },
+  {
+    "kpiId": "kpi188",
+    "kpiName": "Late Refinement (Next Sprint)",
+    "maxValue": "",
+    "isDeleted": "False",
+    "defaultOrder": 12,
+    "kpiCategory": "Iteration",
+    "kpiSubCategory": "Iteration Review",
+    "kpiSource": "Jira",
+    "combinedKpiSource": "Jira/Azure",
+    "groupId": 19,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": null,
+    "kpiInfo": {
+      "definition": "Measures the number of work items that are slated for the next sprint but still lack necessary refinement details. Work items tagged to the next sprint that lack sufficient refinement (e.g., missing description, acceptance criteria, etc).",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinemnt+Future+Sprint"
+          }
+        }
+      ]
+    },
+    "showTrend": false,
+    "isAdditionalFilterSupport": false,
+    "kpiFilter": "multiSelectDropDown",
+    "boxType": "3_column",
+    "calculateMaturity": false
+  },
+  {
+    "kpiId": "kpi189",
     "kpiName": "Sprint Goals",
     "isDeleted": "False",
     "defaultOrder": 31,
