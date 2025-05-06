@@ -43,13 +43,18 @@ public class ItrCommitmentChangeUnit {
 
 	@RollbackExecution
 	public void rollback() {
-		Document document = new Document().append("fieldName", "jiraLabelsKPI120")
-				.append("fieldLabel", "Labels for Scope Change Identification").append("fieldType", "chips")
-				.append("section", "WorkFlow Status Mapping").append("tooltip",
-						new Document("definition", "Specify labels to detect and track scope changes effectively"));
+		Document existingDocument = mongoTemplate.getCollection("field_mapping_structure")
+				.find(new Document("fieldName", "jiraLabelsKPI120")).first();
 
-		mongoTemplate.getCollection("field_mapping_structure").insertOne(document);
+		if (existingDocument == null) {
+			Document document = new Document().append("fieldName", "jiraLabelsKPI120")
+					.append("fieldLabel", "Labels for Scope Change Identification").append("fieldType", "chips")
+					.append("section", "WorkFlow Status Mapping").append("tooltip",
+							new Document("definition", "Specify labels to detect and track scope changes effectively"));
 
+			mongoTemplate.getCollection("field_mapping_structure").insertOne(document);
+
+		}
 	}
 
 }
