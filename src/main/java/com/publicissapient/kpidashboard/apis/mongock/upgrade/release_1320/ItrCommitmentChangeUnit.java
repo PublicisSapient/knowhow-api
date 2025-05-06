@@ -29,6 +29,7 @@ import io.mongock.api.annotations.RollbackExecution;
 @ChangeUnit(id = "itr_commit_enhc", order = "13202", author = "shunaray", systemVersion = "13.2.0")
 public class ItrCommitmentChangeUnit {
 
+	public static final String JIRA_LABELS_KPI_120 = "jiraLabelsKPI120";
 	private final MongoTemplate mongoTemplate;
 
 	public ItrCommitmentChangeUnit(MongoTemplate mongoTemplate) {
@@ -38,10 +39,10 @@ public class ItrCommitmentChangeUnit {
 	@Execution
 	public void execution() {
 		Document existingDocument = mongoTemplate.getCollection("field_mapping_structure")
-				.find(new Document("fieldName", "jiraLabelsKPI120")).first();
+				.find(new Document("fieldName", JIRA_LABELS_KPI_120)).first();
 
 		if (existingDocument == null) {
-			Document document = new Document().append("fieldName", "jiraLabelsKPI120")
+			Document document = new Document().append("fieldName", JIRA_LABELS_KPI_120)
 					.append("fieldLabel", "Labels for Scope Change Identification").append("fieldType", "chips")
 					.append("section", "WorkFlow Status Mapping").append("tooltip",
 							new Document("definition", "Specify labels to detect and track scope changes effectively"));
@@ -53,7 +54,7 @@ public class ItrCommitmentChangeUnit {
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection("field_mapping_structure").deleteOne(new Document("fieldName", "jiraLabelsKPI120"));
+		mongoTemplate.getCollection("field_mapping_structure").deleteOne(new Document("fieldName", JIRA_LABELS_KPI_120));
 
 	}
 
