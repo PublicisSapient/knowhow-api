@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +53,9 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 	private static final String PUNTED_ISSUES = "puntedIssues";
 	private static final String ADDED_ISSUES = "addedIssues";
 	private static final String EXCLUDE_ADDED_ISSUES = "excludeAddedIssues";
-	private static final String SCOPE_ADDED = "Scope added";
-	private static final String SCOPE_REMOVED = "Scope removed";
+	private static final String SCOPE_ADDED = "Sprint scope added";
+	private static final String SCOPE_REMOVED = "Sprint scope removed";
+	private static final String SCOPE_CHANGE = "Scope Change";
 	private static final String INITIAL_COMMITMENT = "Initial Commitment";
 	private static final String FILTER_TYPE = "Multi";
 	private static final String FILTER_BY_ISSUE_TYPE = "Filter by issue type";
@@ -151,6 +153,14 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		List<JiraIssue> puntedIssues = (List<JiraIssue>) resultMap.get(PUNTED_ISSUES);
 		List<JiraIssue> addedIssues = (List<JiraIssue>) resultMap.get(ADDED_ISSUES);
 		List<JiraIssue> initialIssues = (List<JiraIssue>) resultMap.get(EXCLUDE_ADDED_ISSUES);
+		List<JiraIssue> scopeChangeIssues = Stream.of(initialIssues, addedIssues, puntedIssues)
+				.filter(Objects::nonNull)
+				.flatMap(Collection::stream)
+				.filter(j -> Objects.nonNull(j.getLabels())
+						&& Objects.nonNull(fieldMapping.getJiraLabelsKPI120())
+						&& j.getLabels().stream().anyMatch(fieldMapping.getJiraLabelsKPI120()::contains))
+				.distinct()
+				.collect(Collectors.toList());
 		Set<IssueKpiModalValue> issueData = new HashSet<>();
 
 		if (CollectionUtils.isNotEmpty(initialIssues)) {
@@ -183,6 +193,17 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 				KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
 				IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
 				setCategoryAndDataValue(issue, data, fieldMapping, SCOPE_REMOVED);
+			});
+			issueData.addAll(new HashSet<>(issueKpiModalObject.values()));
+		}
+		if (CollectionUtils.isNotEmpty(scopeChangeIssues)) {
+			log.info("Iteration Commitment - Scope Change -> request id : {} jira Issues : {}", requestTrackerId,
+					scopeChangeIssues.size());
+			Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(scopeChangeIssues);
+			scopeChangeIssues.forEach(issue -> {
+				KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
+				IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
+				setCategoryAndDataValue(issue, data, fieldMapping, SCOPE_CHANGE);
 			});
 			issueData.addAll(new HashSet<>(issueKpiModalObject.values()));
 		}
@@ -324,6 +345,7 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		List<KpiDataCategory> categoryGroup = new ArrayList<>();
 		categoryGroup.add(createKpiDataCategory(INITIAL_COMMITMENT, "+", 1));
 		categoryGroup.add(createKpiDataCategory(SCOPE_ADDED, "+", 2));
+		categoryGroup.add(createKpiDataCategory(SCOPE_CHANGE, Constant.NOT_AVAILABLE, 3));
 		categoryGroup.add(createKpiDataCategory(SCOPE_REMOVED, "-", -1));
 		categoryData.setCategoryGroup(categoryGroup);
 		return categoryData;
