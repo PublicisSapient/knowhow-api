@@ -258,6 +258,16 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
+	/**
+	 * Updates the scope duration by calculating milestones
+	 *
+	 * @param data The `IssueKpiModalValue` object to update with the sorted scope duration.
+	 * @param jiraIssueCustomHistory The history of changes for a Jira issue.
+	 * @param sprintDetails The details of the sprint, including start and end dates.
+	 * @param fieldMapping The field mapping configuration for the project.
+	 * @param label The label indicating the type of scope change (e.g., "Scope Added", "Scope Removed").
+	 * @param overALlScopeDuration A map to store the overall scope duration for different labels.
+	 */
 	private void setScopeDuration(IssueKpiModalValue data, JiraIssueCustomHistory jiraIssueCustomHistory,
 			SprintDetails sprintDetails, FieldMapping fieldMapping, String label,
 			Map<String, Set<Integer>> overALlScopeDuration) {
@@ -309,6 +319,16 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
+	/**
+	 * Retrieves relevant Jira history change logs based on the specified label.
+	 * The logs are filtered according to the sprint name or label mapping, depending on the label type.
+	 *
+	 * @param history The `JiraIssueCustomHistory` object containing the history of changes for a Jira issue.
+	 * @param sprintDetails The `SprintDetails` object containing details of the sprint, including the sprint name.
+	 * @param fieldMapping The `FieldMapping` object containing configuration for field mappings.
+	 * @param label The label indicating the type of scope change (e.g., "Scope Added", "Scope Removed", "Scope Change").
+	 * @return A list of `JiraHistoryChangeLog` objects that match the specified label and filtering criteria.
+	 */
 	private List<JiraHistoryChangeLog> getRelevantLogs(JiraIssueCustomHistory history, SprintDetails sprintDetails,
 			FieldMapping fieldMapping, String label) {
 
