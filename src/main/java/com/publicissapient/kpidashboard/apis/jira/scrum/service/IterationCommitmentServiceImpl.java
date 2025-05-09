@@ -20,32 +20,51 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
-import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
-import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.apis.model.CategoryData;
+import com.publicissapient.kpidashboard.apis.model.Filter;
+import com.publicissapient.kpidashboard.apis.model.FilterGroup;
+import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
+import com.publicissapient.kpidashboard.apis.model.KpiData;
+import com.publicissapient.kpidashboard.apis.model.KpiDataCategory;
+import com.publicissapient.kpidashboard.apis.model.KpiDataGroup;
+import com.publicissapient.kpidashboard.apis.model.KpiDataSummary;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +85,6 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 	private static final String FILTER_BY_STATUS = "Filter by status";
 	private static final String JIRA_ISSUE_HISTORY = "jiraIssueHistory";
 	private static final String SPRINT_DETAILS = "sprintDetails";
-	private static final String OUTPUT_STRING_FORMAT = "Last %d days";
 
 	@Autowired
 	private ConfigHelperService configHelperService;
@@ -171,8 +189,7 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 				.filter(j -> Objects.nonNull(j.getLabels())
 						&& Objects.nonNull(fieldMapping.getJiraLabelsKPI120())
 						&& j.getLabels().stream().anyMatch(fieldMapping.getJiraLabelsKPI120()::contains))
-				.distinct()
-				.collect(Collectors.toList());
+				.distinct().toList();
 		Set<IssueKpiModalValue> issueData = new HashSet<>();
 
 		if (CollectionUtils.isNotEmpty(initialIssues)) {
@@ -241,60 +258,71 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
-	private void setScopeDuration(IssueKpiModalValue data, JiraIssueCustomHistory jiraIssueCustomHistory, SprintDetails sprintDetails, FieldMapping fieldMapping, String label, Map<String, Set<Integer>> overALlScopeDuration) {
+	private void setScopeDuration(IssueKpiModalValue data, JiraIssueCustomHistory jiraIssueCustomHistory,
+			SprintDetails sprintDetails, FieldMapping fieldMapping, String label,
+			Map<String, Set<Integer>> overALlScopeDuration) {
 
-		List<JiraHistoryChangeLog> sprintUpdationLog = new ArrayList<>();
+		if (jiraIssueCustomHistory == null) {
+			return;
+		}
+
 		LocalDate sprintStartDate = DateUtil.stringToLocalDate(sprintDetails.getStartDate(),
 				DateUtil.TIME_FORMAT_WITH_SEC_ZONE);
 		LocalDate sprintEndDate = DateUtil.stringToLocalDate(sprintDetails.getEndDate(),
 				DateUtil.TIME_FORMAT_WITH_SEC_ZONE);
 		long sprintDuration = ChronoUnit.DAYS.between(sprintStartDate, sprintEndDate) + 1;
+
 		int quarterSprint = (int) Math.ceil(0.25 * sprintDuration);
 		int halfSprint = (int) Math.ceil(0.5 * sprintDuration);
 		int threeQuarterSprint = (int) Math.ceil(0.75 * sprintDuration);
 
-		if (jiraIssueCustomHistory != null) {
-			sprintUpdationLog = switch (label) {
-				case SCOPE_ADDED -> jiraIssueCustomHistory.getSprintUpdationLog().stream()
-						.filter(updationLog -> updationLog.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName()))
-						.toList();
-				case SCOPE_REMOVED -> jiraIssueCustomHistory.getSprintUpdationLog().stream()
-						.filter(updationLog -> updationLog.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName()))
-						.toList();
-				case SCOPE_CHANGE -> jiraIssueCustomHistory.getLabelUpdationLog().stream()
-						.filter(updationLog -> fieldMapping.getJiraLabelsKPI120().contains(updationLog.getChangedTo()))
-						.toList();
-				default -> sprintUpdationLog;
-			};
+		List<JiraHistoryChangeLog> relevantLogs = getRelevantLogs(jiraIssueCustomHistory, sprintDetails, fieldMapping,
+				label);
+		if (CollectionUtils.isEmpty(relevantLogs)) {
+			return;
 		}
+		Set<Integer> scopeDuration = new LinkedHashSet<>();
+		LocalDate today = LocalDate.now();
+		long durationFromSprintStart = ChronoUnit.DAYS.between(sprintStartDate, today) + 1L;
 
-		if (CollectionUtils.isNotEmpty(sprintUpdationLog)) {
-			Set<Integer> scopeDuration = new LinkedHashSet<>();
-			LocalDate today = LocalDate.now();
-			long durationFromSprintStart = ChronoUnit.DAYS.between(sprintStartDate, today) + 1L;
-			sprintUpdationLog.forEach(updationLog -> {
-				LocalDate sprintDate = updationLog.getUpdatedOn().toLocalDate();
-				if (durationFromSprintStart >= quarterSprint
-						&& sprintDate.isAfter(today.minusDays(quarterSprint + 1))) {
-					scopeDuration.add(quarterSprint);
-				}
-				if (durationFromSprintStart >= halfSprint && sprintDate.isAfter(today.minusDays(halfSprint + 1))) {
-					scopeDuration.add(halfSprint);
-				}
-				if (durationFromSprintStart >= threeQuarterSprint
-						&& sprintDate.isAfter(today.minusDays(threeQuarterSprint + 1))) {
-					scopeDuration.add(threeQuarterSprint);
-				}
-			});
-			List<Integer> sortedScopeDuration = new ArrayList<>(scopeDuration);
-			Collections.sort(sortedScopeDuration);
-			data.setScopeDuration(sortedScopeDuration);
+		for (JiraHistoryChangeLog log : relevantLogs) {
+			LocalDate updateDate = log.getUpdatedOn().toLocalDate();
 
-			if (!sortedScopeDuration.isEmpty()) {
-				overALlScopeDuration.computeIfAbsent(label, k -> new HashSet<>()).addAll(sortedScopeDuration);
+			if (durationFromSprintStart >= quarterSprint && updateDate.isAfter(today.minusDays(quarterSprint + 1L))) {
+				scopeDuration.add(quarterSprint);
+			}
+			if (durationFromSprintStart >= halfSprint && updateDate.isAfter(today.minusDays(halfSprint + 1L))) {
+				scopeDuration.add(halfSprint);
+			}
+			if (durationFromSprintStart >= threeQuarterSprint
+					&& updateDate.isAfter(today.minusDays(threeQuarterSprint + 1L))) {
+				scopeDuration.add(threeQuarterSprint);
 			}
 		}
 
+		List<Integer> sortedScopeDuration = new ArrayList<>(scopeDuration);
+		Collections.sort(sortedScopeDuration);
+		data.setScopeDuration(sortedScopeDuration);
+
+		if (!sortedScopeDuration.isEmpty()) {
+			overALlScopeDuration.computeIfAbsent(label, k -> new HashSet<>()).addAll(sortedScopeDuration);
+		}
+	}
+
+	private List<JiraHistoryChangeLog> getRelevantLogs(JiraIssueCustomHistory history, SprintDetails sprintDetails,
+			FieldMapping fieldMapping, String label) {
+
+		String sprintName = sprintDetails.getSprintName();
+
+		return switch (label) {
+		case SCOPE_ADDED -> history.getSprintUpdationLog().stream()
+				.filter(log -> log.getChangedTo().equalsIgnoreCase(sprintName)).toList();
+		case SCOPE_REMOVED -> history.getSprintUpdationLog().stream()
+				.filter(log -> log.getChangedFrom().equalsIgnoreCase(sprintName)).toList();
+		case SCOPE_CHANGE -> history.getLabelUpdationLog().stream()
+				.filter(log -> fieldMapping.getJiraLabelsKPI120().contains(log.getChangedTo())).toList();
+		default -> new ArrayList<>();
+		};
 	}
 
 	/**
@@ -423,7 +451,8 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 		List<KpiDataCategory> categoryGroup = new ArrayList<>();
 		categoryGroup.add(createKpiDataCategory(INITIAL_COMMITMENT, "+", 1, new HashSet<>()));
 		categoryGroup.add(createKpiDataCategory(SCOPE_ADDED, "+", 2, scopeDuration.get(SCOPE_ADDED)));
-		categoryGroup.add(createKpiDataCategory(SCOPE_CHANGE, Constant.NOT_AVAILABLE, 3, scopeDuration.get(SCOPE_CHANGE)));
+		categoryGroup
+				.add(createKpiDataCategory(SCOPE_CHANGE, Constant.NOT_AVAILABLE, 3, scopeDuration.get(SCOPE_CHANGE)));
 		categoryGroup.add(createKpiDataCategory(SCOPE_REMOVED, "-", -1, scopeDuration.get(SCOPE_REMOVED)));
 		categoryData.setCategoryGroup(categoryGroup);
 		return categoryData;
@@ -437,7 +466,8 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 	 * @param order
 	 * @return
 	 */
-	private KpiDataCategory createKpiDataCategory(String categoryName, String categoryValue, Integer order, Set<Integer> scopeduration) {
+	private KpiDataCategory createKpiDataCategory(String categoryName, String categoryValue, Integer order,
+			Set<Integer> scopeduration) {
 		KpiDataCategory category = new KpiDataCategory();
 		category.setCategoryName(categoryName);
 		category.setCategoryValue(categoryValue);
