@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
@@ -225,6 +226,40 @@ public class WorkStatusServiceImplTest {
 		Map<String, Object> returnMap = workStatusService.fetchKPIDataFromDb(leafNodeList.get(0), startDate, endDate,
 				kpiRequest);
 		assertNotNull(returnMap);
+	}
+
+	@Test
+	public void testSetDataForPlannedWithDelay() throws ApplicationException {
+		// Arrange
+		TreeAggregatorDetail treeAggregatorDetail = new TreeAggregatorDetail();
+		Map<String, Node> mapTmp = new HashMap<>();
+
+		// Create a mock Node for "hierarchyLevelOne"
+		Node hierarchyNode = new Node();
+		hierarchyNode.setName("Hierarchy Level One");
+
+		// Add child nodes to the hierarchyNode
+		Node childNode1 = new Node();
+		childNode1.setName("Child Node 1");
+		Node childNode2 = new Node();
+		childNode2.setName("Child Node 2");
+
+		List<Node> children = new ArrayList<>();
+		children.add(childNode1);
+		children.add(childNode2);
+		hierarchyNode.setChildren(children);
+
+		// Add the hierarchyNode to mapTmp
+		mapTmp.put("hierarchyLevelOne", hierarchyNode);
+		treeAggregatorDetail.setMapTmp(mapTmp);
+
+		// Act
+		Node retrievedNode = treeAggregatorDetail.getMapTmp().get("hierarchyLevelOne");
+
+		// Assert
+		assertNotNull("Node for 'hierarchyLevelOne' should not be null", retrievedNode);
+		assertNotNull("Children of the node should not be null", retrievedNode.getChildren());
+		assertFalse("Children list should not be empty", retrievedNode.getChildren().isEmpty());
 	}
 
 	@After
