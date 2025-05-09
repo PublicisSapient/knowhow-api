@@ -499,5 +499,7 @@ public class KPIExcelData {
     @JsonProperty("Un-Refined")
     private String unRefined;
 
+	@JsonProperty("Labels")
+	private List<String> labels;
 
 }
