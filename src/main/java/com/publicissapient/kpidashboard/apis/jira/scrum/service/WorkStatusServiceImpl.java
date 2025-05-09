@@ -393,9 +393,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
 					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
 					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-					if(delay !=0) {
-                        category2.get(DEV_STATUS).add(DELAY_COUNT);
-                    }
+					populateDelay(delay, category2, DEV_STATUS);
 				}
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
@@ -408,9 +406,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
 					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
 					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-					if(delay !=0) {
-                        category2.get(DEV_STATUS).add(DELAY_COUNT);
-                    }
+					populateDelay(delay, category2, DEV_STATUS);
 				}
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
@@ -455,9 +451,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				if(delay !=0) {
-                    category2.get(PLANNED).add(DELAY_COUNT);
-                }
+				populateDelay(delay, category2, PLANNED);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -467,9 +461,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				if(delay !=0) {
-                    category2.get(PLANNED).add(DELAY_COUNT);
-                }
+				populateDelay(delay, category2, PLANNED);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -485,6 +477,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 		}
 		return category2;
+	}
+	private static void populateDelay(int delay, Map<String, List<String>> category2, String categoryKey) {
+		if (delay != 0) {
+			category2.get(categoryKey).add(DELAY_COUNT);
+		}
 	}
 
 	/**
