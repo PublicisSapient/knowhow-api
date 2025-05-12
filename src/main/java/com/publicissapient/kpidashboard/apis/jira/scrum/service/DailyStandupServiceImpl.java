@@ -671,10 +671,10 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 			if (CollectionUtils.isNotEmpty(inSprintHistoryLogs)) {
 				inSprintHistoryLogs.sort(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn).reversed());
 				lastTimeInString = CommonUtils.convertSecondsToDays(
-						(int) Duration.between(inSprintHistoryLogs.get(0).getUpdatedOn(), LocalDateTime.now()).getSeconds());
+						(int) Duration.between(inSprintHistoryLogs.get(0).getUpdatedOn(), DateUtil.todaysTime()).getSeconds());
 			} else if (CollectionUtils.isNotEmpty(allLogs)) {
 				lastTimeInString = CommonUtils
-						.convertSecondsToDays((int) Duration.between(sprintStartDateTime, LocalDateTime.now()).getSeconds());
+						.convertSecondsToDays((int) Duration.between(sprintStartDateTime, DateUtil.todaysTime()).getSeconds());
 			}
 
 		} else
