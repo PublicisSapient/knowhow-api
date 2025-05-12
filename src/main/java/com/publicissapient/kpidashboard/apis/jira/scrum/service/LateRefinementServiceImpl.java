@@ -403,7 +403,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 				List<JiraIssue> unRefinedData = calculateLateRefinementPercenatge(overall, lateRefinedDateWiseMap, date.toLocalDate(),
 						dataCountList, sprintName);
 				Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(overall);
-				createExcelData(unRefinedData, overall, date.toString(), fieldMapping, issueKpiModalObject);
+				createExcelData(unRefinedData, overall, date, fieldMapping, issueKpiModalObject);
 				issueKpiModalValueList.addAll(issueKpiModalObject.values());
 				currentSprint.setFilter(DateUtil.tranformUTCLocalTimeToZFormat(date));
 				currentSprint.setValue(dataCountList);
@@ -441,7 +441,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		return commonIssues;
 	}
 
-	private void createExcelData(List<JiraIssue> commonIssues, List<JiraIssue> overall, String date,
+	private void createExcelData(List<JiraIssue> commonIssues, List<JiraIssue> overall, LocalDateTime date,
 			FieldMapping fieldMapping, Map<String, IssueKpiModalValue> issueKpiModalObject) {
 
 		overall.forEach(issue -> {
@@ -450,7 +450,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
 			IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
 			data.setUnRefined(unRefinedMap.containsKey(issue.getNumber()) ? "Yes" : "No");
-			data.setDate(date);
+			data.setDate(DateUtil.tranformUTCLocalTimeToZFormat(date));
 
 		});
 
