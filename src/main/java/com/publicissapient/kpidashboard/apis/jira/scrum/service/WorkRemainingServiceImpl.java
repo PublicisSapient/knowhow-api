@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static com.publicissapient.kpidashboard.apis.util.IterationKpiHelper.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -178,14 +179,12 @@ public class WorkRemainingServiceImpl extends JiraIterationKPIService {
 	private void setKpiSpecificData(SprintDetails sprintDetails, IssueKpiModalValue jiraIssueModalObject,
 			IterationPotentialDelay iterationPotentialDelay, JiraIssue jiraIssue, String devCompletionDate,
 			FieldMapping fieldMapping) {
-		jiraIssueModalObject.setDevCompletionDate(
-				DateUtil.dateTimeConverter(devCompletionDate, DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
+		jiraIssueModalObject.setDevCompletionDate(devCompletionDate);
 		String markerValue = Constant.BLANK;
 		if (null != iterationPotentialDelay && StringUtils.isNotEmpty(jiraIssue.getDueDate())) {
 			jiraIssueModalObject.setPotentialDelay(iterationPotentialDelay.getPotentialDelay() + "d");
 			markerValue = getMarkerValue(sprintDetails, iterationPotentialDelay, markerValue);
-			jiraIssueModalObject.setPredictedCompletionDate(DateUtil.dateTimeConverter(
-					iterationPotentialDelay.getPredictedCompletedDate(), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
+			jiraIssueModalObject.setPredictedCompletionDate(iterationPotentialDelay.getPredictedCompletedDate());
 
 		} else {
 			jiraIssueModalObject.setPotentialDelay(Constant.BLANK);
@@ -212,9 +211,9 @@ public class WorkRemainingServiceImpl extends JiraIterationKPIService {
 
 	private static String getMarkerValue(SprintDetails sprintDetails, IterationPotentialDelay iterationPotentialDelay,
 			String markerValue) {
-		final LocalDate sprintEndDate = DateUtil.stringToLocalDate(sprintDetails.getEndDate(),
+		final LocalDateTime sprintEndDate = DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(),
 				DateUtil.TIME_FORMAT_WITH_SEC);
-		final LocalDate predictCompletionDate = LocalDate.parse(iterationPotentialDelay.getPredictedCompletedDate());
+		final LocalDateTime predictCompletionDate =DateUtil.stringToLocalDateTime(iterationPotentialDelay.getPredictedCompletedDate(), DateUtil.TIME_FORMAT_WITH_SEC_DATE);
 		if (!sprintEndDate.isBefore(predictCompletionDate)) {
 			if (ChronoUnit.DAYS.between(predictCompletionDate, sprintEndDate) < 2) {
 				markerValue = Constant.AMBER;
