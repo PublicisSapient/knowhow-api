@@ -218,8 +218,9 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	private void createDateWiseRefinementMap(Set<JiraIssue> totalIssueList, JiraIssueCustomHistory issueHistory,
 			List<JiraHistoryChangeLog> statusUpdationLog, FieldMapping fieldMapping,
 			Map<LocalDate, List<JiraIssue>> lateRefined, SprintDetails sprintDetails) {
-		final LocalDate currentDate = LocalDate.now();
-		LocalDate startDate = LocalDate.parse(sprintDetails.getStartDate().split("T")[0], DATE_TIME_FORMATTER);
+		LocalDateTime startDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		final LocalDateTime currentDate = DateUtil.localDateTimeToUTC(LocalDateTime.now());
+
 
 		// Get relevant issues
 		List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
@@ -228,8 +229,8 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		}
 		// Handle refined status case
 		LocalDate maxDate = calculateMaxDateForRefinedStatus(statusUpdationLog, fieldMapping);
-		if (DateUtil.isWithinDateRange(maxDate, startDate, currentDate)) {
-			updateLateRefinedMap(startDate, maxDate, lateRefined, jiraIssueList);
+		if (DateUtil.isWithinDateTimeRange(maxDate.atStartOfDay(), startDate, currentDate)) {
+			updateLateRefinedMap(startDate.toLocalDate(), maxDate, lateRefined, jiraIssueList);
 		}
 
 	}
@@ -250,7 +251,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 				.map(status -> status.trim().toLowerCase()).collect(Collectors.toSet());
 
 		boolean startDateFound = false;
-		LocalDate maxDate = LocalDate.now();
+		LocalDate maxDate = DateUtil.localDateTimeToUTC(LocalDateTime.now()).toLocalDate();
 
 		for (JiraHistoryChangeLog updateLog : statusUpdationLog) {
 			String changedStatus = updateLog.getChangedTo().trim().toLowerCase();
@@ -292,36 +293,37 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			Map<LocalDate, List<JiraIssue>> addedIssuesMap, Map<LocalDate, List<JiraIssue>> removedIssues,
 			Map<LocalDate, List<JiraIssue>> fullSprintMap, JiraIssueCustomHistory issueHistory,
 			List<JiraHistoryChangeLog> sprintUpdationLog) {
-		LocalDate startDate = LocalDate.parse(sprintDetails.getStartDate().split("T")[0], DATE_TIME_FORMATTER);
-		LocalDate sprintEndDate = LocalDate.now();
+		LocalDateTime startDateTime = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintEndTime = DateUtil.localDateTimeToUTC(LocalDateTime.now());
 		List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
 		int lastIndex = sprintUpdationLog.size() - 1;
 		sprintUpdationLog.stream()
 				.filter(updateLogs -> updateLogs.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName())
 						|| (updateLogs.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName()) && DateUtil
-								.isWithinDateRange(updateLogs.getUpdatedOn().toLocalDate(), startDate, sprintEndDate)))
+								.isWithinDateTimeRange(updateLogs.getUpdatedOn(), startDateTime, sprintEndTime)))
 				.forEach(updateLogs -> {
+					LocalDate startLocalDate = startDateTime.toLocalDate();
 					if (updateLogs.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName())) {
-						if (sprintUpdationLog.get(lastIndex).getUpdatedOn().toLocalDate()
-								.isBefore(startDate.plusDays(1))) {
-							fullSprintMap.computeIfPresent(startDate, (k, v) -> {
+						if (sprintUpdationLog.get(lastIndex).getUpdatedOn()
+								.isBefore(startDateTime.plusDays(1))) {
+							fullSprintMap.computeIfPresent(startLocalDate, (k, v) -> {
 								v.addAll(jiraIssueList);
 								return v;
 							});
-							fullSprintMap.putIfAbsent(startDate, jiraIssueList);
+							fullSprintMap.putIfAbsent(startLocalDate, jiraIssueList);
 						}
-						LocalDate updatedLog = updateLogs.getUpdatedOn().toLocalDate().isBefore(startDate.plusDays(1))
-								? startDate
-								: limitDateInSprint(updateLogs.getUpdatedOn().toLocalDate(), sprintEndDate);
-						addedIssuesMap.computeIfPresent(updatedLog, (k, v) -> {
+						LocalDateTime updatedLog = updateLogs.getUpdatedOn().isBefore(startDateTime.plusDays(1))
+								? startDateTime
+								: limitDateInSprint(updateLogs.getUpdatedOn(), sprintEndTime);
+						addedIssuesMap.computeIfPresent(updatedLog.toLocalDate(), (k, v) -> {
 							v.addAll(jiraIssueList);
 							return v;
 						});
-						addedIssuesMap.putIfAbsent(updatedLog, jiraIssueList);
+						addedIssuesMap.putIfAbsent(updatedLog.toLocalDate(), jiraIssueList);
 					}
 
 					if (updateLogs.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName()) && DateUtil
-							.isWithinDateRange(updateLogs.getUpdatedOn().toLocalDate(), startDate, sprintEndDate)) {
+							.isWithinDateTimeRange(updateLogs.getUpdatedOn(), startDateTime, sprintEndTime)) {
 						List<JiraIssue> removeJiraIssueLIst = new ArrayList<>(jiraIssueList);
 						LocalDate updatedLog = updateLogs.getUpdatedOn().toLocalDate();
 						removedIssues.computeIfPresent(updatedLog, (k, v) -> {
@@ -343,7 +345,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	 * would be counted under the last day of sprint
 	 */
 
-	private LocalDate limitDateInSprint(LocalDate updatedLog, LocalDate sprintEndDate) {
+	private LocalDateTime limitDateInSprint(LocalDateTime updatedLog, LocalDateTime sprintEndDate) {
 		if (Objects.nonNull(updatedLog) && updatedLog.isAfter(sprintEndDate.minusDays(1))) {
 			return sprintEndDate;
 		} else {
@@ -382,9 +384,9 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 
 			log.info("Late Refinement -> request id : {} total jira Issues : {}", requestTrackerId,
 					fullSprintIssuesMap.size());
-			LocalDate sprintStartDate = DateUtil.stringToLocalDate(sprintDetails.getStartDate(),
+			LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),
 					DateUtil.TIME_FORMAT_WITH_SEC);
-			LocalDate sprintEndDate = LocalDate.now().plusDays(1);
+			LocalDateTime sprintEndDate = DateUtil.localDateTimeToUTC(LocalDateTime.now()).plusDays(1);
 
 			LocalDate maximumRemovalDate = removedIssuesMap.keySet().stream().filter(Objects::nonNull)
 					.min(LocalDate::compareTo).orElse(null);
@@ -393,17 +395,17 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			List<JiraIssue> processedAllIssues = new ArrayList<>();
 			List<KPIExcelData> excelDataList = new ArrayList<>();
 			List<IssueKpiModalValue> issueKpiModalValueList = new ArrayList<>();
-			for (LocalDate date = sprintStartDate; date.isBefore(sprintEndDate); date = date.plusDays(1)) {
+			for (LocalDateTime date = sprintStartDate; date.toLocalDate().isBefore(sprintEndDate.toLocalDate()); date = date.plusDays(1)) {
 				DataCountGroup currentSprint = new DataCountGroup();
 				List<DataCount> dataCountList = new ArrayList<>();
 				List<JiraIssue> overall = calculateOverallScopeDayWise(fullSprintIssuesMap, removedIssuesMap,
-						addedIssuesMap, processedAllIssues, date, sprintDetails, maximumRemovalDate);
-				List<JiraIssue> unRefinedData = calculateLateRefinementPercenatge(overall, lateRefinedDateWiseMap, date,
+						addedIssuesMap, processedAllIssues, date.toLocalDate(), sprintDetails, maximumRemovalDate);
+				List<JiraIssue> unRefinedData = calculateLateRefinementPercenatge(overall, lateRefinedDateWiseMap, date.toLocalDate(),
 						dataCountList, sprintName);
 				Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(overall);
 				createExcelData(unRefinedData, overall, date.toString(), fieldMapping, issueKpiModalObject);
 				issueKpiModalValueList.addAll(issueKpiModalObject.values());
-				currentSprint.setFilter(date.toString());
+				currentSprint.setFilter(DateUtil.tranformUTCLocalTimeToZFormat(date));
 				currentSprint.setValue(dataCountList);
 				currentSprintDataCountGroup.add(currentSprint);
 			}

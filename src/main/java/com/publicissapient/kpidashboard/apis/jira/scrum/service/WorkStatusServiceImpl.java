@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static com.publicissapient.kpidashboard.apis.util.KpiDataHelper.sprintWiseDelayCalculation;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
@@ -525,8 +526,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		List<String> inProgressStatuses = new ArrayList<>();
 		List<JiraHistoryChangeLog> filterStatusUpdationLogs = new ArrayList<>();
 
-		LocalDate sprintStartDate = LocalDate.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
-		LocalDate sprintEndDate = LocalDate.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
+		LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetail.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintEndDate = DateUtil.stringToLocalDateTime(sprintDetail.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC);
 		Map<String, Object> resultList = new HashMap<>();
 
 		// filtering statusUpdationLogs lies in between sprintStart and sprintEnd
@@ -544,14 +545,13 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		if (null != fieldMapping && CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI128())) {
 			inProgressStatuses = fieldMapping.getJiraStatusForInProgressKPI128();
 		}
-		LocalDate startDate = null;
-		LocalDate endDate;
+		LocalDateTime startDate = null;
+		LocalDateTime endDate;
 		boolean isStartDateFound = false;
 
-		Map<String, LocalDate> closedStatusDateMap = new HashMap<>();
+		Map<String, LocalDateTime> closedStatusDateMap = new HashMap<>();
 		for (JiraHistoryChangeLog statusUpdationLog : filterStatusUpdationLogs) {
-			LocalDate activityLocalDate = LocalDate
-					.parse(statusUpdationLog.getUpdatedOn().toString().split("T")[0].concat("T00:00:00"), DATE_TIME_FORMATTER);
+			LocalDateTime activityLocalDate = statusUpdationLog.getUpdatedOn();
 
 			if (inProgressStatuses.contains(statusUpdationLog.getChangedTo()) && !isStartDateFound) {
 				startDate = activityLocalDate;
@@ -568,7 +568,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			}
 		}
 		// Getting the min date of closed status.
-		endDate = closedStatusDateMap.values().stream().filter(Objects::nonNull).min(LocalDate::compareTo).orElse(null);
+		endDate = closedStatusDateMap.values().stream().filter(Objects::nonNull).min(LocalDateTime::compareTo).orElse(null);
 		resultList.put(ACTUAL_START_DATE, startDate);
 		resultList.put(ACTUAL_COMPLETE_DATE, endDate);
 		return resultList;
@@ -577,12 +577,12 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	// Filtering the history which happened inside the sprint on basis of activity
 	// date
 	private List<JiraHistoryChangeLog> getFilterStatusUpdationLogs(JiraIssueCustomHistory issueCustomHistory,
-			List<JiraHistoryChangeLog> filterStatusUpdationLogs, LocalDate sprintStartDate, LocalDate sprintEndDate) {
+			List<JiraHistoryChangeLog> filterStatusUpdationLogs, LocalDateTime sprintStartDate,
+			LocalDateTime sprintEndDate) {
 		if (CollectionUtils.isNotEmpty(issueCustomHistory.getStatusUpdationLog())) {
-			filterStatusUpdationLogs = issueCustomHistory.getStatusUpdationLog().stream()
-					.filter(jiraIssueSprint -> DateUtil.isWithinDateRange(LocalDate
-							.parse(jiraIssueSprint.getUpdatedOn().toString().split("T")[0].concat("T00:00:00"), DATE_TIME_FORMATTER),
-							sprintStartDate, sprintEndDate))
+			filterStatusUpdationLogs = issueCustomHistory
+					.getStatusUpdationLog().stream().filter(jiraIssueSprint -> DateUtil
+							.isWithinDateTimeRange(jiraIssueSprint.getUpdatedOn(), sprintStartDate, sprintEndDate))
 					.collect(Collectors.toList());
 		}
 		return filterStatusUpdationLogs;
@@ -612,9 +612,9 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		Map<String, Object> actualCompletionData = calStartAndEndDate(issueCustomHistory, allCompletedIssuesList,
 				sprintDetails, fieldMapping);
 		if (actualCompletionData.get(ACTUAL_COMPLETE_DATE) != null && jiraIssue.getDueDate() != null) {
-			LocalDate actualCompletedDate = (LocalDate) actualCompletionData.get(ACTUAL_COMPLETE_DATE);
+			LocalDateTime actualCompletedDate = (LocalDateTime) actualCompletionData.get(ACTUAL_COMPLETE_DATE);
 			int jiraIssueDelay = getDelay(DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC),
-					actualCompletedDate);
+					actualCompletedDate.toLocalDate());
 			resultList.put(ISSUE_DELAY, jiraIssueDelay);
 		} else {
 			resultList.put(ISSUE_DELAY, Constant.DASH);
@@ -649,9 +649,9 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 
 		if (StringUtils.isNotEmpty(devCompletionDate) && !devCompletionDate.equalsIgnoreCase("-") &&
 				jiraIssue.getDevDueDate() != null) {
-			LocalDate devCompletedDate = LocalDate.parse(devCompletionDate);
+			LocalDateTime devCompletedDate = LocalDateTime.parse(devCompletionDate);
 			int jiraIssueDelay = getDelay(
-					DateUtil.stringToLocalDate(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC), devCompletedDate);
+					DateUtil.stringToLocalDate(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC), devCompletedDate.toLocalDate());
 			resultList.put(ISSUE_DELAY, jiraIssueDelay);
 		} else {
 			resultList.put(ISSUE_DELAY, Constant.DASH);
@@ -752,23 +752,24 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	private void setKpiSpecificData(IssueKpiModalValue jiraIssueModalObject,
 			Map<String, IterationPotentialDelay> issueWiseDelay, JiraIssue jiraIssue, Map<String, Object> jiraIssueData,
 			Map<String, Object> actualCompletionData, boolean isPlanned) {
-		jiraIssueModalObject.setDevCompletionDate(DateUtil.dateTimeConverter(
-				(String) jiraIssueData.get(DEV_COMPLETION_DATE), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
+		String devCompletion=(String)jiraIssueData.get(DEV_COMPLETION_DATE);
+		jiraIssueModalObject.setDevCompletionDate(devCompletion);
+		if(StringUtils.isNotEmpty(devCompletion) && !devCompletion.equalsIgnoreCase(Constant.DASH)) {
+			jiraIssueModalObject.setDevCompletionDate(DateUtil.localDateTimeToUTC(jiraIssueData.get(DEV_COMPLETION_DATE).toString()));
+		}
 		if (actualCompletionData.get(ACTUAL_COMPLETE_DATE) != null)
 			jiraIssueModalObject
-					.setActualCompletionDate(DateUtil.dateTimeConverter(actualCompletionData.get(ACTUAL_COMPLETE_DATE).toString(),
-							DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
+					.setActualCompletionDate(DateUtil.localDateTimeToUTC(actualCompletionData.get(ACTUAL_COMPLETE_DATE).toString()));
 		else
 			jiraIssueModalObject.setActualCompletionDate(Constant.BLANK);
 		if (actualCompletionData.get(ACTUAL_START_DATE) != null) {
-			jiraIssueModalObject.setActualStartDate(DateUtil.dateTimeConverter(
-					actualCompletionData.get(ACTUAL_START_DATE).toString(), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
+			jiraIssueModalObject.setActualStartDate(DateUtil.localDateTimeToUTC(actualCompletionData.get(ACTUAL_START_DATE).toString()));
 		} else
 			jiraIssueModalObject.setActualStartDate(Constant.BLANK);
 
 		if (isPlanned) {
-			if (DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(LocalDate.now().minusDays(1))) {
+			if (DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+					.isAfter(DateUtil.localDateTimeToUTC(LocalDateTime.now()).minusDays(1))) {
 				jiraIssueModalObject.setMarker(Constant.GREEN);
 			}
 			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
@@ -777,8 +778,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				jiraIssueModalObject.setDelayInDays(Constant.BLANK);
 			}
 		} else {
-			if (DateUtil.stringToLocalDate(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(LocalDate.now().minusDays(1))) {
+			if (DateUtil.stringToLocalDateTime(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+					.isAfter(DateUtil.localDateTimeToUTC(LocalDateTime.now()).minusDays(1))) {
 				jiraIssueModalObject.setMarker(Constant.GREEN);
 			}
 			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
@@ -791,8 +792,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				issueWiseDelay.get(jiraIssue.getNumber()).isMaxMarker()) {
 			IterationPotentialDelay iterationPotentialDelay = issueWiseDelay.get(jiraIssue.getNumber());
 			jiraIssueModalObject.setPotentialDelay(iterationPotentialDelay.getPotentialDelay() + "d");
-			jiraIssueModalObject.setPredictedCompletionDate(DateUtil.dateTimeConverter(
-					iterationPotentialDelay.getPredictedCompletedDate(), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
+			jiraIssueModalObject.setPredictedCompletionDate(iterationPotentialDelay.getPredictedCompletedDate());
 		}
 	}
 }
