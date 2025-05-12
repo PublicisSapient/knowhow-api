@@ -291,7 +291,7 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 			return;
 		}
 		Set<Integer> scopeDuration = new LinkedHashSet<>();
-		LocalDateTime today = DateUtil.localDateTimeToUTC(LocalDateTime.now());
+		LocalDateTime today = DateUtil.todaysTime();
 		long durationFromSprintStart = ChronoUnit.DAYS.between(sprintStartDate, today) + 1L;
 
 		for (JiraHistoryChangeLog log : relevantLogs) {

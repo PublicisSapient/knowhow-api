@@ -200,7 +200,7 @@ public class CalculatePCDHelper {
 			// for the first calculation
 			LocalDateTime startDate = sprintDetails.getState().equalsIgnoreCase(SprintDetails.SPRINT_STATE_CLOSED)
 					? DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					: DateUtil.localDateTimeToUTC(LocalDateTime.now());
+					: DateUtil.todaysTime();
 
 			pcd = CommonUtils.getWorkingDayAfterAdditionofDays(startDate, remainingEstimateTime);
 		} else {
