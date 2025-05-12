@@ -1351,12 +1351,7 @@ public class KPIExcelUtility {
 				excelData.setProjectName(projectName);
 				excelData.setDefectId(defectLink);
 				excelData.setPriority(defect.getPriority());
-				String date = Constant.EMPTY_STRING;
-				if (defect.getCreatedDate() != null) {
-					date = DateUtil.dateTimeConverter(defect.getCreatedDate(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
-				}
-				excelData.setCreatedDate(date);
+				excelData.setCreatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(defect.getCreatedDate()));
 				excelData.setIssueDesc(checkEmptyName(defect));
 				excelData.setStatus(defect.getJiraStatus());
 				kpiExcelData.add(excelData);
@@ -1374,8 +1369,7 @@ public class KPIExcelUtility {
 				excelData.setProject(projectName);
 				excelData.setTicketIssue(storyMap);
 				excelData.setPriority(kanbanIssues.getPriority());
-				excelData.setCreatedDate(DateUtil.dateTimeConverter(kanbanIssues.getCreatedDate(), DateUtil.TIME_FORMAT,
-						DateUtil.DISPLAY_DATE_FORMAT));
+				excelData.setCreatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(kanbanIssues.getCreatedDate()));
 				excelData.setIssueStatus(kanbanIssues.getJiraStatus());
 				kpiExcelData.add(excelData);
 			});
@@ -1602,13 +1596,11 @@ public class KPIExcelUtility {
 		jiraIssueModalObject.setDueDate((StringUtils.isNotEmpty(jiraIssue.getDueDate()))
 				? jiraIssue.getDueDate()
 				: Constant.BLANK);
-		jiraIssueModalObject.setChangeDate(
-				(StringUtils.isNotEmpty(jiraIssue.getChangeDate())) ? jiraIssue.getChangeDate() : Constant.BLANK);
-		jiraIssueModalObject.setCreatedDate((StringUtils.isNotEmpty(jiraIssue.getCreatedDate()))
-				? jiraIssue.getCreatedDate()
-				: Constant.BLANK);
-		jiraIssueModalObject.setUpdatedDate(
-				(StringUtils.isNotEmpty(jiraIssue.getUpdateDate())) ? jiraIssue.getUpdateDate() : Constant.BLANK);
+		jiraIssueModalObject.setChangeDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getChangeDate()));
+		jiraIssueModalObject
+				.setCreatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getCreatedDate()));
+		jiraIssueModalObject
+				.setUpdatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getUpdateDate()));
 		jiraIssueModalObject.setLabels(jiraIssue.getLabels());
 		jiraIssueModalObject.setRootCauseList(jiraIssue.getRootCauseList());
 		jiraIssueModalObject.setOwnersFullName(jiraIssue.getOwnersFullName());
@@ -1680,12 +1672,9 @@ public class KPIExcelUtility {
 		setIssueSizeForIssueKpiModal(jiraIssue, fieldMapping, issueKpiModalValue);
 		issueKpiModalValue
 				.setDueDate(StringUtils.isNotEmpty(jiraIssue.getDueDate()) ? jiraIssue.getDueDate() : Constant.BLANK);
-		issueKpiModalValue.setChangeDate(
-				(StringUtils.isNotEmpty(jiraIssue.getChangeDate())) ? jiraIssue.getChangeDate() : Constant.BLANK);
-		issueKpiModalValue.setCreatedDate(
-				(StringUtils.isNotEmpty(jiraIssue.getCreatedDate())) ? jiraIssue.getCreatedDate() : Constant.BLANK);
-		issueKpiModalValue.setUpdatedDate(
-				(StringUtils.isNotEmpty(jiraIssue.getUpdateDate())) ? jiraIssue.getUpdateDate() : Constant.BLANK);
+		issueKpiModalValue.setChangeDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getChangeDate()));
+		issueKpiModalValue.setCreatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getCreatedDate()));
+		issueKpiModalValue.setUpdatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getUpdateDate()));
 		issueKpiModalValue.setLabels(jiraIssue.getLabels());
 		issueKpiModalValue.setRootCauseList(jiraIssue.getRootCauseList());
 		issueKpiModalValue.setOwnersFullName(jiraIssue.getOwnersFullName());

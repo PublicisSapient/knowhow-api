@@ -626,7 +626,7 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 		Map<String, List<String>> dateWiseLogMap = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(historyLog)) {
 			for (JiraHistoryChangeLog log : historyLog) {
-				String changedOn = log.getUpdatedOn().toLocalDate().toString();
+				String changedOn = DateUtil.tranformUTCLocalTimeToZFormat(log.getUpdatedOn());
 				dateWiseLogMap.computeIfPresent(changedOn, (date, logs) -> {
 					logs.add(log.getChangedTo());
 					return logs;
