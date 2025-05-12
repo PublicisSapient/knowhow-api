@@ -23,9 +23,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -71,6 +74,7 @@ public class IterationCommitmentServiceImplTest {
 	private JiraIterationServiceR jiraService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
+	private List<JiraIssueCustomHistory> historyList = new ArrayList<>();
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private SprintDetails sprintDetails = new SprintDetails();
@@ -94,7 +98,14 @@ public class IterationCommitmentServiceImplTest {
 		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
 				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
+		historyList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
+		JiraHistoryChangeLog historyChangeLog = new JiraHistoryChangeLog();
+		historyChangeLog.setChangedFrom(sprintDetails.getSprintName());
+		historyChangeLog.setChangedTo(sprintDetails.getSprintName());
+		historyChangeLog.setUpdatedOn(LocalDateTime.now().minusDays(3));
+		historyList.forEach(history -> history.setSprintUpdationLog(List.of(historyChangeLog)));
 	}
 
 	private void setMockProjectConfig() {
@@ -119,6 +130,7 @@ public class IterationCommitmentServiceImplTest {
 
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(historyList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
@@ -149,6 +161,7 @@ public class IterationCommitmentServiceImplTest {
 
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(historyList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);

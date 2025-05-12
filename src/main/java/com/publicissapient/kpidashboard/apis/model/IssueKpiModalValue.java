@@ -238,4 +238,6 @@ public class IssueKpiModalValue implements Serializable {
     @JsonProperty("Un-Refined")
     private String unRefined;
 
+	private List<Integer> scopeDuration;
+
 }

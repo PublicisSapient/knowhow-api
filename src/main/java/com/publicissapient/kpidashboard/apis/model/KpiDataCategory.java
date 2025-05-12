@@ -20,6 +20,8 @@ package com.publicissapient.kpidashboard.apis.model;
 
 import lombok.*;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @Builder
@@ -29,4 +31,5 @@ public class KpiDataCategory {
 	private String categoryName;
 	private String categoryValue;
 	private Integer order;
+	private Set<Integer> scopeDuration;
 }
