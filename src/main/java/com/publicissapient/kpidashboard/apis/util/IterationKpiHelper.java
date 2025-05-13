@@ -147,8 +147,7 @@ public final class IterationKpiHelper {
 		if (CollectionUtils.isNotEmpty(issueHistoryLogs)) {
 			filterStatusUpdationLogs = issueHistoryLogs.stream()
 					.filter(jiraIssueSprint -> DateUtil.isWithinDateRange(
-							LocalDate.parse(jiraIssueSprint.getUpdatedOn().toString().split("T")[0].concat("T00:00:00"),
-									DateTimeFormatter.ofPattern(TIME_FORMAT)),
+							jiraIssueSprint.getUpdatedOn().toLocalDate(),
 							sprintStartDate, sprintEndDate))
 					.collect(Collectors.toList());
 		}
