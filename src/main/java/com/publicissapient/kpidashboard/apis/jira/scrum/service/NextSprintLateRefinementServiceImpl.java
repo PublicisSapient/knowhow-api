@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,16 +101,16 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 				// Find the next sprint
 				SprintDetails sprintDetails = futureSprintList.stream()
 						.filter(sprint -> sprint.getStartDate() != null
-								&& LocalDate.parse(sprint.getStartDate().split("T")[0], DATE_TIME_FORMATTER).isAfter(
-										LocalDate.parse(activeSprint.getEndDate().split("T")[0], DATE_TIME_FORMATTER)))
+								&& DateUtil.stringToLocalDateTime(sprint.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC).isAfter(
+								DateUtil.stringToLocalDateTime(activeSprint.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC)))
 						.findFirst().orElse(null);
 
 				if (sprintDetails == null) {
 					return new HashMap<>();
 				}
-				Set<String> totalIssues = sprintDetails.getTotalIssues().stream()
-						.filter(a -> fieldMapping.getJiraIssueTypeNamesKPI188().contains(a.getTypeName()))
-						.map(SprintIssue::getNumber).collect(Collectors.toSet());
+
+				Set<String> totalIssues = jiraIssueRepository.findBySprintID(sprintDetails.getSprintID()).stream()
+						.filter(a -> fieldMapping.getJiraIssueTypeNamesKPI188().contains(a.getTypeName())).map(JiraIssue::getNumber).collect(Collectors.toSet());
 				Map<String, Object> mapOfFilter = new HashMap<>();
 				jiraIterationServiceR.createAdditionalFilterMap(kpiRequest, mapOfFilter);
 				Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
