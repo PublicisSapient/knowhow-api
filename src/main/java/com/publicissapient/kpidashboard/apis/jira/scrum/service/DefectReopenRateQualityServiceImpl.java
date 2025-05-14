@@ -52,7 +52,6 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -61,7 +60,6 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.core.Feature;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -104,7 +102,6 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 	public static final String REOPENED_DEFECTS = "Reopened Defects";
 	public static final String COMPLETED_DEFECTS = "Completed Defects";
 	private static final String DEFECT_HISTORY = "subTaskBugsHistory";
-	public static final String UNCHECKED = "unchecked";
 	private static final String TOTAL_DEFECT_DATA = "totalDefectWithoutDrop";
 	public static final String STORY_LIST = "storyList";
 	private static final String DEV = "DeveloperKpi";
@@ -170,7 +167,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 	 * @param kpiRequest
 	 *            the KpiRequest
 	 */
-	@SuppressWarnings(UNCHECKED)
+	@SuppressWarnings("unchecked")
 	private void sprintWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList,
 			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
 
@@ -185,8 +182,8 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 				.get(DEFECT_HISTORY);
 		List<SprintDetails> sprintDetails = (List<SprintDetails>) resultListMap.get(SPRINT_DETAILS);
 
-		Map<Pair<String, String>, Map<String, Long>> sprintWiseDCReopenedDefectsPriorityMap = new HashMap<>();
-		Map<Pair<String, String>, Map<String, Long>> sprintWiseDCCompletedDefectsPriorityMap = new HashMap<>();
+		Map<Pair<String, String>, Map<String, Long>> sprintWiseReopenedDefectsPriorityMap = new HashMap<>();
+		Map<Pair<String, String>, Map<String, Long>> sprintWiseCompletedDefectsPriorityMap = new HashMap<>();
 		Map<Pair<String, String>, List<JiraIssue>> sprintWiseReOpenedDefectListMap = new HashMap<>();
 		Map<Pair<String, String>, List<JiraIssue>> sprintWiseCompletedDefectListMap = new HashMap<>();
 
@@ -236,8 +233,8 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 					customApiConfig);
 			projectWisePriorityList.addAll(priorityCountMapReopenedDefects.keySet());
 			projectWisePriorityList.addAll(priorityCountMapCompletedDefects.keySet());
-			sprintWiseDCReopenedDefectsPriorityMap.put(sprintFilter, priorityCountMapReopenedDefects);
-			sprintWiseDCCompletedDefectsPriorityMap.put(sprintFilter, priorityCountMapCompletedDefects);
+			sprintWiseReopenedDefectsPriorityMap.put(sprintFilter, priorityCountMapReopenedDefects);
+			sprintWiseCompletedDefectsPriorityMap.put(sprintFilter, priorityCountMapCompletedDefects);
 		});
 
 		sprintLeafNodeList.forEach(node -> {
@@ -246,22 +243,18 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
 
 			Map<String, List<DataCount>> dataCountMap = new HashMap<>();
-			Map<String, Long> reopenedDefectsPriorityMap = sprintWiseDCReopenedDefectsPriorityMap
+			Map<String, Long> reopenedDefectsPriorityMap = sprintWiseReopenedDefectsPriorityMap
 					.getOrDefault(currentNodeIdentifier, new HashMap<>());
-			Map<String, Long> completedDefectsPriorityMap = sprintWiseDCCompletedDefectsPriorityMap
+			Map<String, Long> completedDefectsPriorityMap = sprintWiseCompletedDefectsPriorityMap
 					.getOrDefault(currentNodeIdentifier, new HashMap<>());
 			Map<String, Long> reopenedFinalMap = new HashMap<>();
 			Map<String, Long> completedFinalMap = new HashMap<>();
-			Map<String, Object> reopenedOverAllHoverValueMap = new HashMap<>();
-			Map<String, Object> completedOverAllHoverValueMap = new HashMap<>();
 			if (CollectionUtils.isNotEmpty(projectWisePriorityList)) {
 				projectWisePriorityList.forEach(priority -> {
 					Long reopenedWiseCount = reopenedDefectsPriorityMap.getOrDefault(priority, 0L);
 					Long completedWiseCount = completedDefectsPriorityMap.getOrDefault(priority, 0L);
 					reopenedFinalMap.put(StringUtils.capitalize(priority), reopenedWiseCount);
 					completedFinalMap.put(StringUtils.capitalize(priority), completedWiseCount);
-					reopenedOverAllHoverValueMap.put(StringUtils.capitalize(priority), reopenedWiseCount.intValue());
-					completedOverAllHoverValueMap.put(StringUtils.capitalize(priority), completedWiseCount.intValue());
 				});
 				projectWisePriorityList.forEach(priority -> reopenedFinalMap.computeIfAbsent(priority, val -> 0L));
 				projectWisePriorityList.forEach(priority -> completedFinalMap.computeIfAbsent(priority, val -> 0L));
@@ -294,6 +287,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
+
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		List<String> sprintList = new ArrayList<>();
 		List<String> basicProjectConfigIds = new ArrayList<>();
@@ -309,9 +303,11 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 			sprintList.add(leaf.getSprintFilter().getId());
 			basicProjectConfigIds.add(basicProjectConfigId.toString());
 			defectType.add(NormalizedJira.DEFECT_TYPE.getValue());
+
 			KpiHelperService.getDroppedDefectsFilters(droppedDefectMap, basicProjectConfigId,
 					fieldMapping.getResolutionTypeForRejectionKPI190(),
 					fieldMapping.getJiraDefectRejectionStatusKPI190());
+
 			mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 					CommonUtils.convertToPatternList(defectType));
 			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -321,7 +317,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 
 		Set<String> totalSprintReportStories = new HashSet<>();
 		Set<String> totalIssue = new HashSet<>();
-		Set<String> totalIssueInSprint = new HashSet<>();
+		Set<String> taggedIssuesInSprint = new HashSet<>();
 		sprintDetails.forEach(sprintDetail -> {
 			if (CollectionUtils.isNotEmpty(sprintDetail.getTotalIssues())) {
 				FieldMapping fieldMapping = configHelperService.getFieldMapping(sprintDetail.getBasicProjectConfigId());
@@ -331,13 +327,13 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 				totalIssue.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
 						CommonConstant.TOTAL_ISSUES));
 			}
-			totalIssueInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
+			taggedIssuesInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
 					CommonConstant.TOTAL_ISSUES));
-			totalIssueInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
+			taggedIssuesInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
 					CommonConstant.COMPLETED_ISSUES_ANOTHER_SPRINT));
-			totalIssueInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
+			taggedIssuesInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
 					CommonConstant.PUNTED_ISSUES));
-			totalIssueInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
+			taggedIssuesInSprint.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetail,
 					CommonConstant.ADDED_ISSUES));
 
 		});
@@ -356,7 +352,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 
 			List<JiraIssue> totalSubTaskDefects = jiraIssueRepository
 					.findLinkedDefects(mapOfFilters, totalSprintReportStories, uniqueProjectMap).stream()
-					.filter(jiraIssue -> !totalIssueInSprint.contains(jiraIssue.getNumber()))
+					.filter(jiraIssue -> !taggedIssuesInSprint.contains(jiraIssue.getNumber()))
 					.collect(Collectors.toList());
 
 			totalDefectList.addAll(totalSprintReportDefects);
@@ -379,8 +375,9 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 	private DataCount getDataCountObject(Node node, String trendLineName, String priority,
 			Map<String, Long> reopenedFinalMap, Map<String, Long> completedFinalMap) {
 		DataCount dataCount = new DataCount();
-		double value = (double) Math.round(
-				(100.0 * reopenedFinalMap.getOrDefault(priority, 0L)) / (completedFinalMap.getOrDefault(priority, 0L)));
+		final Long reopenedCount = reopenedFinalMap.getOrDefault(priority, 0L);
+		final Long completedCount = completedFinalMap.getOrDefault(priority, 0L);
+		double value = completedCount == 0 ? 0.0 : (double) Math.round((100.0 * reopenedCount) / completedCount);
 		dataCount.setData(String.valueOf(value));
 		dataCount.setSProjectName(trendLineName);
 		dataCount.setSSprintID(node.getSprintFilter().getId());
@@ -388,18 +385,18 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 		dataCount.setValue(value);
 		dataCount.setKpiGroup(priority);
 		Map<String, Object> hoverValueMap = new LinkedHashMap<>();
-		hoverValueMap.put(REOPENED_DEFECTS, reopenedFinalMap.getOrDefault(priority, 0L));
-		hoverValueMap.put(COMPLETED_DEFECTS, completedFinalMap.getOrDefault(priority, 0L));
+		hoverValueMap.put(REOPENED_DEFECTS, reopenedCount);
+		hoverValueMap.put(COMPLETED_DEFECTS, completedCount);
 		dataCount.setHoverValue(hoverValueMap);
 		return dataCount;
 	}
 
 	private void populateExcelDataObject(String requestTrackerId, String sprintName, List<KPIExcelData> excelData,
-			List<JiraIssue> sprintWiseDefectDataList, Map<String, ReopenedDefectInfo> reopenedDefectInfoMap,
+			List<JiraIssue> sprintWiseReopenDefectDataList, Map<String, ReopenedDefectInfo> reopenedDefectInfoMap,
 			CustomApiConfig customApiConfig, List<JiraIssue> storyList) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprintName, sprintWiseDefectDataList, excelData,
+			KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprintName, sprintWiseReopenDefectDataList, excelData,
 					customApiConfig, storyList, reopenedDefectInfoMap);
 		}
 	}
