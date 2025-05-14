@@ -2179,18 +2179,20 @@ public class KpiHelperService { // NOPMD
 				? LocalDateTime.parse(sprintDetails.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
 				: LocalDateTime.parse(sprintDetails.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
 		List<JiraIssue> reopenedDefectsInSprint = new ArrayList<>();
+		Map<String, JiraIssue> totalDefectMap = totalDefectList.stream()
+				.collect(Collectors.toMap(JiraIssue::getNumber, Function.identity()));
 		defectHistoryList.forEach(jiraIssueCustomHistory -> {
 			List<JiraHistoryChangeLog> issueHistoryList = jiraIssueCustomHistory.getStatusUpdationLog();
 			Optional<JiraHistoryChangeLog> closedHistoryOptional = issueHistoryList.stream().filter(Objects::nonNull)
-					.filter(issueHistory -> closedStatusList.contains(issueHistory.getChangedTo().toLowerCase())).findFirst();
-                                                                                                                                                                                 			if (closedHistoryOptional.isPresent()) {
+					.filter(issueHistory -> closedStatusList.contains(issueHistory.getChangedTo().toLowerCase()))
+					.findFirst();
+			if (closedHistoryOptional.isPresent()) {
 				JiraHistoryChangeLog closedHistory = closedHistoryOptional.get();
-				Optional<JiraHistoryChangeLog> reopenHistoryOptional = issueHistoryList
-						.stream().filter(
-								sprintChangeLog -> sprintChangeLog.getUpdatedOn().isAfter(closedHistory.getUpdatedOn())
-										&& DateUtil.isWithinDateTimeRange(sprintChangeLog.getUpdatedOn(),
-												sprintStartDate, sprintEndDate)
-										&& !closedStatusList.contains(sprintChangeLog.getChangedTo().toLowerCase()))
+				Optional<JiraHistoryChangeLog> reopenHistoryOptional = issueHistoryList.stream()
+						.filter(sprintChangeLog -> sprintChangeLog.getUpdatedOn().isAfter(closedHistory.getUpdatedOn())
+								&& DateUtil.isWithinDateTimeRange(sprintChangeLog.getUpdatedOn(), sprintStartDate,
+										sprintEndDate)
+								&& !closedStatusList.contains(sprintChangeLog.getChangedTo().toLowerCase()))
 						.findFirst();
 				if (reopenHistoryOptional.isPresent()) {
 					JiraHistoryChangeLog reopenHistory = reopenHistoryOptional.get();
@@ -2201,9 +2203,8 @@ public class KpiHelperService { // NOPMD
 					double duration = Double.parseDouble(KpiDataHelper.calWeekHours(closedDate, reopenDate));
 					sprintReOpenedDefects.put(jiraIssueCustomHistory.getStoryID(),
 							new ReopenedDefectInfo(closedDate, reopenDate, duration));
-					reopenedDefectsInSprint.add(totalDefectList.stream()
-							.filter(j -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase(j.getNumber()))
-							.findFirst().orElse(null));
+					reopenedDefectsInSprint
+							.add(totalDefectMap.getOrDefault(jiraIssueCustomHistory.getStoryID(), new JiraIssue()));
 				}
 			}
 		});

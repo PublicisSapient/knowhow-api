@@ -2302,7 +2302,7 @@ public class KPIExcelUtility {
 					ReopenedDefectInfo info = reopenedDefectInfoMap.get(jiraIssue.getNumber());
 					excelData.setClosedDate(String.valueOf(info.getClosedDate()));
 					excelData.setReopenDate(String.valueOf(info.getReopenDate()));
-					excelData.setDurationToReopen(String.valueOf(info.getReopenDuration()));
+					excelData.setDurationToReopen(info.getReopenDuration() + "Hrs");
 				}
 				kpiExcelData.add(excelData);
 			});

@@ -5029,7 +5029,7 @@
     "kpiName" : "Defect Reopen Rate",
     "isDeleted" : "False",
     "defaultOrder" : 8,
-    "kpiUnit" : "Number",
+    "kpiUnit" : "%",
     "chartType" : "line",
     "upperThresholdBG" : "red",
     "lowerThresholdBG" : "white",
