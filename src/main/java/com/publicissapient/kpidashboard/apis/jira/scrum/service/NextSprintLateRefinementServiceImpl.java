@@ -27,8 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,9 +109,9 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 				if (sprintDetails == null) {
 					return new HashMap<>();
 				}
-				Set<String> totalIssues = sprintDetails.getTotalIssues().stream()
-						.filter(a -> fieldMapping.getJiraIssueTypeNamesKPI188().contains(a.getTypeName()))
-						.map(SprintIssue::getNumber).collect(Collectors.toSet());
+
+				Set<String> totalIssues = jiraIssueRepository.findBySprintID(sprintDetails.getSprintID()).stream()
+						.filter(a -> getTypeNames(fieldMapping).contains(a.getTypeName().toLowerCase())).map(JiraIssue::getNumber).collect(Collectors.toSet());
 				Map<String, Object> mapOfFilter = new HashMap<>();
 				jiraIterationServiceR.createAdditionalFilterMap(kpiRequest, mapOfFilter);
 				Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
@@ -117,23 +119,21 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 
 				List<JiraIssue> totalJiraIssueList = jiraIssueRepository
 						.findIssueByNumberWithAdditionalFilter(totalIssues, uniqueProjectMap);
-				// no need to transform sprintdetails as it already has a fieldmapping to filter
-				// out the issues
-				List<String> completeAndIncompleteIssues = KpiDataHelper
-						.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails, CommonConstant.TOTAL_ISSUES);
-
-				if (CollectionUtils.isNotEmpty(completeAndIncompleteIssues)) {
-					List<JiraIssue> filteredJiraIssue = IterationKpiHelper
-							.getFilteredJiraIssue(new ArrayList<>(completeAndIncompleteIssues), totalJiraIssueList);
-					Set<JiraIssue> filtersIssuesList = KpiDataHelper
-							.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(sprintDetails, new HashSet<>(),
-									filteredJiraIssue);
-					resultListMap.put(INCLUDED_ISSUES, new ArrayList<>(filtersIssuesList));
+				if (CollectionUtils.isNotEmpty(totalJiraIssueList)) {
+					resultListMap.put(INCLUDED_ISSUES, new ArrayList<>(totalJiraIssueList));
 				}
 			}
 		}
 
 		return resultListMap;
+	}
+
+	private static Set<String> getTypeNames(FieldMapping fieldMapping) {
+		return fieldMapping.getJiraIssueTypeNamesKPI188().stream()
+				.flatMap(name -> "Defect".equalsIgnoreCase(name)
+						? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
+						: Stream.of(name.trim().toLowerCase()))
+				.collect(Collectors.toSet());
 	}
 
 	/**
