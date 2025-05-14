@@ -33,7 +33,7 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author shunaray
  */
-@ChangeUnit(id = "r_defect_reopen_quality", order = "013204", author = "shunaray", systemVersion = "13.2.0")
+@ChangeUnit(id = "r_defect_reopen_quality", order = "013205", author = "shunaray", systemVersion = "13.2.0")
 public class DefectReopenChangeUnit {
 
 	public static final String FIELD_NAME = "fieldName";

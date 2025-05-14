@@ -58,6 +58,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.Feature;
@@ -82,16 +83,21 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
-
-	private final JiraIssueRepository jiraIssueRepository;
-	private final JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	private final SprintRepository sprintRepository;
-	private final ConfigHelperService configHelperService;
-	private final CustomApiConfig customApiConfig;
-	private final FilterHelperService filterHelperService;
-	private final CacheService cacheService;
+	@Autowired
+	private JiraIssueRepository jiraIssueRepository;
+	@Autowired
+	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Autowired
+	private SprintRepository sprintRepository;
+	@Autowired
+	private ConfigHelperService configHelperService;
+	@Autowired
+	private CustomApiConfig customApiConfig;
+	@Autowired
+	private FilterHelperService filterHelperService;
+	@Autowired
+	private CacheService cacheService;
 
 	private static final String SPRINT_SUBTASK_DEFECTS = "totalSprintSubtaskDefects";
 	public static final String SPRINT_DETAILS = "sprintWiseSprintDetails";
