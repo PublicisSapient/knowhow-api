@@ -1433,12 +1433,18 @@ public class KpiHelperService { // NOPMD
 					.get(new ObjectId(projectBasicConfigId));
 			List<ProjectToolConfig> projectToolConfig = null;
 			if (MapUtils.isNotEmpty(projectToolMap)) {
-				projectToolConfig = projectToolMap.get("Jira");
+				if(projectToolMap.get("Jira")==null){
+					projectToolConfig = projectToolMap.get("Rally");
+				} else if (projectToolMap.get("Jira")!=null) {
+					projectToolConfig = projectToolMap.get("Jira");
+				}
 				if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET)
 						&& projectToolMap.containsKey(Constant.REPO_TOOLS)) {
 					projectToolConfig = projectToolMap.get(Constant.REPO_TOOLS);
-				} else if (CollectionUtils.isEmpty(projectToolConfig)) {
+				} else if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_AZURE) ) {
 					projectToolConfig = projectToolMap.get("Azure");
+				} else if (CollectionUtils.isEmpty(projectToolConfig)) {
+					projectToolConfig = projectToolMap.get("Rally");
 				}
 			}
 

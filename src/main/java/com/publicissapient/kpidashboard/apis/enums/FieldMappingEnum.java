@@ -25,6 +25,14 @@ import java.util.List;
 /** KpiFieldMapping */
 @SuppressWarnings("java:S1192")
 public enum FieldMappingEnum {
+	KPI200("Processor", KPISource.RALLY.name(),
+			Arrays.asList("jiradefecttype", "jiraIssueTypeNames", "jiraIterationCompletionStatusCustomField",
+					"rootCauseIdentifier", "rootCause", "rootCauseValues", "sprintName", "estimationCriteria",
+					"storyPointToHourMapping", "jiraStoryPointsCustomField", "epicCostOfDelay", "epicRiskReduction",
+					"epicUserBusinessValue", "epicWsjf", "epicTimeCriticality", "epicJobSize", "additionalFilterConfig",
+					"jiraDueDateField", "jiraDueDateCustomField", "jiraDevDueDateField", "jiraDevDueDateCustomField",
+					"jiraIssueEpicType", "storyFirstStatus", "notificationEnabler", "epicLink", "jiraSubTaskDefectType",
+					"jiraSubTaskIdentification")),
 	KPI0("Processor", KPISource.JIRA.name(),
 			Arrays.asList("jiradefecttype", "jiraIssueTypeNames", "jiraIterationCompletionStatusCustomField",
 					"rootCauseIdentifier", "rootCause", "rootCauseValues", "sprintName", "estimationCriteria",
