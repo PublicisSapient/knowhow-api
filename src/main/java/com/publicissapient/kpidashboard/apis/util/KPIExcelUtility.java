@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.model.ReopenedDefectInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -2272,6 +2273,37 @@ public class KPIExcelUtility {
 						? DateUtil.dateTimeConverter(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC,
 								DateUtil.DISPLAY_DATE_FORMAT)
 						: Constant.BLANK);
+				kpiExcelData.add(excelData);
+			});
+		}
+	}
+	
+	public static void populateDefectWithReopenInfoExcelData(String sprint, List<JiraIssue> jiraIssues,
+			List<KPIExcelData> kpiExcelData, CustomApiConfig customApiConfig, List<JiraIssue> storyList,
+			Map<String, ReopenedDefectInfo> reopenedDefectInfoMap) {
+		if (CollectionUtils.isNotEmpty(jiraIssues)) {
+			jiraIssues.forEach(jiraIssue -> {
+				KPIExcelData excelData = new KPIExcelData();
+				excelData.setSprintName(sprint);
+				excelData.setDefectDesc(checkEmptyName(jiraIssue));
+				Map<String, String> defectIdDetails = new HashMap<>();
+				defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
+				excelData.setDefectId(defectIdDetails);
+				setSquads(excelData, jiraIssue);
+				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+				excelData.setRootCause(jiraIssue.getRootCauseList());
+				excelData.setDefectStatus(jiraIssue.getStatus());
+				excelData.setLabels(jiraIssue.getLabels());
+				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+
+				// Populate reopened defect info if present
+				if (reopenedDefectInfoMap != null && reopenedDefectInfoMap.containsKey(jiraIssue.getNumber())) {
+					ReopenedDefectInfo info = reopenedDefectInfoMap.get(jiraIssue.getNumber());
+					excelData.setClosedDate(String.valueOf(info.getClosedDate()));
+					excelData.setReopenDate(String.valueOf(info.getReopenDate()));
+					excelData.setDurationToReopen(String.valueOf(info.getReopenDuration()));
+				}
 				kpiExcelData.add(excelData);
 			});
 		}

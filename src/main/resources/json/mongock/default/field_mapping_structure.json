@@ -4471,5 +4471,63 @@
       "definition": "All issue types used by your Jira project"
     },
     "mandatory": true
+  },
+  {
+    "fieldName": "resolutionTypeForRejectionKPI190",
+    "fieldLabel": "Resolution type to be excluded",
+    "fieldType": "chips",
+    "section": "WorkFlow Status Mapping",
+    "processorCommon": false,
+    "tooltip": {
+      "definition": "Resolution types for defects that can be excluded from Defect reopen rate calculation"
+    },
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 1,
+    "mandatory": false,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "jiraDefectRejectionStatusKPI190",
+    "fieldLabel": "Status to identify rejected defects",
+    "fieldType": "text",
+    "fieldCategory": "workflow",
+    "section": "WorkFlow Status Mapping",
+    "processorCommon": false,
+    "tooltip": {
+      "definition": "All workflow statuses used to reject defects."
+    },
+    "fieldDisplayOrder": 2,
+    "sectionOrder": 1,
+    "mandatory": false,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "jiraDefectClosedStatusKPI190",
+    "fieldLabel": "Status to identify Closed Issues",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "section": "WorkFlow Status Mapping",
+    "processorCommon": false,
+    "tooltip": {
+      "definition": "This field should consider all status that are considered Closed in Jira for e.g. Closed, Done etc."
+    },
+    "fieldDisplayOrder": 3,
+    "sectionOrder": 1,
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "thresholdValueKPI190",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "section": "Project Level Threshold",
+    "processorCommon": false,
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 2,
+    "mandatory": false,
+    "nodeSpecific": false
   }
 ]
