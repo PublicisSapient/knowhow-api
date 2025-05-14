@@ -91,7 +91,6 @@ public class OpenDefectRateServiceImplTest {
     private KpiRequest kpiRequest;
     private Map<String, Object> filterLevelMap;
     private Map<String, String> kpiWiseAggregation = new HashMap<>();
-    private List<DataCount> dataCountList = new ArrayList<>();
 
     @InjectMocks
     OpenDefectRateServiceImpl odrServiceImpl;
@@ -224,6 +223,7 @@ public class OpenDefectRateServiceImplTest {
                 .thenReturn(kpiRequestTrackerId);
         when(odrServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
         when(sprintRepository.findBySprintIDIn(Mockito.any())).thenReturn(sprintDetailsList);
+        when(jiraIssueRepository.findIssueAndDescByNumber(Mockito.any())).thenReturn(totalIssueList);
         when(jiraIssueRepository.findIssueByNumber(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(totalIssueList);
         when(jiraIssueRepository.findLinkedDefects(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(totalBugList);
         when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(Mockito.any(), Mockito.any()))
@@ -233,6 +233,7 @@ public class OpenDefectRateServiceImplTest {
                     treeAggregatorDetail);
             assertThat("ODR Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
         } catch (Exception exception) {
+            System.out.println(exception);
         }
     }
 
