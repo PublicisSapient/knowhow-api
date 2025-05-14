@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * @author shunaray
  */
-@ChangeUnit(id = "defect_reopen_quality", order = "13204", author = "shunaray", systemVersion = "13.2.0")
+@ChangeUnit(id = "defect_reopen_quality", order = "13205", author = "shunaray", systemVersion = "13.2.0")
 public class DefectReopenChangeUnit {
 
 	public static final String FIELD_NAME = "fieldName";
