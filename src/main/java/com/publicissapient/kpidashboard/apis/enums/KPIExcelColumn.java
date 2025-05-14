@@ -376,7 +376,10 @@ public enum KPIExcelColumn {
 	LATE_REFINEMENT("kpi187", Arrays.asList("Sprint Name", "Date", "Issue Id", "Issue Type", "Issue Description", "Size(story point/hours)",
 			"Due Date", "Assignee", "Issue Status", "Un-Refined" )),
     NEXT_SPRINT_LATE_REFINEMENT("kpi188",
-                                  Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined"));
+                                  Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined")),
+
+	DEFECT_REOPEN_RATE_QUALITY("kpi190", Arrays.asList("Issue Id", "Defect Description", "Issue Status",
+			"Defect Priority", "Closed Date", "Reopen Date", "Time taken to reopen"));
 
 	// @formatter:on
 

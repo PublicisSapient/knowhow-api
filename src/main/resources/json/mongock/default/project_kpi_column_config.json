@@ -3379,6 +3379,54 @@
         "isDefault": true
       }
     ]
+  },
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi190",
+    "kpiColumnDetails": [
+      {
+        "columnName": "Sprint Name",
+        "order": 0,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Defect ID",
+        "order": 1,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Defect Description",
+        "order": 2,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Defect Priority",
+        "order": 3,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Closed Date",
+        "order": 4,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Reopen Date",
+        "order": 5,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Time taken to reopen",
+        "order": 6,
+        "isShown": true,
+        "isDefault": true
+      }
+    ]
   }
 ]
 
