@@ -4473,6 +4473,52 @@
     "mandatory": true
   },
   {
+    "fieldName": "jiraDefectRemovalStatusKPI191",
+    "fieldLabel": "Status to identify closed defects",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "fieldDisplayOrder": 8,
+    "sectionOrder": 4,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All workflow statuses used to identify defects in closed state"
+    }
+  },
+  {
+    "fieldName": "resolutionTypeForRejectionKPI191",
+    "fieldLabel": "Resolution type to be excluded",
+    "fieldType": "chips",
+    "section": "WorkFlow Status Mapping",
+    "fieldDisplayOrder": 6,
+    "sectionOrder": 4,
+    "tooltip": {
+      "definition": "Resolution types for defects that can be excluded from Defect count by Priority calculation"
+    }
+  },
+  {
+    "fieldName": "jiraDefectRejectionStatusKPI191",
+    "fieldLabel": "Status to identify rejected defects",
+    "fieldType": "text",
+    "fieldCategory": "workflow",
+    "section": "WorkFlow Status Mapping",
+    "fieldDisplayOrder": 2,
+    "sectionOrder": 4,
+    "tooltip": {
+      "definition": "All workflow statuses used to reject defects."
+    }
+  },
+  {
+    "fieldName": "thresholdValueKPI191",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "section": "Project Level Threshold",
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 6,
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    }
+  },
+  {
     "fieldName": "resolutionTypeForRejectionKPI190",
     "fieldLabel": "Resolution type to be excluded",
     "fieldType": "chips",

@@ -160,6 +160,8 @@ public enum KPICode {
 	WORK_REMAINING("kpi119", KPISource.JIRA.name()),
 	/** Defect Count By Status (Iteration) */
 	DEFECT_COUNT_BY_ITERATION("kpi136", KPISource.JIRA.name()),
+	/** Open Defect Rate kpi code. */
+	OPEN_DEFECT_RATE("kpi191", KPISource.JIRA.name()),
 	/** Risks and Dependencies */
 	RISKS_AND_DEPENDENCIES("kpi176", KPISource.JIRA.name()),
 	/** Defect Count By Status (Release) */
