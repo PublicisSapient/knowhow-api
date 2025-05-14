@@ -518,7 +518,26 @@
       "isDefault": true
     }]
   },
-
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi191",
+    "kpiColumnDetails": [{
+      "columnName": "Sprint Name",
+      "order": 0,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Defect ID",
+      "order": 1,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Issue Description",
+      "order": 2,
+      "isShown": true,
+      "isDefault": true
+    }]
+  },
   {
     "basicProjectConfigId": null,
     "kpiId": "kpi36",
