@@ -139,12 +139,15 @@ public class NextSprintLateRefinementServiceImplTest {
         sprintDetails.setState("ACTIVE");
         when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
         sprintDetails.setStartDate("2022-09-28T17:00:00.000Z");
+        sprintDetails.setSprintID("id");
         when(sprintRepository
                 .findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(any(ObjectId.class), any(String.class)))
                 .thenReturn(new ArrayList<>(List.of(sprintDetails)));
         when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
         when(jiraIssueRepository
                 .findIssueByNumberWithAdditionalFilter(any(),any())).thenReturn(storyList);
+        when(jiraIssueRepository
+                .findBySprintID(any())).thenReturn(storyList);
         try {
             KpiElement kpiElement = futureSprintLateRefinementService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
                     treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
