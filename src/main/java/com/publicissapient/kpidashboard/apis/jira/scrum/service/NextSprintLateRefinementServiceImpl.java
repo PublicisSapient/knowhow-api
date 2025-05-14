@@ -101,7 +101,7 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 				// Find the next sprint
 				SprintDetails sprintDetails = futureSprintList.stream()
 						.filter(sprint -> sprint.getStartDate() != null
-								&& DateUtil.stringToLocalDateTime(sprint.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC).isAfter(
+								&& DateUtil.stringToLocalDateTime(sprint.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC).isAfter(
 								DateUtil.stringToLocalDateTime(activeSprint.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC)))
 						.findFirst().orElse(null);
 
