@@ -119,11 +119,7 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 
 				List<JiraIssue> totalJiraIssueList = jiraIssueRepository
 						.findIssueByNumberWithAdditionalFilter(totalIssues, uniqueProjectMap);
-				// no need to transform sprintdetails as it already has a fieldmapping to filter
-				// out the issues
-				Set<String> completeAndIncompleteIssues = totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
-
-				if (CollectionUtils.isNotEmpty(completeAndIncompleteIssues)) {
+				if (CollectionUtils.isNotEmpty(totalJiraIssueList)) {
 					resultListMap.put(INCLUDED_ISSUES, new ArrayList<>(totalJiraIssueList));
 				}
 			}
