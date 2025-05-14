@@ -143,6 +143,9 @@ public enum FieldMappingEnum {
 	KPI134("Unplanned Work Status", KPISource.JIRA.name(),
 			Arrays.asList("jiraIterationCompletionStatusKPI134", "jiraIterationIssuetypeKPI134")),
 
+	KPI191("Open Defect Rate", KPISource.JIRA.name(), Arrays.asList("resolutionTypeForRejectionKPI191",
+			"jiraDefectRejectionStatusKPI191", "thresholdValueKPI191", "jiraDefectRemovalStatusKPI191")),
+
 	KPI119("Work Remaining", KPISource.JIRA.name(), Arrays.asList("jiraIterationCompletionStatusKPI119",
 			"jiraIterationIssuetypeKPI119", "jiraDevDoneStatusKPI119", "jiraStatusForInProgressKPI119")),
 

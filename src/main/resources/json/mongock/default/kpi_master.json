@@ -4981,5 +4981,47 @@
     "isTrendCalculative": false,
     "isAdditionalFilterSupport": false,
     "combinedKpiSource": "Jira/Azure"
+  },
+  {
+    "kpiId": "kpi191",
+    "kpiName": "Open Defect Rate",
+    "maxValue": "100",
+    "kpiUnit": "%",
+    "isDeleted": "False",
+    "defaultOrder": 5,
+    "kpiSource": "Jira",
+    "groupId": 3,
+    "thresholdValue": "90",
+    "kanban": false,
+    "chartType": "line",
+    "kpiInfo" : {
+      "definition" : "Measure of percentage of defects not closed against the total count tagged to the iteration" ,
+      "formula" : [
+        {
+          "lhs" : "ODR for a sprint" ,
+          "operator" : "division" ,
+          "operands" : [
+            "No. of defects in the iteration that are not fixed" ,
+            "Total no. of defects in a iteration"
+          ]
+        }
+      ] ,
+      "details" : [
+        {
+          "type" : "link" ,
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at" ,
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi191-Open+Defect+Rate"
+          }
+        }
+      ]
+    } , "xAxisLabel": "Sprints",
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": false,
+    "showTrend": true,
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": true,
+    "calculateMaturity": true,
+    "maturityRange": ["-25","25-50","50-75","75-90","90-"]
   }
 ]
