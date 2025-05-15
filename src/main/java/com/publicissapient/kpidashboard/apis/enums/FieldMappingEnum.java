@@ -143,6 +143,9 @@ public enum FieldMappingEnum {
 	KPI134("Unplanned Work Status", KPISource.JIRA.name(),
 			Arrays.asList("jiraIterationCompletionStatusKPI134", "jiraIterationIssuetypeKPI134")),
 
+	KPI191("Open Defect Rate", KPISource.JIRA.name(), Arrays.asList("resolutionTypeForRejectionKPI191",
+			"jiraDefectRejectionStatusKPI191", "thresholdValueKPI191", "jiraDefectRemovalStatusKPI191")),
+
 	KPI119("Work Remaining", KPISource.JIRA.name(), Arrays.asList("jiraIterationCompletionStatusKPI119",
 			"jiraIterationIssuetypeKPI119", "jiraDevDoneStatusKPI119", "jiraStatusForInProgressKPI119")),
 
@@ -320,6 +323,9 @@ public enum FieldMappingEnum {
 	KPI184("Change Failure Rate", KPISource.JENKINSKANBAN.name(), Arrays.asList("thresholdValueKPI184")),
 
 	KPI183("Deployment Frequency", KPISource.JENKINSKANBAN.name(), Arrays.asList("thresholdValueKPI183")),
+
+	KPI190("Defect Reopen Rate", KPISource.JIRA.name(), Arrays.asList("resolutionTypeForRejectionKPI190",
+			"jiraDefectRejectionStatusKPI190", "jiraDefectClosedStatusKPI190", "thresholdValueKPI190")),
 
 	KPI997("Open Ticket Aging By Priority", KPISource.JIRAKANBAN.name(),
 			Arrays.asList("jiraLiveStatusKPI997", "ticketCountIssueTypeKPI997", "jiraTicketClosedStatusKPI997",
