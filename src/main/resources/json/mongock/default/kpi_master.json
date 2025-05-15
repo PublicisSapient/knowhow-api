@@ -5034,7 +5034,7 @@
     "upperThresholdBG" : "red",
     "lowerThresholdBG" : "white",
     "xAxisLabel" : "Sprints",
-    "yAxisLabel" : "Count",
+    "yAxisLabel" : "Percentage",
     "showTrend" : true,
     "isPositiveTrend" : false,
     "calculateMaturity" : false,

@@ -96,7 +96,7 @@ public class DefectReopenChangeUnit {
 		return new Document().append(KPI_ID, KPI_190).append("kpiName", "Defect Reopen Rate")
 				.append("isDeleted", "False").append("defaultOrder", 8).append("kpiUnit", "%")
 				.append("chartType", "line").append("upperThresholdBG", "red").append("lowerThresholdBG", "white")
-				.append("xAxisLabel", "Sprints").append("yAxisLabel", "Count").append("showTrend", true)
+				.append("xAxisLabel", "Sprints").append("yAxisLabel", "Percentage").append("showTrend", true)
 				.append("isPositiveTrend", false).append("calculateMaturity", false).append("hideOverallFilter", false)
 				.append("kpiSource", "Jira").append("maxValue", "90").append("thresholdValue", "55")
 				.append("kanban", false).append("groupId", 24)
