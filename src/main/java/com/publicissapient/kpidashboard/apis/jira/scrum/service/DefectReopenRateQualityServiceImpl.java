@@ -263,7 +263,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 				reopenedFinalMap.put(CommonConstant.OVERALL, reopenedOverAllCount);
 				completedFinalMap.put(CommonConstant.OVERALL, completedOverAllCount);
 				projectWisePriorityList.add(CommonConstant.OVERALL);
-				projectWisePriorityList.forEach((priority) -> {
+				projectWisePriorityList.forEach(priority -> {
 					DataCount dataCount = getDataCountObject(node, trendLineName, StringUtils.capitalize(priority),
 							reopenedFinalMap, completedFinalMap);
 					trendValueList.add(dataCount);
