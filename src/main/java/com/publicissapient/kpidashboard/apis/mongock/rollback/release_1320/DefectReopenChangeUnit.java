@@ -61,7 +61,7 @@ public class DefectReopenChangeUnit {
 				.deleteMany(new Document(FIELD_NAME, new Document("$in", List.of("resolutionTypeForRejectionKPI190",
 						"jiraDefectRejectionStatusKPI190", "jiraDefectClosedStatusKPI190", "thresholdValueKPI190"))));
 		mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_190));
-		mongoTemplate.getCollection("kpi_column_configs").deleteOne(new Document("kpiId", KPI_ID));
+		mongoTemplate.getCollection("kpi_column_configs").deleteOne(new Document(KPI_ID, KPI_190));
 
 	}
 
@@ -133,7 +133,7 @@ public class DefectReopenChangeUnit {
 	}
 
 	private void insertKPIColumnConfig() {
-		Document kpiColumnConfig = new Document().append("basicProjectConfigId", null).append("kpiId", KPI_190).append(
+		Document kpiColumnConfig = new Document().append("basicProjectConfigId", null).append(KPI_ID, KPI_190).append(
 				"kpiColumnDetails",
 				List.of(createColumnDetail("Sprint Name", 1),
 						createColumnDetail("Defect ID", 2),
