@@ -929,7 +929,7 @@ public class ProjectAccessManager {
 
 			for (ProjectBasicConfig projectBasicConfig : uniqueProjectBasicConfigs) {
 				ProjectsForAccessRequest project = new ProjectsForAccessRequest();
-				project.setProjectId(projectBasicConfig.getId().toHexString());
+				project.setProjectId(projectBasicConfig.getProjectNodeId());
 				project.setProjectName(projectBasicConfig.getProjectName());
 				project.setHierarchy(projectBasicConfig.getHierarchy());
 				projects.add(project);
