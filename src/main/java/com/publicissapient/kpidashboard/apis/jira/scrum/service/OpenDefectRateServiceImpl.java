@@ -49,6 +49,7 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -257,40 +257,101 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
         sprintLeafNodeList.forEach(node -> {
             String trendLineName = node.getProjectFilter().getName();
 
-            Pair<String, String> currentNodeIdentifier = Pair.of(node.getProjectFilter().getBasicProjectConfigId().toString(),
-                    node.getSprintFilter().getId());
+            Pair<String, String> currentNodeIdentifier = Pair
+                    .of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
 
-            double odrForCurrentLeaf;
+            Set<String> openDefectStatuses = projectWiseDefectStatus
+                    .getOrDefault(node.getProjectFilter().getBasicProjectConfigId().toString(), new HashSet<>());
 
             if (sprintWiseODRMap.containsKey(currentNodeIdentifier)) {
-                odrForCurrentLeaf = sprintWiseODRMap.get(currentNodeIdentifier);
-                List<JiraIssue> sprintWiseClosedDefectList = sprintWiseOpendDefectListMap.get(currentNodeIdentifier);
+
+                List<JiraIssue> sprintWiseOpenDefectList = sprintWiseOpendDefectListMap.get(currentNodeIdentifier);
                 List<JiraIssue> sprintWiseTotaldDefectList = sprintWiseTotaldDefectListMap.get(currentNodeIdentifier);
-                populateExcelDataObject(requestTrackerId, node.getSprintFilter().getName(), excelData,
-                        sprintWiseClosedDefectList, sprintWiseTotaldDefectList, storyList);
+                Map<String, List<JiraIssue>> statusWisedefectMap = sprintWiseOpenDefectList.stream()
+                        .filter(issue -> issue.getStatus() != null)
+                        .collect(Collectors.groupingBy(JiraIssue::getStatus));
+                Map<String, Double> finalMap = new HashMap<>();
+                Map<String, Object> overallHowerMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(openDefectStatuses)) {
+                    openDefectStatuses.forEach(status -> {
+                        List<JiraIssue> issueList = statusWisedefectMap.getOrDefault(status, new ArrayList<>());
+                        int totalDefectCount = sprintWiseTotaldDefectList.size();
+                        Map<String, Object> howerMap = new HashMap<>();
+                        double odrForCurrentLeaf = 0.0d;
+                        odrForCurrentLeaf = getOdrForCurrentLeaf(sprintWiseTotaldDefectList, issueList, totalDefectCount,
+                                howerMap, odrForCurrentLeaf);
+                        howerMap.put(TOTAL, totalDefectCount);
+                        finalMap.put(status, odrForCurrentLeaf);
+                        overallHowerMap.put(status, howerMap);
+                    });
+                    openDefectStatuses.forEach(status -> finalMap.computeIfAbsent(status, val -> 0D));
+                    Double overAllCount = finalMap.values().stream().mapToDouble(val -> val).sum();
+                    finalMap.put(CommonConstant.OVERALL, overAllCount);
 
-            } else {
-                odrForCurrentLeaf = 0.0d;
+                    Map<String, Object> overHowerMap = new HashMap<>();
+                    overHowerMap.put(OPEN_DEFECTS, statusWisedefectMap.values().stream().mapToInt(List::size).sum());
+                    overHowerMap.put(TOTAL, sprintWiseTotaldDefectList.size());
+                    overallHowerMap.put(CommonConstant.OVERALL, overHowerMap);
+                    populateExcelDataObject(requestTrackerId, node.getSprintFilter().getName(), excelData,
+                            sprintWiseOpenDefectList, sprintWiseTotaldDefectList, storyList);
+                }
+                Map<String, List<DataCount>> dataCountMap = new HashMap<>();
+                createDataCount(trendValueList, node, dataCountMap, trendLineName, finalMap, overallHowerMap,
+                        sprintWiseTotaldDefectList.size());
+                mapTmp.get(node.getId()).setValue(dataCountMap);
             }
-            log.debug("[ODR-SPRINT-WISE][{}]. ODR for sprint {}  is {}", requestTrackerId, node.getSprintFilter().getName(),
-                    odrForCurrentLeaf);
-
-            DataCount dataCount = new DataCount();
-            dataCount.setData(String.valueOf(Math.round(odrForCurrentLeaf)));
-            dataCount.setSProjectName(trendLineName);
-            dataCount.setSSprintID(node.getSprintFilter().getId());
-            dataCount.setSSprintName(node.getSprintFilter().getName());
-            dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
-            dataCount.setSprintNames(new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
-            dataCount.setValue(odrForCurrentLeaf);
-            dataCount.setHoverValue(sprintWiseHowerMap.get(currentNodeIdentifier));
-            mapTmp.get(node.getId()).setValue(new ArrayList<>(Arrays.asList(dataCount)));
-            trendValueList.add(dataCount);
         });
 
         kpiElement.setExcelData(excelData);
         kpiElement.setExcelColumns(
                 KPIExcelColumn.OPEN_DEFECT_RATE.getColumns(sprintLeafNodeList, cacheService, flterHelperService));
+    }
+
+    private static double getOdrForCurrentLeaf(List<JiraIssue> sprintWiseTotaldDefectList, List<JiraIssue> issueList, int totalDefectCount, Map<String, Object> howerMap, double odrForCurrentLeaf) {
+        if (CollectionUtils.isNotEmpty(issueList)
+                && CollectionUtils.isNotEmpty(sprintWiseTotaldDefectList)) {
+            int openDefectCount = issueList.size();
+            howerMap.put(OPEN_DEFECTS, openDefectCount);
+            odrForCurrentLeaf = Math.round((100.0 * openDefectCount) / totalDefectCount);
+        } else {
+            howerMap.put(OPEN_DEFECTS, 0);
+        }
+        return odrForCurrentLeaf;
+    }
+
+    private void createDataCount(List<DataCount> trendValueList, Node node, Map<String, List<DataCount>> dataCountMap,
+                                 String trendLineName, Map<String, Double> finalMap, Map<String, Object> overallHowerMap, int totalBug) {
+        if (MapUtils.isNotEmpty(finalMap)) {
+            finalMap.forEach((status, value) -> {
+                DataCount dataCount = getDataCountObject(node, trendLineName, overallHowerMap, status, value);
+                trendValueList.add(dataCount);
+                dataCountMap.computeIfAbsent(status, k -> new ArrayList<>()).add(dataCount);
+            });
+        } else {
+            Map<String, Object> overHowerMap = new HashMap<>();
+            overHowerMap.put(OPEN_DEFECTS, 0);
+            overHowerMap.put(TOTAL, totalBug);
+            Map<String, Object> defaultMap = new HashMap<>();
+            defaultMap.put(CommonConstant.OVERALL, overHowerMap);
+
+            DataCount dataCount = getDataCountObject(node, trendLineName, defaultMap, CommonConstant.OVERALL, 0D);
+            trendValueList.add(dataCount);
+            dataCountMap.computeIfAbsent(CommonConstant.OVERALL, k -> new ArrayList<>()).add(dataCount);
+        }
+    }
+
+    private DataCount getDataCountObject(Node node, String trendLineName, Map<String, Object> overAllHoverValueMap,
+                                         String key, Double value) {
+        DataCount dataCount = new DataCount();
+        dataCount.setData(String.valueOf(value));
+        dataCount.setSProjectName(trendLineName);
+        dataCount.setSSprintID(node.getSprintFilter().getId());
+        dataCount.setSSprintName(node.getSprintFilter().getName());
+        dataCount.setValue(value);
+        dataCount.setKpiGroup(key);
+        dataCount.setHoverValue((Map<String, Object>) overAllHoverValueMap.get(key));
+
+        return dataCount;
     }
 
     /**
