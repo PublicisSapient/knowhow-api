@@ -499,5 +499,16 @@ public class KPIExcelData {
     @JsonProperty("Un-Refined")
     private String unRefined;
 
+	@JsonProperty("Labels")
+	private List<String> labels;
+
+	@JsonProperty("Closed Date")
+	private String closedDate;
+
+	@JsonProperty("Reopen Date")
+	private String reopenDate;
+
+	@JsonProperty("Time taken to reopen")
+	private String durationToReopen;
 
 }
