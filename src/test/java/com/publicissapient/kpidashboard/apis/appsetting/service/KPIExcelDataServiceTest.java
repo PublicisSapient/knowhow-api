@@ -417,7 +417,7 @@ public class KPIExcelDataServiceTest {
 
 		assertArrayEquals(idList.parallelStream().toArray(String[]::new),
 				kpiRequestSourceWiseMap.get("EXCEL-SONAR").getIds());
-		assertThat("kpi request: ", kpiRequestSourceWiseMap.size(), equalTo(5));
+		assertThat("kpi request: ", kpiRequestSourceWiseMap.size(), equalTo(6));
 	}
 
 	@Test
