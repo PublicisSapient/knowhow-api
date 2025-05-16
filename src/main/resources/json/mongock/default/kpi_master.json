@@ -4981,5 +4981,92 @@
     "isTrendCalculative": false,
     "isAdditionalFilterSupport": false,
     "combinedKpiSource": "Jira/Azure"
+  },
+  {
+    "kpiId": "kpi191",
+    "kpiName": "Open Defect Rate",
+    "maxValue": "100",
+    "kpiUnit": "%",
+    "isDeleted": "False",
+    "defaultOrder": 5,
+    "kpiSource": "Jira",
+    "groupId": 3,
+    "thresholdValue": "90",
+    "kanban": false,
+    "chartType": "line",
+    "kpiInfo" : {
+      "definition" : "Measure of percentage of defects not closed against the total count tagged to the iteration" ,
+      "formula" : [
+        {
+          "lhs" : "ODR for a sprint" ,
+          "operator" : "division" ,
+          "operands" : [
+            "No. of defects in the iteration that are not fixed" ,
+            "Total no. of defects in a iteration"
+          ]
+        }
+      ] ,
+      "details" : [
+        {
+          "type" : "link" ,
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at" ,
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi191-Open+Defect+Rate"
+          }
+        }
+      ]
+    } , "xAxisLabel": "Sprints",
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": false,
+    "showTrend": true,
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": true,
+    "calculateMaturity": true,
+    "maturityRange": ["-25","25-50","50-75","75-90","90-"]
+  },
+  {
+    "kpiId" : "kpi190",
+    "kpiName" : "Defect Reopen Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 8,
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "xAxisLabel" : "Sprints",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : false,
+    "kpiSource" : "Jira",
+    "maxValue" : "90",
+    "thresholdValue" : "55",
+    "kanban" : false,
+    "groupId" : 24,
+    "kpiInfo" : {
+      "definition" : "It shows number of defects reopened in a given span of time in comparison to the total closed defects. For all the reopened defects, the average time to reopen is also available.",
+      "formula" : [
+        {
+          "lhs" : "Defect Reopen Rate (%)",
+          "operator" : "division",
+          "operands" : [ "Reopened Defects", "Total Resolved Defects" ]
+        }
+      ],
+      "details" : [
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at",
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi190-Defect+Reopen+Rate"
+          }
+        }
+      ]
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : true,
+    "combinedKpiSource" : "Jira/Azure"
   }
 ]

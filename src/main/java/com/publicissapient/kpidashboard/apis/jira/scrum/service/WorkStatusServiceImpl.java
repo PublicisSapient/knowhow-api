@@ -75,6 +75,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	public static final String PLANNED = "Planned";
 	public static final String UNPLANNED = "Unplanned";
 	public static final String DEV_STATUS = "Dev Status";
+	public static final String DELAY_COUNT = "Delayed Workitems";
 
 	@Autowired
 	private ConfigHelperService configHelperService;
@@ -175,7 +176,6 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			Map<JiraIssue, String> devCompletedIssues = getDevCompletedIssues(allIssuesWithDevDueDate, allIssueHistories,
 					fieldMapping);
 			Set<IssueKpiModalValue> issueData = new HashSet<>();
-
 			allIssues.forEach(issue -> {
 				KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
 				IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
@@ -317,6 +317,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		List<KpiDataCategory> categoryGroup2 = new ArrayList<>();
 		categoryGroup2.add(createKpiDataCategory(PLANNED_COMPLETION, 1));
 		categoryGroup2.add(createKpiDataCategory(ACTUAL_COMPLETION, 2));
+		categoryGroup2.add(createKpiDataCategory(DELAY_COUNT, 3));
 		categoryData.setCategoryGroup2(categoryGroup2);
 
 		return categoryData;
@@ -392,6 +393,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
 					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
 					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
+					populateDelay(delay, category2, DEV_STATUS);
 				}
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
@@ -404,6 +406,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
 					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
 					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
+					populateDelay(delay, category2, DEV_STATUS);
 				}
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
@@ -448,6 +451,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
+				populateDelay(delay, category2, PLANNED);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -457,6 +461,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
+				populateDelay(delay, category2, PLANNED);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -472,6 +477,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 		}
 		return category2;
+	}
+	private static void populateDelay(int delay, Map<String, List<String>> category2, String categoryKey) {
+		if (delay != 0) {
+			category2.get(categoryKey).add(DELAY_COUNT);
+		}
 	}
 
 	/**
@@ -601,7 +611,6 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		// calling function for cal actual completion days
 		Map<String, Object> actualCompletionData = calStartAndEndDate(issueCustomHistory, allCompletedIssuesList,
 				sprintDetails, fieldMapping);
-
 		if (actualCompletionData.get(ACTUAL_COMPLETE_DATE) != null && jiraIssue.getDueDate() != null) {
 			LocalDate actualCompletedDate = (LocalDate) actualCompletionData.get(ACTUAL_COMPLETE_DATE);
 			int jiraIssueDelay = getDelay(DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC),
