@@ -201,7 +201,7 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 
 		if (userInfo.getAuthorities().contains(SUPERADMINROLENAME)) {
 			accessRequest = repository.findByStatus(status);
-		} else if (userInfo.getAuthorities().contains(Constant.ROLE_PROJECT_ADMIN)) {
+		} else {
 			List<String> roleList = Arrays.asList(Constant.ROLE_PROJECT_ADMIN);
 			accessRequest = fetchAccessRequestBasedOnUserInfoAndRole(userInfo, roleList, status);
 		}
@@ -242,10 +242,14 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	}
 
 	private List<AccessRequest> filterProjectLevelRequest(List<String> basicConfigList,
-														  List<AccessRequest> pendingAccessRequest) {
+			List<AccessRequest> pendingAccessRequest) {
 		List<AccessRequest> filteredRequest = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(basicConfigList) && CollectionUtils.isNotEmpty(pendingAccessRequest)) {
-			pendingAccessRequest.forEach(filteredRequest::add);
+			pendingAccessRequest.forEach(request -> {
+				if (basicConfigList.contains(request.getAccessNode().getAccessItems().get(0).getItemId())) {
+					filteredRequest.add(request);
+				}
+			});
 		}
 		return filteredRequest;
 	}
