@@ -2278,8 +2278,8 @@ public class KPIExcelUtility {
 		}
 	}
 	
-	public static void populateDefectWithReopenInfoExcelData(String sprint, List<JiraIssue> jiraIssues,
-			List<KPIExcelData> kpiExcelData, CustomApiConfig customApiConfig, List<JiraIssue> storyList,
+	public static void populateDefectWithReopenInfoExcelData(String sprint, List<KPIExcelData> kpiExcelData,
+			CustomApiConfig customApiConfig, List<JiraIssue> storyList,
 			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap) {
 		if (MapUtils.isNotEmpty(reopenedDefectInfoMap)) {
 			reopenedDefectInfoMap
