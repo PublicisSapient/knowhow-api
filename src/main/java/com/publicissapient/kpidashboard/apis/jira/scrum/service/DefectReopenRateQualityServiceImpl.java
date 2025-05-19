@@ -280,8 +280,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 				});
 
 				populateExcelDataObject(requestTrackerId, node.getSprintFilter().getName(), excelData,
-						sprintWiseReOpenedDefectListMap.get(currentNodeIdentifier), reopenDefectTransitionMap,
-						customApiConfig, storyList);
+						reopenDefectTransitionMap, customApiConfig, storyList);
 			}
 			mapTmp.get(node.getId()).setValue(dataCountMap);
 		});
@@ -404,13 +403,12 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 	}
 
 	private void populateExcelDataObject(String requestTrackerId, String sprintName, List<KPIExcelData> excelData,
-			List<JiraIssue> sprintWiseReopenCompletedDefectDataList,
 			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap, CustomApiConfig customApiConfig,
 			List<JiraIssue> storyList) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprintName, sprintWiseReopenCompletedDefectDataList,
-					excelData, customApiConfig, storyList, reopenedDefectInfoMap);
+			KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprintName, excelData, customApiConfig, storyList,
+					reopenedDefectInfoMap);
 		}
 	}
 
