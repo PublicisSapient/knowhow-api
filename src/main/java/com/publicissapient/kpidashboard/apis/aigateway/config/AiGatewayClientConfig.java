@@ -40,9 +40,10 @@ public class AiGatewayClientConfig {
     public AiGatewayClient aiGatewayClient() {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-        httpClient.connectTimeout(100, TimeUnit.SECONDS)
+        httpClient.connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(100, TimeUnit.SECONDS)
-                .writeTimeout(100, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .callTimeout(150, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true);
 
         httpClient.interceptors().clear();
