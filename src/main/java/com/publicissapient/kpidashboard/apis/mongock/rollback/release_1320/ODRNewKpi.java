@@ -126,11 +126,11 @@ public class ODRNewKpi {
                         new Document(COLUMN_NAME, "Defect Description").append(ORDER, 3).append(IS_SHOWN, true).append(IS_DEFAULT, true),
                         new Document(COLUMN_NAME, "Story ID").append(ORDER, 4).append(IS_SHOWN, true).append(IS_DEFAULT, true),
                         new Document(COLUMN_NAME, "Story Description").append(ORDER, 5).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-                        new Document(COLUMN_NAME, "Squad").append(ORDER, 6).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-                        new Document(COLUMN_NAME, "Root Cause").append(ORDER, 7).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-                        new Document(COLUMN_NAME, "Defect Priority").append(ORDER, 8).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-                        new Document(COLUMN_NAME, "Defect Status").append(ORDER, 10).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-                        new Document(COLUMN_NAME, "Time Spent (in hours)").append(ORDER, 11).append(IS_SHOWN, true).append(IS_DEFAULT, true)
+                        new Document(COLUMN_NAME, "Open Defect").append(ORDER, 6).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Defect Priority").append(ORDER, 7).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Squad").append(ORDER, 8).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Root Cause").append(ORDER, 9).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Time Spent (in hours)").append(ORDER, 10).append(IS_SHOWN, true).append(IS_DEFAULT, true)
                 ));
         mongoTemplate.getCollection("kpi_column_configs").insertOne(kpiColumnConfigDoc);
     }
