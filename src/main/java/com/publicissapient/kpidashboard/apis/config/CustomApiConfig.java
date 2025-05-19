@@ -327,6 +327,8 @@ public class CustomApiConfig { // NOPMD
 	private String defectRateUrl;
 
 	@Value("${rally.test.connection}")
+	@Setter
+	@Getter
 	private String rallyTestConnection;
 
 	@Setter
@@ -1370,11 +1372,4 @@ public class CustomApiConfig { // NOPMD
 		this.centralHierarchyUrl = centralHierarchyUrl;
 	}
 
-	public String getRallyTestConnection() {
-		return rallyTestConnection;
-	}
-
-	public void setRallyTestConnection(String rallyTestConnection) {
-		this.rallyTestConnection = rallyTestConnection;
-	}
 }
