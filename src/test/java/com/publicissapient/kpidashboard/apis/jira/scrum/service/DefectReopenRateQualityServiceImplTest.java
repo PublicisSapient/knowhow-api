@@ -192,7 +192,6 @@ public class DefectReopenRateQualityServiceImplTest {
 			v.setIncludeRCAForKPI35(Arrays.asList("code issue"));
 			v.setDefectPriorityKPI35(Arrays.asList("P3"));
 
-			v.setJiraDefectClosedStatusKPI190(Arrays.asList("closed"));
 		});
 		when(sprintRepository.findBySprintIDIn(any())).thenReturn(sprintDetailsList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
@@ -257,7 +256,6 @@ public class DefectReopenRateQualityServiceImplTest {
 			v.setIncludeRCAForKPI35(Arrays.asList("code issue"));
 			v.setDefectPriorityKPI35(Arrays.asList("P3"));
 
-			v.setJiraDefectClosedStatusKPI190(Arrays.asList("closed"));
 			v.setJiraDefectRejectionStatusKPI190("rejected");
 			v.setResolutionTypeForRejectionKPI190(Arrays.asList("Invalid", "Duplicate", "Unrequired"));
 		});
