@@ -267,6 +267,9 @@ public class KPIExcelUtility {
 				if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REJECTION_RATE.getKpiId())) {
 					excelData.setRejectedDefect(present);
 				}
+				if (kpiId.equalsIgnoreCase(KPICode.OPEN_DEFECT_RATE.getKpiId())) {
+					excelData.setOpenDefect(present);
+				}
 
 				kpiExcelData.add(excelData);
 			});
