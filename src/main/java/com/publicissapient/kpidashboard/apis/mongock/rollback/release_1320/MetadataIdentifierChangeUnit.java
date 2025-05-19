@@ -23,9 +23,6 @@ import io.mongock.api.annotations.RollbackExecution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 @ChangeUnit(id = "r_insertMetadataIdentifier", order = "13204", author = "girpatha", systemVersion = "13.2.0")
 public class MetadataIdentifierChangeUnit {
     private static final String METADATA_IDENTIFIER_COLLECTION = "metadata_identifier";

@@ -232,7 +232,7 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 
 	private boolean validateRallyConnection(Connection connection, String apiUrl, String token) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.set("ZSESSIONID", connection.getAccessToken());
+		headers.set("ZSESSIONID", token != null ? token : connection.getAccessToken());
 		HttpEntity<String> entity = new HttpEntity<>(headers);
 		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
 		return response.getStatusCode().is2xxSuccessful();
