@@ -32,6 +32,9 @@ public class MetadataIdentifierChangeUnit {
 
     private static final String METADATA_IDENTIFIER_COLLECTION = "metadata_identifier";
     private final MongoTemplate mongoTemplate;
+    private static final String VALUE = "value";
+    private static final String HIERARCHICAL_REQUIREMENT = "hierarchicalrequirement";
+
 
     public MetadataIdentifierChangeUnit(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
@@ -46,21 +49,21 @@ public class MetadataIdentifierChangeUnit {
                 .append("isKanban", false)
                 .append("disabled", false)
                 .append("issues", Arrays.asList(
-                        new Document("type", "jiradefecttype").append("value", Arrays.asList("Defect", "Bug")),
-                        new Document("type", "jiraIssueTypeNames").append("value", Arrays.asList("hierarchicalrequirement", "defect", "task")),
-                        new Document("type", "jiraIssueEpicType").append("value", Collections.singletonList("Epic")),
-                        new Document("type", "jiraDefectInjectionIssueTypeKPI14").append("value", Arrays.asList("hierarchicalrequirement", "task")),
-                        new Document("type", "jiraIssueTypeKPI35").append("value", Arrays.asList("hierarchicalrequirement", "task"))
+                        new Document("type", "jiradefecttype").append(VALUE, Arrays.asList("Defect", "Bug")),
+                        new Document("type", "jiraIssueTypeNames").append(VALUE, Arrays.asList(HIERARCHICAL_REQUIREMENT, "defect", "task")),
+                        new Document("type", "jiraIssueEpicType").append(VALUE, Collections.singletonList("Epic")),
+                        new Document("type", "jiraDefectInjectionIssueTypeKPI14").append(VALUE, Arrays.asList(HIERARCHICAL_REQUIREMENT, "task")),
+                        new Document("type", "jiraIssueTypeKPI35").append(VALUE, Arrays.asList(HIERARCHICAL_REQUIREMENT, "task"))
                 ))
                 .append("customfield", Arrays.asList(
-                        new Document("type", "jiraStoryPointsCustomField").append("value", Collections.singletonList("Story Points")),
-                        new Document("type", "epicCostOfDelay").append("value", Collections.singletonList("Story Points")),
-                        new Document("type", "epicRiskReduction").append("value", Collections.singletonList("Risk Reduction-Opportunity Enablement Value"))
+                        new Document("type", "jiraStoryPointsCustomField").append(VALUE, Collections.singletonList("Story Points")),
+                        new Document("type", "epicCostOfDelay").append(VALUE, Collections.singletonList("Story Points")),
+                        new Document("type", "epicRiskReduction").append(VALUE, Collections.singletonList("Risk Reduction-Opportunity Enablement Value"))
                 ))
                 .append("workflow", Arrays.asList(
-                        new Document("type", "storyFirstStatusKPI148").append("value", Collections.singletonList("Open")),
-                        new Document("type", "jiraStatusForQaKPI148").append("value", Collections.singletonList("In Testing")),
-                        new Document("type", "jiraStatusForDevelopmentKPI82").append("value", Arrays.asList("Implementing", "In Development", "In Analysis"))
+                        new Document("type", "storyFirstStatusKPI148").append(VALUE, Collections.singletonList("Open")),
+                        new Document("type", "jiraStatusForQaKPI148").append(VALUE, Collections.singletonList("In Testing")),
+                        new Document("type", "jiraStatusForDevelopmentKPI82").append(VALUE, Arrays.asList("Implementing", "In Development", "In Analysis"))
                 ));
 
         mongoTemplate.getCollection(METADATA_IDENTIFIER_COLLECTION).insertOne(metadataIdentifier);
