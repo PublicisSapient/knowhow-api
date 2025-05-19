@@ -932,6 +932,7 @@ public class ProjectAccessManager {
 			for (ProjectBasicConfig projectBasicConfig : uniqueProjectBasicConfigs) {
 				ProjectsForAccessRequest project = new ProjectsForAccessRequest();
 				project.setProjectId(projectBasicConfig.getId().toHexString());
+				project.setProjectNodeId(projectBasicConfig.getProjectNodeId());
 				project.setProjectName(projectBasicConfig.getProjectName());
 				project.setHierarchy(projectBasicConfig.getHierarchy());
 				projects.add(project);
@@ -1303,7 +1304,7 @@ public class ProjectAccessManager {
 		List<String> projectIdList = new ArrayList<>();
 		if (null != projectAccess) {
 			projectIdList = getProjects(projectAccess.getAccessNodes()).stream()
-					.map(ProjectsForAccessRequest::getProjectId).collect(Collectors.toList());
+					.map(ProjectsForAccessRequest::getProjectNodeId).collect(Collectors.toList());
 		}
 		return projectIdList;
 	}
