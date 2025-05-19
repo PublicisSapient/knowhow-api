@@ -45,7 +45,7 @@ public class ODRNewKpi {
                         .append(FIELD_TYPE, "chips")
                         .append(FIELD_CATEGORY, "workflow")
                         .append(FIELD_DISPLAY_ORDER, 8)
-                        .append(SECTION_ORDER, 4)
+                        .append(SECTION_ORDER, 4).append("mandatory", true)
                         .append(SECTION, WORK_FLOW_STATUS_MAPPING)
                         .append(TOOLTIP, new Document(DEFINITION, "All workflow statuses used to identify defects in closed state")),
 
@@ -88,16 +88,16 @@ public class ODRNewKpi {
                 .append("thresholdValue", "90")
                 .append("kanban", false)
                 .append("chartType", "line")
-                .append("kpiInfo", new Document(DEFINITION, "Measure of percentage of defects not closed against the total count tagged to the iteration")
+                .append("kpiInfo", new Document(DEFINITION, "Measure of percentage of defects unresolved against the total count tagged to the iteration")
                         .append("formula", Arrays.asList(
-                                new Document("lhs", "ODR for a sprint")
+                                new Document("lhs", "ODR for a sprint (%)")
                                         .append("operator", "division")
                                         .append("operands", Arrays.asList("No. of defects in the iteration that are not fixed", "Total no. of defects in a iteration"))
                         ))
                         .append("details", Arrays.asList(
                                 new Document("type", "link")
                                         .append("kpiLinkDetail", new Document("text", "Detailed Information at")
-                                                .append("link", "https://knowhow.tools.publicis.sapient.com/wiki/kpi191-Open+Defect+Rate"))
+                                                .append("link", "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/189825034/Open+Defect+Rate"))
                         ))
                 )
                 .append("xAxisLabel", "Sprints")
@@ -112,7 +112,7 @@ public class ODRNewKpi {
 
         // Insert document in kpi_category_mapping
         Document kpiCategoryMappingDoc = new Document(KPI_ID, KPI_191)
-                .append("categoryId", "categoryTwo")
+                .append("categoryId", "quality")
                 .append("kpiOrder", 15)
                 .append("kanban", false);
         mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDoc);
