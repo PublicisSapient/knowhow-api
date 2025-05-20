@@ -185,7 +185,7 @@ public class DefectReopenRateQualityServiceImplTest {
 		maturityRangeMap.put("defectCountByPriority", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		maturityRangeMap.put("defectPriorityWeight", Arrays.asList("10", "7", "5", "3"));
 
-		when(jiraIssueRepository.findIssueByNumber(Mockito.any(), Mockito.any(), Mockito.any()))
+		when(jiraIssueRepository.findIssuesByFilterAndProjectMapFilter(Mockito.any(), Mockito.any()))
 				.thenReturn(jiraIssueList);
 
 		fieldMappingMap.forEach((k, v) -> {
@@ -265,6 +265,9 @@ public class DefectReopenRateQualityServiceImplTest {
 				.thenReturn(fieldMappingMap.get(new ObjectId("6335363749794a18e8a4479b")));
 		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(Mockito.any(), Mockito.any()))
 				.thenReturn(jiraIssueCustomHistoryList);
+		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
+		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+				.thenReturn(kpiRequestTrackerId);
 		Map<String, Object> defectDataListMap = defectReopenRateQualityService.fetchKPIDataFromDb(leafNodeList,
 				startDate, endDate, kpiRequest);
 		assertThat("Total Defects value :",
