@@ -112,7 +112,7 @@ public class ODRNewKpi {
         // Insert document in kpi_category_mapping
         Document kpiCategoryMappingDoc = new Document(KPI_ID, KPI_191)
                 .append("categoryId", "quality")
-                .append("kpiOrder", 15)
+                .append("kpiOrder", 5)
                 .append("kanban", false);
         mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDoc);
 

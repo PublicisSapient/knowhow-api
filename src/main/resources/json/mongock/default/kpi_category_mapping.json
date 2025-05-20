@@ -122,7 +122,7 @@
   {
     "kpiId": "kpi191",
     "categoryId": "categoryTwo",
-    "kpiOrder": 15,
+    "kpiOrder": 5,
     "kanban": false
   },
   {
@@ -277,7 +277,7 @@
   {
     "kpiId": "kpi190",
     "categoryId": "categoryTwo",
-    "kpiOrder": 16,
+    "kpiOrder": 6,
     "kanban": false
   }
 ]
