@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -100,7 +101,7 @@ public class NetOpenTicketCountByPriorityServiceImpl
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.TICKET_COUNT_BY_PRIORITY);
 
-		trendValuesMap = sortTrendValueMap(trendValuesMap, priorityTypes(true));
+		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, priorityTypes(true));
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
 		trendValuesMap.forEach((key, dateWiseDataCount) -> {
 			DataCountGroup dataCountGroup = new DataCountGroup();
@@ -366,16 +367,6 @@ public class NetOpenTicketCountByPriorityServiceImpl
 			KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(dateProjectKey, jiraHistoryPriorityAndDateWiseIssueMap,
 					projectWisePriorityList, kanbanJiraIssues, excelData, date, KPICode.TICKET_COUNT_BY_PRIORITY.getKpiId());
 		}
-	}
-
-	private Map<String, List<DataCount>> sortTrendValueMap(Map<String, List<DataCount>> trendMap, List<String> keyOrder) {
-		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();
-		keyOrder.forEach(order -> {
-			if (null != trendMap.get(order)) {
-				sortedMap.put(order, trendMap.get(order));
-			}
-		});
-		return sortedMap;
 	}
 
 	private List<String> priorityTypes(boolean addOverall) {

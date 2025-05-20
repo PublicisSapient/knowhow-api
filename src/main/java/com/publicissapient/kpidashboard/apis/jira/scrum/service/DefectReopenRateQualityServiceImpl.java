@@ -130,7 +130,7 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.DEFECT_REOPEN_RATE_QUALITY);
 
-		trendValuesMap = sortTrendValueMap(trendValuesMap, Arrays.asList(CommonConstant.OVERALL, Constant.P1,
+		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, Arrays.asList(CommonConstant.OVERALL, Constant.P1,
 				Constant.P2, Constant.P3, Constant.P4, Constant.MISC));
 		Map<String, Map<String, List<DataCount>>> issueTypeProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach((issueType, dataCounts) -> {
@@ -428,17 +428,6 @@ public class DefectReopenRateQualityServiceImpl extends JiraKPIService<Double, L
 		avgByPriority.put(CommonConstant.OVERALL, round(overallAvg));
 		return avgByPriority;
 
-	}
-
-	private Map<String, List<DataCount>> sortTrendValueMap(Map<String, List<DataCount>> trendMap,
-			List<String> keyOrder) {
-		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();
-		keyOrder.forEach(order -> {
-			if (null != trendMap.get(order)) {
-				sortedMap.put(order, trendMap.get(order));
-			}
-		});
-		return sortedMap;
 	}
 
 	/** {@inheritDoc} */
