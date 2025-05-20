@@ -17,6 +17,7 @@
 package com.publicissapient.kpidashboard.apis.aigateway.service;
 
 import com.publicissapient.kpidashboard.apis.aigateway.client.AiGatewayClient;
+import com.publicissapient.kpidashboard.apis.aigateway.config.AiGatewayConfig;
 import com.publicissapient.kpidashboard.apis.aigateway.dto.request.ChatGenerationRequestDTO;
 import com.publicissapient.kpidashboard.apis.aigateway.dto.response.AiProvidersResponseDTO;
 import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
@@ -35,7 +36,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class AiGatewayServiceImpl implements AiGatewayService {
 
-    private static final String DEFAULT_AI_PROVIDER_NAME = "openai";
+    private final AiGatewayConfig aiGatewayConfig;
 
     private final AiGatewayClient aiGatewayClient;
 
@@ -54,7 +55,7 @@ public class AiGatewayServiceImpl implements AiGatewayService {
     public ChatGenerationResponseDTO generateChatResponse(String prompt) {
         try {
             return aiGatewayClient.generate(
-                            new ChatGenerationRequestDTO(prompt, DEFAULT_AI_PROVIDER_NAME)
+                            new ChatGenerationRequestDTO(prompt, aiGatewayConfig.getDefaultAiProvider())
                     )
                     .execute()
                     .body();
@@ -67,6 +68,6 @@ public class AiGatewayServiceImpl implements AiGatewayService {
 
     @Override
     public void generateChatResponseAsync(String prompt, Callback<ChatGenerationResponseDTO> callBack) {
-        aiGatewayClient.generate(new ChatGenerationRequestDTO(prompt, DEFAULT_AI_PROVIDER_NAME)).enqueue(callBack);
+        aiGatewayClient.generate(new ChatGenerationRequestDTO(prompt, aiGatewayConfig.getDefaultAiProvider())).enqueue(callBack);
     }
 }
