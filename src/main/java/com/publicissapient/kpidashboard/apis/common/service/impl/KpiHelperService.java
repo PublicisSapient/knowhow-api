@@ -2199,8 +2199,7 @@ public class KpiHelperService { // NOPMD
 					processClosedStatusDate(statusLog, closedStatusDateMap, changedTo);
 				}
 				// Reopen event
-				else if (isIssueReopened(closedStatusList, defectReopenStatusKPI190, statusLog, changedTo,
-						sprintStartDate, sprintEndDate)) {
+				else if (isIssueReopened(defectReopenStatusKPI190, statusLog, sprintStartDate, sprintEndDate)) {
 					processReopenDetail(sprintDefectStatusInfo, defectHistory, statusLog, closedStatusDateMap,
 							totalDefectMap, reopenedDefects);
 				}
@@ -2246,10 +2245,9 @@ public class KpiHelperService { // NOPMD
 				: LocalDateTime.parse(sprintDetails1.split("\\.")[0], DATE_TIME_FORMATTER);
 	}
 
-	private static boolean isIssueReopened(List<String> closedStatusList, String reopenStatus,
-			JiraHistoryChangeLog statusLog, String changedTo, LocalDateTime sprintStartDate,
-			LocalDateTime sprintEndDate) {
-		return !closedStatusList.contains(changedTo) && statusLog.getChangedTo().equalsIgnoreCase(reopenStatus)
+	private static boolean isIssueReopened(String reopenStatus, JiraHistoryChangeLog statusLog,
+			LocalDateTime sprintStartDate, LocalDateTime sprintEndDate) {
+		return statusLog.getChangedTo().equalsIgnoreCase(reopenStatus)
 				&& DateUtil.isWithinDateTimeRange(statusLog.getUpdatedOn(), sprintStartDate, sprintEndDate);
 	}
 }
