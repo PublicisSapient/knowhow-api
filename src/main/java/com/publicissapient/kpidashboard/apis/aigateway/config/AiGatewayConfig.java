@@ -26,4 +26,5 @@ import org.springframework.context.annotation.Configuration;
 public class AiGatewayConfig {
     private String baseUrl;
     private String audience;
+    private String defaultAiProvider;
 }
