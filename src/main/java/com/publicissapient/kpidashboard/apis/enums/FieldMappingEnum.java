@@ -324,8 +324,8 @@ public enum FieldMappingEnum {
 
 	KPI183("Deployment Frequency", KPISource.JENKINSKANBAN.name(), Arrays.asList("thresholdValueKPI183")),
 
-	KPI190("Defect Reopen Rate", KPISource.JIRA.name(), Arrays.asList("resolutionTypeForRejectionKPI190",
-			"jiraDefectRejectionStatusKPI190", "jiraDefectClosedStatusKPI190", "thresholdValueKPI190")),
+	KPI190("Defect Reopen Rate", KPISource.JIRA.name(), Arrays.asList("defectReopenStatusKPI190",
+			"resolutionTypeForRejectionKPI190", "jiraDefectRejectionStatusKPI190", "thresholdValueKPI190")),
 
 	KPI997("Open Ticket Aging By Priority", KPISource.JIRAKANBAN.name(),
 			Arrays.asList("jiraLiveStatusKPI997", "ticketCountIssueTypeKPI997", "jiraTicketClosedStatusKPI997",
