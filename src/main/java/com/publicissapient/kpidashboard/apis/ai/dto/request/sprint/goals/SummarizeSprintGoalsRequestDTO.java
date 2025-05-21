@@ -16,14 +16,11 @@
 
 package com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 
-import java.util.List;
-
 public record SummarizeSprintGoalsRequestDTO(
-        @Schema(description = "List of sprint goals", example = "Increase team collaboration, Have more prod deployments")
-        @NotEmpty(message = "The field 'sprintGoals' cannot be empty")
-        List<String> sprintGoals
-) {
+		@Schema(description = "List of sprint goals", example = "Increase team collaboration, Have more prod deployments") @NotEmpty(message = "The field 'sprintGoals' cannot be empty") List<String> sprintGoals) {
 }

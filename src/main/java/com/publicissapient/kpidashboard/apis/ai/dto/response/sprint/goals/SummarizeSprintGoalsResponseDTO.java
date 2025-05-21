@@ -16,7 +16,5 @@
 
 package com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals;
 
-public record SummarizeSprintGoalsResponseDTO(
-        String summary
-) {
+public record SummarizeSprintGoalsResponseDTO(String summary) {
 }

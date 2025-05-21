@@ -16,10 +16,15 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
-import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
-import com.publicissapient.kpidashboard.apis.ai.service.sprint.goals.SprintGoalsService;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,58 +35,49 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Collections;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
+import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.service.sprint.goals.SprintGoalsService;
 
 @ExtendWith(MockitoExtension.class)
 class AiControllerTest {
 
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Mock
-    private SprintGoalsService sprintGoalsService;
+	@Mock
+	private SprintGoalsService sprintGoalsService;
 
-    @InjectMocks
-    private AiController aiController;
+	@InjectMocks
+	private AiController aiController;
 
-    @BeforeEach
-    public void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(aiController).build();
-    }
+	@BeforeEach
+	public void setUp() {
+		mockMvc = MockMvcBuilders.standaloneSetup(aiController).build();
+	}
 
-    @Test
-    void testSummarizeSprintGoalsSuccess() throws Exception {
-        when(sprintGoalsService.summarizeSprintGoals(any(SummarizeSprintGoalsRequestDTO.class)))
-                .thenReturn(new SummarizeSprintGoalsResponseDTO("Summary of goals"));
-        SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
+	@Test
+	void testSummarizeSprintGoalsSuccess() throws Exception {
+		when(sprintGoalsService.summarizeSprintGoals(any(SummarizeSprintGoalsRequestDTO.class)))
+				.thenReturn(new SummarizeSprintGoalsResponseDTO("Summary of goals"));
+		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
 
-        mockMvc.perform(post("/ai/sprint-goals/summary")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isOk())
-                .andExpect(content().json(
-                        """
-                        {
-                          "summary": "Summary of goals"
-                        }
-                        """));
-    }
+		mockMvc.perform(post("/ai/sprint-goals/summary").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isOk())
+				.andExpect(content().json("""
+						{
+						  "summary": "Summary of goals"
+						}
+						"""));
+	}
 
-    @Test
-    void testSummarizeSprintGoalsValidationError() throws Exception {
-        SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(Collections.emptyList());
+	@Test
+	void testSummarizeSprintGoalsValidationError() throws Exception {
+		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(Collections.emptyList());
 
-        mockMvc.perform(post("/ai/sprint-goals/summary")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
-    }
+		mockMvc.perform(post("/ai/sprint-goals/summary").contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isBadRequest());
+	}
 }

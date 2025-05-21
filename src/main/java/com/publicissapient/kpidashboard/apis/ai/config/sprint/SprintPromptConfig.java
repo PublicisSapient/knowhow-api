@@ -16,19 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.ai.config.sprint;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
 
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "ai.sprint")
 public class SprintPromptConfig {
 
-    private Goals goals = new Goals();
+	private Goals goals = new Goals();
 
-    @Data
-    public static class Goals {
-        private String prompt;
-    }
+	@Data
+	public static class Goals {
+		private String prompt;
+	}
 }
