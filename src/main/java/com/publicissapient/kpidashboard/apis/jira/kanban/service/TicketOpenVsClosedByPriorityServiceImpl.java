@@ -130,7 +130,7 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.TICKET_OPEN_VS_CLOSE_BY_PRIORITY);
 
-		trendValuesMap = sortTrendValueMap(trendValuesMap, priorityTypes(true));
+		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, priorityTypes(true));
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
 		trendValuesMap.forEach((key, datewiseDataCount) -> {
 			DataCountGroup dataCountGroup = new DataCountGroup();
@@ -412,16 +412,6 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 
 		dateWiseIssueClosedStatusList.addAll(filteredIssue);
 		return projectIssueTypeMap;
-	}
-
-	private Map<String, List<DataCount>> sortTrendValueMap(Map<String, List<DataCount>> trendMap, List<String> keyOrder) {
-		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();
-		keyOrder.forEach(order -> {
-			if (null != trendMap.get(order)) {
-				sortedMap.put(order, trendMap.get(order));
-			}
-		});
-		return sortedMap;
 	}
 
 	private List<String> priorityTypes(boolean addOverall) {
