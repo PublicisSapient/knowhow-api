@@ -67,7 +67,7 @@ public class AlignKpiMaturityRangeToKEM {
 				"kpi82", List.of("-25", "25-50", "50-75", "75-90", "90-"),
 				"kpi111", List.of("-90", "90-60", "60-25", "25-10", "10-"),
 				"kpi166", List.of("48-", "24-48", "12-24", "1-12", "-1"),
-				KPI_PI_PREDICTABILITY, null,
+				KPI_PI_PREDICTABILITY, new ArrayList<>(),
 				"kpi118", List.of("0-2", "2-4", "4-6", "6-8", "8-"));
 
 		updateMaturityRanges(maturityRangeMap, false);
