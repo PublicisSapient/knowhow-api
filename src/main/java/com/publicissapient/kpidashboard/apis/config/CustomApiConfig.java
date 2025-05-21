@@ -326,6 +326,11 @@ public class CustomApiConfig { // NOPMD
 	private String repoToolMembersUrl;
 	private String defectRateUrl;
 
+	@Value("${rally.test.connection}")
+	@Setter
+	@Getter
+	private String rallyTestConnection;
+
 	@Setter
 	@Getter
 	private int sprintVelocityVarianceThreshold;
