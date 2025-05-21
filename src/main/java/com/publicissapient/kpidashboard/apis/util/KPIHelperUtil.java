@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -450,4 +452,16 @@ public final class KPIHelperUtil {
 			return Constant.MISC;
 		}
 	}
+	
+	public static Map<String, List<DataCount>> sortTrendMapByKeyOrder(Map<String, List<DataCount>> trendMap,
+			List<String> keyOrder) {
+		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();
+		keyOrder.forEach(order -> {
+			if (null != trendMap.get(order)) {
+				sortedMap.put(order, trendMap.get(order));
+			}
+		});
+		return sortedMap;
+	}
+
 }

@@ -4527,7 +4527,7 @@
     "tooltip": {
       "definition": "Resolution types for defects that can be excluded from Defect reopen rate calculation"
     },
-    "fieldDisplayOrder": 1,
+    "fieldDisplayOrder": 3,
     "sectionOrder": 1,
     "mandatory": false,
     "nodeSpecific": false
@@ -4548,21 +4548,6 @@
     "nodeSpecific": false
   },
   {
-    "fieldName": "jiraDefectClosedStatusKPI190",
-    "fieldLabel": "Status to identify Closed Issues",
-    "fieldType": "chips",
-    "fieldCategory": "workflow",
-    "section": "WorkFlow Status Mapping",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "This field should consider all status that are considered Closed in Jira for e.g. Closed, Done etc."
-    },
-    "fieldDisplayOrder": 3,
-    "sectionOrder": 1,
-    "mandatory": true,
-    "nodeSpecific": false
-  },
-  {
     "fieldName": "thresholdValueKPI190",
     "fieldLabel": "Target KPI Value",
     "fieldType": "number",
@@ -4575,5 +4560,18 @@
     "sectionOrder": 2,
     "mandatory": false,
     "nodeSpecific": false
+  },
+  {
+    "fieldName": "defectReopenStatusKPI190",
+    "fieldLabel": "Defect Reopen Status",
+    "fieldDisplayOrder": 1,
+    "fieldType": "text",
+    "fieldCategory": "workflow",
+    "section": "WorkFlow Status Mapping",
+    "sectionOrder": 1,
+    "mandatory": true,
+    "tooltip": {
+      "definition": "Enter the workflow status to which a defect transitions when it is reopened."
+    }
   }
 ]
