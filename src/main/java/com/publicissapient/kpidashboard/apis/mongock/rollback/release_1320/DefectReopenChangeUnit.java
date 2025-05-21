@@ -59,7 +59,7 @@ public class DefectReopenChangeUnit {
 		mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_190));
 		mongoTemplate.getCollection("field_mapping_structure")
 				.deleteMany(new Document(FIELD_NAME, new Document("$in", List.of("resolutionTypeForRejectionKPI190",
-						"jiraDefectRejectionStatusKPI190", "jiraDefectClosedStatusKPI190", "thresholdValueKPI190"))));
+						"jiraDefectRejectionStatusKPI190", "defectReopenStatusKPI190", "thresholdValueKPI190"))));
 		mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_190));
 		mongoTemplate.getCollection("kpi_column_configs").deleteOne(new Document(KPI_ID, KPI_190));
 
@@ -81,11 +81,11 @@ public class DefectReopenChangeUnit {
 						"Status to identify rejected defects", FIELD_TYPE, "text", FIELD_CATEGORY, "workflow", SECTION,
 						WORK_FLOW_STATUS_MAPPING, TOOLTIP, "All workflow statuses used to reject defects.",
 						FIELD_DISPLAY_ORDER, 2, SECTION_ORDER, 1, MANDATORY, false)),
-				createFieldMapping(Map.of(FIELD_NAME, "jiraDefectClosedStatusKPI190", FIELD_LABEL,
-						"Status to identify Closed Issues", FIELD_TYPE, "chips", FIELD_CATEGORY, "workflow", SECTION,
-						WORK_FLOW_STATUS_MAPPING, TOOLTIP,
-						"This field should consider all status that are considered Closed in Jira for e.g. Closed, Done etc.",
-						FIELD_DISPLAY_ORDER, 3, SECTION_ORDER, 1, MANDATORY, true)),
+				createFieldMapping(Map.of(FIELD_NAME, "defectReopenStatusKPI190", FIELD_LABEL, "Defect Reopen Status",
+						FIELD_TYPE, "text", FIELD_CATEGORY, "workflow", SECTION, WORK_FLOW_STATUS_MAPPING,
+						FIELD_DISPLAY_ORDER, 1, SECTION_ORDER, 4, TOOLTIP,
+						"Enter the workflow status to which a defect transitions when it is reopened.", MANDATORY,
+						true)),
 				createFieldMapping(Map.of(FIELD_NAME, "thresholdValueKPI190", FIELD_LABEL, "Target KPI Value",
 						FIELD_TYPE, "number", SECTION, "Project Level Threshold", TOOLTIP,
 						"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown",
@@ -135,12 +135,9 @@ public class DefectReopenChangeUnit {
 	private void insertKPIColumnConfig() {
 		Document kpiColumnConfig = new Document().append("basicProjectConfigId", null).append(KPI_ID, KPI_190).append(
 				"kpiColumnDetails",
-				List.of(createColumnDetail("Sprint Name", 1),
-						createColumnDetail("Defect ID", 2),
-						createColumnDetail("Defect Description", 3),
-						createColumnDetail("Defect Priority", 4),
-						createColumnDetail("Closed Date", 5),
-						createColumnDetail("Reopen Date", 6),
+				List.of(createColumnDetail("Sprint Name", 1), createColumnDetail("Defect ID", 2),
+						createColumnDetail("Defect Description", 3), createColumnDetail("Defect Priority", 4),
+						createColumnDetail("Closed Date", 5), createColumnDetail("Reopen Date", 6),
 						createColumnDetail("Time taken to reopen", 7)));
 
 		mongoTemplate.getCollection("kpi_column_configs").insertOne(kpiColumnConfig);
