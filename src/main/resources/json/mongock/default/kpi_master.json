@@ -5028,7 +5028,7 @@
     "kpiId" : "kpi190",
     "kpiName" : "Defect Reopen Rate",
     "isDeleted" : "False",
-    "defaultOrder" : 8,
+    "defaultOrder" : 6,
     "kpiUnit" : "%",
     "chartType" : "line",
     "upperThresholdBG" : "red",
