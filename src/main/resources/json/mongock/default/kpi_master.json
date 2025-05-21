@@ -4892,7 +4892,7 @@
   },
   {
     "kpiId": "kpi187",
-    "kpiName": "Late Refinement (Current Sprint)",
+    "kpiName": "Sprint Readiness (Current Sprint)",
     "kpiUnit": "Count",
     "isDeleted": "False",
     "defaultOrder": 11,
@@ -4911,7 +4911,7 @@
           "type": "link",
           "kpiLinkDetail": {
             "text": "Detailed Information at",
-            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinemnt+Current+Sprint"
+            "link": "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/159154188/Sprint+Readiness"
           }
         }
       ]
@@ -4928,7 +4928,7 @@
   },
   {
     "kpiId": "kpi188",
-    "kpiName": "Late Refinement (Next Sprint)",
+    "kpiName": "Sprint Readiness (Next Sprint)",
     "maxValue": "",
     "isDeleted": "False",
     "defaultOrder": 12,
@@ -4947,7 +4947,7 @@
           "type": "link",
           "kpiLinkDetail": {
             "text": "Detailed Information at",
-            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinemnt+Future+Sprint"
+            "link": "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/159154188/Sprint+Readiness"
           }
         }
       ]
