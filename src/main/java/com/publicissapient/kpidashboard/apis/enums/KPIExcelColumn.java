@@ -93,8 +93,8 @@ public enum KPIExcelColumn {
 					"Defect Description", "Root Cause", "Defect Priority", "Defect Status", "Time Spent (in hours)")),
 
 	OPEN_DEFECT_RATE("kpi191",
-			Arrays.asList("Sprint Name", "Defect ID", "Defect Description", "Story ID", "Story Description", "Squad",
-					"Root Cause", "Defect Priority", "Defect Status", "Time Spent (in hours)")),
+			Arrays.asList("Sprint Name", "Defect ID", "Defect Description","Open Defect", "Story ID", "Story Description", "Squad",
+					"Root Cause", "Defect Priority", "Time Spent (in hours)")),
 	DEFECT_SEEPAGE_RATE("kpi35",
 			Arrays.asList("Sprint Name", "Defect ID", "Defect Description", "Escaped defect identifier", "Story ID",
 					"Story Description", "Squad", "Root Cause", "Defect Priority", "Defect Status", "Time Spent (in hours)")),
