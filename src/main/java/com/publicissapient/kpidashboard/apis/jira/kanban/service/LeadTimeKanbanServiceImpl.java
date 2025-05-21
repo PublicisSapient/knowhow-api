@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -398,7 +399,7 @@ public class LeadTimeKanbanServiceImpl extends JiraKPIService<Long, List<Object>
 	 * @return
 	 */
 	private List<DataCountGroup> getDataCountGroups(Map<String, List<DataCount>> trendValuesMap) {
-		trendValuesMap = sortTrendValueMap(trendValuesMap, filterOrder());
+		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, filterOrder());
 		Map<String, Map<String, List<DataCount>>> filterProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach((filter, dataCounts) -> {
 			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
@@ -429,16 +430,6 @@ public class LeadTimeKanbanServiceImpl extends JiraKPIService<Long, List<Object>
 			dataCountGroups.add(dataCountGroup);
 		});
 		return dataCountGroups;
-	}
-
-	private Map<String, List<DataCount>> sortTrendValueMap(Map<String, List<DataCount>> trendMap, List<String> keyOrder) {
-		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();
-		keyOrder.forEach(order -> {
-			if (null != trendMap.get(order)) {
-				sortedMap.put(order, trendMap.get(order));
-			}
-		});
-		return sortedMap;
 	}
 
 	private List<String> filterOrder() {
