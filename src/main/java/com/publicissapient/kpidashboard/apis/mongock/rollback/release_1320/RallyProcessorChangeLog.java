@@ -5,10 +5,6 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-
-import java.util.Collections;
 
 @ChangeUnit(id = "r_insertRallyProcessorIfNotExists", order = "013209", author = "girpatha", systemVersion = "13.2.0")
 public class RallyProcessorChangeLog {
@@ -30,5 +26,6 @@ public class RallyProcessorChangeLog {
 
     @RollbackExecution
     public void rollback() {
+        // Rollback not required for this
     }
 }

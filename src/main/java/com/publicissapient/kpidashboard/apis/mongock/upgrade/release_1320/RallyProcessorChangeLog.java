@@ -19,6 +19,7 @@ public class RallyProcessorChangeLog {
     private static final String PROCESSOR_COLLECTION = "processor";
     private static final String CLASS_KEY = "_class";
     private static final String PROCESSOR_NAME = "processorName";
+    public static final String RALLY = "Rally";
 
     private final MongoTemplate mongoTemplate;
 
@@ -29,13 +30,13 @@ public class RallyProcessorChangeLog {
     @Execution
     public void insertRallyProcessor() {
         // Check if Rally processor already exists
-        Query query = new Query(Criteria.where(PROCESSOR_NAME).is("Rally"));
+        Query query = new Query(Criteria.where(PROCESSOR_NAME).is(RALLY));
         boolean processorExists = mongoTemplate.exists(query, PROCESSOR_COLLECTION);
         
         // Only insert if processor doesn't exist
         if (!processorExists) {
             Document rallyProcessor = new Document()
-                    .append(PROCESSOR_NAME, "Rally")
+                    .append(PROCESSOR_NAME, RALLY)
                     .append("processorType", "AGILE_TOOL")
                     .append("isActive", true)
                     .append("isOnline", true)
@@ -52,6 +53,6 @@ public class RallyProcessorChangeLog {
         // Only delete the processor if it was inserted by this changeLog
         // This is a simplified approach - in a real scenario, you might want to track what was inserted
         mongoTemplate.getCollection(PROCESSOR_COLLECTION)
-                .deleteOne(new Document(PROCESSOR_NAME, "Rally"));
+                .deleteOne(new Document(PROCESSOR_NAME, RALLY));
     }
 }
