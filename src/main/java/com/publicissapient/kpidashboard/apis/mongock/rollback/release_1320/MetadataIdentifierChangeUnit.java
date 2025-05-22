@@ -23,7 +23,7 @@ import io.mongock.api.annotations.RollbackExecution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@ChangeUnit(id = "r_insertMetadataIdentifier", order = "13204", author = "girpatha", systemVersion = "13.2.0")
+@ChangeUnit(id = "r_insertMetadataIdentifier", order = "013208", author = "girpatha", systemVersion = "13.2.0")
 public class MetadataIdentifierChangeUnit {
     private static final String METADATA_IDENTIFIER_COLLECTION = "metadata_identifier";
     private final MongoTemplate mongoTemplate;
@@ -34,12 +34,12 @@ public class MetadataIdentifierChangeUnit {
 
     @Execution
     public void execution() {
-        // No execution logic as this is a rollback script
+        deleteMetadataIdentifier();
     }
 
     @RollbackExecution
     public void rollback() {
-        deleteMetadataIdentifier();
+        // No execution logic as this is a rollback script
     }
 
     private void deleteMetadataIdentifier() {
