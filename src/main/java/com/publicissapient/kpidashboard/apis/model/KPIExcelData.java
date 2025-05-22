@@ -115,6 +115,9 @@ public class KPIExcelData {
 	@JsonProperty("Defect Rejected")
 	private String rejectedDefect;
 
+	@JsonProperty("Open Defect")
+	private String openDefect;
+
 	@JsonProperty("Priority")
 	private String priority;
 
