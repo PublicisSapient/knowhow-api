@@ -1435,15 +1435,8 @@ public class KpiHelperService { // NOPMD
 					.get(new ObjectId(projectBasicConfigId));
 			List<ProjectToolConfig> projectToolConfig = null;
 			if (MapUtils.isNotEmpty(projectToolMap)) {
-				projectToolConfig = projectToolMap.get("Jira");
-				if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET)
-						&& projectToolMap.containsKey(Constant.REPO_TOOLS)) {
-					projectToolConfig = projectToolMap.get(Constant.REPO_TOOLS);
-				} else if (CollectionUtils.isEmpty(projectToolConfig)) {
-					projectToolConfig = projectToolMap.get("Azure");
-				}
+				projectToolConfig = getProjectToolConfigs(projectToolMap, projectToolConfig, kpiSource);
 			}
-
 			if (CollectionUtils.isEmpty(projectToolConfig)) {
 				return fieldMappingStructureResponse;
 			}
@@ -1466,6 +1459,23 @@ public class KpiHelperService { // NOPMD
 			log.info("kpi Id" + kpiId + "No Enum is present");
 		}
 		return fieldMappingStructureResponse;
+	}
+
+	private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap, List<ProjectToolConfig> projectToolConfig, String kpiSource) {
+		if(projectToolMap.get("Jira")==null){
+			projectToolConfig = projectToolMap.get("Rally");
+		} else if (projectToolMap.get("Jira")!=null) {
+			projectToolConfig = projectToolMap.get("Jira");
+		}
+		if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET)
+				&& projectToolMap.containsKey(Constant.REPO_TOOLS)) {
+			projectToolConfig = projectToolMap.get(Constant.REPO_TOOLS);
+		} else if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_AZURE) ) {
+			projectToolConfig = projectToolMap.get("Azure");
+		} else if (CollectionUtils.isEmpty(projectToolConfig)) {
+			projectToolConfig = projectToolMap.get("Rally");
+		}
+		return projectToolConfig;
 	}
 
 	public List<FieldMappingStructure> getFieldMappingStructure(List<FieldMappingStructure> fieldMappingStructureList,

@@ -70,13 +70,16 @@ jobs:
           COMMON_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "COMMON_VERSION=$COMMON_VERSION"
           echo "COMMON_VERSION=$COMMON_VERSION" >> $GITHUB_ENV
+      
+      - name: Updating the common version in api project
+        run: |
           mvn versions:use-dep-version \
             -Dincludes=com.publicissapient.kpidashboard:common \
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
       - name: Build & Test CustomAPI
-        run: mvn clean install -Ddockerfile.skip=true 
+        run: mvn clean install -Ddockerfile.skip=true
 
       - name: SonarQube Analysis - CustomAPI
         run: |
