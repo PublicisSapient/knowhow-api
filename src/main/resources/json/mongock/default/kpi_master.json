@@ -97,11 +97,11 @@
     "isAdditionalFilterSupport" : true ,
     "calculateMaturity" : true ,
     "maturityRange" : [
-      "-25" ,
-      "25-50" ,
-      "50-75" ,
-      "75-90" ,
-      "90-"
+      "-60",
+      "60-79",
+      "80-89",
+      "90-94",
+      "95-"
     ]
   } ,
   {
@@ -149,10 +149,10 @@
     "isAdditionalFilterSupport" : true ,
     "calculateMaturity" : true ,
     "maturityRange" : [
-      "-90" ,
-      "90-60" ,
-      "60-25" ,
-      "25-10" ,
+      "-50",
+      "50-40",
+      "40-20",
+      "20-10",
       "10-"
     ]
   } ,
@@ -903,11 +903,11 @@
     "isAdditionalFilterSupport" : true ,
     "calculateMaturity" : true ,
     "maturityRange" : [
-      "-40" ,
-      "40-60" ,
-      "60-75" ,
-      "75-90" ,
-      "90-"
+      "-60",
+      "60-79",
+      "80-94",
+      "95-105",
+      "105-"
     ]
   } ,
   {
@@ -1252,11 +1252,11 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "maturityRange": [
-      "0-2" ,
-      "2-4" ,
-      "4-6" ,
-      "6-8" ,
-      "8-"
+      "-2",
+      "2-4",
+      "5-10",
+      "11-20",
+      "20-"
     ],
     "maturityLevel": [
       {
@@ -3425,7 +3425,14 @@
     "showTrend" : true ,
     "aggregationCriteria" : "sum" ,
     "isAdditionalFilterSupport" : false ,
-    "calculateMaturity" : false
+    "calculateMaturity" : true,
+    "maturityRange": [
+      "-50",
+      "51-70",
+      "71-80",
+      "81-90",
+      "91-"
+    ]
   } ,
   {
     "kpiId" : "kpi154" ,
@@ -4190,11 +4197,11 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "maturityRange": [
-      "48-",
-      "24-48",
-      "12-24",
-      "1-12",
-      "-1"
+      "24-",
+      "4-24",
+      "1-4",
+      "0.5-1",
+      "-0.5"
     ],
     "maturityLevel": [
       {
