@@ -25,6 +25,14 @@ import java.util.List;
 /** KpiFieldMapping */
 @SuppressWarnings("java:S1192")
 public enum FieldMappingEnum {
+	KPI200("Processor", KPISource.RALLY.name(),
+			Arrays.asList("jiradefecttype", "jiraIssueTypeNames", "jiraIterationCompletionStatusCustomField",
+					"rootCauseIdentifier", "rootCause", "rootCauseValues", "sprintName", "estimationCriteria",
+					"storyPointToHourMapping", "jiraStoryPointsCustomField", "epicCostOfDelay", "epicRiskReduction",
+					"epicUserBusinessValue", "epicWsjf", "epicTimeCriticality", "epicJobSize", "additionalFilterConfig",
+					"jiraDueDateField", "jiraDueDateCustomField", "jiraDevDueDateField", "jiraDevDueDateCustomField",
+					"jiraIssueEpicType", "storyFirstStatus", "notificationEnabler", "epicLink", "jiraSubTaskDefectType",
+					"jiraSubTaskIdentification")),
 	KPI0("Processor", KPISource.JIRA.name(),
 			Arrays.asList("jiradefecttype", "jiraIssueTypeNames", "jiraIterationCompletionStatusCustomField",
 					"rootCauseIdentifier", "rootCause", "rootCauseValues", "sprintName", "estimationCriteria",
@@ -324,8 +332,8 @@ public enum FieldMappingEnum {
 
 	KPI183("Deployment Frequency", KPISource.JENKINSKANBAN.name(), Arrays.asList("thresholdValueKPI183")),
 
-	KPI190("Defect Reopen Rate", KPISource.JIRA.name(), Arrays.asList("resolutionTypeForRejectionKPI190",
-			"jiraDefectRejectionStatusKPI190", "jiraDefectClosedStatusKPI190", "thresholdValueKPI190")),
+	KPI190("Defect Reopen Rate", KPISource.JIRA.name(), Arrays.asList("defectReopenStatusKPI190",
+			"resolutionTypeForRejectionKPI190", "jiraDefectRejectionStatusKPI190", "thresholdValueKPI190")),
 
 	KPI997("Open Ticket Aging By Priority", KPISource.JIRAKANBAN.name(),
 			Arrays.asList("jiraLiveStatusKPI997", "ticketCountIssueTypeKPI997", "jiraTicketClosedStatusKPI997",

@@ -167,7 +167,7 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.OPEN_TICKET_AGING_BY_PRIORITY);
 
-		trendValuesMap = sortTrendValueMap(trendValuesMap, priorityTypes(true));
+		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, priorityTypes(true));
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach((priority, dataCounts) -> {
 			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
@@ -381,15 +381,6 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 		});
 	}
 
-	private Map<String, List<DataCount>> sortTrendValueMap(Map<String, List<DataCount>> trendMap, List<String> keyOrder) {
-		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();
-		keyOrder.forEach(order -> {
-			if (null != trendMap.get(order)) {
-				sortedMap.put(order, trendMap.get(order));
-			}
-		});
-		return sortedMap;
-	}
 
 	private List<String> priorityTypes(boolean addOverall) {
 		if (addOverall) {
