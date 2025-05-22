@@ -316,7 +316,7 @@
     "jiraIncludeBlockedStatus131": "Include Flagged Issue",
     "jiraKPI135StoryIdentification": ["Story","Enabler Story","Change request"],
     "jiraDefectClosedStatusKPI137": [ "Closed"],
-    "jiraDefectClosedStatusKPI190": [ "Closed"],
+    "defectReopenStatusKPI190" : "open",
     "jiraIssueTypeKPI3": ["Story","Enabler Story", "Change request"],
     "jiraIssueTypeKPI171": ["Story","Enabler Story", "Change request"],
     "jiraQAKPI111IssueType": ["Story","Enabler Story","Change request"],
