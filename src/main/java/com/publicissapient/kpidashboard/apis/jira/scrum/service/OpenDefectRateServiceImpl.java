@@ -90,7 +90,6 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
     public static final String TOTAL_DEFECTS = "totalDefects";
     public static final String DEFECT_HISTORY = "defectHistory";
     public static final String SPRINT_DETAILS = "sprintDetails";
-    public static final String PROJECT_WISE_DEFECT_REMOVEL_STATUS = "projectWiseDefectRemovelStatus";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     public static final String SUB_TASK_BUGS = "subTaskBugs";
     public static final String JIRA_ISSUE_CLOSED_DATE = "jiraIssueClosedDate";
@@ -189,8 +188,6 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
         List<JiraIssueCustomHistory> defectsCustomHistory = (List<JiraIssueCustomHistory>) storyDefectDataListMap
                 .get(DEFECT_HISTORY);
         List<SprintDetails> sprintDetails = (List<SprintDetails>) storyDefectDataListMap.get(SPRINT_DETAILS);
-        Map<String, List<String>> projectWiseDefectRemovalStatus = (Map<String, List<String>>) storyDefectDataListMap
-                .get(PROJECT_WISE_DEFECT_REMOVEL_STATUS);
 
         Map<Pair<String, String>, Double> sprintWiseODRMap = new HashMap<>();
         Map<Pair<String, String>, Map<String, Object>> sprintWiseHowerMap = new HashMap<>();
@@ -209,7 +206,7 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
                 List<String> notCompletedSprintIssues = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sd,
                         CommonConstant.NOT_COMPLETED_ISSUES);
                 Set<JiraIssue> totalSubTask = new HashSet<>();
-                getSubtasks(subTaskBugs, defectsCustomHistory, projectWiseDefectRemovalStatus, totalSubTask, sd);
+                getSubtasks(subTaskBugs, totalSubTask, sd);
                 List<String> totalIssues = new ArrayList<>(
                         KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sd, CommonConstant.TOTAL_ISSUES));
                 List<JiraIssue> subCategoryWiseTotalDefectList = totalDefects.stream()
@@ -217,13 +214,11 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
                 subCategoryWiseTotalDefectList.addAll(totalSubTask);
 
                 List<JiraIssue> subCategoryWiseOpenDefectList = totalDefects.stream()
-                        .filter(f -> notCompletedSprintIssues.contains(f.getNumber()) && CollectionUtils
-                                .emptyIfNull(projectWiseDefectRemovalStatus.get(f.getBasicProjectConfigId())).stream()
-                                .anyMatch(s -> !s.equalsIgnoreCase(f.getJiraStatus())))
+                        .filter(f -> notCompletedSprintIssues.contains(f.getNumber()))
                         .collect(Collectors.toList());
 
                 subCategoryWiseOpenDefectList.addAll(getNotCompletedSubTasksByHistory(totalSubTask,
-                        defectsCustomHistory, sd, projectWiseDefectRemovalStatus));
+                        defectsCustomHistory, sd));
 
                 double odrForCurrentLeaf = 0.0d;
                 subCategoryWiseOpenAndTotalDefectList.put(OPEN_DEFECT_DATA, subCategoryWiseOpenDefectList);
@@ -392,8 +387,7 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
     }
 
     public List<JiraIssue> getNotCompletedSubTasksByHistory(Set<JiraIssue> totalSubTask,
-                                                            List<JiraIssueCustomHistory> subTaskHistory, SprintDetails sprintDetail,
-                                                            Map<String, List<String>> projectWiseDefectRemovelStatus) {
+                                                            List<JiraIssueCustomHistory> subTaskHistory, SprintDetails sprintDetail) {
         List<JiraIssue> openSubtaskOfSprint = new ArrayList<>();
         LocalDate sprintEndDate = sprintDetail.getCompleteDate() != null
                 ? LocalDate.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
@@ -401,8 +395,7 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
         LocalDate sprintStartDate = sprintDetail.getActivatedDate() != null
                 ? LocalDate.parse(sprintDetail.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
                 : LocalDate.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
-        List<String> defectRemovalStatus = projectWiseDefectRemovelStatus
-                .get(sprintDetail.getBasicProjectConfigId().toString());
+
         totalSubTask.forEach(jiraIssue -> {
             JiraIssueCustomHistory jiraIssueCustomHistory = subTaskHistory.stream().filter(
                             issueCustomHistory -> issueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
@@ -411,64 +404,27 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
                     .filter(jiraIssueSprint -> DateUtil.isWithinDateRange(jiraIssueSprint.getUpdatedOn().toLocalDate(),
                             sprintStartDate, sprintEndDate))
                     .reduce((a, b) -> b);
-            if (issueSprint.isPresent() && !defectRemovalStatus.contains(issueSprint.get().getChangedTo()))
+            if (issueSprint.isPresent())
                 openSubtaskOfSprint.add(jiraIssue);
         });
         return openSubtaskOfSprint;
     }
 
-    private static void getSubtasks(List<JiraIssue> allSubTaskBugs, List<JiraIssueCustomHistory> defectsCustomHistory,
-                                    Map<String, List<String>> projectWiseDefectRemovalStatus, Set<JiraIssue> totalSubTask,
+    private static void getSubtasks(List<JiraIssue> allSubTaskBugs,
+                                    Set<JiraIssue> totalSubTask,
                                     SprintDetails sprintDetail) {
         LocalDateTime sprintEndDate = sprintDetail.getCompleteDate() != null
                 ? LocalDateTime.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
                 : LocalDateTime.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
-        LocalDateTime sprintStartDate = sprintDetail.getActivatedDate() != null
-                ? LocalDateTime.parse(sprintDetail.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-                : LocalDateTime.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+
         allSubTaskBugs.forEach(jiraIssue -> {
             LocalDateTime jiraCreatedDate = LocalDateTime.parse(jiraIssue.getCreatedDate().split("\\.")[0],
                     DATE_TIME_FORMATTER);
-            JiraIssueCustomHistory jiraIssueCustomHistoryOfClosedSubTask = defectsCustomHistory.stream()
-                    .filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID()
-                            .equalsIgnoreCase(jiraIssue.getNumber()))
-                    .findFirst().orElse(new JiraIssueCustomHistory());
-            Map<String, LocalDateTime> jiraTicketClosedDateMap = new HashMap<>();
-            getJiraIssueClosedDate(projectWiseDefectRemovalStatus, jiraIssue, jiraIssueCustomHistoryOfClosedSubTask,
-                    jiraTicketClosedDateMap);
 
             if (CollectionUtils.isNotEmpty(jiraIssue.getSprintIdList())
                     && jiraIssue.getSprintIdList().contains(sprintDetail.getSprintID().split("_")[0])
-                    && projectWiseDefectRemovalStatus.get(jiraIssue.getBasicProjectConfigId()).stream()
-                    .anyMatch(s -> !s.equalsIgnoreCase(jiraIssue.getStatus()))
-                    && null != jiraTicketClosedDateMap.get(JIRA_ISSUE_CLOSED_DATE)
-                    && ((sprintEndDate.isAfter(jiraCreatedDate)
-                    && jiraTicketClosedDateMap.get(JIRA_ISSUE_CLOSED_DATE).isAfter(sprintEndDate))
-                    || (DateUtil.isWithinDateTimeRange(jiraTicketClosedDateMap.get(JIRA_ISSUE_CLOSED_DATE),
-                    sprintStartDate, sprintEndDate)))) {
+                    && (sprintEndDate.isAfter(jiraCreatedDate))) {
                 totalSubTask.add(jiraIssue);
-            }
-            if (CollectionUtils.isNotEmpty(jiraIssue.getSprintIdList())
-                    && jiraIssue.getSprintIdList().contains(sprintDetail.getSprintID().split("_")[0])
-                    && null != jiraTicketClosedDateMap.get(JIRA_ISSUE_CLOSED_DATE) && DateUtil.isWithinDateTimeRange(
-                    jiraTicketClosedDateMap.get(JIRA_ISSUE_CLOSED_DATE), sprintStartDate, sprintEndDate)) {
-                totalSubTask.add(jiraIssue);
-            }
-        });
-    }
-
-    private static void getJiraIssueClosedDate(Map<String, List<String>> projectWiseDefectRemovalStatus,
-                                               JiraIssue jiraIssue, JiraIssueCustomHistory jiraIssueCustomHistoryOfClosedSubTask,
-                                               Map<String, LocalDateTime> jiraTicketClosedDateMap) {
-        jiraIssueCustomHistoryOfClosedSubTask.getStatusUpdationLog().forEach(historyChangeLog -> {
-            List<String> closureStatusList = projectWiseDefectRemovalStatus.get(jiraIssue.getBasicProjectConfigId());
-            LocalDateTime jiraTicketClosedDate = null;
-            if (CollectionUtils.isNotEmpty(closureStatusList)
-                    && closureStatusList.contains(historyChangeLog.getChangedTo())) {
-                jiraTicketClosedDate = historyChangeLog.getUpdatedOn();
-            }
-            if (null != jiraTicketClosedDate) {
-                jiraTicketClosedDateMap.put(JIRA_ISSUE_CLOSED_DATE, jiraTicketClosedDate);
             }
         });
     }
@@ -559,7 +515,6 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
             resultListMap.put(SUB_TASK_BUGS, defectListWoDrop);
             resultListMap.put(DEFECT_HISTORY, defectsCustomHistory);
             resultListMap.put(SPRINT_DETAILS, sprintDetails);
-            resultListMap.put(PROJECT_WISE_DEFECT_REMOVEL_STATUS, projectWiseDefectClosedStatus);
             resultListMap.put(STORY_LIST, jiraIssueRepository.findIssueAndDescByNumber(new ArrayList<>(totalIssue)));
         }
 
