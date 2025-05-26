@@ -4998,7 +4998,7 @@
     "defaultOrder": 5,
     "kpiSource": "Jira",
     "groupId": 3,
-    "thresholdValue": "90",
+    "thresholdValue": "15",
     "kanban": false,
     "chartType": "line",
     "kpiInfo" : {
