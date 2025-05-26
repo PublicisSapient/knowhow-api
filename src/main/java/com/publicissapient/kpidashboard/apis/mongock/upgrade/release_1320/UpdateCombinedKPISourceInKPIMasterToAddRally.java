@@ -15,21 +15,19 @@
  * limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1310;
-
-import org.bson.Document;
-import org.springframework.data.mongodb.core.MongoTemplate;
+package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1320;
 
 import com.mongodb.client.MongoCollection;
-
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
  * @author girpatha
  */
-@ChangeUnit(id = "update_combinedKpiSource_in_kpi_master_to_add_rally", order = "13100", author = "girpatha", systemVersion = "13.1.0")
+@ChangeUnit(id = "update_combinedKpiSource_in_kpi_master_to_add_rally", order = "13210", author = "girpatha", systemVersion = "13.2.0")
 public class UpdateCombinedKPISourceInKPIMasterToAddRally {
 
 	private final MongoTemplate mongoTemplate;
