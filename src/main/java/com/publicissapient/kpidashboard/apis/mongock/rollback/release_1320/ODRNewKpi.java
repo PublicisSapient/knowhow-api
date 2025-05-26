@@ -76,7 +76,7 @@ public class ODRNewKpi {
                 .append("defaultOrder", 5)
                 .append("kpiSource", "Jira")
                 .append("groupId", 3)
-                .append("thresholdValue", "15s")
+                .append("thresholdValue", "15")
                 .append("kanban", false)
                 .append("chartType", "line")
                 .append("kpiInfo", new Document(DEFINITION, "Measure of percentage of defects unresolved against the total count tagged to the iteration")
