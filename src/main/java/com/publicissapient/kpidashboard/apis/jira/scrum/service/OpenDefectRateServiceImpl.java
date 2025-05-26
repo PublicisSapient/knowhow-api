@@ -134,9 +134,9 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
                 kpiRequest.getRequestTrackerId(), root);
 
         Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-        calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.DEFECT_COUNT_BY_PRIORITY);
+        calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.OPEN_DEFECT_RATE);
         Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-                KPICode.DEFECT_COUNT_BY_PRIORITY);
+                KPICode.OPEN_DEFECT_RATE);
         Map<String, Map<String, List<DataCount>>> issueTypeProjectWiseDc = new LinkedHashMap<>();
         trendValuesMap.forEach((issueType, dataCounts) -> {
             Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
@@ -519,5 +519,15 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
         }
 
         return resultListMap;
+    }
+
+    @Override
+    public Double calculateKpiValue(List<Double> valueList, String kpiName) {
+        return calculateKpiValueForDouble(valueList, kpiName);
+    }
+
+    @Override
+    public Double calculateThresholdValue(FieldMapping fieldMapping) {
+        return calculateThresholdValue(fieldMapping.getThresholdValueKPI191(), KPICode.OPEN_DEFECT_RATE.getKpiId());
     }
 }
