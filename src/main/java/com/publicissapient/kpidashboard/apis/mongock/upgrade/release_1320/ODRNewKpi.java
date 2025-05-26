@@ -39,15 +39,6 @@ public class ODRNewKpi {
     public void execution() {
         // Insert documents in field_mapping_structure
         List<Document> fieldMappingDocs = Arrays.asList(
-                new Document(FIELD_NAME, "jiraDefectRemovalStatusKPI191")
-                        .append(FIELD_LABEL, "Status to identify closed defects")
-                        .append(FIELD_TYPE, "chips")
-                        .append("fieldCategory", "workflow")
-                        .append(FIELD_DISPLAY_ORDER, 8)
-                        .append(SECTION_ORDER, 4).append("mandatory", true)
-                        .append(SECTION, WORK_FLOW_STATUS_MAPPING)
-                        .append(TOOLTIP, new Document(DEFINITION, "All workflow statuses used to identify defects in closed state")),
-
                 new Document(FIELD_NAME, "resolutionTypeForRejectionKPI191")
                         .append(FIELD_LABEL, "Resolution type to be excluded")
                         .append(FIELD_TYPE, "chips")
@@ -84,7 +75,7 @@ public class ODRNewKpi {
                 .append("defaultOrder", 5)
                 .append("kpiSource", "Jira")
                 .append("groupId", 3)
-                .append("thresholdValue", "90")
+                .append("thresholdValue", "15")
                 .append("kanban", false)
                 .append("chartType", "line")
                 .append("kpiInfo", new Document(DEFINITION, "Measure of percentage of defects unresolved against the total count tagged to the iteration")
@@ -138,8 +129,7 @@ public class ODRNewKpi {
     public void rollback() {
         // Rollback for field_mapping_structure
         mongoTemplate.getCollection("field_mapping_structure").
-                deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList(
-                        "jiraDefectRemovalStatusKPI191", "resolutionTypeForRejectionKPI191", "jiraDefectRejectionStatusKPI191",
+                deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList("resolutionTypeForRejectionKPI191", "jiraDefectRejectionStatusKPI191",
                         "thresholdValueKPI191"))));
 
         // Rollback for kpi_master
