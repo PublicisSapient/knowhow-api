@@ -57,6 +57,7 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import org.bson.types.ObjectId;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,6 +77,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -242,5 +244,21 @@ public class OpenDefectRateServiceImplTest {
         String kpiName = KPICode.OPEN_DEFECT_RATE.name();
         String type = odrServiceImpl.getQualifierType();
         assertThat("KPI NAME: ", type, equalTo(kpiName));
+    }
+
+    @Test
+    public void testCalculateKpiValue() {
+        List<Double> valueList = Arrays.asList(10D, 20D, 30D, 40D);
+        String kpiId = "kpi191";
+        Double result = odrServiceImpl.calculateKpiValue(valueList, kpiId);
+        assertEquals(0.0, result);
+    }
+
+    @Test
+    public void calculateThresholdValue() {
+        FieldMapping fieldMapping = new FieldMapping();
+        fieldMapping.setThresholdValueKPI191("15");
+        Assert.assertEquals(Double.valueOf(15D), odrServiceImpl
+                .calculateThresholdValue(fieldMapping.getThresholdValueKPI191(), KPICode.OPEN_DEFECT_RATE.getKpiId()));
     }
 }
