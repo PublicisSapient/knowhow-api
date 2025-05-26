@@ -256,15 +256,16 @@ public class KPIExcelUtility {
 				setSquads(excelData, jiraIssue);
 				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 				excelData.setRootCause(jiraIssue.getRootCauseList());
-				excelData.setDefectStatus(jiraIssue.getStatus());
 				excelData.setLabels(jiraIssue.getLabels());
 				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
 				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 
 				if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId())) {
+					excelData.setDefectStatus(jiraIssue.getStatus());
 					excelData.setRemovedDefect(present);
 				}
 				if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REJECTION_RATE.getKpiId())) {
+					excelData.setDefectStatus(jiraIssue.getStatus());
 					excelData.setRejectedDefect(present);
 				}
 				if (kpiId.equalsIgnoreCase(KPICode.OPEN_DEFECT_RATE.getKpiId())) {

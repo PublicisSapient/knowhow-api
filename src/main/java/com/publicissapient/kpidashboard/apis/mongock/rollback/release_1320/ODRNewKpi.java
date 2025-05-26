@@ -40,15 +40,6 @@ public class ODRNewKpi {
     public void rollback() {
         // Insert documents in field_mapping_structure
         List<Document> fieldMappingDocs = Arrays.asList(
-                new Document(FIELD_NAME, "jiraDefectRemovalStatusKPI191")
-                        .append(FIELD_LABEL, "Status to identify closed defects")
-                        .append(FIELD_TYPE, "chips")
-                        .append(FIELD_CATEGORY, "workflow")
-                        .append(FIELD_DISPLAY_ORDER, 8)
-                        .append(SECTION_ORDER, 4).append("mandatory", true)
-                        .append(SECTION, WORK_FLOW_STATUS_MAPPING)
-                        .append(TOOLTIP, new Document(DEFINITION, "All workflow statuses used to identify defects in closed state")),
-
                 new Document(FIELD_NAME, "resolutionTypeForRejectionKPI191")
                         .append(FIELD_LABEL, "Resolution type to be excluded")
                         .append(FIELD_TYPE, "chips")
@@ -85,7 +76,7 @@ public class ODRNewKpi {
                 .append("defaultOrder", 5)
                 .append("kpiSource", "Jira")
                 .append("groupId", 3)
-                .append("thresholdValue", "90")
+                .append("thresholdValue", "15s")
                 .append("kanban", false)
                 .append("chartType", "line")
                 .append("kpiInfo", new Document(DEFINITION, "Measure of percentage of defects unresolved against the total count tagged to the iteration")
@@ -138,8 +129,7 @@ public class ODRNewKpi {
     @Execution
     public void execution() {
 
-        mongoTemplate.getCollection("field_mapping_structure").deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList(
-                "jiraDefectRemovalStatusKPI191", "resolutionTypeForRejectionKPI191", "jiraDefectRejectionStatusKPI191", "thresholdValueKPI191"))));
+        mongoTemplate.getCollection("field_mapping_structure").deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList("resolutionTypeForRejectionKPI191", "jiraDefectRejectionStatusKPI191", "thresholdValueKPI191"))));
         mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_191));
         mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_191));
         mongoTemplate.getCollection("kpi_column_configs").deleteOne(new Document(KPI_ID, KPI_191));
