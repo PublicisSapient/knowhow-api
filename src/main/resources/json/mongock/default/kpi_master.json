@@ -5029,7 +5029,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-25","25-50","50-75","75-90","90-"]
+    "maturityRange" : [
+      "-90" ,
+      "75-90" ,
+      "50-75" ,
+      "25-50" ,
+      "25-"
+    ]
   },
   {
     "kpiId" : "kpi190",
