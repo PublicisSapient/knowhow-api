@@ -19,11 +19,14 @@
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
   <artifactId>customapi</artifactId>
-  <version>13.1.0-SNAPSHOT</version>
+  <version>13.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Rest API Layer</description>
   <scm>
+    <connection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</connection>
+    <developerConnection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</developerConnection>
     <tag>4.6.1</tag>
+    <url>https://github.com/PublicisSapient/knowhow-api.git</url>
   </scm>
   <properties>
     <java.version>17</java.version>
@@ -86,7 +89,7 @@
     <dependency>
       <groupId>com.publicissapient.kpidashboard</groupId>
       <artifactId>common</artifactId>
-      <version>${common.version}</version>
+      <version>13.2.0-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>ch.qos.logback</groupId>
@@ -110,7 +113,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
-      <version>6.1.3</version>
+      <version>6.1.6</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
@@ -479,6 +482,17 @@
       <groupId>org.ehcache</groupId>
       <artifactId>ehcache</artifactId>
       <classifier>jakarta</classifier>
+    </dependency>
+    <!--Retrofit-->
+    <dependency>
+      <groupId>com.squareup.retrofit2</groupId>
+      <artifactId>retrofit</artifactId>
+      <version>2.7.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.retrofit2</groupId>
+      <artifactId>converter-gson</artifactId>
+      <version>2.7.2</version>
     </dependency>
   </dependencies>
   <repositories>

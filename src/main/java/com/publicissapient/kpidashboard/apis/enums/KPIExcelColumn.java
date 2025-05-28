@@ -92,6 +92,9 @@ public enum KPIExcelColumn {
 			Arrays.asList("Sprint Name", "Story ID", "Story Description", "Size(story point/hours)", "Squad", "Defect ID",
 					"Defect Description", "Root Cause", "Defect Priority", "Defect Status", "Time Spent (in hours)")),
 
+	OPEN_DEFECT_RATE("kpi191",
+			Arrays.asList("Sprint Name", "Defect ID", "Defect Description","Open Defect", "Story ID", "Story Description", "Squad",
+					"Root Cause", "Defect Priority", "Time Spent (in hours)")),
 	DEFECT_SEEPAGE_RATE("kpi35",
 			Arrays.asList("Sprint Name", "Defect ID", "Defect Description", "Escaped defect identifier", "Story ID",
 					"Story Description", "Squad", "Root Cause", "Defect Priority", "Defect Status", "Time Spent (in hours)")),
@@ -376,7 +379,10 @@ public enum KPIExcelColumn {
 	LATE_REFINEMENT("kpi187", Arrays.asList("Sprint Name", "Date", "Issue Id", "Issue Type", "Issue Description", "Size(story point/hours)",
 			"Due Date", "Assignee", "Issue Status", "Un-Refined" )),
     NEXT_SPRINT_LATE_REFINEMENT("kpi188",
-                                  Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined"));
+                                  Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined")),
+
+	DEFECT_REOPEN_RATE_QUALITY("kpi190", Arrays.asList("Issue Id", "Defect Description", "Issue Status",
+			"Defect Priority", "Closed Date", "Reopen Date", "Time taken to reopen"));
 
 	// @formatter:on
 
