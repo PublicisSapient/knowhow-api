@@ -33,12 +33,14 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -136,6 +138,10 @@ public class KpiHelperService { // NOPMD
 	private static final String BITBUCKET = "Bitbucket";
 	private static final String GITLAB = "GitLab";
 	private static final String GITHUB = "GitHub";
+	// Define tool constants to avoid hardcoded strings
+	private static final String TOOL_JIRA = "Jira";
+	private static final String TOOL_AZURE = "Azure";
+	private static final String TOOL_RALLY = "Rally";
 
 	@Autowired
 	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
@@ -1433,15 +1439,8 @@ public class KpiHelperService { // NOPMD
 					.get(new ObjectId(projectBasicConfigId));
 			List<ProjectToolConfig> projectToolConfig = null;
 			if (MapUtils.isNotEmpty(projectToolMap)) {
-				projectToolConfig = projectToolMap.get("Jira");
-				if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET)
-						&& projectToolMap.containsKey(Constant.REPO_TOOLS)) {
-					projectToolConfig = projectToolMap.get(Constant.REPO_TOOLS);
-				} else if (CollectionUtils.isEmpty(projectToolConfig)) {
-					projectToolConfig = projectToolMap.get("Azure");
-				}
+				projectToolConfig = getProjectToolConfigs(projectToolMap, projectToolConfig, kpiSource);
 			}
-
 			if (CollectionUtils.isEmpty(projectToolConfig)) {
 				return fieldMappingStructureResponse;
 			}
@@ -1465,6 +1464,44 @@ public class KpiHelperService { // NOPMD
 		}
 		return fieldMappingStructureResponse;
 	}
+
+	/**
+	 * Gets the project tool configurations based on priority and source.
+	 *
+	 * @param projectToolMap Map containing tool configurations by tool name
+	 * @param projectToolConfig Initial project tool configuration list
+	 * @param kpiSource The source of the KPI
+	 * @return The appropriate project tool configuration list
+	 */
+	private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap,
+        List<ProjectToolConfig> projectToolConfig, String kpiSource) {
+    // If projectToolConfig is already populated, no need to process further
+    if (!CollectionUtils.isEmpty(projectToolConfig)) {
+        return projectToolConfig;
+    }
+    
+    // Handle special case for Bitbucket
+    if (kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET) && projectToolMap.containsKey(Constant.REPO_TOOLS)) {
+        return projectToolMap.get(Constant.REPO_TOOLS);
+    }
+    
+    // Handle special case for Azure
+    if (kpiSource.equalsIgnoreCase(Constant.TOOL_AZURE) && projectToolMap.containsKey(TOOL_AZURE)) {
+        return projectToolMap.get(TOOL_AZURE);
+    }
+    
+    // Priority-based selection: Jira > Azure > Rally
+    if (projectToolMap.containsKey(TOOL_JIRA)) {
+        return projectToolMap.get(TOOL_JIRA);
+    } else if (projectToolMap.containsKey(TOOL_AZURE)) {
+        return projectToolMap.get(TOOL_AZURE);
+    } else if (projectToolMap.containsKey(TOOL_RALLY)) {
+        return projectToolMap.get(TOOL_RALLY);
+    }
+    
+    // Return the original list if no matches found
+    return projectToolConfig;
+}
 
 	public List<FieldMappingStructure> getFieldMappingStructure(List<FieldMappingStructure> fieldMappingStructureList,
 			List<String> fieldList) {
@@ -1955,7 +1992,7 @@ public class KpiHelperService { // NOPMD
 
 		List<JiraIssue> remainingDefects = new ArrayList<>();
 		for (JiraIssue defect : defects) {
-			if (org.apache.commons.collections4.MapUtils
+			if (MapUtils
 					.isNotEmpty(projectWisePriority.get(defect.getBasicProjectConfigId()))) {
 				Map<String, Integer> projPriorityCountMap = projectWisePriority.get(defect.getBasicProjectConfigId());
 				Set<String> linkedStories = defect.getDefectStoryID();
@@ -2166,4 +2203,82 @@ public class KpiHelperService { // NOPMD
 		}
 		return source;
 	}
+
+	public static List<JiraIssue> getSprintReOpenedDefects(SprintDetails sprintDetails,
+			List<JiraIssueCustomHistory> defectHistoryList, List<String> closedStatusList,
+			List<JiraIssue> totalDefectList, String defectReopenStatusKPI190,
+			Map<String, List<DefectTransitionInfo>> sprintDefectStatusInfo) {
+
+		List<JiraIssue> reopenedDefects = new ArrayList<>();
+		LocalDateTime sprintStartDate = getParseDateFromSprint(sprintDetails.getActivatedDate(),
+				sprintDetails.getStartDate());
+		LocalDateTime sprintEndDate = getParseDateFromSprint(sprintDetails.getCompleteDate(),
+				sprintDetails.getEndDate());
+
+		Map<String, JiraIssue> totalDefectMap = totalDefectList.stream()
+				.collect(Collectors.toMap(JiraIssue::getNumber, Function.identity()));
+
+		for (JiraIssueCustomHistory defectHistory : defectHistoryList) {
+			List<JiraHistoryChangeLog> statusUpdationLog = defectHistory.getStatusUpdationLog();
+			if (CollectionUtils.isEmpty(statusUpdationLog))
+				continue;
+			statusUpdationLog.sort(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
+
+			Map<String, DateTime> closedStatusDateMap = new HashMap<>();
+			for (JiraHistoryChangeLog statusLog : statusUpdationLog) {
+				String changedTo = statusLog.getChangedTo().toLowerCase();
+				if (statusLog.getUpdatedOn().isAfter(sprintEndDate)) {
+					break;
+				}
+				if (closedStatusList.contains(changedTo)) {
+					processClosedStatusDate(statusLog, closedStatusDateMap, changedTo);
+				}
+				// Reopen event
+				else if (statusLog.getChangedTo().equalsIgnoreCase(defectReopenStatusKPI190)
+						&& DateUtil.isWithinDateTimeRange(statusLog.getUpdatedOn(), sprintStartDate, sprintEndDate)) {
+					processReopenDetail(sprintDefectStatusInfo, defectHistory, statusLog, closedStatusDateMap,
+							totalDefectMap, reopenedDefects);
+				}
+			}
+		}
+		return reopenedDefects;
+	}
+
+	private static void processClosedStatusDate(JiraHistoryChangeLog statusLog,
+			Map<String, DateTime> closedStatusDateMap, String changedTo) {
+		if (closedStatusDateMap.containsKey(changedTo)) {
+			closedStatusDateMap.clear();
+		}
+		closedStatusDateMap.put(changedTo, DateUtil.convertLocalDateTimeToDateTime(statusLog.getUpdatedOn()));
+	}
+
+	private static void processReopenDetail(Map<String, List<DefectTransitionInfo>> sprintDefectStatusInfo,
+			JiraIssueCustomHistory defectHistory, JiraHistoryChangeLog statusLog,
+			Map<String, DateTime> closedStatusDateMap, Map<String, JiraIssue> totalDefectMap,
+			List<JiraIssue> reopenedDefects) {
+		DefectTransitionInfo transitionInfo = new DefectTransitionInfo();
+		DateTime reopenTime = DateUtil.convertLocalDateTimeToDateTime(statusLog.getUpdatedOn());
+		DateTime lastClosedLogTime = closedStatusDateMap.values().stream().filter(Objects::nonNull)
+				.min(DateTime::compareTo).orElse(null);
+		if (lastClosedLogTime != null) {
+			transitionInfo.setClosedDate(lastClosedLogTime);
+			transitionInfo.setReopenDate(reopenTime);
+			transitionInfo
+					.setReopenDuration(Double.parseDouble(KpiDataHelper.calWeekHours(lastClosedLogTime, reopenTime)));
+			final JiraIssue jiraIssue = totalDefectMap.get(defectHistory.getStoryID());
+			reopenedDefects.add(jiraIssue);
+			transitionInfo.setPriority(jiraIssue.getPriority());
+			transitionInfo.setDefectJiraIssue(jiraIssue);
+			List<DefectTransitionInfo> transitionList = sprintDefectStatusInfo.getOrDefault(defectHistory.getStoryID(),
+					new ArrayList<>());
+			transitionList.add(transitionInfo);
+			sprintDefectStatusInfo.put(defectHistory.getStoryID(), transitionList);
+		}
+	}
+
+	private static LocalDateTime getParseDateFromSprint(String sprintDetails, String sprintDetails1) {
+		return sprintDetails != null ? LocalDateTime.parse(sprintDetails.split("\\.")[0], DATE_TIME_FORMATTER)
+				: LocalDateTime.parse(sprintDetails1.split("\\.")[0], DATE_TIME_FORMATTER);
+	}
+
 }

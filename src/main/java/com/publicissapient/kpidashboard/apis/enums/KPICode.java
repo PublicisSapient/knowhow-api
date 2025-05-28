@@ -26,6 +26,7 @@ public enum KPICode {
 
 	/** JIRA_PROCESSOR field */
 	JIRA_PROCESSOR("kpi0", KPISource.JIRA.name()),
+	RALLY_PROCESSOR("kpi200", KPISource.RALLY.name()),
 	/** JIRA_PROCESSOR_KANBAN */
 	JIRA_PROCESSOR_KANBAN("kpi1", KPISource.JIRAKANBAN.name()),
 	/** The Dor to dod. */
@@ -160,6 +161,8 @@ public enum KPICode {
 	WORK_REMAINING("kpi119", KPISource.JIRA.name()),
 	/** Defect Count By Status (Iteration) */
 	DEFECT_COUNT_BY_ITERATION("kpi136", KPISource.JIRA.name()),
+	/** Open Defect Rate kpi code. */
+	OPEN_DEFECT_RATE("kpi191", KPISource.JIRA.name()),
 	/** Risks and Dependencies */
 	RISKS_AND_DEPENDENCIES("kpi176", KPISource.JIRA.name()),
 	/** Defect Count By Status (Release) */
@@ -289,6 +292,9 @@ public enum KPICode {
 	 * Sprint Goals
 	 */
 	SPRINT_GOALS("kpi189", KPISource.JIRA.name()),
+
+	/** Defect reopen rate kpi */
+	DEFECT_REOPEN_RATE_QUALITY("kpi190", KPISource.JIRA.name()),
 
 	// do not remove below codes as they are required for test case
 	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()), TEST_JIRA("TEST_JIRA",
