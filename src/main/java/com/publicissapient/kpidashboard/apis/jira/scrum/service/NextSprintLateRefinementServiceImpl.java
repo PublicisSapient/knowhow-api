@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,15 +104,12 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 				SprintDetails sprintDetails = futureSprintList.stream()
 						.filter(sprint -> sprint.getStartDate() != null
 								&& DateUtil.stringToLocalDateTime(sprint.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC).isAfter(
-								DateUtil.stringToLocalDateTime(activeSprint.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC)))
+								DateUtil.stringToLocalDateTime(activeSprint.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)))
 						.findFirst().orElse(null);
 
 				if (sprintDetails == null) {
 					return new HashMap<>();
 				}
-
-				Set<String> totalIssues = jiraIssueRepository.findBySprintID(sprintDetails.getSprintID()).stream()
-						.filter(a -> fieldMapping.getJiraIssueTypeNamesKPI188().contains(a.getTypeName())).map(JiraIssue::getNumber).collect(Collectors.toSet());
 
 				Set<String> totalIssues = jiraIssueRepository.findBySprintID(sprintDetails.getSprintID()).stream()
 						.filter(a -> getTypeNames(fieldMapping).contains(a.getTypeName().toLowerCase())).map(JiraIssue::getNumber).collect(Collectors.toSet());

@@ -221,7 +221,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			List<JiraHistoryChangeLog> statusUpdationLog, FieldMapping fieldMapping,
 			Map<LocalDate, List<JiraIssue>> lateRefined, SprintDetails sprintDetails) {
 		LocalDateTime startDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-		final LocalDateTime currentDate = DateUtil.todaysTime();
+		final LocalDateTime currentDate = DateUtil.getTodayTime();
 
 
 		// Get relevant issues
@@ -253,7 +253,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 				.map(status -> status.trim().toLowerCase()).collect(Collectors.toSet());
 
 		boolean startDateFound = false;
-		LocalDate maxDate = DateUtil.todaysDate();
+		LocalDate maxDate = DateUtil.getTodayDate();
 
 		for (JiraHistoryChangeLog updateLog : statusUpdationLog) {
 			String changedStatus = updateLog.getChangedTo().trim().toLowerCase();
@@ -296,7 +296,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			Map<LocalDate, List<JiraIssue>> fullSprintMap, JiraIssueCustomHistory issueHistory,
 			List<JiraHistoryChangeLog> sprintUpdationLog) {
 		LocalDateTime startDateTime = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-		LocalDateTime sprintEndTime = DateUtil.todaysTime();
+		LocalDateTime sprintEndTime = DateUtil.getTodayTime();
 		List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
 		int lastIndex = sprintUpdationLog.size() - 1;
 		sprintUpdationLog.stream()
@@ -388,7 +388,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 					fullSprintIssuesMap.size());
 			LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),
 					DateUtil.TIME_FORMAT_WITH_SEC);
-			LocalDateTime sprintEndDate = DateUtil.todaysTime().plusDays(1);
+			LocalDateTime sprintEndDate = DateUtil.getTodayTime().plusDays(1);
 
 			LocalDate maximumRemovalDate = removedIssuesMap.keySet().stream().filter(Objects::nonNull)
 					.min(LocalDate::compareTo).orElse(null);
