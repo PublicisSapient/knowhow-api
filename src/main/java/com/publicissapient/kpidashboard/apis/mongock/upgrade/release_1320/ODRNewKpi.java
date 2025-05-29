@@ -90,14 +90,15 @@ public class ODRNewKpi {
                                                 .append("link", "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/189825034/Open+Defect+Rate"))
                         ))
                 )
-                .append("xAxisLabel", "Sprints")
+                .append("xAxisLabel", "Sprints").append("upperThresholdBG", "red").append("lowerThresholdBG", "white")
                 .append("yAxisLabel", "Percentage")
                 .append("isPositiveTrend", false)
                 .append("showTrend", true)
                 .append("aggregationCriteria", "average")
+                .append("combinedKpiSource", "Jira/Azure")
                 .append("isAdditionalFilterSupport", true)
                 .append("calculateMaturity", true)
-                .append("maturityRange", Arrays.asList("-25", "25-50", "50-75", "75-90", "90-"));
+                .append("maturityRange", Arrays.asList("-90", "75-90", "50-75", "25-50", "25-"));
         mongoTemplate.getCollection("kpi_master").insertOne(kpiMasterDoc);
 
         // Insert document in kpi_category_mapping

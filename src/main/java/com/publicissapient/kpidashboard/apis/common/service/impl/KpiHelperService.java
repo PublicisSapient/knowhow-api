@@ -138,6 +138,10 @@ public class KpiHelperService { // NOPMD
 	private static final String BITBUCKET = "Bitbucket";
 	private static final String GITLAB = "GitLab";
 	private static final String GITHUB = "GitHub";
+	// Define tool constants to avoid hardcoded strings
+	private static final String TOOL_JIRA = "Jira";
+	private static final String TOOL_AZURE = "Azure";
+	private static final String TOOL_RALLY = "Rally";
 
 	@Autowired
 	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
@@ -1461,22 +1465,43 @@ public class KpiHelperService { // NOPMD
 		return fieldMappingStructureResponse;
 	}
 
-	private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap, List<ProjectToolConfig> projectToolConfig, String kpiSource) {
-		if(projectToolMap.get("Jira")==null){
-			projectToolConfig = projectToolMap.get("Rally");
-		} else if (projectToolMap.get("Jira")!=null) {
-			projectToolConfig = projectToolMap.get("Jira");
-		}
-		if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET)
-				&& projectToolMap.containsKey(Constant.REPO_TOOLS)) {
-			projectToolConfig = projectToolMap.get(Constant.REPO_TOOLS);
-		} else if (CollectionUtils.isEmpty(projectToolConfig) && kpiSource.equalsIgnoreCase(Constant.TOOL_AZURE) ) {
-			projectToolConfig = projectToolMap.get("Azure");
-		} else if (CollectionUtils.isEmpty(projectToolConfig)) {
-			projectToolConfig = projectToolMap.get("Rally");
-		}
-		return projectToolConfig;
-	}
+	/**
+	 * Gets the project tool configurations based on priority and source.
+	 *
+	 * @param projectToolMap Map containing tool configurations by tool name
+	 * @param projectToolConfig Initial project tool configuration list
+	 * @param kpiSource The source of the KPI
+	 * @return The appropriate project tool configuration list
+	 */
+	private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap,
+        List<ProjectToolConfig> projectToolConfig, String kpiSource) {
+    // If projectToolConfig is already populated, no need to process further
+    if (!CollectionUtils.isEmpty(projectToolConfig)) {
+        return projectToolConfig;
+    }
+    
+    // Handle special case for Bitbucket
+    if (kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET) && projectToolMap.containsKey(Constant.REPO_TOOLS)) {
+        return projectToolMap.get(Constant.REPO_TOOLS);
+    }
+    
+    // Handle special case for Azure
+    if (kpiSource.equalsIgnoreCase(Constant.TOOL_AZURE) && projectToolMap.containsKey(TOOL_AZURE)) {
+        return projectToolMap.get(TOOL_AZURE);
+    }
+    
+    // Priority-based selection: Jira > Azure > Rally
+    if (projectToolMap.containsKey(TOOL_JIRA)) {
+        return projectToolMap.get(TOOL_JIRA);
+    } else if (projectToolMap.containsKey(TOOL_AZURE)) {
+        return projectToolMap.get(TOOL_AZURE);
+    } else if (projectToolMap.containsKey(TOOL_RALLY)) {
+        return projectToolMap.get(TOOL_RALLY);
+    }
+    
+    // Return the original list if no matches found
+    return projectToolConfig;
+}
 
 	public List<FieldMappingStructure> getFieldMappingStructure(List<FieldMappingStructure> fieldMappingStructureList,
 			List<String> fieldList) {
