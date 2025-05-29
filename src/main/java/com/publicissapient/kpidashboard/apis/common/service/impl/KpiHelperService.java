@@ -1987,7 +1987,7 @@ public class KpiHelperService { // NOPMD
 			Set<String> linkedStories = defect.getDefectStoryID();
 			linkedStories
 					.forEach(linkedStory -> storiesBugPriorityCount.computeIfAbsent(linkedStory, k -> new HashMap<>())
-							.merge(defect.getPriority().toLowerCase(), 1, Integer::sum));
+							.merge(Optional.ofNullable(defect.getPriority()).orElse("").toLowerCase(), 1, Integer::sum));
 		});
 
 		List<JiraIssue> remainingDefects = new ArrayList<>();
