@@ -61,7 +61,7 @@ public enum NotificationCustomDataEnum {
 
 	ADMIN_EMAIL("Admin_Email"),
 
-	TOOL_NAME("tool_name");
+	TOOL_NAME("Tool_Name");
 
 	private String value;
 
