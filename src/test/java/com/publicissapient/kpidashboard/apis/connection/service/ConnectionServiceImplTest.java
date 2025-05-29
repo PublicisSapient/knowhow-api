@@ -20,24 +20,19 @@ package com.publicissapient.kpidashboard.apis.connection.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
+import com.publicissapient.kpidashboard.common.service.NotificationService;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +43,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.security.core.Authentication;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -113,6 +108,23 @@ public class ConnectionServiceImplTest {
 	@Mock
 	private RepoToolsConfigServiceImpl repoToolsConfigService;
 
+	@Mock
+	private UserInfoRepository userInfoRepository;
+
+	@Mock
+	private AuthenticationRepository authenticationRepository;
+
+	@Mock
+	private NotificationService notificationService;
+
+	@Mock
+	private KafkaTemplate<String, Object> kafkaTemplate;
+
+	private final String creator = "test_user";
+
+	private Connection connection;
+	private final ObjectId connectionId = new ObjectId();
+
 	/** method includes preprocesses for test cases */
 	@Before
 	public void setUp() {
@@ -160,6 +172,13 @@ public class ConnectionServiceImplTest {
 		projectBasicConfigList.add(projectBasicConfig);
 		testConnectionOpt = Optional.of(testConnection);
 		testConnectionOpt.get().setCreatedBy("superadmin");
+
+		connection = new Connection();
+		connection.setId(connectionId);
+		connection.setCreatedBy("user123");
+		connection.setNotificationCount(0);
+		connection.setBrokenConnection(false);
+
 	}
 
 	/** method includes post processes for test cases */
@@ -865,5 +884,116 @@ public class ConnectionServiceImplTest {
 		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory.newInstance(jsonFilePath);
 		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.GITHUB);
 		return connectionsByType.get(0);
+	}
+
+	@Test
+	public void shouldResetConnectionWhenErrorMsgIsEmpty() {
+		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
+
+		connectionServiceImpl.updateBreakingConnection(connection, "");
+
+		assertFalse(connection.isBrokenConnection());
+		assertNull(connection.getConnectionErrorMsg());
+		assertEquals(0, connection.getNotificationCount().intValue());
+		verify(connectionRepository).save(connection);
+	}
+
+	@Test
+	public void shouldTriggerNotificationWhenErrorMsgExists() {
+		connection.setNotificationCount(0);
+		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
+
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Alert!");
+		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
+		when(customApiConfig.getKafkaMailTopic()).thenReturn("mail-topic");
+		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
+		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setEmailAddress("user@example.com");
+		userInfo.setDisplayName("User");
+
+		Authentication auth = new Authentication();
+		auth.setEmail("auth@example.com");
+
+		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
+		when(authenticationRepository.findByUsername("user123")).thenReturn(auth);
+
+		connectionServiceImpl.updateBreakingConnection(connection, "Error!");
+
+		assertTrue(connection.isBrokenConnection());
+		assertEquals("Error!", connection.getConnectionErrorMsg());
+		assertNotNull(connection.getNotifiedOn());
+		assertEquals(1, connection.getNotificationCount().intValue());
+		verify(notificationService).sendNotificationEvent(
+				eq(List.of("auth@example.com")),
+				anyMap(),
+				eq("Alert!"),
+				eq("Broken_Connection"),
+				eq("mail-topic"),
+				eq(true),
+				eq(kafkaTemplate),
+				eq("template-key"),
+				eq(false)
+		);
+	}
+
+	public @Test
+	void shouldNotNotifyWhenNotificationCountExceedsMax() {
+		connection.setNotificationCount(5);
+		connection.setNotifiedOn(LocalDateTime.now().minusDays(1).toString());
+		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+
+		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
+
+		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
+	}
+
+	@Test
+	public void shouldNotifyWhenNotifiedOnIsInvalid() {
+		connection.setNotificationCount(0);
+		connection.setNotifiedOn("invalid-timestamp");
+		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(3);
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Subject");
+		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
+		when(customApiConfig.getKafkaMailTopic()).thenReturn("mail-topic");
+		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
+		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setEmailAddress("user@example.com");
+		userInfo.setDisplayName("User");
+
+		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
+		when(authenticationRepository.findByUsername("user123")).thenReturn(null); // fallback to userInfo email
+
+		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
+
+		verify(notificationService).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
+	}
+
+	@Test
+	public void shouldNotNotifyWhenEmailOrSubjectIsBlank() {
+		connection.setNotificationCount(0);
+		connection.setNotifiedOn(null);
+		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn(""); // subject is blank
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setEmailAddress("user@example.com");
+		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
+		when(authenticationRepository.findByUsername("user123")).thenReturn(null);
+
+		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
+
+		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
 	}
 }
