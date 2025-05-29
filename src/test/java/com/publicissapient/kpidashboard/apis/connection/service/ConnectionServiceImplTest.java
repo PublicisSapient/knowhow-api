@@ -120,8 +120,6 @@ public class ConnectionServiceImplTest {
 	@Mock
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
-	private final String creator = "test_user";
-
 	private Connection connection;
 	private final ObjectId connectionId = new ObjectId();
 
