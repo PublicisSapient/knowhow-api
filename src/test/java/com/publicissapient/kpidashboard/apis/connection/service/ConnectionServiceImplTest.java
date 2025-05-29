@@ -38,6 +38,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -929,6 +930,9 @@ public class ConnectionServiceImplTest {
 		UserInfo userInfo = new UserInfo();
 		userInfo.setEmailAddress("user@example.com");
 		userInfo.setDisplayName("User");
+		Map<String, Boolean> alertNotifications = new HashMap<>();
+		alertNotifications.put("errorAlertNotification",true);
+		userInfo.setNotificationEmail(alertNotifications);
 
 		Authentication auth = new Authentication();
 		auth.setEmail("auth@example.com");
@@ -992,6 +996,9 @@ public class ConnectionServiceImplTest {
 
 		UserInfo userInfo = new UserInfo();
 		userInfo.setEmailAddress("user@example.com");
+		Map<String, Boolean> alertNotifications = new HashMap<>();
+		alertNotifications.put("errorAlertNotification",false);
+		userInfo.setNotificationEmail(alertNotifications);
 		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
 		when(authenticationRepository.findByUsername("user123")).thenReturn(null);
 
