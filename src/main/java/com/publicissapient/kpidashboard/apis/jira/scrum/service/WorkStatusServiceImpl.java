@@ -769,7 +769,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 
 		if (isPlanned) {
 			if (DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(DateUtil.todaysTime().minusDays(1))) {
+					.isAfter(DateUtil.getTodayTime().minusDays(1))) {
 				jiraIssueModalObject.setMarker(Constant.GREEN);
 			}
 			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
@@ -779,7 +779,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			}
 		} else {
 			if (DateUtil.stringToLocalDateTime(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(DateUtil.todaysTime().minusDays(1))) {
+					.isAfter(DateUtil.getTodayTime().minusDays(1))) {
 				jiraIssueModalObject.setMarker(Constant.GREEN);
 			}
 			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {

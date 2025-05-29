@@ -34,6 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.bson.types.ObjectId;
@@ -233,13 +234,33 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 				List<ConfigurationHistoryChangeLog> changeLogs = FieldMappingHelper.getFieldMappingHistory(fieldMapping, field,
 						releaseNodeId, nodeSpecifFields.contains(field));
 				if (CollectionUtils.isNotEmpty(changeLogs)) {
-					mappingResponse.setHistory(changeLogs.stream()
-							.sorted(Comparator.comparing(ConfigurationHistoryChangeLog::getUpdatedOn).reversed()).limit(5).toList());
+					List<ConfigurationHistoryChangeLog> changeHistory = changeLogs.stream()
+							.sorted(Comparator.comparing(ConfigurationHistoryChangeLog::getUpdatedOn).reversed()).limit(5).toList();
+
+                    changeHistory.forEach(changeLog -> changeLog.setUpdatedOn(transformToUTCZFormat(changeLog.getUpdatedOn())));
+                    mappingResponse.setHistory(changeHistory);
+
 				}
 				fieldMappingResponses.add(mappingResponse);
 			}
 		}
 		return fieldMappingResponses;
+	}
+
+	/**
+	 * Converts the given date string to UTC 'Z' format if not already in UTC.
+	 * Prevents parsing errors for cached data that may already be in UTC format.
+	 *
+	 * @param updatedOn
+	 *            the date string to transform
+	 * @return the transformed date string in UTC 'Z' format or the original string
+	 *         if no transformation is needed
+	 */
+	private String transformToUTCZFormat(String updatedOn) {
+		if (StringUtils.isNotEmpty(updatedOn) && !updatedOn.endsWith("Z")) {
+			return DateUtil.tranformUTCLocalDateTimeStringToZFormat(DateUtil.localDateTimeToUTC(updatedOn));
+		}
+		return updatedOn;
 	}
 
 	/**

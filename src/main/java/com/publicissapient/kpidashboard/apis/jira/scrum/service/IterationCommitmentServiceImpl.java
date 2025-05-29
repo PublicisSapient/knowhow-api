@@ -18,7 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -291,7 +290,7 @@ public class IterationCommitmentServiceImpl extends JiraIterationKPIService {
 			return;
 		}
 		Set<Integer> scopeDuration = new LinkedHashSet<>();
-		LocalDateTime today = DateUtil.todaysTime();
+		LocalDateTime today = DateUtil.getTodayTime();
 		long durationFromSprintStart = ChronoUnit.DAYS.between(sprintStartDate, today) + 1L;
 
 		for (JiraHistoryChangeLog log : relevantLogs) {

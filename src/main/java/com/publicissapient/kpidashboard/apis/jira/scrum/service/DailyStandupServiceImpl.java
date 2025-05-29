@@ -424,7 +424,7 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 		LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC);
 		LocalDateTime sprintEndDate = DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC);
 		int daysBetween = checkWorkingDays(sprintStartDate.toLocalDate(), sprintEndDate.toLocalDate());
-		int daysLeft = checkWorkingDays(DateUtil.todaysDate(),sprintEndDate.toLocalDate());
+		int daysLeft = checkWorkingDays(DateUtil.getTodayDate(),sprintEndDate.toLocalDate());
 
 		if (capacityKpiData != null && CollectionUtils.isNotEmpty(capacityKpiData.getAssigneeCapacity())) {
 			capacityKpiData.getAssigneeCapacity().forEach(assignee -> {
@@ -612,7 +612,7 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 		if (issueWiseDelay.containsKey(jiraIssue.getNumber()) && StringUtils.isNotEmpty(jiraIssue.getDueDate())) {
 			IterationPotentialDelay iterationPotentialDelay = issueWiseDelay.get(jiraIssue.getNumber());
 			jiraIssueModalObject.setPotentialDelay(iterationPotentialDelay.getPotentialDelay() + "d");
-			jiraIssueModalObject.setPredictedCompletionDate(DateUtil.stringToLocalDateTime(iterationPotentialDelay.getPredictedCompletedDate(),DateUtil.TIME_FORMAT_WITH_SEC_DATE).toString());
+			jiraIssueModalObject.setPredictedCompletionDate(iterationPotentialDelay.getPredictedCompletedDate());
 		} else {
 			jiraIssueModalObject.setPredictedCompletionDate("-");
 			jiraIssueModalObject.setPotentialDelay(Constant.BLANK);
@@ -671,10 +671,10 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 			if (CollectionUtils.isNotEmpty(inSprintHistoryLogs)) {
 				inSprintHistoryLogs.sort(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn).reversed());
 				lastTimeInString = CommonUtils.convertSecondsToDays(
-						(int) Duration.between(inSprintHistoryLogs.get(0).getUpdatedOn(), DateUtil.todaysTime()).getSeconds());
+						(int) Duration.between(inSprintHistoryLogs.get(0).getUpdatedOn(), DateUtil.getTodayTime()).getSeconds());
 			} else if (CollectionUtils.isNotEmpty(allLogs)) {
 				lastTimeInString = CommonUtils
-						.convertSecondsToDays((int) Duration.between(sprintStartDateTime, DateUtil.todaysTime()).getSeconds());
+						.convertSecondsToDays((int) Duration.between(sprintStartDateTime, DateUtil.getTodayTime()).getSeconds());
 			}
 
 		} else

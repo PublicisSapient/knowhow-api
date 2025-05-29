@@ -142,7 +142,7 @@ public class ClosurePossibleTodayServiceImpl extends JiraIterationKPIService {
 			Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(allIssues);
 			allIssues.forEach(issue -> {
 				if (issueWiseDelay.containsKey(issue.getNumber()) &&
-						DateUtil.stringToLocalDateTime(issueWiseDelay.get(issue.getNumber()).getPredictedCompletedDate(),DateUtil.TIME_FORMAT_WITH_SEC_DATE).toLocalDate().isEqual(DateUtil.todaysDate())
+						DateUtil.stringToLocalDateTime(issueWiseDelay.get(issue.getNumber()).getPredictedCompletedDate(),DateUtil.TIME_FORMAT_WITH_SEC_DATE).toLocalDate().isEqual(DateUtil.getTodayDate())
 						) {
 					KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
 					IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
