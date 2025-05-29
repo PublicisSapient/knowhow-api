@@ -59,7 +59,9 @@ public enum NotificationCustomDataEnum {
 
 	INVALID("INVALID"),
 
-	ADMIN_EMAIL("Admin_Email");
+	ADMIN_EMAIL("Admin_Email"),
+
+	TOOL_NAME("tool_name");
 
 	private String value;
 
