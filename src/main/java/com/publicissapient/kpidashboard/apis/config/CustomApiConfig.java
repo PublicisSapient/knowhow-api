@@ -23,6 +23,7 @@ package com.publicissapient.kpidashboard.apis.config; // NOPMD // do not remove 
 import java.util.List;
 import java.util.Map;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,7 @@ import lombok.Setter;
  *
  * @author pankumar8
  */
+@Data
 @Component
 @ConfigurationProperties
 public class CustomApiConfig { // NOPMD
@@ -224,6 +226,12 @@ public class CustomApiConfig { // NOPMD
 
 	@Value("${brokenConnection.EmailNotificationSubject}")
 	private String brokenConnectionEmailNotificationSubject;
+
+	@Value("${brokenConnection.fix.url}")
+	private String brokenConnectionFixUrl;
+
+	@Value("${brokenConnection.help.url}")
+	private String brokenConnectionHelpUrl;
 
 	private int jiraXaxisMonthCount;
 
@@ -1381,27 +1389,4 @@ public class CustomApiConfig { // NOPMD
 		this.centralHierarchyUrl = centralHierarchyUrl;
 	}
 
-	public int getBrokenConnectionMaximumEmailNotificationCount() {
-		return brokenConnectionMaximumEmailNotificationCount;
-	}
-
-	public void setBrokenConnectionMaximumEmailNotificationCount(int brokenConnectionMaximumEmailNotificationCount) {
-		this.brokenConnectionMaximumEmailNotificationCount = brokenConnectionMaximumEmailNotificationCount;
-	}
-
-	public int getBrokenConnectionEmailNotificationFrequency() {
-		return brokenConnectionEmailNotificationFrequency;
-	}
-
-	public void setBrokenConnectionEmailNotificationFrequency(int brokenConnectionEmailNotificationFrequency) {
-		this.brokenConnectionEmailNotificationFrequency = brokenConnectionEmailNotificationFrequency;
-	}
-
-	public String getBrokenConnectionEmailNotificationSubject() {
-		return brokenConnectionEmailNotificationSubject;
-	}
-
-	public void setBrokenConnectionEmailNotificationSubject(String brokenConnectionEmailNotificationSubject) {
-		this.brokenConnectionEmailNotificationSubject = brokenConnectionEmailNotificationSubject;
-	}
 }

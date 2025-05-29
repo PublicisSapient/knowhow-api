@@ -879,7 +879,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		if (shouldSendNotification(connection)) {
 			triggerEmailNotification(connection);
-			connection.setNotifiedOn(LocalDateTime.now().toString());
+			connection.setNotifiedOn(DateUtil.getTodayTime().toString());
 			connection.setNotificationCount(connection.getNotificationCount() + 1);
 		}
 	}
@@ -897,8 +897,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (StringUtils.isBlank(notifiedOn)) return true;
 
 		try {
-			LocalDateTime lastNotified = LocalDateTime.parse(notifiedOn);
-			return LocalDateTime.now().isAfter(lastNotified.plusDays(frequencyDays));
+			LocalDateTime lastNotified = LocalDateTime.parse(DateUtil.localDateTimeToUTC(notifiedOn));
+			return DateUtil.getTodayTime().isAfter(lastNotified.plusDays(frequencyDays));
 		} catch (DateTimeParseException e) {
 			return true;
 		}
@@ -909,9 +909,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 		Authentication authentication = authenticationRepository.findByUsername(connection.getCreatedBy());
 		String email = authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
 		String notificationSubject = customApiConfig.getBrokenConnectionEmailNotificationSubject();
+		String connectionFixUrl = customApiConfig.getUiHost()+customApiConfig.getBrokenConnectionFixUrl();
 		if (StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
 			String toolName = connection.getType();
-			Map<String, String> customData = createCustomData(userinfo.getDisplayName(), toolName);
+			Map<String, String> customData = createCustomData(
+					userinfo.getDisplayName(), toolName, connectionFixUrl,
+					customApiConfig.getBrokenConnectionHelpUrl()
+			);
 			log.info("Notification message sent to kafka with key : {}", NOTIFICATION_KEY);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 			notificationService.sendNotificationEvent(Collections.singletonList(email), customData, notificationSubject,
@@ -924,10 +928,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 					  + "or Property - brokenConnection.EmailNotificationSubject not set in property file ");
 		}
 	}
-	private Map<String, String> createCustomData(String userName, String toolName) {
+	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
 		Map<String, String> customData = new HashMap<>();
 		customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userName);
 		customData.put(NotificationCustomDataEnum.TOOL_NAME.getValue(), toolName);
+		customData.put(NotificationCustomDataEnum.FIX_URL.getValue(), connectionFixUrl);
+		customData.put(NotificationCustomDataEnum.HELP_URL.getValue(), helpUrl);
 		return customData;
 	}
 	/**
