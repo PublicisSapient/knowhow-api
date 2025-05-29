@@ -878,7 +878,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		connection.setConnectionErrorMsg(errorMsg);
 
 		if (shouldSendNotification(connection)) {
-			triggerEmailNotification(connection);
+			sendBrokenConnectionNotification(connection);
 			connection.setNotifiedOn(DateUtil.getTodayTime().toString());
 			connection.setNotificationCount(connection.getNotificationCount() + 1);
 		}
@@ -905,30 +905,52 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 	}
 
-	void triggerEmailNotification(Connection connection) {
-		UserInfo userinfo = userInfoRepository.findByUsername(connection.getCreatedBy());
+	void sendBrokenConnectionNotification(Connection connection) {
+		UserInfo userInfo = userInfoRepository.findByUsername(connection.getCreatedBy());
+		if (userInfo == null) {
+			log.warn("No userInfo found for username: {}", connection.getCreatedBy());
+			return;
+		}
+
 		Authentication authentication = authenticationRepository.findByUsername(connection.getCreatedBy());
-		String email = authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
-		String notificationSubject = customApiConfig.getBrokenConnectionEmailNotificationSubject();
-		String connectionFixUrl = customApiConfig.getUiHost()+customApiConfig.getBrokenConnectionFixUrl();
-		if (StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
-			String toolName = connection.getType();
+		String email = authentication == null ? userInfo.getEmailAddress() : authentication.getEmail();
+		boolean notifyUserOnError = Boolean.TRUE.equals(isErrorAlertNotificationEnabled(userInfo));
+
+		String subject = customApiConfig.getBrokenConnectionEmailNotificationSubject();
+		String fixUrl = customApiConfig.getUiHost() + customApiConfig.getBrokenConnectionFixUrl();
+
+		if (notifyUserOnError && StringUtils.isNotBlank(email) && StringUtils.isNotBlank(subject)) {
 			Map<String, String> customData = createCustomData(
-					userinfo.getDisplayName(), toolName, connectionFixUrl,
+					userInfo.getDisplayName(),
+					connection.getType(),
+					fixUrl,
 					customApiConfig.getBrokenConnectionHelpUrl()
 			);
-			log.info("Notification message sent to kafka with key : {}", NOTIFICATION_KEY);
+
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
-			notificationService.sendNotificationEvent(Collections.singletonList(email), customData, notificationSubject,
-													  NOTIFICATION_KEY, customApiConfig.getKafkaMailTopic(),
-													  customApiConfig.isNotificationSwitch(), kafkaTemplate,
-													  templateKey, customApiConfig.isMailWithoutKafka()
+
+			log.info("Sending broken connection notification to user: {}", email);
+			notificationService.sendNotificationEvent(
+					Collections.singletonList(email),
+					customData,
+					subject,
+					NOTIFICATION_KEY,
+					customApiConfig.getKafkaMailTopic(),
+					customApiConfig.isNotificationSwitch(),
+					kafkaTemplate,
+					templateKey,
+					customApiConfig.isMailWithoutKafka()
 			);
 		} else {
-			log.error("Notification Event not sent : No email address found "
-					  + "or Property - brokenConnection.EmailNotificationSubject not set in property file ");
+			log.info("Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
+					 email, notifyUserOnError, StringUtils.isBlank(subject));
 		}
 	}
+
+	private Boolean isErrorAlertNotificationEnabled(UserInfo userInfo) {
+		return Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
+	}
+
 	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
 		Map<String, String> customData = new HashMap<>();
 		customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userName);
