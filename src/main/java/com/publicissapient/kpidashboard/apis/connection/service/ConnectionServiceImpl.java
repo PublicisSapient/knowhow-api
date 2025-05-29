@@ -18,40 +18,12 @@
 
 package com.publicissapient.kpidashboard.apis.connection.service;
 
-import static com.publicissapient.kpidashboard.apis.constant.Constant.REPO_TOOLS;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ARGOCD;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_AZURE;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_AZUREPIPELINE;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_AZUREREPO;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_BAMBOO;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_BITBUCKET;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITHUB;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITLAB;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JENKINS;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JIRA;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_SONAR;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_TEAMCITY;
-import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHYR;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.util.RestAPIUtils;
@@ -59,13 +31,30 @@ import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfig;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
 import com.publicissapient.kpidashboard.common.model.connection.ConnectionDTO;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectToolConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.connection.ConnectionRepository;
+import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
+import com.publicissapient.kpidashboard.common.service.NotificationService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.publicissapient.kpidashboard.apis.constant.Constant.*;
 
 /**
  * This class provides various methods related to operations on Connections
@@ -79,7 +68,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	private static final String CONNECTION_EMPTY_MSG = "Connection name cannot be empty";
 	private static final String ERROR_MSG = "A connection with same details already exists. Connection name is ";
-
+	private static final String NOTIFICATION_KEY = "Broken_Connection";
 	@Autowired
 	private AesEncryptionService aesEncryptionService;
 
@@ -88,6 +77,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	@Autowired
 	private ProjectToolConfigRepository toolRepository;
+
+	@Autowired
+	UserInfoRepository userInfoRepository;
+
+	@Autowired
+	AuthenticationRepository authenticationRepository;
 
 	@Autowired
 	private CustomApiConfig customApiConfig;
@@ -102,10 +97,16 @@ public class ConnectionServiceImpl implements ConnectionService {
 	private AuthenticationService authenticationService;
 
 	@Autowired
+	private NotificationService notificationService;
+
+	@Autowired
 	private RepoToolsConfigServiceImpl repoToolsConfigService;
 
 	@Autowired
 	private RestAPIUtils restAPIUtils;
+
+	@Autowired
+	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	/**
 	 * Fetch all connection data.
@@ -831,24 +832,84 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 */
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
+		if (connection == null) return;
 
-		if (connection != null) {
+		connectionRepository.findById(connection.getId())
+							.ifPresent(existingConnection -> {
+								if (StringUtils.isEmpty(conErrorMsg)) {
+									resetConnectionState(existingConnection);
+								} else {
+									handleBrokenConnection(existingConnection, conErrorMsg);
+								}
+								connectionRepository.save(existingConnection);
+							});
+	}
 
-			Optional<Connection> existingConnOpt = connectionRepository.findById(connection.getId());
-			if (existingConnOpt.isPresent()) {
-				Connection existingConnection = existingConnOpt.get();
-				if (StringUtils.isEmpty(conErrorMsg)) {
-					existingConnection.setBrokenConnection(false);
-					existingConnection.setConnectionErrorMsg(conErrorMsg);
-				} else {
-					existingConnection.setBrokenConnection(true);
-					existingConnection.setConnectionErrorMsg(conErrorMsg);
-				}
-				connectionRepository.save(existingConnection);
-			}
+	private void resetConnectionState(Connection connection) {
+		connection.setBrokenConnection(false);
+		connection.setConnectionErrorMsg(null);
+		connection.setNotifiedOn(null);
+		connection.setNotificationCount(0);
+	}
+
+	private void handleBrokenConnection(Connection connection, String errorMsg) {
+		connection.setBrokenConnection(true);
+		connection.setConnectionErrorMsg(errorMsg);
+
+		if (shouldSendNotification(connection)) {
+			triggerEmailNotification(connection); // Your custom method
+			connection.setNotifiedOn(LocalDateTime.now().toString());
+			connection.setNotificationCount(connection.getNotificationCount() + 1);
 		}
 	}
 
+	private boolean shouldSendNotification(Connection connection) {
+		int maxCount = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
+		int frequencyDays = customApiConfig.getBrokenConnectionEmailNotificationFrequency();
+
+		if (maxCount <= 0) return false;
+
+		int count = connection.getNotificationCount();
+		if (count >= maxCount) return false;
+
+		String notifiedOn = connection.getNotifiedOn();
+		if (StringUtils.isBlank(notifiedOn)) return true;
+
+		try {
+			LocalDateTime lastNotified = LocalDateTime.parse(notifiedOn);
+			return LocalDateTime.now().isAfter(lastNotified.plusDays(frequencyDays));
+		} catch (DateTimeParseException e) {
+			// Treat parse failure as "never notified"
+			return true;
+		}
+	}
+
+	void triggerEmailNotification(Connection connection) {
+		UserInfo userinfo = userInfoRepository.findByUsername(connection.getCreatedBy());
+		Authentication authentication = authenticationRepository.findByUsername(connection.getCreatedBy());
+		String email = authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
+		String notificationSubject = customApiConfig.getBrokenConnectionEmailNotificationSubject();
+		if (StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
+			String toolName = connection.getType();
+			Map<String, String> customData = createCustomData(userinfo.getDisplayName(), toolName);
+			log.info("Notification message sent to kafka with key : {}", NOTIFICATION_KEY);
+			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
+			notificationService.sendNotificationEvent(Collections.singletonList(email), customData, notificationSubject,
+													  NOTIFICATION_KEY, customApiConfig.getKafkaMailTopic(),
+													  customApiConfig.isNotificationSwitch(), kafkaTemplate,
+													  templateKey, customApiConfig.isMailWithoutKafka()
+			);
+		} else {
+			log.error("Notification Event not sent : No email address found "
+					  + "or Property - brokenConnection.EmailNotificationSubject not set in property file ");
+		}
+	}
+	private Map<String, String> createCustomData(String userName, String toolName) {
+		Map<String, String> customData = new HashMap<>();
+		customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userName);
+		customData.put(NotificationCustomDataEnum.TOOL_NAME.getValue(), toolName);
+		return customData;
+	}
 	/**
 	 * @param connection
 	 *          connection

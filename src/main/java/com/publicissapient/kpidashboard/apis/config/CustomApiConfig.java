@@ -216,6 +216,15 @@ public class CustomApiConfig { // NOPMD
 	@Value("${latest.kpi.comments.summary}")
 	private int latestKpiCommentsSummary;
 
+	@Value("${brokenConnection.MaximumEmailNotificationCount}")
+	private int brokenConnectionMaximumEmailNotificationCount;
+
+	@Value("${brokenConnection.EmailNotificationFrequency}")
+	private int brokenConnectionEmailNotificationFrequency;
+
+	@Value("${brokenConnection.EmailNotificationSubject}")
+	private String brokenConnectionEmailNotificationSubject;
+
 	private int jiraXaxisMonthCount;
 
 	private boolean ssoLogin;
@@ -1372,4 +1381,27 @@ public class CustomApiConfig { // NOPMD
 		this.centralHierarchyUrl = centralHierarchyUrl;
 	}
 
+	public int getBrokenConnectionMaximumEmailNotificationCount() {
+		return brokenConnectionMaximumEmailNotificationCount;
+	}
+
+	public void setBrokenConnectionMaximumEmailNotificationCount(int brokenConnectionMaximumEmailNotificationCount) {
+		this.brokenConnectionMaximumEmailNotificationCount = brokenConnectionMaximumEmailNotificationCount;
+	}
+
+	public int getBrokenConnectionEmailNotificationFrequency() {
+		return brokenConnectionEmailNotificationFrequency;
+	}
+
+	public void setBrokenConnectionEmailNotificationFrequency(int brokenConnectionEmailNotificationFrequency) {
+		this.brokenConnectionEmailNotificationFrequency = brokenConnectionEmailNotificationFrequency;
+	}
+
+	public String getBrokenConnectionEmailNotificationSubject() {
+		return brokenConnectionEmailNotificationSubject;
+	}
+
+	public void setBrokenConnectionEmailNotificationSubject(String brokenConnectionEmailNotificationSubject) {
+		this.brokenConnectionEmailNotificationSubject = brokenConnectionEmailNotificationSubject;
+	}
 }
