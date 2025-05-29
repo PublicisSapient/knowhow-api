@@ -857,7 +857,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		connection.setConnectionErrorMsg(errorMsg);
 
 		if (shouldSendNotification(connection)) {
-			triggerEmailNotification(connection); // Your custom method
+			triggerEmailNotification(connection);
 			connection.setNotifiedOn(LocalDateTime.now().toString());
 			connection.setNotificationCount(connection.getNotificationCount() + 1);
 		}
@@ -879,7 +879,6 @@ public class ConnectionServiceImpl implements ConnectionService {
 			LocalDateTime lastNotified = LocalDateTime.parse(notifiedOn);
 			return LocalDateTime.now().isAfter(lastNotified.plusDays(frequencyDays));
 		} catch (DateTimeParseException e) {
-			// Treat parse failure as "never notified"
 			return true;
 		}
 	}
