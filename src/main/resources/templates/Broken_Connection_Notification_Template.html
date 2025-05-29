@@ -22,10 +22,10 @@
     </tr>
     <tr>
         <td style="padding: 25px;">
-            <p>Hi <strong th:text="${User_Name}">User</strong>,</p>
+            <p>Hi <strong th:text="${User_Name}"></strong>,</p>
 
             <p>
-                We’ve detected that your <strong th:text="${Tool_Name}">Tool</strong> connection is currently <span style="color: #FE414D;">broken</span> — this is usually due to an expired token or authentication issue.
+                We’ve detected that your <strong th:text="${Tool_Name}"></strong> connection is currently <span style="color: #FE414D;">broken</span> — this is usually due to an expired token or authentication issue.
             </p>
 
             <p>
@@ -37,13 +37,14 @@
             </p>
 
             <div style="margin: 20px 0;">
-                <a href="https://https://knowhow.tools.publicis.sapient.com/connections" style="background-color: #0099ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+                <a th:href="${Fix_Url}" style="background-color: #0099ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
                     Fix your connection now
                 </a>
             </div>
 
             <p>
-                Need help? Reach out to us anytime at <a href="https://publicissapient.atlassian.net/servicedesk/customer/portal/7/group/38/create/101">knowHOW Request</a>.
+                Need help? Reach out to us anytime at
+                <a th:href="${Help_Url}">knowHOW Request</a>.
             </p>
 
             <p style="margin-top: 40px;">Thanks,<br/>The KnowHow Team</p>
