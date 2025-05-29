@@ -975,22 +975,10 @@ public class ConnectionServiceImplTest {
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(3);
 		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
-		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Subject");
-		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
-		when(customApiConfig.getKafkaMailTopic()).thenReturn("mail-topic");
-		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
-
-		UserInfo userInfo = new UserInfo();
-		userInfo.setEmailAddress("user@example.com");
-		userInfo.setDisplayName("User");
-
-		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
-		when(authenticationRepository.findByUsername("user123")).thenReturn(null); // fallback to userInfo email
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
+		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
 	}
 
 	@Test

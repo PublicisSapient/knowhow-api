@@ -900,7 +900,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 			LocalDateTime lastNotified = LocalDateTime.parse(DateUtil.localDateTimeToUTC(notifiedOn));
 			return DateUtil.getTodayTime().isAfter(lastNotified.plusDays(frequencyDays));
 		} catch (DateTimeParseException e) {
-			return true;
+			log.warn("Invalid notifiedOn timestamp for connection ID {}: {}", connection.getId(), notifiedOn, e);
+			return false;
 		}
 	}
 
