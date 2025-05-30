@@ -483,16 +483,10 @@
       <artifactId>ehcache</artifactId>
       <classifier>jakarta</classifier>
     </dependency>
-    <!--Retrofit-->
     <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>retrofit</artifactId>
-      <version>2.7.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>converter-gson</artifactId>
-      <version>2.7.2</version>
+      <groupId>com.knowhow.retro</groupId>
+      <artifactId>ai-gateway-client</artifactId>
+      <version>1.0.0</version>
     </dependency>
   </dependencies>
   <repositories>
