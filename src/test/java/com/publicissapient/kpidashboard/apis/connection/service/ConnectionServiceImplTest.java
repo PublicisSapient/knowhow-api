@@ -917,11 +917,12 @@ public class ConnectionServiceImplTest {
 	@Test
 	public void shouldTriggerNotificationWhenErrorMsgExists() {
 		connection.setNotificationCount(0);
+		connection.setType("Jenkins");
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
 		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
-		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Alert!");
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection");
 		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
 		when(customApiConfig.getKafkaMailTopic()).thenReturn("mail-topic");
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
@@ -949,7 +950,7 @@ public class ConnectionServiceImplTest {
 		verify(notificationService).sendNotificationEvent(
 				eq(List.of("auth@example.com")),
 				anyMap(),
-				eq("Alert!"),
+				eq("Action Required: Restore Your {{toolName}} Connection"),
 				eq("Broken_Connection"),
 				eq("mail-topic"),
 				eq(true),
@@ -962,6 +963,7 @@ public class ConnectionServiceImplTest {
 	public @Test
 	void shouldNotNotifyWhenNotificationCountExceedsMax() {
 		connection.setNotificationCount(5);
+		connection.setType("Jenkins");
 		connection.setNotifiedOn(LocalDateTime.now().minusDays(1).toString());
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
@@ -975,6 +977,7 @@ public class ConnectionServiceImplTest {
 	@Test
 	public void shouldNotifyWhenNotifiedOnIsInvalid() {
 		connection.setNotificationCount(0);
+		connection.setType("Jenkins");
 		connection.setNotifiedOn("invalid-timestamp");
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(3);
@@ -989,10 +992,11 @@ public class ConnectionServiceImplTest {
 	public void shouldNotNotifyWhenEmailOrSubjectIsBlank() {
 		connection.setNotificationCount(0);
 		connection.setNotifiedOn(null);
+		connection.setType("Jenkins");
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
 		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
-		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn(""); // subject is blank
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection"); // subject is blank
 
 		UserInfo userInfo = new UserInfo();
 		userInfo.setEmailAddress("user@example.com");
