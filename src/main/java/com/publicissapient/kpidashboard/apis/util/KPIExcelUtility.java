@@ -138,14 +138,14 @@ public class KPIExcelUtility {
 			excelData.setStoryId(Collections.singletonMap(story, checkEmptyURL(jiraIssue)));
 			setSquads(excelData, jiraIssue);
 			excelData.setPriority(setPriority(customApiConfig, jiraIssue));
-			Integer totalTimeSpent = jiraIssue.getTimeSpentInMinutes();
+			Integer totalTimeSpent = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0);
 			if (defect != null) {
 				excelData.setDefectId(Collections.singletonMap(defectNumber, checkEmptyURL(defect)));
 				excelData.setDefectDesc(checkEmptyName(defect));
 				excelData.setRootCause(defect.getRootCauseList());
 				excelData.setDefectPriority(setPriority(customApiConfig, defect));
 				excelData.setDefectStatus(defect.getStatus());
-				totalTimeSpent = totalTimeSpent + defect.getTimeSpentInMinutes();
+				totalTimeSpent = totalTimeSpent + Objects.requireNonNullElse(defect.getTimeSpentInMinutes(), 0);
 			} else {
 				excelData.setDefectId(Collections.emptyMap());
 				excelData.setDefectDesc(Constant.BLANK);
