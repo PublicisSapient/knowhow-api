@@ -257,7 +257,7 @@ public class KPIExcelUtility {
 				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 				excelData.setRootCause(jiraIssue.getRootCauseList());
 				excelData.setLabels(jiraIssue.getLabels());
-				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+				Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 
 				if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId())) {
@@ -314,7 +314,7 @@ public class KPIExcelUtility {
 			excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 			excelData.setRootCause(jiraIssue.getRootCauseList());
 			excelData.setDefectStatus(jiraIssue.getStatus());
-			Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+			Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0);
 			setStoryExcelData(totalStoryWoDrop, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 			excelDataList.add(excelData);
 		});
@@ -1640,7 +1640,7 @@ public class KPIExcelUtility {
 			jiraIssueModalObject.setRemainingEstimateMinutes(Constant.BLANK);
 			jiraIssueModalObject.setRemainingTimeInDays(Constant.BLANK);
 		}
-		jiraIssueModalObject.setTimeSpentInMinutes(CommonUtils.convertIntoDays(jiraIssue.getTimeSpentInMinutes()));
+		jiraIssueModalObject.setTimeSpentInMinutes(CommonUtils.convertIntoDays(Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0)));
 		if (jiraIssue.getDevDueDate() != null)
 			jiraIssueModalObject.setDevDueDate(DateUtil.dateTimeConverter(jiraIssue.getDevDueDate(),
 					DateUtil.TIME_FORMAT_WITH_SEC, DateUtil.DISPLAY_DATE_FORMAT));
@@ -1723,7 +1723,7 @@ public class KPIExcelUtility {
 			issueKpiModalValue.setRemainingEstimateMinutes(Constant.BLANK);
 			issueKpiModalValue.setRemainingTime(0);
 		}
-		issueKpiModalValue.setTimeSpentInMinutes(CommonUtils.convertIntoDays(jiraIssue.getTimeSpentInMinutes()));
+		issueKpiModalValue.setTimeSpentInMinutes(CommonUtils.convertIntoDays(Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0)));
 		if (jiraIssue.getDevDueDate() != null)
 			issueKpiModalValue.setDevDueDate(DateUtil.dateTimeConverter(jiraIssue.getDevDueDate(),
 					DateUtil.TIME_FORMAT_WITH_SEC, DateUtil.DISPLAY_DATE_FORMAT));
@@ -2300,7 +2300,7 @@ public class KPIExcelUtility {
 						excelData.setRootCause(jiraIssue.getRootCauseList());
 						excelData.setDefectStatus(jiraIssue.getStatus());
 						excelData.setLabels(jiraIssue.getLabels());
-						Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+						Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 						setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 
 						excelData.setReopenDate(String.valueOf(defectTransitionInfo.getReopenDate()));
