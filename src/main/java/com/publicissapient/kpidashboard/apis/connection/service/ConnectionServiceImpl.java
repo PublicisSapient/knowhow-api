@@ -916,10 +916,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 		String email = authentication == null ? userInfo.getEmailAddress() : authentication.getEmail();
 		boolean notifyUserOnError = Boolean.TRUE.equals(isErrorAlertNotificationEnabled(userInfo));
 
-		String subject = customApiConfig.getBrokenConnectionEmailNotificationSubject();
+		String subjectTemplate = customApiConfig.getBrokenConnectionEmailNotificationSubject();
+		String notificationSubject = subjectTemplate.replace("{{Tool_Name}}", connection.getType());
+
 		String fixUrl = customApiConfig.getUiHost() + customApiConfig.getBrokenConnectionFixUrl();
 
-		if (notifyUserOnError && StringUtils.isNotBlank(email) && StringUtils.isNotBlank(subject)) {
+		if (notifyUserOnError && StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
 			Map<String, String> customData = createCustomData(
 					userInfo.getDisplayName(),
 					connection.getType(),
@@ -933,7 +935,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 			notificationService.sendNotificationEvent(
 					Collections.singletonList(email),
 					customData,
-					subject,
+					notificationSubject,
 					NOTIFICATION_KEY,
 					customApiConfig.getKafkaMailTopic(),
 					customApiConfig.isNotificationSwitch(),
@@ -943,7 +945,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 			);
 		} else {
 			log.info("Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
-					 email, notifyUserOnError, StringUtils.isBlank(subject));
+					 email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
 		}
 	}
 
