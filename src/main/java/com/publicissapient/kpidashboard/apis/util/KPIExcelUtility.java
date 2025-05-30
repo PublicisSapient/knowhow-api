@@ -367,7 +367,7 @@ public class KPIExcelUtility {
 				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 				excelData.setRootCause(jiraIssue.getRootCauseList());
 				excelData.setDefectStatus(jiraIssue.getStatus());
-				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+				Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 				kpiExcelData.add(excelData);
 			});
