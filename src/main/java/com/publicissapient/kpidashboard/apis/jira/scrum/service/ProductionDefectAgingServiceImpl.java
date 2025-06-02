@@ -244,7 +244,8 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 		initializeRangeMapForProjects(rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
 		projectWiseJiraIssueList.forEach(issue -> {
-			long daysBetween = DAYS.between(KpiDataHelper.convertStringToDate(issue.getCreatedDate()), LocalDate.now());
+			long daysBetween = DAYS.between(DateUtil.convertToUTCLocalDateTime(issue.getCreatedDate()).toLocalDate(),
+					DateUtil.getTodayDate());
 			Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
 			String range;
 			if (null == monthRangeMap.get(monthsBetween)) {
