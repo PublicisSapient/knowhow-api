@@ -65,7 +65,6 @@ public class DefectReopenRateServiceImpl extends JiraBacklogKPIService<Double, L
 	private static final String TOTAL_JIRA_DEFECTS = "TOTAL_JIRA_DEFECTS";
 	private static final String PROJECT_CLOSED_STATUS_MAP = "PROJECT_CLOSED_STATUS_MAP";
 	private static final String JIRA_REOPEN_HISTORY = "JIRA_REOPEN_HISTORY";
-	private static final String TIME_FORMAT_WITH_SEC = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 	@Autowired
 	private JiraIssueRepository jiraIssueRepository;
 

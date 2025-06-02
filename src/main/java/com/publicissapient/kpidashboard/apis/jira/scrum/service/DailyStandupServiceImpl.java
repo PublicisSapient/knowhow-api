@@ -110,8 +110,6 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 	public static final String REMAINING_ESTIMATE = "Remaining Estimate";
 	public static final String REMAINING_WORK = "Remaining Work";
 	public static final String DELAY = "Delay";
-	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String HISTORY_ISSUES = "historyIssue";
 	private static final String EPICS = "epics";
 	private static final String FILTER_BUTTON = "button";

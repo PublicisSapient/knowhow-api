@@ -71,7 +71,6 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	private static final String ISSUES = "issues";
 	private static final String DELAY = "Delay";
 	private static final String SPRINT_DETAILS = "sprintDetails";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String FILTER_TYPE = "Multi";
 	public static final String PLANNED = "Planned";
 	public static final String UNPLANNED = "Unplanned";

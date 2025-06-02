@@ -96,7 +96,6 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 	public static final String DOTTED_LINE = "Gap Between Completed and Predicted";
 	private static final String SPRINT = "sprint";
 	private static final String ISSUES = "issues";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
 	private ConfigHelperService configHelperService;

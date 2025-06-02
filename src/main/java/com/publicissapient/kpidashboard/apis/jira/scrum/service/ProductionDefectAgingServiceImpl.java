@@ -61,9 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long, List<Object>> {
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	private static final String RANGE = "range";
 	private static final String RANGE_TICKET_LIST = "rangeTickets";
-	private static final String IN = "in";
 	@Autowired
 	private ConfigHelperService configHelperService;
 	@Autowired

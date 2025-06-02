@@ -38,7 +38,8 @@ import io.mongock.api.annotations.RollbackExecution;
  */
 @ChangeUnit(id = "r_update_dora_kpi_column", order = "013300", author = "shi6", systemVersion = "13.3.0")
 public class RollbackUpdateDoraKPIColumnName {
-
+	private static final String COLUMN_NAME = "columnName";
+	private static final String KPI_COLUMN_DETAILS = "kpiColumnDetails";
 	private final MongoTemplate mongoTemplate;
 
 	public RollbackUpdateDoraKPIColumnName(MongoTemplate mongoTemplate) {
@@ -73,24 +74,24 @@ public class RollbackUpdateDoraKPIColumnName {
 			Map<String, String> renameMap = entry.getValue();
 
 			// Filter documents for this KPI with relevant old column names
-			Document filter = new Document("kpiId", kpiId).append("kpiColumnDetails",
-					new Document("$elemMatch", new Document("columnName", new Document("$in", renameMap.keySet()))));
+			Document filter = new Document("kpiId", kpiId).append(KPI_COLUMN_DETAILS,
+					new Document("$elemMatch", new Document(COLUMN_NAME, new Document("$in", renameMap.keySet()))));
 
 			for (Document doc : collection.find(filter)) {
 				boolean updated = false;
-				List<Document> kpiColumnDetails = (List<Document>) doc.get("kpiColumnDetails");
+				List<Document> kpiColumnDetails = (List<Document>) doc.get(KPI_COLUMN_DETAILS);
 
 				for (Document colDetail : kpiColumnDetails) {
-					String oldName = colDetail.getString("columnName");
+					String oldName = colDetail.getString(COLUMN_NAME);
 					if (renameMap.containsKey(oldName)) {
-						colDetail.put("columnName", renameMap.get(oldName));
+						colDetail.put(COLUMN_NAME, renameMap.get(oldName));
 						updated = true;
 					}
 				}
 
 				if (updated) {
 					collection.updateOne(eq("_id", doc.getObjectId("_id")),
-							new Document("$set", new Document("kpiColumnDetails", kpiColumnDetails)));
+							new Document("$set", new Document(KPI_COLUMN_DETAILS, kpiColumnDetails)));
 				}
 			}
 		}

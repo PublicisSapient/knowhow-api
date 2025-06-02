@@ -97,7 +97,6 @@ public class ReleaseBurnUpServiceImpl extends JiraReleaseKPIService {
 	private static final int DAYS_RANGE = 120;
 	private static final String RELEASE_PROGRESS = "Release Progress";
 	private static final String LINE_GRAPH_TYPE = "line";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	public static final String RELEASE_PREDICTION = "Release Prediction";
 	public static final String ISSUE_COUNT_PREDICTION = "issueCountPrediction";
 	public static final String ISSUE_SIZE_PREDICTION = "issueSizePrediction";

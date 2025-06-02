@@ -83,7 +83,6 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	private static final String ISSUES = "issues";
 	private static final String LATE_REFINED = "Late Refined";
 	private static final String LEGEND = "Unrefined scope";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
 	private ConfigHelperService configHelperService;
