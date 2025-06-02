@@ -35,8 +35,11 @@ import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHY
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,8 +53,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.util.RestAPIUtils;
@@ -59,13 +65,17 @@ import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfig;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
 import com.publicissapient.kpidashboard.common.model.connection.ConnectionDTO;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectToolConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.connection.ConnectionRepository;
+import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
+import com.publicissapient.kpidashboard.common.service.NotificationService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+import java.time.format.DateTimeParseException;
 
 /**
  * This class provides various methods related to operations on Connections
@@ -79,7 +89,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	private static final String CONNECTION_EMPTY_MSG = "Connection name cannot be empty";
 	private static final String ERROR_MSG = "A connection with same details already exists. Connection name is ";
-
+	private static final String NOTIFICATION_KEY = "Broken_Connection";
 	@Autowired
 	private AesEncryptionService aesEncryptionService;
 
@@ -88,6 +98,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	@Autowired
 	private ProjectToolConfigRepository toolRepository;
+
+	@Autowired
+	UserInfoRepository userInfoRepository;
+
+	@Autowired
+	AuthenticationRepository authenticationRepository;
 
 	@Autowired
 	private CustomApiConfig customApiConfig;
@@ -102,10 +118,16 @@ public class ConnectionServiceImpl implements ConnectionService {
 	private AuthenticationService authenticationService;
 
 	@Autowired
+	private NotificationService notificationService;
+
+	@Autowired
 	private RepoToolsConfigServiceImpl repoToolsConfigService;
 
 	@Autowired
 	private RestAPIUtils restAPIUtils;
+
+	@Autowired
+	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	/**
 	 * Fetch all connection data.
@@ -831,24 +853,114 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 */
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
+		if (connection == null) return;
 
-		if (connection != null) {
+		connectionRepository.findById(connection.getId())
+							.ifPresent(existingConnection -> {
+								if (StringUtils.isEmpty(conErrorMsg)) {
+									resetConnectionState(existingConnection);
+								} else {
+									handleBrokenConnection(existingConnection, conErrorMsg);
+								}
+								connectionRepository.save(existingConnection);
+							});
+	}
 
-			Optional<Connection> existingConnOpt = connectionRepository.findById(connection.getId());
-			if (existingConnOpt.isPresent()) {
-				Connection existingConnection = existingConnOpt.get();
-				if (StringUtils.isEmpty(conErrorMsg)) {
-					existingConnection.setBrokenConnection(false);
-					existingConnection.setConnectionErrorMsg(conErrorMsg);
-				} else {
-					existingConnection.setBrokenConnection(true);
-					existingConnection.setConnectionErrorMsg(conErrorMsg);
-				}
-				connectionRepository.save(existingConnection);
-			}
+	private void resetConnectionState(Connection connection) {
+		connection.setBrokenConnection(false);
+		connection.setConnectionErrorMsg(null);
+		connection.setNotifiedOn(null);
+		connection.setNotificationCount(0);
+	}
+
+	private void handleBrokenConnection(Connection connection, String errorMsg) {
+		connection.setBrokenConnection(true);
+		connection.setConnectionErrorMsg(errorMsg);
+
+		if (shouldSendNotification(connection)) {
+			sendBrokenConnectionNotification(connection);
+			connection.setNotifiedOn(DateUtil.getTodayTime().toString());
+			connection.setNotificationCount(connection.getNotificationCount() + 1);
 		}
 	}
 
+	private boolean shouldSendNotification(Connection connection) {
+		int maxCount = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
+		int frequencyDays = customApiConfig.getBrokenConnectionEmailNotificationFrequency();
+
+		if (maxCount <= 0) return false;
+
+		int count = connection.getNotificationCount();
+		if (count >= maxCount) return false;
+
+		String notifiedOn = connection.getNotifiedOn();
+		if (StringUtils.isBlank(notifiedOn)) return true;
+
+		try {
+			LocalDateTime lastNotified = LocalDateTime.parse(DateUtil.localDateTimeToUTC(notifiedOn));
+			return DateUtil.getTodayTime().isAfter(lastNotified.plusDays(frequencyDays));
+		} catch (DateTimeParseException e) {
+			log.warn("Invalid notifiedOn timestamp for connection ID {}: {}", connection.getId(), notifiedOn, e);
+			return false;
+		}
+	}
+
+	void sendBrokenConnectionNotification(Connection connection) {
+		UserInfo userInfo = userInfoRepository.findByUsername(connection.getCreatedBy());
+		if (userInfo == null) {
+			log.warn("No userInfo found for username: {}", connection.getCreatedBy());
+			return;
+		}
+
+		Authentication authentication = authenticationRepository.findByUsername(connection.getCreatedBy());
+		String email = authentication == null ? userInfo.getEmailAddress() : authentication.getEmail();
+		boolean notifyUserOnError = Boolean.TRUE.equals(isErrorAlertNotificationEnabled(userInfo));
+
+		String subjectTemplate = customApiConfig.getBrokenConnectionEmailNotificationSubject();
+		String notificationSubject = subjectTemplate.replace("{{Tool_Name}}", connection.getType());
+
+		String fixUrl = customApiConfig.getUiHost() + customApiConfig.getBrokenConnectionFixUrl();
+
+		if (notifyUserOnError && StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
+			Map<String, String> customData = createCustomData(
+					userInfo.getDisplayName(),
+					connection.getType(),
+					fixUrl,
+					customApiConfig.getBrokenConnectionHelpUrl()
+			);
+
+			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
+
+			log.info("Sending broken connection notification to user: {}", email);
+			notificationService.sendNotificationEvent(
+					Collections.singletonList(email),
+					customData,
+					notificationSubject,
+					NOTIFICATION_KEY,
+					customApiConfig.getKafkaMailTopic(),
+					customApiConfig.isNotificationSwitch(),
+					kafkaTemplate,
+					templateKey,
+					customApiConfig.isMailWithoutKafka()
+			);
+		} else {
+			log.info("Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
+					 email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
+		}
+	}
+
+	private Boolean isErrorAlertNotificationEnabled(UserInfo userInfo) {
+		return Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
+	}
+
+	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
+		Map<String, String> customData = new HashMap<>();
+		customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userName);
+		customData.put(NotificationCustomDataEnum.TOOL_NAME.getValue(), toolName);
+		customData.put(NotificationCustomDataEnum.FIX_URL.getValue(), connectionFixUrl);
+		customData.put(NotificationCustomDataEnum.HELP_URL.getValue(), helpUrl);
+		return customData;
+	}
 	/**
 	 * @param connection
 	 *          connection
