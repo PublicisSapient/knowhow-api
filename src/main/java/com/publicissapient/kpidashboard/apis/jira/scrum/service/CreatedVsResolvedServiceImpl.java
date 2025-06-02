@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -338,8 +339,8 @@ public class CreatedVsResolvedServiceImpl extends JiraKPIService<Double, List<Ob
 			if (CollectionUtils.isNotEmpty(sprintWiseCreatedIssues.get(currentNodeIdentifier))) {
 				totalCreatedIssues = sprintWiseCreatedIssues.get(currentNodeIdentifier);
 				totalCreatedIssuesAfter = totalCreatedIssues.stream()
-						.filter(jiraIssue -> LocalDate.parse(jiraIssue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-								.isAfter(LocalDate.parse(sprintStartDate.split("\\.")[0], DATE_TIME_FORMATTER)))
+						.filter(jiraIssue -> DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate()).isAfter(
+								DateUtil.stringToLocalDateTime(sprintStartDate, DateUtil.TIME_FORMAT_WITH_SEC)))
 						.collect(Collectors.toList());
 				totalClosedIssues = sprintWiseClosedIssues.get(currentNodeIdentifier);
 				closedIssuesWithStatus = sprintWiseClosedIssueStatus.get(currentNodeIdentifier);
@@ -421,11 +422,11 @@ public class CreatedVsResolvedServiceImpl extends JiraKPIService<Double, List<Ob
 	public List<JiraIssue> getTotalSubTasks(List<JiraIssue> allSubTasks, SprintDetails sprintDetails,
 			List<JiraIssueCustomHistory> subTaskHistory) {
 		LocalDateTime sprintEndDate = sprintDetails.getCompleteDate() != null
-				? LocalDateTime.parse(sprintDetails.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetails.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
+				? DateUtil.stringToLocalDateTime(sprintDetails.getCompleteDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+				: DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 		LocalDateTime sprintStartDate = sprintDetails.getActivatedDate() != null
-				? LocalDateTime.parse(sprintDetails.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetails.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+				? DateUtil.stringToLocalDateTime(sprintDetails.getActivatedDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+				: DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 		FieldMapping fieldMapping = configHelperService.getFieldMapping(sprintDetails.getBasicProjectConfigId());
 		List<JiraIssue> subTaskTaggedWithSprint = new ArrayList<>();
 
@@ -438,7 +439,7 @@ public class CreatedVsResolvedServiceImpl extends JiraKPIService<Double, List<Ob
 							changeLog.getUpdatedOn().isAfter(sprintStartDate))
 					.findFirst();
 			if (jiraHistoryChangeLog.isPresent() &&
-					sprintEndDate.isAfter(LocalDateTime.parse(jiraIssue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER)))
+					sprintEndDate.isAfter(DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate())))
 				subTaskTaggedWithSprint.add(jiraIssue);
 		});
 		return subTaskTaggedWithSprint;
