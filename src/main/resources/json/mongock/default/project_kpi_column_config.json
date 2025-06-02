@@ -3124,13 +3124,13 @@
         "isDefault": true
       },
       {
-        "columnName": "Created Date",
+        "columnName": "Created Time",
         "order": 5,
         "isShown": true,
         "isDefault": true
       },
       {
-        "columnName": "Completion Date",
+        "columnName": "Completion Time",
         "order": 6,
         "isShown": true,
         "isDefault": true

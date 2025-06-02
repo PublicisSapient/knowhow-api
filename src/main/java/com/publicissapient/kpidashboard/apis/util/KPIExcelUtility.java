@@ -2090,7 +2090,7 @@ public class KPIExcelUtility {
 					(weekOrMonthName, meanRecoverListCurrentTime) -> meanRecoverListCurrentTime.forEach(meanTimeRecoverData -> {
 						KPIExcelData excelData = new KPIExcelData();
 						excelData.setProjectName(projectName);
-                        excelData.setDate(meanTimeRecoverData.getDate());
+                        excelData.setWeeks(meanTimeRecoverData.getDate());
 						Map<String, String> issueDetails = new HashMap<>();
 						issueDetails.put(meanTimeRecoverData.getStoryID(),
 								StringUtils.isEmpty(meanTimeRecoverData.getUrl())
@@ -2099,10 +2099,10 @@ public class KPIExcelUtility {
 						excelData.setStoryId(issueDetails);
 						excelData.setIssueType(meanTimeRecoverData.getIssueType());
 						excelData.setIssueDesc(meanTimeRecoverData.getDesc());
-						excelData.setCompletionDate(!StringUtils.isEmpty(meanTimeRecoverData.getClosedDate())
+						excelData.setCompletionDateTime(!StringUtils.isEmpty(meanTimeRecoverData.getClosedDate())
 								? meanTimeRecoverData.getClosedDate()
 								: Constant.BLANK);
-						excelData.setCreatedDate(meanTimeRecoverData.getCreatedDate());
+						excelData.setCreatedDateTime(meanTimeRecoverData.getCreatedDate());
 						excelData.setTimeToRecover(meanTimeRecoverData.getTimeToRecover());
 						kpiExcelData.add(excelData);
 					}));
