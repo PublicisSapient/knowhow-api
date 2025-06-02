@@ -89,7 +89,6 @@ public final class KpiDataHelper {
 	private static final String CLOSED = "closed";
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final DecimalFormat df = new DecimalFormat(".##");
-	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	private KpiDataHelper() {
 	}

@@ -66,7 +66,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 
-	private static final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 	private static final String SUCCESS_MSG = "Successfully fetched all records for projectToolConfig";
 	private static final String TOOL_NOT_FOUND = "Tool not found";
 	@Autowired
