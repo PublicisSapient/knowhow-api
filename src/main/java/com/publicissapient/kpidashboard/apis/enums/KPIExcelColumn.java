@@ -317,10 +317,10 @@ public enum KPIExcelColumn {
 					"Original Time Estimate (in hours)", "Time Spent (in hours)")),
 
 	LEAD_TIME_FOR_CHANGE("Kpi156", Arrays.asList("Project Name", "Weeks", "Story ID", "Lead Time (In Days) [B-A]",
-			"Change Completion Date [A]", "Change Release Date [B]")),
+			"Change Completion Time [A]", "Change Release Time [B]")),
 
 	LEAD_TIME_FOR_CHANGE_REPO("Kpi156", Arrays.asList("Project Name", "Weeks", "Story ID", "Lead Time (In Days) [B-A]",
-			"Change Completion Date [A]", "Change Release Date [B]", "Merge Request Id", "Branch")),
+			"Change Completion Time [A]", "Change Release Time [B]", "Merge Request Id", "Branch")),
 
 	RELEASE_DEFECT_BY_TEST_PHASE("kpi163", Arrays.asList("Issue ID", "Issue Description", "Issue Type", "Priority",
 			"Sprint Name", "Assignee", "Issue Status", "Testing Phase")),
@@ -338,7 +338,7 @@ public enum KPIExcelColumn {
 			"To Do(Value/Percentage)", "In Progress(Value/Percentage)", "Done(Value/Percentage)")),
 
 	MEAN_TIME_TO_RECOVER("kpi166", Arrays.asList("Project Name", "Weeks", "Story ID", "Issue Type", "Issue Description",
-			"Created Date", "Completion Date", "Time to Recover (In Hours)")),
+			"Created Time", "Completion Time", "Time to Recover (In Hours)")),
 
 	CODE_QUALITY("kpi168",
 			Arrays.asList("Project", "Job Name / Pipeline Name", "Code Quality", "Month")), FLOW_EFFICIENCY("kpi170",
