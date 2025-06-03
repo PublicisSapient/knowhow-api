@@ -36,21 +36,22 @@ public class LabelChangeDoraRollback {
 
 	private static final String KPI_116 = "kpi116";
 	private static final String KPI_166 = "kpi166";
+	private static final String WEEKS_LABEL = "Weeks";
 
 	@Execution
 	public void execution() {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_master");
 		updateLabel(collection, KPI_116, null, null);
 		updateLabel(collection, KPI_166, null, null);
-		updateLabel(collection, KPI_116, "Weeks", "Percentage");
-		updateLabel(collection, KPI_166, "Weeks", "Hours");
+		updateLabel(collection, KPI_116, WEEKS_LABEL, "Percentage");
+		updateLabel(collection, KPI_166, WEEKS_LABEL, "Hours");
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_master");
-		updateLabel(collection, KPI_116, "Weeks", "Percentage");
-		updateLabel(collection, KPI_166, "Weeks", "Hours");
+		updateLabel(collection, KPI_116, WEEKS_LABEL, "Percentage");
+		updateLabel(collection, KPI_166, WEEKS_LABEL, "Hours");
 	}
 
 	public void updateLabel(MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel,
