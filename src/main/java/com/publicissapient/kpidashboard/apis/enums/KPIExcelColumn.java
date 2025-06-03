@@ -265,8 +265,8 @@ public enum KPIExcelColumn {
 	ITERATION_BURNUP("kpi125", Arrays.asList("Issue Id", "Issue Type", "Issue Description", "Size(story point/hours)",
 			"Priority", "Assignee", "Issue Status", "Due Date")),
 
-	DEFECT_REOPEN_RATE("kpi137", Arrays.asList("Issue Id", "Issue Description", "Issue Status", "Priority", "Closed Date",
-			"Reopen Date", "Time taken to reopen")),
+	DEFECT_REOPEN_RATE("kpi137", Arrays.asList("Issue Id", "Issue Description", "Issue Status", "Priority", "Closed Time",
+			"Reopen Time", "Time taken to reopen")),
 
 	REFINEMENT_REJECTION_RATE("kpi139",
 			Arrays.asList("Issue ID", "Issue Description", "Priority", "Status", "Change Date", "Weeks", "Issue Status")),
@@ -382,7 +382,7 @@ public enum KPIExcelColumn {
                                   Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined")),
 
 	DEFECT_REOPEN_RATE_QUALITY("kpi190", Arrays.asList("Issue Id", "Defect Description", "Issue Status",
-			"Defect Priority", "Closed Date", "Reopen Date", "Time taken to reopen"));
+			"Defect Priority", "Closed Time", "Reopen Time", "Time taken to reopen"));
 
 	// @formatter:on
 

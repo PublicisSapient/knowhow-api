@@ -15,52 +15,65 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1330;
-
-import static com.mongodb.client.model.Filters.eq;
+package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1330;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
-import com.mongodb.client.MongoCollection;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
+import static com.mongodb.client.model.Filters.eq;
+
 /**
  *
  * @author shi6
  */
-@ChangeUnit(id = "r_update_dora_kpi_column", order = "013300", author = "shi6", systemVersion = "13.3.0")
-public class RollbackUpdateDoraKPIColumnName {
-	private static final String COLUMN_NAME = "columnName";
-	private static final String KPI_COLUMN_DETAILS = "kpiColumnDetails";
+@ChangeUnit(id = "update_time_kpi_column", order = "13300", author = "shi6", systemVersion = "13.3.0")
+public class UpdateKPIColumnTime {
+	public static final String REOPEN_DATE = "Reopen Date";
+	public static final String REOPEN_TIME = "Reopen Time";
+	public static final String CLOSED_DATE = "Closed Date";
+	public static final String CLOSED_TIME = "Closed Time";
 	private final MongoTemplate mongoTemplate;
+	private static final String KPI_COLUMN_DETAILS = "kpiColumnDetails";
+	private static final String COLUMN_NAME = "columnName";
 
-	public RollbackUpdateDoraKPIColumnName(MongoTemplate mongoTemplate) {
+	public UpdateKPIColumnTime(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
 	}
 
 	@Execution
 	public void execution() {
-
+		// Map of kpiId → map of old columnName to new columnName
 		Map<String, Map<String, String>> kpiRenameMap = new HashMap<>();
 		// Example for kpi156
 		Map<String, String> kpi156Map = new HashMap<>();
-		kpi156Map.put("Change Release Time [B]", "Change Release Date [B]");
-		kpi156Map.put("Change Completion Time [A]", "Change Completion Date [A]");
+		kpi156Map.put("Change Release Date [B]", "Change Release Time [B]");
+		kpi156Map.put("Change Completion Date [A]", "Change Completion Time [A]");
 		kpiRenameMap.put("kpi156", kpi156Map);
 
 		// Example for another KPI (kpi789), add your own mappings
 		Map<String, String> kpi166Map = new HashMap<>();
-		kpi166Map.put("Created Time", "Created Date");
-		kpi166Map.put("Completion Time", "Completion Date");
+		kpi166Map.put("Created Date", "Created Time");
+		kpi166Map.put("Completion Date", "Completion Time");
 		kpiRenameMap.put("kpi166", kpi166Map);
+
+		Map<String, String> kpi190Map = new HashMap<>();
+		kpi190Map.put(REOPEN_DATE, REOPEN_TIME);
+		kpi190Map.put(CLOSED_DATE, CLOSED_TIME);
+		kpiRenameMap.put("kpi190", kpi190Map);
+
+		Map<String, String> kpi137Map = new HashMap<>();
+		kpi137Map.put(REOPEN_DATE, REOPEN_TIME);
+		kpi137Map.put(CLOSED_DATE, CLOSED_TIME);
+		kpiRenameMap.put("kpi137", kpi137Map);
 
 		updateMultipleKpisColumns(mongoTemplate, kpiRenameMap);
 	}
@@ -99,19 +112,28 @@ public class RollbackUpdateDoraKPIColumnName {
 
 	@RollbackExecution
 	public void rollback() {
-		// Map of kpiId → map of old columnName to new columnName
 		Map<String, Map<String, String>> kpiRenameMap = new HashMap<>();
 		// Example for kpi156
 		Map<String, String> kpi156Map = new HashMap<>();
-		kpi156Map.put("Change Release Date [B]", "Change Release Time [B]");
-		kpi156Map.put("Change Completion Date [A]", "Change Completion Time [A]");
+		kpi156Map.put("Change Release Time [B]", "Change Release Date [B]");
+		kpi156Map.put("Change Completion Time [A]", "Change Completion Date [A]");
 		kpiRenameMap.put("kpi156", kpi156Map);
 
 		// Example for another KPI (kpi789), add your own mappings
 		Map<String, String> kpi166Map = new HashMap<>();
-		kpi166Map.put("Created Date", "Created Time");
-		kpi166Map.put("Completion Date", "Completion Time");
+		kpi166Map.put("Created Time", "Created Date");
+		kpi166Map.put("Completion Time", "Completion Date");
 		kpiRenameMap.put("kpi166", kpi166Map);
+
+		Map<String, String> kpi190Map = new HashMap<>();
+		kpi190Map.put(REOPEN_TIME, REOPEN_DATE);
+		kpi190Map.put(CLOSED_TIME, CLOSED_DATE);
+		kpiRenameMap.put("kpi190", kpi190Map);
+
+		Map<String, String> kpi137Map = new HashMap<>();
+		kpi137Map.put(REOPEN_TIME, REOPEN_DATE);
+		kpi137Map.put(CLOSED_TIME, CLOSED_DATE);
+		kpiRenameMap.put("kpi137", kpi137Map);
 
 		updateMultipleKpisColumns(mongoTemplate, kpiRenameMap);
 	}
