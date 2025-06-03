@@ -596,6 +596,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		existingConnection.setKrb5ConfigFilePath(connection.getKrb5ConfigFilePath());
 		existingConnection.setEmail(connection.getEmail());
 		existingConnection.setBrokenConnection(false);
+		existingConnection.setConnectionErrorMsg(null);
 	}
 
 	private void saveConnection(Connection conn) {
@@ -893,7 +894,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 		int count = connection.getNotificationCount();
 		if (count >= maxCount) return false;
 
-		String notifiedOn = connection.getNotifiedOn();
+		String notifiedOn = Optional.of(connection)
+									.map(Connection::getNotifiedOn)
+									.orElse("");
 		if (StringUtils.isBlank(notifiedOn)) return true;
 
 		try {
@@ -950,7 +953,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private Boolean isErrorAlertNotificationEnabled(UserInfo userInfo) {
-		return Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
+		return userInfo.getNotificationEmail() != null
+			   && Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
 	}
 
 	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
