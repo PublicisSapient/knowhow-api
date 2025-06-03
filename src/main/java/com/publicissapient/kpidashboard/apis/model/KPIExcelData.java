@@ -511,10 +511,10 @@ public class KPIExcelData {
 	@JsonProperty("Labels")
 	private List<String> labels;
 
-	@JsonProperty("Closed Date")
+	@JsonProperty("Closed Time")
 	private String closedDate;
 
-	@JsonProperty("Reopen Date")
+	@JsonProperty("Reopen Time")
 	private String reopenDate;
 
 	@JsonProperty("Time taken to reopen")

@@ -662,6 +662,54 @@
   },
 
   {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi137",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Issue Id",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Status",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Priority",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Closed Time",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Reopen Time",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Time taken to reopen",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
     "basicProjectConfigId": null,
     "kpiId": "kpi126",
     "kpiColumnDetails": [{
@@ -3428,13 +3476,13 @@
         "isDefault": true
       },
       {
-        "columnName": "Closed Date",
+        "columnName": "Closed Time",
         "order": 4,
         "isShown": true,
         "isDefault": true
       },
       {
-        "columnName": "Reopen Date",
+        "columnName": "Reopen Time",
         "order": 5,
         "isShown": true,
         "isDefault": true
