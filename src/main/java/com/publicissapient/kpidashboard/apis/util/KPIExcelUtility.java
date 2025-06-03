@@ -90,9 +90,6 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 public class KPIExcelUtility {
 
 	public static final String TIME = "0d ";
-	private static final String MONTH_YEAR_FORMAT = "MMM yyyy";
-	private static final String DATE_YEAR_MONTH_FORMAT = "dd-MMM-yy";
-	private static final String ITERATION_DATE_FORMAT = "yyyy-MM-dd";
 	private static final DecimalFormat df2 = new DecimalFormat(".##");
 	private static final String STATUS = "Status";
 	private static final String WEEK = "Week";
