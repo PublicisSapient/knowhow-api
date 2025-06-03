@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -87,7 +88,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class KpiDataHelper {
 	private static final String CLOSED = "closed";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final DecimalFormat df = new DecimalFormat(".##");
 
 	private KpiDataHelper() {
@@ -947,12 +947,10 @@ public final class KpiDataHelper {
 			Map<String, String> issueWiseDeliveredStatus) {
 		List<JiraIssue> resolvedSubtaskForSprint = new ArrayList<>();
 		// <Number>,PAIR<JiraIssue,Status>>
-		LocalDateTime sprintEndDateTime = sprintDetail.getCompleteDate() != null
-				? LocalDateTime.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
-		LocalDateTime sprintStartDateTime = sprintDetail.getActivatedDate() != null
-				? LocalDateTime.parse(sprintDetail.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+		LocalDateTime sprintEndDateTime = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+				sprintDetail.getEndDate());
+		LocalDateTime sprintStartDateTime = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
+				sprintDetail.getStartDate());
 
 		totalSubTask.forEach(jiraIssue -> {
 			JiraIssueCustomHistory jiraIssueCustomHistory = subTaskHistory.stream()
@@ -981,12 +979,10 @@ public final class KpiDataHelper {
 	 */
 	public static List<JiraIssue> getTotalSprintSubTasks(List<JiraIssue> allSubTasks, SprintDetails sprintDetails,
 			List<JiraIssueCustomHistory> subTaskHistory, List<String> fieldMappingDoneStatus) {
-		LocalDateTime sprintEndDate = sprintDetails.getCompleteDate() != null
-				? LocalDateTime.parse(sprintDetails.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetails.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
-		LocalDateTime sprintStartDate = sprintDetails.getActivatedDate() != null
-				? LocalDateTime.parse(sprintDetails.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetails.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetails.getCompleteDate(),
+				sprintDetails.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetails.getActivatedDate(),
+				sprintDetails.getStartDate());
 		List<JiraIssue> subTaskTaggedWithSprint = new ArrayList<>();
 
 		allSubTasks.forEach(jiraIssue -> {
@@ -998,7 +994,7 @@ public final class KpiDataHelper {
 							changeLog.getUpdatedOn().isAfter(sprintStartDate))
 					.findFirst();
 			if (jiraHistoryChangeLog.isPresent() &&
-					sprintEndDate.isAfter(LocalDateTime.parse(jiraIssue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER)))
+					sprintEndDate.isAfter(DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate())))
 				subTaskTaggedWithSprint.add(jiraIssue);
 		});
 		return subTaskTaggedWithSprint;
