@@ -2261,8 +2261,10 @@ public class KPIExcelUtility {
 						Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 						setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 
-						excelData.setReopenDate(String.valueOf(defectTransitionInfo.getReopenDate()));
-						excelData.setClosedDate(String.valueOf(defectTransitionInfo.getClosedDate()));
+						excelData.setReopenDate(DateUtil.tranformUTCLocalTimeToZFormat(
+								DateUtil.convertJodaDateTimeToLocalDateTime(defectTransitionInfo.getReopenDate())));
+						excelData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(
+								DateUtil.convertJodaDateTimeToLocalDateTime(defectTransitionInfo.getClosedDate())));
 						excelData.setDurationToReopen(defectTransitionInfo.getReopenDuration() + "Hrs");
 						kpiExcelData.add(excelData);
 					}));

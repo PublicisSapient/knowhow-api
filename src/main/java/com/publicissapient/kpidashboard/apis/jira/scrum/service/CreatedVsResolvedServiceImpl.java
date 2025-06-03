@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -420,12 +421,10 @@ public class CreatedVsResolvedServiceImpl extends JiraKPIService<Double, List<Ob
 	 */
 	public List<JiraIssue> getTotalSubTasks(List<JiraIssue> allSubTasks, SprintDetails sprintDetails,
 			List<JiraIssueCustomHistory> subTaskHistory) {
-		LocalDateTime sprintEndDate = sprintDetails.getCompleteDate() != null
-				? DateUtil.stringToLocalDateTime(sprintDetails.getCompleteDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-				: DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-		LocalDateTime sprintStartDate = sprintDetails.getActivatedDate() != null
-				? DateUtil.stringToLocalDateTime(sprintDetails.getActivatedDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-				: DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetails.getCompleteDate(),
+				sprintDetails.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetails.getActivatedDate(),
+				sprintDetails.getStartDate());
 		FieldMapping fieldMapping = configHelperService.getFieldMapping(sprintDetails.getBasicProjectConfigId());
 		List<JiraIssue> subTaskTaggedWithSprint = new ArrayList<>();
 
