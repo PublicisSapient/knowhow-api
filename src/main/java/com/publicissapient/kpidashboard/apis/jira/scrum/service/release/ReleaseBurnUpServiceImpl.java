@@ -282,28 +282,32 @@ public class ReleaseBurnUpServiceImpl extends JiraReleaseKPIService {
 		// making QA completion date map
 		if (CollectionUtils.isNotEmpty(qaCompletionStatusLog)) {
 			final LocalDateTime updatedLog = getDoneDateBasedOnStatus(qaCompletionStatusLog, jiraReleaseDoneStatus, fieldMapping);
-			List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
-			List<JiraIssueReferTime> jiraIssueReferTime = createJiraIssueReferTime(updatedLog, jiraIssueList);
-			completedIssues.computeIfPresent(updatedLog.toLocalDate(), (k, v) -> {
-				List<JiraIssueReferTime> jiraIssueReferTimes = new ArrayList<>(v);
-				jiraIssueReferTimes.addAll(jiraIssueReferTime);
-				return jiraIssueReferTimes;
-			});
-			completedIssues.putIfAbsent(updatedLog.toLocalDate(), jiraIssueReferTime);
-			completedIssues.remove(null);
+			if (updatedLog != null) {
+				List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
+				List<JiraIssueReferTime> jiraIssueReferTime = createJiraIssueReferTime(updatedLog, jiraIssueList);
+				completedIssues.computeIfPresent(updatedLog.toLocalDate(), (k, v) -> {
+					List<JiraIssueReferTime> jiraIssueReferTimes = new ArrayList<>(v);
+					jiraIssueReferTimes.addAll(jiraIssueReferTime);
+					return jiraIssueReferTimes;
+				});
+				completedIssues.putIfAbsent(updatedLog.toLocalDate(), jiraIssueReferTime);
+				completedIssues.remove(null);
+			}
 		}
 		// making dev completion date map
 		if (CollectionUtils.isNotEmpty(devCompletionStatusLog)) {
 			final LocalDateTime updatedLog = getDoneDateBasedOnStatus(devCompletionStatusLog, devDoneStatus, fieldMapping);
-			List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
-			List<JiraIssueReferTime> jiraIssueReferTime = createJiraIssueReferTime(updatedLog, jiraIssueList);
-			devCompletedReleaseMap.computeIfPresent(updatedLog.toLocalDate(), (k, v) -> {
-				List<JiraIssueReferTime> jiraIssueReferTimes = new ArrayList<>(v);
-				jiraIssueReferTimes.addAll(jiraIssueReferTime);
-				return jiraIssueReferTimes;
-			});
-			devCompletedReleaseMap.putIfAbsent(updatedLog.toLocalDate(), jiraIssueReferTime);
-			devCompletedReleaseMap.remove(null);
+			if (updatedLog != null) {
+				List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
+				List<JiraIssueReferTime> jiraIssueReferTime = createJiraIssueReferTime(updatedLog, jiraIssueList);
+				devCompletedReleaseMap.computeIfPresent(updatedLog.toLocalDate(), (k, v) -> {
+					List<JiraIssueReferTime> jiraIssueReferTimes = new ArrayList<>(v);
+					jiraIssueReferTimes.addAll(jiraIssueReferTime);
+					return jiraIssueReferTimes;
+				});
+				devCompletedReleaseMap.putIfAbsent(updatedLog.toLocalDate(), jiraIssueReferTime);
+				devCompletedReleaseMap.remove(null);
+			}
 		}
 	}
 
