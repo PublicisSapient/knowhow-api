@@ -910,7 +910,7 @@ public class ConnectionServiceImplTest {
 
 		assertFalse(connection.isBrokenConnection());
 		assertNull(connection.getConnectionErrorMsg());
-		assertEquals(0, connection.getNotificationCount().intValue());
+		assertEquals(0, connection.getNotificationCount());
 		verify(connectionRepository).save(connection);
 	}
 
@@ -946,7 +946,7 @@ public class ConnectionServiceImplTest {
 		assertTrue(connection.isBrokenConnection());
 		assertEquals("Error!", connection.getConnectionErrorMsg());
 		assertNotNull(connection.getNotifiedOn());
-		assertEquals(1, connection.getNotificationCount().intValue());
+		assertEquals(1, connection.getNotificationCount());
 		verify(notificationService).sendNotificationEvent(
 				eq(List.of("auth@example.com")),
 				anyMap(),
