@@ -424,12 +424,10 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 			List<JiraIssueCustomHistory> subTaskHistory, SprintDetails sprintDetail,
 			Map<String, List<String>> projectWiseDefectRemovelStatus) {
 		List<JiraIssue> completedSubtaskOfSprint = new ArrayList<>();
-		LocalDateTime sprintEndDate = sprintDetail.getCompleteDate() != null
-				? DateUtil.stringToLocalDateTime(sprintDetail.getCompleteDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-				: DateUtil.stringToLocalDateTime(sprintDetail.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-		LocalDateTime sprintStartDate = sprintDetail.getActivatedDate() != null
-				? DateUtil.stringToLocalDateTime(sprintDetail.getActivatedDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-				: DateUtil.stringToLocalDateTime(sprintDetail.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+				sprintDetail.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
+				sprintDetail.getStartDate());
 		List<String> defectRemovalStatus = projectWiseDefectRemovelStatus
 				.get(sprintDetail.getBasicProjectConfigId().toString());
 		totalSubTask.forEach(jiraIssue -> {
@@ -449,12 +447,10 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 	private static void getSubtasks(List<JiraIssue> allSubTaskBugs, List<JiraIssueCustomHistory> defectsCustomHistory,
 			Map<String, List<String>> projectWiseDefectRemovalStatus, Set<JiraIssue> totalSubTask,
 			SprintDetails sprintDetail) {
-		LocalDateTime sprintEndDate = sprintDetail.getCompleteDate() != null
-				? DateUtil.stringToLocalDateTime(sprintDetail.getCompleteDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-				: DateUtil.stringToLocalDateTime(sprintDetail.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-		LocalDateTime sprintStartDate = sprintDetail.getActivatedDate() != null
-				? DateUtil.stringToLocalDateTime(sprintDetail.getActivatedDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-				: DateUtil.stringToLocalDateTime(sprintDetail.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+				sprintDetail.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
+				sprintDetail.getStartDate());
 		allSubTaskBugs.forEach(jiraIssue -> {
 			LocalDateTime jiraCreatedDate = DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate());
 			JiraIssueCustomHistory jiraIssueCustomHistoryOfClosedSubTask = defectsCustomHistory.stream()
