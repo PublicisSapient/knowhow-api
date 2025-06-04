@@ -201,8 +201,8 @@ public class CostOfDelayServiceImpl extends JiraKPIService<Double, List<Object>,
 	@SuppressWarnings("unchecked")
 	private void setProjectNodeValue(Map<String, Node> mapTmp, Node node, Map<String, Object> resultMap,
 			List<DataCount> trendValueList, String requestTrackerId, List<KPIExcelData> excelData) {
-		Map<String, Double> lastNMonthMap = getLastNMonth(customApiConfig.getJiraXaxisMonthCount());
 		Map<String, String> timeFormatMap = new HashMap<>();
+		Map<String, Double> lastNMonthMap = getLastNMonth(customApiConfig.getJiraXaxisMonthCount(), timeFormatMap);
 		String projectName = node.getProjectFilter().getName();
 		List<JiraIssue> epicList = new ArrayList<>();
 		Map<String, Map<String, Integer>> howerMap = new HashMap<>();

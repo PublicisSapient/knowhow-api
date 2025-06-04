@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -158,8 +159,8 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 	 */
 	private void setProjectNodeValue(Map<String, Node> mapTmp, Node node, ProjectRelease projectRelease,
 			List<DataCount> trendValueList, String projectName, String requestTrackerId, List<KPIExcelData> excelData) {
-		Map<String, Double> dateCount = getLastNMonth(customApiConfig.getSprintCountForFilters());
 		Map<String, String> timeFormatMap = new HashMap<>();
+		Map<String, Double> dateCount = getLastNMonth(customApiConfig.getSprintCountForFilters(), timeFormatMap);
 		List<ProjectVersion> projectVersionList = Lists.newArrayList();
 		List<String> dateList = Lists.newArrayList();
 		// Filter to include only released versions
