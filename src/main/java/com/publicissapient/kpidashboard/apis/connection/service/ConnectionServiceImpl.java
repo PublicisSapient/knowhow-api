@@ -887,8 +887,14 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private boolean shouldSendNotification(Connection connection) {
-		int maxCount = Integer.parseInt(
-				customApiConfig.getBrokenConnectionMaximumEmailNotificationCount());
+		String value = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
+		int maxCount = 0;
+		try {
+			maxCount = Integer.parseInt(value.replace("'", "").trim());
+		} catch (NumberFormatException e) {
+			log.warn("Invalid max notification count: {}", value);
+		}
+
 		int frequencyDays = Integer.parseInt(customApiConfig.getBrokenConnectionEmailNotificationFrequency());
 		log.info("maxCount:{}",maxCount);
 		log.info("frequencyDays:{}",frequencyDays);
