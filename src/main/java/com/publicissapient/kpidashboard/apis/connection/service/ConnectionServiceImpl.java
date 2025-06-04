@@ -854,8 +854,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 */
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
-		if (connection == null) return;
 
+		if (connection == null) return;
+		log.info("Inside updateBreakingConnection {}",connection.getConnectionName());
 		connectionRepository.findById(connection.getId())
 							.ifPresent(existingConnection -> {
 								if (!connection.isBrokenConnection() && StringUtils.isEmpty(conErrorMsg)) {
@@ -888,10 +889,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 	private boolean shouldSendNotification(Connection connection) {
 		int maxCount = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
 		int frequencyDays = customApiConfig.getBrokenConnectionEmailNotificationFrequency();
-
+		log.info("maxCount:{}",maxCount);
+		log.info("frequencyDays:{}",frequencyDays);
 		if (maxCount <= 0) return false;
 
 		int count = connection.getNotificationCount();
+		log.info("NotificationCount:{}",count);
 		if (count >= maxCount) return false;
 
 		String notifiedOn = Optional.of(connection)
@@ -970,7 +973,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *          connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
-
+			log.info("inside validateConnectionFlag {}",connection.getConnectionName());
 			updateBreakingConnection(connection, null);
 
 	}
