@@ -887,6 +887,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private boolean shouldSendNotification(Connection connection) {
+		log.info("getBrokenConnectionMaximumEmailNotificationCount:{}",customApiConfig.getBrokenConnectionMaximumEmailNotificationCount());
 		String value = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
 		int maxCount = 0;
 		try {
