@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.modelmapper.ModelMapper;
@@ -145,6 +146,16 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 				userinfoKnowHow = centralUserInfo;
 				UserTokenData userTokenData = new UserTokenData(username, authToken, LocalDateTime.now().toString());
 				userTokenReopository.save(userTokenData);
+			}
+		}else {
+			if (!(StringUtils.isNotEmpty(userinfoKnowHow.getFirstName()) && StringUtils.isNotEmpty(userinfoKnowHow.getLastName()) && StringUtils.isNotEmpty(userinfoKnowHow.getDisplayName()))) {
+				CentralUserInfoDTO centralUserInfoDTO = userInfoService.getCentralAuthUserInfoDetails(username, authToken);
+				if (Objects.nonNull(centralUserInfoDTO)) {
+					userinfoKnowHow.setFirstName(centralUserInfoDTO.getFirstName());
+					userinfoKnowHow.setLastName(centralUserInfoDTO.getLastName());
+					userinfoKnowHow.setDisplayName(centralUserInfoDTO.getDisplayName());
+					userInfoRepository.save(userinfoKnowHow);
+				}
 			}
 		}
 		Authentication authentication = authenticationRepository.findByUsername(username);
