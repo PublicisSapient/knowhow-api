@@ -135,8 +135,9 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
 			ProjectRelease projectRelease = filterWiseDataMap.get(projectNodeId);
 			if (projectRelease != null) {
 				String projectName = node.getProjectFilter().getName();
-				Map<String, Double> dateCount = getLastNMonth(customApiConfig.getJiraXaxisMonthCount());
 				Map<String, String> formatDate= new HashMap<>();
+				Map<String, Double> dateCount = getLastNMonth(customApiConfig.getJiraXaxisMonthCount(), formatDate);
+
 				List<DataCount> dc = new ArrayList<>();
 				List<ProjectVersion> projectVersionList = Lists.newArrayList();
 				// Filter to include only released versions

@@ -95,16 +95,18 @@ public abstract class JiraKPIService<R, S, T> extends ToolsKPIService<R, S> impl
 		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name());
 	}
 
-	public Map<String, Double> getLastNMonth(int count) {
+	public Map<String, Double> getLastNMonth(int count, Map<String, String> timeFormatMap) {
 		Map<String, Double> lastNMonth = new LinkedHashMap<>();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		String currentDateStr = currentDate.getYear() + String.valueOf(currentDate.getMonth());
+		timeFormatMap.put(currentDateStr,DateUtil.tranformUTCLocalTimeToZFormat(currentDate));
 		lastNMonth.put(currentDateStr, 0.0);
 		LocalDateTime lastMonth = DateUtil.getTodayTime();
 		for (int i = 1; i < count; i++) {
 			lastMonth = lastMonth.minusMonths(1);
 			String lastMonthStr = lastMonth.getYear() + String.valueOf(lastMonth.getMonth());
 			lastNMonth.put(lastMonthStr, 0.0);
+			timeFormatMap.put(lastMonthStr,DateUtil.tranformUTCLocalTimeToZFormat(lastMonth));
 		}
 		return lastNMonth;
 	}
