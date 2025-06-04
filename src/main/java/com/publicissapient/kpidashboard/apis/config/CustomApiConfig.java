@@ -23,6 +23,7 @@ package com.publicissapient.kpidashboard.apis.config; // NOPMD // do not remove 
 import java.util.List;
 import java.util.Map;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,7 @@ import lombok.Setter;
  *
  * @author pankumar8
  */
+@Data
 @Component
 @ConfigurationProperties
 public class CustomApiConfig { // NOPMD
@@ -216,6 +218,21 @@ public class CustomApiConfig { // NOPMD
 	@Value("${latest.kpi.comments.summary}")
 	private int latestKpiCommentsSummary;
 
+	@Value("${brokenConnection.MaximumEmailNotificationCount}")
+	private int brokenConnectionMaximumEmailNotificationCount;
+
+	@Value("${brokenConnection.EmailNotificationFrequency}")
+	private int brokenConnectionEmailNotificationFrequency;
+
+	@Value("${brokenConnection.EmailNotificationSubject}")
+	private String brokenConnectionEmailNotificationSubject;
+
+	@Value("${brokenConnection.fix.url}")
+	private String brokenConnectionFixUrl;
+
+	@Value("${brokenConnection.help.url}")
+	private String brokenConnectionHelpUrl;
+
 	private int jiraXaxisMonthCount;
 
 	private boolean ssoLogin;
@@ -325,6 +342,11 @@ public class CustomApiConfig { // NOPMD
 	private String innovationRateUrl;
 	private String repoToolMembersUrl;
 	private String defectRateUrl;
+
+	@Value("${rally.test.connection}")
+	@Setter
+	@Getter
+	private String rallyTestConnection;
 
 	@Setter
 	@Getter

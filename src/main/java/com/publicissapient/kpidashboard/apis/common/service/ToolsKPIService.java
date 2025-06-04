@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1005,7 +1006,7 @@ public abstract class ToolsKPIService<R, S> {
 		} else if (Constant.AVERAGE.equalsIgnoreCase(configHelperService.calculateCriteria().get(kpiId))) {
 			calculatedValue = AggregationUtils.average(valueList);
 		} else if (Constant.SUM.equalsIgnoreCase(configHelperService.calculateCriteria().get(kpiId))) {
-			calculatedValue = valueList.stream().mapToDouble(i -> i).sum();
+			calculatedValue = valueList.stream().filter(Objects::nonNull).mapToDouble(i -> i).sum();
 		}
 		return round(calculatedValue);
 	}

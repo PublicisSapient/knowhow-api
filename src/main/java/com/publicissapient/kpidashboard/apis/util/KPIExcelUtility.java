@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -137,14 +138,14 @@ public class KPIExcelUtility {
 			excelData.setStoryId(Collections.singletonMap(story, checkEmptyURL(jiraIssue)));
 			setSquads(excelData, jiraIssue);
 			excelData.setPriority(setPriority(customApiConfig, jiraIssue));
-			Integer totalTimeSpent = jiraIssue.getTimeSpentInMinutes();
+			Integer totalTimeSpent = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0);
 			if (defect != null) {
 				excelData.setDefectId(Collections.singletonMap(defectNumber, checkEmptyURL(defect)));
 				excelData.setDefectDesc(checkEmptyName(defect));
 				excelData.setRootCause(defect.getRootCauseList());
 				excelData.setDefectPriority(setPriority(customApiConfig, defect));
 				excelData.setDefectStatus(defect.getStatus());
-				totalTimeSpent = totalTimeSpent + defect.getTimeSpentInMinutes();
+				totalTimeSpent = totalTimeSpent + Objects.requireNonNullElse(defect.getTimeSpentInMinutes(), 0);
 			} else {
 				excelData.setDefectId(Collections.emptyMap());
 				excelData.setDefectDesc(Constant.BLANK);
@@ -255,15 +256,20 @@ public class KPIExcelUtility {
 				setSquads(excelData, jiraIssue);
 				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 				excelData.setRootCause(jiraIssue.getRootCauseList());
-				excelData.setDefectStatus(jiraIssue.getStatus());
-				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+				excelData.setLabels(jiraIssue.getLabels());
+				Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 
 				if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId())) {
+					excelData.setDefectStatus(jiraIssue.getStatus());
 					excelData.setRemovedDefect(present);
 				}
 				if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REJECTION_RATE.getKpiId())) {
+					excelData.setDefectStatus(jiraIssue.getStatus());
 					excelData.setRejectedDefect(present);
+				}
+				if (kpiId.equalsIgnoreCase(KPICode.OPEN_DEFECT_RATE.getKpiId())) {
+					excelData.setOpenDefect(present);
 				}
 
 				kpiExcelData.add(excelData);
@@ -308,7 +314,7 @@ public class KPIExcelUtility {
 			excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 			excelData.setRootCause(jiraIssue.getRootCauseList());
 			excelData.setDefectStatus(jiraIssue.getStatus());
-			Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+			Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0);
 			setStoryExcelData(totalStoryWoDrop, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 			excelDataList.add(excelData);
 		});
@@ -361,7 +367,7 @@ public class KPIExcelUtility {
 				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 				excelData.setRootCause(jiraIssue.getRootCauseList());
 				excelData.setDefectStatus(jiraIssue.getStatus());
-				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+				Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 				kpiExcelData.add(excelData);
 			});
@@ -491,7 +497,7 @@ public class KPIExcelUtility {
 				excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
 				excelData.setRootCause(jiraIssue.getRootCauseList());
 				excelData.setDefectStatus(jiraIssue.getStatus());
-				Integer totalTimeSpentInMinutes = jiraIssue.getTimeSpentInMinutes();
+				Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0);
 				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
 				kpiExcelData.add(excelData);
 			});
@@ -1634,7 +1640,7 @@ public class KPIExcelUtility {
 			jiraIssueModalObject.setRemainingEstimateMinutes(Constant.BLANK);
 			jiraIssueModalObject.setRemainingTimeInDays(Constant.BLANK);
 		}
-		jiraIssueModalObject.setTimeSpentInMinutes(CommonUtils.convertIntoDays(jiraIssue.getTimeSpentInMinutes()));
+		jiraIssueModalObject.setTimeSpentInMinutes(CommonUtils.convertIntoDays(Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0)));
 		if (jiraIssue.getDevDueDate() != null)
 			jiraIssueModalObject.setDevDueDate(DateUtil.dateTimeConverter(jiraIssue.getDevDueDate(),
 					DateUtil.TIME_FORMAT_WITH_SEC, DateUtil.DISPLAY_DATE_FORMAT));
@@ -1717,7 +1723,7 @@ public class KPIExcelUtility {
 			issueKpiModalValue.setRemainingEstimateMinutes(Constant.BLANK);
 			issueKpiModalValue.setRemainingTime(0);
 		}
-		issueKpiModalValue.setTimeSpentInMinutes(CommonUtils.convertIntoDays(jiraIssue.getTimeSpentInMinutes()));
+		issueKpiModalValue.setTimeSpentInMinutes(CommonUtils.convertIntoDays(Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0)));
 		if (jiraIssue.getDevDueDate() != null)
 			issueKpiModalValue.setDevDueDate(DateUtil.dateTimeConverter(jiraIssue.getDevDueDate(),
 					DateUtil.TIME_FORMAT_WITH_SEC, DateUtil.DISPLAY_DATE_FORMAT));
@@ -2273,6 +2279,35 @@ public class KPIExcelUtility {
 						: Constant.BLANK);
 				kpiExcelData.add(excelData);
 			});
+		}
+	}
+	
+	public static void populateDefectWithReopenInfoExcelData(String sprint, List<KPIExcelData> kpiExcelData,
+			CustomApiConfig customApiConfig, List<JiraIssue> storyList,
+			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap) {
+		if (MapUtils.isNotEmpty(reopenedDefectInfoMap)) {
+			reopenedDefectInfoMap
+					.forEach((key, reopenTransitionList) -> reopenTransitionList.forEach(defectTransitionInfo -> {
+						KPIExcelData excelData = new KPIExcelData();
+						JiraIssue jiraIssue = defectTransitionInfo.getDefectJiraIssue();
+						excelData.setSprintName(sprint);
+						excelData.setDefectDesc(checkEmptyName(jiraIssue));
+						Map<String, String> defectIdDetails = new HashMap<>();
+						defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
+						excelData.setDefectId(defectIdDetails);
+						setSquads(excelData, jiraIssue);
+						excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+						excelData.setRootCause(jiraIssue.getRootCauseList());
+						excelData.setDefectStatus(jiraIssue.getStatus());
+						excelData.setLabels(jiraIssue.getLabels());
+						Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
+						setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+
+						excelData.setReopenDate(String.valueOf(defectTransitionInfo.getReopenDate()));
+						excelData.setClosedDate(String.valueOf(defectTransitionInfo.getClosedDate()));
+						excelData.setDurationToReopen(defectTransitionInfo.getReopenDuration() + "Hrs");
+						kpiExcelData.add(excelData);
+					}));
 		}
 	}
 }

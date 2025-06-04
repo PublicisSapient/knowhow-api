@@ -78,7 +78,7 @@ public class KpiDataCacheServiceImpl implements KpiDataCacheService {
 						KPICode.DEFECT_DENSITY.getKpiId(), KPICode.DEFECT_REJECTION_RATE.getKpiId(),
 						KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId(), KPICode.DEFECT_COUNT_BY_RCA.getKpiId(),
 						KPICode.FIRST_TIME_PASS_RATE.getKpiId(), KPICode.DEFECT_SEEPAGE_RATE.getKpiId(),
-						KPICode.DEFECT_COUNT_BY_PRIORITY.getKpiId()));
+						KPICode.DEFECT_COUNT_BY_PRIORITY.getKpiId(), KPICode.DEFECT_REOPEN_RATE_QUALITY.getKpiId()));
 		kpiMap.put(KPISource.JIRAKANBAN.name(),
 				List.of(KPICode.TEAM_CAPACITY.getKpiId(), KPICode.TICKET_VELOCITY.getKpiId(),
 						KPICode.LEAD_TIME_KANBAN.getKpiId(), KPICode.COST_OF_DELAY_KANBAN.getKpiId(),

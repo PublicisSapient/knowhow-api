@@ -7,7 +7,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 1 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 25 ,
     "thresholdValue" : "10" ,
     "kanban" : false ,
@@ -59,7 +59,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 2 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 25 ,
     "thresholdValue" : "75" ,
     "kanban" : false ,
@@ -97,11 +97,11 @@
     "isAdditionalFilterSupport" : true ,
     "calculateMaturity" : true ,
     "maturityRange" : [
-      "-25" ,
-      "25-50" ,
-      "50-75" ,
-      "75-90" ,
-      "90-"
+      "-60",
+      "60-79",
+      "80-89",
+      "90-94",
+      "95-"
     ]
   } ,
   {
@@ -112,7 +112,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 3 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 24 ,
     "thresholdValue" : "25" ,
     "kanban" : false ,
@@ -149,10 +149,10 @@
     "isAdditionalFilterSupport" : true ,
     "calculateMaturity" : true ,
     "maturityRange" : [
-      "-90" ,
-      "90-60" ,
-      "60-25" ,
-      "25-10" ,
+      "-50",
+      "50-40",
+      "40-20",
+      "20-10",
       "10-"
     ]
   } ,
@@ -164,7 +164,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 4 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 24 ,
     "thresholdValue" : "10" ,
     "kanban" : false ,
@@ -217,7 +217,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 5 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 25 ,
     "thresholdValue" : "90" ,
     "kanban" : false ,
@@ -269,7 +269,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 6 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 25 ,
     "thresholdValue" : "10" ,
     "kanban" : false ,
@@ -321,7 +321,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 7 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 24 ,
     "thresholdValue" : "55" ,
     "kanban" : false ,
@@ -402,7 +402,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 9 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 24 ,
     "thresholdValue" : "0" ,
     "kanban" : false ,
@@ -865,7 +865,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 18 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 2 ,
     "thresholdValue" : "85" ,
     "kanban" : false ,
@@ -903,11 +903,11 @@
     "isAdditionalFilterSupport" : true ,
     "calculateMaturity" : true ,
     "maturityRange" : [
-      "-40" ,
-      "40-60" ,
-      "60-75" ,
-      "75-90" ,
-      "90-"
+      "-60",
+      "60-79",
+      "80-94",
+      "95-105",
+      "105-"
     ]
   } ,
   {
@@ -920,7 +920,7 @@
       "Aggregated"
     ] ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 2 ,
     "maxValue" : "10" ,
     "kpiUnit" : "%" ,
@@ -974,7 +974,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 20 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 2 ,
     "thresholdValue" : "40" ,
     "kanban" : false ,
@@ -1252,11 +1252,11 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "maturityRange": [
-      "0-2" ,
-      "2-4" ,
-      "4-6" ,
-      "6-8" ,
-      "8-"
+      "-2",
+      "2-4",
+      "5-10",
+      "11-20",
+      "20-"
     ],
     "maturityLevel": [
       {
@@ -1299,7 +1299,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 26 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 4 ,
     "thresholdValue" : "2" ,
     "kanban" : false ,
@@ -1377,7 +1377,7 @@
     "kpiUnit" : "Tickets" ,
     "defaultOrder" : 1 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 26 ,
     "thresholdValue": "0",
     "kanban" : true ,
@@ -1435,7 +1435,7 @@
     "isDeleted" : "False" ,
     "defaultOrder" : 2 ,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "groupId" : 26 ,
     "thresholdValue": "0",
     "kanban" : true ,
@@ -2541,7 +2541,7 @@
     "maxValue" : "" ,
     "kpiUnit" : "" ,
     "isDeleted" : "False" ,
-    "defaultOrder" : 11 ,
+    "defaultOrder" : 10 ,
     "kpiCategory" : "Iteration" ,
     "kpiSubCategory" : "Iteration Review" ,
     "kpiSource": "Jira",
@@ -3425,7 +3425,14 @@
     "showTrend" : true ,
     "aggregationCriteria" : "sum" ,
     "isAdditionalFilterSupport" : false ,
-    "calculateMaturity" : false
+    "calculateMaturity" : true,
+    "maturityRange": [
+      "-50",
+      "51-70",
+      "71-80",
+      "81-90",
+      "91-"
+    ]
   } ,
   {
     "kpiId" : "kpi154" ,
@@ -4190,11 +4197,11 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "maturityRange": [
-      "48-",
-      "24-48",
-      "12-24",
-      "1-12",
-      "-1"
+      "24-",
+      "4-24",
+      "1-4",
+      "0.5-1",
+      "-0.5"
     ],
     "maturityLevel": [
       {
@@ -4885,6 +4892,74 @@
   },
   {
     "kpiId": "kpi187",
+    "kpiName": "Sprint Readiness (Current Sprint)",
+    "kpiUnit": "Count",
+    "isDeleted": "False",
+    "defaultOrder": 11,
+    "kpiCategory": "Iteration",
+    "kpiSubCategory": "Iteration Review",
+    "kpiSource": "Jira",
+    "combinedKpiSource": "Jira/Azure",
+    "groupId": 20,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": null,
+    "kpiInfo": {
+      "definition": "Measures the number of work items that are not adequately refined in time for development planning. This includes: Work items in the current sprint that do not meet DoR (Definition of Ready).",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/159154188/Sprint+Readiness"
+          }
+        }
+      ]
+    },
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": true,
+    "showTrend": false,
+    "isAdditionalFilterSupport": false,
+    "kpiWidth": 66,
+    "boxType": "chart",
+    "calculateMaturity": false,
+    "isRawData": false,
+    "kpiHeight": 100
+  },
+  {
+    "kpiId": "kpi188",
+    "kpiName": "Sprint Readiness (Next Sprint)",
+    "maxValue": "",
+    "isDeleted": "False",
+    "defaultOrder": 12,
+    "kpiCategory": "Iteration",
+    "kpiSubCategory": "Iteration Review",
+    "kpiSource": "Jira",
+    "combinedKpiSource": "Jira/Azure",
+    "groupId": 19,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": null,
+    "kpiInfo": {
+      "definition": "Measures the number of work items that are slated for the next sprint but still lack necessary refinement details. Work items tagged to the next sprint that lack sufficient refinement (e.g., missing description, acceptance criteria, etc).",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/159154188/Sprint+Readiness"
+          }
+        }
+      ]
+    },
+    "showTrend": false,
+    "isAdditionalFilterSupport": false,
+    "kpiFilter": "multiSelectDropDown",
+    "boxType": "3_column",
+    "calculateMaturity": false
+  },
+  {
+    "kpiId": "kpi189",
     "kpiName": "Sprint Goals",
     "isDeleted": "False",
     "defaultOrder": 31,
@@ -4913,5 +4988,101 @@
     "isTrendCalculative": false,
     "isAdditionalFilterSupport": false,
     "combinedKpiSource": "Jira/Azure"
+  },
+  {
+    "kpiId": "kpi191",
+    "kpiName": "Open Defect Rate",
+    "maxValue": "100",
+    "kpiUnit": "%",
+    "isDeleted": "False",
+    "defaultOrder": 5,
+    "kpiSource": "Jira",
+    "groupId": 3,
+    "thresholdValue": "15",
+    "kanban": false,
+    "chartType": "line",
+    "kpiInfo" : {
+      "definition" : "Measure of percentage of defects not closed against the total count tagged to the iteration" ,
+      "formula" : [
+        {
+          "lhs" : "ODR for a sprint" ,
+          "operator" : "division" ,
+          "operands" : [
+            "No. of defects in the iteration that are not fixed" ,
+            "Total no. of defects in a iteration"
+          ]
+        }
+      ] ,
+      "details" : [
+        {
+          "type" : "link" ,
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at" ,
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi191-Open+Defect+Rate"
+          }
+        }
+      ]
+    } , "xAxisLabel": "Sprints",
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": false,
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "showTrend": true,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": true,
+    "calculateMaturity": true,
+    "maturityRange" : [
+      "-90" ,
+      "75-90" ,
+      "50-75" ,
+      "25-50" ,
+      "25-"
+    ]
+  },
+  {
+    "kpiId" : "kpi190",
+    "kpiName" : "Defect Reopen Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 6,
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "xAxisLabel" : "Sprints",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : false,
+    "kpiSource" : "Jira",
+    "maxValue" : "90",
+    "thresholdValue" : "55",
+    "kanban" : false,
+    "groupId" : 24,
+    "kpiInfo" : {
+      "definition" : "It shows number of defects reopened in a given span of time in comparison to the total closed defects. For all the reopened defects, the average time to reopen is also available.",
+      "formula" : [
+        {
+          "lhs" : "Defect Reopen Rate (%)",
+          "operator" : "division",
+          "operands" : [ "Reopened Defects", "Total Resolved Defects" ]
+        }
+      ],
+      "details" : [
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at",
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi190-Defect+Reopen+Rate"
+          }
+        }
+      ]
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : true,
+    "combinedKpiSource" : "Jira/Azure"
   }
 ]
