@@ -19,10 +19,11 @@ package com.publicissapient.kpidashboard.apis.ai.service.sprint.goals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,11 +33,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
+import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.config.sprint.SprintPromptConfig;
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 
 import jakarta.ws.rs.InternalServerErrorException;
 
@@ -47,7 +48,7 @@ class SprintGoalsServiceImplTest {
 	private SprintPromptConfig sprintPromptConfig;
 
 	@Mock
-	private AiGatewayService aiGatewayService;
+	private AiGatewayClient aiGatewayClient;
 
 	@InjectMocks
 	private SprintGoalsServiceImpl sprintGoalsService;
@@ -60,10 +61,10 @@ class SprintGoalsServiceImplTest {
 	}
 
 	@Test
-	void testSummarizeSprintGoalsSuccess() {
+	void testSummarizeSprintGoalsSuccess() throws IOException {
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
-		ChatGenerationResponseDTO chatResponse = new ChatGenerationResponseDTO("Summary of goals");
-		when(aiGatewayService.generateChatResponse(anyString())).thenReturn(chatResponse);
+        ChatGenerationResponseDTO chatResponse = new ChatGenerationResponseDTO("Summary of goals");
+		when(aiGatewayClient.generate(any())).thenReturn(chatResponse);
 
 		SummarizeSprintGoalsResponseDTO responseDTO = sprintGoalsService.summarizeSprintGoals(requestDTO);
 
@@ -81,9 +82,9 @@ class SprintGoalsServiceImplTest {
 	}
 
 	@Test
-	void testSummarizeSprintGoalsEmptyAiResponse() {
+	void testSummarizeSprintGoalsEmptyAiResponse() throws IOException {
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
-		when(aiGatewayService.generateChatResponse(anyString())).thenReturn(new ChatGenerationResponseDTO(""));
+		when(aiGatewayClient.generate(any())).thenReturn(new ChatGenerationResponseDTO(""));
 
 		assertThrows(InternalServerErrorException.class, () -> sprintGoalsService.summarizeSprintGoals(requestDTO));
 	}

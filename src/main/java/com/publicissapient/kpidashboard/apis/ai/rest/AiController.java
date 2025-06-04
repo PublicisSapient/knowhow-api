@@ -16,6 +16,8 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
+import java.io.IOException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -58,7 +60,7 @@ public class AiController {
 					- Prompt configuration is invalid
 					""") })
 	public ResponseEntity<SummarizeSprintGoalsResponseDTO> summarizeSprintGoals(
-			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) {
+			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws IOException {
 		return ResponseEntity.ok(sprintGoalsService.summarizeSprintGoals(summarizeSprintGoalsRequestDTO));
 	}
 }
