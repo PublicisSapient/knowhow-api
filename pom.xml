@@ -501,6 +501,11 @@
       <name>Apache Development Snapshot Repository</name>
       <url>https://repository.apache.org/content/repositories/snapshots/</url>
     </repository>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/PublicisSapient/knowhow-ai-gateway-client</url>
+    </repository>
   </repositories>
   <build>
     <finalName>${final.name}</finalName>
