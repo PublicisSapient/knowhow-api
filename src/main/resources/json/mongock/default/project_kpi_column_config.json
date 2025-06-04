@@ -518,7 +518,26 @@
       "isDefault": true
     }]
   },
-
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi191",
+    "kpiColumnDetails": [{
+      "columnName": "Sprint Name",
+      "order": 0,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Defect ID",
+      "order": 1,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Issue Description",
+      "order": 2,
+      "isShown": true,
+      "isDefault": true
+    }]
+  },
   {
     "basicProjectConfigId": null,
     "kpiId": "kpi36",
@@ -3276,5 +3295,158 @@
         "isDefault" : true
       }
     ]
+  },
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi188",
+    "kpiColumnDetails": [
+      {
+        "columnName": "Issue Id",
+        "order": 0,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Issue Description",
+        "order": 1,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Sprint Name",
+        "order": 2,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Issue Status",
+        "order": 3,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Issue Type",
+        "order": 4,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Un-Refined",
+        "order": 5,
+        "isShown": true,
+        "isDefault": false
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi188",
+    "kpiColumnDetails": [
+      {
+        "columnName": "Sprint Name",
+        "order": 0,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Date",
+        "order": 1,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Issue Id",
+        "order": 2,
+        "isShown": true,
+        "isDefault": false
+      }, {
+        "columnName": "Issue Type",
+        "order": 3,
+        "isShown": true,
+        "isDefault": true
+      }, {
+        "columnName": "Issue Description",
+        "order": 4,
+        "isShown": true,
+        "isDefault": true
+      }, {
+        "columnName": "Size(story point/hours)",
+        "order": 5,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Due Date",
+        "order": 6,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Assignee",
+        "order": 7,
+        "isShown": true,
+        "isDefault": false
+      }, {
+        "columnName": "Issue Status",
+        "order": 8,
+        "isShown": true,
+        "isDefault": true
+      }, {
+        "columnName": "Un-Refined",
+        "order": 9,
+        "isShown": true,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi190",
+    "kpiColumnDetails": [
+      {
+        "columnName": "Sprint Name",
+        "order": 0,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Defect ID",
+        "order": 1,
+        "isShown": true,
+        "isDefault": false
+      },
+      {
+        "columnName": "Defect Description",
+        "order": 2,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Defect Priority",
+        "order": 3,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Closed Date",
+        "order": 4,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Reopen Date",
+        "order": 5,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Time taken to reopen",
+        "order": 6,
+        "isShown": true,
+        "isDefault": true
+      }
+    ]
   }
 ]
+
+

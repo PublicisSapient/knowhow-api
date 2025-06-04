@@ -115,6 +115,9 @@ public class KPIExcelData {
 	@JsonProperty("Defect Rejected")
 	private String rejectedDefect;
 
+	@JsonProperty("Open Defect")
+	private String openDefect;
+
 	@JsonProperty("Priority")
 	private String priority;
 
@@ -495,5 +498,20 @@ public class KPIExcelData {
 
 	@JsonProperty("MR Comments")
 	private List<String> mrComments;
+
+    @JsonProperty("Un-Refined")
+    private String unRefined;
+
+	@JsonProperty("Labels")
+	private List<String> labels;
+
+	@JsonProperty("Closed Date")
+	private String closedDate;
+
+	@JsonProperty("Reopen Date")
+	private String reopenDate;
+
+	@JsonProperty("Time taken to reopen")
+	private String durationToReopen;
 
 }
