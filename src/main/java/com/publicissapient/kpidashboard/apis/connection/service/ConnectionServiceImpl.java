@@ -858,7 +858,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		connectionRepository.findById(connection.getId())
 							.ifPresent(existingConnection -> {
-								if (StringUtils.isEmpty(conErrorMsg)) {
+								if (!connection.isBrokenConnection() && StringUtils.isEmpty(conErrorMsg)) {
 									resetConnectionState(existingConnection);
 								} else {
 									handleBrokenConnection(existingConnection, conErrorMsg);
@@ -970,8 +970,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *          connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
-		if (connection.isBrokenConnection()) {
+
 			updateBreakingConnection(connection, null);
-		}
+
 	}
 }
