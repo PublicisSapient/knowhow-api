@@ -855,10 +855,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
 		if (connection == null) return;
-		log.info("Inside updateBreakingConnection {}",connection.getConnectionName());
+		log.info("updating breaking connection for connection: {}",connection.getConnectionName());
 		connectionRepository.findById(connection.getId())
 							.ifPresent(existingConnection -> {
-								if (!connection.isBrokenConnection() && StringUtils.isEmpty(conErrorMsg)) {
+								if (StringUtils.isEmpty(conErrorMsg)) {
 									resetConnectionState(existingConnection);
 								} else {
 									handleBrokenConnection(existingConnection, conErrorMsg);
@@ -977,8 +977,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *          connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
-			log.info("Validating the connection for {}",connection.getConnectionName());
+		log.info("Validating the connection for {}",connection.getConnectionName());
+		if (connection.isBrokenConnection()) {
 			updateBreakingConnection(connection, null);
-
+		}
 	}
 }
