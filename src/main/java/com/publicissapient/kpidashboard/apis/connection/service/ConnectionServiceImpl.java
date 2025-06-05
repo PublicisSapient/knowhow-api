@@ -854,7 +854,6 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 */
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
-
 		if (connection == null) return;
 		log.info("Inside updateBreakingConnection {}",connection.getConnectionName());
 		connectionRepository.findById(connection.getId())
@@ -887,8 +886,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private boolean shouldSendNotification(Connection connection) {
-		log.info("getBrokenConnectionMaximumEmailNotificationCount:{}",customApiConfig.getBrokenConnectionMaximumEmailNotificationCount());
 		String value = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
+		log.info("BrokenConnectionMaximumEmailNotificationCount from config: {}", value);
 		int maxCount = 0;
 		try {
 			maxCount = Integer.parseInt(value.replace("'", "").trim());
@@ -897,8 +896,6 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 
 		int frequencyDays = Integer.parseInt(customApiConfig.getBrokenConnectionEmailNotificationFrequency());
-		log.info("maxCount:{}",maxCount);
-		log.info("frequencyDays:{}",frequencyDays);
 		if (maxCount <= 0) return false;
 
 		int count = connection.getNotificationCount();
@@ -906,8 +903,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (count >= maxCount) return false;
 
 		String notifiedOn = Optional.of(connection)
-									.map(Connection::getNotifiedOn)
-									.orElse("");
+									.map(Connection::getNotifiedOn).orElse("");
 		if (StringUtils.isBlank(notifiedOn)) return true;
 
 		try {
@@ -981,7 +977,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *          connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
-			log.info("inside validateConnectionFlag {}",connection.getConnectionName());
+			log.info("Validating the connection for {}",connection.getConnectionName());
 			updateBreakingConnection(connection, null);
 
 	}
