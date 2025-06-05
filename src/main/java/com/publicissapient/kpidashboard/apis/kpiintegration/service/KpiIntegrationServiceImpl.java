@@ -18,11 +18,13 @@
 
 package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,10 +32,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.publicissapient.kpidashboard.apis.ai.model.KpiDataPrompt;
+import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
+import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
+import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
+import com.publicissapient.kpidashboard.apis.model.GenericKpiRecommendation;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.json.simple.JSONArray;
 import org.slf4j.MDC;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -111,6 +126,12 @@ public class KpiIntegrationServiceImpl {
 
 	@Autowired
 	private RestTemplate restTemplate;
+
+	@Autowired
+	private PromptGenerator promptGenerator;
+
+	@Autowired
+	private AiGatewayService aiGatewayService;
 
 	/**
 	 * get kpi element list with maturity assuming req for hierarchy level 4
@@ -347,25 +368,114 @@ public class KpiIntegrationServiceImpl {
 
 	public List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendation(KpiRequest kpiRequest) {
 		try {
-			Optional<String> sprintId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT).stream()
-					.findFirst();
-			Optional<String> projectId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT).stream()
-					.findFirst();
-			String recommendationUrl = String.format(customApiConfig.getRnrRecommendationUrl(),
-					URLEncoder.encode(projectId.orElse(""), StandardCharsets.UTF_8),
-					URLEncoder.encode(sprintId.orElse(""), StandardCharsets.UTF_8),
-					URLEncoder.encode(String.join(",", kpiRequest.getKpiIdList()), StandardCharsets.UTF_8));
-			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.set(RNR_API_HEADER, customApiConfig.getRnrRecommendationApiKey());
-			httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-			ResponseEntity<List<ProjectWiseKpiRecommendation>> response = restTemplate.exchange(URI.create(recommendationUrl),
-					HttpMethod.GET, entity, new ParameterizedTypeReference<>() {
-					});
-			return response.getBody();
+			if (CollectionUtils.isNotEmpty(customApiConfig.getAiRecommendationKpiList())) {
+				return getAiRecommendations(kpiRequest);
+			} else {
+				return fetchRecommendationsFromRnr(kpiRequest);
+			}
 		} catch (Exception ex) {
-			log.error("Exception hitting recommendation api ", ex);
-			return new ArrayList<>();
+			log.error("Exception hitting recommendation API", ex);
+			return Collections.emptyList();
 		}
 	}
+
+	private List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest) throws IOException {
+		kpiRequest.setKpiIdList(customApiConfig.getAiRecommendationKpiList());
+		kpiRequest.getSelectedMap().put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, new ArrayList<>());
+
+		Map<String, Object> kpiDataMap = extractKpiData(kpiRequest);
+		String prompt = promptGenerator.getKpiRecommendationPrompt(kpiDataMap, kpiRequest.getRecommendationFor());
+		ChatGenerationResponseDTO chatResponse = aiGatewayService.generateChatResponse(prompt);
+
+		Object responseObject = parseJsonResponse(chatResponse.content());
+		return buildProjectWiseRecommendations(kpiRequest, responseObject);
+	}
+
+	private Map<String, Object> extractKpiData(KpiRequest kpiRequest) {
+		List<KpiElement> kpiElements = getKpiResponses(kpiRequest);
+		Map<String, Object> kpiDataMap = new HashMap<>();
+
+		kpiElements.forEach(kpiElement -> {
+			List<KpiDataPrompt> kpiDataPromptList = new ArrayList<>();
+			List<?> trendValueList = (List<?>) kpiElement.getTrendValueList();
+
+			if (CollectionUtils.isNotEmpty(trendValueList)) {
+				DataCount dataCount = trendValueList.get(0) instanceof DataCountGroup
+						? ((List<DataCountGroup>) trendValueList).stream()
+								.filter(trend -> FILTER_LIST.contains(trend.getFilter())
+										|| (FILTER_LIST.contains(trend.getFilter1())
+												&& FILTER_LIST.contains(trend.getFilter2())))
+								.map(DataCountGroup::getValue).flatMap(List::stream).findFirst().orElse(null)
+						: ((List<DataCount>) trendValueList).get(0);
+
+				if (dataCount != null && dataCount.getValue() instanceof List) {
+					((List<DataCount>) dataCount.getValue()).forEach(dataCountItem -> {
+						KpiDataPrompt kpiDataPrompt = new KpiDataPrompt();
+						kpiDataPrompt.setData(dataCountItem.getData());
+						kpiDataPrompt.setSProjectName(dataCountItem.getSProjectName());
+						kpiDataPrompt.setSSprintName(dataCountItem.getsSprintName());
+						kpiDataPrompt.setDate(dataCountItem.getDate());
+						kpiDataPromptList.add(kpiDataPrompt);
+					});
+				}
+				kpiDataMap.put(kpiElement.getKpiName(), kpiDataPromptList);
+			}
+		});
+
+		return kpiDataMap;
+	}
+
+	private Object parseJsonResponse(String jsonString) {
+		try {
+			String formattedJsonString = jsonString.substring(jsonString.indexOf('{'));
+			return new ObjectMapper().readTree(formattedJsonString);
+		} catch (JsonProcessingException e) {
+			log.error("Error parsing JSON: {}", e.getMessage());
+			return new Object();
+		}
+	}
+
+	private List<ProjectWiseKpiRecommendation> buildProjectWiseRecommendations(KpiRequest kpiRequest,
+			Object responseObject) {
+		ProjectWiseKpiRecommendation recommendation = new ProjectWiseKpiRecommendation();
+		List<GenericKpiRecommendation> genericRecommendations = new ArrayList<>();
+		recommendation.setProjectId(kpiRequest.getIds()[0]);
+		recommendation.setProjectScore(((ObjectNode) responseObject).get("project_health_value").asDouble());
+		JsonNode jsonArray = ((ObjectNode) responseObject).get("project_recommendations");
+		jsonArray.forEach(jsonElement -> {
+			GenericKpiRecommendation genericRecommendationItem = new GenericKpiRecommendation();
+			genericRecommendationItem.setRecommendationDetails(String.valueOf(jsonElement.get("recommendation")));
+			genericRecommendations.add(genericRecommendationItem);
+		});
+		recommendation.setRecommendations(genericRecommendations);
+
+		return Collections.singletonList(recommendation);
+	}
+
+	private List<ProjectWiseKpiRecommendation> fetchRecommendationsFromRnr(KpiRequest kpiRequest) {
+		Optional<String> sprintId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT).stream()
+				.findFirst();
+		Optional<String> projectId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT).stream()
+				.findFirst();
+
+		String recommendationUrl = String.format(customApiConfig.getRnrRecommendationUrl(), encode(
+				projectId.orElse("") + "," + sprintId.orElse("") + "," + String.join(",", kpiRequest.getKpiIdList())));
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set(RNR_API_HEADER, customApiConfig.getRnrRecommendationApiKey());
+		headers.setContentType(MediaType.APPLICATION_JSON);
+
+		ResponseEntity<List<ProjectWiseKpiRecommendation>> response = restTemplate.exchange(
+				URI.create(recommendationUrl), HttpMethod.GET, new HttpEntity<>(headers),
+				new ParameterizedTypeReference<>() {
+				});
+
+		return response.getBody();
+	}
+
+	private String encode(String value) {
+		return URLEncoder.encode(value, StandardCharsets.UTF_8);
+	}
+
+
 }
