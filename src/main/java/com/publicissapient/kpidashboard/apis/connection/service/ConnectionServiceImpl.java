@@ -597,6 +597,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		existingConnection.setEmail(connection.getEmail());
 		existingConnection.setBrokenConnection(false);
 		existingConnection.setConnectionErrorMsg(null);
+		connection.setNotifiedOn(null);
+		connection.setNotificationCount(0);
 	}
 
 	private void saveConnection(Connection conn) {
@@ -979,7 +981,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	public void validateConnectionFlag(Connection connection) {
 		log.info("Validating the connection for {}",connection.getConnectionName());
 		if (connection.isBrokenConnection()) {
-			updateBreakingConnection(connection, null);
+			updateBreakingConnection(connection, connection.getConnectionErrorMsg());
 		}
 	}
 }
