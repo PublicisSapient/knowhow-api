@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.rest;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +56,7 @@ public class UserController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class)) }),
             @ApiResponse(responseCode = "400", description = "Bad request. Username is required"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error occurred") })
+    @PreAuthorize("hasPermission(null, 'ADD_USER')")
     public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         UserInfo savedUserInfo = userService.saveUserInfo(userRequestDTO.getUsername());
         UserResponseDTO responseDTO = new UserResponseDTO();
