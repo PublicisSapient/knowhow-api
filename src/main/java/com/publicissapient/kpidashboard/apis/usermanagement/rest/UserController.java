@@ -16,12 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.rest;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.request.UserRequestDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
@@ -55,12 +55,10 @@ public class UserController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class)) }),
             @ApiResponse(responseCode = "400", description = "Bad request. Username is required"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error occurred") })
-    public ResponseEntity<UserResponseDTO> saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+    public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         UserInfo savedUserInfo = userService.saveUserInfo(userRequestDTO.getUsername());
         UserResponseDTO responseDTO = new UserResponseDTO();
         responseDTO.setUsername(savedUserInfo.getUsername());
-        responseDTO.setMessage("User information saved successfully");
-        
-        return ResponseEntity.ok(responseDTO);
+        return new ServiceResponse(true, "User information saved successfully", responseDTO);
     }
 }

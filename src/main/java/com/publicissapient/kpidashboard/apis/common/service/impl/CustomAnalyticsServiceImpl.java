@@ -126,68 +126,117 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		}
 		json.put(AUTH_RESPONSE_HEADER, httpServletResponse.getHeader(AUTH_RESPONSE_HEADER));
 
-		log.info("Successfully added Google Analytics data to Response.");
-		return json;
-	}
+        log.info("Successfully added Google Analytics data to Response.");
+        return json;
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(HttpServletResponse httpServletResponse,
-			String username, String authToken) {
-		Map<String, Object> userMap = new HashMap<>();
-		httpServletResponse.setContentType("application/json");
-		UserInfo userinfoKnowHow = userInfoRepository.findByUsername(username);
-		httpServletResponse.setCharacterEncoding("UTF-8");
-		if (Objects.isNull(userinfoKnowHow)) {
-			CentralUserInfoDTO centralUserInfoDTO = userInfoService.getCentralAuthUserInfoDetails(username, authToken);
-			UserInfo centralUserInfo = new UserInfo();
-			if (Objects.nonNull(centralUserInfoDTO)) {
-				setUserDetailsFromCentralAuth(username, centralUserInfoDTO, centralUserInfo);
-				userinfoKnowHow = centralUserInfo;
-				UserTokenData userTokenData = new UserTokenData(username, authToken, LocalDateTime.now().toString());
-				userTokenReopository.save(userTokenData);
-			}
-		}else {
-			if (!(StringUtils.isNotEmpty(userinfoKnowHow.getFirstName()) && StringUtils.isNotEmpty(userinfoKnowHow.getLastName()) && StringUtils.isNotEmpty(userinfoKnowHow.getDisplayName()))) {
-				CentralUserInfoDTO centralUserInfoDTO = userInfoService.getCentralAuthUserInfoDetails(username, authToken);
-				if (Objects.nonNull(centralUserInfoDTO)) {
-					userinfoKnowHow.setFirstName(centralUserInfoDTO.getFirstName());
-					userinfoKnowHow.setLastName(centralUserInfoDTO.getLastName());
-					userinfoKnowHow.setDisplayName(centralUserInfoDTO.getDisplayName());
-					userInfoRepository.save(userinfoKnowHow);
-				}
-			}
-		}
-		Authentication authentication = authenticationRepository.findByUsername(username);
-		userMap.put(USER_NAME, username);
-		if (Objects.nonNull(userinfoKnowHow)) {
-			String email = authentication == null
-					? userinfoKnowHow.getEmailAddress().toLowerCase()
-					: authentication.getEmail().toLowerCase();
-			userMap.put(USER_EMAIL, email);
-			userMap.put(USER_ID, userinfoKnowHow.getId().toString());
-			userMap.put(USER_AUTHORITIES, userinfoKnowHow.getAuthorities());
-			userMap.put(USER_AUTH_TYPE, userinfoKnowHow.getAuthType().toString());
-			userMap.put(NOTIFICATION_EMAIL, userinfoKnowHow.getNotificationEmail());
-			List<RoleWiseProjects> projectAccessesWithRole = projectAccessManager.getProjectAccessesWithRole(username);
-			if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
-				userMap.put(PROJECTS_ACCESS, projectAccessesWithRole);
-			} else {
-				userMap.put(PROJECTS_ACCESS, new JSONArray());
-			}
-			usersSessionService.createUsersSessionInfo(userinfoKnowHow, AuthenticationEvent.LOGIN, Status.SUCCESS);
-		}
-		userMap.put(AUTH_RESPONSE_HEADER, httpServletResponse.getHeader(AUTH_RESPONSE_HEADER));
+    @Override
+    public Map<String, Object> addAnalyticsDataAndSaveCentralUser(HttpServletResponse httpServletResponse,
+            String username, String authToken) {
+        Map<String, Object> userMap = new HashMap<>();
+        httpServletResponse.setContentType("application/json");
+        UserInfo userinfoKnowHow = userInfoRepository.findByUsername(username);
+        httpServletResponse.setCharacterEncoding("UTF-8");
+        userinfoKnowHow = processUserInfo(userinfoKnowHow, username, authToken);
+        Authentication authentication = authenticationRepository.findByUsername(username);
+        userMap.put(USER_NAME, username);
+        if (Objects.nonNull(userinfoKnowHow)) {
+            String email = authentication == null
+                    ? userinfoKnowHow.getEmailAddress().toLowerCase()
+                    : authentication.getEmail().toLowerCase();
+            userMap.put(USER_EMAIL, email);
+            userMap.put(USER_ID, userinfoKnowHow.getId().toString());
+            userMap.put(USER_AUTHORITIES, userinfoKnowHow.getAuthorities());
+            userMap.put(USER_AUTH_TYPE, userinfoKnowHow.getAuthType().toString());
+            userMap.put(NOTIFICATION_EMAIL, userinfoKnowHow.getNotificationEmail());
+            List<RoleWiseProjects> projectAccessesWithRole = projectAccessManager.getProjectAccessesWithRole(username);
+            if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
+                userMap.put(PROJECTS_ACCESS, projectAccessesWithRole);
+            } else {
+                userMap.put(PROJECTS_ACCESS, new JSONArray());
+            }
+            usersSessionService.createUsersSessionInfo(userinfoKnowHow, AuthenticationEvent.LOGIN, Status.SUCCESS);
+        }
+        userMap.put(AUTH_RESPONSE_HEADER, httpServletResponse.getHeader(AUTH_RESPONSE_HEADER));
 
-		log.info("Successfully added Google Analytics data to Response.");
-		return userMap;
-	}
+        log.info("Successfully added Google Analytics data to Response.");
+        return userMap;
+    }
 
-	/**
-	 * @param username
-	 * @param centralUserInfoDTO
-	 * @param centralUserInfo
-	 */
+    /**
+     * Process user information based on whether the user exists or needs updating
+     * 
+     * @param userInfo existing user info or null if user doesn't exist
+     * @param username the username
+     * @param authToken the authentication token
+     * @return processed UserInfo object
+     */
+    private UserInfo processUserInfo(UserInfo userInfo, String username, String authToken) {
+        if (Objects.isNull(userInfo)) {
+            return createNewUserInfo(username, authToken);
+        } else if (isUserInfoIncomplete(userInfo)) {
+            return updateExistingUserInfo(userInfo, username, authToken);
+        }
+        return userInfo;
+    }
+    
+    /**
+     * Creates a new user info record from central auth
+     * 
+     * @param username the username
+     * @param authToken the authentication token
+     * @return new UserInfo object or null if central auth info not available
+     */
+    private UserInfo createNewUserInfo(String username, String authToken) {
+        CentralUserInfoDTO centralUserInfoDTO = userInfoService.getCentralAuthUserInfoDetails(username, authToken);
+        if (Objects.nonNull(centralUserInfoDTO)) {
+            UserInfo centralUserInfo = new UserInfo();
+            setUserDetailsFromCentralAuth(username, centralUserInfoDTO, centralUserInfo);
+            UserTokenData userTokenData = new UserTokenData(username, authToken, LocalDateTime.now().toString());
+            userTokenReopository.save(userTokenData);
+            return centralUserInfo;
+        }
+        return null;
+    }
+    
+    /**
+     * Checks if user info is incomplete (missing name fields)
+     * 
+     * @param userInfo the user info to check
+     * @return true if any required fields are missing
+     */
+    private boolean isUserInfoIncomplete(UserInfo userInfo) {
+        return !(StringUtils.isNotEmpty(userInfo.getFirstName()) && 
+            StringUtils.isNotEmpty(userInfo.getLastName()) && 
+            StringUtils.isNotEmpty(userInfo.getDisplayName()));
+    }
+    
+    /**
+     * Updates existing user info with data from central auth
+     * 
+     * @param userInfo existing user info to update
+     * @param username the username
+     * @param authToken the authentication token
+     * @return updated UserInfo object
+     */
+    private UserInfo updateExistingUserInfo(UserInfo userInfo, String username, String authToken) {
+        CentralUserInfoDTO centralUserInfoDTO = userInfoService.getCentralAuthUserInfoDetails(username, authToken);
+        if (Objects.nonNull(centralUserInfoDTO)) {
+            userInfo.setFirstName(centralUserInfoDTO.getFirstName());
+            userInfo.setLastName(centralUserInfoDTO.getLastName());
+            userInfo.setDisplayName(centralUserInfoDTO.getDisplayName());
+            userInfoRepository.save(userInfo);
+        }
+        return userInfo;
+    }
+    
+    /**
+     * Sets user details from central auth information
+     *
+     * @param username the username
+     * @param centralUserInfoDTO the central user info DTO
+     * @param centralUserInfo the user info to populate
+     */
 	private void setUserDetailsFromCentralAuth(String username, CentralUserInfoDTO centralUserInfoDTO,
 			UserInfo centralUserInfo) {
 		centralUserInfo.setUsername(username);
