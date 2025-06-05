@@ -15,4 +15,4 @@ Output: Provide a comprehensive report with:
 3. Provide any recommendations to address observed discrepancies and how can the project health be improved, do not mention the size of dataset in this section
 
 Format the comprehensive report in parsable json format, the recommendations should be actionable and specific to the KPIs analyzed and specifically tailored for %s role
-the key for project health should be titled 'project_health_value' and recommendation key should be 'project_recommendations'"""
+the key for project health should be titled 'project_health_value' and recommendation key should be 'project_recommendations', in the project_recommendations key, provide a list of recommendations with each recommendation should have key recommendation and value as a string and another key severity and value as a string, the severity can be one of the following: low, medium, high, critical

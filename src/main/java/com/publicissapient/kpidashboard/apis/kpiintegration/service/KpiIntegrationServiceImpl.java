@@ -445,6 +445,7 @@ public class KpiIntegrationServiceImpl {
 		jsonArray.forEach(jsonElement -> {
 			GenericKpiRecommendation genericRecommendationItem = new GenericKpiRecommendation();
 			genericRecommendationItem.setRecommendationDetails(String.valueOf(jsonElement.get("recommendation")));
+			genericRecommendationItem.setRecommendationType(String.valueOf(jsonElement.get("severity")));
 			genericRecommendations.add(genericRecommendationItem);
 		});
 		recommendation.setRecommendations(genericRecommendations);
