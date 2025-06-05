@@ -77,8 +77,10 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("testUser"))
-                .andExpect(jsonPath("$.message").value("User information saved successfully"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("User information saved successfully"))
+                .andExpect(jsonPath("$.data.username").value("testUser"))
+                .andExpect(jsonPath("$.data.message").doesNotExist());
     }
 
     @Test
