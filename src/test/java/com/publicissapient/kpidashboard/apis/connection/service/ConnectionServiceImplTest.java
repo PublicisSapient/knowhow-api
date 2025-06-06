@@ -910,7 +910,7 @@ public class ConnectionServiceImplTest {
 
 		assertFalse(connection.isBrokenConnection());
 		assertNull(connection.getConnectionErrorMsg());
-		assertEquals(0, connection.getNotificationCount().intValue());
+		assertEquals(0, connection.getNotificationCount());
 		verify(connectionRepository).save(connection);
 	}
 
@@ -920,8 +920,8 @@ public class ConnectionServiceImplTest {
 		connection.setType("Jenkins");
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 
-		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
-		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn("5");
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
 		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection");
 		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
 		when(customApiConfig.getKafkaMailTopic()).thenReturn("mail-topic");
@@ -946,7 +946,7 @@ public class ConnectionServiceImplTest {
 		assertTrue(connection.isBrokenConnection());
 		assertEquals("Error!", connection.getConnectionErrorMsg());
 		assertNotNull(connection.getNotifiedOn());
-		assertEquals(1, connection.getNotificationCount().intValue());
+		assertEquals(1, connection.getNotificationCount());
 		verify(notificationService).sendNotificationEvent(
 				eq(List.of("auth@example.com")),
 				anyMap(),
@@ -966,8 +966,8 @@ public class ConnectionServiceImplTest {
 		connection.setType("Jenkins");
 		connection.setNotifiedOn(LocalDateTime.now().minusDays(1).toString());
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
-		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
-		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn("5");
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
@@ -980,8 +980,8 @@ public class ConnectionServiceImplTest {
 		connection.setType("Jenkins");
 		connection.setNotifiedOn("invalid-timestamp");
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
-		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(3);
-		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn("3");
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
@@ -994,8 +994,8 @@ public class ConnectionServiceImplTest {
 		connection.setNotifiedOn(null);
 		connection.setType("Jenkins");
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
-		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn(5);
-		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn(1);
+		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn("5");
+		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
 		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection"); // subject is blank
 
 		UserInfo userInfo = new UserInfo();
