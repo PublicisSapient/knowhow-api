@@ -16,3 +16,13 @@ Output: Provide a comprehensive report with:
 
 Format the comprehensive report in parsable json format, the recommendations should be actionable and specific to the KPIs analyzed and specifically tailored for %s role
 the key for project health should be titled 'project_health_value' and recommendation key should be 'project_recommendations', in the project_recommendations key, provide a list of recommendations with each recommendation should have key recommendation and value as a string and another key severity and value as a string, the severity can be one of the following: low, medium, high, critical
+{
+  "project_health_value": 0,
+  "project_recommendations": [
+    {
+      "recommendation": "",
+      "severity": ""
+    }
+  ],
+  "observations": []
+}
