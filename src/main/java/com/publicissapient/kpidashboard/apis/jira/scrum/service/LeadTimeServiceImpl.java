@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -140,8 +141,8 @@ public class LeadTimeServiceImpl extends JiraBacklogKPIService<Long, List<Object
 		List<KPIExcelData> excelData = new ArrayList<>();
 		Set<String> issueTypesSet = new LinkedHashSet<>();
 		List<String> rangeList = customApiConfig.getLeadTimeRange();
-		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, LocalDate.now().minusMonths(6).toString(),
-				LocalDate.now().toString(), kpiRequest);
+		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, DateUtil.getTodayDate().minusMonths(6).toString(),
+				DateUtil.getTodayDate().toString(), kpiRequest);
 		List<JiraIssueCustomHistory> ticketList = (List<JiraIssueCustomHistory>) resultMap.get(STORY_HISTORY_DATA);
 
 		Map<String, List<JiraIssueCustomHistory>> projectWiseJiraIssue = ticketList.stream()

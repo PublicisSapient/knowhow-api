@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService {
 	private static final String INCLUDED_ISSUES = "included issues";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
 	private ConfigHelperService configHelperService;
@@ -102,8 +102,8 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 				// Find the next sprint
 				SprintDetails sprintDetails = futureSprintList.stream()
 						.filter(sprint -> sprint.getStartDate() != null
-								&& LocalDate.parse(sprint.getStartDate().split("T")[0], DATE_TIME_FORMATTER).isAfter(
-										LocalDate.parse(activeSprint.getEndDate().split("T")[0], DATE_TIME_FORMATTER)))
+								&& DateUtil.stringToLocalDateTime(sprint.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC).isAfter(
+								DateUtil.stringToLocalDateTime(activeSprint.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)))
 						.findFirst().orElse(null);
 
 				if (sprintDetails == null) {

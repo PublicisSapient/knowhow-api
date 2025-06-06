@@ -61,7 +61,7 @@ public class JiraConfigurationTypeChangeUnit {
     @RollbackExecution
     public void rollback() {
         // Remove the jiraConfigurationType field from all Jira configurations
-        Document query = new Document("toolName", "Jira");
+        Document query = new Document(TOOL_NAME, "Jira");
         Document update = new Document("$unset", new Document(JIRA_CONFIGURATION_TYPE, ""));
         mongoTemplate.getCollection(PROJECT_TOOL_CONFIGS).updateMany(query, update);
     }

@@ -433,21 +433,6 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		return response;
 	}
 
-	private void updateProjectNameInProjectHierch(ProjectBasicConfig savedConfigOpt, ProjectBasicConfig basicConfig,
-			List<ProjectHierarchy> projectHierarchyList) {
-		if (CollectionUtils.isNotEmpty(projectHierarchyList)) {
-			projectHierarchyList.stream().forEach(projectHierarchy -> {
-				if (projectHierarchy.getNodeDisplayName().contains(savedConfigOpt.getProjectDisplayName())) {
-					projectHierarchy.setNodeDisplayName(projectHierarchy.getNodeDisplayName()
-							.replace(savedConfigOpt.getProjectDisplayName(), basicConfig.getProjectDisplayName()));
-				}
-			});
-
-			projectHierarchyRepository.saveAll(projectHierarchyList);
-			cacheService.clearCache(CommonConstant.CACHE_PROJECT_HIERARCHY);
-		}
-	}
-
 	private void updateProjectNameInOrgHierarchy(ProjectBasicConfig basicConfig, OrganizationHierarchy orgHierarchy) {
 		if (orgHierarchy != null) {
 			orgHierarchy.setNodeDisplayName(basicConfig.getProjectDisplayName());

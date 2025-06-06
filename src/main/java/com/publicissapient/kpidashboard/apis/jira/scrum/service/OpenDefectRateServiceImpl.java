@@ -16,6 +16,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.Filters;
@@ -89,7 +90,6 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
     public static final String TOTAL_DEFECTS = "totalDefects";
     public static final String DEFECT_HISTORY = "defectHistory";
     public static final String SPRINT_DETAILS = "sprintDetails";
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     public static final String SUB_TASK_BUGS = "subTaskBugs";
     public static final String JIRA_ISSUE_CLOSED_DATE = "jiraIssueClosedDate";
     public static final String STORY_LIST = "storyList";
@@ -305,19 +305,17 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
     public List<JiraIssue> getNotCompletedSubTasksByHistory(Set<JiraIssue> totalSubTask,
                                                             List<JiraIssueCustomHistory> subTaskHistory, SprintDetails sprintDetail) {
         List<JiraIssue> openSubtaskOfSprint = new ArrayList<>();
-        LocalDate sprintEndDate = sprintDetail.getCompleteDate() != null
-                ? LocalDate.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-                : LocalDate.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
-        LocalDate sprintStartDate = sprintDetail.getActivatedDate() != null
-                ? LocalDate.parse(sprintDetail.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-                : LocalDate.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+				sprintDetail.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
+				sprintDetail.getStartDate());
 
         totalSubTask.forEach(jiraIssue -> {
             JiraIssueCustomHistory jiraIssueCustomHistory = subTaskHistory.stream().filter(
                             issueCustomHistory -> issueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
                     .findFirst().orElse(new JiraIssueCustomHistory());
             Optional<JiraHistoryChangeLog> issueSprint = jiraIssueCustomHistory.getStatusUpdationLog().stream()
-                    .filter(jiraIssueSprint -> DateUtil.isWithinDateRange(jiraIssueSprint.getUpdatedOn().toLocalDate(),
+                    .filter(jiraIssueSprint -> DateUtil.isWithinDateTimeRange(jiraIssueSprint.getUpdatedOn(),
                             sprintStartDate, sprintEndDate))
                     .reduce((a, b) -> b);
             if (issueSprint.isPresent())
@@ -329,13 +327,11 @@ public class OpenDefectRateServiceImpl extends JiraKPIService<Double, List<Objec
     private static void getSubtasks(List<JiraIssue> allSubTaskBugs,
                                     Set<JiraIssue> totalSubTask,
                                     SprintDetails sprintDetail) {
-        LocalDateTime sprintEndDate = sprintDetail.getCompleteDate() != null
-                ? LocalDateTime.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-                : LocalDateTime.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
+        LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+                sprintDetail.getEndDate());
 
         allSubTaskBugs.forEach(jiraIssue -> {
-            LocalDateTime jiraCreatedDate = LocalDateTime.parse(jiraIssue.getCreatedDate().split("\\.")[0],
-                    DATE_TIME_FORMATTER);
+            LocalDateTime jiraCreatedDate = DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate());
 
             if (CollectionUtils.isNotEmpty(jiraIssue.getSprintIdList())
                     && jiraIssue.getSprintIdList().contains(sprintDetail.getSprintID().split("_")[0])

@@ -126,16 +126,15 @@ public final class IterationKpiHelper {
 	}
 
 	public static String getDevCompletionDate(JiraIssueCustomHistory issueCustomHistory, List<String> fieldMapping) {
-		String devCompleteDate = Constant.DASH;
+		String devCompleteDate = Constant.BLANK;
 		List<JiraHistoryChangeLog> filterStatusUpdationLog = issueCustomHistory.getStatusUpdationLog();
 
 		if (null != fieldMapping && CollectionUtils.isNotEmpty(fieldMapping)) {
 			devCompleteDate = filterStatusUpdationLog.stream()
 					.filter(jiraHistoryChangeLog -> fieldMapping.contains(jiraHistoryChangeLog.getChangedTo()) &&
 							jiraHistoryChangeLog.getUpdatedOn() != null)
-					.map(jiraHistoryChangeLog -> LocalDate.parse(jiraHistoryChangeLog.getUpdatedOn().toString().split("T")[0],
-							DateTimeFormatter.ofPattern(DateUtil.DATE_FORMAT)))
-					.max(Comparator.naturalOrder()).map(LocalDate::toString).orElse(devCompleteDate);
+					.map(JiraHistoryChangeLog::getUpdatedOn)
+					.max(Comparator.naturalOrder()).map(LocalDateTime::toString).orElse(devCompleteDate);
 		}
 		return devCompleteDate;
 	}
@@ -148,8 +147,7 @@ public final class IterationKpiHelper {
 		if (CollectionUtils.isNotEmpty(issueHistoryLogs)) {
 			filterStatusUpdationLogs = issueHistoryLogs.stream()
 					.filter(jiraIssueSprint -> DateUtil.isWithinDateRange(
-							LocalDate.parse(jiraIssueSprint.getUpdatedOn().toString().split("T")[0].concat("T00:00:00"),
-									DateTimeFormatter.ofPattern(TIME_FORMAT)),
+							jiraIssueSprint.getUpdatedOn().toLocalDate(),
 							sprintStartDate, sprintEndDate))
 					.collect(Collectors.toList());
 		}

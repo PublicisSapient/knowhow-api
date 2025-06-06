@@ -97,7 +97,6 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 	public static final String DEFECT_HISTORY = "defectHistory";
 	public static final String SPRINT_DETAILS = "sprintDetails";
 	public static final String PROJECT_WISE_DEFECT_REMOVEL_STATUS = "projectWiseDefectRemovelStatus";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	public static final String SUB_TASK_BUGS = "subTaskBugs";
 	public static final String JIRA_ISSUE_CLOSED_DATE = "jiraIssueClosedDate";
 	public static final String STORY_LIST = "storyList";
@@ -425,12 +424,10 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 			List<JiraIssueCustomHistory> subTaskHistory, SprintDetails sprintDetail,
 			Map<String, List<String>> projectWiseDefectRemovelStatus) {
 		List<JiraIssue> completedSubtaskOfSprint = new ArrayList<>();
-		LocalDate sprintEndDate = sprintDetail.getCompleteDate() != null
-				? LocalDate.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDate.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
-		LocalDate sprintStartDate = sprintDetail.getActivatedDate() != null
-				? LocalDate.parse(sprintDetail.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDate.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+				sprintDetail.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
+				sprintDetail.getStartDate());
 		List<String> defectRemovalStatus = projectWiseDefectRemovelStatus
 				.get(sprintDetail.getBasicProjectConfigId().toString());
 		totalSubTask.forEach(jiraIssue -> {
@@ -439,7 +436,7 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 					.findFirst().orElse(new JiraIssueCustomHistory());
 			Optional<JiraHistoryChangeLog> issueSprint = jiraIssueCustomHistory
 					.getStatusUpdationLog().stream().filter(jiraIssueSprint -> DateUtil
-							.isWithinDateRange(jiraIssueSprint.getUpdatedOn().toLocalDate(), sprintStartDate, sprintEndDate))
+							.isWithinDateTimeRange(jiraIssueSprint.getUpdatedOn(), sprintStartDate, sprintEndDate))
 					.reduce((a, b) -> b);
 			if (issueSprint.isPresent() && defectRemovalStatus.contains(issueSprint.get().getChangedTo()))
 				completedSubtaskOfSprint.add(jiraIssue);
@@ -450,15 +447,12 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 	private static void getSubtasks(List<JiraIssue> allSubTaskBugs, List<JiraIssueCustomHistory> defectsCustomHistory,
 			Map<String, List<String>> projectWiseDefectRemovalStatus, Set<JiraIssue> totalSubTask,
 			SprintDetails sprintDetail) {
-		LocalDateTime sprintEndDate = sprintDetail.getCompleteDate() != null
-				? LocalDateTime.parse(sprintDetail.getCompleteDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetail.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER);
-		LocalDateTime sprintStartDate = sprintDetail.getActivatedDate() != null
-				? LocalDateTime.parse(sprintDetail.getActivatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetail.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER);
+		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
+				sprintDetail.getEndDate());
+		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
+				sprintDetail.getStartDate());
 		allSubTaskBugs.forEach(jiraIssue -> {
-			LocalDateTime jiraCreatedDate = LocalDateTime.parse(jiraIssue.getCreatedDate().split("\\.")[0],
-					DATE_TIME_FORMATTER);
+			LocalDateTime jiraCreatedDate = DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate());
 			JiraIssueCustomHistory jiraIssueCustomHistoryOfClosedSubTask = defectsCustomHistory.stream()
 					.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
 					.findFirst().orElse(new JiraIssueCustomHistory());

@@ -565,8 +565,8 @@ public class KPIExcelUtilityTest {
 		// Arrange
 		List<KPIExcelData> excelDataList = new ArrayList<>();
 
-		jiraIssues.get(0).setCreatedDate("2022-01-01");
-		jiraIssues.get(0).setUpdateDate("2022-04-01");
+		jiraIssues.get(0).setCreatedDate("2022-01-01T23:08:15.6740000");
+		jiraIssues.get(0).setUpdateDate("2022-04-01T23:08:15.6740000");
 
 		// Act
 		KPIExcelUtility.populateBacklogCountExcelData(jiraIssues, excelDataList);
@@ -1093,9 +1093,9 @@ public class KPIExcelUtilityTest {
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.STORY_POINT);
 
-		Map<String, LocalDate> issueWiseReleaseTagDateMap = new HashMap<>();
-		Map<String, LocalDate> completeDateIssueMap = new HashMap<>();
-		Map<String, LocalDate> devCompleteDateIssueMap = new HashMap<>();
+		Map<String, LocalDateTime> issueWiseReleaseTagDateMap = new HashMap<>();
+		Map<String, LocalDateTime> completeDateIssueMap = new HashMap<>();
+		Map<String, LocalDateTime> devCompleteDateIssueMap = new HashMap<>();
 
 		excelUtility.populateReleaseBurnUpExcelData(jiraIssues, issueWiseReleaseTagDateMap, completeDateIssueMap,
 				devCompleteDateIssueMap, kpiExcelData, fieldMapping);
@@ -1113,9 +1113,9 @@ public class KPIExcelUtilityTest {
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.ACTUAL_ESTIMATION);
 
 		jiraIssues.get(0).setAggregateTimeOriginalEstimateMinutes(480);
-		Map<String, LocalDate> issueWiseReleaseTagDateMap = new HashMap<>();
-		Map<String, LocalDate> completeDateIssueMap = new HashMap<>();
-		Map<String, LocalDate> devCompleteDateIssueMap = new HashMap<>();
+		Map<String, LocalDateTime> issueWiseReleaseTagDateMap = new HashMap<>();
+		Map<String, LocalDateTime> completeDateIssueMap = new HashMap<>();
+		Map<String, LocalDateTime> devCompleteDateIssueMap = new HashMap<>();
 
 		excelUtility.populateReleaseBurnUpExcelData(jiraIssues, issueWiseReleaseTagDateMap, completeDateIssueMap,
 				devCompleteDateIssueMap, kpiExcelData, fieldMapping);

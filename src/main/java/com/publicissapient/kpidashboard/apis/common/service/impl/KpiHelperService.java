@@ -2276,9 +2276,9 @@ public class KpiHelperService { // NOPMD
 		}
 	}
 
-	private static LocalDateTime getParseDateFromSprint(String sprintDetails, String sprintDetails1) {
-		return sprintDetails != null ? LocalDateTime.parse(sprintDetails.split("\\.")[0], DATE_TIME_FORMATTER)
-				: LocalDateTime.parse(sprintDetails1.split("\\.")[0], DATE_TIME_FORMATTER);
+	public static LocalDateTime getParseDateFromSprint(String primaryDate, String fallBackDate) {
+		return primaryDate != null ? DateUtil.stringToLocalDateTime(primaryDate, DateUtil.TIME_FORMAT_WITH_SEC)
+				: DateUtil.stringToLocalDateTime(fallBackDate, DateUtil.TIME_FORMAT_WITH_SEC);
 	}
 
 }

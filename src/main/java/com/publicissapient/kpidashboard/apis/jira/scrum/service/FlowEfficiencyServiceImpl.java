@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,8 +154,8 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 				? configHelperService.getFieldMappingMap().get(leafNode.getProjectFilter().getBasicProjectConfigId())
 				: new FieldMapping();
 		issueTypesSet.add(CommonConstant.OVERALL);
-		String startDate = LocalDate.now().minusMonths(6).toString();
-		String endDate = LocalDate.now().toString();
+		String startDate = DateUtil.getTodayDate().minusMonths(6).toString();
+		String endDate = DateUtil.getTodayDate().toString();
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, startDate, endDate, kpiRequest);
 		List<JiraIssueCustomHistory> allIssueHistory = (List<JiraIssueCustomHistory>) resultMap.get(HISTORY);
@@ -281,7 +282,7 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 				if (fieldMapping.getJiraIssueClosedStateKPI170().contains(nextChangeLog.getChangedTo())) {
 					closedDate = nextChangeLog.getUpdatedOn();
 					totalTime = calculateWaitedTime(
-							LocalDateTime.ofInstant(issueCustomHistory.getCreatedDate().toDate().toInstant(), ZoneId.systemDefault()),
+							DateUtil.convertJodaDateTimeToLocalDateTime(issueCustomHistory.getCreatedDate()),
 							closedDate);
 				}
 			}

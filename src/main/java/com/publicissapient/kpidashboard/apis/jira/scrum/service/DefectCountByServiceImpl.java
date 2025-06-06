@@ -59,7 +59,6 @@ public class DefectCountByServiceImpl extends JiraIterationKPIService {
 	private static final String TOTAL_ISSUES = "Total Issues";
 	private static final String SPRINT_DETAILS = "SprintDetails";
 	private static final String CREATED_DURING_ITERATION = "Created during Iteration";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String FILTER_TYPE = "Multi";
 
 	@Autowired
@@ -165,10 +164,12 @@ public class DefectCountByServiceImpl extends JiraIterationKPIService {
 				SprintDetails sprintDetails = (SprintDetails) resultMap.get(SPRINT_DETAILS);
 				List<JiraIssue> allCompletedDefects = filterDefects(resultMap, fieldMapping);
 				List<JiraIssue> createDuringIteration = allCompletedDefects.stream()
-						.filter(jiraIssue -> DateUtil.isWithinDateRange(
-								LocalDate.parse(jiraIssue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER),
-								LocalDate.parse(sprintDetails.getStartDate().split("\\.")[0], DATE_TIME_FORMATTER),
-								LocalDate.parse(sprintDetails.getEndDate().split("\\.")[0], DATE_TIME_FORMATTER)))
+						.filter(jiraIssue -> DateUtil.isWithinDateTimeRange(
+								DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate()),
+								DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),
+										DateUtil.TIME_FORMAT_WITH_SEC),
+								DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(),
+										DateUtil.TIME_FORMAT_WITH_SEC)))
 						.toList();
 				log.info("DefectCountByServiceImpl -> allCompletedDefects ->  : {}", allCompletedDefects);
 				// Creating map of modal Objects

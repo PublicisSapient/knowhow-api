@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -141,8 +143,11 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
 
 			Map<String, Map<String, Integer>> groupByDateAndTypeCount = jiraIssueCustomHistories.stream()
-					.collect(Collectors.groupingBy(issue -> issue.getCreatedDate().toString().split("T")[0],
-							Collectors.groupingBy(issue -> combineType(issue.getStoryType()), Collectors.summingInt(issue -> 1))));
+					.collect(Collectors.groupingBy(
+							issue -> DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate()).toLocalDate()
+									.toString(),
+							Collectors.groupingBy(issue -> combineType(issue.getStoryType()),
+									Collectors.summingInt(issue -> 1))));
 
 			// Sort the groupByDateAndTypeCount map by date in ascending order
 			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap = new TreeMap<>(groupByDateAndTypeCount);
@@ -182,7 +187,7 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 			String date = entry.getKey();
 			Map<String, Integer> typeCountMap = entry.getValue();
 			DataCount dc = new DataCount();
-			dc.setDate(date);
+			dc.setDate(DateUtil.tranformUTCLocalTimeToZFormat(LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
 			dc.setValue(typeCountMap);
 			dataList.add(dc);
 		}

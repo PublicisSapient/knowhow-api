@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,7 +151,7 @@ public class RefinementRejectionRateServiceImpl extends JiraBacklogKPIService<Do
 	 */
 	private void projectWiseLeafNodeValue(Node node, List<DataCount> trendValueList, KpiElement kpiElement,
 			KpiRequest kpiRequest, Map<String, Node> mapTmp) {
-
+		String requestTrackerId = getRequestTrackerId();
 		CustomDateRange dateRange = KpiDataHelper.getDayForPastDataHistory(customApiConfig.getBacklogWeekCount() * 5);
 
 		// get start and end date in yyyy-mm-dd format
@@ -206,7 +207,8 @@ public class RefinementRejectionRateServiceImpl extends JiraBacklogKPIService<Do
 		}
 		weekAndTypeMap.keySet().stream().forEach(f -> weekAndTypeMap.get(f).keySet().stream()
 				.forEach(issue -> issuesExcel.addAll(weekAndTypeMap.get(f).get(issue))));
-		KPIExcelUtility.populateRefinementRejectionExcelData(excelData, issuesExcel, weekAndTypeMap, jiraDateMap);
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()))
+			KPIExcelUtility.populateRefinementRejectionExcelData(excelData, issuesExcel, weekAndTypeMap, jiraDateMap);
 		mapTmp.get(node.getId()).setValue(trendValueList);
 		kpiElement.setTrendValueList(trendValueList);
 
@@ -260,7 +262,7 @@ public class RefinementRejectionRateServiceImpl extends JiraBacklogKPIService<Do
 			JiraIssueCustomHistory hist) {
 		String status = "";
 		String fromStatus = "";
-		LocalDateTime changeDate = LocalDateTime.now();
+		LocalDateTime changeDate = DateUtil.getTodayTime();
 		int count = 0;
 		for (JiraHistoryChangeLog story : hist.getStatusUpdationLog()) {
 			if (count == 0) {
@@ -477,13 +479,15 @@ public class RefinementRejectionRateServiceImpl extends JiraBacklogKPIService<Do
 	}
 
 	public List<JiraIssue> filterProjectJiraIssues(List<JiraIssue> projectJiraIssue, String startDate, String endDate) {
-        LocalDateTime startDateTime = DateUtil.stringToLocalDate(startDate, DateUtil.DATE_FORMAT).atStartOfDay();
-
-        LocalDateTime endDateTime = DateUtil.stringToLocalDate(endDate, DateUtil.DATE_FORMAT).atStartOfDay();
+		LocalDateTime startDateTime = DateUtil
+				.localDateTimeToUTC(DateUtil.stringToLocalDate(startDate, DateUtil.DATE_FORMAT).atStartOfDay());
+		LocalDateTime endDateTime = DateUtil
+				.localDateTimeToUTC(DateUtil.stringToLocalDate(endDate, DateUtil.DATE_FORMAT).atStartOfDay());
 		return projectJiraIssue.stream()
 				.filter(issue -> {
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS");
-					LocalDateTime updateDate = LocalDateTime.parse(issue.getUpdateDate(), formatter);
+					LocalDateTime updateDate = DateUtil
+							.localDateTimeToUTC(LocalDateTime.parse(issue.getUpdateDate(), formatter));
 					return DateUtil.isWithinDateTimeRange(updateDate, startDateTime, endDateTime);
 				})
 				.filter(issue -> issue.getSprintAssetState() == null || issue.getSprintAssetState().isEmpty()

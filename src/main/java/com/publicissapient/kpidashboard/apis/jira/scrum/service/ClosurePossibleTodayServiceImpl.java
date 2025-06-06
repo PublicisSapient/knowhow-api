@@ -20,11 +20,12 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static com.publicissapient.kpidashboard.apis.util.KpiDataHelper.sprintWiseDelayCalculation;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -141,7 +142,8 @@ public class ClosurePossibleTodayServiceImpl extends JiraIterationKPIService {
 			Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(allIssues);
 			allIssues.forEach(issue -> {
 				if (issueWiseDelay.containsKey(issue.getNumber()) &&
-						issueWiseDelay.get(issue.getNumber()).getPredictedCompletedDate().equals(LocalDate.now().toString())) {
+						DateUtil.stringToLocalDateTime(issueWiseDelay.get(issue.getNumber()).getPredictedCompletedDate(),DateUtil.TIME_FORMAT_WITH_SEC_DATE).toLocalDate().isEqual(DateUtil.getTodayDate())
+						) {
 					KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
 					IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
 					data.setValue(0d);
