@@ -313,15 +313,14 @@ public class NetOpenTicketCountByPriorityServiceImpl
 	 */
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
-		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDateTime().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
