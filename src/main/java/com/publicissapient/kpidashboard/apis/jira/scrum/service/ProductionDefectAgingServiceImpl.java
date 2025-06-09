@@ -61,9 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long, List<Object>> {
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	private static final String RANGE = "range";
 	private static final String RANGE_TICKET_LIST = "rangeTickets";
-	private static final String IN = "in";
 	@Autowired
 	private ConfigHelperService configHelperService;
 	@Autowired
@@ -244,7 +242,8 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 		initializeRangeMapForProjects(rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
 		projectWiseJiraIssueList.forEach(issue -> {
-			long daysBetween = DAYS.between(KpiDataHelper.convertStringToDate(issue.getCreatedDate()), LocalDate.now());
+			long daysBetween = DAYS.between(DateUtil.convertToUTCLocalDateTime(issue.getCreatedDate()).toLocalDate(),
+					DateUtil.getTodayDate());
 			Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
 			String range;
 			if (null == monthRangeMap.get(monthsBetween)) {

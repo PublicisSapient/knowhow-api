@@ -65,7 +65,6 @@ public class DefectReopenRateServiceImpl extends JiraBacklogKPIService<Double, L
 	private static final String TOTAL_JIRA_DEFECTS = "TOTAL_JIRA_DEFECTS";
 	private static final String PROJECT_CLOSED_STATUS_MAP = "PROJECT_CLOSED_STATUS_MAP";
 	private static final String JIRA_REOPEN_HISTORY = "JIRA_REOPEN_HISTORY";
-	private static final String TIME_FORMAT_WITH_SEC = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 	@Autowired
 	private JiraIssueRepository jiraIssueRepository;
 
@@ -226,8 +225,10 @@ public class DefectReopenRateServiceImpl extends JiraBacklogKPIService<Double, L
 		iterationKpiModalValue.setDescription(issue.getName());
 		iterationKpiModalValue.setPriority(issue.getPriority());
 		iterationKpiModalValue.setIssueStatus(issue.getStatus());
-		iterationKpiModalValue.setClosedDate(DateUtil.dateTimeConverter(closedHistory, TIME_FORMAT_WITH_SEC));
-		iterationKpiModalValue.setReopenDate(DateUtil.dateTimeConverter(reopenHistory, TIME_FORMAT_WITH_SEC));
+		iterationKpiModalValue.setClosedDate(
+				DateUtil.tranformUTCLocalTimeToZFormat(DateUtil.convertJodaDateTimeToLocalDateTime(closedHistory)));
+		iterationKpiModalValue.setReopenDate(
+				DateUtil.tranformUTCLocalTimeToZFormat(DateUtil.convertJodaDateTimeToLocalDateTime(reopenHistory)));
 		iterationKpiModalValue.setDurationToReopen(duration + "Hrs");
 		return iterationKpiModalValue;
 	}

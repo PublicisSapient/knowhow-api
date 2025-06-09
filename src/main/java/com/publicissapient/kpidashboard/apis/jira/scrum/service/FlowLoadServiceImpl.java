@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -111,7 +113,7 @@ public class FlowLoadServiceImpl extends JiraBacklogKPIService<Double, List<Obje
 
 		int monthToSubtract = customApiConfig.getFlowKpiMonthCount();
 
-		LocalDate endDate = LocalDate.now();
+		LocalDate endDate = DateUtil.getTodayDate();
 		LocalDate startDate = endDate.minusMonths(monthToSubtract);
 
 		String requestTrackerId = getRequestTrackerId();
@@ -201,7 +203,8 @@ public class FlowLoadServiceImpl extends JiraBacklogKPIService<Double, List<Obje
 		}
 
 		// When issue is created after end date
-		else if (LocalDate.parse(jiraIssueCustomHistory.getCreatedDate().toString().split("T")[0]).isAfter(endDate))
+		else if (DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate()).toLocalDate()
+				.isAfter(endDate))
 			return;
 		else {
 			for (int index = 0; index + 1 < statusChangeLog.size(); index++) {
@@ -261,7 +264,7 @@ public class FlowLoadServiceImpl extends JiraBacklogKPIService<Double, List<Obje
 			String date = entry.getKey();
 			Map<String, Integer> typeCountMap = entry.getValue();
 			DataCount dc = new DataCount();
-			dc.setDate(date);
+			dc.setDate(DateUtil.tranformUTCLocalTimeToZFormat(LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
 			dc.setValue(typeCountMap);
 			dataList.add(dc);
 		}

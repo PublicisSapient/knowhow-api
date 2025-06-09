@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -34,6 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.bson.types.ObjectId;
 import org.hamcrest.core.StringContains;
 import org.junit.Before;
@@ -68,6 +72,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReleaseStatusRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RefinementRejectionRateServiceImplTest {
@@ -101,7 +106,8 @@ public class RefinementRejectionRateServiceImplTest {
 	@Mock
 	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	private KpiRequest kpiRequest;
-
+	@Mock
+	private CacheService cacheService;
 	@Before
 	public void setup() throws ApplicationException {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
@@ -167,6 +173,7 @@ public class RefinementRejectionRateServiceImplTest {
 	public void testGetKpiData() throws ApplicationException {
 		when(customApiConfig.getBacklogWeekCount()).thenReturn(5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(cacheService.getFromApplicationCache(anyString())).thenReturn("Jira");
 		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(new JiraIssueReleaseStatus());
 		KpiElement responseKpiElement =
 				refinementRejectionRateService.getKpiData(
