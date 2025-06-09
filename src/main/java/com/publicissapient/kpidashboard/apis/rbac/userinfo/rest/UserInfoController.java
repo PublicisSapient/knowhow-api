@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import javax.validation.Valid;
 
+import com.publicissapient.kpidashboard.common.repository.rbac.AccessRequestsRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -66,6 +67,8 @@ public class UserInfoController {
 
 	@Autowired
 	private UserInfoRepository userInfoRepository;
+	@Autowired
+	private AccessRequestsRepository accessRequestsRepository;
 
 	/**
 	 * Fetch only approved user info data.
@@ -106,6 +109,7 @@ public class UserInfoController {
 		String loggedUserName = authenticationService.getLoggedInUser();
 		UserInfo userInfo = userInfoRepository.findByUsername(userName);
 		if ((!loggedUserName.equals(userName) && !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
+			accessRequestsRepository.deleteByUsername(userName);
 			ServiceResponse response = userInfoService.deleteUser(userName, false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
