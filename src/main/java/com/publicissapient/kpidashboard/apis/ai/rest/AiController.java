@@ -17,7 +17,7 @@
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -89,7 +89,7 @@ public class AiController {
 					- Prompt configuration is invalid
 					""") })
 	public ResponseEntity<List<ProjectWiseKpiRecommendation>> getKpiRecommendation(
-			@NotNull @RequestBody KpiRequest kpiRequest) {
+			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRequest) {
 		List<ProjectWiseKpiRecommendation> response = kpiIntegrationService.getProjectWiseKpiRecommendation(kpiRequest);
 		return ResponseEntity.ok().body(response);
 	}
