@@ -1536,11 +1536,12 @@ public class KPIExcelUtility {
 
 		KPIExcelData excelData = new KPIExcelData();
 		excelData.setProjectName(projectName);
-		excelData.setStartDate(DateUtil.localDateTimeConverter(dateRange.getStartDate()));
+		excelData.setStartDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()));
+		excelData.setEndDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()));
 		if (CommonConstant.DAYS.equalsIgnoreCase(duration)) {
-			excelData.setEndDate(DateUtil.localDateTimeConverter(dateRange.getStartDate()));
+			excelData.setEndDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()));
 		} else {
-			excelData.setEndDate(DateUtil.localDateTimeConverter(dateRange.getEndDate()));
+			excelData.setEndDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime()));
 		}
 		excelData.setEstimatedCapacity(df2.format(capacity));
 		kpiExcelData.add(excelData);
