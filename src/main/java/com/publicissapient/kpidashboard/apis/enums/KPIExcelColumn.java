@@ -155,7 +155,7 @@ public enum KPIExcelColumn {
 			Arrays.asList("Project Name", "Release Name", "Release Description", "Release End Date", "Month")),
 
 	RELEASE_FREQUENCY_KANBAN("kpi74",
-			Arrays.asList("Project Name", "Release Name", "Release Description", "Release End Date", "Month")),
+			Arrays.asList("Project Name", "Release Name", "Release Description", "Release End Time", "Month")),
 
 	DEPLOYMENT_FREQUENCY("kpi118",
 			Arrays.asList("Project Name", "Job Name / Pipeline Name", "Date", "Weeks",
@@ -216,7 +216,7 @@ public enum KPIExcelColumn {
 			Arrays.asList("Project Name", "Repo", "Branch", "Developer", "Days/Weeks", "No Of Commit")),
 
 	TEAM_CAPACITY_KANBAN("kpi58",
-			Arrays.asList("Project Name", "Start Date", "End Date", "Estimated Capacity (in hours)")),
+			Arrays.asList("Project Name", "Start Time", "End Time", "Estimated Capacity (in hours)")),
 
 	ISSUES_LIKELY_TO_SPILL("kpi123",
 			Arrays.asList("Issue Id", "Issue Type", "Issue Description", "Issue Priority", "Size(story point/hours)",

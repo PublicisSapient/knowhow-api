@@ -172,8 +172,8 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 				List<KanbanJiraIssue> kanbanJiraIssueList = new ArrayList<>();
 				String projectName = node.getProjectFilter().getName();
 				for (int i = 0; i < customApiConfig.getJiraXaxisMonthCount(); i++) {
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(
-							LocalDate.from(currentDate),
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+							currentDate,
 							CommonConstant.MONTH);
 					Double cod = filterDataBasedOnStartAndEndDate(dateWiseIssue, dateRange, kanbanJiraIssueList);
 					String date = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
