@@ -396,7 +396,7 @@ public class KpiIntegrationServiceImpl {
 		Map<String, Object> kpiDataMap = new HashMap<>();
 
 		kpiElements.forEach(kpiElement -> {
-			List<KpiDataPrompt> kpiDataPromptList = new ArrayList<>();
+			List<String> kpiDataPromptList = new ArrayList<>();
 			List<?> trendValueList = (List<?>) kpiElement.getTrendValueList();
 
 			if (CollectionUtils.isNotEmpty(trendValueList)) {
@@ -415,7 +415,7 @@ public class KpiIntegrationServiceImpl {
 						kpiDataPrompt.setSProjectName(dataCountItem.getSProjectName());
 						kpiDataPrompt.setSSprintName(dataCountItem.getsSprintName());
 						kpiDataPrompt.setDate(dataCountItem.getDate());
-						kpiDataPromptList.add(kpiDataPrompt);
+						kpiDataPromptList.add(kpiDataPrompt.toString());
 					});
 				}
 				kpiDataMap.put(kpiElement.getKpiName(), kpiDataPromptList);
