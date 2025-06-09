@@ -1,6 +1,7 @@
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -186,10 +187,11 @@ public class NetOpenTicketCountByPriorityServiceImpl
 			if (MapUtils.isNotEmpty(jiraHistoryPriorityAndDateWiseIssueMap)) {
 				Set<String> projectWisePriorityList = new HashSet<>();
 				projectWisePriorityList.addAll(jiraHistoryPriorityAndDateWiseIssueMap.keySet());
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+							currentDate,
 							kpiRequest.getDuration());
 
 					Map<String, Long> projectWisePriorityCountMap = filterKanbanDataBasedOnDateAndPriorityWise(
@@ -292,7 +294,7 @@ public class NetOpenTicketCountByPriorityServiceImpl
 	 * @param currentDate
 	 */
 	@NotNull
-	private LocalDate getNextRangeDate(KpiRequest kpiRequest, LocalDate currentDate) {
+	private LocalDateTime getNextRangeDate(KpiRequest kpiRequest, LocalDateTime currentDate) {
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
 			currentDate = currentDate.minusWeeks(1);
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
@@ -362,7 +364,7 @@ public class NetOpenTicketCountByPriorityServiceImpl
 				MapUtils.isNotEmpty(jiraHistoryPriorityAndDateWiseIssueMap)) {
 			String dateProjectKey = node.getProjectHierarchy().getNodeDisplayName();
 			String date = getRange(
-					KpiDataHelper.getStartAndEndDateForDataFiltering(LocalDate.now(), kpiRequest.getDuration()), kpiRequest);
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(DateUtil.getTodayTime(), kpiRequest.getDuration()), kpiRequest);
 			KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(dateProjectKey, jiraHistoryPriorityAndDateWiseIssueMap,
 					projectWisePriorityList, kanbanJiraIssues, excelData, date, KPICode.TICKET_COUNT_BY_PRIORITY.getKpiId());
 		}
