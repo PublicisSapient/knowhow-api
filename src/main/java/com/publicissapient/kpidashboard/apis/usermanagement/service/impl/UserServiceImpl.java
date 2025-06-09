@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserInfoService userInfoService;
     private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
-    private static final String DOMAIN_NAME = "@publicisgroupe.net";
+    private static final String DOMAIN_NAME = "@publicissapient.com";
     @Override
     public UserInfo saveUserInfo(String username) {
 
