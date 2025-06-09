@@ -51,16 +51,6 @@ public class KpiRequest implements Serializable {
 	private String hierarchyName;
 	private String hierarchyId;
 
-	public String getRecommendationFor() {
-		return recommendationFor;
-	}
-
-	public void setRecommendationFor(String recommendationFor) {
-		this.recommendationFor = recommendationFor;
-	}
-
-	private String recommendationFor;
-
 	/**
 	 * Gets kpi list.
 	 *
