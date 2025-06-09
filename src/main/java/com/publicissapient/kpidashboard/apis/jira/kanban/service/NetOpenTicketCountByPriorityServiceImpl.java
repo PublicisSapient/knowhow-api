@@ -314,7 +314,7 @@ public class NetOpenTicketCountByPriorityServiceImpl
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
+			range = DateUtil.dateTimeConverter(dateRange.getStartDateTime().toString(), DateUtil.DATE_FORMAT,
 					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
 					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
 							DateUtil.DISPLAY_DATE_FORMAT);
