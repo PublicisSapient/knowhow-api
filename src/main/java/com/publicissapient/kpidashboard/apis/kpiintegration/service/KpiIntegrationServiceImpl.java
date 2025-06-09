@@ -32,9 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,9 +42,9 @@ import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerati
 import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
 import com.publicissapient.kpidashboard.apis.model.GenericKpiRecommendation;
+import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.json.simple.JSONArray;
 import org.slf4j.MDC;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -366,8 +364,12 @@ public class KpiIntegrationServiceImpl {
 		return kpiElement;
 	}
 
-	public List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendation(KpiRequest kpiRequest) {
+	public List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendation(
+			KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		try {
+
+			KpiRequest kpiRequest = new KpiRequest();
+			BeanUtils.copyProperties(kpiRecommendationRequestDTO, kpiRequest);
 			if (CollectionUtils.isNotEmpty(customApiConfig.getAiRecommendationKpiList())) {
 				return getAiRecommendations(kpiRequest);
 			} else {

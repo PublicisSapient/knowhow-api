@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -86,7 +87,7 @@ public class KpiIntegrationController {
 	 */
 	@PostMapping(value = "/kpiRecommendation", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<ProjectWiseKpiRecommendation>> getKpiRecommendation(
-			@NotNull @RequestBody KpiRequest kpiRequest) {
+			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRequest) {
 		List<ProjectWiseKpiRecommendation> response = kpiIntegrationService.getProjectWiseKpiRecommendation(kpiRequest);
 		return ResponseEntity.ok().body(response);
 	}
