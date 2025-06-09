@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -320,8 +321,9 @@ public class BacklogReadinessEfficiencyServiceImpl extends JiraBacklogKPIService
 		AtomicDouble storyPoint = new AtomicDouble();
 		if (CollectionUtils.isNotEmpty(sprintDetails)) {
 			List<SprintDetails> sprintForStregthCalculation = sprintDetails.stream()
-					.filter(sprintDetail -> null != sprintDetail.getEndDate() &&
-							DateTime.parse(sprintDetail.getEndDate()).isBefore(DateTime.now()))
+					.filter(sprintDetail -> null != sprintDetail.getEndDate()
+							&& DateUtil.stringToLocalDateTime(sprintDetail.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+									.isBefore(DateUtil.getTodayTime()))
 					.limit(sprintCountForBackLogStrength).toList();
 
 			if (CollectionUtils.isNotEmpty(sprintForStregthCalculation)) {
