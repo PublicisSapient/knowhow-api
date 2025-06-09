@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -162,7 +164,7 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 		String requestTrackerId = getKanbanRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
 		projectList.forEach(node -> {
-			LocalDate currentDate = LocalDate.now();
+			LocalDateTime currentDateTime = DateUtil.getTodayTime();
 			String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
 			Map<String, List<KanbanJiraIssue>> dateWiseIssue = projectandDayWiseDelay.get(projectNodeId);
 			if (MapUtils.isNotEmpty(dateWiseIssue)) {
@@ -170,12 +172,12 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 				List<KanbanJiraIssue> kanbanJiraIssueList = new ArrayList<>();
 				String projectName = node.getProjectFilter().getName();
 				for (int i = 0; i < customApiConfig.getJiraXaxisMonthCount(); i++) {
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDateTime,
 							CommonConstant.MONTH);
 					Double cod = filterDataBasedOnStartAndEndDate(dateWiseIssue, dateRange, kanbanJiraIssueList);
-					String date = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+					String date = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 					dataCount.add(getDataCountObject(cod, projectName, date));
-					currentDate = currentDate.minusMonths(1);
+					currentDateTime = currentDateTime.minusMonths(1);
 				}
 
 				mapTmp.get(node.getId()).setValue(dataCount);
