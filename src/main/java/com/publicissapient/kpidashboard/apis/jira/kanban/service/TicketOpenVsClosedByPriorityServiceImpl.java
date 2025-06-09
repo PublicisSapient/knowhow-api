@@ -280,8 +280,8 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 					List<KanbanJiraIssue> dateWiseIssueTypeList = new ArrayList<>();
 					List<KanbanIssueCustomHistory> dateWiseIssueClosedStatusList = new ArrayList<>();
 
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(
-							LocalDate.from(currentDate),
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+							currentDate,
 							kpiRequest.getDuration());
 
 					List<String> priorityList = priorityTypes(false);
@@ -378,8 +378,8 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 
 	public Map<String, Long> filterKanbanDataBasedOnStartAndEndDateAndIssueType(List<KanbanJiraIssue> issueList,
 			List<String> priorityList, LocalDate startDate, LocalDate endDate, List<KanbanJiraIssue> dateWiseIssueTypeList) {
-		Predicate<KanbanJiraIssue> predicate = issue -> DateUtil.stringToLocalDateTime(issue.getCreatedDate(), DateUtil.TIME_FORMAT_WITH_SEC).isAfter(startDate.atTime(0, 0, 0)) &&
-														DateUtil.stringToLocalDateTime(issue.getCreatedDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+		Predicate<KanbanJiraIssue> predicate = issue -> DateUtil.stringToLocalDateTime(issue.getCreatedDate(), DateUtil.TIME_FORMAT).isAfter(startDate.atTime(0, 0, 0)) &&
+														DateUtil.stringToLocalDateTime(issue.getCreatedDate(), DateUtil.TIME_FORMAT)
 						.isBefore(endDate.atTime(23, 59, 59));
 		List<KanbanJiraIssue> filteredIssue = issueList.stream().filter(predicate).collect(Collectors.toList());
 		Map<String, Long> projectIssueTypeMap = KPIHelperUtil.setpriorityKanban(filteredIssue, customApiConfig);
