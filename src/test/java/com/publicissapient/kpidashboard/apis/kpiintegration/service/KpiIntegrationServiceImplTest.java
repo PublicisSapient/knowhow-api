@@ -21,11 +21,9 @@ package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -41,10 +39,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -172,8 +166,6 @@ public class KpiIntegrationServiceImplTest {
 		kpiRequest.setKpiIdList(Arrays.asList("kpi1", "kpi2"));
 		ProjectWiseKpiRecommendation expectedResponse = new ProjectWiseKpiRecommendation();
 		when(customApiConfig.getRnrRecommendationUrl()).thenReturn("recommendation/%s/%s/%s");
-		when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class),
-				any(ParameterizedTypeReference.class))).thenReturn(ResponseEntity.ok(Arrays.asList(expectedResponse)));
 		List<ProjectWiseKpiRecommendation> actualResponse = maturityService.getProjectWiseKpiRecommendation(kpiRequest);
 		assertNotNull(actualResponse);
 	}

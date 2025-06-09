@@ -371,7 +371,7 @@ public class KpiIntegrationServiceImpl {
 			KpiRequest kpiRequest = new KpiRequest();
 			BeanUtils.copyProperties(kpiRecommendationRequestDTO, kpiRequest);
 			if (CollectionUtils.isNotEmpty(customApiConfig.getAiRecommendationKpiList())) {
-				return getAiRecommendations(kpiRequest);
+				return getAiRecommendations(kpiRequest, kpiRecommendationRequestDTO.getRecommendationFor());
 			} else {
 				return fetchRecommendationsFromRnr(kpiRequest);
 			}
@@ -381,12 +381,13 @@ public class KpiIntegrationServiceImpl {
 		}
 	}
 
-	private List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest) throws IOException {
+	private List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest, String promptPersona)
+			throws IOException {
 		kpiRequest.setKpiIdList(customApiConfig.getAiRecommendationKpiList());
 		kpiRequest.getSelectedMap().put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, new ArrayList<>());
 
 		Map<String, Object> kpiDataMap = extractKpiData(kpiRequest);
-		String prompt = promptGenerator.getKpiRecommendationPrompt(kpiDataMap, kpiRequest.getRecommendationFor());
+		String prompt = promptGenerator.getKpiRecommendationPrompt(kpiDataMap, promptPersona);
 		ChatGenerationResponseDTO chatResponse = aiGatewayService.generateChatResponse(prompt);
 
 		Object responseObject = parseJsonResponse(chatResponse.content());
