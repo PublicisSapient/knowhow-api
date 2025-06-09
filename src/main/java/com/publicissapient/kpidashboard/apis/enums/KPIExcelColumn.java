@@ -265,8 +265,8 @@ public enum KPIExcelColumn {
 	ITERATION_BURNUP("kpi125", Arrays.asList("Issue Id", "Issue Type", "Issue Description", "Size(story point/hours)",
 			"Priority", "Assignee", "Issue Status", "Due Date")),
 
-	DEFECT_REOPEN_RATE("kpi137", Arrays.asList("Issue Id", "Issue Description", "Issue Status", "Priority", "Closed Date",
-			"Reopen Date", "Time taken to reopen")),
+	DEFECT_REOPEN_RATE("kpi137", Arrays.asList("Issue Id", "Issue Description", "Issue Status", "Priority", "Closed Time",
+			"Reopen Time", "Time taken to reopen")),
 
 	REFINEMENT_REJECTION_RATE("kpi139",
 			Arrays.asList("Issue ID", "Issue Description", "Priority", "Status", "Change Date", "Weeks", "Issue Status")),
@@ -317,10 +317,10 @@ public enum KPIExcelColumn {
 					"Original Time Estimate (in hours)", "Time Spent (in hours)")),
 
 	LEAD_TIME_FOR_CHANGE("Kpi156", Arrays.asList("Project Name", "Weeks", "Story ID", "Lead Time (In Days) [B-A]",
-			"Change Completion Date [A]", "Change Release Date [B]")),
+			"Change Completion Time [A]", "Change Release Time [B]")),
 
 	LEAD_TIME_FOR_CHANGE_REPO("Kpi156", Arrays.asList("Project Name", "Weeks", "Story ID", "Lead Time (In Days) [B-A]",
-			"Change Completion Date [A]", "Change Release Date [B]", "Merge Request Id", "Branch")),
+			"Change Completion Time [A]", "Change Release Time [B]", "Merge Request Id", "Branch")),
 
 	RELEASE_DEFECT_BY_TEST_PHASE("kpi163", Arrays.asList("Issue ID", "Issue Description", "Issue Type", "Priority",
 			"Sprint Name", "Assignee", "Issue Status", "Testing Phase")),
@@ -338,7 +338,7 @@ public enum KPIExcelColumn {
 			"To Do(Value/Percentage)", "In Progress(Value/Percentage)", "Done(Value/Percentage)")),
 
 	MEAN_TIME_TO_RECOVER("kpi166", Arrays.asList("Project Name", "Weeks", "Story ID", "Issue Type", "Issue Description",
-			"Created Date", "Completion Date", "Time to Recover (In Hours)")),
+			"Created Time", "Completion Time", "Time to Recover (In Hours)")),
 
 	CODE_QUALITY("kpi168",
 			Arrays.asList("Project", "Job Name / Pipeline Name", "Code Quality", "Month")), FLOW_EFFICIENCY("kpi170",
@@ -382,7 +382,7 @@ public enum KPIExcelColumn {
                                   Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined")),
 
 	DEFECT_REOPEN_RATE_QUALITY("kpi190", Arrays.asList("Issue Id", "Defect Description", "Issue Status",
-			"Defect Priority", "Closed Date", "Reopen Date", "Time taken to reopen"));
+			"Defect Priority", "Closed Time", "Reopen Time", "Time taken to reopen"));
 
 	// @formatter:on
 
