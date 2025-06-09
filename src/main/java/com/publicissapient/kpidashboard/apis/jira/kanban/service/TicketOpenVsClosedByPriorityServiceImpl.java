@@ -317,15 +317,14 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
-		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString();
+		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
@@ -378,8 +377,9 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 
 	public Map<String, Long> filterKanbanDataBasedOnStartAndEndDateAndIssueType(List<KanbanJiraIssue> issueList,
 			List<String> priorityList, LocalDate startDate, LocalDate endDate, List<KanbanJiraIssue> dateWiseIssueTypeList) {
-		Predicate<KanbanJiraIssue> predicate = issue -> DateUtil.stringToLocalDateTime(issue.getCreatedDate(), DateUtil.TIME_FORMAT).isAfter(startDate.atTime(0, 0, 0)) &&
-														DateUtil.stringToLocalDateTime(issue.getCreatedDate(), DateUtil.TIME_FORMAT)
+		Predicate<KanbanJiraIssue> predicate = issue -> LocalDateTime
+				.parse(issue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER).isAfter(startDate.atTime(0, 0, 0)) &&
+				LocalDateTime.parse(issue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
 						.isBefore(endDate.atTime(23, 59, 59));
 		List<KanbanJiraIssue> filteredIssue = issueList.stream().filter(predicate).collect(Collectors.toList());
 		Map<String, Long> projectIssueTypeMap = KPIHelperUtil.setpriorityKanban(filteredIssue, customApiConfig);
@@ -394,9 +394,9 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 			List<KanbanIssueCustomHistory> issueList, List<String> priorityList, List<String> issueClosedStatusList,
 			LocalDate startDate, LocalDate endDate, List<KanbanIssueCustomHistory> dateWiseIssueClosedStatusList) {
 		Predicate<KanbanIssueHistory> predicate = issue -> issueClosedStatusList.contains(issue.getStatus()) &&
-														   DateUtil.stringToLocalDateTime(issue.getActivityDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+				LocalDateTime.parse(issue.getActivityDate().split("\\.")[0], DATE_TIME_FORMATTER)
 						.isAfter(startDate.atTime(0, 0, 0)) &&
-														   DateUtil.stringToLocalDateTime(issue.getActivityDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+				LocalDateTime.parse(issue.getActivityDate().split("\\.")[0], DATE_TIME_FORMATTER)
 						.isBefore(endDate.atTime(23, 59, 59));
 
 		List<KanbanIssueCustomHistory> filteredIssue = new ArrayList<>();
