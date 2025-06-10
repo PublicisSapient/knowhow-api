@@ -364,24 +364,7 @@ public class KpiIntegrationServiceImpl {
 		return kpiElement;
 	}
 
-	public List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendation(
-			KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
-		try {
-
-			KpiRequest kpiRequest = new KpiRequest();
-			BeanUtils.copyProperties(kpiRecommendationRequestDTO, kpiRequest);
-			if (CollectionUtils.isNotEmpty(customApiConfig.getAiRecommendationKpiList())) {
-				return getAiRecommendations(kpiRequest, kpiRecommendationRequestDTO.getRecommendationFor());
-			} else {
-				return fetchRecommendationsFromRnr(kpiRequest);
-			}
-		} catch (Exception ex) {
-			log.error("Exception hitting recommendation API", ex);
-			return Collections.emptyList();
-		}
-	}
-
-	private List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest, String promptPersona)
+	public List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest, String promptPersona)
 			throws IOException {
 		kpiRequest.setKpiIdList(customApiConfig.getAiRecommendationKpiList());
 		kpiRequest.getSelectedMap().put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, new ArrayList<>());
@@ -456,7 +439,7 @@ public class KpiIntegrationServiceImpl {
 		return Collections.singletonList(recommendation);
 	}
 
-	private List<ProjectWiseKpiRecommendation> fetchRecommendationsFromRnr(KpiRequest kpiRequest) {
+	public List<ProjectWiseKpiRecommendation> fetchRecommendationsFromRnr(KpiRequest kpiRequest) {
 		Optional<String> sprintId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT).stream()
 				.findFirst();
 		Optional<String> projectId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT).stream()
