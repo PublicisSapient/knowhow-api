@@ -66,7 +66,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 
-	private static final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 	private static final String SUCCESS_MSG = "Successfully fetched all records for projectToolConfig";
 	private static final String TOOL_NOT_FOUND = "Tool not found";
 	@Autowired
@@ -196,9 +195,9 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 
 		log.info("Successfully pushed project_tools into db");
-		projectToolConfig.setCreatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), TIME_FORMAT));
+		projectToolConfig.setCreatedAt(DateUtil.getTodayTime().toString());
 		projectToolConfig.setCreatedBy(authenticationService.getLoggedInUser());
-		projectToolConfig.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), TIME_FORMAT));
+		projectToolConfig.setUpdatedAt(DateUtil.getTodayTime().toString());
 		toolRepository.save(projectToolConfig);
 		cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
 		cacheService.clearCache(CommonConstant.CACHE_TOOL_CONFIG_MAP);
@@ -246,7 +245,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		projectTool.setApiVersion(projectToolConfig.getApiVersion());
 		projectTool.setRepoSlug(projectToolConfig.getRepoSlug());
 		projectTool.setBitbucketProjKey(projectToolConfig.getBitbucketProjKey());
-		projectTool.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), TIME_FORMAT));
+		projectTool.setUpdatedAt(DateUtil.getTodayTime().toString());
 		projectTool.setBoardQuery(projectToolConfig.getBoardQuery());
 		projectTool.setBoards(projectToolConfig.getBoards());
 		projectTool.setQueryEnabled(projectToolConfig.isQueryEnabled());
@@ -429,8 +428,8 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 			projectConfToolDto.setRepositoryName(e.getRepositoryName());
 			projectConfToolDto.setGitFullUrl(e.getGitFullUrl());
 			projectConfToolDto.setBitbucketProjKey(e.getBitbucketProjKey());
-			projectConfToolDto.setCreatedAt(e.getCreatedAt());
-			projectConfToolDto.setUpdatedAt(e.getUpdatedAt());
+			projectConfToolDto.setCreatedAt(DateUtil.tranformUTCLocalDateTimeStringToZFormat(e.getCreatedAt()));
+			projectConfToolDto.setUpdatedAt(DateUtil.tranformUTCLocalDateTimeStringToZFormat(e.getUpdatedAt()));
 			projectConfToolDto.setQueryEnabled(e.isQueryEnabled());
 			projectConfToolDto.setBoardQuery(e.getBoardQuery());
 			projectConfToolDto.setBoards(e.getBoards());
