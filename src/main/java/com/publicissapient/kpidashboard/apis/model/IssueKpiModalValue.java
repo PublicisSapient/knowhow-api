@@ -135,10 +135,10 @@ public class IssueKpiModalValue implements Serializable {
 	private Map<String, String> linkedDefefectPriority;
 
 	// Added for Defect Reopen Rate - submohan1
-	@JsonProperty("Closed Date")
+	@JsonProperty("Closed Time")
 	private String closedDate;
 
-	@JsonProperty("Reopen Date")
+	@JsonProperty("Reopen Time")
 	private String reopenDate;
 
 	@JsonProperty("Time taken to reopen")

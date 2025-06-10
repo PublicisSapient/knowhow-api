@@ -18,10 +18,11 @@
 
 package com.publicissapient.kpidashboard.apis.jira.service;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.joda.time.DateTime;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.publicissapient.kpidashboard.apis.common.service.ApplicationKPIService;
@@ -94,16 +95,18 @@ public abstract class JiraKPIService<R, S, T> extends ToolsKPIService<R, S> impl
 		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name());
 	}
 
-	public Map<String, Double> getLastNMonth(int count) {
+	public Map<String, Double> getLastNMonth(int count, Map<String, String> timeFormatMap) {
 		Map<String, Double> lastNMonth = new LinkedHashMap<>();
-		DateTime currentDate = DateTime.now();
-		String currentDateStr = currentDate.getYear() + Constant.DASH + currentDate.getMonthOfYear();
+		LocalDateTime currentDate = DateUtil.getTodayTime();
+		String currentDateStr = currentDate.getYear() + String.valueOf(currentDate.getMonth());
+		timeFormatMap.put(currentDateStr,DateUtil.tranformUTCLocalTimeToZFormat(currentDate));
 		lastNMonth.put(currentDateStr, 0.0);
-		DateTime lastMonth = DateTime.now();
+		LocalDateTime lastMonth = DateUtil.getTodayTime();
 		for (int i = 1; i < count; i++) {
 			lastMonth = lastMonth.minusMonths(1);
-			String lastMonthStr = lastMonth.getYear() + Constant.DASH + lastMonth.getMonthOfYear();
+			String lastMonthStr = lastMonth.getYear() + String.valueOf(lastMonth.getMonth());
 			lastNMonth.put(lastMonthStr, 0.0);
+			timeFormatMap.put(lastMonthStr,DateUtil.tranformUTCLocalTimeToZFormat(lastMonth));
 		}
 		return lastNMonth;
 	}

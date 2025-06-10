@@ -111,7 +111,7 @@ public class JiraKPIServiceTest {
 
 	@Test
 	public void testCalcWeekDays() {
-		assertNotNull(jiraKPIService.getLastNMonth(10));
+		assertNotNull(jiraKPIService.getLastNMonth(10, new HashMap<>()));
 	}
 
 	public static class JiraKpiServiceTestImpl extends JiraKPIService {
