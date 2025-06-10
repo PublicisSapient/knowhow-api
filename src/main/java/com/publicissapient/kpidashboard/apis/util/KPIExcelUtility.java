@@ -1409,8 +1409,8 @@ public class KPIExcelUtility {
 				if (kpiId.equalsIgnoreCase(KPICode.TICKET_COUNT_BY_PRIORITY.getKpiId())) {
 					excelData.setPriority(field);
 				}
-				excelData.setCreatedDate(DateUtil.dateTimeConverter(kanbanJiraIssue.getCreatedDate(), DateUtil.TIME_FORMAT,
-						DateUtil.DISPLAY_DATE_FORMAT));
+				excelData.setCreatedDate(
+						kanbanJiraIssue.getCreatedDate());
 				excelData.setDayWeekMonth(date);
 				excelDataList.add(excelData);
 			});
