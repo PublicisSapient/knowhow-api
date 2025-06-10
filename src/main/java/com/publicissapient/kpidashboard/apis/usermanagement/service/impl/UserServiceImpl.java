@@ -43,7 +43,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserInfoService userInfoService;
     private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
-    private static final String DOMAIN_NAME = "@publicissapient.com";
     @Override
     public UserInfo saveUserInfo(String username) {
 
@@ -65,7 +64,7 @@ public class UserServiceImpl implements UserService {
         userInfo.setUsername(username);
         userInfo.setAuthType(AuthType.SAML);
         userInfo.setAuthorities(new ArrayList<>());
-        userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
+        userInfo.setEmailAddress("");
         userInfo.setProjectsAccess(Collections.emptyList());
         
         log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
