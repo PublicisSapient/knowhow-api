@@ -596,6 +596,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 		existingConnection.setKrb5ConfigFilePath(connection.getKrb5ConfigFilePath());
 		existingConnection.setEmail(connection.getEmail());
 		existingConnection.setBrokenConnection(false);
+		existingConnection.setConnectionErrorMsg(null);
+		connection.setNotifiedOn(null);
+		connection.setNotificationCount(0);
 	}
 
 	private void saveConnection(Connection conn) {
@@ -854,7 +857,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
 		if (connection == null) return;
-
+		log.info("updating breaking connection for connection: {}",connection.getConnectionName());
 		connectionRepository.findById(connection.getId())
 							.ifPresent(existingConnection -> {
 								if (StringUtils.isEmpty(conErrorMsg)) {
@@ -885,15 +888,24 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private boolean shouldSendNotification(Connection connection) {
-		int maxCount = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
-		int frequencyDays = customApiConfig.getBrokenConnectionEmailNotificationFrequency();
+		String value = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
+		log.info("BrokenConnectionMaximumEmailNotificationCount from config: {}", value);
+		int maxCount = 0;
+		try {
+			maxCount = Integer.parseInt(value.replace("'", "").trim());
+		} catch (NumberFormatException e) {
+			log.warn("Invalid max notification count: {}", value);
+		}
 
+		int frequencyDays = Integer.parseInt(customApiConfig.getBrokenConnectionEmailNotificationFrequency());
 		if (maxCount <= 0) return false;
 
 		int count = connection.getNotificationCount();
+		log.info("NotificationCount:{}",count);
 		if (count >= maxCount) return false;
 
-		String notifiedOn = connection.getNotifiedOn();
+		String notifiedOn = Optional.of(connection)
+									.map(Connection::getNotifiedOn).orElse("");
 		if (StringUtils.isBlank(notifiedOn)) return true;
 
 		try {
@@ -950,7 +962,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private Boolean isErrorAlertNotificationEnabled(UserInfo userInfo) {
-		return Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
+		return userInfo.getNotificationEmail() != null
+			   && Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
 	}
 
 	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
@@ -966,8 +979,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *          connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
+		log.info("Validating the connection for {}",connection.getConnectionName());
 		if (connection.isBrokenConnection()) {
-			updateBreakingConnection(connection, null);
+			updateBreakingConnection(connection, connection.getConnectionErrorMsg());
 		}
 	}
 }
