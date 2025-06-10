@@ -1100,7 +1100,7 @@ public final class KpiDataHelper {
 							: changeType.equals(CommonConstant.REMOVED)
 									&& sprintUpdate.getChangedFrom().equalsIgnoreCase(sprint))
 					.forEach(sprintUpdate -> issueDateMap.put(issueKey,
-							DateUtil.localDateTimeToUTC(sprintUpdate.getUpdatedOn().toString())));
+							DateUtil.tranformUTCLocalTimeToZFormat(sprintUpdate.getUpdatedOn())));
 		});
 
 		return issueDateMap;
