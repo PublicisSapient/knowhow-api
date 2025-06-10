@@ -296,6 +296,8 @@ public enum KPICode {
 	/** Defect reopen rate kpi */
 	DEFECT_REOPEN_RATE_QUALITY("kpi190", KPISource.JIRA.name()),
 
+	LEAD_TIME_SPEED("kpi192", KPISource.JIRA.name()),
+
 	// do not remove below codes as they are required for test case
 	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()), TEST_JIRA("TEST_JIRA",
 			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name());
