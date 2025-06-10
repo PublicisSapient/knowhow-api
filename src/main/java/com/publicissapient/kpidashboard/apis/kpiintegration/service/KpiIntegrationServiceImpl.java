@@ -43,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
 import com.publicissapient.kpidashboard.apis.model.GenericKpiRecommendation;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.MDC;
@@ -364,7 +365,29 @@ public class KpiIntegrationServiceImpl {
 		return kpiElement;
 	}
 
-	public List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest, String promptPersona)
+	public ServiceResponse getProjectWiseKpiRecommendation(
+			KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
+		List<ProjectWiseKpiRecommendation> projectWiseKpiRecommendations = new ArrayList<>();
+		try {
+
+			KpiRequest kpiRequest = new KpiRequest();
+			BeanUtils.copyProperties(kpiRecommendationRequestDTO, kpiRequest);
+			if (CollectionUtils.isNotEmpty(customApiConfig.getAiRecommendationKpiList())) {
+				if (kpiRecommendationRequestDTO.getRecommendationFor() == null) {
+					return new ServiceResponse(false, "AiRecommendation", null);
+				}
+				projectWiseKpiRecommendations = getAiRecommendations(kpiRequest,
+						kpiRecommendationRequestDTO.getRecommendationFor());
+			} else {
+				projectWiseKpiRecommendations = fetchRecommendationsFromRnr(kpiRequest);
+			}
+		} catch (Exception ex) {
+			log.error("Exception hitting recommendation API", ex);
+		}
+		return new ServiceResponse(true, "Successfully Fetched Recommendations", projectWiseKpiRecommendations);
+	}
+
+	private List<ProjectWiseKpiRecommendation> getAiRecommendations(KpiRequest kpiRequest, String promptPersona)
 			throws IOException {
 		kpiRequest.setKpiIdList(customApiConfig.getAiRecommendationKpiList());
 		kpiRequest.getSelectedMap().put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, new ArrayList<>());
@@ -439,7 +462,7 @@ public class KpiIntegrationServiceImpl {
 		return Collections.singletonList(recommendation);
 	}
 
-	public List<ProjectWiseKpiRecommendation> fetchRecommendationsFromRnr(KpiRequest kpiRequest) {
+	private List<ProjectWiseKpiRecommendation> fetchRecommendationsFromRnr(KpiRequest kpiRequest) {
 		Optional<String> sprintId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT).stream()
 				.findFirst();
 		Optional<String> projectId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT).stream()
