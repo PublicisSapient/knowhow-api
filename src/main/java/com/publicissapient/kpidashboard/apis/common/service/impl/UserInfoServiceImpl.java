@@ -391,9 +391,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 			authenticationService.delete(username);
 			userTokenDeletionService.invalidateSession(username);
 			userBoardConfigService.deleteUser(username);
-			if (centralAuthService) {
-				deleteFromCentralAuthUser(username);
-			}
+//			if (centralAuthService) {
+//				deleteFromCentralAuthUser(username);
+//			}
 			cleanAllCache();
 		} catch (Exception exception) {
 			log.error("Error in Repository :  {} " + exception);
