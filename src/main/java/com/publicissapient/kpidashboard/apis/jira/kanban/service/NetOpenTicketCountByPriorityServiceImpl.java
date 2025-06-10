@@ -245,8 +245,8 @@ public class NetOpenTicketCountByPriorityServiceImpl
 			Map<String, Map<String, Set<String>>> jiraHistoryPriorityAndDateWiseIssueMap, Set<String> priorityList,
 			LocalDate currentDate) {
 		String date;
-		if (currentDate.isAfter(LocalDate.now())) {
-			date = LocalDate.now().toString();
+		if (currentDate.isAfter(DateUtil.getTodayDate())) {
+			date = DateUtil.getTodayDate().toString();
 		} else {
 			date = currentDate.toString();
 		}

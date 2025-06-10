@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.util;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -702,7 +703,9 @@ public class KPIExcelUtility {
 			excelData.setExecutionPercentage(String.valueOf(executionPercentage));
 			excelData.setPassedTest(kanbanTestExecution.getPassedTestCase().toString());
 			excelData.setPassedPercentage(String.valueOf(passPercentage));
-			excelData.setExecutionDate(kanbanTestExecution.getExecutionDate());
+			excelData.setExecutionDate(DateUtil.tranformUTCLocalTimeToZFormat(
+					LocalDateTime.parse(kanbanTestExecution.getExecutionDate() + DateUtil.ZERO_TIME_FORMAT,
+							DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT))));
 			kpiExcelData.add(excelData);
 		}
 	}
@@ -1409,8 +1412,8 @@ public class KPIExcelUtility {
 				if (kpiId.equalsIgnoreCase(KPICode.TICKET_COUNT_BY_PRIORITY.getKpiId())) {
 					excelData.setPriority(field);
 				}
-				excelData.setCreatedDate(DateUtil.dateTimeConverter(kanbanJiraIssue.getCreatedDate(), DateUtil.TIME_FORMAT,
-						DateUtil.DISPLAY_DATE_FORMAT));
+				excelData.setCreatedDate(
+						kanbanJiraIssue.getCreatedDate());
 				excelData.setDayWeekMonth(date);
 				excelDataList.add(excelData);
 			});
