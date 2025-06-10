@@ -1,4 +1,4 @@
-name: Unified_CI_Workflow  # Define the name of the workflow
+name: Unified_CI_Workflow  # Define the name of the workflows
 
 # Define when the workflow should trigger
 on:
@@ -103,7 +103,7 @@ jobs:
           echo "COMMON_VERSION=$COMMON_VERSION"
           echo "COMMON_VERSION=$COMMON_VERSION" >> $GITHUB_ENV
       
-      # ✅ Updating the common version in api project
+      # ✅ Updating the common version in api projects
       - name: Updating the common version in api project
         run: |
           mvn versions:use-dep-version \
@@ -130,7 +130,7 @@ jobs:
           chmod +x SonarQG.sh
           ./SonarQG.sh ./target/sonar/report-task.txt
 
-  # ✅ Final Job to Ensure Completion
+  # ✅ Final Job to Ensure Completions
   GitHub_CI_Complete:
     needs: [api_ci]
     if: always()
@@ -144,3 +144,4 @@ jobs:
             exit 1
           else
             echo "✅ All relevant jobs have passed."
+          fi
