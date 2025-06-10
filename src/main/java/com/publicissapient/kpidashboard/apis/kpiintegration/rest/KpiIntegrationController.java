@@ -20,16 +20,12 @@ package com.publicissapient.kpidashboard.apis.kpiintegration.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +38,6 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -86,31 +81,14 @@ public class KpiIntegrationController {
 	}
 
 	/**
-	 * @param kpiRequest
+	 * @param kpiRecommendationRequestDTO
 	 *          kpi request
 	 * @return kpi recommendation
 	 */
 	@PostMapping(value = "/kpiRecommendation", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getKpiRecommendation(
 			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
-		List<ProjectWiseKpiRecommendation> projectWiseKpiRecommendations = new ArrayList<>();
-		try {
-
-			KpiRequest kpiRequest = new KpiRequest();
-			BeanUtils.copyProperties(kpiRecommendationRequestDTO, kpiRequest);
-			if (CollectionUtils.isNotEmpty(customApiConfig.getAiRecommendationKpiList())) {
-				if (kpiRecommendationRequestDTO.getRecommendationFor() == null) {
-					return ResponseEntity.ok().body(new ServiceResponse(false, "AiRecommendation", null));
-				}
-				projectWiseKpiRecommendations = kpiIntegrationService.getAiRecommendations(kpiRequest,
-						kpiRecommendationRequestDTO.getRecommendationFor());
-			} else {
-				projectWiseKpiRecommendations = kpiIntegrationService.fetchRecommendationsFromRnr(kpiRequest);
-			}
-		} catch (Exception ex) {
-			log.error("Exception hitting recommendation API", ex);
-		}
-
-		return ResponseEntity.ok().body(new ServiceResponse(true, "Successfully Fetched Recommendations", projectWiseKpiRecommendations));
+		return ResponseEntity.ok()
+				.body(kpiIntegrationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
 	}
 }

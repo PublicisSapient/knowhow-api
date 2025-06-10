@@ -33,6 +33,7 @@ import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -166,7 +167,7 @@ public class KpiIntegrationServiceImplTest {
 		kpiRequest.setKpiIdList(Arrays.asList("kpi1", "kpi2"));
 		ProjectWiseKpiRecommendation expectedResponse = new ProjectWiseKpiRecommendation();
 		when(customApiConfig.getRnrRecommendationUrl()).thenReturn("recommendation/%s/%s/%s");
-		List<ProjectWiseKpiRecommendation> actualResponse = maturityService.getProjectWiseKpiRecommendation(kpiRequest);
+		ServiceResponse actualResponse = maturityService.getProjectWiseKpiRecommendation(kpiRequest);
 		assertNotNull(actualResponse);
 	}
 
@@ -174,6 +175,7 @@ public class KpiIntegrationServiceImplTest {
 	public void testGetProjectWiseKpiRecommendationAI() throws EntityNotFoundException, IOException {
 		KpiRecommendationRequestDTO kpiRequestReco = new KpiRecommendationRequestDTO();
 		kpiRequestReco.setIds(new String[] { "id1" });
+		kpiRequestReco.setRecommendationFor("Team Lead");
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, Arrays.asList("project1"));
 		selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, Arrays.asList("sprint1"));
@@ -198,9 +200,9 @@ public class KpiIntegrationServiceImplTest {
 		when(promptGenerator.getKpiRecommendationPrompt(any(), any()))
 				.thenReturn("Generated prompt for AI recommendation");
 		when(aiGatewayService.generateChatResponse(any())).thenReturn(chatGenerationResponseDTO);
-		List<ProjectWiseKpiRecommendation> actualResponse = maturityService
+		ServiceResponse actualResponse = maturityService
 				.getProjectWiseKpiRecommendation(kpiRequestReco);
-		assertEquals(63, actualResponse.get(0).getProjectScore());
+		assertEquals("Successfully Fetched Recommendations", actualResponse.getMessage());
 	}
 
 }
