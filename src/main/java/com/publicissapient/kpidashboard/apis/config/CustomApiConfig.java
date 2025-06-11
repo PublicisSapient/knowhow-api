@@ -219,10 +219,10 @@ public class CustomApiConfig { // NOPMD
 	private int latestKpiCommentsSummary;
 
 	@Value("${brokenConnection.MaximumEmailNotificationCount}")
-	private int brokenConnectionMaximumEmailNotificationCount;
+	private String brokenConnectionMaximumEmailNotificationCount;
 
 	@Value("${brokenConnection.EmailNotificationFrequency}")
-	private int brokenConnectionEmailNotificationFrequency;
+	private String brokenConnectionEmailNotificationFrequency;
 
 	@Value("${brokenConnection.EmailNotificationSubject}")
 	private String brokenConnectionEmailNotificationSubject;
