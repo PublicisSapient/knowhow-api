@@ -16,7 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
-import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
+import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class AiController {
 	private final SprintGoalsService sprintGoalsService;
 
 	@Autowired
-	private KpiIntegrationServiceImpl kpiIntegrationService;
+	private KpiRecommendationServiceImpl kpiRecommendationServiceImpl;
 
 	@PostMapping("/sprint-goals/summary")
 	@Operation(summary = "Summarize Sprint Goals", description = "Generates a summary of the provided sprint goals using AI")
@@ -92,6 +92,6 @@ public class AiController {
 	public ResponseEntity<ServiceResponse> getKpiRecommendation(
 			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		return ResponseEntity.ok()
-				.body(kpiIntegrationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
+				.body(kpiRecommendationServiceImpl.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
 	}
 }
