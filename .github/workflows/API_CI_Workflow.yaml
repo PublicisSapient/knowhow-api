@@ -23,7 +23,7 @@ env:
   GITHUB_HEAD_NAME: $GITHUB_HEAD_REF  # Store the head branch name
   sonartoken: ${{ secrets.SONARQUBE_TOKEN }}  # Secret for SonarQube authentication
   sonarurl: ${{ secrets.SONARURL }}  # SonarQube URL stored in secrets
-  GITHUB_TOKEN: ${{ secrets.maven_token }}  # Use the maven_token for authentication
+  #MAVEN_GH_TOKEN: ${{ secrets.MAVEN_TOKEN }} # Use the maven_token for authentication
 
 jobs:
 
@@ -58,7 +58,7 @@ jobs:
               <server>
                 <id>github</id>
                 <username>${{ github.actor }}</username>
-                <password>${{ secrets.GITHUB_TOKEN }}</password>
+                <password>${{ secrets.MAVEN_TOKEN }}</password>
               </server>
             </servers>
             <profiles>
