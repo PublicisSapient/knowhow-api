@@ -300,7 +300,7 @@ public final class FieldMappingHelper {
 			Integer previousValue = 0;
 			if (CollectionUtils.isNotEmpty(getNodeSpecificFieldHistory)) {
 				List<ConfigurationHistoryChangeLog> changeLogs = getNodeSpecificFieldHistory.stream().filter(
-						configurationHistoryChangeLog -> configurationHistoryChangeLog.getReleaseNodeId().equalsIgnoreCase(nodeId))
+						configurationHistoryChangeLog -> StringUtils.isNotEmpty(configurationHistoryChangeLog.getReleaseNodeId()) && configurationHistoryChangeLog.getReleaseNodeId().equalsIgnoreCase(nodeId))
 						.toList();
 				if (CollectionUtils.isNotEmpty(changeLogs)) {
 					ConfigurationHistoryChangeLog configurationHistoryChangeLog = changeLogs.get(changeLogs.size() - 1);
