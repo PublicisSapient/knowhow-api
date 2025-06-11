@@ -19,21 +19,13 @@
  *
  */
 
-package com.publicissapient.kpidashboard.apis.ai.model;
+package com.publicissapient.kpidashboard.apis.ai.constants;
 
-import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
-import lombok.AllArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
+public final class PromptKeys {
+	public static final String SPRINT_GOALS_PROMPT = "sprintGoalsPrompt";
 
-import lombok.Data;
+	private PromptKeys() {
+		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+	}
 
-/**
- * @author shunaray
- */
-@Data
-@AllArgsConstructor
-@Document(collection = "prompt_details")
-public class PromptDetails extends BasicModel {
-	private String key;
-	private String prompt;
 }
