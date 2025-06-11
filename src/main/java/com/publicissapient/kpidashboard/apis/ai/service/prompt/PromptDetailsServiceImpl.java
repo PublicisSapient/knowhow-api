@@ -19,21 +19,24 @@
  *
  */
 
-package com.publicissapient.kpidashboard.apis.ai.model;
+package com.publicissapient.kpidashboard.apis.ai.service.prompt;
 
-import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
-import lombok.AllArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.stereotype.Service;
+import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.apis.ai.repository.PromptDetailsRepository;
 
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-/**
- * @author shunaray
- */
-@Data
-@AllArgsConstructor
-@Document(collection = "prompt_details")
-public class PromptDetails extends BasicModel {
-	private String key;
-	private String prompt;
+import java.util.List;
+
+@RequiredArgsConstructor
+@Service
+public class PromptDetailsServiceImpl implements PromptDetailsService {
+
+	private final PromptDetailsRepository promptDetailsRepository;
+
+	@Override
+	public List<PromptDetails> getAllPrompts() {
+		return promptDetailsRepository.findAll();
+	}
 }
