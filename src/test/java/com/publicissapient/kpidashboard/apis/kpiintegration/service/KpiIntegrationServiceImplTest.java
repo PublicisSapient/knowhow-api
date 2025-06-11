@@ -19,31 +19,19 @@
 package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
-import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.web.client.RestTemplate;
 
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiMasterDataFactory;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
@@ -51,10 +39,8 @@ import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsServiceR;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceR;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceR;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
@@ -87,18 +73,6 @@ public class KpiIntegrationServiceImplTest {
 
 	@Mock
 	private HierarchyLevelService hierarchyLevelService;
-
-	@Mock
-	private CacheService cacheService;
-
-	@Mock
-	private RestTemplate restTemplate;
-
-	@Mock
-	private CustomApiConfig customApiConfig;
-
-	@Mock
-	private PromptGenerator promptGenerator;
 
 	@Mock
 	private AiGatewayService aiGatewayService;
@@ -154,55 +128,6 @@ public class KpiIntegrationServiceImplTest {
 		when(kpiMasterRepository.findByKpiIdIn(kpiIdList)).thenReturn(kpiMasterDataFactory.getSpecificKpis(kpiIdList));
 		List<KpiElement> kpiElementList = maturityService.getKpiResponses(kpiRequest);
 		assertEquals(0, kpiElementList.size());
-	}
-
-	@Test
-	public void testGetProjectWiseKpiRecommendation() {
-		KpiRecommendationRequestDTO kpiRequest = new KpiRecommendationRequestDTO();
-		kpiRequest.setIds(new String[]{"id1"});
-		Map<String, List<String>> selectedMap = new HashMap<>();
-		selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, Arrays.asList("project1"));
-		selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, Arrays.asList("sprint1"));
-		kpiRequest.setSelectedMap(selectedMap);
-		kpiRequest.setKpiIdList(Arrays.asList("kpi1", "kpi2"));
-		ProjectWiseKpiRecommendation expectedResponse = new ProjectWiseKpiRecommendation();
-		when(customApiConfig.getRnrRecommendationUrl()).thenReturn("recommendation/%s/%s/%s");
-		ServiceResponse actualResponse = maturityService.getProjectWiseKpiRecommendation(kpiRequest);
-		assertNotNull(actualResponse);
-	}
-
-	@Test
-	public void testGetProjectWiseKpiRecommendationAI() throws EntityNotFoundException, IOException {
-		KpiRecommendationRequestDTO kpiRequestReco = new KpiRecommendationRequestDTO();
-		kpiRequestReco.setIds(new String[] { "id1" });
-		kpiRequestReco.setRecommendationFor("Team Lead");
-		Map<String, List<String>> selectedMap = new HashMap<>();
-		selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, Arrays.asList("project1"));
-		selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, Arrays.asList("sprint1"));
-		kpiRequestReco.setSelectedMap(selectedMap);
-		when(customApiConfig.getAiRecommendationKpiList()).thenReturn(Arrays.asList("kpi14"));
-		when(kpiMasterRepository.findByKpiIdIn(any()))
-				.thenReturn(kpiMasterDataFactory.getSpecificKpis(Arrays.asList("kpi14")));
-		when(jiraService.processWithExposedApiToken(any())).thenReturn(Arrays.asList(kpiElement1));
-		String expectedResponse = """
-				  {
-					"project_health_value": 63,
-					"project_recommendations": [
-					  {
-						"recommendation": "",
-						"severity": ""
-					  }
-					],
-					"observations": []
-				  }
-				""";
-		ChatGenerationResponseDTO chatGenerationResponseDTO = new ChatGenerationResponseDTO(expectedResponse);
-		when(promptGenerator.getKpiRecommendationPrompt(any(), any()))
-				.thenReturn("Generated prompt for AI recommendation");
-		when(aiGatewayService.generateChatResponse(any())).thenReturn(chatGenerationResponseDTO);
-		ServiceResponse actualResponse = maturityService
-				.getProjectWiseKpiRecommendation(kpiRequestReco);
-		assertEquals("Successfully Fetched Recommendations", actualResponse.getMessage());
 	}
 
 }

@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,9 @@ public class KpiIntegrationController {
 
 	@Autowired
 	private KpiIntegrationServiceImpl kpiIntegrationService;
+
+	@Autowired
+	private KpiRecommendationServiceImpl kpiRecommendationService;
 
 	@Autowired
 	private CustomApiConfig customApiConfig;
@@ -89,6 +93,6 @@ public class KpiIntegrationController {
 	public ResponseEntity<ServiceResponse> getKpiRecommendation(
 			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		return ResponseEntity.ok()
-				.body(kpiIntegrationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
+				.body(kpiRecommendationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
 	}
 }
