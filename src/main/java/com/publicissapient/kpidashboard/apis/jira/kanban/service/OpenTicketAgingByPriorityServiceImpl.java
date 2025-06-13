@@ -2,7 +2,6 @@ package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -274,7 +274,7 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 		initializeRangeMapForProjects(rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
 		projectWiseJiraIssueList.forEach(issue -> {
-			long daysBetween = DAYS.between(KpiDataHelper.convertStringToDate(issue.getCreatedDate()), LocalDate.now());
+			long daysBetween = DAYS.between(KpiDataHelper.convertStringToDate(issue.getCreatedDate()), DateUtil.getTodayTime());
 			Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
 			String range;
 			if (null == monthRangeMap.get(monthsBetween)) {

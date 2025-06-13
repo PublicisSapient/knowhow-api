@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.zephyr.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -185,12 +186,12 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 
 			if (MapUtils.isNotEmpty(existingTestExecutionsByDates)) {
 
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				List<DataCount> dataCounts = new ArrayList<>();
 
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 					// fetch date range based on period for which request came
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
 							kpiRequest.getDuration());
 
 					String xAxisDataPointName = getXAxisDataPointName(dateRange, kpiRequest);
@@ -269,12 +270,12 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 	private String getXAxisDataPointName(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.localDateTimeConverter(dateRange.getStartDate()) + " to " +
-					DateUtil.localDateTimeConverter(dateRange.getEndDate());
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}

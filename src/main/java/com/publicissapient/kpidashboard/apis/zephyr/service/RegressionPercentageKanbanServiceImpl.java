@@ -66,8 +66,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RegressionPercentageKanbanServiceImpl extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String TESTCASEKEY = "testCaseData";
 	private static final String AUTOMATED_TESTCASE_KEY = "automatedTestCaseData";
 	private static final String AUTOMATED = "Regression test cases automated";
@@ -144,13 +142,7 @@ public class RegressionPercentageKanbanServiceImpl extends ZephyrKPIService<Doub
 	@SuppressWarnings("unchecked")
 	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
 			KpiRequest kpiRequest) {
-
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest); // cs
-
-		String startDate = dateRange.getStartDate().format(DATE_FORMATTER);
-		String endDate = dateRange.getEndDate().format(DATE_FORMATTER);
-
-		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 
 		kpiWithoutFilter(resultMap, mapTmp, leafNodeList, kpiElement, kpiRequest);
 	}
@@ -172,20 +164,20 @@ public class RegressionPercentageKanbanServiceImpl extends ZephyrKPIService<Doub
 			List<TestCaseDetails> automatedTest = automated.get(basicProjectConfId);
 
 			if (CollectionUtils.isNotEmpty(automatedTest) || CollectionUtils.isNotEmpty(totalTest)) {
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				List<DataCount> dc = new ArrayList<>();
 
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 					Map<String, Object> hoverMap = new LinkedHashMap<>();
 					// fetch date range based on period for which request came
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
 							kpiRequest.getDuration());
 
 					List<TestCaseDetails> totalTestList = filterKanbanTotalDataBasedOnStartAndEndDate(totalTest,
-							dateRange.getEndDate());
+							dateRange.getEndDateTime());
 
 					List<TestCaseDetails> automatedTestList = filterKanbanAutomatedDataBasedOnStartAndEndDate(automatedTest,
-							dateRange.getEndDate());
+							dateRange.getEndDateTime());
 
 					setHoverMap(automatedTestList, totalTestList, hoverMap, AUTOMATED, TOTAL);
 
@@ -230,34 +222,29 @@ public class RegressionPercentageKanbanServiceImpl extends ZephyrKPIService<Doub
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
 
 	private List<TestCaseDetails> filterKanbanTotalDataBasedOnStartAndEndDate(List<TestCaseDetails> tests,
-			LocalDate endDate) {
-		Predicate<TestCaseDetails> predicate = issue -> LocalDateTime
-				.parse(issue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER).isBefore(endDate.atTime(23, 59, 59));
-		List<TestCaseDetails> filteredTests = tests.stream().filter(predicate).collect(Collectors.toList());
-		return filteredTests;
+			LocalDateTime endDate) {
+		Predicate<TestCaseDetails> predicate = issue -> DateUtil.convertToUTCLocalDateTime(issue.getCreatedDate())
+				.isBefore(endDate);
+		return tests.stream().filter(predicate).collect(Collectors.toList());
 	}
 
 	private List<TestCaseDetails> filterKanbanAutomatedDataBasedOnStartAndEndDate(List<TestCaseDetails> tests,
-			LocalDate endDate) {
-		Predicate<TestCaseDetails> predicate = issue -> StringUtils.isNotEmpty(issue.getTestAutomatedDate()) &&
-				LocalDateTime.parse(issue.getTestAutomatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
-						.isBefore(endDate.atTime(23, 59, 59));
-		List<TestCaseDetails> filteredTests = Optional.ofNullable(tests).orElse(Collections.emptyList()).stream()
-				.filter(predicate).collect(Collectors.toList());
-		return filteredTests;
+			LocalDateTime endDate) {
+		Predicate<TestCaseDetails> predicate = issue -> StringUtils.isNotEmpty(issue.getTestAutomatedDate())
+				&& DateUtil.convertToUTCLocalDateTime(issue.getTestAutomatedDate()).isBefore(endDate);
+		return Optional.ofNullable(tests).orElse(Collections.emptyList()).stream().filter(predicate)
+				.collect(Collectors.toList());
 	}
 
 	/**

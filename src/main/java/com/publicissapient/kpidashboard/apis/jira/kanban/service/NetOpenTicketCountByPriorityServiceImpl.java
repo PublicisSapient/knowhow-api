@@ -1,6 +1,7 @@
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -186,10 +187,11 @@ public class NetOpenTicketCountByPriorityServiceImpl
 			if (MapUtils.isNotEmpty(jiraHistoryPriorityAndDateWiseIssueMap)) {
 				Set<String> projectWisePriorityList = new HashSet<>();
 				projectWisePriorityList.addAll(jiraHistoryPriorityAndDateWiseIssueMap.keySet());
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+							currentDate,
 							kpiRequest.getDuration());
 
 					Map<String, Long> projectWisePriorityCountMap = filterKanbanDataBasedOnDateAndPriorityWise(
@@ -243,8 +245,8 @@ public class NetOpenTicketCountByPriorityServiceImpl
 			Map<String, Map<String, Set<String>>> jiraHistoryPriorityAndDateWiseIssueMap, Set<String> priorityList,
 			LocalDate currentDate) {
 		String date;
-		if (currentDate.isAfter(LocalDate.now())) {
-			date = LocalDate.now().toString();
+		if (currentDate.isAfter(DateUtil.getTodayDate())) {
+			date = DateUtil.getTodayDate().toString();
 		} else {
 			date = currentDate.toString();
 		}
@@ -292,7 +294,7 @@ public class NetOpenTicketCountByPriorityServiceImpl
 	 * @param currentDate
 	 */
 	@NotNull
-	private LocalDate getNextRangeDate(KpiRequest kpiRequest, LocalDate currentDate) {
+	private LocalDateTime getNextRangeDate(KpiRequest kpiRequest, LocalDateTime currentDate) {
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
 			currentDate = currentDate.minusWeeks(1);
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
@@ -311,15 +313,14 @@ public class NetOpenTicketCountByPriorityServiceImpl
 	 */
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
-		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
@@ -362,7 +363,7 @@ public class NetOpenTicketCountByPriorityServiceImpl
 				MapUtils.isNotEmpty(jiraHistoryPriorityAndDateWiseIssueMap)) {
 			String dateProjectKey = node.getProjectHierarchy().getNodeDisplayName();
 			String date = getRange(
-					KpiDataHelper.getStartAndEndDateForDataFiltering(LocalDate.now(), kpiRequest.getDuration()), kpiRequest);
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(DateUtil.getTodayTime(), kpiRequest.getDuration()), kpiRequest);
 			KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(dateProjectKey, jiraHistoryPriorityAndDateWiseIssueMap,
 					projectWisePriorityList, kanbanJiraIssues, excelData, date, KPICode.TICKET_COUNT_BY_PRIORITY.getKpiId());
 		}

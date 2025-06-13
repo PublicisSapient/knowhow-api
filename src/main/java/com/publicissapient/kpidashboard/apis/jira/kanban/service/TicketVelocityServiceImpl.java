@@ -18,7 +18,9 @@
 
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -166,13 +168,13 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 			Map<String, List<KanbanIssueCustomHistory>> dateWiseStoryMap = projectAndDateWiseStoryMap
 					.get(basicProjectConfigId);
 			if (MapUtils.isNotEmpty(dateWiseStoryMap)) {
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				List<DataCount> dataCount = new ArrayList<>();
 
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 					List<KanbanIssueCustomHistory> kanbanIssueCustomHistories = new ArrayList<>();
 					String projectName = node.getProjectFilter().getName();
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
 							kpiRequest.getDuration());
 
 					Double capacity = filterDataBasedOnStartAndEndDate(dateWiseStoryMap, dateRange, kanbanIssueCustomHistories);
@@ -226,7 +228,7 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 	 * @param currentDate
 	 * @return
 	 */
-	private LocalDate getNextRangeDate(KpiRequest kpiRequest, LocalDate currentDate) {
+	private LocalDateTime getNextRangeDate(KpiRequest kpiRequest, LocalDateTime currentDate) {
 		if ((CommonConstant.WEEK).equalsIgnoreCase(kpiRequest.getDuration())) {
 			currentDate = currentDate.minusWeeks(1);
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
@@ -246,14 +248,13 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+				   + DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}

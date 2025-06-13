@@ -272,14 +272,14 @@ public final class KpiDataHelper {
 	public static CustomDateRange getStartAndEndDate(KpiRequest kpiRequest) {
 		int dataPoint = (int) ObjectUtils.defaultIfNull(kpiRequest.getKanbanXaxisDataPoints(), 7) + 1;
 		CustomDateRange cdr = new CustomDateRange();
-		cdr.setEndDate(LocalDate.now());
+		cdr.setEndDate(DateUtil.getTodayDate());
 		LocalDate startDate = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			startDate = LocalDate.now().minusWeeks(dataPoint);
+			startDate = DateUtil.getTodayDate().minusWeeks(dataPoint);
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			startDate = LocalDate.now().minusMonths(dataPoint);
+			startDate = DateUtil.getTodayDate().minusMonths(dataPoint);
 		} else {
-			startDate = LocalDate.now().minusDays(dataPoint);
+			startDate = DateUtil.getTodayDate().minusDays(dataPoint);
 		}
 		cdr.setStartDate(startDate);
 		return cdr;
