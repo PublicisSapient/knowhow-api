@@ -150,7 +150,7 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
                         if (dateCount.keySet().contains(yearMonth)) {
                             projectVersionList.add(pv);
                             dateCount.put(yearMonth, dateCount.get(yearMonth) + 1);
-                            formatDate.put(yearMonth, DateUtil.tranformUTCLocalTimeToZFormat(localDateTime)); //formatDate
+                            formatDate.put(yearMonth, DateUtil.convertToMonthYearFormat(localDateTime.toString())); //formatDate
                         }
                     }
                 }
