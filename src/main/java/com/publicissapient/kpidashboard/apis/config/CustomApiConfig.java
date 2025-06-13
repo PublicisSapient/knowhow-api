@@ -360,6 +360,11 @@ public class CustomApiConfig { // NOPMD
 	@Getter
 	private int userSessionsExpiresOn;
 
+	@Value("${ai-recommendation-kpi-list}")
+	@Getter
+	@Setter
+	private List<String> aiRecommendationKpiList;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}

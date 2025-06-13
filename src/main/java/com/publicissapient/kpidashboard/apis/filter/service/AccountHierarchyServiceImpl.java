@@ -129,18 +129,7 @@ public class AccountHierarchyServiceImpl
 			if (acc.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_RELEASE)) {
 				data = AccountFilteredData.builder().nodeId(acc.getNodeId()).nodeName(acc.getNodeName())
 						.nodeDisplayName(acc.getNodeDisplayName()).labelName(acc.getHierarchyLevelId()).parentId(acc.getParentId())
-						.releaseState(acc.getReleaseState())
-                        .releaseStartDate(StringUtils.isNotEmpty(acc.getBeginDate())
-                                ? DateUtil.tranformUTCLocalDateTimeStringToZFormat(
-                                DateUtil.convertJodaDateTimeToLocalDateTime(DateTime.parse(acc.getBeginDate()))
-                                        .toString())
-                                : acc.getBeginDate())
-                        .releaseEndDate(StringUtils.isNotEmpty(acc.getEndDate())
-                                ? DateUtil.tranformUTCLocalDateTimeStringToZFormat(
-                                DateUtil.convertJodaDateTimeToLocalDateTime(DateTime.parse(acc.getEndDate()))
-                                        .toString())
-                                : acc.getEndDate())
-                        .level(level).build();
+						.releaseState(acc.getReleaseState()).releaseStartDate(acc.getBeginDate()).releaseEndDate(acc.getEndDate()).level(level).build();
 			} else {
 				data = AccountFilteredData.builder().nodeId(acc.getNodeId()).nodeName(acc.getNodeName())
 						.nodeDisplayName(acc.getNodeDisplayName()).labelName(acc.getHierarchyLevelId()).parentId(acc.getParentId())
