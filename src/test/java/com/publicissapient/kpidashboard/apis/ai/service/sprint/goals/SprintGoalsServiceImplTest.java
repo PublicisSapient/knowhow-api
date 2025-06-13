@@ -20,11 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
+import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
+import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +35,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.publicissapient.kpidashboard.apis.ai.config.sprint.SprintPromptConfig;
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
 import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
@@ -44,7 +46,7 @@ import jakarta.ws.rs.InternalServerErrorException;
 class SprintGoalsServiceImplTest {
 
 	@Mock
-	private SprintPromptConfig sprintPromptConfig;
+	private CacheService cacheService;
 
 	@Mock
 	private AiGatewayService aiGatewayService;
@@ -54,9 +56,9 @@ class SprintGoalsServiceImplTest {
 
 	@BeforeEach
 	public void setUp() {
-		SprintPromptConfig.Goals goals = mock(SprintPromptConfig.Goals.class);
-		when(sprintPromptConfig.getGoals()).thenReturn(goals);
-		when(goals.getPrompt()).thenReturn("Summarize the following sprint goals:");
+		PromptDetails promptDetails = new PromptDetails(PromptKeys.SPRINT_GOALS_PROMPT, "Prompt for sprint goals");
+		when(cacheService.getPromptDetails()).thenReturn(Map.of(PromptKeys.SPRINT_GOALS_PROMPT, promptDetails));
+
 	}
 
 	@Test
@@ -73,7 +75,7 @@ class SprintGoalsServiceImplTest {
 
 	@Test
 	void testSummarizeSprintGoalsNoPromptConfig() {
-		when(sprintPromptConfig.getGoals().getPrompt()).thenReturn(null);
+		when(cacheService.getPromptDetails()).thenReturn(Map.of());
 
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
 
