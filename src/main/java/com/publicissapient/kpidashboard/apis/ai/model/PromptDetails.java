@@ -23,6 +23,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author shunaray
  */
@@ -31,5 +33,17 @@ import lombok.Data;
 @Document(collection = "prompt_details")
 public class PromptDetails extends BasicModel {
 	private String key;
-	private String prompt;
+	private String context;
+	private String task;
+	private List<String> instructions;
+	private String input;
+	private String outputFormat;
+	private List<String> placeHolders;
+
+	@Override
+	public String toString() {
+		return "Prompt{" + ", context='" + context + '\'' + ", task='" + task + '\'' + ", instructions=" + instructions
+				+ ", input='" + input + '\'' + ", outputFormat='" + outputFormat + '\'' + ", placeHolders="
+				+ placeHolders + '}';
+	}
 }
