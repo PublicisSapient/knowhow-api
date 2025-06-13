@@ -898,9 +898,9 @@ public class KPIExcelUtility {
 					setSquads(excelData, epic);
 					String month = Constant.EMPTY_STRING;
 					String epicEndDate = Constant.EMPTY_STRING;
-					if (epic.getChangeDate() != null) {
-						month = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getChangeDate());
-						epicEndDate = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getChangeDate());
+					if (epic.getEpicEndDate() != null) {
+						month = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getEpicEndDate());
+						epicEndDate = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getEpicEndDate());
 
 					}
 					excelData.setMonth(month);
@@ -947,9 +947,9 @@ public class KPIExcelUtility {
 					excelData.setCostOfDelay(epic.getCostOfDelay());
 					String month = Constant.EMPTY_STRING;
 					String epicEndDate = Constant.EMPTY_STRING;
-					if (epic.getChangeDate() != null) {
-						month = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getChangeDate());
-						epicEndDate = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getChangeDate());
+					if (epic.getEpicEndDate() != null) {
+						month = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getEpicEndDate());
+						epicEndDate = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getEpicEndDate());
 					}
 					excelData.setMonth(month);
 					excelData.setEpicEndDate(epicEndDate);
@@ -1589,7 +1589,7 @@ public class KPIExcelUtility {
 		jiraIssueModalObject.setPriority(jiraIssue.getPriority());
 		KPIExcelUtility.populateAssignee(jiraIssue, jiraIssueModalObject);
 		setIssueSizeForIssueKpiModal(jiraIssue, fieldMapping, jiraIssueModalObject);
-        jiraIssueModalObject.setDueDate((StringUtils.isNotEmpty(jiraIssue.getDueDate())) ? jiraIssue.getDueDate() : "-");
+        jiraIssueModalObject.setDueDate(DateUtil.convertToGenericString(jiraIssue.getDueDate()));
         jiraIssueModalObject.setChangeDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getChangeDate()));
         jiraIssueModalObject
                 .setCreatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getCreatedDate()));
@@ -1621,11 +1621,7 @@ public class KPIExcelUtility {
 			jiraIssueModalObject.setRemainingTimeInDays(Constant.BLANK);
 		}
 		jiraIssueModalObject.setTimeSpentInMinutes(CommonUtils.convertIntoDays(Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0)));
-		if (jiraIssue.getDevDueDate() != null)
-			jiraIssueModalObject.setDevDueDate(jiraIssue.getDevDueDate());
-		else
-			jiraIssueModalObject.setDevDueDate(Constant.BLANK);
-
+		jiraIssueModalObject.setDevDueDate(DateUtil.convertToGenericString(jiraIssue.getDevDueDate()));
 		if (CollectionUtils.isNotEmpty(fieldMapping.getAdditionalFilterConfig())) {
 			if (CollectionUtils.isNotEmpty(jiraIssue.getAdditionalFilters())) {
 				jiraIssueModalObject.setSquads(jiraIssue.getAdditionalFilters().stream()
@@ -1664,8 +1660,7 @@ public class KPIExcelUtility {
 		issueKpiModalValue.setPriority(jiraIssue.getPriority());
 		KPIExcelUtility.populateAssignee(jiraIssue, issueKpiModalValue);
 		setIssueSizeForIssueKpiModal(jiraIssue, fieldMapping, issueKpiModalValue);
-		issueKpiModalValue
-				.setDueDate(StringUtils.isNotEmpty(jiraIssue.getDueDate()) ? jiraIssue.getDueDate() : Constant.BLANK);
+		issueKpiModalValue.setDueDate(DateUtil.convertToGenericString(jiraIssue.getDueDate()));
 		issueKpiModalValue.setChangeDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getChangeDate()));
 		issueKpiModalValue.setCreatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getCreatedDate()));
 		issueKpiModalValue.setUpdatedDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(jiraIssue.getUpdateDate()));
@@ -1697,9 +1692,7 @@ public class KPIExcelUtility {
 			issueKpiModalValue.setRemainingTime(0);
 		}
         issueKpiModalValue.setTimeSpentInMinutes(CommonUtils.convertIntoDays(Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(),0)));
-		issueKpiModalValue.setDevDueDate(
-				StringUtils.isNotEmpty(jiraIssue.getDevDueDate()) ? jiraIssue.getDevDueDate() : Constant.BLANK);
-
+		issueKpiModalValue.setDevDueDate(DateUtil.convertToGenericString(jiraIssue.getDevDueDate()));
 		if (CollectionUtils.isNotEmpty(fieldMapping.getAdditionalFilterConfig())) {
 			if (CollectionUtils.isNotEmpty(jiraIssue.getAdditionalFilters())) {
 				issueKpiModalValue
@@ -2238,7 +2231,7 @@ public class KPIExcelUtility {
 					excelData.setStoryPoint(roundingOff(totalOriginalEstimate / fieldMapping.getStoryPointToHourMapping()) + "/" +
 							roundingOff(totalOriginalEstimate) + " hrs");
 				}
-                excelData.setDueDate((StringUtils.isNotEmpty(jiraIssue.getDueDate())) ? jiraIssue.getDueDate(): "-");
+				excelData.setDueDate(DateUtil.convertToGenericString(jiraIssue.getDueDate()));
 				kpiExcelData.add(excelData);
 			});
 		}
