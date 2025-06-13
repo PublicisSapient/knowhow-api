@@ -18,7 +18,9 @@
 package com.publicissapient.kpidashboard.apis.ai.constants;
 
 public final class PromptKeys {
-	public static final String SPRINT_GOALS_PROMPT = "sprintGoalsPrompt";
+	public static final String SPRINT_GOALS_SUMMARY = "sprint-goals-summary";
+	public static final String KPI_CORRELATION_ANALYSIS = "kpi-Correlation-Analysis";
+	public static final String KPI_RECOMMENDATION_PROMPT = "kpi-recommendation";
 
 	private PromptKeys() {
 		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
