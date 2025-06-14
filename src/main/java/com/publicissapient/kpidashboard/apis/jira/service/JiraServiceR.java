@@ -126,7 +126,7 @@ public class JiraServiceR {
 					return responseList;
 				}
 				List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
-				if (CollectionUtils.isNotEmpty(cachedData))
+				if (CollectionUtils.isNotEmpty(cachedData) && referFromProjectCache)
 					return cachedData;
 
 				TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,

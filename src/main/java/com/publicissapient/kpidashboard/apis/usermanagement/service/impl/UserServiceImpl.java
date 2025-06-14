@@ -43,9 +43,10 @@ public class UserServiceImpl implements UserService {
 
     private final UserInfoService userInfoService;
     private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
-
+    private static final String DOMAIN_NAME = "@publicisgroupe.net";
     @Override
     public UserInfo saveUserInfo(String username) {
+
         if (StringUtils.isEmpty(username)) {
             log.error(USER_NAME_CANNOT_NULL);
             throw new IllegalArgumentException(USER_NAME_CANNOT_NULL);
@@ -53,18 +54,18 @@ public class UserServiceImpl implements UserService {
         log.info("Saving user information for username: {}", username);
         // Check if user already exists with SAML auth type
         UserInfo existingUser = userInfoService.getUserInfo(username, AuthType.SAML);
-        
+
         if (!Objects.isNull(existingUser)) {
             log.info("User already exists with username: {} and authType: {}", username, AuthType.SAML);
             return existingUser;
         }
-        
+
         // Create new user with SAML auth type
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(username);
         userInfo.setAuthType(AuthType.SAML);
         userInfo.setAuthorities(new ArrayList<>());
-        userInfo.setEmailAddress("");
+        userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
         userInfo.setProjectsAccess(Collections.emptyList());
         
         log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
