@@ -21,7 +21,6 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.client.MongoCollection;
-import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -30,7 +29,7 @@ import io.mongock.api.annotations.RollbackExecution;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_CORRELATION_ANALYSIS;
+import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT;
 import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_RECOMMENDATION_PROMPT;
 import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.SPRINT_GOALS_SUMMARY;
 
@@ -50,7 +49,7 @@ public class PromptDetailsChangeUnit {
 	public void execution() {
 		MongoCollection<Document> collection = mongoTemplate.getCollection(PROMPT_DETAILS_COLLECTION);
 		collection.deleteMany(new Document("key", new Document("$in",
-				Arrays.asList(KPI_CORRELATION_ANALYSIS, KPI_RECOMMENDATION_PROMPT, SPRINT_GOALS_SUMMARY))));
+				Arrays.asList(KPI_CORRELATION_ANALYSIS_REPORT, KPI_RECOMMENDATION_PROMPT, SPRINT_GOALS_SUMMARY))));
 
 	}
 
@@ -70,7 +69,7 @@ public class PromptDetailsChangeUnit {
 				.append("outputFormat", "A concise and professional bulleted list.")
 				.append("placeHolders", List.of("SPRINT_GOALS_PLACEHOLDER"));
 
-		Document kpiCorrelationAnalysis = new Document().append("key", KPI_CORRELATION_ANALYSIS).append(CONTEXT,
+		Document kpiCorrelationAnalysis = new Document().append("key", KPI_CORRELATION_ANALYSIS_REPORT).append(CONTEXT,
 				"Below is the “analysis‐report” that summarizes the comprehensive pair–by–pair correlation analysis among the seven key‐performance indicator (KPI) columns on our multi–sprint project dataset. In this example we assume that all KPI values were measured using a Pearson–based procedure and that for each computed correlation a “weight” (an accuracy or reliability measure on a scale from 0 to 1, with values nearer 1 indicating very high confidence given the large number of sprints in the dataset) has been derived. (In our analysis no KPI was excluded and all 7×7 combinations – including the “self–correlations” – are shown.)\n")
 				.append("task",
 						"Analyze and interpret the correlation matrix of KPIs to identify strong relationships and potential areas of concern in project performance.")

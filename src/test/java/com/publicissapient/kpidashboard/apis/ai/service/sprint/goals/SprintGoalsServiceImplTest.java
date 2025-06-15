@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.ai.service.sprint.goals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
@@ -27,7 +28,9 @@ import java.util.Map;
 
 import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +49,7 @@ import jakarta.ws.rs.InternalServerErrorException;
 class SprintGoalsServiceImplTest {
 
 	@Mock
-	private CacheService cacheService;
+	private PromptGenerator promptGenerator;
 
 	@Mock
 	private AiGatewayService aiGatewayService;
@@ -55,14 +58,18 @@ class SprintGoalsServiceImplTest {
 	private SprintGoalsServiceImpl sprintGoalsService;
 
 	@BeforeEach
-	public void setUp() {
-		PromptDetails promptDetails = new PromptDetails(PromptKeys.SPRINT_GOALS_PROMPT, "Prompt for sprint goals");
-		when(cacheService.getPromptDetails()).thenReturn(Map.of(PromptKeys.SPRINT_GOALS_PROMPT, promptDetails));
+	public void setUp() throws EntityNotFoundException {
+		PromptDetails promptDetails = new PromptDetails(PromptKeys.SPRINT_GOALS_SUMMARY, "Prompt for sprint goals",
+				"Summarize the sprint goals", List.of("Please summarize the sprint goals provided."),
+				"SPRINT_GOALS_PLACEHOLDER", "Summary format", List.of("SPRINT_GOALS_PLACEHOLDER"));
+
+		when(promptGenerator.getPromptDetails(any())).thenReturn(promptDetails);
+		sprintGoalsService = new SprintGoalsServiceImpl(promptGenerator, aiGatewayService);
 
 	}
 
 	@Test
-	void testSummarizeSprintGoalsSuccess() {
+	void testSummarizeSprintGoalsSuccess() throws EntityNotFoundException {
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
 		ChatGenerationResponseDTO chatResponse = new ChatGenerationResponseDTO("Summary of goals");
 		when(aiGatewayService.generateChatResponse(anyString())).thenReturn(chatResponse);
@@ -74,8 +81,8 @@ class SprintGoalsServiceImplTest {
 	}
 
 	@Test
-	void testSummarizeSprintGoalsNoPromptConfig() {
-		when(cacheService.getPromptDetails()).thenReturn(Map.of());
+	void testSummarizeSprintGoalsNoPromptConfig() throws EntityNotFoundException {
+		when(promptGenerator.getPromptDetails(any())).thenReturn(null);
 
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
 
@@ -87,6 +94,8 @@ class SprintGoalsServiceImplTest {
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
 		when(aiGatewayService.generateChatResponse(anyString())).thenReturn(new ChatGenerationResponseDTO(""));
 
-		assertThrows(InternalServerErrorException.class, () -> sprintGoalsService.summarizeSprintGoals(requestDTO));
+		InternalServerErrorException exception = assertThrows(InternalServerErrorException.class,
+				() -> sprintGoalsService.summarizeSprintGoals(requestDTO));
+		assertEquals("Could not process the sprint goals summarization.", exception.getMessage());
 	}
 }
