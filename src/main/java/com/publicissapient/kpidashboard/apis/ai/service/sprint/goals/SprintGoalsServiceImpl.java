@@ -21,7 +21,8 @@ import java.util.Objects;
 
 import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
@@ -41,19 +42,19 @@ public class SprintGoalsServiceImpl implements SprintGoalsService {
 
 	private static final String COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR = "Could not process the sprint goals summarization.";
 
-	private final CacheService cacheService;
+	private final PromptGenerator promptGenerator;
 
 	private final AiGatewayService aiGatewayService;
 
 	@Override
 	public SummarizeSprintGoalsResponseDTO summarizeSprintGoals(
-			SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) {
-		PromptDetails sprintGoalPrompt = cacheService.getPromptDetails().get(PromptKeys.SPRINT_GOALS_PROMPT);
-		if (Objects.isNull(sprintGoalPrompt) || StringUtils.isEmpty(sprintGoalPrompt.getPrompt())) {
+			SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws EntityNotFoundException {
+		PromptDetails sprintGoalPrompt = promptGenerator.getPromptDetails(PromptKeys.SPRINT_GOALS_SUMMARY);
+		if (Objects.isNull(sprintGoalPrompt) || StringUtils.isEmpty(sprintGoalPrompt.toString())) {
 			log.error("{} No sprint prompt was found", COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR);
 			throw new InternalServerErrorException(COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR);
 		}
-		String prompt = String.format("%s%n%s", sprintGoalPrompt.getPrompt(),
+		String prompt = sprintGoalPrompt.toString().replace("SPRINT_GOALS_PLACEHOLDER",
 				String.join("\n", summarizeSprintGoalsRequestDTO.sprintGoals()));
 		ChatGenerationResponseDTO chatGenerationResponseDTO = aiGatewayService.generateChatResponse(prompt);
 		if (Objects.isNull(chatGenerationResponseDTO) || StringUtils.isEmpty(chatGenerationResponseDTO.content())) {

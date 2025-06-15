@@ -42,8 +42,7 @@ public class PromptDetails extends BasicModel {
 
 	@Override
 	public String toString() {
-		return "Prompt{" + ", context='" + context + '\'' + ", task='" + task + '\'' + ", instructions=" + instructions
-				+ ", input='" + input + '\'' + ", outputFormat='" + outputFormat + '\'' + ", placeHolders="
-				+ placeHolders + '}';
+		return "{" + "context='" + context + '\'' + ", task='" + task + '\'' + ", instructions=" + instructions
+				+ ", input='" + input + '\'' + ", outputFormat='" + outputFormat + '\'' + '}';
 	}
 }
