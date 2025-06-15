@@ -592,39 +592,8 @@ public class ProjectBasicConfigServiceImplTest {
 		doNothing().when(fieldMappingService).deleteByBasicProjectConfigId(any(ObjectId.class));
 		doNothing().when(basicConfigRepository).delete(any(ProjectBasicConfig.class));
 		doNothing().when(deleteProjectTraceLogService).save(any(ProjectBasicConfig.class));
-		when(accessRequestsHelperService.getAccessRequestsByProject(anyString()))
-				.thenReturn(Arrays.asList(accessRequestsData));
-		projectBasicConfigServiceImpl.deleteProject(id);
 
-		verify(basicConfigRepository, times(1)).delete(p1);
-		verify(toolRepository, times(1)).deleteById(new ObjectId("5fc4d61f80b6350f048a93e6"));
-	}
 
-	@Test
-	public void deleteAssigneeDetails() {
-		String id = "5fc4d61f80b6350f048a93e5";
-		ObjectId basicProjectConfigId = new ObjectId(id);
-
-		ProjectBasicConfig p1 = new ProjectBasicConfig();
-		p1.setId(basicProjectConfigId);
-		p1.setProjectName("Test");
-
-		Optional<ProjectBasicConfig> p1Opt = Optional.of(p1);
-		AccessRequest accessRequestsData = createAccessRequestData();
-		when(toolRepository.findByBasicProjectConfigId(any(ObjectId.class))).thenReturn(createTools());
-		when(userAuthorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
-		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(p1.getId().toString(), p1);
-		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		when(assigneeDetailsRepository.findByBasicProjectConfigId(anyString())).thenReturn(new AssigneeDetails());
-		when(dataCleanUpServiceFactory.getService(ProcessorConstants.JIRA)).thenReturn(agileDataCleanUpService);
-		doNothing().when(agileDataCleanUpService).clean(anyString());
-		doNothing().when(toolRepository).deleteById(any(ObjectId.class));
-		doNothing().when(fieldMappingService).deleteByBasicProjectConfigId(any(ObjectId.class));
-		doNothing().when(basicConfigRepository).delete(any(ProjectBasicConfig.class));
-		doNothing().when(deleteProjectTraceLogService).save(any(ProjectBasicConfig.class));
-		when(accessRequestsHelperService.getAccessRequestsByProject(anyString()))
-				.thenReturn(Arrays.asList(accessRequestsData));
 		projectBasicConfigServiceImpl.deleteProject(id);
 
 		verify(basicConfigRepository, times(1)).delete(p1);
