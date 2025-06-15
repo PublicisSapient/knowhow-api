@@ -363,7 +363,7 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 
 	@Override
 	public List<AccessRequest> getAccessRequestsByProject(String basicProjectConfigId) {
-		return repository.findPendingAccessRequestsByAccessItemId(basicProjectConfigId);
+		return repository.findAccessRequestsByAccessItemId(basicProjectConfigId);
 	}
 
 	@Override
