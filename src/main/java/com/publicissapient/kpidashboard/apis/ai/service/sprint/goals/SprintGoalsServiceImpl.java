@@ -16,16 +16,18 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service.sprint.goals;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
+import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
+import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
+import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.config.sprint.SprintPromptConfig;
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 
 import jakarta.ws.rs.InternalServerErrorException;
 import lombok.AllArgsConstructor;
@@ -40,11 +42,11 @@ public class SprintGoalsServiceImpl implements SprintGoalsService {
 
 	private final SprintPromptConfig sprintGoalsPromptConfig;
 
-	private final AiGatewayService aiGatewayService;
+	private final AiGatewayClient aiGatewayClient;
 
 	@Override
 	public SummarizeSprintGoalsResponseDTO summarizeSprintGoals(
-			SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) {
+			SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws IOException {
 		if (Objects.isNull(sprintGoalsPromptConfig.getGoals())
 				|| StringUtils.isEmpty(sprintGoalsPromptConfig.getGoals().getPrompt())) {
 			log.error(String.format("%s No prompt configuration was found",
@@ -53,7 +55,8 @@ public class SprintGoalsServiceImpl implements SprintGoalsService {
 		}
 		String prompt = String.format("%s%n%s", sprintGoalsPromptConfig.getGoals().getPrompt(),
 				String.join("\n", summarizeSprintGoalsRequestDTO.sprintGoals()));
-		ChatGenerationResponseDTO chatGenerationResponseDTO = aiGatewayService.generateChatResponse(prompt);
+		ChatGenerationResponseDTO chatGenerationResponseDTO = aiGatewayClient
+				.generate(ChatGenerationRequest.builder().prompt(prompt).build());
 		if (Objects.isNull(chatGenerationResponseDTO) || StringUtils.isEmpty(chatGenerationResponseDTO.content())) {
 			log.error(String.format("%s. Ai Gateway returned a null or empty response",
 					COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR));
