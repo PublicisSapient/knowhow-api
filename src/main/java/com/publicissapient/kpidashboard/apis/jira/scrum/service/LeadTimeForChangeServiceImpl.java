@@ -530,7 +530,8 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 		leadTimeChangeData.setStoryID(jiraIssueHistoryData.getStoryID());
 		leadTimeChangeData.setUrl(jiraIssueHistoryData.getUrl());
 		leadTimeChangeData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
-		leadTimeChangeData.setReleaseDate(DateUtil.tranformUTCLocalTimeToZFormat(releaseDate.get()));
+		leadTimeChangeData.setReleaseDate(
+				DateUtil.dateTimeConverter(releaseDate.get().toString(), DateUtil.HOUR_MINUTE, DateUtil.TIME_FORMAT));
 		String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
 		leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
 		leadTimeChangeData.setLeadTime(leadTimeChange);
@@ -616,7 +617,8 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 			leadTimeChangeData.setMergeID(mergeRequests.getRevisionNumber());
 			leadTimeChangeData.setFromBranch(mergeRequests.getFromBranch());
 			leadTimeChangeData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
-			leadTimeChangeData.setReleaseDate(DateUtil.tranformUTCLocalTimeToZFormat(releaseDate.get()));
+			leadTimeChangeData.setReleaseDate(DateUtil.dateTimeConverter(releaseDate.get().toString(),
+					DateUtil.HOUR_MINUTE, DateUtil.TIME_FORMAT));
 			String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
 			leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
 			leadTimeChangeData.setLeadTime(leadTimeChange);
