@@ -18,20 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.List;
-
-import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
+import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiMasterDataFactory;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
@@ -46,6 +33,18 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.repository.application.KpiMasterRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 /**
  * @author kunkambl
@@ -75,7 +74,7 @@ public class KpiIntegrationServiceImplTest {
 	private HierarchyLevelService hierarchyLevelService;
 
 	@Mock
-	private AiGatewayService aiGatewayService;
+	private AiGatewayClient aiGatewayClient;
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement1;
 	private KpiElement kpiElement2;
