@@ -1,10 +1,9 @@
 package com.publicissapient.kpidashboard.apis.kpiintegration.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
+import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
+import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -25,6 +24,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +43,7 @@ class AiKpiRecommendationProviderServiceImplTest {
 	private PromptGenerator promptGenerator;
 
 	@Mock
-	private AiGatewayService aiGatewayService;
+	private AiGatewayClient aiGatewayClient;
 
 	@Mock
 	private KpiIntegrationServiceImpl kpiIntegrationService;
@@ -72,7 +75,7 @@ class AiKpiRecommendationProviderServiceImplTest {
 		kpiRequest.setIds(new String[] { "project1" });
 		kpiRequest.setSelectedMap(new HashMap<>());
 
-		Mockito.when(aiGatewayService.generateChatResponse(any())).thenReturn(new ChatGenerationResponseDTO(
+		Mockito.when(aiGatewayClient.generate(any(ChatGenerationRequest.class))).thenReturn(new ChatGenerationResponseDTO(
 				"{\"project_health_value\": 85.0, \"project_recommendations\": [{\"recommendation\": \"Improve code quality\", \"severity\": \"High\"}]}"));
 
 		List<ProjectWiseKpiRecommendation> recommendations = aiKpiRecommendationProviderService
@@ -94,7 +97,7 @@ class AiKpiRecommendationProviderServiceImplTest {
 		kpiRequest.setIds(new String[] { "project1" });
 		kpiRequest.setSelectedMap(new HashMap<>());
 
-		Mockito.when(aiGatewayService.generateChatResponse(any())).thenReturn(
+		Mockito.when(aiGatewayClient.generate(any())).thenReturn(
 				new ChatGenerationResponseDTO("{\"project_health_value\": 0.0, \"project_recommendations\": []}"));
 
 		List<ProjectWiseKpiRecommendation> recommendations = aiKpiRecommendationProviderService
