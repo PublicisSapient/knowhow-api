@@ -21,18 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+
 
 import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +64,7 @@ class SprintGoalsServiceImplTest {
 				"SPRINT_GOALS_PLACEHOLDER", "Summary format", List.of("SPRINT_GOALS_PLACEHOLDER"));
 
 		when(promptGenerator.getPromptDetails(any())).thenReturn(promptDetails);
-		sprintGoalsService = new SprintGoalsServiceImpl(promptGenerator, aiGatewayService);
+		sprintGoalsService = new SprintGoalsServiceImpl(promptGenerator, aiGatewayClient);
 
 	}
 
