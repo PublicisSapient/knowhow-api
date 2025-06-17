@@ -1,9 +1,11 @@
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -183,10 +185,10 @@ public class NetOpenTicketCountByRCAServiceImpl
 			if (MapUtils.isNotEmpty(jiraHistoryRCAAndDateWiseIssueMap)) {
 				Set<String> projectWiseRCAList = new HashSet<>();
 				projectWiseRCAList.addAll(jiraHistoryRCAAndDateWiseIssueMap.keySet());
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
 							kpiRequest.getDuration());
 
 					Map<String, Long> projectWiseRCACountMap = filterKanbanDataBasedOnDateAndRCAWise(
@@ -287,7 +289,7 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @param currentDate
 	 */
 	@NotNull
-	private LocalDate getNextRangeDate(KpiRequest kpiRequest, LocalDate currentDate) {
+	private LocalDateTime getNextRangeDate(KpiRequest kpiRequest, LocalDateTime currentDate) {
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
 			currentDate = currentDate.minusWeeks(1);
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
@@ -306,15 +308,14 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 */
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
-		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
@@ -368,7 +369,7 @@ public class NetOpenTicketCountByRCAServiceImpl
 				MapUtils.isNotEmpty(jiraHistoryRCAAndDateWiseIssueMap)) {
 			String dateProjectKey = node.getProjectHierarchy().getNodeDisplayName();
 			String date = getRange(
-					KpiDataHelper.getStartAndEndDateForDataFiltering(LocalDate.now(), kpiRequest.getDuration()), kpiRequest);
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(DateUtil.getTodayTime(), kpiRequest.getDuration()), kpiRequest);
 			KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(dateProjectKey, jiraHistoryRCAAndDateWiseIssueMap,
 					projectWiseRCAList, kanbanJiraIssues, excelData, date, KPICode.NET_OPEN_TICKET_COUNT_BY_RCA.getKpiId());
 		}
