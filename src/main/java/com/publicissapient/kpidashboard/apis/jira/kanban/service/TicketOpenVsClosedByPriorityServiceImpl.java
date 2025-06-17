@@ -275,12 +275,13 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 
 				Map<String, List<DataCount>> projectFilterWiseDataMap = new HashMap<>();
 				List<String> issueClosedStatusList = projectWiseClosedStatusMap.get(projectNodeId);
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 					List<KanbanJiraIssue> dateWiseIssueTypeList = new ArrayList<>();
 					List<KanbanIssueCustomHistory> dateWiseIssueClosedStatusList = new ArrayList<>();
 
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+							currentDate,
 							kpiRequest.getDuration());
 
 					List<String> priorityList = priorityTypes(false);
@@ -316,15 +317,14 @@ public class TicketOpenVsClosedByPriorityServiceImpl extends JiraKPIService<Long
 
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
-		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString();
+		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
