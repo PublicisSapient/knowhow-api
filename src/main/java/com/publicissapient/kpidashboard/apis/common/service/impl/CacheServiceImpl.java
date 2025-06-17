@@ -22,8 +22,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.apis.ai.service.prompt.PromptDetailsService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -82,7 +85,8 @@ public class CacheServiceImpl implements CacheService {
 	@Autowired
 	private ProjectHierarchyService projectHierarchyService;
 	List<AccountHierarchyData> accountHierarchyDataList;
-
+	@Autowired
+	private PromptDetailsService promptDetailsService;
 	@Override
 	public void clearCache(String cacheName) {
 		Cache cache = cacheManager.getCache(cacheName);
@@ -331,4 +335,13 @@ public class CacheServiceImpl implements CacheService {
 		log.info("Caching ProjectHierachy");
 		return projectHierarchyService.findAll();
 	}
+
+	@Cacheable(CommonConstant.CACHE_PROMPT_DETAILS)
+	@Override
+	public Map<String, PromptDetails> getPromptDetails() {
+		log.info("Caching Prompt Details Map");
+		List<PromptDetails> promptDetailsList = promptDetailsService.getAllPrompts();
+		return promptDetailsList.stream().collect(Collectors.toMap(PromptDetails::getKey, Function.identity()));
+	}
+
 }
