@@ -31,7 +31,6 @@ import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationReque
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
 
 import jakarta.ws.rs.InternalServerErrorException;
 import lombok.AllArgsConstructor;
