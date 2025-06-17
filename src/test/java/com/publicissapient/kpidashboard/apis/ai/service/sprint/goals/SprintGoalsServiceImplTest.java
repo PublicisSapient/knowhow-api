@@ -43,11 +43,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.ai.config.sprint.SprintPromptConfig;
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 
 import jakarta.ws.rs.InternalServerErrorException;
 
