@@ -20,10 +20,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
+import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
+import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.model.KpiDataPrompt;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
-import com.publicissapient.kpidashboard.apis.aigateway.dto.response.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.aigateway.service.AiGatewayService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiRecommendationProviderService;
@@ -58,7 +59,7 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 	PromptGenerator promptGenerator;
 
 	@Autowired
-	AiGatewayService aiGatewayService;
+	AiGatewayClient aiGatewayClient;
 
 	@Autowired
 	KpiIntegrationServiceImpl kpiIntegrationService;
@@ -89,7 +90,8 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 		try {
 			Map<String, Object> kpiDataMap = extractKpiData(kpiRequest);
 			String prompt = promptGenerator.getKpiRecommendationPrompt(kpiDataMap, promptPersona);
-			ChatGenerationResponseDTO chatResponse = aiGatewayService.generateChatResponse(prompt);
+			ChatGenerationRequest chatGenerationRequest = ChatGenerationRequest.builder().prompt(prompt).build();
+			ChatGenerationResponseDTO chatResponse = aiGatewayClient.generate(chatGenerationRequest);
 
 			Object responseObject = parseJsonResponse(chatResponse.content());
 			projectWiseKpiRecommendations = buildProjectWiseRecommendations(kpiRequest, responseObject);
