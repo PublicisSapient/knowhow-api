@@ -75,7 +75,7 @@ class SprintGoalsServiceImplTest {
 	}
 
 	@Test
-	void testSummarizeSprintGoalsSuccess() throwsEntityNotFoundException, IOException {
+	void testSummarizeSprintGoalsSuccess() throws EntityNotFoundException, IOException {
 		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
         ChatGenerationResponseDTO chatResponse = new ChatGenerationResponseDTO("Summary of goals");
 		when(aiGatewayClient.generate(any())).thenReturn(chatResponse);
