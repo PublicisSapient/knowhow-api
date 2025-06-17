@@ -482,7 +482,7 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 
 			jiraIssueHistoryData.getStatusUpdationLog().forEach(jiraHistoryChangeLog -> {
 				if (CollectionUtils.isNotEmpty(dodStatus) && dodStatus.contains(jiraHistoryChangeLog.getChangedTo())) {
-					closedTicketDate.set(jiraHistoryChangeLog.getUpdatedOn());
+					closedTicketDate.set(DateUtil.localDateTimeToUTC(jiraHistoryChangeLog.getUpdatedOn()));
 				}
 			});
 			if (Objects.nonNull(jiraIssueMap.get(jiraIssueHistoryData.getStoryID())) &&
@@ -494,7 +494,6 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 			}
 
 			if (closedTicketDate.get() != null && releaseDate.get() != null) {
-
 				double leadTimeChangeInDays = KpiDataHelper.calWeekDaysExcludingWeekends(closedTicketDate.get(),
 						releaseDate.get());
 
