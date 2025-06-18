@@ -33,7 +33,7 @@ import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_
 import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_RECOMMENDATION_PROMPT;
 import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.SPRINT_GOALS_SUMMARY;
 
-@ChangeUnit(id = "ddl9", order = "009", author = "shunaray", systemVersion = "13.3.0")
+@ChangeUnit(id = "ddl10", order = "0010", author = "shunaray")
 public class PromptDetailsChangeLog {
 
 	private static final String PROMPT_DETAILS_COLLECTION = "prompt_details";
