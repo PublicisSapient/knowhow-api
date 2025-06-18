@@ -24,6 +24,9 @@ import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
+import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +39,6 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,9 @@ public class KpiIntegrationController {
 
 	@Autowired
 	private KpiIntegrationServiceImpl kpiIntegrationService;
+
+	@Autowired
+	private KpiRecommendationServiceImpl kpiRecommendationService;
 
 	@Autowired
 	private CustomApiConfig customApiConfig;
@@ -80,14 +85,14 @@ public class KpiIntegrationController {
 	}
 
 	/**
-	 * @param kpiRequest
+	 * @param kpiRecommendationRequestDTO
 	 *          kpi request
 	 * @return kpi recommendation
 	 */
 	@PostMapping(value = "/kpiRecommendation", produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<ProjectWiseKpiRecommendation>> getKpiRecommendation(
-			@NotNull @RequestBody KpiRequest kpiRequest) {
-		List<ProjectWiseKpiRecommendation> response = kpiIntegrationService.getProjectWiseKpiRecommendation(kpiRequest);
-		return ResponseEntity.ok().body(response);
+	public ResponseEntity<ServiceResponse> getKpiRecommendation(
+			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
+		return ResponseEntity.ok()
+				.body(kpiRecommendationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
 	}
 }
