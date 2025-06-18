@@ -78,9 +78,6 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 	@Autowired
 	private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
-
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
 			TreeAggregatorDetail treeAggregatorDetail) throws ApplicationException {
@@ -128,7 +125,7 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, List<Node> leafNodeList,
 			KpiRequest kpiRequest) {
-		KpiElement leadTimeReq = kpiRequest.getKpiList().stream().filter(k -> k.getKpiId().equalsIgnoreCase("kpi171"))
+		KpiElement leadTimeReq = kpiRequest.getKpiList().stream().filter(k -> k.getKpiId().equalsIgnoreCase("kpi193"))
 				.findFirst().orElse(new KpiElement());
 
 		LinkedHashMap<String, Object> filterDuration = (LinkedHashMap<String, Object>) leadTimeReq.getFilterDuration();
@@ -181,24 +178,24 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 
 			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
-			if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI171()).isPresent()) {
+			if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI193()).isPresent()) {
 
 				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(mapOfProjectFilters,
-						fieldMapping.getJiradefecttype(), fieldMapping.getJiraIssueTypeKPI171(),
+						fieldMapping.getJiradefecttype(), fieldMapping.getJiraIssueTypeKPI193(),
 						JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
 				uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 			}
 			List<String> status = new ArrayList<>();
-			if (Optional.ofNullable(fieldMapping.getJiraDodKPI171()).isPresent()) {
-				status.addAll(fieldMapping.getJiraDodKPI171());
+			if (Optional.ofNullable(fieldMapping.getJiraDodKPI193()).isPresent()) {
+				status.addAll(fieldMapping.getJiraDodKPI193());
 			}
 
-			if (Optional.ofNullable(fieldMapping.getJiraDorKPI171()).isPresent()) {
-				status.addAll(fieldMapping.getJiraDorKPI171());
+			if (Optional.ofNullable(fieldMapping.getJiraDorKPI193()).isPresent()) {
+				status.addAll(fieldMapping.getJiraDorKPI193());
 			}
 
-			if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI171()).isPresent()) {
-				status.addAll(fieldMapping.getJiraLiveStatusKPI171());
+			if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI193()).isPresent()) {
+				status.addAll(fieldMapping.getJiraLiveStatusKPI193());
 			}
 			mapOfProjectFilters.put("statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
 			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -268,13 +265,13 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 						cycleTime.setIntakeTime(jiraIssueCustomHistory.getCreatedDate());
 						cycleTimeValidationData.setIntakeDate(jiraIssueCustomHistory.getCreatedDate());
 						Map<String, DateTime> dodStatusDateMap = new HashMap<>();
-						List<String> liveStatus = Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI171())
+						List<String> liveStatus = Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI193())
 								.orElse(Collections.emptyList()).stream().filter(Objects::nonNull)
 								.map(String::toLowerCase).collect(Collectors.toList());
-						List<String> dodStatus = fieldMapping.getJiraDodKPI171().stream().filter(Objects::nonNull)
+						List<String> dodStatus = fieldMapping.getJiraDodKPI193().stream().filter(Objects::nonNull)
 								.map(String::toLowerCase).collect(Collectors.toList());
-						String storyFirstStatus = fieldMapping.getStoryFirstStatusKPI171();
-						List<String> dor = fieldMapping.getJiraDorKPI171().stream().filter(Objects::nonNull)
+						String storyFirstStatus = fieldMapping.getStoryFirstStatusKPI193();
+						List<String> dor = fieldMapping.getJiraDorKPI193().stream().filter(Objects::nonNull)
 								.map(String::toLowerCase).collect(Collectors.toList());
 
 						jiraIssueCustomHistory.getStatusUpdationLog().forEach(statusUpdateLog -> {

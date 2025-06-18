@@ -113,9 +113,9 @@ public class LeadTimeSpeedServiceImpl extends JiraKPIService<Double, List<Object
 
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.LEAD_TIME);
+		calculateAggregatedValueMap(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.LEAD_TIME_SPEED);
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.LEAD_TIME);
+				KPICode.LEAD_TIME_SPEED);
 
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach((priority, dataCounts) -> {
@@ -185,15 +185,15 @@ public class LeadTimeSpeedServiceImpl extends JiraKPIService<Double, List<Object
 			Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 
 			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-			if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI3()).isPresent()) {
+			if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI192()).isPresent()) {
 				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(mapOfProjectFilters,
-						fieldMapping.getJiradefecttype(), fieldMapping.getJiraIssueTypeKPI3(),
+						fieldMapping.getJiradefecttype(), fieldMapping.getJiraIssueTypeKPI192(),
 						JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
 				uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 			}
 			List<String> status = new ArrayList<>();
-			if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI3()).isPresent()) {
-				status.addAll(fieldMapping.getJiraLiveStatusKPI3());
+			if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI192()).isPresent()) {
+				status.addAll(fieldMapping.getJiraLiveStatusKPI192());
 			}
 			mapOfProjectFilters.put("statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
 			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -242,7 +242,7 @@ public class LeadTimeSpeedServiceImpl extends JiraKPIService<Double, List<Object
 				cycleTime.setIntakeTime(jiraIssueCustomHistory.getCreatedDate());
 				cycleTimeValidationData.setIntakeDate(jiraIssueCustomHistory.getCreatedDate());
 
-				List<String> liveStatus = fieldMapping.getJiraLiveStatusKPI3().stream().filter(Objects::nonNull)
+				List<String> liveStatus = fieldMapping.getJiraLiveStatusKPI192().stream().filter(Objects::nonNull)
 						.map(String::toLowerCase).collect(Collectors.toList());
 				jiraIssueCustomHistory.getStatusUpdationLog()
 						.forEach(statusUpdateLog -> BacklogKpiHelper.setLiveTime(cycleTimeValidationData, cycleTime,
@@ -350,7 +350,7 @@ public class LeadTimeSpeedServiceImpl extends JiraKPIService<Double, List<Object
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI3(), KPICode.LEAD_TIME.getKpiId());
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI192(), KPICode.LEAD_TIME.getKpiId());
 	}
 
 	@Override
