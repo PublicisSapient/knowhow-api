@@ -14,17 +14,18 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1330;
+package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1330;
+
+import java.util.List;
+
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-import org.bson.Document;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
-import java.util.List;
-
-@ChangeUnit(id = "add_cycle_time_kpi", order = "13305", author = "kunkambl", systemVersion = "13.3.0")
+@ChangeUnit(id = "r_add_cycle_time_kpi", order = "013305", author = "kunkambl", systemVersion = "13.3.0")
 public class CycleTimeKpiChangeLog {
 
 	private static final String FIELD_MAPPING_STRUCTURE_COLLECTION = "field_mapping_structure";
@@ -56,8 +57,12 @@ public class CycleTimeKpiChangeLog {
 
 	@Execution
 	public void execution() {
-		addCycleTimeKpi();
-		addFieldMappingStructure();
+		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).deleteOne(new Document("kpiId", KPI_ID));
+
+		List<String> fieldsToRemove = List.of("jiraIssueTypeKPI193", "jiraDodKPI193", "jiraLiveStatusKPI193",
+				"jiraDorKPI193", "storyFirstStatusKPI193");
+		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.deleteMany(new Document(FIELD_NAME, new Document("$in", fieldsToRemove)));
 	}
 
 	private void addCycleTimeKpi() {
@@ -140,11 +145,7 @@ public class CycleTimeKpiChangeLog {
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).deleteOne(new Document("kpiId", KPI_ID));
-
-		List<String> fieldsToRemove = List.of("jiraIssueTypeKPI193", "jiraDodKPI193", "jiraLiveStatusKPI193",
-				"jiraDorKPI193", "storyFirstStatusKPI193");
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.deleteMany(new Document(FIELD_NAME, new Document("$in", fieldsToRemove)));
+		addCycleTimeKpi();
+		addFieldMappingStructure();
 	}
 }
