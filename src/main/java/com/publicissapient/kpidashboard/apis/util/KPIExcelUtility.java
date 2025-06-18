@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.util;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -702,7 +703,9 @@ public class KPIExcelUtility {
 			excelData.setExecutionPercentage(String.valueOf(executionPercentage));
 			excelData.setPassedTest(kanbanTestExecution.getPassedTestCase().toString());
 			excelData.setPassedPercentage(String.valueOf(passPercentage));
-			excelData.setExecutionDate(kanbanTestExecution.getExecutionDate());
+			excelData.setExecutionDate(DateUtil.tranformUTCLocalTimeToZFormat(
+					LocalDateTime.parse(kanbanTestExecution.getExecutionDate() + DateUtil.ZERO_TIME_FORMAT,
+							DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT))));
 			kpiExcelData.add(excelData);
 		}
 	}
@@ -964,8 +967,8 @@ public class KPIExcelUtility {
 				excelData.setProjectName(projectName);
 				excelData.setReleaseName(pv.getName());
 				excelData.setReleaseDesc(pv.getDescription());
-				excelData.setReleaseEndDate(DateUtil.tranformUTCLocalTimeToZFormat(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate())));
-				excelData.setMonth(DateUtil.tranformUTCLocalTimeToZFormat(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate())));
+				excelData.setReleaseEndDate(DateUtil.convertToGenericString(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate()).toString()));
+				excelData.setMonth(DateUtil.convertToMonthYearFormat(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate()).toString()));
 				kpiExcelData.add(excelData);
 			});
 		}
@@ -1409,8 +1412,8 @@ public class KPIExcelUtility {
 				if (kpiId.equalsIgnoreCase(KPICode.TICKET_COUNT_BY_PRIORITY.getKpiId())) {
 					excelData.setPriority(field);
 				}
-				excelData.setCreatedDate(DateUtil.dateTimeConverter(kanbanJiraIssue.getCreatedDate(), DateUtil.TIME_FORMAT,
-						DateUtil.DISPLAY_DATE_FORMAT));
+				excelData.setCreatedDate(
+						kanbanJiraIssue.getCreatedDate());
 				excelData.setDayWeekMonth(date);
 				excelDataList.add(excelData);
 			});
@@ -1536,11 +1539,12 @@ public class KPIExcelUtility {
 
 		KPIExcelData excelData = new KPIExcelData();
 		excelData.setProjectName(projectName);
-		excelData.setStartDate(DateUtil.localDateTimeConverter(dateRange.getStartDate()));
+		excelData.setStartDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()));
+		excelData.setEndDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()));
 		if (CommonConstant.DAYS.equalsIgnoreCase(duration)) {
-			excelData.setEndDate(DateUtil.localDateTimeConverter(dateRange.getStartDate()));
+			excelData.setEndDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()));
 		} else {
-			excelData.setEndDate(DateUtil.localDateTimeConverter(dateRange.getEndDate()));
+			excelData.setEndDate(DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime()));
 		}
 		excelData.setEstimatedCapacity(df2.format(capacity));
 		kpiExcelData.add(excelData);
@@ -2005,7 +2009,7 @@ public class KPIExcelUtility {
 				leadTimeListCurrentTime.stream().forEach(leadTimeChangeData -> {
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setProjectName(projectName);
-                    excelData.setDate(leadTimeChangeData.getDate());
+                    excelData.setWeeks(leadTimeChangeData.getDate());
 					excelData.setChangeCompletionDate(leadTimeChangeData.getClosedDate());
 					if (CommonConstant.REPO.equals(leadTimeConfigRepoTool)) {
 						excelData.setMergeRequestId(leadTimeChangeData.getMergeID());
