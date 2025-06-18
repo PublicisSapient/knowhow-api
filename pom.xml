@@ -508,8 +508,13 @@
     </repository>
     <repository>
       <id>github</id>
-      <name>GitHub Packages</name>
+      <name>GitHub Packages ai</name>
       <url>https://maven.pkg.github.com/PublicisSapient/knowhow-ai-gateway-client</url>
+    </repository>
+    <repository>
+      <id>github-common</id>
+      <name>GitHub Packages common</name>
+      <url>https://maven.pkg.github.com/PublicisSapient/knowhow-common</url>
     </repository>
   </repositories>
   <build>
