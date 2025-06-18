@@ -2009,7 +2009,7 @@ public class KPIExcelUtility {
 				leadTimeListCurrentTime.stream().forEach(leadTimeChangeData -> {
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setProjectName(projectName);
-                    excelData.setDate(leadTimeChangeData.getDate());
+                    excelData.setWeeks(leadTimeChangeData.getDate());
 					excelData.setChangeCompletionDate(leadTimeChangeData.getClosedDate());
 					if (CommonConstant.REPO.equals(leadTimeConfigRepoTool)) {
 						excelData.setMergeRequestId(leadTimeChangeData.getMergeID());
