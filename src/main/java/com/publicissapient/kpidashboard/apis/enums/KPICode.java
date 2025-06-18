@@ -298,6 +298,8 @@ public enum KPICode {
 
 	LEAD_TIME_SPEED("kpi192", KPISource.JIRA.name()),
 
+	CYCLE_TIME_SPEED("kpi193", KPISource.JIRA.name()),
+
 	// do not remove below codes as they are required for test case
 	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()), TEST_JIRA("TEST_JIRA",
 			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name());
