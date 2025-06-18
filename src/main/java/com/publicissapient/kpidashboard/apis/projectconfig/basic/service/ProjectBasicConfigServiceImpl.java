@@ -576,7 +576,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				projectBasicConfig.getId().toHexString());
 
 		List<AccessRequest> accessRequests = accessRequestsHelperService
-				.getAccessRequestsByProject(projectBasicConfig.getId().toHexString());
+				.getAccessRequestsByProject(projectBasicConfig.getProjectNodeId());
 		accessRequests
 				.forEach(accessRequest -> projectAccessManager.rejectAccessRequest(accessRequest.getId().toHexString(),
 						"Rejected! due to project (" + projectBasicConfig.getProjectName() + ") was deleted", null));
@@ -623,7 +623,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 	}
 
 	private void removeProjectUserInfo(ProjectBasicConfig projectBasicConfig) {
-		projectAccessManager.removeProjectAccessFromAllUsers(projectBasicConfig.getId().toHexString());
+		projectAccessManager.removeProjectAccessFromAllUsers(projectBasicConfig.getProjectNodeId());
 	}
 
 	private void addToTraceLog(ProjectBasicConfig projectBasicConfig) {

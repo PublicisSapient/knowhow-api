@@ -16,12 +16,15 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.ai.service.search.kpi.SearchKPIService;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.io.IOException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,7 +78,7 @@ public class AiController {
 					- Prompt configuration is invalid
 					""") })
 	public ResponseEntity<SummarizeSprintGoalsResponseDTO> summarizeSprintGoals(
-			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) {
+			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws EntityNotFoundException , IOException{
 		return ResponseEntity.ok(sprintGoalsService.summarizeSprintGoals(summarizeSprintGoalsRequestDTO));
 	}
 

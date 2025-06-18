@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -174,10 +175,10 @@ public class TeamCapacityServiceImpl extends JiraKPIService<Double, List<Object>
 			Map<String, List<KanbanCapacity>> dateWiseKanbanCapacity = projectAndDateWiseCapacityMap
 					.get(node.getProjectFilter().getBasicProjectConfigId().toString());
 			if (MapUtils.isNotEmpty(dateWiseKanbanCapacity)) {
-				LocalDate currentDate = LocalDate.now();
+				LocalDateTime currentDate = DateUtil.getTodayTime();
 				List<DataCount> dataCount = new ArrayList<>();
 				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
+					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
 							kpiRequest.getDuration());
 					String projectName = node.getProjectFilter().getName();
 					Double capacity = filterDataBasedOnStartAndEndDate(dateWiseKanbanCapacity, dateRange, projectName);
@@ -234,7 +235,7 @@ public class TeamCapacityServiceImpl extends JiraKPIService<Double, List<Object>
 	 * @param currentDate
 	 * @return
 	 */
-	private LocalDate getNextRangeDate(KpiRequest kpiRequest, LocalDate currentDate) {
+	private LocalDateTime getNextRangeDate(KpiRequest kpiRequest, LocalDateTime currentDate) {
 		if ((CommonConstant.WEEK).equalsIgnoreCase(kpiRequest.getDuration())) {
 			currentDate = currentDate.minusWeeks(1);
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
@@ -254,12 +255,13 @@ public class TeamCapacityServiceImpl extends JiraKPIService<Double, List<Object>
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
-			range = DateUtil.localDateTimeConverter(dateRange.getStartDate()) + " to " +
-					DateUtil.localDateTimeConverter(dateRange.getEndDate());
+
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
+					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
-			range = dateRange.getStartDate().toString();
+			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		}
 		return range;
 	}
