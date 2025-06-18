@@ -14,22 +14,15 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.ai.config.sprint;
+package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 
-import lombok.Data;
+import java.util.List;
 
-@Data
-@Configuration
-@ConfigurationProperties(prefix = "ai.sprint")
-public class SprintPromptConfig {
+public interface KpiRecommendationProviderService {
 
-	private Goals goals = new Goals();
+	List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendations(KpiRequest kpiRequest, String promptPersona);
 
-	@Data
-	public static class Goals {
-		private String prompt;
-	}
 }

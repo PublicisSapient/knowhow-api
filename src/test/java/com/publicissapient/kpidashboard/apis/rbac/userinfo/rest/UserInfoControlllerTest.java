@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import com.publicissapient.kpidashboard.common.repository.rbac.AccessRequestsRepository;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -82,6 +83,8 @@ public class UserInfoControlllerTest {
 
 	@Mock
 	private UserInfoRepository userInfoRepository;
+	@Mock
+	private AccessRequestsRepository accessRequestsRepository;
 
 	@Mock
 	private UserTokenDeletionService userTokenDeletionService;

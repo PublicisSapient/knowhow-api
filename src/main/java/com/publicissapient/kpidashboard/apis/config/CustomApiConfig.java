@@ -219,10 +219,10 @@ public class CustomApiConfig { // NOPMD
 	private int latestKpiCommentsSummary;
 
 	@Value("${brokenConnection.MaximumEmailNotificationCount}")
-	private int brokenConnectionMaximumEmailNotificationCount;
+	private String brokenConnectionMaximumEmailNotificationCount;
 
 	@Value("${brokenConnection.EmailNotificationFrequency}")
-	private int brokenConnectionEmailNotificationFrequency;
+	private String brokenConnectionEmailNotificationFrequency;
 
 	@Value("${brokenConnection.EmailNotificationSubject}")
 	private String brokenConnectionEmailNotificationSubject;
@@ -359,6 +359,11 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	@Getter
 	private int userSessionsExpiresOn;
+
+	@Value("${ai-recommendation-kpi-list}")
+	@Getter
+	@Setter
+	private List<String> aiRecommendationKpiList;
 
 	public String getDefectRateUrl() {
 		return defectRateUrl;

@@ -482,7 +482,7 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 
 			jiraIssueHistoryData.getStatusUpdationLog().forEach(jiraHistoryChangeLog -> {
 				if (CollectionUtils.isNotEmpty(dodStatus) && dodStatus.contains(jiraHistoryChangeLog.getChangedTo())) {
-					closedTicketDate.set(jiraHistoryChangeLog.getUpdatedOn());
+					closedTicketDate.set(DateUtil.localDateTimeToUTC(jiraHistoryChangeLog.getUpdatedOn()));
 				}
 			});
 			if (Objects.nonNull(jiraIssueMap.get(jiraIssueHistoryData.getStoryID())) &&
@@ -494,7 +494,6 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 			}
 
 			if (closedTicketDate.get() != null && releaseDate.get() != null) {
-
 				double leadTimeChangeInDays = KpiDataHelper.calWeekDaysExcludingWeekends(closedTicketDate.get(),
 						releaseDate.get());
 
@@ -530,7 +529,8 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 		leadTimeChangeData.setStoryID(jiraIssueHistoryData.getStoryID());
 		leadTimeChangeData.setUrl(jiraIssueHistoryData.getUrl());
 		leadTimeChangeData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
-		leadTimeChangeData.setReleaseDate(DateUtil.tranformUTCLocalTimeToZFormat(releaseDate.get()));
+		leadTimeChangeData.setReleaseDate(
+				DateUtil.dateTimeConverter(releaseDate.get().toString(), DateUtil.HOUR_MINUTE, DateUtil.DISPLAY_DATE_TIME_FORMAT));
 		String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
 		leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
 		leadTimeChangeData.setLeadTime(leadTimeChange);
@@ -616,7 +616,8 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 			leadTimeChangeData.setMergeID(mergeRequests.getRevisionNumber());
 			leadTimeChangeData.setFromBranch(mergeRequests.getFromBranch());
 			leadTimeChangeData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
-			leadTimeChangeData.setReleaseDate(DateUtil.tranformUTCLocalTimeToZFormat(releaseDate.get()));
+			leadTimeChangeData.setReleaseDate(DateUtil.dateTimeConverter(releaseDate.get().toString(),
+					DateUtil.HOUR_MINUTE, DateUtil.DISPLAY_DATE_TIME_FORMAT));
 			String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
 			leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
 			leadTimeChangeData.setLeadTime(leadTimeChange);
