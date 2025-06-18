@@ -22,29 +22,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
-
 @Component("AiRecommendation")
 @Slf4j
 public class AiRecommendation implements ParserStategy<Object> {
-    /**
-     * Parses a JSON string and converts it into a JSON object.
-     *
-     * @param jsonString
-     *            The JSON string to be parsed. It is expected to contain a valid
-     *            JSON object.
-     * @return A {@link JsonNode} representing the parsed JSON object, or an empty
-     *         {@link Object} if parsing fails.
-     */
-    @Override
-    public Object parse(String jsonString) {
-        try {
-            String formattedJsonString = jsonString.substring(jsonString.indexOf('{'));
-            return new ObjectMapper().readTree(formattedJsonString);
-        } catch (JsonProcessingException e) {
-            log.error("Error parsing JSON: {}", e.getMessage());
-            return new Object();
-        }
-    }
+
+	/**
+	 * Parses a JSON string and converts it into a JSON object.
+	 *
+	 * @param jsonString
+	 *            The JSON string to be parsed. It is expected to contain a valid
+	 *            JSON object.
+	 * @return A {@link JsonNode} representing the parsed JSON object, or an empty
+	 *         {@link Object} if parsing fails.
+	 */
+	@Override
+	public Object parse(String jsonString) {
+		try {
+			String formattedJsonString = jsonString.substring(jsonString.indexOf('{'));
+			return new ObjectMapper().readTree(formattedJsonString);
+		} catch (JsonProcessingException e) {
+			log.error("Error parsing JSON: {}", e.getMessage());
+			return new Object();
+		}
+	}
 
 }
