@@ -24,12 +24,16 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
@@ -102,23 +106,19 @@ public class AiController {
 				.body(kpiRecommendationServiceImpl.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
 	}
 
-	@PostMapping(value = "/kpisearch/{usermessage}", produces = APPLICATION_JSON_VALUE)
+	@GetMapping(value = "/kpisearch", produces = APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get KPI Search", description = "Produces a possible kpis match for the user entered message")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successfully matched kpis", content = {
 					@Content(mediaType = "application/json", schema = @Schema(implementation = SummarizeSprintGoalsResponseDTO.class)) }),
-			@ApiResponse(responseCode = "400", description = """
-					Bad request. Can happen in one of the following cases:
-					- No request body was provided
-					- The request body does not contain the required fields
-					"""), @ApiResponse(responseCode = "500", description = """
+		    @ApiResponse(responseCode = "500", description = """
 					Unexpected server error occurred. Can happen in one of the following cases:
 					- AI gateway failed to process the request
 					- Prompt configuration is invalid
 					""") })
-	public ResponseEntity<ServiceResponse> getRelevantKPIs(
-			@NotNull @PathVariable String usermessage) {
+	public ResponseEntity<List<String>> getRelevantKPIs(
+			 @RequestParam(required = true) String query) throws EntityNotFoundException {
 		return ResponseEntity.ok()
-				.body(new ServiceResponse(true,"pass", searchKPIService.searchRelatedKpi(usermessage)));
+				.body(searchKPIService.searchRelatedKpi(query));
 	}
 }
