@@ -16,12 +16,15 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service.sprint.goals;
 
+import java.io.IOException;
+
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
 
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 
 public interface SprintGoalsService {
 	SummarizeSprintGoalsResponseDTO summarizeSprintGoals(
-			@NotNull SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO);
+			@NotNull SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws EntityNotFoundException, IOException;
 }
