@@ -24,7 +24,6 @@ package com.publicissapient.kpidashboard.apis.errors;
  * This exception is thrown for the AI Gateway errors.
  */
 public class AiGatewayServiceException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
 
     /**
      * Constructs a new AiGatewayServiceException with the specified detail message.
