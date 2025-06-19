@@ -49,9 +49,8 @@ public class PromptGenerator {
 
 	public String getKpiSearchPrompt( String userQuery)
 			throws EntityNotFoundException {
-		PromptDetails kpi_data = getPromptDetails("kpi-data");
-		PromptDetails searchBasee = getPromptDetails("kpi-search");
-
+		PromptDetails kpi_data = getPromptDetails(PromptKeys.KPI_DATA);
+		PromptDetails searchBasee = getPromptDetails(PromptKeys.KPI_SEARCH);
 		return searchBasee.toString().replace("KPI_DATA", kpi_data.toString())
 				.replace("USER_QUERY", userQuery);
 

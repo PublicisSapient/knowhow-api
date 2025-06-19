@@ -97,7 +97,6 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 			String prompt = promptGenerator.getKpiRecommendationPrompt(kpiDataMap, promptPersona);
 			ChatGenerationRequest chatGenerationRequest = ChatGenerationRequest.builder().prompt(prompt).build();
 			ChatGenerationResponseDTO chatResponse = aiGatewayClient.generate(chatGenerationRequest);
-
 			Object responseObject = parserStategy.parse(chatResponse.content());
 			projectWiseKpiRecommendations = buildProjectWiseRecommendations(kpiRequest, responseObject);
 		} catch (Exception ex) {
