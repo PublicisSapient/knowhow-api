@@ -29,7 +29,6 @@ import io.mongock.api.annotations.RollbackExecution;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
-import java.util.List;
 
 /**
  * add modified date, createdby and modifiedby

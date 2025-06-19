@@ -70,9 +70,9 @@ public class PromptDetailsChangeUnit {
 						Arrays.asList("Present the output as a bulleted list.", "Use clear, outcome-focused language.",
 								"Limit the total response to 50 words.",
 								"Emphasize business value or strategic alignment where possible."))
-				.append("input", "Sprint goals: SPRINT_GOALS_PLACEHOLDER")
-				.append("outputFormat", "A concise and professional bulleted list.")
-				.append("placeHolders", List.of("SPRINT_GOALS_PLACEHOLDER"));
+				.append(INPUT, "Sprint goals: SPRINT_GOALS_PLACEHOLDER")
+				.append(OUTPUT_FORMAT, "A concise and professional bulleted list.")
+				.append(PLACEHOLDER, List.of("SPRINT_GOALS_PLACEHOLDER"));
 
 		Document kpiCorrelationAnalysis = new Document().append("key", KPI_CORRELATION_ANALYSIS_REPORT).append(CONTEXT,
 				"Below is the “analysis‐report” that summarizes the comprehensive pair–by–pair correlation analysis among the seven key‐performance indicator (KPI) columns on our multi–sprint project dataset. In this example we assume that all KPI values were measured using a Pearson–based procedure and that for each computed correlation a “weight” (an accuracy or reliability measure on a scale from 0 to 1, with values nearer 1 indicating very high confidence given the large number of sprints in the dataset) has been derived. (In our analysis no KPI was excluded and all 7×7 combinations – including the “self–correlations” – are shown.)\n")
@@ -101,11 +101,11 @@ public class PromptDetailsChangeUnit {
 						"3. Calculate the pairwise scores based on the benchmark comparison using the formula: text(pair_score)_(i,j) = (1 - Delta r) cdot w_(benchmark) - (0.2 cdot Delta r text(if) Delta r > 0.2)' Normalize between 0 and 1.",
 						"4. Aggregate all pairwise scores and normalize across 49 pairs.",
 						"5. Scale the normalized score to a percentage to get the project health."))
-				.append("input",
+				.append(INPUT,
 						"Based on the KPIs – sprint_velocity_kpi_value, commitment_reliability_kpi_value, sprint_capacity_utilization_kpi_value, defect_injection_rate_kpi_value, scope_churn_issue_count_kpi_value, lead_time_for_change_kpi_value, code_build_time_kpi_value – analyze the provided dataset KPI_DATA_BY_PROJECT_PLACEHOLDER, which contains kpi data of latest five sprints marked by date,analyze the performance of each kpi and generate a score for the project performance.")
-				.append("outputFormat",
+				.append(OUTPUT_FORMAT,
 						"Provide a comprehensive report with:\n  1. The project health score as a percentage\n  2. Observations on significant deviations between the project and benchmark values\n  3. Provide any recommendations to address observed discrepancies and how can the project health be improved,\n  do not mention the size of dataset in this section\n\n  Format the comprehensive report in parsable json format,\n  the recommendations should be actionable and specific to the KPIs analyzed and specifically tailored\n  for USER_ROLE_PLACEHOLDER role\n  the key\n  for project health should be titled 'project_health_value'\n  and recommendation key should be 'project_recommendations',\n  in the project_recommendations key,\n  provide a list of recommendations with each recommendation should have key recommendation and value as a string and another key severity and value as a string,\n  the severity can be one of the following: low,\n  medium,\n  high,\n  critical {\n    \"project_health_value\": 0,\n    \"project_recommendations\": [{\n      \"recommendation\": \"\",\n      \"severity\": \"\"\n    }],\n    \"observations\": []\n  }")
-				.append("placeHolders", Arrays.asList("ANALYSIS_REPORT_PLACEHOLDER", "KPI_DATA_BY_PROJECT_PLACEHOLDER",
+				.append(PLACEHOLDER, Arrays.asList("ANALYSIS_REPORT_PLACEHOLDER", "KPI_DATA_BY_PROJECT_PLACEHOLDER",
 						"USER_ROLE_PLACEHOLDER"));
 
 
