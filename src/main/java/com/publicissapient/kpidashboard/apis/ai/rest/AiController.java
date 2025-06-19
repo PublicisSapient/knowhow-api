@@ -95,7 +95,7 @@ public class AiController {
 					Bad request. Can happen in one of the following cases:
 					- No request body was provided
 					- The request body does not contain the required fields
-					"""), @ApiResponse(responseCode = "500", description = """
+					"""), @ApiResponse(responseCode = "503", description = """
 					Unexpected server error occurred. Can happen in one of the following cases:
 					- AI gateway failed to process the request
 					- Prompt configuration is invalid
