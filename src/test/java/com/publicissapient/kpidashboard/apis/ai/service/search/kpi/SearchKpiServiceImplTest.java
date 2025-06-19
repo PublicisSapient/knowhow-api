@@ -25,7 +25,9 @@ import java.util.List;
 
 import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
+import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import jakarta.ws.rs.InternalServerErrorException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,7 +37,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 
-import jakarta.ws.rs.InternalServerErrorException;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,7 +76,7 @@ class SearchKpiServiceImplTest {
 	void testSearchRelatedKpi_emptyQuery_throwsException() {
 		InternalServerErrorException exception = assertThrows(InternalServerErrorException.class,
 				() -> searchKpiService.searchRelatedKpi(""));
-		assertEquals("Could not process the user message to seach kpi.", exception.getMessage());
+		assertEquals("Could not process the user message to search kpi.", exception.getMessage());
 	}
 
 	@Test
@@ -84,9 +85,9 @@ class SearchKpiServiceImplTest {
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn("prompt");
 		when(aiGatewayClient.generate(any())).thenReturn(null);
 
-		InternalServerErrorException exception = assertThrows(InternalServerErrorException.class,
+		AiGatewayServiceException exception = assertThrows(AiGatewayServiceException.class,
 				() -> searchKpiService.searchRelatedKpi(userMessage));
-		assertEquals("Could not process the sprint goals summarization.", exception.getMessage());
+		assertEquals("Could not process search kpi.", exception.getMessage());
 	}
 
 	@Test
@@ -95,9 +96,9 @@ class SearchKpiServiceImplTest {
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn("prompt");
 		when(aiGatewayClient.generate(any())).thenReturn(new ChatGenerationResponseDTO(""));
 
-		InternalServerErrorException exception = assertThrows(InternalServerErrorException.class,
+		AiGatewayServiceException exception = assertThrows(AiGatewayServiceException.class,
 				() -> searchKpiService.searchRelatedKpi(userMessage));
-		assertEquals("Could not process the sprint goals summarization.", exception.getMessage());
+		assertEquals("Could not process search kpi.", exception.getMessage());
 	}
 
 	@Test
