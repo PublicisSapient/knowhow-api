@@ -967,7 +967,7 @@ public class KPIExcelUtility {
 				excelData.setProjectName(projectName);
 				excelData.setReleaseName(pv.getName());
 				excelData.setReleaseDesc(pv.getDescription());
-				excelData.setReleaseEndDate(DateUtil.convertToGenericString(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate()).toString()));
+				excelData.setReleaseEndDate(DateUtil.convertToGenericString(pv.getReleaseDate().toString()));
 				excelData.setMonth(DateUtil.convertToMonthYearFormat(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate()).toString()));
 				kpiExcelData.add(excelData);
 			});
