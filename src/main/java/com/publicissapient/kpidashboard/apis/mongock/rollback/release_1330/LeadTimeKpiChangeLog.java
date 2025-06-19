@@ -28,7 +28,7 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_add_cycle_time_kpi", order = "013305", author = "kunkambl", systemVersion = "13.3.0")
+@ChangeUnit(id = "r_add_lead_time_kpi", order = "013305", author = "kunkambl", systemVersion = "13.3.0")
 public class LeadTimeKpiChangeLog {
 
 	private static final String KPI_ID = "kpi192";
