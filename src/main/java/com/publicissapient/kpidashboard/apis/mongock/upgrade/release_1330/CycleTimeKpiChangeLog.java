@@ -69,8 +69,8 @@ public class CycleTimeKpiChangeLog {
 										"https://knowhow.tools.publicis.sapient.com/wiki/kpi171-Cycle+Time"))));
 
 		Document kpiDocument = new Document().append("kpiId", KPI_ID).append("kpiName", "Cycle Time")
-				.append("maxValue", "").append("kpiUnit", "Days").append("isDeleted", "False").append("defaultOrder", 1)
-				.append("kpiSource", "Jira").append("groupId", 11).append("thresholdValue", "").append("kanban", false)
+				.append("maxValue", "").append("kpiUnit", "Days").append("isDeleted", "False").append("defaultOrder", 28)
+				.append("kpiSource", "Jira").append("groupId", 4).append("thresholdValue", "").append("kanban", false)
 				.append("chartType", "table").append("yAxisLabel", "").append("xAxisLabel", "")
 				.append("isAdditionalfFilterSupport", false).append("kpiFilter", "multiSelectDropDown")
 				.append("calculateMaturity", false).append("kpiInfo", kpiInfo)

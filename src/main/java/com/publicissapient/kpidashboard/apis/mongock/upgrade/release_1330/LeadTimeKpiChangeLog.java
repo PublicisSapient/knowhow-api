@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-@ChangeUnit(id = "add_cycle_time_kpi", order = "13305", author = "kunkambl", systemVersion = "13.3.0")
+@ChangeUnit(id = "add_lead_time_kpi", order = "13305", author = "kunkambl", systemVersion = "13.3.0")
 public class LeadTimeKpiChangeLog {
 
 	private static final String KPI_ID = "kpi192";
@@ -37,8 +37,8 @@ public class LeadTimeKpiChangeLog {
 	private static final String KPI_SOURCE = "Jira";
 	private static final String COMBINED_KPI_SOURCE = "Jira/Azure/Rally";
 	private static final String THRESHOLD_VALUE = "20";
-	private static final int GROUP_ID = 11;
-	private static final int DEFAULT_ORDER = 1;
+	private static final int GROUP_ID = 4;
+	private static final int DEFAULT_ORDER = 27;
 
 	private static final String FIELD_JIRA_ISSUE_TYPE = "jiraIssueTypeKPI192";
 	private static final String FIELD_THRESHOLD_VALUE = "thresholdValueKPI192";
