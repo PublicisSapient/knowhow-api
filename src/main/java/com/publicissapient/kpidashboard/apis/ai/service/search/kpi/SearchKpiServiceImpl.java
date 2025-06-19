@@ -24,6 +24,7 @@ import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationReque
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
+import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -39,9 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class SearchKpiServiceImpl implements SearchKPIService {
 
-	private static final String COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR = "Could not process the sprint goals summarization.";
-	private static final String PROMPT = "You are given a dictionary of KPI definitions, where each key is a kpiId and each value is the definition.\n"
-			+ "KPI Dictionary: %s /nUser Query: %s /n Please return all relevant kpiIds and explain why each one matches.";
+	private static final String SEARCH_KPI_ERROR_MESSAGE = "Could not process search kpi.";
 
 	private final AiGatewayClient aiGatewayClient;
 
@@ -54,17 +53,17 @@ public class SearchKpiServiceImpl implements SearchKPIService {
 	@Override
 	public List<String> searchRelatedKpi(String userMessage) throws EntityNotFoundException {
 		if (StringUtils.isEmpty(userMessage)) {
-			log.error(String.format("%s No prompt configuration was found",
-					"Could not process the user message to seach kpi."));
-			throw new InternalServerErrorException("Could not process the user message to seach kpi.");
+			log.error(String.format("%s No prompt was found",
+					"Could not process the user message to search kpi."));
+			throw new InternalServerErrorException("Could not process the user message to search kpi.");
 		}
 		String prompt = promptGenerator.getKpiSearchPrompt(userMessage);
 		ChatGenerationResponseDTO chatGenerationResponseDTO = aiGatewayClient
 				.generate(ChatGenerationRequest.builder().prompt(prompt).build());
 		if (Objects.isNull(chatGenerationResponseDTO) || StringUtils.isEmpty(chatGenerationResponseDTO.content())) {
 			log.error(String.format("%s. Ai Gateway returned a null or empty response",
-					COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR));
-			throw new InternalServerErrorException(COULD_NOT_PROCESS_SPRINT_GOALS_SUMMARIZATION_ERROR);
+					SEARCH_KPI_ERROR_MESSAGE));
+			throw new AiGatewayServiceException(SEARCH_KPI_ERROR_MESSAGE);
 		}
 
 		return parserStategy.parse(chatGenerationResponseDTO.content());

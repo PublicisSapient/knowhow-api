@@ -111,7 +111,7 @@ public class AiController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successfully matched kpis", content = {
 					@Content(mediaType = "application/json", schema = @Schema(implementation = SummarizeSprintGoalsResponseDTO.class)) }),
-		    @ApiResponse(responseCode = "500", description = """
+		    @ApiResponse(responseCode = "503", description = """
 					Unexpected server error occurred. Can happen in one of the following cases:
 					- AI gateway failed to process the request
 					- Prompt configuration is invalid
