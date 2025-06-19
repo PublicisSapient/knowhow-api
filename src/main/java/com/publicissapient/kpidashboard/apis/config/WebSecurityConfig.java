@@ -99,7 +99,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 	 * - added CorsFilter in filter chain for endpoints mentioned in the method
 	 *
 	 * @param http
-	 *          - reference to HttpSecurity
+	 *            - reference to HttpSecurity
 	 */
 	@Bean
 	protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -111,25 +111,29 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 				.httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(customApiConfig.isIncludeSubDomains())
 						.maxAgeInSeconds(customApiConfig.getMaxAgeInSeconds())));
 		http.csrf(AbstractHttpConfigurer::disable);
-		http.authorizeHttpRequests(authz -> authz.requestMatchers("/appinfo").permitAll().requestMatchers("/registerUser")
-				.permitAll().requestMatchers("/changePassword").permitAll().requestMatchers("/login/captcha").permitAll()
-				.requestMatchers("/login/captchavalidate").permitAll().requestMatchers("/login**").permitAll()
-				.requestMatchers("/error").permitAll().requestMatchers("/authenticationProviders").permitAll()
-				.requestMatchers("/auth-types-status").permitAll().requestMatchers("/pushData/*").permitAll()
-				.requestMatchers("/getversionmetadata").permitAll().requestMatchers("/kpiIntegrationValues").permitAll()
-				.requestMatchers("/processor/saveRepoToolsStatus").permitAll().requestMatchers("/v1/kpi/{kpiID}").permitAll()
-				.requestMatchers("/basicconfigs/hierarchyResponses").permitAll()
+		http.authorizeHttpRequests(authz -> authz.requestMatchers("/appinfo").permitAll()
+				.requestMatchers("/registerUser").permitAll().requestMatchers("/changePassword").permitAll()
+				.requestMatchers("/login/captcha").permitAll().requestMatchers("/login/captchavalidate").permitAll()
+				.requestMatchers("/login**").permitAll().requestMatchers("/error").permitAll()
+				.requestMatchers("/authenticationProviders").permitAll().requestMatchers("/auth-types-status")
+				.permitAll().requestMatchers("/pushData/*").permitAll().requestMatchers("/getversionmetadata")
+				.permitAll().requestMatchers("/kpiIntegrationValues").permitAll()
+				.requestMatchers("/processor/saveRepoToolsStatus").permitAll().requestMatchers("/v1/kpi/{kpiID}")
+				.permitAll().requestMatchers("/basicconfigs/hierarchyResponses").permitAll()
 
 				// management metrics
-				.requestMatchers("/info").permitAll().requestMatchers("/health").permitAll().requestMatchers("/env").permitAll()
-				.requestMatchers("/metrics").permitAll().requestMatchers("/actuator/togglz**").permitAll()
-				.requestMatchers("/togglz-console**").permitAll().requestMatchers("hierarchy/migrate/**").permitAll()
-				.requestMatchers("/actuator**").permitAll().requestMatchers("/forgotPassword").permitAll()
-				.requestMatchers("/validateEmailToken**").permitAll().requestMatchers("/resetPassword").permitAll()
-				.requestMatchers("/cache/**").permitAll().requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-				.requestMatchers(HttpMethod.GET, "/analytics/switch").permitAll().requestMatchers("/stringShortener/shorten")
-				.permitAll().requestMatchers("/stringShortener/longString").permitAll().anyRequest().authenticated())
-				.addFilterBefore(standardLoginRequestFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
+				.requestMatchers("/info").permitAll().requestMatchers("/health").permitAll().requestMatchers("/env")
+				.permitAll().requestMatchers("/metrics").permitAll().requestMatchers("/actuator/togglz**").permitAll()
+				.requestMatchers("/actuator/health").permitAll().requestMatchers("/togglz-console**").permitAll()
+				.requestMatchers("hierarchy/migrate/**").permitAll().requestMatchers("/actuator**").permitAll()
+				.requestMatchers("/forgotPassword").permitAll().requestMatchers("/validateEmailToken**").permitAll()
+				.requestMatchers("/resetPassword").permitAll().requestMatchers("/cache/**").permitAll()
+				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+				.requestMatchers(HttpMethod.GET, "/analytics/switch").permitAll()
+				.requestMatchers("/stringShortener/shorten").permitAll().requestMatchers("/stringShortener/longString")
+				.permitAll().anyRequest().authenticated())
+				.addFilterBefore(standardLoginRequestFilter(authenticationManager),
+						UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterAfter(corsFilter(), ChannelProcessingFilter.class)
 				.httpBasic(basic -> basic.authenticationEntryPoint(customAuthenticationEntryPoint()))

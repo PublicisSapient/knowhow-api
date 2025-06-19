@@ -5,6 +5,7 @@ import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationReque
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -53,7 +54,7 @@ class AiKpiRecommendationProviderServiceImplTest {
 	private KpiElement kpiElement2;
 
 	@BeforeEach
-	void setUp() throws IOException {
+	void setUp() throws IOException, EntityNotFoundException {
 		DataCount dataCount = new DataCount();
 		dataCount.setMaturity("1");
 		dataCount.setMaturityValue("35");
