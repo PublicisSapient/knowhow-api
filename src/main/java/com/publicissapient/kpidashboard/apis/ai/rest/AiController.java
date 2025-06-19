@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -73,7 +74,7 @@ public class AiController {
 					- Prompt configuration is invalid
 					""") })
 	public ResponseEntity<SummarizeSprintGoalsResponseDTO> summarizeSprintGoals(
-			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws IOException {
+			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws EntityNotFoundException , IOException{
 		return ResponseEntity.ok(sprintGoalsService.summarizeSprintGoals(summarizeSprintGoalsRequestDTO));
 	}
 
@@ -86,7 +87,7 @@ public class AiController {
 					Bad request. Can happen in one of the following cases:
 					- No request body was provided
 					- The request body does not contain the required fields
-					"""), @ApiResponse(responseCode = "500", description = """
+					"""), @ApiResponse(responseCode = "503", description = """
 					Unexpected server error occurred. Can happen in one of the following cases:
 					- AI gateway failed to process the request
 					- Prompt configuration is invalid

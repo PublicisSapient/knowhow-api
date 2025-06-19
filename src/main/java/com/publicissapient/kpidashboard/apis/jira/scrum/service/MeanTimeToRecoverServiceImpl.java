@@ -331,7 +331,7 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 		List<String> dodStatus = jiraDodKPI166.stream().map(String::toLowerCase).collect(Collectors.toList());
 		jiraIssueHistoryDataList.forEach(jiraIssueHistoryData -> {
 			LocalDateTime ticketClosedDate;
-			LocalDateTime ticketCreatedDate = DateUtil.convertDateTimeToLocalDateTime(jiraIssueHistoryData.getCreatedDate());
+			LocalDateTime ticketCreatedDate =DateUtil.localDateTimeToUTC(DateUtil.convertDateTimeToLocalDateTime(jiraIssueHistoryData.getCreatedDate()));
 			Map<String, LocalDateTime> closedStatusDateMap = new HashMap<>();
 
 			jiraIssueHistoryData.getStatusUpdationLog().forEach(statusChangeLog -> {
@@ -356,6 +356,7 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 			double meanTimeToRecoverInHrs = 0;
 			if (ticketClosedDate != null && ticketCreatedDate != null) {
 
+				ticketClosedDate = DateUtil.localDateTimeToUTC(ticketClosedDate);
                 meanTimeToRecoverInHrs= Duration.between(ticketCreatedDate, ticketClosedDate).toHours();
 			}
 
