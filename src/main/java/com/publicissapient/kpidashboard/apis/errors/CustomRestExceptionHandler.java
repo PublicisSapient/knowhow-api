@@ -290,4 +290,10 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 		ServiceResponse response = new ServiceResponse(false, ex.getMessage(), null);
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
+
+	@ExceptionHandler(AiGatewayServiceException.class)
+	protected ResponseEntity<Object> handleServiceUnavailableException(AiGatewayServiceException ex) {
+		ServiceResponse response = new ServiceResponse(false, ex.getMessage(), null);
+		return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
+	}
 }
