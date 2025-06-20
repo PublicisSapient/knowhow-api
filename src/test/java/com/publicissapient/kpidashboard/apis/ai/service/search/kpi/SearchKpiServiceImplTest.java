@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
@@ -47,7 +48,7 @@ class SearchKpiServiceImplTest {
 
 	@Mock
 	@Qualifier("SearchParser")
-	private ParserStategy<List<String>> parserStategy;
+		private ParserStategy<SearchKpiResponseDTO> parserStategy;
 
 	@Mock
 	private PromptGenerator promptGenerator;
@@ -60,16 +61,17 @@ class SearchKpiServiceImplTest {
 		String userMessage = "defect leakage";
 		String generatedPrompt = "some prompt";
 		String aiResponseContent = "Defect Leakage, Defect Density";
-		List<String> parsedResult = List.of("kpi14", "kpi82");
+		SearchKpiResponseDTO searchKpiResponseDTO = new SearchKpiResponseDTO("kpi14", "found");
+		List<String> parsedResult = List.of("kpi14");
 
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn(generatedPrompt);
 		when(aiGatewayClient.generate(any())).thenReturn(new ChatGenerationResponseDTO(aiResponseContent));
-		when(parserStategy.parse(aiResponseContent)).thenReturn(parsedResult);
+		when(parserStategy.parse(aiResponseContent)).thenReturn(searchKpiResponseDTO);
 		// When
-		List<String> result = searchKpiService.searchRelatedKpi(userMessage);
+		SearchKpiResponseDTO result = searchKpiService.searchRelatedKpi(userMessage);
 		// Then
 		assertNotNull(result);
-		assertEquals(parsedResult, result);
+		assertEquals(parsedResult, result.getKpis());
 	}
 
 	@Test

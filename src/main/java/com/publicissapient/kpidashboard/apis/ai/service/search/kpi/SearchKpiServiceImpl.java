@@ -16,12 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service.search.kpi;
 
-import java.util.List;
 import java.util.Objects;
 
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
@@ -45,13 +45,13 @@ public class SearchKpiServiceImpl implements SearchKPIService {
 	private final AiGatewayClient aiGatewayClient;
 
 	@Qualifier("SearchParser")
-	private final ParserStategy<List<String>> parserStategy;
+	private final ParserStategy<SearchKpiResponseDTO> parserStategy;
 
 	@Autowired
 	PromptGenerator promptGenerator;
 
 	@Override
-	public List<String> searchRelatedKpi(String userMessage) throws EntityNotFoundException {
+	public SearchKpiResponseDTO searchRelatedKpi(String userMessage) throws EntityNotFoundException {
 		if (StringUtils.isEmpty(userMessage)) {
 			log.error(String.format("%s No prompt was found",
 					"Could not process the user message to search kpi."));

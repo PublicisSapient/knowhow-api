@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.ai.service.search.kpi.SearchKPIService;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
@@ -114,7 +115,7 @@ public class AiController {
 					- AI gateway failed to process the request
 					- Prompt configuration is invalid
 					""") })
-	public ResponseEntity<List<String>> getRelevantKPIs(
+	public ResponseEntity<SearchKpiResponseDTO> getRelevantKPIs(
 			 @RequestParam(required = true) String query) throws EntityNotFoundException {
 		return ResponseEntity.ok()
 				.body(searchKPIService.searchRelatedKpi(query));

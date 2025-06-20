@@ -16,11 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service.search.kpi;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
 public interface SearchKPIService {
-	List<String> searchRelatedKpi(@NotNull String userMessage) throws EntityNotFoundException;
+	SearchKpiResponseDTO searchRelatedKpi(@NotNull String userMessage) throws EntityNotFoundException;
 }
