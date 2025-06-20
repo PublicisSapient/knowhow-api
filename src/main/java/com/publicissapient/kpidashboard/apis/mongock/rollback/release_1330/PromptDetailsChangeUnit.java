@@ -124,10 +124,9 @@ public class PromptDetailsChangeUnit {
 						"Search for relevant kpis and provide the kpiid in parsable format on the basis of kpi information and user query")
 				.append(INSTRUCTIONS, Arrays.asList(
 						"1. Given a list of KPIs in the format <kpiId>:<definition> : KPI_DATA and a user query",
-						"2. Match based on context, including synonyms or implied meanings.- Return multiple IDs if relevant.",
-						"3. if no kpi found return empty string"))
+						"2. Match based on context, including synonyms or implied meanings.- Return multiple IDs if relevant and a message"))
 				.append(INPUT, "User Query: USER_QUERY")
-				.append(OUTPUT_FORMAT, "Format the response in comma-seperated string")
+				.append(OUTPUT_FORMAT, "Format the response in parsable format where message is the reason for match or mismatch\n and kpis will be comma-seperated matched kpis otherwise null")
 				.append(PLACEHOLDER, Arrays.asList("KPI_DATA"));
 	}
 
