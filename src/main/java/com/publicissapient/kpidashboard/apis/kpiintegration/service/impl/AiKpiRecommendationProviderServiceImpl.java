@@ -26,6 +26,7 @@ import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResp
 import com.publicissapient.kpidashboard.apis.ai.model.KpiDataPrompt;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiRecommendationProviderService;
 import com.publicissapient.kpidashboard.apis.model.GenericKpiRecommendation;
@@ -78,7 +79,7 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 	 *            The persona to be used for generating recommendations.
 	 * @return A list of {@link ProjectWiseKpiRecommendation} objects containing
 	 *         recommendations for each project.
-	 * @throws InternalServerErrorException
+	 * @throws AiGatewayServiceException
 	 *             if an error occurs while retrieving AI recommendations.
 	 */
 	@Override
@@ -97,7 +98,7 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 			projectWiseKpiRecommendations = buildProjectWiseRecommendations(kpiRequest, responseObject);
 		} catch (Exception ex) {
 			log.error("Exception hitting AI Gateway", ex);
-			throw new InternalServerErrorException("Could not retrieve AI recommendations", ex);
+			throw new AiGatewayServiceException("Could not retrieve AI recommendations");
 		}
 
 		return projectWiseKpiRecommendations;

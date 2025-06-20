@@ -32,8 +32,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,8 +61,8 @@ public class RnrEngineRecommendationProviderServiceImpl implements KpiRecommenda
 		Optional<String> projectId = kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT).stream()
 				.findFirst();
 
-		String recommendationUrl = String.format(customApiConfig.getRnrRecommendationUrl(), encode(
-				projectId.orElse("") + "," + sprintId.orElse("") + "," + String.join(",", kpiRequest.getKpiIdList())));
+		String recommendationUrl = String.format(customApiConfig.getRnrRecommendationUrl(),
+				projectId.orElse(""), sprintId.orElse(""), String.join(",", kpiRequest.getKpiIdList()));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set(RNR_API_HEADER, customApiConfig.getRnrRecommendationApiKey());
@@ -78,7 +76,4 @@ public class RnrEngineRecommendationProviderServiceImpl implements KpiRecommenda
 		return response.getBody();
 	}
 
-	private String encode(String value) {
-		return URLEncoder.encode(value, StandardCharsets.UTF_8);
-	}
 }
