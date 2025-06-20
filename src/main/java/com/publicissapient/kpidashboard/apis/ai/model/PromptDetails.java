@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.ai.model;
 
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
@@ -29,6 +30,7 @@ import java.util.List;
  * @author shunaray
  */
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "prompt_details")
 public class PromptDetails extends BasicModel {

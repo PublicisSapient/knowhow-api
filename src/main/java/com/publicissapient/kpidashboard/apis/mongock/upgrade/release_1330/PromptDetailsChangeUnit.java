@@ -86,8 +86,7 @@ public class PromptDetailsChangeUnit {
 						"2. Compute the pairwise correlation coefficients and weights for the project data",
 						"3. Calculate the pairwise scores based on the benchmark comparison using the formula: text(pair_score)_(i,j) = (1 - Delta r) cdot w_(benchmark) - (0.2 cdot Delta r text(if) Delta r > 0.2)' Normalize between 0 and 1.",
 						"4. Aggregate all pairwise scores and normalize across 49 pairs.",
-						"5. Scale the normalized score to a percentage to get the project health.",
-						"Analyze the provided dataset KPI_DATA_BY_PROJECT_PLACEHOLDER, which contains KPI data of the latest five sprints marked by date, analyze the performance of each KPI and generate a score for the project performance."))
+						"5. Scale the normalized score to a percentage to get the project health."))
 				.append("input",
 						"Based on the KPIs – sprint_velocity_kpi_value, commitment_reliability_kpi_value, sprint_capacity_utilization_kpi_value, defect_injection_rate_kpi_value, scope_churn_issue_count_kpi_value, lead_time_for_change_kpi_value, code_build_time_kpi_value – analyze the provided dataset KPI_DATA_BY_PROJECT_PLACEHOLDER, which contains kpi data of latest five sprints marked by date,analyze the performance of each kpi and generate a score for the project performance.")
 				.append("outputFormat",
