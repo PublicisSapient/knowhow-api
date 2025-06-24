@@ -173,7 +173,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 				hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA)) {
 			return new ServiceResponse(false, "Jira already configured for this project", null);
 		}
-		if (isRepoTool(projectToolConfig, projectToolConfig.getBasicProjectConfigId().toString())) {
+		if (isRepoTool(projectToolConfig)) {
 			ServiceResponse repoToolServiceResponse = setRepoToolConfig(projectToolConfig);
 			if (Boolean.FALSE.equals(repoToolServiceResponse.getSuccess()))
 				return repoToolServiceResponse;
@@ -338,7 +338,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 		ProjectToolConfig tool = optionalProjectToolConfig.get();
 		if (isValidTool(basicProjectConfigId, tool)) {
-			if (isRepoTool(tool, basicProjectConfigId) && !repoToolsConfigService.updateRepoToolProjectConfiguration(
+			if (isRepoTool(tool) && !repoToolsConfigService.updateRepoToolProjectConfiguration(
 					toolList.stream().filter(projectToolConfig -> projectToolConfig.getToolName().equals(tool.getToolName()))
 							.collect(Collectors.toList()),
 					tool, basicProjectConfigId)) {
@@ -355,11 +355,10 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 	}
 
-	private boolean isRepoTool(ProjectToolConfig tool, String basicProjectConfigId) {
-		ProjectBasicConfig projectBasicConfig = configHelperService.getProjectConfig(basicProjectConfigId);
+	private boolean isRepoTool(ProjectToolConfig tool) {
 		List<String> scmToolList = Arrays.asList(ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
 				ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
-		return scmToolList.contains(tool.getToolName()) && projectBasicConfig.isDeveloperKpiEnabled();
+		return scmToolList.contains(tool.getToolName());
 	}
 
 	private void cleanData(ProjectToolConfig tool) {
@@ -510,7 +509,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	public boolean cleanToolData(String basicProjectConfigId, String projectToolId) {
 		ProjectToolConfig tool = toolRepository.findById(projectToolId);
 		if (isValidTool(basicProjectConfigId, tool)) {
-			if (isRepoTool(tool, basicProjectConfigId)) {
+			if (isRepoTool(tool)) {
 				repoToolsConfigService.deleteRepoToolProject(configHelperService.getProjectConfig(basicProjectConfigId), true);
 			}
 			cleanData(tool);

@@ -109,13 +109,11 @@ public class ProcessorServiceImpl implements ProcessorService {
 		boolean isSuccess = true;
 		int statuscode = HttpStatus.NOT_FOUND.value();
 		String body = "";
-		boolean isSCMToolEnabled = false;
 		String projectBasicConfigId = "";
 		if (processorExecutionBasicConfig != null) {
 			projectBasicConfigId = processorExecutionBasicConfig.getProjectBasicConfigIds().get(0);
-			isSCMToolEnabled = configHelperService.getProjectConfig(projectBasicConfigId).isDeveloperKpiEnabled();
 		}
-		if (scmToolList.contains(processorName) && isSCMToolEnabled) {
+		if (scmToolList.contains(processorName)) {
 			statuscode = repoToolsConfigService.triggerScanRepoToolProject(processorName, projectBasicConfigId);
 		} else {
 			httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
