@@ -221,27 +221,16 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 				String weekOrMonth = (String) durationFilter.getOrDefault(Constant.DURATION, CommonConstant.WEEK);
 				int previousTimeCount = (int) durationFilter.getOrDefault(Constant.COUNT, 8);
 
-				Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise = new HashMap<>();
-				Map<String, String> formattedLeadTimeMapTimeWise= new HashMap<>();
-						if(weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)) {
-							Pair<Map<String, List<MeanTimeRecoverData>>, Map<String, String>> lastNWeek = getLastNWeek(previousTimeCount);
-							meanTimeRecoverMapTimeWise=lastNWeek.getKey();
-							formattedLeadTimeMapTimeWise=lastNWeek.getValue();
-						}else{
-							Pair<Map<String, List<MeanTimeRecoverData>>, Map<String, String>> lastNMonth = getLastNMonthCount(previousTimeCount);
-							meanTimeRecoverMapTimeWise=lastNMonth.getKey();
-							formattedLeadTimeMapTimeWise=lastNMonth.getValue();
-						}
-
+				Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise = weekOrMonth.equalsIgnoreCase(
+						CommonConstant.WEEK) ? getLastNWeek(previousTimeCount) : getLastNMonthCount(previousTimeCount);
 				if (CollectionUtils.isNotEmpty(jiraIssueHistoryDataList)) {
 					List<DataCount> dataCountList = new ArrayList<>();
 
 					findMeanTimeToRecover(jiraIssueHistoryDataList, weekOrMonth, meanTimeRecoverMapTimeWise, fieldMapping);
 
-					Map<String, String> finalFormattedLeadTimeMapTimeWise = formattedLeadTimeMapTimeWise;
 					meanTimeRecoverMapTimeWise.forEach((weekOrMonthName, meanTimeRecoverListCurrentTime) -> {
 						DataCount dataCount = createDataCount(trendLineName, weekOrMonthName,
-                                meanTimeRecoverListCurrentTime, finalFormattedLeadTimeMapTimeWise);
+                                meanTimeRecoverListCurrentTime);
 						dataCountList.add(dataCount);
 					});
 					populateMeanTimeRecoverExcelData(excelData, requestTrackerId, trendLineName, meanTimeRecoverMapTimeWise);
@@ -279,35 +268,25 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
      * @param trendLineName                     project name
      * @param weekOrMonthName                   date
      * @param meanTimeRecoverListCurrentTime    meantime list
-     * @param finalFormattedLeadTimeMapTimeWise
 	 * @return data count
 	 */
 	private DataCount createDataCount(String trendLineName, String weekOrMonthName,
-									  List<MeanTimeRecoverData> meanTimeRecoverListCurrentTime, Map<String, String> finalFormattedLeadTimeMapTimeWise) {
-		double timeToRecover = 0.0D;
-		String formattedDate ="";
+									  List<MeanTimeRecoverData> meanTimeRecoverListCurrentTime) {
+		double timeToRecover = meanTimeRecoverListCurrentTime.stream().filter(data -> data.getTimeToRecover() != null)
+				.mapToDouble(data -> Double.parseDouble(data.getTimeToRecover())).sum();
 		long count = meanTimeRecoverListCurrentTime.stream().filter(data -> data.getTimeToRecover() != null).count();
-
-		DataCount dataCount = new DataCount();
-		dataCount.setSProjectName(trendLineName);
-		if (CollectionUtils.isNotEmpty(meanTimeRecoverListCurrentTime)) {
-			formattedDate=meanTimeRecoverListCurrentTime.get(meanTimeRecoverListCurrentTime.size() - 1).getDate();
-			timeToRecover = meanTimeRecoverListCurrentTime.stream().filter(data -> data.getTimeToRecover() != null)
-					.mapToDouble(data -> Double.parseDouble(data.getTimeToRecover())).sum();
-		} else {
-			formattedDate = finalFormattedLeadTimeMapTimeWise.get(weekOrMonthName);
-		}
 		double meanTime = 0.0;
 		if (count != 0) {
 			meanTime = timeToRecover / count;
 		}
-
+		DataCount dataCount = new DataCount();
+		dataCount.setSProjectName(trendLineName);
 		dataCount.setData(String.valueOf(meanTime));
 		Map<String, Object> hoverMap = new HashMap<>();
 		hoverMap.put("Total Time", timeToRecover);
 		hoverMap.put("Issue Count", count);
 
-		dataCount.setDate(formattedDate);
+		dataCount.setDate(weekOrMonthName);
 		dataCount.setValue(meanTime);
 		dataCount.setHoverValue(hoverMap);
 		return dataCount;
@@ -360,7 +339,7 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
                 meanTimeToRecoverInHrs= Duration.between(ticketCreatedDate, ticketClosedDate).toHours();
 			}
 
-			Pair<String, String> weekOrMonthName = getDateFormatted(weekOrMonth, ticketCreatedDate);
+			 String weekOrMonthName = getDateFormatted(weekOrMonth, ticketCreatedDate);
 
 			setMeanTimeForRecoverData(meanTimeRecoverMapTimeWise, jiraIssueHistoryData, ticketClosedDate, ticketCreatedDate,
 					meanTimeToRecoverInHrs, weekOrMonthName);
@@ -376,11 +355,11 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	 *          current date
 	 * @return formatted date
 	 */
-	private  Pair<String, String> getDateFormatted(String weekOrMonth, LocalDateTime currentDate) {
+	private String getDateFormatted(String weekOrMonth, LocalDateTime currentDate) {
 		if (weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)) {
 			return DateUtil.getWeekRangeUsingDateTime(currentDate);
 		} else {
-			return Pair.of(currentDate.getYear() + Constant.DASH + String.valueOf(currentDate.getMonthValue()),DateUtil.tranformUTCLocalTimeToZFormat(currentDate));
+			return currentDate.getYear() + Constant.DASH + String.valueOf(currentDate.getMonthValue());
 		}
 	}
 
@@ -402,7 +381,7 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	 */
 	private void setMeanTimeForRecoverData(Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
 			JiraIssueCustomHistory jiraIssueHistoryData, LocalDateTime ticketClosedDate, LocalDateTime ticketCreatedDate,
-			double meanTimeToRecoverInHrs, Pair<String, String> weekOrMonthName) {
+			double meanTimeToRecoverInHrs, String weekOrMonthName) {
 		MeanTimeRecoverData meanTimeRecoverData = new MeanTimeRecoverData();
 		meanTimeRecoverData.setStoryID(jiraIssueHistoryData.getStoryID());
 		meanTimeRecoverData.setUrl(jiraIssueHistoryData.getUrl());
@@ -413,8 +392,8 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 			meanTimeRecoverData.setTimeToRecover(String.valueOf(meanTimeToRecoverInHrs));
 		}
 		meanTimeRecoverData.setCreatedDate(DateUtil.tranformUTCLocalTimeToZFormat(ticketCreatedDate));
-		meanTimeRecoverData.setDate(weekOrMonthName.getValue());
-		meanTimeRecoverMapTimeWise.computeIfPresent(weekOrMonthName.getKey(), (key, meanTimeToRecoverListCurrentTime) -> {
+		meanTimeRecoverData.setDate(weekOrMonthName);
+		meanTimeRecoverMapTimeWise.computeIfPresent(weekOrMonthName, (key, meanTimeToRecoverListCurrentTime) -> {
 			meanTimeToRecoverListCurrentTime.add(meanTimeRecoverData);
 			return meanTimeToRecoverListCurrentTime;
 		});
@@ -427,17 +406,15 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	 *          count
 	 * @return map of list of MeanTimeRecoverData
 	 */
-	private Pair<Map<String, List<MeanTimeRecoverData>>, Map<String, String>> getLastNWeek(int count) {
+	private Map<String, List<MeanTimeRecoverData>> getLastNWeek(int count) {
 		Map<String, List<MeanTimeRecoverData>> lastNWeek = new LinkedHashMap<>();
-		Map<String,String> formattedWeek = new LinkedHashMap<>();
 		LocalDateTime endDateTime = DateUtil.getTodayTime();
 		for (int i = 0; i < count; i++) {
-			Pair<String, String> weekRangeUsingDateTime = DateUtil.getWeekRangeUsingDateTime(endDateTime);
-			lastNWeek.put(weekRangeUsingDateTime.getKey(), new ArrayList<>());
-			formattedWeek.put(weekRangeUsingDateTime.getKey(),weekRangeUsingDateTime.getValue());
+			String weekRangeUsingDateTime = DateUtil.getWeekRangeUsingDateTime(endDateTime);
+			lastNWeek.put(weekRangeUsingDateTime, new ArrayList<>());
 			endDateTime = endDateTime.minusWeeks(1);
 		}
-		return Pair.of(lastNWeek, formattedWeek);
+		return lastNWeek;
 	}
 
 	/**
@@ -447,21 +424,18 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	 *          count
 	 * @return map of list of MeanTimeRecoverData
 	 */
-	private Pair<Map<String, List<MeanTimeRecoverData>>, Map<String, String>> getLastNMonthCount(int count) {
+	private Map<String, List<MeanTimeRecoverData>> getLastNMonthCount(int count) {
 		Map<String, List<MeanTimeRecoverData>> lastNMonth = new LinkedHashMap<>();
-		Map<String,String> formattedLastNMonth = new LinkedHashMap<>();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		String currentDateStr = currentDate.getYear() + Constant.DASH + currentDate.getMonthValue();
-		formattedLastNMonth.put(currentDateStr, DateUtil.tranformUTCLocalTimeToZFormat(currentDate));
 		lastNMonth.put(currentDateStr, new ArrayList<>());
 		LocalDateTime lastMonth = DateUtil.getTodayTime();
 		for (int i = 1; i < count; i++) {
 			lastMonth = lastMonth.minusMonths(1);
 			String lastMonthStr = lastMonth.getYear() + Constant.DASH + lastMonth.getMonthValue();
 			lastNMonth.put(lastMonthStr, new ArrayList<>());
-            formattedLastNMonth.put(lastMonthStr, DateUtil.tranformUTCLocalTimeToZFormat(lastMonth));
 		}
-		return Pair.of(lastNMonth, formattedLastNMonth);
+		return lastNMonth;
 	}
 
 	/** {@inheritDoc} */
