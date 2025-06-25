@@ -259,7 +259,12 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		try {
 			ResponseEntity<String> result = restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity,
 					String.class);
-			return result.getStatusCode().is2xxSuccessful();
+            if (result.getBody()!= null && result.getBody().trim().equals("[]")) {
+				return result.getStatusCode().is4xxClientError();
+			} else {
+				return result.getStatusCode().is2xxSuccessful();
+			}
+
 		} catch (HttpClientErrorException e) {
 			return e.getStatusCode().is5xxServerError();
 		}
@@ -375,6 +380,9 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		}
 		if (toolName.equalsIgnoreCase(Constant.TOOL_BITBUCKET) && responseEntity.getStatusCode().equals(HttpStatus.OK)) {
 			return HttpStatus.OK;
+		}
+		if (responseBody.toString().trim().equals("[]")) {
+			return HttpStatus.UNAUTHORIZED;
 		}
 
 		return responseEntity.getStatusCode();
@@ -495,10 +503,13 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 			case Constant.TOOL_GITHUB, Constant.TOOL_GITLAB, Constant.TOOL_ARGOCD, Constant.REPO_TOOLS ->
 				connection.getAccessToken();
 			case Constant.TOOL_ZEPHYR -> {
-				if (connection.isCloudEnv() || connection.isBearerToken()) {
+				if (connection.isCloudEnv()) {
 					yield connection.getAccessToken();
+				} else if(connection.isBearerToken()){
+					yield connection.getPatOAuthToken();
+				}else {
+					yield connection.getPassword();
 				}
-				yield connection.getApiKey();
 			}
 			case Constant.TOOL_SONAR -> {
 				if (connection.isCloudEnv() || StringUtils.isNotEmpty(connection.getAccessToken())) {
