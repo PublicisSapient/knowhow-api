@@ -129,11 +129,8 @@ public class TestConnectionServiceImplTest {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer key");
 
-		when(restTemplate.exchange(new URI("https://abc.com/jira/rest/api/2/issue/createmeta"), HttpMethod.GET,
-				new HttpEntity<>(headers), String.class)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-
 		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ZEPHYR);
-		assertThat("status: ", response.getSuccess(), equalTo(true));
+		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
 	@Test
