@@ -45,7 +45,7 @@ public class KpiMasterChangeUnit {
         MongoCollection<Document> kpiMaster = mongoTemplate.getCollection("kpi_master");
         Document filter = new Document("kpiId", "kpi168");
 
-        Document update = new Document("$set", new Document("yaxisLabel", "Code Quality"));
+        Document update = new Document("$set", new Document("yAxisLabel", "Code Quality"));
 
         // Perform the update
         kpiMaster.updateOne(filter, update);
@@ -59,7 +59,7 @@ public class KpiMasterChangeUnit {
     public void rollbackkpi168() {
         MongoCollection<Document> kpiMaster = mongoTemplate.getCollection("kpi_master");
         Document filter = new Document("kpiId", "kpi168");
-        Document update = new Document("$set", new Document("yaxisLabel", null));
+        Document update = new Document("$set", new Document("yAxisLabel", null));
 
         // Perform the update
         kpiMaster.updateOne(filter, update);
