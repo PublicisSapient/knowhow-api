@@ -381,7 +381,7 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		if (toolName.equalsIgnoreCase(Constant.TOOL_BITBUCKET) && responseEntity.getStatusCode().equals(HttpStatus.OK)) {
 			return HttpStatus.OK;
 		}
-		if (responseBody.toString().trim().equals("[]")) {
+		if (responseBody != null && responseBody.toString().trim().equals("[]")) {
 			return HttpStatus.UNAUTHORIZED;
 		}
 
