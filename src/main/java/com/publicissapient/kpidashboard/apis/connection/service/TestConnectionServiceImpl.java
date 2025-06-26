@@ -259,7 +259,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		try {
 			ResponseEntity<String> result = restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity,
 					String.class);
-            if (result.getBody()!= null && result.getBody().trim().equals("[]")) {
+			String body = result.getBody();
+			if (body != null && body.trim().equals("[]")) {
 				return result.getStatusCode().is4xxClientError();
 			} else {
 				return result.getStatusCode().is2xxSuccessful();
