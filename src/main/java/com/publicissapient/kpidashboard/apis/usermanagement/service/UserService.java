@@ -16,7 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.service;
 
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 /**
  * Service interface for user operations
@@ -27,7 +27,7 @@ public interface UserService {
      * Saves user information with SAML authentication type
      *
      * @param username the username
-     * @return the saved user info
+     * @return ServiceResponse containing status, message, and user info
      */
-    UserInfo saveUserInfo(String username);
+    ServiceResponse saveUserInfo(String username);
 }
