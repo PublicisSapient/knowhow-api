@@ -25,7 +25,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Data
