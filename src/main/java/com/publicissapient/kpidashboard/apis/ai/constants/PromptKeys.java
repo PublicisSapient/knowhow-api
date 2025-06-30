@@ -21,6 +21,8 @@ public final class PromptKeys {
 	public static final String SPRINT_GOALS_SUMMARY = "sprint-goals-summary";
 	public static final String KPI_CORRELATION_ANALYSIS_REPORT = "kpi-correlation-analysis-report";
 	public static final String KPI_RECOMMENDATION_PROMPT = "kpi-recommendation";
+	public static final String KPI_SEARCH = "kpi-search";
+	public static final String KPI_DATA = "kpi-data";
 
 	private PromptKeys() {
 		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
