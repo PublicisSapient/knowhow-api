@@ -1,10 +1,30 @@
+/*
+ *  Copyright 2024 <Sapient Corporation>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the
+ *  License.
+ */
+
 package com.publicissapient.kpidashboard.apis.kpiintegration.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -16,8 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -29,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AiKpiRecommendationProviderServiceImplTest {
@@ -48,12 +69,17 @@ class AiKpiRecommendationProviderServiceImplTest {
 	@Mock
 	private KpiIntegrationServiceImpl kpiIntegrationService;
 
+	@Mock
+	@Qualifier("AiRecommendation")
+	private ParserStategy<Object> parserStategy;
+
 	private KpiElement kpiElement1;
 
 	private KpiElement kpiElement2;
+	private String content;
 
 	@BeforeEach
-	void setUp() throws IOException {
+	void setUp() throws IOException, EntityNotFoundException {
 		DataCount dataCount = new DataCount();
 		dataCount.setMaturity("1");
 		dataCount.setMaturityValue("35");
@@ -64,19 +90,20 @@ class AiKpiRecommendationProviderServiceImplTest {
 		dataCountGroup.setValue(Arrays.asList(dataCount));
 		kpiElement2 = new KpiElement();
 		kpiElement2.setTrendValueList(Arrays.asList(dataCountGroup));
-		Mockito.when(customApiConfig.getAiRecommendationKpiList()).thenReturn(Arrays.asList("KPI1", "KPI2"));
-		Mockito.when(kpiIntegrationService.getKpiResponses(any())).thenReturn(Collections.singletonList(kpiElement1));
-		Mockito.when(promptGenerator.getKpiRecommendationPrompt(any(), any())).thenReturn("Generated Prompt");
+		when(customApiConfig.getAiRecommendationKpiList()).thenReturn(Arrays.asList("KPI1", "KPI2"));
+		when(kpiIntegrationService.getKpiResponses(any())).thenReturn(Collections.singletonList(kpiElement1));
+		when(promptGenerator.getKpiRecommendationPrompt(any(), any())).thenReturn("Generated Prompt");
 	}
 
 	@Test
-	void getProjectWiseKpiRecommendationsReturnsRecommendationsForValidInput() {
+	void getProjectWiseKpiRecommendationsReturnsRecommendationsForValidInput() throws JsonProcessingException {
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setIds(new String[] { "project1" });
 		kpiRequest.setSelectedMap(new HashMap<>());
-
-		Mockito.when(aiGatewayClient.generate(any(ChatGenerationRequest.class))).thenReturn(new ChatGenerationResponseDTO(
-				"{\"project_health_value\": 85.0, \"project_recommendations\": [{\"recommendation\": \"Improve code quality\", \"severity\": \"High\"}]}"));
+	  content="{\"project_health_value\": 85.0, \"project_recommendations\": [{\"recommendation\": \"Improve code quality\", \"severity\": \"High\"}]}";
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class))).thenReturn(new ChatGenerationResponseDTO(
+				content));
+		when(parserStategy.parse(any())).thenReturn(new ObjectMapper().readTree(content));
 
 		List<ProjectWiseKpiRecommendation> recommendations = aiKpiRecommendationProviderService
 				.getProjectWiseKpiRecommendations(kpiRequest, "persona");
@@ -92,13 +119,15 @@ class AiKpiRecommendationProviderServiceImplTest {
 	}
 
 	@Test
-	void getProjectWiseKpiRecommendationsHandlesEmptyKpiData() {
+	void getProjectWiseKpiRecommendationsHandlesEmptyKpiData() throws JsonProcessingException {
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setIds(new String[] { "project1" });
 		kpiRequest.setSelectedMap(new HashMap<>());
 
-		Mockito.when(aiGatewayClient.generate(any())).thenReturn(
-				new ChatGenerationResponseDTO("{\"project_health_value\": 0.0, \"project_recommendations\": []}"));
+		content = "{\"project_health_value\": 0.0, \"project_recommendations\": []}";
+		when(aiGatewayClient.generate(any())).thenReturn(
+				new ChatGenerationResponseDTO(content));
+		when(parserStategy.parse(any())).thenReturn(new ObjectMapper().readTree(content));
 
 		List<ProjectWiseKpiRecommendation> recommendations = aiKpiRecommendationProviderService
 				.getProjectWiseKpiRecommendations(kpiRequest, "persona");

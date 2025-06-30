@@ -967,7 +967,7 @@ public class KPIExcelUtility {
 				excelData.setProjectName(projectName);
 				excelData.setReleaseName(pv.getName());
 				excelData.setReleaseDesc(pv.getDescription());
-				excelData.setReleaseEndDate(DateUtil.convertToGenericString(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate()).toString()));
+				excelData.setReleaseEndDate(DateUtil.convertToGenericString(pv.getReleaseDate().toString()));
 				excelData.setMonth(DateUtil.convertToMonthYearFormat(DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate()).toString()));
 				kpiExcelData.add(excelData);
 			});
@@ -2009,7 +2009,7 @@ public class KPIExcelUtility {
 				leadTimeListCurrentTime.stream().forEach(leadTimeChangeData -> {
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setProjectName(projectName);
-                    excelData.setDate(leadTimeChangeData.getDate());
+                    excelData.setWeeks(leadTimeChangeData.getDate());
 					excelData.setChangeCompletionDate(leadTimeChangeData.getClosedDate());
 					if (CommonConstant.REPO.equals(leadTimeConfigRepoTool)) {
 						excelData.setMergeRequestId(leadTimeChangeData.getMergeID());

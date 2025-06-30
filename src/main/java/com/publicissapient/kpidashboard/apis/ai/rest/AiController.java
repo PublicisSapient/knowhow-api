@@ -16,17 +16,23 @@
 
 package com.publicissapient.kpidashboard.apis.ai.rest;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import com.publicissapient.kpidashboard.apis.ai.service.search.kpi.SearchKPIService;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
@@ -58,6 +64,8 @@ public class AiController {
 	@Autowired
 	private KpiRecommendationServiceImpl kpiRecommendationServiceImpl;
 
+	private final SearchKPIService searchKPIService;
+
 	@PostMapping("/sprint-goals/summary")
 	@Operation(summary = "Summarize Sprint Goals", description = "Generates a summary of the provided sprint goals using AI")
 	@ApiResponses(value = {
@@ -73,7 +81,7 @@ public class AiController {
 					- Prompt configuration is invalid
 					""") })
 	public ResponseEntity<SummarizeSprintGoalsResponseDTO> summarizeSprintGoals(
-			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws IOException {
+			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO) throws EntityNotFoundException , IOException{
 		return ResponseEntity.ok(sprintGoalsService.summarizeSprintGoals(summarizeSprintGoalsRequestDTO));
 	}
 
@@ -86,7 +94,7 @@ public class AiController {
 					Bad request. Can happen in one of the following cases:
 					- No request body was provided
 					- The request body does not contain the required fields
-					"""), @ApiResponse(responseCode = "500", description = """
+					"""), @ApiResponse(responseCode = "503", description = """
 					Unexpected server error occurred. Can happen in one of the following cases:
 					- AI gateway failed to process the request
 					- Prompt configuration is invalid
@@ -95,5 +103,21 @@ public class AiController {
 			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		return ResponseEntity.ok()
 				.body(kpiRecommendationServiceImpl.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
+	}
+
+	@GetMapping(value = "/kpisearch", produces = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Get KPI Search", description = "Produces a possible kpis match for the user entered message")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successfully matched kpis", content = {
+					@Content(mediaType = "application/json", schema = @Schema(implementation = SummarizeSprintGoalsResponseDTO.class)) }),
+		    @ApiResponse(responseCode = "503", description = """
+					Unexpected server error occurred. Can happen in one of the following cases:
+					- AI gateway failed to process the request
+					- Prompt configuration is invalid
+					""") })
+	public ResponseEntity<SearchKpiResponseDTO> getRelevantKPIs(
+			 @RequestParam(required = true) String query) throws EntityNotFoundException {
+		return ResponseEntity.ok()
+				.body(searchKPIService.searchRelatedKpi(query));
 	}
 }
