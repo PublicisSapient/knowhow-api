@@ -78,9 +78,7 @@ class EmailNotificationServiceImplTest {
 		payload.setFixUrl("fixUrl");
 		payload.setExpiryTime("expiry");
 		payload.setResetUrl("resetUrl");
-		// Include PDF attachment data if needed
 		payload.setPdfAttachment("pdfData");
-		// Recipients list
 		payload.setRecipients(new ArrayList<String>() {
 			{
 				add("recipient@test.com");
@@ -107,7 +105,6 @@ class EmailNotificationServiceImplTest {
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
 		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
-		// Prepare expected custom data from utility
 		Map<String, String> customData = new HashMap<>();
 		customData.put("USER_NAME", payload.getUserName());
 		customData.put("USER_EMAIL", payload.getUserEmail());
@@ -126,16 +123,14 @@ class EmailNotificationServiceImplTest {
 		customData.put("FEEDBACK_TYPE", payload.getFeedbackType());
 		customData.put("ADMIN_EMAIL", payload.getAdminEmail());
 		customData.put("TOOL_NAME", payload.getToolName());
-		customData.put("HELP_URL", ""); // customApiConfig.getBrokenConnectionHelpUrl() not used in this test
+		customData.put("HELP_URL", "");
 		customData.put("FIX_URL", payload.getFixUrl());
 		customData.put("EXPIRY_TIME", payload.getExpiryTime());
 		customData.put("RESET_URL", payload.getResetUrl());
 		customData.put("PDF_ATTACHMENT", payload.getPdfAttachment());
 
-		// Mock static methods of NotificationUtility
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
 			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig)).thenReturn(customData);
-			// Return empty set means no required variables (i.e. validate passes)
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
 
@@ -170,22 +165,13 @@ class EmailNotificationServiceImplTest {
 		Map<String, String> subjectMap = new HashMap<>();
 		subjectMap.put(templateKey, "Test Subject");
 		when(customApiConfig.getMailTemplate()).thenReturn(mailTemplateMap);
-//		when(customApiConfig.getNotificationSubject()).thenReturn(subjectMap);
-//		when(customApiConfig.getKafkaMailTopic()).thenReturn("testTopic");
-//		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-//		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
-		// Prepare custom data that is missing a required variable
 		Map<String, String> customData = new HashMap<>();
-		// Omit one required field purposely
 		customData.put("USER_NAME", payload.getUserName());
 		customData.put("USER_EMAIL", payload.getUserEmail());
-		// ... other keys not set
 
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
 			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig)).thenReturn(customData);
-			// Return a set with one required variable "MISSING_VAR" that is not in
-			// customData
 			Set<String> requiredVars = new HashSet<>();
 			requiredVars.add("MISSING_VAR");
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
