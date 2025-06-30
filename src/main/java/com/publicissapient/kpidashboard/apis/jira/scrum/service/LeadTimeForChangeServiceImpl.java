@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -393,20 +394,11 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 
 				String weekOrMonth = (String) durationFilter.getOrDefault(Constant.DURATION, CommonConstant.WEEK);
 				int defaultTimeCount = 8;
-                Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise= new HashMap<>();
-                Map<String, String> formattedLeadTimeMapTimeWise= new HashMap<>();
-                if(weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)){
-                    Pair<Map<String, List<LeadTimeChangeData>>, Map<String, String>> lastNWeek = getLastNWeek(defaultTimeCount);
-                    leadTimeMapTimeWise= lastNWeek.getKey();
-                    formattedLeadTimeMapTimeWise=lastNWeek.getValue();
-                }
-                else{
-                    Pair<Map<String, List<LeadTimeChangeData>>, Map<String, String>> lastNMonthCount = getLastNMonthCount(defaultTimeCount);
-                    leadTimeMapTimeWise=lastNMonthCount.getKey();
-                    formattedLeadTimeMapTimeWise=lastNMonthCount.getValue();
-                }
+				Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise = weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)
+						? getLastNWeek(defaultTimeCount)
+						: getLastNMonthCount(defaultTimeCount);
 
-                if (CollectionUtils.isNotEmpty(jiraIssueHistoryDataList) && CollectionUtils.isNotEmpty(jiraIssueDataList)) {
+				if (CollectionUtils.isNotEmpty(jiraIssueHistoryDataList) && CollectionUtils.isNotEmpty(jiraIssueDataList)) {
 					Map<String, JiraIssue> jiraIssueMap = jiraIssueDataList.stream()
 							.collect(Collectors.toMap(JiraIssue::getNumber, Function.identity()));
 					List<DataCount> dataCountList = new ArrayList<>();
@@ -419,9 +411,8 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 								dodStatus);
 					}
 
-					Map<String, String> finalFormattedLeadTimeMapTimeWise = formattedLeadTimeMapTimeWise;
 					leadTimeMapTimeWise.forEach((weekOrMonthName, leadTimeListCurrentTime) -> {
-						DataCount dataCount = createDataCount(trendLineName, weekOrMonthName, leadTimeListCurrentTime, finalFormattedLeadTimeMapTimeWise);
+						DataCount dataCount = createDataCount(trendLineName, weekOrMonthName, leadTimeListCurrentTime);
 						dataCountList.add(dataCount);
 					});
 					populateLeadTimeExcelData(excelData, requestTrackerId, trendLineName, leadTimeConfigRepoTool,
@@ -482,7 +473,7 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 
 			jiraIssueHistoryData.getStatusUpdationLog().forEach(jiraHistoryChangeLog -> {
 				if (CollectionUtils.isNotEmpty(dodStatus) && dodStatus.contains(jiraHistoryChangeLog.getChangedTo())) {
-					closedTicketDate.set(jiraHistoryChangeLog.getUpdatedOn());
+					closedTicketDate.set(DateUtil.localDateTimeToUTC(jiraHistoryChangeLog.getUpdatedOn()));
 				}
 			});
 			if (Objects.nonNull(jiraIssueMap.get(jiraIssueHistoryData.getStoryID())) &&
@@ -494,11 +485,10 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 			}
 
 			if (closedTicketDate.get() != null && releaseDate.get() != null) {
-
 				double leadTimeChangeInDays = KpiDataHelper.calWeekDaysExcludingWeekends(closedTicketDate.get(),
 						releaseDate.get());
 
-				Pair<String,String> weekOrMonthName = getDateFormatted(weekOrMonth, releaseDate.get());
+				String weekOrMonthName = getDateFormatted(weekOrMonth, releaseDate.get());
 
 				setLeadTimeChangeDataListForJira(leadTimeMapTimeWise, jiraIssueHistoryData, closedTicketDate, releaseDate,
 						leadTimeChangeInDays, weekOrMonthName);
@@ -525,18 +515,18 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 	 */
 	private void setLeadTimeChangeDataListForJira(Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise,
 			JiraIssueCustomHistory jiraIssueHistoryData, AtomicReference<LocalDateTime> closedTicketDate,
-			AtomicReference<LocalDateTime> releaseDate, double leadTimeChange, Pair<String,String> weekOrMonthName) {
+			AtomicReference<LocalDateTime> releaseDate, double leadTimeChange, String weekOrMonthName) {
 		LeadTimeChangeData leadTimeChangeData = new LeadTimeChangeData();
 		leadTimeChangeData.setStoryID(jiraIssueHistoryData.getStoryID());
 		leadTimeChangeData.setUrl(jiraIssueHistoryData.getUrl());
 		leadTimeChangeData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
 		leadTimeChangeData.setReleaseDate(
-				DateUtil.dateTimeConverter(releaseDate.get().toString(), DateUtil.HOUR_MINUTE, DateUtil.TIME_FORMAT));
+				DateUtil.dateTimeConverter(releaseDate.get().toString(), DateUtil.HOUR_MINUTE, DateUtil.DISPLAY_DATE_TIME_FORMAT));
 		String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
 		leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
 		leadTimeChangeData.setLeadTime(leadTimeChange);
-		leadTimeChangeData.setDate(weekOrMonthName.getValue());
-		leadTimeMapTimeWise.computeIfPresent(weekOrMonthName.getKey(), (key, leadTimeChangeListCurrentTime) -> {
+		leadTimeChangeData.setDate(weekOrMonthName);
+		leadTimeMapTimeWise.computeIfPresent(weekOrMonthName, (key, leadTimeChangeListCurrentTime) -> {
 			leadTimeChangeListCurrentTime.add(leadTimeChangeData);
 			return leadTimeChangeListCurrentTime;
 		});
@@ -609,7 +599,7 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 		if (closedTicketDate.get() != null && releaseDate.get() != null) {
 			double leadTimeChange = KpiDataHelper.calWeekDaysExcludingWeekends(closedTicketDate.get(), releaseDate.get());
 
-			Pair<String, String> weekOrMonthName = getDateFormatted(weekOrMonth, releaseDate.get());
+			String weekOrMonthName = getDateFormatted(weekOrMonth, releaseDate.get());
 
 			LeadTimeChangeData leadTimeChangeData = new LeadTimeChangeData();
 			leadTimeChangeData.setStoryID(matchJiraIssue.get().getNumber());
@@ -618,12 +608,12 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 			leadTimeChangeData.setFromBranch(mergeRequests.getFromBranch());
 			leadTimeChangeData.setClosedDate(DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
 			leadTimeChangeData.setReleaseDate(DateUtil.dateTimeConverter(releaseDate.get().toString(),
-					DateUtil.HOUR_MINUTE, DateUtil.TIME_FORMAT));
+					DateUtil.HOUR_MINUTE, DateUtil.DISPLAY_DATE_TIME_FORMAT));
 			String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
 			leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
 			leadTimeChangeData.setLeadTime(leadTimeChange);
-			leadTimeChangeData.setDate(weekOrMonthName.getValue());
-			leadTimeMapTimeWise.computeIfPresent(weekOrMonthName.getKey(), (key, leadTimeChangeListCurrentTime) -> {
+			leadTimeChangeData.setDate(weekOrMonthName);
+			leadTimeMapTimeWise.computeIfPresent(weekOrMonthName, (key, leadTimeChangeListCurrentTime) -> {
 				leadTimeChangeListCurrentTime.add(leadTimeChangeData);
 				return leadTimeChangeListCurrentTime;
 			});
@@ -632,37 +622,32 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 
 	/**
 	 * set data count
-     *
-     * @param trendLineName                     project name
-     * @param weekOrMonthName                   date
-     * @param leadTimeListCurrentTime           lead time list
-     * @param finalFormattedLeadTimeMapTimeWise
+	 *
+	 * @param trendLineName
+	 *          project name
+	 * @param weekOrMonthName
+	 *          date
+	 * @param leadTimeListCurrentTime
+	 *          lead time list
 	 * @return data count
 	 */
 	private DataCount createDataCount(String trendLineName, String weekOrMonthName,
-			List<LeadTimeChangeData> leadTimeListCurrentTime, Map<String, String> finalFormattedLeadTimeMapTimeWise) {
-		double days = 0.0D;
-		String formattedDate = "";
+			List<LeadTimeChangeData> leadTimeListCurrentTime) {
+		double days = leadTimeListCurrentTime.stream().mapToDouble(LeadTimeChangeData::getLeadTime).sum();
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(days));
 		dataCount.setSProjectName(trendLineName);
-		if (CollectionUtils.isNotEmpty(leadTimeListCurrentTime)) {
-			formattedDate=leadTimeListCurrentTime.get(leadTimeListCurrentTime.size() - 1).getDate();
-			days = leadTimeListCurrentTime.stream().mapToDouble(LeadTimeChangeData::getLeadTime).sum();
-		} else {
-			formattedDate = finalFormattedLeadTimeMapTimeWise.get(weekOrMonthName);
-		}
-		dataCount.setDate(formattedDate);
+		dataCount.setDate(weekOrMonthName);
 		dataCount.setValue(days);
 		dataCount.setHoverValue(new HashMap<>());
 		return dataCount;
 	}
 
-	private Pair<String, String> getDateFormatted(String weekOrMonth, LocalDateTime currentDate) {
+	private String getDateFormatted(String weekOrMonth, LocalDateTime currentDate) {
 		if (weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)) {
 			return DateUtil.getWeekRangeUsingDateTime(currentDate);
 		} else {
-			return Pair.of(currentDate.getYear() + Constant.DASH + String.valueOf(currentDate.getMonthValue()),DateUtil.tranformUTCLocalTimeToZFormat(currentDate));
+			return currentDate.getYear() + Constant.DASH + Month.of(currentDate.toLocalDate().atTime(23, 59, 59).getMonthValue());
 		}
 	}
 
@@ -683,17 +668,16 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 	 *          count
 	 * @return map of list of LeadTimeChangeData
 	 */
-	private Pair<Map<String, List<LeadTimeChangeData>>, Map<String, String>> getLastNWeek(int count) {
+	private Map<String, List<LeadTimeChangeData>> getLastNWeek(int count) {
 		Map<String, List<LeadTimeChangeData>> lastNWeek = new LinkedHashMap<>();
-		Map<String,String> formattedWeek = new LinkedHashMap<>();
 		LocalDateTime endDateTime = DateUtil.getTodayTime();
+
 		for (int i = 0; i < count; i++) {
-			Pair<String, String> weekRangeUsingDateTime = DateUtil.getWeekRangeUsingDateTime(endDateTime);
-			lastNWeek.put(weekRangeUsingDateTime.getKey(), new ArrayList<>());
-			formattedWeek.put(weekRangeUsingDateTime.getKey(),weekRangeUsingDateTime.getValue());
+			String currentWeekStr = DateUtil.getWeekRangeUsingDateTime(endDateTime);
+			lastNWeek.put(currentWeekStr, new ArrayList<>());
 			endDateTime = endDateTime.minusWeeks(1);
 		}
-		return Pair.of(lastNWeek, formattedWeek);
+		return lastNWeek;
 	}
 
 	/**
@@ -703,20 +687,19 @@ public class LeadTimeForChangeServiceImpl extends JiraKPIService<Double, List<Ob
 	 *          count
 	 * @return map of list of LeadTimeChangeData
 	 */
-	private Pair<Map<String, List<LeadTimeChangeData>>, Map<String, String>> getLastNMonthCount(int count) {
+	private Map<String, List<LeadTimeChangeData>> getLastNMonthCount(int count) {
 		Map<String, List<LeadTimeChangeData>> lastNMonth = new LinkedHashMap<>();
-		Map<String,String> formattedLastNMonth = new LinkedHashMap<>();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		String currentDateStr = currentDate.getYear() + Constant.DASH + currentDate.getMonthValue();
-		formattedLastNMonth.put(currentDateStr, DateUtil.tranformUTCLocalTimeToZFormat(currentDate));
 		lastNMonth.put(currentDateStr, new ArrayList<>());
 		LocalDateTime lastMonth = DateUtil.getTodayTime();
 		for (int i = 1; i < count; i++) {
 			lastMonth = lastMonth.minusMonths(1);
 			String lastMonthStr = lastMonth.getYear() + Constant.DASH + lastMonth.getMonthValue();
 			lastNMonth.put(lastMonthStr, new ArrayList<>());
-            formattedLastNMonth.put(lastMonthStr, DateUtil.tranformUTCLocalTimeToZFormat(lastMonth));		}
-		return Pair.of(lastNMonth, formattedLastNMonth);
+
+		}
+		return lastNMonth;
 	}
 
 	@Override

@@ -16,31 +16,43 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service;
 
+import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
+import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 
+@AllArgsConstructor
 @Component
 public class PromptGenerator {
-    private static final String ANALYSIS_REPORT_PATH = "templates/prompts/analysis-report.txt";
-    private static final String KPI_RECOMMENDATION_PROMPT_PATH = "templates/prompts/kpi-recommendation-prompt.txt";
+	private final CacheService cacheService;
 
-    private String loadResource(String path) throws IOException {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path)) {
-            if (inputStream == null) {
-                throw new IOException("Resource not found: " + path);
-            }
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
+	public PromptDetails getPromptDetails(String key) throws EntityNotFoundException {
+		return Optional.ofNullable(cacheService.getPromptDetails().get(key))
+				.orElseThrow(() -> new EntityNotFoundException(PromptDetails.class, "promptKey", key));
+	}
 
+	public String getKpiRecommendationPrompt(Map<String, Object> kpiDataByProject, String userRole)
+			throws EntityNotFoundException {
+		PromptDetails analysisReport = getPromptDetails(PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT);
+		PromptDetails kpiRecommendationPrompt = getPromptDetails(PromptKeys.KPI_RECOMMENDATION_PROMPT);
 
-	public String getKpiRecommendationPrompt(Map<String, Object> kpiDataByProject, String userRole) throws IOException {
-		String analysisReport = loadResource(ANALYSIS_REPORT_PATH);
-		String kpiRecommendationPrompt = loadResource(KPI_RECOMMENDATION_PROMPT_PATH);
-		return String.format(kpiRecommendationPrompt, analysisReport, kpiDataByProject, userRole);
+		return kpiRecommendationPrompt.toString().replace("ANALYSIS_REPORT_PLACEHOLDER", analysisReport.toString())
+				.replace("KPI_DATA_BY_PROJECT_PLACEHOLDER", kpiDataByProject.toString())
+				.replace("USER_ROLE_PLACEHOLDER", userRole);
+
+	}
+
+	public String getKpiSearchPrompt( String userQuery)
+			throws EntityNotFoundException {
+		PromptDetails kpi_data = getPromptDetails(PromptKeys.KPI_DATA);
+		PromptDetails searchBasee = getPromptDetails(PromptKeys.KPI_SEARCH);
+		return searchBasee.toString().replace("KPI_DATA", kpi_data.toString())
+				.replace("USER_QUERY", userQuery);
+
 	}
 }

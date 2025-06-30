@@ -14,22 +14,11 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.ai.config.sprint;
+package com.publicissapient.kpidashboard.apis.ai.parser;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
-import lombok.Data;
-
-@Data
-@Configuration
-@ConfigurationProperties(prefix = "ai.sprint")
-public class SprintPromptConfig {
-
-	private Goals goals = new Goals();
-
-	@Data
-	public static class Goals {
-		private String prompt;
-	}
+@Component
+public interface ParserStategy<R> {
+	R parse(String chatResponse);
 }
