@@ -14,20 +14,11 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.usermanagement.service;
+package com.publicissapient.kpidashboard.apis.ai.parser;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import org.springframework.stereotype.Component;
 
-/**
- * Service interface for user operations
- */
-public interface UserService {
-
-    /**
-     * Saves user information with SAML authentication type
-     *
-     * @param username the username
-     * @return ServiceResponse containing status, message, and user info
-     */
-    ServiceResponse saveUserInfo(String username);
+@Component
+public interface ParserStategy<R> {
+	R parse(String chatResponse);
 }

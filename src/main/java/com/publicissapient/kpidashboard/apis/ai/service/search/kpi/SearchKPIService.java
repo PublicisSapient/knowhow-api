@@ -14,20 +14,14 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.usermanagement.service;
+package com.publicissapient.kpidashboard.apis.ai.service.search.kpi;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
 
-/**
- * Service interface for user operations
- */
-public interface UserService {
+import java.util.List;
 
-    /**
-     * Saves user information with SAML authentication type
-     *
-     * @param username the username
-     * @return ServiceResponse containing status, message, and user info
-     */
-    ServiceResponse saveUserInfo(String username);
+public interface SearchKPIService {
+	SearchKpiResponseDTO searchRelatedKpi(@NotNull String userMessage) throws EntityNotFoundException;
 }
