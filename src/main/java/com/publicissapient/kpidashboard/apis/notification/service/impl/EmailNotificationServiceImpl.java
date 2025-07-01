@@ -26,6 +26,7 @@ import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtili
 import com.publicissapient.kpidashboard.common.service.NotificationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -43,12 +44,13 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 	private final KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Override
-	public ServiceResponse sendEmail(String templateKey, EmailRequestPayload request) {
+	public ServiceResponse sendEmail(String templateKey, String notificationSubjectKey, EmailRequestPayload request) {
 		try {
-			Map<String, String> customData = NotificationUtility.toCustomDataMap(request, customApiConfig, commonService);
+			Map<String, String> customData = NotificationUtility.toCustomDataMap(request, customApiConfig,
+					commonService);
 			String templateName = getTemplateName(templateKey);
 			validateTemplateData(templateName, customData);
-			String notificationSubject = getNotificationSubject(templateKey);
+			String notificationSubject = getNotificationSubject(notificationSubjectKey);
 
 			notificationService.sendNotificationEvent(request.getRecipients(), customData, notificationSubject,
 					templateKey, customApiConfig.getKafkaMailTopic(), customApiConfig.isNotificationSwitch(),
@@ -80,9 +82,13 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 		}
 	}
 
-	private String getNotificationSubject(String templateKey) {
+	private String getNotificationSubject(String notificationSubjectKey) {
 		Map<String, String> notificationSubjectMap = customApiConfig.getNotificationSubject();
-		return notificationSubjectMap.get(templateKey);
+		String subject = notificationSubjectMap.get(notificationSubjectKey);
+		if (StringUtils.isBlank(subject)) {
+			throw new IllegalArgumentException("No notification subject found for key: " + notificationSubjectKey);
+		}
+		return subject;
 	}
 
 }

@@ -47,8 +47,9 @@ public class NotificationController {
 			@ApiResponse(responseCode = "400", description = "Invalid input", content = @Content) })
 	@PostMapping("/email")
 	public ResponseEntity<ServiceResponse> sendEmail(@RequestParam String templateKey,
-			@Valid @RequestBody EmailRequestPayload emailRequestPayload) {
-		ServiceResponse response = emailNotificationService.sendEmail(templateKey, emailRequestPayload);
+			@RequestParam String notificationSubjectKey, @Valid @RequestBody EmailRequestPayload emailRequestPayload) {
+		ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey,
+				emailRequestPayload);
 		return ResponseEntity.ok(response);
 	}
 }

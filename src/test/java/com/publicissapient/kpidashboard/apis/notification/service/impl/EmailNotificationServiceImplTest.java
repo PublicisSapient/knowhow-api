@@ -95,6 +95,7 @@ class EmailNotificationServiceImplTest {
 		String templateKey = "TP";
 		String templateName = "Forgot_Password_Template";
 		String subject = "Test Subject";
+		String notificationSubjectKey = "TP";
 
 		Map<String, String> mailTemplateMap = new HashMap<>();
 		mailTemplateMap.put(templateKey, templateName);
@@ -113,8 +114,7 @@ class EmailNotificationServiceImplTest {
 			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
-
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, payload);
+			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 
 			verify(notificationService).sendNotificationEvent(eq(payload.getRecipients()), eq(customData), eq(subject),
 					eq(templateKey), eq("testTopic"), eq(true), eq(kafkaTemplate), eq(templateName), eq(false));
@@ -127,10 +127,11 @@ class EmailNotificationServiceImplTest {
 	void testSendEmailNoTemplateMapping() {
 		EmailRequestPayload payload = createValidPayload();
 		String templateKey = "NO_KEY";
+		String notificationSubjectKey = "NO_KEY";
 		// Return an empty mail template map so that getTemplateName fails.
 		when(customApiConfig.getMailTemplate()).thenReturn(new HashMap<>());
 
-		ServiceResponse response = emailNotificationService.sendEmail(templateKey, payload);
+		ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 		assertFalse(response.getSuccess());
 		assertTrue(response.getMessage().contains("No email template found for key"));
 	}
@@ -139,6 +140,7 @@ class EmailNotificationServiceImplTest {
 	void testSendEmailMissingRequiredTemplateVariable() {
 		EmailRequestPayload payload = createValidPayload();
 		String templateKey = "TP";
+		String notificationSubjectKey = "TP";
 		String templateName = "Forgot_Password_Template";
 		Map<String, String> mailTemplateMap = new HashMap<>();
 		mailTemplateMap.put(templateKey, templateName);
@@ -157,7 +159,7 @@ class EmailNotificationServiceImplTest {
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(requiredVars);
 
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, payload);
+			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 			assertFalse(response.getSuccess());
 			assertEquals("Missing required template variable: MISSING_VAR", response.getMessage());
 		}
@@ -167,6 +169,7 @@ class EmailNotificationServiceImplTest {
 	void testSendEmailExceptionInNotification() {
 		EmailRequestPayload payload = createValidPayload();
 		String templateKey = "TP";
+		String notificationSubjectKey = "TP";
 		String templateName = "Forgot_Password_Template";
 		String subject = "Test Subject";
 
@@ -191,7 +194,7 @@ class EmailNotificationServiceImplTest {
 					Collections.singletonList(anyString()), anyMap(), anyString(), anyString(), anyString(),
 					anyBoolean(), any(), anyString(), anyBoolean());
 
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, payload);
+			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 			assertFalse(response.getSuccess());
 			assertTrue(response.getMessage().contains("Failed to send email:"));
 		}
