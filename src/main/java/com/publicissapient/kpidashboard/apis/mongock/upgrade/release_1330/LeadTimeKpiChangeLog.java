@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @ChangeUnit(id = "add_lead_time_kpi", order = "13305", author = "kunkambl", systemVersion = "13.3.0")
 public class LeadTimeKpiChangeLog {
@@ -46,6 +47,7 @@ public class LeadTimeKpiChangeLog {
 
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String FIELD_MAPPING_STRUCTURE_COLLECTION = "field_mapping_structure";
+	private static final String KPI_COLUMN_CONFIGS = "kpi_column_configs";
 
 	private static final String FIELD_TYPE = "fieldType";
 	private static final String FIELD_NAME = "fieldName";
@@ -56,6 +58,11 @@ public class LeadTimeKpiChangeLog {
 	private static final String SECTION = "section";
 	private static final String PROCESSOR_COMMON = "processorCommon";
 	private static final String NODE_SPECIFIC = "nodeSpecific";
+	
+	private static final String COLUMN_NAME = "columnName";
+	private static final String ORDER = "order";
+	private static final String IS_SHOWN = "isShown";
+	private static final String IS_DEFAULT = "isDefault";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -72,6 +79,7 @@ public class LeadTimeKpiChangeLog {
 	private void addLeadTimeKpi() {
 		Document kpiDocument = createKpiDocument();
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiDocument);
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS).insertOne(createKpiColumnConfig());
 	}
 
 	private Document createKpiDocument() {
@@ -150,15 +158,35 @@ public class LeadTimeKpiChangeLog {
 						new Document(DEFINITION, "Workflow status/es to identify that an issue is live in Production."))
 				.append(MANDATORY, Boolean.TRUE).append(NODE_SPECIFIC, Boolean.FALSE);
 	}
+	
+	private Document createKpiColumnConfig() {
+		return new Document(new Document("kpiId", KPI_ID).append("kpiColumnDetails", List.of(
+				new Document(COLUMN_NAME, "Issue ID").append(ORDER, 1).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+				new Document(COLUMN_NAME, "Issue Type").append(ORDER, 2).append(IS_SHOWN, true).append(IS_DEFAULT,
+						true),
+				new Document(COLUMN_NAME, "Issue Description").append(ORDER, 3).append(IS_SHOWN, true)
+						.append(IS_DEFAULT, true),
+				new Document(COLUMN_NAME, "Created Date").append(ORDER, 4).append(IS_SHOWN, true).append(IS_DEFAULT,
+						true),
+				new Document(COLUMN_NAME, "Live Date").append(ORDER, 5).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+				new Document(COLUMN_NAME, "Lead Time (In Days)").append(ORDER, 6).append(IS_SHOWN, true)
+						.append(IS_DEFAULT, true))));
+
+	}
 
 	@RollbackExecution
 	public void rollback() {
 		removeLeadTimeKpi();
 		removeFieldMappingStructure();
+		removeKpiColumnConfig();
 	}
 
 	private void removeLeadTimeKpi() {
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).deleteOne(new Document("kpiId", KPI_ID));
+	}
+
+	private void removeKpiColumnConfig() {
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS).deleteOne(new Document("kpiId", KPI_ID));
 	}
 
 	private void removeFieldMappingStructure() {
