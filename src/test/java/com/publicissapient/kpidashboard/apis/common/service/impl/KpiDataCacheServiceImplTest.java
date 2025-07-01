@@ -217,4 +217,16 @@ public class KpiDataCacheServiceImplTest {
 						new ArrayList<>(),
 						KPICode.DEFECT_SEEPAGE_RATE.getKpiId()));
 	}
+
+	@Test
+	public void testFetchDCPData() {
+		when(kpiDataProvider.fetchDCPData(any(), any(), any()))
+				.thenReturn(new HashMap<>());
+		assertNotNull(
+				kpiDataCacheService.fetchDCPData(
+						new KpiRequest(),
+						new ObjectId(),
+						new ArrayList<>(),
+						KPICode.DEFECT_COUNT_BY_PRIORITY.getKpiId()));
+	}
 }
