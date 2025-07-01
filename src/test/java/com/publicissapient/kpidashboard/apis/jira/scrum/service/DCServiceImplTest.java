@@ -20,8 +20,9 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.any;
+
 import static org.mockito.Mockito.when;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,9 +34,11 @@ import java.util.Map;
 import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import org.bson.types.ObjectId;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -59,9 +62,11 @@ import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.SprintFilter;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
@@ -72,7 +77,10 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 import com.publicissapient.kpidashboard.common.repository.application.FieldMappingRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
 /**
  * This J-Unit class tests the functionality of the DCServiceImpl.
@@ -231,7 +239,6 @@ public class DCServiceImplTest {
 		assertThat(dcServiceImpl.getQualifierType(), equalTo(KPICode.DEFECT_COUNT_BY_PRIORITY.name()));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
@@ -253,6 +260,103 @@ public class DCServiceImplTest {
 	@Test
 	public void testCalculateKPIMetrics() {
 		assertThat("Total Defects value :", dcServiceImpl.calculateKPIMetrics(null), equalTo(0L));
+	}
+
+	@Test
+	public void testGetDataCountObject() throws Exception {
+		// Setup test data
+		Node node = new Node();
+		SprintFilter sprintFilter = new SprintFilter("SP-1", "Sprint 1", null, null);
+		node.setSprintFilter(sprintFilter);
+
+		String trendLineName = "Test Trend";
+		Map<String, Object> overAllHoverValueMap = new HashMap<>();
+		overAllHoverValueMap.put("P1", 5);
+		overAllHoverValueMap.put("P2", 3);
+
+		// Test case 1: Key is OVERALL
+		String key1 = CommonConstant.OVERALL;
+		Long value1 = 8L;
+
+		// Use reflection to access private method
+		DataCount result1 = (DataCount) ReflectionTestUtils.invokeMethod(dcServiceImpl, "getDataCountObject", 
+			node, trendLineName, overAllHoverValueMap, key1, value1);
+
+		// Verify results
+		assertThat(result1.getData(), equalTo("8"));
+		assertThat(result1.getSProjectName(), equalTo(trendLineName));
+		assertThat(result1.getValue(), equalTo(value1));
+		assertThat(result1.getKpiGroup(), equalTo(key1));
+		assertThat(result1.getHoverValue(), equalTo(overAllHoverValueMap));
+
+		// Test case 2: Key is not OVERALL
+		String key2 = "P1";
+		Long value2 = 5L;
+
+		DataCount result2 = (DataCount) ReflectionTestUtils.invokeMethod(dcServiceImpl, "getDataCountObject", 
+			node, trendLineName, overAllHoverValueMap, key2, value2);
+
+		// Verify results
+		assertThat(result2.getData(), equalTo("5"));
+		assertThat(result2.getSProjectName(), equalTo(trendLineName));
+		assertThat(result2.getValue(), equalTo(value2));
+		assertThat(result2.getKpiGroup(), equalTo(key2));
+
+		// Verify hover value map contains only the key-value pair
+
+		Map<String, Object> hoverMap = (Map<String, Object>) result2.getHoverValue();
+		assertThat(hoverMap.size(), equalTo(1));
+		assertThat(hoverMap.get(key2), equalTo(5));
+	}
+
+	@Test
+	public void testPopulateExcelDataObject() throws Exception {
+		// Setup test data
+		String requestTrackerId = "Excel-Jira-123";
+		String sprintName = "Sprint 1";
+		List<KPIExcelData> excelData = new ArrayList<>();
+		List<JiraIssue> sprintWiseDefectDataList = new ArrayList<>();
+		List<JiraIssue> storyList = new ArrayList<>();
+
+		// Invoke the private method and verify no exceptions
+		ReflectionTestUtils.invokeMethod(dcServiceImpl, "populateExcelDataObject", 
+			requestTrackerId, sprintName, excelData, sprintWiseDefectDataList, customApiConfig, storyList);
+
+		// Test with non-Excel request tracker ID
+		String nonExcelRequestId = "API-Jira-123";
+		ReflectionTestUtils.invokeMethod(dcServiceImpl, "populateExcelDataObject", 
+			nonExcelRequestId, sprintName, excelData, sprintWiseDefectDataList, customApiConfig, storyList);
+	}
+
+	@Test
+	public void testSetSprintWiseLogger() throws Exception {
+		// Setup test data
+		Pair<String, String> sprint = Pair.of("SP-1", "Sprint 1");
+		List<String> storyIdList = Arrays.asList("STORY-1", "STORY-2");
+		
+		List<JiraIssue> sprintWiseDefectDataList = new ArrayList<>();
+		JiraIssue defect1 = new JiraIssue();
+		defect1.setNumber("DEF-1");
+		JiraIssue defect2 = new JiraIssue();
+		defect2.setNumber("DEF-2");
+		sprintWiseDefectDataList.add(defect1);
+		sprintWiseDefectDataList.add(defect2);
+		
+		Map<String, Long> priorityCountMap = new HashMap<>();
+		priorityCountMap.put("P1", 1L);
+		priorityCountMap.put("P2", 1L);
+
+		// Test with logger turned off
+		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("off");
+		ReflectionTestUtils.invokeMethod(dcServiceImpl, "setSprintWiseLogger", 
+			sprint, storyIdList, sprintWiseDefectDataList, priorityCountMap);
+		// No assertions needed as logger is off
+
+		// Test with logger turned on
+		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("on");
+		// Just verify the method doesn't throw exceptions
+		ReflectionTestUtils.invokeMethod(dcServiceImpl, "setSprintWiseLogger", 
+			sprint, storyIdList, sprintWiseDefectDataList, priorityCountMap);
 	}
 
 	private void setTreadValuesDataCount() {
