@@ -17,11 +17,13 @@
 
 package com.publicissapient.kpidashboard.apis.notification.service.impl;
 
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.notification.model.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
 import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
 import com.publicissapient.kpidashboard.common.service.NotificationService;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -52,6 +54,8 @@ class EmailNotificationServiceImplTest {
 
 	@Mock
 	private CustomApiConfig customApiConfig;
+	@Mock
+	private CommonService commonService;
 
 	@Mock
 	private KafkaTemplate<String, Object> kafkaTemplate;
@@ -66,8 +70,6 @@ class EmailNotificationServiceImplTest {
 		payload.setUserRoles("role");
 		payload.setAccountName("account");
 		payload.setTeamName("team");
-		payload.setYear("2023");
-		payload.setMonth("09");
 		payload.setUploadedBy("uploader");
 		payload.setServerHost("host");
 		payload.setFeedbackContent("feedback");
@@ -105,32 +107,10 @@ class EmailNotificationServiceImplTest {
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
 		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
-		Map<String, String> customData = new HashMap<>();
-		customData.put("USER_NAME", payload.getUserName());
-		customData.put("USER_EMAIL", payload.getUserEmail());
-		customData.put("ACCESS_LEVEL", payload.getAccessLevel());
-		customData.put("ACCESS_ITEMS", payload.getAccessItems());
-		customData.put("USER_PROJECTS", payload.getUserProjects());
-		customData.put("USER_ROLES", payload.getUserRoles());
-		customData.put("ACCOUNT_NAME", payload.getAccountName());
-		customData.put("TEAM_NAME", payload.getTeamName());
-		customData.put("YEAR", payload.getYear());
-		customData.put("MONTH", payload.getMonth());
-		customData.put("UPLOADED_BY", payload.getUploadedBy());
-		customData.put("SERVER_HOST", payload.getServerHost());
-		customData.put("FEEDBACK_CONTENT", payload.getFeedbackContent());
-		customData.put("FEEDBACK_CATEGORY", payload.getFeedbackCategory());
-		customData.put("FEEDBACK_TYPE", payload.getFeedbackType());
-		customData.put("ADMIN_EMAIL", payload.getAdminEmail());
-		customData.put("TOOL_NAME", payload.getToolName());
-		customData.put("HELP_URL", "");
-		customData.put("FIX_URL", payload.getFixUrl());
-		customData.put("EXPIRY_TIME", payload.getExpiryTime());
-		customData.put("RESET_URL", payload.getResetUrl());
-		customData.put("PDF_ATTACHMENT", payload.getPdfAttachment());
+		final Map<String, String> customData = getTemplateDataMap(payload);
 
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
-			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig)).thenReturn(customData);
+			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
 
@@ -171,7 +151,7 @@ class EmailNotificationServiceImplTest {
 		customData.put("USER_EMAIL", payload.getUserEmail());
 
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
-			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig)).thenReturn(customData);
+			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
 			Set<String> requiredVars = new HashSet<>();
 			requiredVars.add("MISSING_VAR");
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
@@ -201,6 +181,24 @@ class EmailNotificationServiceImplTest {
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
 		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
+		final Map<String, String> customData = getTemplateDataMap(payload);
+
+		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
+			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
+			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
+					.thenReturn(new HashSet<>());
+			doThrow(new RuntimeException("Kafka failure")).when(notificationService).sendNotificationEvent(
+					Collections.singletonList(anyString()), anyMap(), anyString(), anyString(), anyString(),
+					anyBoolean(), any(), anyString(), anyBoolean());
+
+			ServiceResponse response = emailNotificationService.sendEmail(templateKey, payload);
+			assertFalse(response.getSuccess());
+			assertTrue(response.getMessage().contains("Failed to send email:"));
+		}
+	}
+
+	@NotNull
+	private static Map<String, String> getTemplateDataMap(EmailRequestPayload payload) {
 		Map<String, String> customData = new HashMap<>();
 		customData.put("USER_NAME", payload.getUserName());
 		customData.put("USER_EMAIL", payload.getUserEmail());
@@ -210,8 +208,6 @@ class EmailNotificationServiceImplTest {
 		customData.put("USER_ROLES", payload.getUserRoles());
 		customData.put("ACCOUNT_NAME", payload.getAccountName());
 		customData.put("TEAM_NAME", payload.getTeamName());
-		customData.put("YEAR", payload.getYear());
-		customData.put("MONTH", payload.getMonth());
 		customData.put("UPLOADED_BY", payload.getUploadedBy());
 		customData.put("SERVER_HOST", payload.getServerHost());
 		customData.put("FEEDBACK_CONTENT", payload.getFeedbackContent());
@@ -224,18 +220,6 @@ class EmailNotificationServiceImplTest {
 		customData.put("EXPIRY_TIME", payload.getExpiryTime());
 		customData.put("RESET_URL", payload.getResetUrl());
 		customData.put("PDF_ATTACHMENT", payload.getPdfAttachment());
-
-		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
-			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig)).thenReturn(customData);
-			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
-					.thenReturn(new HashSet<>());
-			doThrow(new RuntimeException("Kafka failure")).when(notificationService).sendNotificationEvent(
-					Collections.singletonList(anyString()), anyMap(), anyString(), anyString(), anyString(),
-					anyBoolean(), any(), anyString(), anyBoolean());
-
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, payload);
-			assertFalse(response.getSuccess());
-			assertTrue(response.getMessage().contains("Failed to send email:"));
-		}
+		return customData;
 	}
 }

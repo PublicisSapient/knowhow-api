@@ -17,8 +17,9 @@
 
 package com.publicissapient.kpidashboard.apis.notification.service.impl;
 
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.notification.model.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
 import com.publicissapient.kpidashboard.apis.notification.service.EmailNotificationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
@@ -40,12 +41,14 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 	@Autowired
 	private CustomApiConfig customApiConfig;
 	@Autowired
+	private CommonService commonService;
+	@Autowired
 	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Override
 	public ServiceResponse sendEmail(String templateKey, EmailRequestPayload request) {
 		try {
-			Map<String, String> customData = NotificationUtility.toCustomDataMap(request, customApiConfig);
+			Map<String, String> customData = NotificationUtility.toCustomDataMap(request, customApiConfig, commonService);
 			String templateName = getTemplateName(templateKey);
 			validateTemplateData(templateName, customData);
 			String notificationSubject = getNotificationSubject(templateKey);

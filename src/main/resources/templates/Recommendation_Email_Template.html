@@ -36,11 +36,6 @@
             <p>Hello User,</p>
             <p>We're glad to share your latest KPI recommendations with you. Please see the attached document for
                 details.</p>
-            <p>
-                <a th:href="|data:application/pdf;base64,${pdf_attachment}|" download="recommendation.pdf">
-                    Download Recommendation PDF
-                </a>
-            </p>
             <p>Thank you for choosing KnowHOW.</p>
             <p>Regards,<br/>KnowHOW Team</p>
         </td>
@@ -51,7 +46,7 @@
                 <tbody>
                 <tr>
                     <td style="height: 50px; display: table-cell; text-align: center; vertical-align: middle; color: #fff;">
-                        For any queries, contact <a href="${Help_Url}" style="color: #fff;">KnowHOW Request</a>.
+                        For any queries, contact <a th:href="${Help_Url}" style="color: #fff;">KnowHOW Request</a>.
                     </td>
                 </tr>
                 </tbody>
