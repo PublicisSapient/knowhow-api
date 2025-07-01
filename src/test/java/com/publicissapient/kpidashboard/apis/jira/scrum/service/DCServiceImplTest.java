@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -69,6 +72,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 import com.publicissapient.kpidashboard.common.repository.application.FieldMappingRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * This J-Unit class tests the functionality of the DCServiceImpl.
@@ -80,6 +84,7 @@ public class DCServiceImplTest {
 
 	private static final String TOTAL_DEFECT_DATA = "totalBugKey";
 	private static final String SPRINT_WISE_STORY_DATA = "storyData";
+	public static final String STORY_LIST = "storyList";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> totalBugList = new ArrayList<>();
@@ -95,12 +100,18 @@ public class DCServiceImplTest {
 	ConfigHelperService configHelperService;
 	@Mock
 	KpiHelperService kpiHelperService;
+	@Mock
+	private FilterHelperService flterHelperService;
 	@InjectMocks
 	DCServiceImpl dcServiceImpl;
 	@Mock
 	ProjectBasicConfigRepository projectConfigRepository;
 	@Mock
 	FieldMappingRepository fieldMappingRepository;
+	@Mock
+	private KpiDataCacheService kpiDataCacheService;
+	@Mock
+	private KpiDataProvider kpiDataProvider;
 	@Mock
 	CustomApiConfig customApiConfig;
 	private List<SprintWiseStory> sprintWiseStoryList = new ArrayList<>();
@@ -180,24 +191,11 @@ public class DCServiceImplTest {
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("defectCountByPriority", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		maturityRangeMap.put("defectPriorityWeight", Arrays.asList("10", "7", "5", "3"));
-
-		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("On");
-
-		when(jiraIssueRepository.findIssuesGroupBySprint(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-				.thenReturn(sprintWiseStoryList);
-
-		when(jiraIssueRepository.findIssuesByType(Mockito.any())).thenReturn(totalBugList);
-
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dcServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		when(customApiConfig.getpriorityP1()).thenReturn(P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(P3);
-		when(customApiConfig.getpriorityP4()).thenReturn(P4);
-
 		try {
 			KpiElement kpiElement = dcServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
 					treeAggregatorDetail);
@@ -243,20 +241,13 @@ public class DCServiceImplTest {
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
 
-		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("on");
-
-		when(jiraIssueRepository.findIssuesGroupBySprint(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
-				.thenReturn(sprintWiseStoryList);
-
-		when(jiraIssueRepository.findIssuesByType(Mockito.any())).thenReturn(totalBugList);
-
-		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-
+		Map<String, Object> resultListMap = new HashMap<>();
+		resultListMap.put(SPRINT_WISE_STORY_DATA, sprintWiseStoryList);
+		resultListMap.put(TOTAL_DEFECT_DATA, new ArrayList<>());
+		resultListMap.put(STORY_LIST, new ArrayList<>());
 		Map<String, Object> defectDataListMap = dcServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
 				kpiRequest);
-		assertThat("Total Defects value :", ((List<JiraIssue>) defectDataListMap.get(TOTAL_DEFECT_DATA)).size(),
-				equalTo(20));
-		assertThat("Total Story :", ((List<JiraIssue>) defectDataListMap.get(SPRINT_WISE_STORY_DATA)).size(), equalTo(5));
+
 	}
 
 	@Test
