@@ -24,8 +24,8 @@ import com.publicissapient.kpidashboard.apis.notification.service.EmailNotificat
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
 import com.publicissapient.kpidashboard.common.service.NotificationService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -34,16 +34,13 @@ import java.util.Set;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class EmailNotificationServiceImpl implements EmailNotificationService {
 
-	@Autowired
-	private NotificationService notificationService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private CommonService commonService;
-	@Autowired
-	private KafkaTemplate<String, Object> kafkaTemplate;
+	private final NotificationService notificationService;
+	private final CustomApiConfig customApiConfig;
+	private final CommonService commonService;
+	private final KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Override
 	public ServiceResponse sendEmail(String templateKey, EmailRequestPayload request) {
