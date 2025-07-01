@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.commons.collections4.CollectionUtils;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import com.publicissapient.kpidashboard.apis.notification.service.EmailNotificationService;
@@ -47,11 +47,7 @@ public class NotificationController {
 			@ApiResponse(responseCode = "400", description = "Invalid input", content = @Content) })
 	@PostMapping("/email")
 	public ResponseEntity<ServiceResponse> sendEmail(@RequestParam String templateKey,
-			@RequestBody EmailRequestPayload emailRequestPayload) {
-		if (CollectionUtils.isEmpty(emailRequestPayload.getRecipients())) {
-			return ResponseEntity.badRequest()
-					.body(new ServiceResponse(false, "Recipients list cannot be empty.", null));
-		}
+			@Valid @RequestBody EmailRequestPayload emailRequestPayload) {
 		ServiceResponse response = emailNotificationService.sendEmail(templateKey, emailRequestPayload);
 		return ResponseEntity.ok(response);
 	}
