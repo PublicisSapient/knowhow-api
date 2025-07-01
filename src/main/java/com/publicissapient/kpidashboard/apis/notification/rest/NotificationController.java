@@ -18,7 +18,7 @@
 package com.publicissapient.kpidashboard.apis.notification.rest;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.notification.model.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

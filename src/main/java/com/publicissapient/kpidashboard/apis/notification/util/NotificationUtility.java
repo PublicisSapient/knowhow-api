@@ -19,11 +19,14 @@
 
 package com.publicissapient.kpidashboard.apis.notification.util;
 
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
-import com.publicissapient.kpidashboard.apis.notification.model.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +35,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class NotificationUtility {
 
 	private NotificationUtility() {
@@ -61,7 +65,7 @@ public final class NotificationUtility {
 	}
 
 	public static Map<String, String> toCustomDataMap(EmailRequestPayload emailRequestPayload,
-			CustomApiConfig customApiConfig) {
+			CustomApiConfig customApiConfig, CommonService commonService) {
 		if (emailRequestPayload == null) {
 			throw new IllegalArgumentException("EmailRequestPayload must not be null");
 		}
@@ -74,11 +78,15 @@ public final class NotificationUtility {
 		customDataMap.put(NotificationCustomDataEnum.USER_ROLES.getValue(), emailRequestPayload.getUserRoles());
 		customDataMap.put(NotificationCustomDataEnum.ACCOUNT_NAME.getValue(), emailRequestPayload.getAccountName());
 		customDataMap.put(NotificationCustomDataEnum.TEAM_NAME.getValue(), emailRequestPayload.getTeamName());
-		customDataMap.put(NotificationCustomDataEnum.YEAR.getValue(), emailRequestPayload.getYear());
-		customDataMap.put(NotificationCustomDataEnum.MONTH.getValue(), emailRequestPayload.getMonth());
+		customDataMap.put(NotificationCustomDataEnum.YEAR.getValue(), String.valueOf(java.time.Year.now().getValue()));
+		customDataMap.put(NotificationCustomDataEnum.MONTH.getValue(), java.time.Month.from(java.time.LocalDate.now()).name());
 		customDataMap.put(NotificationCustomDataEnum.UPLOADED_BY.getValue(), emailRequestPayload.getUploadedBy());
-		customDataMap.put(NotificationCustomDataEnum.SERVER_HOST.getValue(), emailRequestPayload.getServerHost());
-		customDataMap.put(NotificationCustomDataEnum.FEEDBACK_CONTENT.getValue(),
+        try {
+            customDataMap.put(NotificationCustomDataEnum.SERVER_HOST.getValue(), commonService.getApiHost());
+        } catch (UnknownHostException e) {
+            log.error("Failed to get API host: {}", e.getMessage(), e);
+        }
+        customDataMap.put(NotificationCustomDataEnum.FEEDBACK_CONTENT.getValue(),
 				emailRequestPayload.getFeedbackContent());
 		customDataMap.put(NotificationCustomDataEnum.FEEDBACK_CATEGORY.getValue(),
 				emailRequestPayload.getFeedbackCategory());

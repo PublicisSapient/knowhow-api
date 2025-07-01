@@ -18,7 +18,7 @@
 package com.publicissapient.kpidashboard.apis.notification.service;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.notification.model.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
 
 public interface EmailNotificationService {
 
