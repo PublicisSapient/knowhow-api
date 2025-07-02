@@ -29,6 +29,7 @@ import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITHU
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITLAB;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JENKINS;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JIRA;
+import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_RALLY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_SONAR;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_TEAMCITY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHYR;
@@ -396,6 +397,11 @@ public class ConnectionServiceImpl implements ConnectionService {
 				break;
 			case TOOL_ZEPHYR :
 				existingConnection = checkConnDetailsZephyr(inputConn, currConn, api);
+				break;
+			case TOOL_RALLY:
+				if (checkConnDetails(inputConn, currConn)) {
+					existingConnection = currConn;
+				}
 				break;
 			default :
 				existingConnection = new Connection();

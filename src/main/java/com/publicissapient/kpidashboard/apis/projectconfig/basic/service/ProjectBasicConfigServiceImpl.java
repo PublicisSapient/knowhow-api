@@ -318,7 +318,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		FieldMapping originalFieldMapping = fieldMappingService
 				.getFieldMappingByBasicconfigId(savedProjectBasicConfig.getClonedFrom().toString());
 		Optional<ProjectToolConfig> toolConfigOptional = clonedToolConfigs.stream()
-				.filter(tool -> Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()))
+				.filter(tool -> (Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()) || Constant.TOOL_RALLY.equals(tool.getToolName())))
 				.findFirst();
 
 		if (originalFieldMapping != null && toolConfigOptional.isPresent()) {
@@ -342,7 +342,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		BoardMetadata originalBoardMetadata = boardMetadataRepository
 				.findByProjectBasicConfigId(savedProjectBasicConfig.getClonedFrom());
 		Optional<ProjectToolConfig> toolConfigOptional = clonedToolConfigs.stream()
-				.filter(tool -> Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()))
+				.filter(tool -> (Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()) || Constant.TOOL_RALLY.equals(tool.getToolName())))
 				.findFirst();
 
 		if (originalBoardMetadata != null && toolConfigOptional.isPresent()) {
