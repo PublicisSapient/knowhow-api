@@ -28,7 +28,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,20 +161,22 @@ public class FieldMappingServiceImplTest {
 
 		Set<String> configIds = new HashSet<>();
 		configIds.add(fieldMapping.getBasicProjectConfigId().toString());
-		when(fieldMappingRepository.findByProjectToolConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
 		when(projectToolConfigRepository.findById(anyString())).thenReturn(projectToolConfig);
 		when(projectBasicConfigRepository.findById(Mockito.any())).thenReturn(projectBasicConfigOpt);
 		when(tokenAuthenticationService.getUserProjects()).thenReturn(configIds);
 
-		FieldMapping result = fieldMappingService.getFieldMapping(projectToolConfig.getId().toString());
+		FieldMapping result = fieldMappingService.getFieldMapping(projectBasicConfigOpt.get());
 
 		assertNotNull(result);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AccessDeniedException.class)
 	public void getFieldMappingException() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		FieldMapping result = fieldMappingService.getFieldMapping("abc123");
+		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
+		projectBasicConfig.setId(fieldMapping.getBasicProjectConfigId());
+		FieldMapping result = fieldMappingService.getFieldMapping(projectBasicConfig);
 	}
 
 	@Test
