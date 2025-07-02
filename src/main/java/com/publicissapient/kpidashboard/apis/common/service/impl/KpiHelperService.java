@@ -1474,46 +1474,42 @@ public class KpiHelperService { // NOPMD
 	 *            Map containing tool configurations by tool name
 	 * @param projectToolConfig
 	 *            Initial project tool configuration list
-	 * @param kpiSource
+	 * @param fieldMappingKpiSource
 	 *            The source of the KPI
 	 * @return The appropriate project tool configuration list
 	 */
-	private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap,
-			List<ProjectToolConfig> projectToolConfig, String kpiSource) {
-		// If projectToolConfig is already populated, no need to process further
-		if (!CollectionUtils.isEmpty(projectToolConfig)) {
+
+	 private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap,
+				List<ProjectToolConfig> projectToolConfig, String fieldMappingKpiSource) {
+			// If projectToolConfig is already populated, no need to process further
+			if (!CollectionUtils.isEmpty(projectToolConfig)) {
+				return projectToolConfig;
+			}
+
+			Set<String> kpiSources = Arrays.stream(KPISource.values()).map(k -> k.getValue().toLowerCase())
+					.collect(Collectors.toSet());
+			fieldMappingKpiSource = fieldMappingKpiSource.toLowerCase();
+
+			if (!kpiSources.contains(fieldMappingKpiSource)) {
+				return null;
+			}
+
+			// Handle special case for Bitbucket
+			if (projectToolMap.containsKey(Constant.REPO_TOOLS)) {
+				return projectToolMap.get(Constant.REPO_TOOLS);
+			} else if (projectToolMap.containsKey(TOOL_JIRA)) {
+				return projectToolMap.get(TOOL_JIRA);
+			} else if (projectToolMap.containsKey(TOOL_AZURE)) {
+				return projectToolMap.get(TOOL_AZURE);
+			} else if (projectToolMap.containsKey(TOOL_RALLY)) {
+				return projectToolMap.get(TOOL_RALLY);
+			} else if (projectToolMap.containsKey(TOOL_JENKIN)) {
+				return projectToolMap.get(TOOL_JENKIN);
+			} else if (projectToolMap.containsKey(TOOL_SONAR)) {
+				return projectToolMap.get(TOOL_SONAR);
+			}
+			// Return the original list if no matches found
 			return projectToolConfig;
-		}
-
-		// Handle special case for Bitbucket
-		if (kpiSource.equalsIgnoreCase(Constant.TOOL_BITBUCKET) && projectToolMap.containsKey(Constant.REPO_TOOLS)) {
-			return projectToolMap.get(Constant.REPO_TOOLS);
-		}
-
-		// Handle special case for Azure
-		if (kpiSource.equalsIgnoreCase(Constant.TOOL_AZURE) && projectToolMap.containsKey(TOOL_AZURE)) {
-			return projectToolMap.get(TOOL_AZURE);
-		}
-
-		// Priority-based selection: Jira > Azure > Rally
-		if (projectToolMap.containsKey(TOOL_JIRA)) {
-			return projectToolMap.get(TOOL_JIRA);
-		} else if (projectToolMap.containsKey(TOOL_AZURE)) {
-			return projectToolMap.get(TOOL_AZURE);
-		} else if (projectToolMap.containsKey(TOOL_RALLY)) {
-			return projectToolMap.get(TOOL_RALLY);
-		}
-
-		if (kpiSource.equalsIgnoreCase(Constant.TOOL_JENKINS) && projectToolMap.containsKey(TOOL_JENKIN)) {
-			return projectToolMap.get(TOOL_JENKIN);
-		}
-
-		if (kpiSource.equalsIgnoreCase(Constant.TOOL_SONAR) && projectToolMap.containsKey(TOOL_SONAR)) {
-			return projectToolMap.get(TOOL_SONAR);
-		}
-
-		// Return the original list if no matches found
-		return projectToolConfig;
 	}
 
 	public List<FieldMappingStructure> getFieldMappingStructure(List<FieldMappingStructure> fieldMappingStructureList,
