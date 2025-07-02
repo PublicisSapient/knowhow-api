@@ -399,7 +399,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 				existingConnection = checkConnDetailsZephyr(inputConn, currConn, api);
 				break;
 			case TOOL_RALLY:
-				if (checkConnDetails(inputConn, currConn)) {
+				if (checkConnDetailsForRally(inputConn, currConn)) {
 					existingConnection = currConn;
 				}
 				break;
@@ -414,6 +414,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 		boolean b = false;
 		if (!inputConn.isOffline() && inputConn.getUsername().equals(currConn.getUsername()) &&
 				inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
+			b = true;
+		return b;
+	}
+
+	private boolean checkConnDetailsForRally(Connection inputConn, Connection currConn) {
+		boolean b = false;
+		if (inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
 			b = true;
 		return b;
 	}
