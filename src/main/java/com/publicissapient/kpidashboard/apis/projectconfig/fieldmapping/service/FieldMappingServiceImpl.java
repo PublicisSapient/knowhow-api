@@ -288,8 +288,6 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 
 			Map<String, FieldMappingStructure> fieldMappingStructureMap = fieldMappingStructure.stream()
 					.collect(Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
-
-			ObjectId projectToolConfigId = projectToolConfig.getId();
 			ProjectBasicConfig projectBasicConfig = ((Map<String, ProjectBasicConfig>) cacheService
 					.cacheProjectConfigMapData()).get(projectToolConfig.getBasicProjectConfigId().toString());
 
