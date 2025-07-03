@@ -41,8 +41,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -111,6 +113,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KpiHelperService { // NOPMD
 
 	private static final String STORY_DATA = "storyData";
@@ -145,32 +148,32 @@ public class KpiHelperService { // NOPMD
 	private static final String TOOL_JENKIN = "Jenkins";
 	private static final String TOOL_SONAR = "Sonar";
 
-	@Autowired
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
-	@Autowired
-	private CapacityKpiDataRepository capacityKpiDataRepository;
-	@Autowired
-	private KanbanCapacityRepository kanbanCapacityRepository;
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private KPIVideoLinkRepository kpiVideoLinkRepository;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private SprintRepository sprintRepository;
-	@Autowired
-	private FilterHelperService flterHelperService;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Autowired
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
+	
+	private final JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	
+	private final JiraIssueRepository jiraIssueRepository;
+	
+	private final KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
+	
+	private final CapacityKpiDataRepository capacityKpiDataRepository;
+	
+	private final KanbanCapacityRepository kanbanCapacityRepository;
+	
+	private final ConfigHelperService configHelperService;
+	
+	private final KPIVideoLinkRepository kpiVideoLinkRepository;
+	
+	private final CustomApiConfig customApiConfig;
+	
+	private final SprintRepository sprintRepository;
+	
+	private final FilterHelperService flterHelperService;
+	
+	private final CacheService cacheService;
+	
+	private final UserAuthorizedProjectsService authorizedProjectsService;
+	
+	private final RepoToolsConfigServiceImpl repoToolsConfigService;
 
 	public static void getDroppedDefectsFilters(Map<String, Map<String, List<String>>> droppedDefects,
 			ObjectId basicProjectConfigId, List<String> resolutionTypeForRejection, String jiraDefectRejectionStatus) {
@@ -284,11 +287,11 @@ public class KpiHelperService { // NOPMD
 	public static void addPriorityProjectWise(Map<String, List<String>> projectWisePriority,
 			Map<String, List<String>> configPriority, String basicProjectConfigId, List<String> defectPriority) {
 		if (CollectionUtils.isNotEmpty(defectPriority)) {
-			List<String> priorValue = defectPriority.stream().map(String::toUpperCase).collect(Collectors.toList());
+			List<String> priorValue = defectPriority.stream().map(String::toUpperCase).toList();
 			if (CollectionUtils.isNotEmpty(priorValue)) {
 				List<String> priorityValues = new ArrayList<>();
 				priorValue.forEach(priority -> priorityValues.addAll(
-						configPriority.get(priority).stream().map(String::toLowerCase).collect(Collectors.toList())));
+						configPriority.get(priority).stream().map(String::toLowerCase).toList()));
 				projectWisePriority.put(basicProjectConfigId, priorityValues);
 			}
 		}
@@ -297,11 +300,11 @@ public class KpiHelperService { // NOPMD
 	public static void addPriorityProjectWiseForQualityKPIs(Map<String, List<String>> projectWisePriority,
 			Map<String, List<String>> configPriority, ObjectId basicProjectConfigId, List<String> defectPriority) {
 		if (CollectionUtils.isNotEmpty(defectPriority)) {
-			List<String> priorValue = defectPriority.stream().map(String::toUpperCase).collect(Collectors.toList());
+			List<String> priorValue = defectPriority.stream().map(String::toUpperCase).toList();
 			if (CollectionUtils.isNotEmpty(priorValue)) {
 				List<String> priorityValues = new ArrayList<>();
 				priorValue.forEach(priority -> priorityValues.addAll(
-						configPriority.get(priority).stream().map(String::toLowerCase).collect(Collectors.toList())));
+						configPriority.get(priority).stream().map(String::toLowerCase).toList()));
 				projectWisePriority.put(basicProjectConfigId.toString(), priorityValues);
 			}
 		}
@@ -441,9 +444,9 @@ public class KpiHelperService { // NOPMD
 		KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
 
 		mapOfFilters.put(JiraFeature.SPRINT_ID.getFieldValueInFeature(),
-				sprintList.stream().distinct().collect(Collectors.toList()));
+				sprintList.stream().distinct().toList());
 		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 
 		List<SprintWiseStory> sprintWiseStoryList = jiraIssueRepository.findIssuesGroupBySprint(mapOfFilters,
 				uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEV);
@@ -460,16 +463,16 @@ public class KpiHelperService { // NOPMD
 		List<JiraIssueCustomHistory> storyDataList = jiraIssueCustomHistoryRepository
 				.findFeatureCustomHistoryStoryProjectWise(mapOfFiltersFH, uniqueProjectMapFH, Sort.Direction.DESC);
 		List<String> dodStoryIdList = storyDataList.stream().map(JiraIssueCustomHistory::getStoryID)
-				.collect(Collectors.toList());
+				.toList();
 		sprintWiseStoryList.stream().forEach(story -> {
 			List<String> storyNumberList = story.getStoryList().stream().filter(dodStoryIdList::contains)
-					.collect(Collectors.toList());
+					.toList();
 			story.setStoryList(storyNumberList);
 		});
 
 		Map<String, List<String>> mapOfFiltersWithStoryIds = new LinkedHashMap<>();
 		mapOfFiltersWithStoryIds.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 		mapOfFiltersWithStoryIds.put(JiraFeature.DEFECT_STORY_ID.getFieldValueInFeature(), dodStoryIdList);
 		mapOfFiltersWithStoryIds.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 				Collections.singletonList(NormalizedJira.DEFECT_TYPE.getValue()));
@@ -532,9 +535,9 @@ public class KpiHelperService { // NOPMD
 		KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
 
 		mapOfFilters.put(JiraFeature.SPRINT_ID.getFieldValueInFeature(),
-				sprintList.stream().distinct().collect(Collectors.toList()));
+				sprintList.stream().distinct().toList());
 		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 
 		List<SprintWiseStory> sprintWiseStoryList = jiraIssueRepository.findIssuesGroupBySprint(mapOfFilters,
 				uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEV);
@@ -551,20 +554,20 @@ public class KpiHelperService { // NOPMD
 		List<JiraIssueCustomHistory> storyDataList = jiraIssueCustomHistoryRepository
 				.findFeatureCustomHistoryStoryProjectWise(mapOfFiltersFH, uniqueProjectMapFH, Sort.Direction.DESC);
 		List<String> dodStoryIdList = storyDataList.stream().map(JiraIssueCustomHistory::getStoryID)
-				.collect(Collectors.toList());
+				.toList();
 
 		issuesBySprintAndType = issuesBySprintAndType.stream()
-				.filter(feature -> dodStoryIdList.contains(feature.getNumber())).collect(Collectors.toList());
+				.filter(feature -> dodStoryIdList.contains(feature.getNumber())).toList();
 
 		sprintWiseStoryList.forEach(story -> {
 			List<String> storyNumberList = story.getStoryList().stream().filter(dodStoryIdList::contains)
-					.collect(Collectors.toList());
+					.toList();
 			story.setStoryList(storyNumberList);
 		});
 		// remove keys when search defects based on stories
 		Map<String, List<String>> mapOfFiltersWithStoryIds = new LinkedHashMap<>();
 		mapOfFiltersWithStoryIds.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 		mapOfFiltersWithStoryIds.put(JiraFeature.DEFECT_STORY_ID.getFieldValueInFeature(), dodStoryIdList);
 		mapOfFiltersWithStoryIds.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 				Collections.singletonList(NormalizedJira.DEFECT_TYPE.getValue()));
@@ -631,14 +634,14 @@ public class KpiHelperService { // NOPMD
 				}
 			});
 			mapOfFilters.put(JiraFeature.ISSUE_NUMBER.getFieldValueInFeature(),
-					totalIssueIds.stream().distinct().collect(Collectors.toList()));
+					totalIssueIds.stream().distinct().toList());
 		}
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
 
 		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 
 		if (CollectionUtils.isNotEmpty(totalIssueIds)) {
 			List<JiraIssue> sprintVelocityList = jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters,
@@ -683,7 +686,7 @@ public class KpiHelperService { // NOPMD
 		List<SprintDetails> sprintDetailList = sprintRepository.findBySprintIDIn(sprintList);
 		sprintDetailList.sort(Comparator.comparing(SprintDetails::getStartDate).reversed());
 		List<SprintDetails> sprintDetails = sprintDetailList.stream()
-				.limit(customApiConfig.getSprintCountForBackLogStrength()).collect(Collectors.toList());
+				.limit(customApiConfig.getSprintCountForBackLogStrength()).toList();
 		List<String> totalIssueIds = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(sprintDetails)) {
 			sprintDetails.stream().forEach(dbSprintDetail -> {
@@ -700,17 +703,17 @@ public class KpiHelperService { // NOPMD
 				}
 			});
 			mapOfFilters.put(JiraFeature.ISSUE_NUMBER.getFieldValueInFeature(),
-					totalIssueIds.stream().distinct().collect(Collectors.toList()));
+					totalIssueIds.stream().distinct().toList());
 		} else {
 			mapOfFilters.put(JiraFeature.SPRINT_ID.getFieldValueInFeature(),
-					sprintList.stream().distinct().collect(Collectors.toList()));
+					sprintList.stream().distinct().toList());
 		}
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
 
 		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 
 		if (CollectionUtils.isNotEmpty(totalIssueIds)) {
 			List<JiraIssue> sprintVelocityList = jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters,
@@ -794,7 +797,7 @@ public class KpiHelperService { // NOPMD
 			jiraIssues.addAll(jiraIssueList);
 			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = jiraIssueCustomHistoryRepository
 					.findByStoryIDInAndBasicProjectConfigIdIn(jiraIssues.stream().map(JiraIssue::getNumber).toList(),
-							basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+							basicProjectConfigIds.stream().distinct().toList());
 			resultListMap.put(STORY_LIST, jiraIssues);
 			resultListMap.put(SPRINTSDETAILS, sprintDetails);
 			resultListMap.put(JIRA_ISSUE_HISTORY_DATA, jiraIssueCustomHistoryList);
@@ -825,9 +828,9 @@ public class KpiHelperService { // NOPMD
 		KpiDataHelper.createAdditionalFilterMapForCapacity(kpiRequest, mapOfFilters, flterHelperService);
 
 		mapOfFilters.put(JiraFeature.SPRINT_ID.getFieldValueInFeature(),
-				sprintList.stream().distinct().collect(Collectors.toList()));
+				sprintList.stream().distinct().toList());
 		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
+				basicProjectConfigIds.stream().distinct().toList());
 		return capacityKpiDataRepository.findByFilters(mapOfFilters, uniqueProjectMap);
 	}
 
@@ -870,7 +873,7 @@ public class KpiHelperService { // NOPMD
 		String subGroupCategory = Constant.DATE;
 
 		mapOfFilters.put(JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				projectList.stream().distinct().collect(Collectors.toList()));
+				projectList.stream().distinct().toList());
 
 		List<KanbanIssueCustomHistory> dateVelocityList = kanbanJiraIssueHistoryRepository
 				.findIssuesByStatusAndDate(mapOfFilters, uniqueProjectMap, startDate, endDate, IN);
@@ -903,7 +906,7 @@ public class KpiHelperService { // NOPMD
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMapForCapacity(kpiRequest, mapOfFilters, flterHelperService);
 		mapOfFilters.put(JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				projectList.stream().distinct().collect(Collectors.toList()));
+				projectList.stream().distinct().toList());
 
 		resultListMap.put(capacityKey, kanbanCapacityRepository.findIssuesByType(mapOfFilters, startDate, endDate));
 		resultListMap.put(SUBGROUPCATEGORY, Constant.DATE);
@@ -962,7 +965,7 @@ public class KpiHelperService { // NOPMD
 		String subGroupCategory = KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.KANBAN,
 				DEV, flterHelperService);
 		mapOfFilters.put(JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				projectList.stream().distinct().collect(Collectors.toList()));
+				projectList.stream().distinct().toList());
 
 		List<KanbanIssueCustomHistory> issuesByCreatedDateAndType = kanbanJiraIssueHistoryRepository
 				.findIssuesByCreatedDateAndType(mapOfFilters, uniqueProjectMap, startDate, endDate);
@@ -982,7 +985,7 @@ public class KpiHelperService { // NOPMD
 				mapOfProjectFilters.put(JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature(),
 						CommonUtils.convertToPatternList(rcaFieldMappingIssueType));
 				projectWiseIssueTypeMap.put(leaf.getProjectFilter().getBasicProjectConfigId().toString(),
-						rcaFieldMappingIssueType.stream().distinct().collect(Collectors.toList()));
+						rcaFieldMappingIssueType.stream().distinct().toList());
 			}
 		} else {
 			if (Optional.ofNullable(fieldWiseMapping.get("Ticket_Count_IssueType")).isPresent()) {
@@ -990,7 +993,7 @@ public class KpiHelperService { // NOPMD
 				mapOfProjectFilters.put(JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature(),
 						CommonUtils.convertToPatternList(ticketCountIssueType));
 				projectWiseIssueTypeMap.put(leaf.getProjectFilter().getBasicProjectConfigId().toString(),
-						ticketCountIssueType.stream().distinct().collect(Collectors.toList()));
+						ticketCountIssueType.stream().distinct().toList());
 			}
 		}
 	}
@@ -1007,7 +1010,7 @@ public class KpiHelperService { // NOPMD
 				closedStatusList.addAll((List<String>) fieldWiseMapping.get("RejectedStatus"));
 			}
 			projectWiseClosedStatusMap.put(leaf.getProjectFilter().getBasicProjectConfigId().toString(),
-					closedStatusList.stream().distinct().collect(Collectors.toList()));
+					closedStatusList.stream().distinct().toList());
 		}
 	}
 
@@ -1459,7 +1462,7 @@ public class KpiHelperService { // NOPMD
 							: new ArrayList<>());
 			fieldMappingStructureResponse.setKpiSource(kpiSource);
 			fieldMappingStructureResponse
-					.setProjectToolConfigId(projectToolConfigId != null ? projectToolConfigId.toString() : null);
+					.setProjectToolConfigId(ObjectUtils.isNotEmpty(projectToolConfigId) ? projectToolConfigId.toString() : null);
 		} catch (IllegalArgumentException e) {
 			fieldMappingStructureResponse.setFieldConfiguration(new ArrayList<>());
 			log.info("kpi Id" + kpiId + "No Enum is present");
@@ -1479,43 +1482,46 @@ public class KpiHelperService { // NOPMD
 	 * @return The appropriate project tool configuration list
 	 */
 
-	 private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap,
-				List<ProjectToolConfig> projectToolConfig, String fieldMappingKpiSource) {
-			// If projectToolConfig is already populated, no need to process further
-			if (!CollectionUtils.isEmpty(projectToolConfig)) {
-				return projectToolConfig;
-			}
-
-			Set<String> kpiSources = Arrays.stream(KPISource.values()).map(k -> k.getValue().toLowerCase())
-					.collect(Collectors.toSet());
-			fieldMappingKpiSource = fieldMappingKpiSource.toLowerCase();
-
-			if (!kpiSources.contains(fieldMappingKpiSource)) {
-				return null;
-			}
-
-			// Handle special case for Bitbucket
-			if (projectToolMap.containsKey(Constant.REPO_TOOLS)) {
-				return projectToolMap.get(Constant.REPO_TOOLS);
-			} else if (projectToolMap.containsKey(TOOL_JIRA)) {
-				return projectToolMap.get(TOOL_JIRA);
-			} else if (projectToolMap.containsKey(TOOL_AZURE)) {
-				return projectToolMap.get(TOOL_AZURE);
-			} else if (projectToolMap.containsKey(TOOL_RALLY)) {
-				return projectToolMap.get(TOOL_RALLY);
-			} else if (projectToolMap.containsKey(TOOL_JENKIN)) {
-				return projectToolMap.get(TOOL_JENKIN);
-			} else if (projectToolMap.containsKey(TOOL_SONAR)) {
-				return projectToolMap.get(TOOL_SONAR);
-			}
-			// Return the original list if no matches found
+	private static List<ProjectToolConfig> getProjectToolConfigs(Map<String, List<ProjectToolConfig>> projectToolMap,
+			List<ProjectToolConfig> projectToolConfig, String fieldMappingKpiSource) {
+		// If projectToolConfig is already populated, no need to process further
+		if (CollectionUtils.isNotEmpty(projectToolConfig)) {
 			return projectToolConfig;
+		}
+
+		Set<String> kpiSources = Arrays.stream(KPISource.values()).map(k -> k.getValue().toLowerCase())
+				.collect(Collectors.toSet());
+		fieldMappingKpiSource = fieldMappingKpiSource.toLowerCase();
+
+		if (!kpiSources.contains(fieldMappingKpiSource)) {
+			return List.of();
+		}
+		// Return the original list if no matches found
+		return getToolWiseToolConfigList(projectToolMap);
+	}
+
+	private static List<ProjectToolConfig> getToolWiseToolConfigList(
+			Map<String, List<ProjectToolConfig>> projectToolMap) {
+		if (projectToolMap.containsKey(Constant.REPO_TOOLS)) {
+			return projectToolMap.get(Constant.REPO_TOOLS);
+		} else if (projectToolMap.containsKey(TOOL_JIRA)) {
+			return projectToolMap.get(TOOL_JIRA);
+		} else if (projectToolMap.containsKey(TOOL_AZURE)) {
+			return projectToolMap.get(TOOL_AZURE);
+		} else if (projectToolMap.containsKey(TOOL_RALLY)) {
+			return projectToolMap.get(TOOL_RALLY);
+		} else if (projectToolMap.containsKey(TOOL_JENKIN)) {
+			return projectToolMap.get(TOOL_JENKIN);
+		} else if (projectToolMap.containsKey(TOOL_SONAR)) {
+			return projectToolMap.get(TOOL_SONAR);
+		}
+		return List.of();
 	}
 
 	public List<FieldMappingStructure> getFieldMappingStructure(List<FieldMappingStructure> fieldMappingStructureList,
 			List<String> fieldList) {
 		return fieldMappingStructureList.stream().filter(f -> fieldList.contains(f.getFieldName()))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public boolean hasReturnTransactionOrFTPRRejectedStatus(JiraIssue issue,
@@ -1531,7 +1537,7 @@ public class KpiHelperService { // NOPMD
 				// if rejected field is mentioned then we will not calculate return transactions
 				return CollectionUtils.isNotEmpty(statusUpdationLog.stream()
 						.filter(statusHistory -> jiraFtprRejectStatus.contains(statusHistory.getChangedTo()))
-						.collect(Collectors.toList()));
+						.toList());
 			} else {
 				Collections.sort(statusUpdationLog, Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
 				// if after qa field we get some status which signifies statusfor development
@@ -1540,7 +1546,7 @@ public class KpiHelperService { // NOPMD
 				JiraHistoryChangeLog latestQAField = statusUpdationLog.stream()
 						.filter(statusHistory -> jiraStatusForQa1.contains(statusHistory.getChangedTo())).findFirst()
 						.orElse(null);
-				if (latestQAField != null) {
+				if (ObjectUtils.isNotEmpty(latestQAField)) {
 					List<String> jiraStatusForDevelopemnt = (List<String>) CollectionUtils
 							.emptyIfNull(statusForDevelopemnt);
 					DateTime latestQAFieldActivityDate = DateTime.parse(latestQAField.getUpdatedOn().toString());
@@ -1587,9 +1593,9 @@ public class KpiHelperService { // NOPMD
 		Map<ObjectId, Map<String, List<LocalDateTime>>> projectIssueWiseClosedDates = new HashMap<>();
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		mapOfFilters.put(JiraFeatureHistory.STORY_ID.getFieldValueInFeature(),
-				duplicateIssues.values().stream().flatMap(Collection::stream).collect(Collectors.toList()));
+				duplicateIssues.values().stream().flatMap(Collection::stream).toList());
 		mapOfFilters.put(JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				duplicateIssues.keySet().stream().map(ObjectId::toString).collect(Collectors.toList()));
+				duplicateIssues.keySet().stream().map(ObjectId::toString).toList());
 		List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = jiraIssueCustomHistoryRepository
 				.findByFilterAndFromStatusMap(mapOfFilters, new HashMap<>());
 
@@ -1603,7 +1609,7 @@ public class KpiHelperService { // NOPMD
 									&& objectId.toString().equalsIgnoreCase(history.getBasicProjectConfigId()))
 							.flatMap(history -> history.getStatusUpdationLog().stream())
 							.sorted(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn))
-							.collect(Collectors.toList());
+							.toList();
 					/*
 					 * iterate over status logs and if some not completed status appears then that
 					 * has to be considered as reopen scenario, and at that time whatever statuses
@@ -1622,7 +1628,7 @@ public class KpiHelperService { // NOPMD
 						if (MapUtils.isNotEmpty(minimumCompletedStatusWiseMap)) {
 							LocalDateTime minDate = minimumCompletedStatusWiseMap.values().stream()
 									.min(LocalDateTime::compareTo).orElse(null);
-							if (minDate != null) {
+							if (ObjectUtils.isNotEmpty(minDate)) {
 								minimumDate.add(minDate);
 								minimumCompletedStatusWiseMap.clear();
 							}
@@ -2203,7 +2209,7 @@ public class KpiHelperService { // NOPMD
 				.cacheProjectToolConfigMapData();
 
 		String source = "";
-		if (MapUtils.isNotEmpty(toolMap) && toolMap.get(basicProjectConfId) != null) {
+		if (MapUtils.isNotEmpty(toolMap) && ObjectUtils.isNotEmpty(toolMap.get(basicProjectConfId))) {
 			List<ProjectToolConfig> allToolConfigs = new ArrayList<>();
 			toolMap.get(basicProjectConfId).values().forEach(allToolConfigs::addAll);
 			ProjectToolConfig projectToolConfig = allToolConfigs.stream()
@@ -2269,7 +2275,7 @@ public class KpiHelperService { // NOPMD
 		DateTime reopenTime = DateUtil.convertLocalDateTimeToDateTime(statusLog.getUpdatedOn());
 		DateTime lastClosedLogTime = closedStatusDateMap.values().stream().filter(Objects::nonNull)
 				.min(DateTime::compareTo).orElse(null);
-		if (lastClosedLogTime != null) {
+		if (ObjectUtils.isNotEmpty(lastClosedLogTime)) {
 			transitionInfo.setClosedDate(lastClosedLogTime);
 			transitionInfo.setReopenDate(reopenTime);
 			transitionInfo
@@ -2286,7 +2292,7 @@ public class KpiHelperService { // NOPMD
 	}
 
 	public static LocalDateTime getParseDateFromSprint(String primaryDate, String fallBackDate) {
-		return primaryDate != null ? DateUtil.stringToLocalDateTime(primaryDate, DateUtil.TIME_FORMAT_WITH_SEC)
+		return ObjectUtils.isNotEmpty(primaryDate) ? DateUtil.stringToLocalDateTime(primaryDate, DateUtil.TIME_FORMAT_WITH_SEC)
 				: DateUtil.stringToLocalDateTime(fallBackDate, DateUtil.TIME_FORMAT_WITH_SEC);
 	}
 
