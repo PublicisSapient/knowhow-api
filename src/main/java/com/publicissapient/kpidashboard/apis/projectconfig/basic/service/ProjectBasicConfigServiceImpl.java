@@ -281,7 +281,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		List<ProjectToolConfig> clonedToolConfigs = cloneToolConfigurations(savedProjectBasicConfig);
 
 		// Step 2: Clone field mappings
-		cloneFieldMapping(savedProjectBasicConfig, clonedToolConfigs);
+		cloneFieldMapping(savedProjectBasicConfig);
 
 		// Step 3: Clone board metadata
 		cloneBoardMetadata(savedProjectBasicConfig, clonedToolConfigs);
@@ -313,19 +313,14 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		return projectToolConfigService.saveProjectToolConfigs(clonedToolConfigs);
 	}
 
-	private void cloneFieldMapping(ProjectBasicConfig savedProjectBasicConfig,
-			List<ProjectToolConfig> clonedToolConfigs) {
+	private void cloneFieldMapping(ProjectBasicConfig savedProjectBasicConfig) {
 		FieldMapping originalFieldMapping = fieldMappingService
 				.getFieldMappingByBasicconfigId(savedProjectBasicConfig.getClonedFrom().toString());
-		Optional<ProjectToolConfig> toolConfigOptional = clonedToolConfigs.stream()
-				.filter(tool -> (Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()) || Constant.TOOL_RALLY.equals(tool.getToolName())))
-				.findFirst();
-
-		if (originalFieldMapping != null && toolConfigOptional.isPresent()) {
+		if (originalFieldMapping != null) {
 			try {
 				FieldMapping clonedFieldMapping = originalFieldMapping.clone();
 				clonedFieldMapping.setId(null);
-				clonedFieldMapping.setProjectToolConfigId(toolConfigOptional.get().getId());
+				clonedFieldMapping.setProjectToolConfigId(null);
 				clonedFieldMapping.setBasicProjectConfigId(savedProjectBasicConfig.getId());
 				clonedFieldMapping.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), CommonConstant.TIME_FORMAT));
 				clonedFieldMapping.setUpdatedBy(authenticationService.getLoggedInUser());
