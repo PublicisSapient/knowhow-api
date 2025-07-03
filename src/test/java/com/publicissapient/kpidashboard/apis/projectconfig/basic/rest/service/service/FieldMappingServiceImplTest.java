@@ -28,7 +28,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,26 +161,26 @@ public class FieldMappingServiceImplTest {
 
 		Set<String> configIds = new HashSet<>();
 		configIds.add(fieldMapping.getBasicProjectConfigId().toString());
-		when(fieldMappingRepository.findByProjectToolConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
-		when(projectToolConfigRepository.findById(anyString())).thenReturn(projectToolConfig);
-		when(projectBasicConfigRepository.findById(Mockito.any())).thenReturn(projectBasicConfigOpt);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
 		when(tokenAuthenticationService.getUserProjects()).thenReturn(configIds);
 
-		FieldMapping result = fieldMappingService.getFieldMapping(projectToolConfig.getId().toString());
+		FieldMapping result = fieldMappingService.getFieldMapping(projectBasicConfigOpt.get());
 
 		assertNotNull(result);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = AccessDeniedException.class)
 	public void getFieldMappingException() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		FieldMapping result = fieldMappingService.getFieldMapping("abc123");
+		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
+		projectBasicConfig.setId(fieldMapping.getBasicProjectConfigId());
+		FieldMapping result = fieldMappingService.getFieldMapping(projectBasicConfig);
 	}
 
 	@Test
 	public void addFieldMappingSuccess() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		when(fieldMappingRepository.findByProjectToolConfigId(Mockito.any(ObjectId.class))).thenReturn(null);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(null);
 		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class))).thenReturn(fieldMapping);
 
 		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping,
@@ -567,7 +567,7 @@ public class FieldMappingServiceImplTest {
 				.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping scrumFieldMapping2 = fieldMappingDataFactory.getFieldMappings().get(0);
 		scrumFieldMapping2.setJiraIterationCompletionStatusCustomField(Arrays.asList("1", "2", "3"));
-		when(fieldMappingRepository.findByProjectToolConfigId(Mockito.any(ObjectId.class))).thenReturn(scrumFieldMapping);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(scrumFieldMapping);
 		doReturn(createProjectBasicConfig(false, scrumFieldMapping2.getBasicProjectConfigId()))
 				.when(projectBasicConfigRepository).findById(Mockito.any(ObjectId.class));
 		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class))).thenReturn(scrumFieldMapping);
@@ -610,7 +610,7 @@ public class FieldMappingServiceImplTest {
 	}
 
 	private void mockRepositoriesForScrum() {
-		when(fieldMappingRepository.findByProjectToolConfigId(Mockito.any(ObjectId.class)))
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class)))
 				.thenReturn(scrumFieldMapping);
 		when(projectBasicConfigRepository.findById(Mockito.any(ObjectId.class)))
 				.thenReturn(createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId()));
@@ -623,7 +623,7 @@ public class FieldMappingServiceImplTest {
 
 	private void mockRepositoriesForKanban() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		when(fieldMappingRepository.findByProjectToolConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
 		when(projectBasicConfigRepository.findById(Mockito.any(ObjectId.class)))
 				.thenReturn(createProjectBasicConfig(true, fieldMapping.getBasicProjectConfigId()));
 		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class))).thenReturn(fieldMapping);
