@@ -1462,7 +1462,7 @@ public class KpiHelperService { // NOPMD
 							: new ArrayList<>());
 			fieldMappingStructureResponse.setKpiSource(kpiSource);
 			fieldMappingStructureResponse
-					.setProjectToolConfigId(ObjectUtils.isNotEmpty(projectToolConfigId) ? projectToolConfigId.toString() : null);
+					.setProjectToolConfigId(projectToolConfigId != null ? projectToolConfigId.toString() : null);
 		} catch (IllegalArgumentException e) {
 			fieldMappingStructureResponse.setFieldConfiguration(new ArrayList<>());
 			log.info("kpi Id" + kpiId + "No Enum is present");
@@ -1546,7 +1546,7 @@ public class KpiHelperService { // NOPMD
 				JiraHistoryChangeLog latestQAField = statusUpdationLog.stream()
 						.filter(statusHistory -> jiraStatusForQa1.contains(statusHistory.getChangedTo())).findFirst()
 						.orElse(null);
-				if (ObjectUtils.isNotEmpty(latestQAField)) {
+				if (latestQAField != null) {
 					List<String> jiraStatusForDevelopemnt = (List<String>) CollectionUtils
 							.emptyIfNull(statusForDevelopemnt);
 					DateTime latestQAFieldActivityDate = DateTime.parse(latestQAField.getUpdatedOn().toString());
