@@ -29,6 +29,7 @@ import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITHU
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITLAB;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JENKINS;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JIRA;
+import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_RALLY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_SONAR;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_TEAMCITY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHYR;
@@ -397,6 +398,11 @@ public class ConnectionServiceImpl implements ConnectionService {
 			case TOOL_ZEPHYR :
 				existingConnection = checkConnDetailsZephyr(inputConn, currConn, api);
 				break;
+			case TOOL_RALLY:
+				if (checkConnDetailsForRally(inputConn, currConn)) {
+					existingConnection = currConn;
+				}
+				break;
 			default :
 				existingConnection = new Connection();
 				break;
@@ -408,6 +414,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 		boolean b = false;
 		if (!inputConn.isOffline() && inputConn.getUsername().equals(currConn.getUsername()) &&
 				inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
+			b = true;
+		return b;
+	}
+
+	private boolean checkConnDetailsForRally(Connection inputConn, Connection currConn) {
+		boolean b = false;
+		if (inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
 			b = true;
 		return b;
 	}
