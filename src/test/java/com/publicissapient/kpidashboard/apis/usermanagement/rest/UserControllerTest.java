@@ -22,8 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.ArrayList;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,10 +33,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.request.UserRequestDTO;
+import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
-import com.publicissapient.kpidashboard.common.constant.AuthType;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -65,13 +63,14 @@ class UserControllerTest {
         UserRequestDTO requestDTO = new UserRequestDTO();
         requestDTO.setUsername("testUser");
 
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUsername("testUser");
-        userInfo.setAuthType(AuthType.SAML);
-        userInfo.setAuthorities(new ArrayList<>());
-        userInfo.setEmailAddress("");
+        // Create response DTO
+        UserResponseDTO responseDTO = new UserResponseDTO();
+        responseDTO.setUsername("testUser");
+        
+        // Create service response
+        ServiceResponse serviceResponse = new ServiceResponse(true, "User information saved successfully", responseDTO);
 
-        when(userService.saveUserInfo(anyString())).thenReturn(userInfo);
+        when(userService.saveUserInfo(anyString())).thenReturn(serviceResponse);
 
         mockMvc.perform(post("/usermanagement/save")
                 .contentType(MediaType.APPLICATION_JSON)

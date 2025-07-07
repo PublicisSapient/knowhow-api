@@ -21,10 +21,11 @@ import java.util.Collections;
 import java.util.Objects;
 
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
@@ -45,7 +46,7 @@ public class UserServiceImpl implements UserService {
     private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
     private static final String DOMAIN_NAME = "@publicisgroupe.net";
     @Override
-    public UserInfo saveUserInfo(String username) {
+    public ServiceResponse saveUserInfo(String username) {
 
         if (StringUtils.isEmpty(username)) {
             log.error(USER_NAME_CANNOT_NULL);
@@ -54,21 +55,32 @@ public class UserServiceImpl implements UserService {
         log.info("Saving user information for username: {}", username);
         // Check if user already exists with SAML auth type
         UserInfo existingUser = userInfoService.getUserInfo(username, AuthType.SAML);
+        UserInfo savedUserInfo;
+        String responseMessage;
 
         if (!Objects.isNull(existingUser)) {
             log.info("User already exists with username: {} and authType: {}", username, AuthType.SAML);
-            return existingUser;
+            savedUserInfo = existingUser;
+            responseMessage = "User already exists";
+        } else {
+            // Create new user with SAML auth type
+            UserInfo userInfo = new UserInfo();
+            userInfo.setUsername(username);
+            userInfo.setAuthType(AuthType.SAML);
+            userInfo.setAuthorities(new ArrayList<>());
+            userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
+            userInfo.setProjectsAccess(Collections.emptyList());
+            
+            log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
+            savedUserInfo = userInfoService.save(userInfo);
+            responseMessage = "User information saved successfully";
         }
-
-        // Create new user with SAML auth type
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUsername(username);
-        userInfo.setAuthType(AuthType.SAML);
-        userInfo.setAuthorities(new ArrayList<>());
-        userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
-        userInfo.setProjectsAccess(Collections.emptyList());
         
-        log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
-        return userInfoService.save(userInfo);
+        // Create response DTO
+        UserResponseDTO responseDTO = new UserResponseDTO();
+        responseDTO.setUsername(savedUserInfo.getUsername());
+        
+        // Return service response with appropriate message
+        return new ServiceResponse(true, responseMessage, responseDTO);
     }
 }

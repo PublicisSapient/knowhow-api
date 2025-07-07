@@ -16,14 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.kpiintegration.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.model.KpiDataPrompt;
+import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
@@ -39,6 +38,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.InternalServerErrorException;
@@ -64,6 +64,10 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 
 	@Autowired
 	KpiIntegrationServiceImpl kpiIntegrationService;
+
+	@Autowired
+    @Qualifier("AiRecommendation")
+	ParserStategy<Object> parserStategy;
 
 	private static final List<String> FILTER_LIST = Arrays.asList("Final Scope (Story Points)", "Average Coverage",
 			"Story Points", "Overall");
@@ -93,8 +97,7 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 			String prompt = promptGenerator.getKpiRecommendationPrompt(kpiDataMap, promptPersona);
 			ChatGenerationRequest chatGenerationRequest = ChatGenerationRequest.builder().prompt(prompt).build();
 			ChatGenerationResponseDTO chatResponse = aiGatewayClient.generate(chatGenerationRequest);
-
-			Object responseObject = parseJsonResponse(chatResponse.content());
+			Object responseObject = parserStategy.parse(chatResponse.content());
 			projectWiseKpiRecommendations = buildProjectWiseRecommendations(kpiRequest, responseObject);
 		} catch (Exception ex) {
 			log.error("Exception hitting AI Gateway", ex);
@@ -145,25 +148,6 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 		});
 
 		return kpiDataMap;
-	}
-
-	/**
-	 * Parses a JSON string and converts it into a JSON object.
-	 *
-	 * @param jsonString
-	 *            The JSON string to be parsed. It is expected to contain a valid
-	 *            JSON object.
-	 * @return A {@link JsonNode} representing the parsed JSON object, or an empty
-	 *         {@link Object} if parsing fails.
-	 */
-	private Object parseJsonResponse(String jsonString) {
-		try {
-			String formattedJsonString = jsonString.substring(jsonString.indexOf('{'));
-			return new ObjectMapper().readTree(formattedJsonString);
-		} catch (JsonProcessingException e) {
-			log.error("Error parsing JSON: {}", e.getMessage());
-			return new Object();
-		}
 	}
 
 	/**

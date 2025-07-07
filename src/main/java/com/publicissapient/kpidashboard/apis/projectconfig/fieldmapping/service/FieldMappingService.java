@@ -34,7 +34,7 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectToolConf
  */
 public interface FieldMappingService {
 
-	FieldMapping getFieldMapping(String projectToolConfigId);
+	FieldMapping getFieldMapping(ProjectBasicConfig projectBasicConfigId);
 
 	FieldMapping getFieldMappingByBasicconfigId(String projectBasicConfigId);
 
@@ -48,14 +48,6 @@ public interface FieldMappingService {
 	 * @return ProjectBasicConfig
 	 */
 	ProjectBasicConfig getBasicProjectConfigById(ObjectId basicProjectConfigId);
-
-	/**
-	 * Checks if user has project access.
-	 *
-	 * @param projectToolConfigId
-	 * @return
-	 */
-	boolean hasProjectAccess(String projectToolConfigId);
 
 	/**
 	 * Delete by basic project config id

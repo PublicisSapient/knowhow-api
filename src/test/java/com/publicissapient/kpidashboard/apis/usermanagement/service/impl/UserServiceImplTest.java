@@ -35,6 +35,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
@@ -66,12 +68,14 @@ class UserServiceImplTest {
         when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
         
         // Act
-        UserInfo result = userService.saveUserInfo(username);
+        ServiceResponse result = userService.saveUserInfo(username);
         
         // Assert
         assertNotNull(result);
-        assertEquals(username, result.getUsername());
-        assertEquals(AuthType.SAML, result.getAuthType());
+        assertEquals(true, result.getSuccess());
+        assertEquals("User information saved successfully", result.getMessage());
+        UserResponseDTO responseDTO = (UserResponseDTO) result.getData();
+        assertEquals(username, responseDTO.getUsername());
         verify(userInfoService).save(any(UserInfo.class));
     }
     
@@ -87,12 +91,14 @@ class UserServiceImplTest {
         when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(existingUserInfo);
         
         // Act
-        UserInfo result = userService.saveUserInfo(username);
+        ServiceResponse result = userService.saveUserInfo(username);
         
         // Assert
         assertNotNull(result);
-        assertEquals(username, result.getUsername());
-        assertEquals(existingUserInfo, result);
+        assertEquals(true, result.getSuccess());
+        assertEquals("User already exists", result.getMessage());
+        UserResponseDTO responseDTO = (UserResponseDTO) result.getData();
+        assertEquals(username, responseDTO.getUsername());
     }
     
     @Test

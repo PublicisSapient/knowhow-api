@@ -28,6 +28,7 @@ import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -62,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FieldMappingController {
 
+	private static final String UPDATE_PROJECT = "UPDATE_PROJECT";
 	@Autowired
 	private FieldMappingService fieldMappingService;
 
@@ -87,7 +89,7 @@ public class FieldMappingController {
 			ProjectToolConfig projectToolConfig = projectToolConfigOptional.get();
 			ProjectBasicConfig projectBasicConfig = fieldMappingService
 					.getBasicProjectConfigById(projectToolConfig.getBasicProjectConfigId());
-			policy.checkPermission(projectBasicConfig, "UPDATE_PROJECT");
+			policy.checkPermission(projectBasicConfig, UPDATE_PROJECT);
 
 			ServiceResponse response;
 			try {
@@ -120,10 +122,20 @@ public class FieldMappingController {
 
 		FieldMappingDTO result = null;
 		projectToolConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectToolConfigId);
-		FieldMapping resultFieldMapping = fieldMappingService.getFieldMapping(projectToolConfigId);
-		if (null != resultFieldMapping && null != resultFieldMapping.getId()) {
-			log.info("getFieldMapping resultFieldMapping : {}", resultFieldMapping);
-			result = new ModelMapper().map(resultFieldMapping, FieldMappingDTO.class);
+		Optional<ProjectToolConfig> projectToolConfigOptional = getProjectToolConfig(projectToolConfigId);
+
+		if (projectToolConfigOptional.isPresent()) {
+			// checking the permission to get the fieldmapping
+			ProjectToolConfig projectToolConfig = projectToolConfigOptional.get();
+			ProjectBasicConfig projectBasicConfig = fieldMappingService
+					.getBasicProjectConfigById(projectToolConfig.getBasicProjectConfigId());
+			policy.checkPermission(projectBasicConfig, UPDATE_PROJECT);
+			FieldMapping resultFieldMapping = fieldMappingService.getFieldMapping(projectBasicConfig);
+
+			if (null != resultFieldMapping && null != resultFieldMapping.getId()) {
+				log.info("getFieldMapping resultFieldMapping : {}", resultFieldMapping);
+				result = new ModelMapper().map(resultFieldMapping, FieldMappingDTO.class);
+			}
 		}
 		log.info("getFieldMapping result : {}", result);
 		ServiceResponse response;
@@ -162,11 +174,13 @@ public class FieldMappingController {
 
 			if (CollectionUtils.isEmpty(kpiSpecificFieldsAndHistory)) {
 				response = new ServiceResponse(false, "no field mapping found for " + projectToolConfigId, null);
-			} else if (checkTool(projectToolConfig)) {
+			}
+			else {
 				FieldMappingMeta fieldMappingMeta = new FieldMappingMeta(kpiSpecificFieldsAndHistory,
 						projectToolConfig.getMetadataTemplateCode());
 				response = new ServiceResponse(true, "field mappings", fieldMappingMeta);
 			}
+
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(response);

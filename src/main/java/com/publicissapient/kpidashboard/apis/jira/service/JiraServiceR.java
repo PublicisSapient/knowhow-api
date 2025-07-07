@@ -153,7 +153,7 @@ public class JiraServiceR {
 						.toList();
 				responseList.addAll(missingKpis);
 
-				if (!customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId)) {
+				if (!customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId) && referFromProjectCache) {
 					kpiHelperService.setIntoApplicationCache(kpiRequest, responseList, groupId, projectKeyCache);
 				}
 			} else {

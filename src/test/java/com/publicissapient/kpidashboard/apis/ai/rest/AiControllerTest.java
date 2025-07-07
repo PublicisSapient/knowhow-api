@@ -19,12 +19,14 @@ package com.publicissapient.kpidashboard.apis.ai.rest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
 import java.util.List;
 
+import com.publicissapient.kpidashboard.apis.ai.service.search.kpi.SearchKPIService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +51,9 @@ class AiControllerTest {
 
 	@Mock
 	private SprintGoalsService sprintGoalsService;
+
+	@Mock
+	private SearchKPIService searchKPIService;
 
 	@InjectMocks
 	private AiController aiController;
@@ -79,5 +84,21 @@ class AiControllerTest {
 
 		mockMvc.perform(post("/ai/sprint-goals/summary").contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isBadRequest());
+	}
+
+
+	@Test
+	void testSearchKpisNegative() throws Exception {
+		mockMvc.perform(get("/ai/kpisearch")
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void testSearchKpisPositive() throws Exception {
+		mockMvc.perform(get("/ai/kpisearch")
+						.param("query", "kpiName")
+						.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
 	}
 }

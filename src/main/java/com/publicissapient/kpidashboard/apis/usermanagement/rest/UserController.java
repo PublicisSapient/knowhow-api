@@ -26,7 +26,6 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.request.UserRequestDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -58,9 +57,6 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Unexpected server error occurred") })
     @PreAuthorize("hasPermission(null, 'ADD_USER')")
     public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        UserInfo savedUserInfo = userService.saveUserInfo(userRequestDTO.getUsername());
-        UserResponseDTO responseDTO = new UserResponseDTO();
-        responseDTO.setUsername(savedUserInfo.getUsername());
-        return new ServiceResponse(true, "User information saved successfully", responseDTO);
+        return userService.saveUserInfo(userRequestDTO.getUsername());
     }
 }
