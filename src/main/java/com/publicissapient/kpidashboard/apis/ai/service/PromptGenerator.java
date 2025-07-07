@@ -46,4 +46,13 @@ public class PromptGenerator {
 				.replace("USER_ROLE_PLACEHOLDER", userRole);
 
 	}
+
+	public String getKpiSearchPrompt( String userQuery)
+			throws EntityNotFoundException {
+		PromptDetails kpiData = getPromptDetails(PromptKeys.KPI_DATA);
+		PromptDetails searchBase = getPromptDetails(PromptKeys.KPI_SEARCH);
+		return searchBase.toString().replace("KPI_DATA", kpiData.toString())
+				.replace("USER_QUERY", userQuery);
+
+	}
 }
