@@ -937,7 +937,7 @@ public class ConnectionServiceImplTest {
 
 		Authentication auth = new Authentication();
 		auth.setEmail("auth@example.com");
-
+		when(customApiConfig.getUiHost()).thenReturn("localhost");
 		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
 		when(authenticationRepository.findByUsername("user123")).thenReturn(auth);
 
@@ -1005,6 +1005,7 @@ public class ConnectionServiceImplTest {
 		userInfo.setNotificationEmail(alertNotifications);
 		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
 		when(authenticationRepository.findByUsername("user123")).thenReturn(null);
+		when(customApiConfig.getUiHost()).thenReturn("localhost");
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 

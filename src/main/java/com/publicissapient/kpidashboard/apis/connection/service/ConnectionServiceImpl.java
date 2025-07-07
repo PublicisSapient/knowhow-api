@@ -33,6 +33,8 @@ import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_SONAR
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_TEAMCITY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHYR;
 
+import java.io.File;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -881,7 +883,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 		connection.setConnectionErrorMsg(errorMsg);
 
 		if (shouldSendNotification(connection)) {
-			sendBrokenConnectionNotification(connection);
+			try {
+				sendBrokenConnectionNotification(connection);
+			} catch (UnknownHostException e) {
+				log.error("Host resolution failed: {}", e.getMessage(), e);
+				throw new IllegalStateException("Cannot send notification: wrong UI host found for fix connection URL", e);
+			}
 			connection.setNotifiedOn(DateUtil.getTodayTime().toString());
 			connection.setNotificationCount(connection.getNotificationCount() + 1);
 		}
@@ -917,7 +924,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 	}
 
-	void sendBrokenConnectionNotification(Connection connection) {
+	void sendBrokenConnectionNotification(Connection connection) throws UnknownHostException {
 		UserInfo userInfo = userInfoRepository.findByUsername(connection.getCreatedBy());
 		if (userInfo == null) {
 			log.warn("No userInfo found for username: {}", connection.getCreatedBy());
@@ -931,7 +938,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		String subjectTemplate = customApiConfig.getBrokenConnectionEmailNotificationSubject();
 		String notificationSubject = subjectTemplate.replace("{{Tool_Name}}", connection.getType());
 
-		String fixUrl = customApiConfig.getUiHost() + customApiConfig.getBrokenConnectionFixUrl();
+		String fixUrl = getUIHost() + customApiConfig.getBrokenConnectionFixUrl();
 
 		if (notifyUserOnError && StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
 			Map<String, String> customData = createCustomData(
@@ -983,5 +990,26 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (connection.isBrokenConnection()) {
 			updateBreakingConnection(connection, connection.getConnectionErrorMsg());
 		}
+	}
+
+	private String getUIHost() throws UnknownHostException {
+		StringBuilder urlPath = new StringBuilder();
+		urlPath.append(':').append(File.separator + File.separator);
+
+		if (org.apache.commons.lang.StringUtils.isNotEmpty(customApiConfig.getUiHost())) {
+
+			if (org.apache.commons.lang.StringUtils.isNotEmpty(customApiConfig.getUiPort())) {
+				urlPath.append(customApiConfig.getUiHost());
+				urlPath.append(':').append(customApiConfig.getUiPort());
+			} else {
+				urlPath.append(customApiConfig.getUiHost());
+			}
+
+		} else {
+			throw new UnknownHostException("Ui host not found in properties.");
+		}
+		urlPath.append(File.separator).append('#');
+		return urlPath.toString();
+
 	}
 }
