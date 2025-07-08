@@ -91,8 +91,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 			Map<String, String> customData = createCustomData(authentication.getUsername(), token, url,
 					customApiConfig.getForgotPasswordExpiryInterval());
 			log.info("Notification message sent to kafka with key : {}", FORGOT_PASSWORD_NOTIFICATION_KEY);
-			notificationService.sendEmailWithoutKafka(Arrays.asList(email), customData, customApiConfig.getEmailSubject(),
-					FORGOT_PASSWORD_NOTIFICATION_KEY, customApiConfig.getKafkaMailTopic(), customApiConfig.isNotificationSwitch(),
+			notificationService.sendNotificationEvent(Arrays.asList(email), customData,
+					customApiConfig.getEmailSubject(), customApiConfig.isNotificationSwitch(),
 					FORGOT_PASSWORD_TEMPLATE);
 			return authentication;
 		}
@@ -130,8 +130,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	 * @return authentication if the <tt>token</tt> is valid and <tt>username</tt>
 	 *         from forgotPasswordToken exists in the database
 	 * @throws ApplicationException
-	 *           if either <tt>forgotPasswordToken</tt> is invalid or
-	 *           <tt>username</tt> doen't exist in the database.
+	 *             if either <tt>forgotPasswordToken</tt> is invalid or
+	 *             <tt>username</tt> doen't exist in the database.
 	 */
 	@Override
 	public Authentication resetPassword(ResetPasswordRequest resetPasswordRequest) throws ApplicationException {
@@ -144,7 +144,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 				log.error("User {} Does not Exist", forgotPasswordToken.getUsername());
 				throw new ApplicationException("User Does not Exist", ApplicationException.BAD_DATA);
 			} else {
-				validatePasswordRules(forgotPasswordToken.getUsername(), resetPasswordRequest.getPassword(), authentication);
+				validatePasswordRules(forgotPasswordToken.getUsername(), resetPasswordRequest.getPassword(),
+						authentication);
 				return authentication;
 			}
 		} else {
@@ -239,7 +240,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 					authentication.setPassword(password);
 					authenticationRepository.save(authentication);
 				} else {
-					throw new ApplicationException("Password should not be old password", ApplicationException.BAD_DATA);
+					throw new ApplicationException("Password should not be old password",
+							ApplicationException.BAD_DATA);
 				}
 			} else {
 				throw new ApplicationException("Password should not contain userName", ApplicationException.BAD_DATA);
@@ -255,13 +257,13 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	 * * create custom data for email
 	 *
 	 * @param username
-	 *          emailId
+	 *            emailId
 	 * @param token
-	 *          token
+	 *            token
 	 * @param url
-	 *          url
+	 *            url
 	 * @param expiryTime
-	 *          expiryTime in Min
+	 *            expiryTime in Min
 	 * @return Map<String, String>
 	 */
 	private Map<String, String> createCustomData(String username, String token, String url, String expiryTime) {

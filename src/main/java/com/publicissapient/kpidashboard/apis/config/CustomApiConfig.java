@@ -161,9 +161,6 @@ public class CustomApiConfig { // NOPMD
 	@Value("$spring.kafka.producer.bootstrap-servers")
 	private List<String> kafkaProducerBootStrapServers;
 
-	@Value("${kafka.mailtopic}")
-	private String kafkaMailTopic;
-
 	private Map<String, String> notificationSubject;
 
 	@Value("${notification.switch}")
@@ -238,12 +235,6 @@ public class CustomApiConfig { // NOPMD
 	private boolean ssoLogin;
 
 	private Map<String, String> mailTemplate;
-
-	@Value("${flag.mailWithoutKafka}")
-	private boolean mailWithoutKafka;
-
-	@Value("${sendGridEnabled}")
-	private boolean sendGridEnabled;
 
 	@Value(("${backlog.sprint.count}"))
 	private int sprintCountForBackLogStrength;
@@ -1065,20 +1056,6 @@ public class CustomApiConfig { // NOPMD
 		return gitlabTestConnection;
 	}
 
-	/**
-	 * @return String
-	 */
-	public String getKafkaMailTopic() {
-		return kafkaMailTopic;
-	}
-
-	/**
-	 * @param kafkaMailTopic
-	 */
-	public void setKafkaMailTopic(String kafkaMailTopic) {
-		this.kafkaMailTopic = kafkaMailTopic;
-	}
-
 	public List<String> getKafkaProducerBootStrapServers() {
 		return kafkaProducerBootStrapServers;
 	}
@@ -1244,22 +1221,6 @@ public class CustomApiConfig { // NOPMD
 
 	public void setMailTemplate(Map<String, String> mailTemplate) {
 		this.mailTemplate = mailTemplate;
-	}
-
-	public boolean isMailWithoutKafka() {
-		return mailWithoutKafka;
-	}
-
-	public void setMailWithoutKafka(boolean mailWithoutKafka) {
-		this.mailWithoutKafka = mailWithoutKafka;
-	}
-
-	public boolean isSendGridEnabled() {
-		return sendGridEnabled;
-	}
-
-	public void setSendGridEnabled(boolean sendGridEnabled) {
-		this.sendGridEnabled = sendGridEnabled;
 	}
 
 	public String getHostPath() {

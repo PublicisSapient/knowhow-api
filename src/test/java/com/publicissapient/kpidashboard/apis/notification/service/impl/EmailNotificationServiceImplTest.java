@@ -104,9 +104,7 @@ class EmailNotificationServiceImplTest {
 
 		when(customApiConfig.getMailTemplate()).thenReturn(mailTemplateMap);
 		when(customApiConfig.getNotificationSubject()).thenReturn(subjectMap);
-		when(customApiConfig.getKafkaMailTopic()).thenReturn("testTopic");
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
 		final Map<String, String> customData = getTemplateDataMap(payload);
 
@@ -116,8 +114,8 @@ class EmailNotificationServiceImplTest {
 					.thenReturn(new HashSet<>());
 			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 
-			verify(notificationService).sendNotificationEvent(eq(payload.getRecipients()), eq(customData), eq(subject),
-					eq(templateKey), eq("testTopic"), eq(true), eq(kafkaTemplate), eq(templateName), eq(false));
+			verify(notificationService).sendNotificationEvent(eq(payload.getRecipients()), eq(customData), eq(subject)
+					, eq(true), eq(templateName));
 			assertTrue(response.getSuccess());
 			assertEquals("Email sent successfully.", response.getMessage());
 		}
@@ -180,9 +178,7 @@ class EmailNotificationServiceImplTest {
 
 		when(customApiConfig.getMailTemplate()).thenReturn(mailTemplateMap);
 		when(customApiConfig.getNotificationSubject()).thenReturn(subjectMap);
-		when(customApiConfig.getKafkaMailTopic()).thenReturn("testTopic");
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
 		final Map<String, String> customData = getTemplateDataMap(payload);
 
@@ -191,8 +187,8 @@ class EmailNotificationServiceImplTest {
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
 			doThrow(new RuntimeException("Kafka failure")).when(notificationService).sendNotificationEvent(
-					Collections.singletonList(anyString()), anyMap(), anyString(), anyString(), anyString(),
-					anyBoolean(), any(), anyString(), anyBoolean());
+					Collections.singletonList(anyString()), anyMap(), anyString(),
+					anyBoolean(),  anyString());
 
 			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 			assertFalse(response.getSuccess());

@@ -924,9 +924,7 @@ public class ConnectionServiceImplTest {
 		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
 		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection");
 		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
-		when(customApiConfig.getKafkaMailTopic()).thenReturn("mail-topic");
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
 		UserInfo userInfo = new UserInfo();
 		userInfo.setEmailAddress("user@example.com");
@@ -951,12 +949,8 @@ public class ConnectionServiceImplTest {
 				eq(List.of("auth@example.com")),
 				anyMap(),
 				eq("Action Required: Restore Your {{toolName}} Connection"),
-				eq("Broken_Connection"),
-				eq("mail-topic"),
 				eq(true),
-				eq(kafkaTemplate),
-				eq("template-key"),
-				eq(false)
+				eq("template-key")
 		);
 	}
 
@@ -971,7 +965,7 @@ public class ConnectionServiceImplTest {
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
+		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -985,7 +979,7 @@ public class ConnectionServiceImplTest {
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
+		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -1008,6 +1002,6 @@ public class ConnectionServiceImplTest {
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), any(), any(), anyBoolean(), any(), any(), anyBoolean());
+		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
 	}
 }

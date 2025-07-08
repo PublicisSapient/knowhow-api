@@ -48,7 +48,6 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.kafka.producer.NotificationEventProducer;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.EmailServerDetail;
 import com.publicissapient.kpidashboard.common.model.application.GlobalConfig;
@@ -83,8 +82,6 @@ public class CommonServiceImplTest {
 	private UserInfoRepository userInfoRepository;
 	@Mock
 	private AuthenticationRepository authenticationRepository;
-	@Mock
-	private NotificationEventProducer notificationEventProducer;
 	@Mock
 	private HttpServletRequest request;
 	@Mock

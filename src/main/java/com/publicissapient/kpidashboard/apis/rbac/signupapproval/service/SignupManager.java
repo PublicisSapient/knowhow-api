@@ -50,8 +50,6 @@ public class SignupManager {
 	@Autowired
 	private NotificationService notificationService;
 	@Autowired
-	private KafkaTemplate<String, Object> kafkaTemplate;
-	@Autowired
 	private TokenAuthenticationService tokenAuthenticationService;
 
 	/**
@@ -110,17 +108,16 @@ public class SignupManager {
 	public void sendEmailNotification(List<String> emailAddresses, Map<String, String> customData, String subjectKey,
 			String notKey) {
 		Map<String, String> notificationSubjects = customApiConfig.getNotificationSubject();
-		if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(emailAddresses) &&
-				MapUtils.isNotEmpty(notificationSubjects)) {
+		if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(emailAddresses)
+				&& MapUtils.isNotEmpty(notificationSubjects)) {
 			String subject = notificationSubjects.get(subjectKey);
 			log.info("Notification message sent to kafka with key : {}", notKey);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(notKey, "");
-			notificationService.sendNotificationEvent(emailAddresses, customData, subject, notKey,
-					customApiConfig.getKafkaMailTopic(), customApiConfig.isNotificationSwitch(), kafkaTemplate, templateKey,
-					customApiConfig.isMailWithoutKafka());
+			notificationService.sendNotificationEvent(emailAddresses, customData, subject,
+					customApiConfig.isNotificationSwitch(), templateKey);
 		} else {
-			log.error("Notification Event not sent : No email address found " +
-					"or Property - notificationSubject.accessRequest not set in property file ");
+			log.error("Notification Event not sent : No email address found "
+					+ "or Property - notificationSubject.accessRequest not set in property file ");
 		}
 	}
 
@@ -212,7 +209,8 @@ public class SignupManager {
 	 * @param email
 	 */
 	public void sendUserPreApprovalRequestEmailToAdmin(String username, String email) {
-		List<String> emailAddresses = commonService.getEmailAddressBasedOnRoles(Arrays.asList(Constant.ROLE_SUPERADMIN));
+		List<String> emailAddresses = commonService
+				.getEmailAddressBasedOnRoles(Arrays.asList(Constant.ROLE_SUPERADMIN));
 		String serverPath = getServerPath();
 		Map<String, String> customData = createCustomData(username, email, serverPath, "");
 		sendEmailNotification(emailAddresses, customData, PRE_APPROVAL_NOTIFICATION_SUBJECT_KEY,
