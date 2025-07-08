@@ -127,9 +127,6 @@ public class ConnectionServiceImpl implements ConnectionService {
 	@Autowired
 	private RestAPIUtils restAPIUtils;
 
-	@Autowired
-	private KafkaTemplate<String, Object> kafkaTemplate;
-
 	/**
 	 * Fetch all connection data.
 	 *
@@ -957,20 +954,11 @@ public class ConnectionServiceImpl implements ConnectionService {
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 
 			log.info("Sending broken connection notification to user: {}", email);
-			notificationService.sendNotificationEvent(
-					Collections.singletonList(email),
-					customData,
-					notificationSubject,
-					NOTIFICATION_KEY,
-					customApiConfig.getKafkaMailTopic(),
-					customApiConfig.isNotificationSwitch(),
-					kafkaTemplate,
-					templateKey,
-					customApiConfig.isMailWithoutKafka()
-			);
+			notificationService.sendNotificationEvent(Collections.singletonList(email), customData, notificationSubject,
+					customApiConfig.isNotificationSwitch(), templateKey);
 		} else {
 			log.info("Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
-					 email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
+					email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
 		}
 	}
 
