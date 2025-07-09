@@ -90,7 +90,7 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 			String token = createForgetPasswordToken(authentication);
 			Map<String, String> customData = createCustomData(authentication.getUsername(), token, url,
 					customApiConfig.getForgotPasswordExpiryInterval());
-			log.info("Notification message sent to kafka with key : {}", FORGOT_PASSWORD_NOTIFICATION_KEY);
+			log.info("Notification message sent with key : {}", FORGOT_PASSWORD_NOTIFICATION_KEY);
 			notificationService.sendNotificationEvent(Arrays.asList(email), customData,
 					customApiConfig.getEmailSubject(), customApiConfig.isNotificationSwitch(),
 					FORGOT_PASSWORD_TEMPLATE);
