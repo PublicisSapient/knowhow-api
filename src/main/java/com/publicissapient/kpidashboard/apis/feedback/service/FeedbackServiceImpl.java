@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
@@ -71,7 +70,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 				log.error("SubmitFeedbackController: Server Host name is not bind with submit feedback Request mail ");
 			}
 			Map<String, String> customData = createCustomData(feedback, serverPath, loggedUserName);
-			log.info("Notification message sent to kafka with key : {}", NOTIFICATION_KEY);
+			log.info("Notification message sent with key : {}", NOTIFICATION_KEY);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 			notificationService.sendNotificationEvent(emailAddresses, customData, feedbackNotificationSubjects,
 					customApiConfig.isNotificationSwitch(), templateKey);

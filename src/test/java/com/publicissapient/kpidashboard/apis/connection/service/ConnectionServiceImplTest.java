@@ -61,7 +61,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -134,9 +133,6 @@ public class ConnectionServiceImplTest {
 
 	@Mock
 	private NotificationService notificationService;
-
-	@Mock
-	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	private Connection connection;
 	private final ObjectId connectionId = new ObjectId();

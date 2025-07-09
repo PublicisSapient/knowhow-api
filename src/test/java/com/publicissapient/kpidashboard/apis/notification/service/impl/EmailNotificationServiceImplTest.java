@@ -30,7 +30,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,9 +55,6 @@ class EmailNotificationServiceImplTest {
 	private CustomApiConfig customApiConfig;
 	@Mock
 	private CommonService commonService;
-
-	@Mock
-	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	private EmailRequestPayload createValidPayload() {
 		EmailRequestPayload payload = new EmailRequestPayload();
@@ -186,7 +182,7 @@ class EmailNotificationServiceImplTest {
 			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
-			doThrow(new RuntimeException("Kafka failure")).when(notificationService).sendNotificationEvent(
+			doThrow(new RuntimeException("Notification failure")).when(notificationService).sendNotificationEvent(
 					Collections.singletonList(anyString()), anyMap(), anyString(),
 					anyBoolean(),  anyString());
 

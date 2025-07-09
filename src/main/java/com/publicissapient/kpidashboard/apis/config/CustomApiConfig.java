@@ -158,9 +158,6 @@ public class CustomApiConfig { // NOPMD
 	@Value("p5-trivial, 5, trivial")
 	private String priorityP5;
 
-	@Value("$spring.kafka.producer.bootstrap-servers")
-	private List<String> kafkaProducerBootStrapServers;
-
 	private Map<String, String> notificationSubject;
 
 	@Value("${notification.switch}")
@@ -1054,14 +1051,6 @@ public class CustomApiConfig { // NOPMD
 	 */
 	public String getGitlabTestConnection() {
 		return gitlabTestConnection;
-	}
-
-	public List<String> getKafkaProducerBootStrapServers() {
-		return kafkaProducerBootStrapServers;
-	}
-
-	public void setKafkaProducerBootStrapServers(List<String> kafkaProducerBootStrapServers) {
-		this.kafkaProducerBootStrapServers = kafkaProducerBootStrapServers;
 	}
 
 	public Map<String, String> getNotificationSubject() {

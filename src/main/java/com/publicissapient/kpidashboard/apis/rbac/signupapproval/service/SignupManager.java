@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
@@ -111,7 +110,7 @@ public class SignupManager {
 		if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(emailAddresses)
 				&& MapUtils.isNotEmpty(notificationSubjects)) {
 			String subject = notificationSubjects.get(subjectKey);
-			log.info("Notification message sent to kafka with key : {}", notKey);
+			log.info("Notification message sent with key : {}", notKey);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(notKey, "");
 			notificationService.sendNotificationEvent(emailAddresses, customData, subject,
 					customApiConfig.isNotificationSwitch(), templateKey);
