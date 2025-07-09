@@ -13,10 +13,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
+import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.application.DataValue;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -84,7 +89,7 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 		projectWiseLeafNodeValue(kpiElement, mapTmp, projectList, kpiRequest);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.CYCLE_TIME_SPEED);
+		calculateAggregatedMultipleValueGroup(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.CYCLE_TIME_SPEED);
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.CYCLE_TIME_SPEED);
 
@@ -124,34 +129,36 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 
 		LinkedHashMap<String, Object> filterDuration = (LinkedHashMap<String, Object>) leadTimeReq.getFilterDuration();
 		int value = 2; // Default value for 'value'
-		String duration = CommonConstant.WEEK; // Default value for 'duration'
+		String duration; // Default value for 'duration'
 		String startDate = null;
 		String endDate = DateUtil.getTodayDate().toString();
 
 		if (filterDuration != null) {
 			value = (int) filterDuration.getOrDefault("value", 6);
 			duration = (String) filterDuration.getOrDefault("duration", CommonConstant.MONTH);
-		}
-		if (duration.equalsIgnoreCase(CommonConstant.WEEK)) {
-			startDate = DateUtil.getTodayDate().minusMonths(value).toString();
+		} else {
+            duration = CommonConstant.WEEK;
+        }
+        if (duration.equalsIgnoreCase(CommonConstant.WEEK)) {
+			startDate = DateUtil.getTodayDate().minusWeeks(value).toString();
 		} else if (duration.equalsIgnoreCase(CommonConstant.MONTH)) {
 			startDate = DateUtil.getTodayDate().minusMonths(value).toString();
 		}
 		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
-
+		List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
+		List<KPIExcelData> excelData = new ArrayList<>();
 		leafNodeList.forEach(leafNode -> {
 			List<JiraIssueCustomHistory> issueCustomHistoryList = (List<JiraIssueCustomHistory>) resultMap
 					.get(leafNode.getProjectFilter().getBasicProjectConfigId().toString());
 
 			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
 					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
-			List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
-			Map<String, Long> cycleTime = getCycleTime(issueCustomHistoryList, fieldMapping, cycleTimeList, kpiElement);
-			Map<String, List<DataCount>> dataCountMap = getDataCountObject(leafNode.getProjectFilter().getName(),
-					cycleTime);
+			Map<String, List<DataValue>> cycleTimeDataCount = getCycleTimeDataCount(leafNode.getProjectFilter().getName(), issueCustomHistoryList, fieldMapping, cycleTimeList, kpiElement);
+			Map<String, List<DataCount>> dataCountMap = getDataCountObject(leafNode.getProjectFilter().getName(), cycleTimeDataCount, duration);
 			mapTmp.get(leafNode.getId()).setValue(dataCountMap);
 		});
-
+		populateExcelDataObject(kpiRequest.getRequestTrackerId(), cycleTimeList, excelData);
+		kpiElement.setExcelData(excelData);
 		kpiElement.setModalHeads(KPIExcelColumn.CYCLE_TIME.getColumns());
 	}
 
@@ -208,11 +215,12 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 		return KPICode.CYCLE_TIME_SPEED.name();
 	}
 
-	public Map<String, Long> getCycleTime(List<JiraIssueCustomHistory> jiraIssueCustomHistoriesList,
-			FieldMapping fieldMapping, List<CycleTimeValidationData> cycleTimeList, KpiElement kpiElement) {
+	public Map<String, List<DataValue>> getCycleTimeDataCount(String projectName,
+			List<JiraIssueCustomHistory> jiraIssueCustomHistoriesList, FieldMapping fieldMapping,
+			List<CycleTimeValidationData> cycleTimeList, KpiElement kpiElement) {
 
 		Set<String> issueTypeFilter = new LinkedHashSet<>();
-		Map<String, Long> cycleMap = new LinkedHashMap<>();
+		Map<String, List<DataValue>> cycleMap = new LinkedHashMap<>();
 
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistoriesList)) {
 			List<Long> overAllIntakeDorTime = new ArrayList<>();
@@ -305,20 +313,26 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 					}
 
 					intakeDor = AggregationUtils.averageLong(intakeDorTime);
-					cycleMap.put(INTAKE_TO_DOR + "#" + type, intakeDor);
+					cycleMap.put(INTAKE_TO_DOR + "#" + type, Arrays.asList(getDataValue(intakeDor, "Issues"),
+							getDataValue(ObjectUtils.defaultIfNull(intakeDor, 0L) / 480, "Days")));
 					dorDod = AggregationUtils.averageLong(dorDodTime);
-					cycleMap.put(DOR_TO_DOD + "#" + type, dorDod);
+					cycleMap.put(DOR_TO_DOD + "#" + type, Arrays.asList(getDataValue(dorDod, "Issues"),
+							getDataValue(ObjectUtils.defaultIfNull(dorDod, 0L) / 480, "Days")));
 					dodLive = AggregationUtils.averageLong(dodLiveTime);
-					cycleMap.put(DOD_TO_LIVE + "#" + type, dodLive);
+					cycleMap.put(DOD_TO_LIVE + "#" + type, Arrays.asList(getDataValue(dodLive, "Issues"),
+							getDataValue(ObjectUtils.defaultIfNull(dodLive, 0L) / 480, "Days")));
 
 				}
 			});
 			overAllIntakeDor = AggregationUtils.averageLong(overAllIntakeDorTime);
-			cycleMap.put(INTAKE_TO_DOR + "#Overall", overAllIntakeDor);
+			cycleMap.put(INTAKE_TO_DOR + "#Overall", Arrays.asList(getDataValue(overAllIntakeDor, "Issues"),
+					getDataValue(ObjectUtils.defaultIfNull(overAllIntakeDor, 0L) / 480, "Days")));
 			overAllDorDod = AggregationUtils.averageLong(overAllDorDodTime);
-			cycleMap.put(DOR_TO_DOD + "#Overall", overAllDorDod);
+			cycleMap.put(DOR_TO_DOD + "#Overall", Arrays.asList(getDataValue(overAllDorDod, "Issues"),
+					getDataValue(ObjectUtils.defaultIfNull(overAllDorDod, 0L) / 480, "Days")));
 			overAllDodLive = AggregationUtils.averageLong(overAllDodLiveTime);
-			cycleMap.put(DOD_TO_LIVE + "#Overall", overAllDodLive);
+			cycleMap.put(DOD_TO_LIVE + "#Overall", Arrays.asList(getDataValue(overAllDodLive, "Issues"),
+					getDataValue(ObjectUtils.defaultIfNull(overAllDodLive, 0L) / 480, "Days")));
 		}
 		Set<String> durationFilter = new LinkedHashSet<>(
 				Arrays.asList("Past Week", "Past 2 Weeks", "Past Month", "Past 3 Months", "Past 6 Months"));
@@ -332,29 +346,36 @@ public class CycleTimeSpeedServiceImpl extends JiraKPIService<Double, List<Objec
 
 	}
 
-	private Map<String, List<DataCount>> getDataCountObject(String trendLineName, Map<String, Long> cycleMap) {
+	private Map<String, List<DataCount>> getDataCountObject(String trendLineName, Map<String, List<DataValue>> cycleMap, String duration) {
 		Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 		cycleMap.forEach((key, value) -> {
+			String[] issueFilter = key.split("#");
+			String filterKey = duration+"#"+issueFilter[1];
 			DataCount dataCount = new DataCount();
-			dataCount.setData(String.valueOf(value));
 			dataCount.setSProjectName(trendLineName);
-			dataCount.setValue(value);
-			dataCount.setKpiGroup(key);
+			dataCount.setDataValue(value);
+			dataCount.setKpiGroup(filterKey);
+			dataCount.setSubFilter(issueFilter[0]);
 			dataCount.setHoverValue(new HashMap<>());
-			dataCountMap.put(key, new ArrayList<>(Arrays.asList(dataCount)));
+			dataCountMap.computeIfAbsent(filterKey, k -> new ArrayList<>()).add(dataCount);
 		});
 		return dataCountMap;
 	}
 
-	private List<IterationKpiModalValue> getIterationKpiModalValue(List<JiraIssueCustomHistory> modalJiraIssues,
-			List<CycleTimeValidationData> cycleTimeList) {
-		List<IterationKpiModalValue> iterationKpiDataList = new ArrayList<>();
-		Map<String, IterationKpiModalValue> dataMap = KpiDataHelper
-				.createMapOfModalObjectFromJiraHistory(modalJiraIssues, cycleTimeList);
-		for (Map.Entry<String, IterationKpiModalValue> entry : dataMap.entrySet()) {
-			iterationKpiDataList.add(dataMap.get(entry.getKey()));
+	private DataValue getDataValue(Long overAllCount, String subFilter) {
+		DataValue dataValue = new DataValue();
+		dataValue.setData(String.valueOf(overAllCount));
+		dataValue.setValue(overAllCount);
+		dataValue.setName(subFilter);
+		return dataValue;
+
+	}
+
+	private void populateExcelDataObject(String requestTrackerId, List<CycleTimeValidationData> cycleTimeList,
+			List<KPIExcelData> excelData) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+			KPIExcelUtility.populateCycleTime(cycleTimeList, excelData);
 		}
-		return iterationKpiDataList;
 	}
 
 	private void transitionExist(List<Long> overAllTimeList, List<JiraIssueCustomHistory> overAllTransitionModalValues,
