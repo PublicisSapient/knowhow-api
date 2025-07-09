@@ -74,6 +74,7 @@ public class LeadTimeKpiChangeLog {
 	public void execute() {
 		addLeadTimeKpi();
 		addFieldMappingStructure();
+		addToKpiCategoryMapping();
 	}
 
 	private void addLeadTimeKpi() {
@@ -174,11 +175,18 @@ public class LeadTimeKpiChangeLog {
 
 	}
 
+	public void addToKpiCategoryMapping() {
+		Document kpiCategoryMappingDocument = new Document().append(KPI_ID, KPI_ID).append("categoryId", "speed")
+				.append("kpiOrder", 11).append("kanban", false);
+		mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDocument);
+	}
+
 	@RollbackExecution
 	public void rollback() {
 		removeLeadTimeKpi();
 		removeFieldMappingStructure();
 		removeKpiColumnConfig();
+		removeKpiCategoryMapping();
 	}
 
 	private void removeLeadTimeKpi() {
@@ -194,6 +202,10 @@ public class LeadTimeKpiChangeLog {
 				FIELD_JIRA_LIVE_STATUS);
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.deleteMany(new Document(FIELD_NAME, new Document("$in", fieldsToRemove)));
+	}
+
+	private void removeKpiCategoryMapping() {
+		mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_ID));
 	}
 }
 

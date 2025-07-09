@@ -278,15 +278,15 @@ public class LeadTimeSpeedServiceImpl extends JiraKPIService<Double, List<Object
 			totalIssueTypeString.forEach(issueType -> {
 				List<JiraIssueCustomHistory> typeWiseIssues = statusWiseJiraIssues.getOrDefault(issueType, new ArrayList<>());
 				List<Long> leadTimeList = typeWiseIssues.stream().map(JiraIssueCustomHistory::getStoryID)
-						.filter(map::containsKey).map(map::get).collect(Collectors.toList());
+						.filter(map::containsKey).map(map::get).toList();
 
 				setDataCount(leafNode.getProjectFilter().getName(), issueType, dateRange,
 						AggregationUtils.averageLong(leadTimeList), dataCountMap, typeWiseIssues.size());
 			});
 			List<JiraIssueCustomHistory> totalRangeWiseIssues = statusWiseJiraIssues.values().stream()
-					.flatMap(List::stream).collect(Collectors.toList());
+					.flatMap(List::stream).toList();
 			List<Long> leadTimeList = totalRangeWiseIssues.stream().map(JiraIssueCustomHistory::getStoryID)
-					.filter(map::containsKey).map(map::get).collect(Collectors.toList());
+					.filter(map::containsKey).map(map::get).toList();
 			setDataCount(leafNode.getProjectFilter().getName(), "Overall", dateRange,
 					AggregationUtils.averageLong(leadTimeList), dataCountMap, totalRangeWiseIssues.size());
 		});
