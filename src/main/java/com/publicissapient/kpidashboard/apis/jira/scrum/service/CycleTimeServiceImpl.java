@@ -318,15 +318,15 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 						cycleTimeList.add(cycleTimeValidationData);
 					}
 
-					intakeDor = AggregationUtils.averageLong(intakeDorTime);
+					intakeDor = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(intakeDorTime), 0).longValue();
 					cycleMap.put(INTAKE_TO_DOR + "#" + type,
 							Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(intakeDor, 0L) / 480, DAYS),
 									getDataValue(intakeDor, ISSUES)));
-					dorDod = AggregationUtils.averageLong(dorDodTime);
+					dorDod = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(dorDodTime), 0).longValue();
 					cycleMap.put(DOR_TO_DOD + "#" + type,
 							Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(dorDod, 0L) / 480, DAYS),
 									getDataValue(dorDod, ISSUES)));
-					dodLive = AggregationUtils.averageLong(dodLiveTime);
+					dodLive = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(dodLiveTime), 0).longValue();
 					cycleMap.put(DOD_TO_LIVE + "#" + type,
 							Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(dodLive, 0L) / 480, DAYS),
 									getDataValue(dodLive, ISSUES)));
