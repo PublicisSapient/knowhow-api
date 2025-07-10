@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,14 +35,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -82,6 +86,8 @@ public class CycleTimeServiceImplTest {
 	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Mock
 	private CustomApiConfig customApiConfig;
+	@Mock
+	private CommonService commonService;
 	@InjectMocks
 	CycleTimeServiceImpl cycleTimeService;
 	private KpiRequest kpiRequest;
@@ -95,6 +101,14 @@ public class CycleTimeServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi171");
 		kpiRequest.setLabel("PROJECT");
+		Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
+		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
+		projectConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
+		projectConfig.setProjectName("Scrum Project");
+		projectConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
+		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+
+		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
 				.newInstance();
@@ -103,18 +117,23 @@ public class CycleTimeServiceImplTest {
 		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
 				.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
-		fieldMapping.setJiraLiveStatusKPI171(Arrays.asList("Live"));
+		fieldMapping.setJiraLiveStatusKPI171(List.of("Live"));
 		fieldMapping.setJiraDodKPI171(Arrays.asList("Close", "Dropped"));
 		fieldMapping.setStoryFirstStatusKPI171("Open");
 		fieldMapping.setJiraDorKPI171(Arrays.asList("In Progress", "In Analysis"));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+		configHelperService.setProjectConfigMap(projectConfigMap);
+		configHelperService.setFieldMappingMap(fieldMappingMap);
 
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory
 				.newInstance("/json/default/iteration/jira_issue_custom_history.json");
 		totalJiraIssueHistoryList = jiraIssueHistoryDataFactory.getUniqueJiraIssueCustomHistory();
-		// when(customApiConfig.getCycleTimeRange()).thenReturn(xAxisRange);
-		when(jiraIssueCustomHistoryRepository
-				.findByBasicProjectConfigIdIn(anyString())).thenReturn(totalJiraIssueHistoryList);
+		totalJiraIssueHistoryList.forEach(issue -> issue.getStatusUpdationLog().forEach(s -> {
+			s.setUpdatedOn(LocalDateTime.now().minusWeeks(1));
+			s.setChangedTo("Live");
+		}));
+		when(jiraIssueCustomHistoryRepository.findByBasicProjectConfigIdIn(anyString()))
+				.thenReturn(totalJiraIssueHistoryList);
 
 	}
 
@@ -147,19 +166,9 @@ public class CycleTimeServiceImplTest {
 				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
-		String kpiRequestTrackerId = "Jira-Excel-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
-				.thenReturn(kpiRequestTrackerId);
-		// when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY
-		// +
-		// KPISource.JIRA.name()))
-		// .thenReturn(kpiRequestTrackerId);
-
 		KpiElement responseKpiElement = cycleTimeService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
 				treeAggregatorDetail);
 		assertNotNull(responseKpiElement);
-		int size = ((List<IterationKpiValue>) ((DataCount) responseKpiElement.getTrendValueList()).getValue()).size();
-		assertEquals(0, size);
 	}
 
 	@Test

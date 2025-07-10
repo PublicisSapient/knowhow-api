@@ -329,13 +329,14 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 
 				}
 			});
-			overAllIntakeDor = AggregationUtils.averageLong(overAllIntakeDorTime);
+			overAllIntakeDor = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(overAllIntakeDorTime), 0)
+					.longValue();
 			cycleMap.put(INTAKE_TO_DOR + "#Overall", Arrays.asList(getDataValue(overAllIntakeDor, "Issues"),
 					getDataValue(ObjectUtils.defaultIfNull(overAllIntakeDor, 0L) / 480, "Days")));
-			overAllDorDod = AggregationUtils.averageLong(overAllDorDodTime);
+			overAllDorDod = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(overAllDorDodTime), 0).longValue();
 			cycleMap.put(DOR_TO_DOD + "#Overall", Arrays.asList(getDataValue(overAllDorDod, "Issues"),
 					getDataValue(ObjectUtils.defaultIfNull(overAllDorDod, 0L) / 480, "Days")));
-			overAllDodLive = AggregationUtils.averageLong(overAllDodLiveTime);
+			overAllDodLive = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(overAllDodLiveTime), 0).longValue();
 			cycleMap.put(DOD_TO_LIVE + "#Overall", Arrays.asList(getDataValue(overAllDodLive, "Issues"),
 					getDataValue(ObjectUtils.defaultIfNull(overAllDodLive, 0L) / 480, "Days")));
 		}
