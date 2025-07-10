@@ -49,10 +49,10 @@ public class CycleTimeKpiChangeLog {
 	}
 
 	private void updateLeadTimeKpi() {
-		Document updateFields = new Document("$set", new Document("boxType", "3_column").append("chartType", "table"))
+		Document updateFields = new Document("$set",
+				new Document("boxType", "3_column").append("chartType", "table").append("defaultOrder", 29))
 				.append("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION)
-				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
+		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 	}
 
 	public void addToKpiCategoryMapping() {
