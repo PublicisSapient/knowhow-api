@@ -22,6 +22,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -145,6 +147,8 @@ public class LeadTimeServiceImplTest {
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
+		maturityRangeMap.put("kpi3", xAxisRange);
+		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
 
@@ -156,12 +160,14 @@ public class LeadTimeServiceImplTest {
 		kpiWiseAggregation.put(LEAD_TIME, "average");
 
 		when(customApiConfig.getLeadTimeRange()).thenReturn(xAxisRange);
-		jiraIssueCustomHistories.get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(3)));
+		jiraIssueCustomHistories.get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
 		jiraIssueCustomHistories.stream()
 				.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase("TEST-17908"))
-				.toList().get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(3)));
+				.toList().get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
 		when(jiraIssueCustomHistoryRepository
 				.findByBasicProjectConfigIdIn(anyString())).thenReturn(jiraIssueCustomHistories);
+		when(commonService.getMaturityLevel(any(), any(), any())).thenReturn("3");
+		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 	}
 
 	@After
