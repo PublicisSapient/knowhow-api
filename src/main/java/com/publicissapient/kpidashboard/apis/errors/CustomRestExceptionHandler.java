@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -295,5 +296,27 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<Object> handleServiceUnavailableException(AiGatewayServiceException ex) {
 		ServiceResponse response = new ServiceResponse(false, ex.getMessage(), null);
 		return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
+	}
+	
+	/**
+	 * Handles MaxUploadSizeExceededException to standardize the response for HTTP
+	 * 413 (Payload Too Large).
+	 *
+	 * @param ex
+	 *            MaxUploadSizeExceededException
+	 * @param headers
+	 *            HttpHeaders
+	 * @param status
+	 *            HttpStatus
+	 * @param request
+	 *            WebRequest
+	 * @return the ApiError object
+	 */
+	@Override
+	protected ResponseEntity<Object> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex,
+			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+		Object errorDetail = errorDetails(request);
+		ApiError apiError = new ApiError(HttpStatus.PAYLOAD_TOO_LARGE, ex.getMessage(), errorDetail, ex);
+		return buildResponseEntity(apiError);
 	}
 }
