@@ -59,8 +59,9 @@ import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HI
 @Component
 @Slf4j
 public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
-	public static final String DAYS = "d";
-	public static final String ISSUES = "issues";
+	private static final String DAYS = "d";
+	private static final String ISSUES = "issues";
+	private static final String OVERALL = "#Overall";
 	private static final String INTAKE_TO_DOR = "Intake - DOR";
 	private static final String DOR_TO_DOD = "DOR - DOD";
 	private static final String DOD_TO_LIVE = "DOD - Live";
@@ -318,27 +319,33 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 					}
 
 					intakeDor = AggregationUtils.averageLong(intakeDorTime);
-					cycleMap.put(INTAKE_TO_DOR + "#" + type, Arrays.asList(getDataValue(intakeDor, "Issues"),
-							getDataValue(ObjectUtils.defaultIfNull(intakeDor, 0L) / 480, "Days")));
+					cycleMap.put(INTAKE_TO_DOR + "#" + type,
+							Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(intakeDor, 0L) / 480, DAYS),
+									getDataValue(intakeDor, ISSUES)));
 					dorDod = AggregationUtils.averageLong(dorDodTime);
-					cycleMap.put(DOR_TO_DOD + "#" + type, Arrays.asList(getDataValue(dorDod, "Issues"),
-							getDataValue(ObjectUtils.defaultIfNull(dorDod, 0L) / 480, "Days")));
+					cycleMap.put(DOR_TO_DOD + "#" + type,
+							Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(dorDod, 0L) / 480, DAYS),
+									getDataValue(dorDod, ISSUES)));
 					dodLive = AggregationUtils.averageLong(dodLiveTime);
-					cycleMap.put(DOD_TO_LIVE + "#" + type, Arrays.asList(getDataValue(dodLive, "Issues"),
-							getDataValue(ObjectUtils.defaultIfNull(dodLive, 0L) / 480, "Days")));
+					cycleMap.put(DOD_TO_LIVE + "#" + type,
+							Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(dodLive, 0L) / 480, DAYS),
+									getDataValue(dodLive, ISSUES)));
 
 				}
 			});
 			overAllIntakeDor = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(overAllIntakeDorTime), 0)
 					.longValue();
-			cycleMap.put(INTAKE_TO_DOR + "#Overall", Arrays.asList(getDataValue(overAllIntakeDor, "Issues"),
-					getDataValue(ObjectUtils.defaultIfNull(overAllIntakeDor, 0L) / 480, "Days")));
+			cycleMap.put(INTAKE_TO_DOR + OVERALL,
+					Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(overAllIntakeDor, 0L) / 480, DAYS),
+							getDataValue(overAllIntakeDor, ISSUES)));
 			overAllDorDod = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(overAllDorDodTime), 0).longValue();
-			cycleMap.put(DOR_TO_DOD + "#Overall", Arrays.asList(getDataValue(overAllDorDod, "Issues"),
-					getDataValue(ObjectUtils.defaultIfNull(overAllDorDod, 0L) / 480, "Days")));
+			cycleMap.put(DOR_TO_DOD + OVERALL,
+					Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(overAllDorDod, 0L) / 480, DAYS),
+							getDataValue(overAllDorDod, ISSUES)));
 			overAllDodLive = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(overAllDodLiveTime), 0).longValue();
-			cycleMap.put(DOD_TO_LIVE + "#Overall", Arrays.asList(getDataValue(overAllDodLive, "Issues"),
-					getDataValue(ObjectUtils.defaultIfNull(overAllDodLive, 0L) / 480, "Days")));
+			cycleMap.put(DOD_TO_LIVE + OVERALL,
+					Arrays.asList(getDataValue(ObjectUtils.defaultIfNull(overAllDodLive, 0L) / 480, DAYS),
+							getDataValue(overAllDodLive, ISSUES)));
 		}
 		IterationKpiFiltersOptions filter1 = new IterationKpiFiltersOptions(SEARCH_BY_DURATION, durationFilter);
 		IterationKpiFiltersOptions filter2 = new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypeFilter);

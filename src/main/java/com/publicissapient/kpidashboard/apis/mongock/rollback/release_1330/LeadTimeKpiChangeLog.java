@@ -17,10 +17,6 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1330;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
