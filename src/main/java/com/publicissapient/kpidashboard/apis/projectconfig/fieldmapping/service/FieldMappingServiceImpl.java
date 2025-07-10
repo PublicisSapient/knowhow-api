@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.common.util.FieldMappingHelper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -124,15 +124,12 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	private KpiHelperService kPIHelperService;
 
 	@Override
-	public FieldMapping getFieldMapping(String projectToolConfigId) {
+	public FieldMapping getFieldMapping(ProjectBasicConfig projectBasicConfig) {
 
-		if (!ObjectId.isValid(projectToolConfigId)) {
-			throw new IllegalArgumentException(INVALID_PROJECT_TOOL_CONFIG_ID);
-		}
-		if (!authorizedProjectsService.ifSuperAdminUser() && !hasProjectAccess(projectToolConfigId)) {
+		if (!authorizedProjectsService.ifSuperAdminUser() && !hasProjectAccess(projectBasicConfig)) {
 			throw new AccessDeniedException("Access is denied");
 		}
-		return fieldMappingRepository.findByProjectToolConfigId(new ObjectId(projectToolConfigId));
+		return fieldMappingRepository.findByBasicProjectConfigId(projectBasicConfig.getId());
 	}
 
 	@Override
@@ -156,7 +153,7 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		fieldMapping.setBasicProjectConfigId(basicProjectConfigId);
 
 		FieldMapping existingFieldMapping = fieldMappingRepository
-				.findByProjectToolConfigId(new ObjectId(projectToolConfigId));
+				.findByBasicProjectConfigId(basicProjectConfigId);
 		if (existingFieldMapping != null) {
 			fieldMapping.setId(existingFieldMapping.getId());
 			updateJiraData(existingFieldMapping.getBasicProjectConfigId(), fieldMapping, existingFieldMapping);
@@ -174,17 +171,10 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		return mapping;
 	}
 
-	@Override
-	public boolean hasProjectAccess(String projectToolConfigId) {
-		Optional<ProjectBasicConfig> projectBasicConfig;
-		ProjectToolConfig projectToolConfig = toolConfigRepository.findById(projectToolConfigId);
-		if (null != projectToolConfig && null != projectToolConfig.getBasicProjectConfigId()) {
-			projectBasicConfig = projectBasicConfigRepository.findById(projectToolConfig.getBasicProjectConfigId());
 
-			Set<String> configIds = tokenAuthenticationService.getUserProjects();
-			return projectBasicConfig.isPresent() && configIds.contains(projectBasicConfig.get().getId().toString());
-		}
-		return false;
+	private boolean hasProjectAccess(ProjectBasicConfig projectBasicConfig) {
+		Set<String> configIds = tokenAuthenticationService.getUserProjects();
+		return configIds.contains(projectBasicConfig.getId().toString());
 	}
 
 	@Override
@@ -299,12 +289,10 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 
 			Map<String, FieldMappingStructure> fieldMappingStructureMap = fieldMappingStructure.stream()
 					.collect(Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
-
-			ObjectId projectToolConfigId = projectToolConfig.getId();
 			ProjectBasicConfig projectBasicConfig = ((Map<String, ProjectBasicConfig>) cacheService
 					.cacheProjectConfigMapData()).get(projectToolConfig.getBasicProjectConfigId().toString());
 
-			Query query = new Query(Criteria.where("projectToolConfigId").is(projectToolConfigId));
+			Query query = new Query(Criteria.where("basicProjectConfigId").is(projectBasicConfig.getId()));
 			Update update = new Update();
 			// Map to store fieldName and corresponding object
 			Map<String, FieldMappingResponse> responseHashMap = new HashMap<>();
@@ -328,7 +316,7 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 			}
 			update.set(UPDATED_AT, DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
 			update.set(UPDATED_BY, loggedInUser);
-			operations.updateFirst(query, update, "field_mapping");
+			operations.upsert(query, update, "field_mapping");
 			saveTemplateCode(projectBasicConfig, projectToolConfig);
 			if (cleanTraceLog.equalsIgnoreCase("True"))
 				removeTraceLog(projectBasicConfig.getId());
