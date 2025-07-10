@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -73,7 +74,6 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHi
 @RunWith(MockitoJUnitRunner.class)
 public class LeadTimeServiceImplTest {
 
-	private static final String STORY_HISTORY_DATA = "storyHistoryData";
 	private static List<String> xAxisRange = Arrays.asList("< 16 Months", "< 3 Months", "< 1 Months", "< 2 Weeks",
 			"< 1 Week");
 	private static final String LEAD_TIME = "Lead Time";
@@ -160,7 +160,8 @@ public class LeadTimeServiceImplTest {
 		jiraIssueCustomHistories.stream()
 				.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase("TEST-17908"))
 				.toList().get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(3)));
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistories);
+		when(jiraIssueCustomHistoryRepository
+				.findByBasicProjectConfigIdIn(anyString())).thenReturn(jiraIssueCustomHistories);
 	}
 
 	@After
@@ -204,8 +205,10 @@ public class LeadTimeServiceImplTest {
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList, LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
-		List<JiraIssueCustomHistory> dataMap = (List<JiraIssueCustomHistory>) resultListMap.get(STORY_HISTORY_DATA);
+		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList,
+				LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
+		List<JiraIssueCustomHistory> dataMap = (List<JiraIssueCustomHistory>) resultListMap
+				.get(leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
 		assertThat("Lead Time Data :", dataMap.size(), equalTo(5));
 	}
 

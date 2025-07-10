@@ -126,7 +126,7 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 				.findFirst().orElse(new KpiElement());
 
 		LinkedHashMap<String, Object> filterDuration = (LinkedHashMap<String, Object>) leadTimeReq.getFilterDuration();
-		int value = 2; // Default value for 'value'
+		int value; // Default value for 'value'
 		String duration; // Default value for 'duration'
 		String startDate = null;
 		String endDate = DateUtil.getTodayDate().toString();
@@ -135,22 +135,19 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 			value = (int) filterDuration.getOrDefault("value", 6);
 			duration = (String) filterDuration.getOrDefault("duration", CommonConstant.MONTH);
 		} else {
-            duration = CommonConstant.WEEK;
-        }
-        if (duration.equalsIgnoreCase(CommonConstant.WEEK)) {
+			value = 2;
+			duration = CommonConstant.WEEK;
+		}
+		if (duration.equalsIgnoreCase(CommonConstant.WEEK)) {
 			startDate = DateUtil.getTodayDate().minusWeeks(value).toString();
 		} else if (duration.equalsIgnoreCase(CommonConstant.MONTH)) {
 			startDate = DateUtil.getTodayDate().minusMonths(value).toString();
 		}
-		Map<String, List<String>> durationLabels = new HashMap<>();
-		durationLabels.put(CommonConstant.WEEK, Arrays.asList("Past Week", "Past 2 Weeks"));
-		durationLabels.put(CommonConstant.MONTH, Arrays.asList("Past Month", "Past 3 Months", "Past 6 Months"));
+		Map<String, Map<Integer, String>> durationLabels = new HashMap<>();
+		durationLabels.put(CommonConstant.WEEK, Map.of(1, "Past Week", 2, "Past 2 Weeks"));
+		durationLabels.put(CommonConstant.MONTH, Map.of(1, "Past Month", 3, "Past 3 Months", 6, "Past 6 Months"));
 
-		String label = durationLabels.getOrDefault(duration, Collections.emptyList())
-				.stream()
-				.skip(value - 1L)
-				.findFirst()
-				.orElse("Unknown");
+		String label = Optional.ofNullable(durationLabels.get(duration)).map(m -> m.get(value)).orElse("Unknown");
 		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 		List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
 		List<KPIExcelData> excelData = new ArrayList<>();
@@ -160,8 +157,10 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 
 			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
 					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
-			Map<String, List<DataValue>> cycleTimeDataCount = getCycleTimeDataCount(issueCustomHistoryList, fieldMapping, cycleTimeList, kpiElement);
-			Map<String, List<DataCount>> dataCountMap = getDataCountObject(leafNode.getProjectFilter().getName(), cycleTimeDataCount, label);
+			Map<String, List<DataValue>> cycleTimeDataCount = getCycleTimeDataCount(issueCustomHistoryList,
+					fieldMapping, cycleTimeList, kpiElement);
+			Map<String, List<DataCount>> dataCountMap = getDataCountObject(leafNode.getProjectFilter().getName(),
+					cycleTimeDataCount, label);
 			mapTmp.get(leafNode.getId()).setValue(dataCountMap);
 		});
 		populateExcelDataObject(kpiRequest.getRequestTrackerId(), cycleTimeList, excelData);
@@ -222,9 +221,8 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 		return KPICode.CYCLE_TIME.name();
 	}
 
-	public Map<String, List<DataValue>> getCycleTimeDataCount(
-			List<JiraIssueCustomHistory> jiraIssueCustomHistoriesList, FieldMapping fieldMapping,
-			List<CycleTimeValidationData> cycleTimeList, KpiElement kpiElement) {
+	public Map<String, List<DataValue>> getCycleTimeDataCount(List<JiraIssueCustomHistory> jiraIssueCustomHistoriesList,
+			FieldMapping fieldMapping, List<CycleTimeValidationData> cycleTimeList, KpiElement kpiElement) {
 
 		Set<String> issueTypeFilter = new LinkedHashSet<>();
 		Map<String, List<DataValue>> cycleMap = new LinkedHashMap<>();
@@ -351,11 +349,12 @@ public class CycleTimeServiceImpl extends JiraKPIService<Double, List<Object>, M
 
 	}
 
-	private Map<String, List<DataCount>> getDataCountObject(String trendLineName, Map<String, List<DataValue>> cycleMap, String duration) {
+	private Map<String, List<DataCount>> getDataCountObject(String trendLineName, Map<String, List<DataValue>> cycleMap,
+			String duration) {
 		Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 		cycleMap.forEach((key, value) -> {
 			String[] issueFilter = key.split("#");
-			String filterKey = duration+"#"+issueFilter[1];
+			String filterKey = duration + "#" + issueFilter[1];
 			DataCount dataCount = new DataCount();
 			dataCount.setSProjectName(trendLineName);
 			dataCount.setDataValue(value);

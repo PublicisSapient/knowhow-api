@@ -43,9 +43,9 @@ public class LeadTimeKpiChangeLog {
 	}
 
 	private void updateLeadTimeKpi() {
-		Document updateFields = new Document("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION)
-				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
+		Document updateFields = new Document("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""))
+				.append("$set", new Document("defaultOrder", 29));
+		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 	}
 
 	public void addToKpiCategoryMapping() {
