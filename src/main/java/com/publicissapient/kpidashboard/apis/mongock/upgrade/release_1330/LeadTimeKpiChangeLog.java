@@ -62,7 +62,7 @@ public class LeadTimeKpiChangeLog {
 
 	private void removeLeadTimeKpi() {
 		Document updateFields = new Document("$set", new Document("kpiSubCategory", "defaultSubCategory")
-				.append("kpiCategory", "defaultCategory"));
+				.append("kpiCategory", "defaultCategory").append("defaultOrder", 1));
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION)
 				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 	}
