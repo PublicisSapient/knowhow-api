@@ -204,7 +204,7 @@ public class LeadTimeServiceImplTest {
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList.get(0), LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
+		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList, LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
 		List<JiraIssueCustomHistory> dataMap = (List<JiraIssueCustomHistory>) resultListMap.get(STORY_HISTORY_DATA);
 		assertThat("Lead Time Data :", dataMap.size(), equalTo(5));
 	}
@@ -222,7 +222,7 @@ public class LeadTimeServiceImplTest {
 		try {
 
 			KpiElement responseKpiElement = leadTimeService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+					treeAggregatorDetail);
 			assertNotNull(responseKpiElement);
 			assertEquals(responseKpiElement.getKpiId(), kpiRequest.getKpiList().get(0).getKpiId());
 		} catch (ApplicationException enfe) {

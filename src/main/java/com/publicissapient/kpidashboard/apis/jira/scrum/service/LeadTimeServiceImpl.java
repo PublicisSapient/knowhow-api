@@ -18,7 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +31,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
+import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
+import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,15 +43,11 @@ import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeatureHistory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
-import com.publicissapient.kpidashboard.apis.jira.service.backlogdashboard.JiraBacklogKPIService;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -69,8 +65,11 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
 /**
  * lead time kpi is a line graph to depict the lead time of issues in past 6
@@ -78,12 +77,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class LeadTimeServiceImpl extends JiraBacklogKPIService<Long, List<Object>> {
+public class LeadTimeServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 	public static final String ISSUES = "issues";
-	private static final String STORY_HISTORY_DATA = "storyHistoryData";
 	private static final String ISSUE_COUNT = "Issue Count";
 	private static final String LEAD_TIME = "LEAD TIME";
-	private static final String SEARCH_BY_ISSUE_TYPE = "Filter by issue type";
+
 	@Autowired
 	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Autowired
@@ -97,16 +95,19 @@ public class LeadTimeServiceImpl extends JiraBacklogKPIService<Long, List<Object
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
+	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		log.info("LEAD-TIME -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
-		Map<String, Node> mapTmp = new HashMap<>();
-		mapTmp.put(projectNode.getId(), projectNode);
-		projectWiseLeafNodeValue(kpiElement, mapTmp, projectNode, kpiRequest);
+		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
+		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
+
+//      in case if only projects or sprint filters are applied
+		projectWiseLeafNodeValue(kpiElement, mapTmp, projectList, kpiRequest);
+
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.LEAD_TIME);
+		calculateAggregatedValue(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.LEAD_TIME);
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.LEAD_TIME);
 
@@ -129,80 +130,74 @@ public class LeadTimeServiceImpl extends JiraBacklogKPIService<Long, List<Object
 		kpiElement.setTrendValueList(dataCountGroups);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
-		log.debug("[LEAD-TIME-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), projectNode);
+//		log.debug("[LEAD-TIME-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+//				kpiRequest.getRequestTrackerId(), projectNode);
 		return kpiElement;
 	}
 
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node leafNode,
+	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, List<Node> leafNodeList,
 			KpiRequest kpiRequest) {
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		Set<String> issueTypesSet = new LinkedHashSet<>();
 		List<String> rangeList = customApiConfig.getLeadTimeRange();
-		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, DateUtil.getTodayDate().minusMonths(6).toString(),
-				DateUtil.getTodayDate().toString(), kpiRequest);
-		List<JiraIssueCustomHistory> ticketList = (List<JiraIssueCustomHistory>) resultMap.get(STORY_HISTORY_DATA);
-
-		Map<String, List<JiraIssueCustomHistory>> projectWiseJiraIssue = ticketList.stream()
-				.collect(Collectors.groupingBy(JiraIssueCustomHistory::getBasicProjectConfigId));
-
-		List<JiraIssueCustomHistory> issueCustomHistoryList = projectWiseJiraIssue
-				.get(leafNode.getProjectFilter().getBasicProjectConfigId().toString());
-
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-				.get(leafNode.getProjectFilter().getBasicProjectConfigId());
-		issueTypesSet.add(CommonConstant.OVERALL);
 		List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
-		LinkedHashMap<String, List<DataCount>> leadTime = getLeadTime(issueCustomHistoryList, fieldMapping, cycleTimeList,
-				leafNode, rangeList, issueTypesSet);
-		populateExcelDataObject(getRequestTrackerId(), cycleTimeList, excelData);
-		mapTmp.get(leafNode.getId()).setValue(leadTime);
-		// Create kpi level filters
-		IterationKpiFiltersOptions filter1 = new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypesSet);
-		IterationKpiFilters iterationKpiFilters = new IterationKpiFilters(filter1, null);
 
+		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, DateUtil.getTodayDate().minusMonths(6).toString(),
+				DateUtil.getTodayDate().toString(), kpiRequest);
+
+		leafNodeList.forEach(leafNode -> {
+			List<JiraIssueCustomHistory> issueCustomHistoryList = (List<JiraIssueCustomHistory>) resultMap
+					.get(leafNode.getProjectFilter().getBasicProjectConfigId().toString());
+			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
+					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			issueTypesSet.add(CommonConstant.OVERALL);
+
+			LinkedHashMap<String, List<DataCount>> leadTime = getLeadTime(issueCustomHistoryList, fieldMapping, cycleTimeList,
+					leafNode, rangeList, issueTypesSet);
+			mapTmp.get(leafNode.getId()).setValue(leadTime);
+
+		});
+
+		populateExcelDataObject(getRequestTrackerId(), cycleTimeList, excelData);
 		List<String> xAxisRange = new ArrayList<>(rangeList);
 		Collections.reverse(xAxisRange);
-		kpiElement.setFilters(iterationKpiFilters);
 		kpiElement.setxAxisValues(xAxisRange);
 		kpiElement.setExcelColumns(KPIExcelColumn.LEAD_TIME.getColumns());
 		kpiElement.setExcelData(excelData);
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
-		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
-		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 
-		List<String> basicProjectConfigIds = new ArrayList<>();
-		ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
-		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
+		leafNodeList.forEach(leafNode -> {
+			Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
+			ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
+			Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-		basicProjectConfigIds.add(basicProjectConfigId.toString());
-		if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI3()).isPresent()) {
-			KpiDataHelper.prepareFieldMappingDefectTypeTransformation(mapOfProjectFilters, fieldMapping.getJiradefecttype(),
-					fieldMapping.getJiraIssueTypeKPI3(), JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
+			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+			if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI3()).isPresent()) {
+				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(mapOfProjectFilters,
+						fieldMapping.getJiradefecttype(), fieldMapping.getJiraIssueTypeKPI3(),
+						JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
+				uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+			}
+			List<String> status = new ArrayList<>();
+			if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI3()).isPresent()) {
+				status.addAll(fieldMapping.getJiraLiveStatusKPI3());
+			}
+			mapOfProjectFilters.put("statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
 			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
-		}
-		List<String> status = new ArrayList<>();
-		if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI3()).isPresent()) {
-			status.addAll(fieldMapping.getJiraLiveStatusKPI3());
-		}
-		mapOfProjectFilters.put("statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
-		uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = jiraIssueCustomHistoryRepository
+					.findByBasicProjectConfigIdIn(basicProjectConfigId.toString());
+			List<JiraIssueCustomHistory> filteredProjectHistory = BacklogKpiHelper.filterProjectHistories(
+					jiraIssueCustomHistoryList, uniqueProjectMap, startDate, endDate);
+			resultListMap.put(basicProjectConfigId.toString(), filteredProjectHistory);
 
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
-
-		List<JiraIssueCustomHistory> filteredProjectHistory = BacklogKpiHelper.filterProjectHistories(
-				getJiraIssuesCustomHistoryFromBaseClass(), uniqueProjectMap, startDate, endDate);
-
-		resultListMap.put(STORY_HISTORY_DATA, filteredProjectHistory);
+		});
 		return resultListMap;
 	}
 
@@ -283,15 +278,15 @@ public class LeadTimeServiceImpl extends JiraBacklogKPIService<Long, List<Object
 			totalIssueTypeString.forEach(issueType -> {
 				List<JiraIssueCustomHistory> typeWiseIssues = statusWiseJiraIssues.getOrDefault(issueType, new ArrayList<>());
 				List<Long> leadTimeList = typeWiseIssues.stream().map(JiraIssueCustomHistory::getStoryID)
-						.filter(map::containsKey).map(map::get).collect(Collectors.toList());
+						.filter(map::containsKey).map(map::get).toList();
 
 				setDataCount(leafNode.getProjectFilter().getName(), issueType, dateRange,
 						AggregationUtils.averageLong(leadTimeList), dataCountMap, typeWiseIssues.size());
 			});
-			List<JiraIssueCustomHistory> totalRangeWiseIssues = statusWiseJiraIssues.values().stream().flatMap(List::stream)
-					.collect(Collectors.toList());
+			List<JiraIssueCustomHistory> totalRangeWiseIssues = statusWiseJiraIssues.values().stream()
+					.flatMap(List::stream).toList();
 			List<Long> leadTimeList = totalRangeWiseIssues.stream().map(JiraIssueCustomHistory::getStoryID)
-					.filter(map::containsKey).map(map::get).collect(Collectors.toList());
+					.filter(map::containsKey).map(map::get).toList();
 			setDataCount(leafNode.getProjectFilter().getName(), "Overall", dateRange,
 					AggregationUtils.averageLong(leadTimeList), dataCountMap, totalRangeWiseIssues.size());
 		});
@@ -351,4 +346,10 @@ public class LeadTimeServiceImpl extends JiraBacklogKPIService<Long, List<Object
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(fieldMapping.getThresholdValueKPI3(), KPICode.LEAD_TIME.getKpiId());
 	}
+
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return 0.0;
+	}
+
 }
