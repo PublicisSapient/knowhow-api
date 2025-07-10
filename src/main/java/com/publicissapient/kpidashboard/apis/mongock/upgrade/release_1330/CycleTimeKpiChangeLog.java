@@ -42,7 +42,7 @@ public class CycleTimeKpiChangeLog {
 	}
 
 	private void updateLeadTimeKpi() {
-		Document updateFields = new Document("$set", new Document("boxType", "2_column"))
+		Document updateFields = new Document("$set", new Document("boxType", "3_column").append("chartType", "table"))
 				.append("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION)
 				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
@@ -58,7 +58,7 @@ public class CycleTimeKpiChangeLog {
 	public void rollback() {
 		Document updateFields = new Document("$set", new Document("kpiSubCategory", "defaultSubCategory")
 				.append("kpiCategory", "defaultCategory"))
-				.append("$unset", new Document("boxType", ""));
+				.append("$unset", new Document("boxType", "").append("chartType", ""));
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION)
 				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 

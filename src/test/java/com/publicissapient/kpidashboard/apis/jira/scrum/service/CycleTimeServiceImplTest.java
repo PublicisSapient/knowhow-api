@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -33,6 +34,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +113,8 @@ public class CycleTimeServiceImplTest {
 				.newInstance("/json/default/iteration/jira_issue_custom_history.json");
 		totalJiraIssueHistoryList = jiraIssueHistoryDataFactory.getUniqueJiraIssueCustomHistory();
 		// when(customApiConfig.getCycleTimeRange()).thenReturn(xAxisRange);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(totalJiraIssueHistoryList);
+		when(jiraIssueCustomHistoryRepository
+				.findByBasicProjectConfigIdIn(anyString())).thenReturn(totalJiraIssueHistoryList);
 
 	}
 
@@ -144,6 +148,8 @@ public class CycleTimeServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Jira-Excel-5be544de025de212549176a9";
+		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+				.thenReturn(kpiRequestTrackerId);
 		// when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY
 		// +
 		// KPISource.JIRA.name()))
