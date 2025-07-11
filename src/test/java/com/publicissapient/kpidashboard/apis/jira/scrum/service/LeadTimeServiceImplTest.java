@@ -22,6 +22,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -73,7 +76,6 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHi
 @RunWith(MockitoJUnitRunner.class)
 public class LeadTimeServiceImplTest {
 
-	private static final String STORY_HISTORY_DATA = "storyHistoryData";
 	private static List<String> xAxisRange = Arrays.asList("< 16 Months", "< 3 Months", "< 1 Months", "< 2 Weeks",
 			"< 1 Week");
 	private static final String LEAD_TIME = "Lead Time";
@@ -145,6 +147,8 @@ public class LeadTimeServiceImplTest {
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
+		maturityRangeMap.put("kpi3", xAxisRange);
+		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
 
@@ -156,11 +160,14 @@ public class LeadTimeServiceImplTest {
 		kpiWiseAggregation.put(LEAD_TIME, "average");
 
 		when(customApiConfig.getLeadTimeRange()).thenReturn(xAxisRange);
-		jiraIssueCustomHistories.get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(3)));
+		jiraIssueCustomHistories.get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
 		jiraIssueCustomHistories.stream()
 				.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase("TEST-17908"))
-				.toList().get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(3)));
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistories);
+				.toList().get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
+		when(jiraIssueCustomHistoryRepository
+				.findByBasicProjectConfigIdIn(anyString())).thenReturn(jiraIssueCustomHistories);
+		when(commonService.getMaturityLevel(any(), any(), any())).thenReturn("3");
+		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 	}
 
 	@After
@@ -204,8 +211,10 @@ public class LeadTimeServiceImplTest {
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList.get(0), LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
-		List<JiraIssueCustomHistory> dataMap = (List<JiraIssueCustomHistory>) resultListMap.get(STORY_HISTORY_DATA);
+		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList,
+				LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
+		List<JiraIssueCustomHistory> dataMap = (List<JiraIssueCustomHistory>) resultListMap
+				.get(leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
 		assertThat("Lead Time Data :", dataMap.size(), equalTo(5));
 	}
 
@@ -222,7 +231,7 @@ public class LeadTimeServiceImplTest {
 		try {
 
 			KpiElement responseKpiElement = leadTimeService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+					treeAggregatorDetail);
 			assertNotNull(responseKpiElement);
 			assertEquals(responseKpiElement.getKpiId(), kpiRequest.getKpiList().get(0).getKpiId());
 		} catch (ApplicationException enfe) {
