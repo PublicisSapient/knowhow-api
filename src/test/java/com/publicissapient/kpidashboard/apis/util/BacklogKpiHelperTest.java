@@ -48,7 +48,7 @@ public class BacklogKpiHelperTest {
         Map<String, Object> filters = new HashMap<>();
         filters.put("storyType", Collections.singletonList(Pattern.compile("Bug")));
         filters.put(BacklogKpiHelper.STATUS_UPDATION_LOG_STORY_CHANGED_TO, Collections.singletonList(Pattern.compile("Done")));
-        uniqueProjectMap.put("project1", filters);
+        uniqueProjectMap.put("6335363749794a18e8a4479b", filters);
 
     }
 
@@ -143,7 +143,7 @@ public class BacklogKpiHelperTest {
 
     @Test
     public void testFilterProjectHistories_Negative_NoMatch() {
-        uniqueProjectMap.get("project1").put("storyType", Collections.singletonList(Pattern.compile("Feature")));
+        uniqueProjectMap.get("6335363749794a18e8a4479b").put("storyType", Collections.singletonList(Pattern.compile("Feature")));
 
         List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
                 projectHistories, uniqueProjectMap, startDate, endDate);
@@ -168,5 +168,81 @@ public class BacklogKpiHelperTest {
 
         assertEquals(0, filteredHistories.size());
     }
-    // Additional test methods for other methods in BacklogKpiHelper
+
+    @Test
+    public void testFilterProjectHistories_Positive_NoMatch() {
+        uniqueProjectMap.get("6335363749794a18e8a4479b").put("storyType", Collections.singletonList(Pattern.compile("Bug")));
+
+        List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
+                projectHistories, uniqueProjectMap, startDate, endDate);
+
+        assertEquals(0, filteredHistories.size());
+    }
+
+    @Test
+    public void testSetDODTime_Positive() {
+        List<String> dodStatus = Arrays.asList("done", "closed");
+        String storyFirstStatus = "open";
+
+        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+        statusUpdateLog.setChangedFrom("done");
+        statusUpdateLog.setChangedTo("open");
+        DateTime updatedOn = new DateTime();
+        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+
+        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+
+        assertTrue(dodStatusDateMap.isEmpty());
+    }
+
+    @Test
+    public void testSetDODTime_Negative_NoChangeFromDOD() {
+        // Scenario: Status does not change from a DOD status
+        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+        statusUpdateLog.setChangedFrom("in progress");
+        statusUpdateLog.setChangedTo("open");
+        DateTime updatedOn = new DateTime();
+        List<String> dodStatus = Arrays.asList("done", "closed");
+        String storyFirstStatus = "open";
+        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+
+        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+
+        assertTrue(dodStatusDateMap.isEmpty());
+    }
+
+    @Test
+    public void testSetDODTime_Positive_ChangeToDOD() {
+        // Scenario: Status changes to a DOD status
+        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+        statusUpdateLog.setChangedTo("done");
+        DateTime updatedOn = new DateTime();
+        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+        List<String> dodStatus = Arrays.asList("done", "closed");
+        String storyFirstStatus = "open";
+        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+
+        assertTrue(dodStatusDateMap.containsKey("done"));
+        assertEquals(updatedOn, dodStatusDateMap.get("done"));
+    }
+
+    @Test
+    public void testSetDODTime_Positive_ClearOnReopen() {
+        // Scenario: Reopen scenario where DOD status is cleared
+        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+        statusUpdateLog.setChangedFrom("done");
+        statusUpdateLog.setChangedTo("open");
+        DateTime updatedOn = new DateTime();
+        List<String> dodStatus = Arrays.asList("done", "closed");
+        String storyFirstStatus = "open";
+
+        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+        dodStatusDateMap.put("done", updatedOn.minusDays(1)); // Pre-existing DOD entry
+
+        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+
+        assertTrue(dodStatusDateMap.isEmpty());
+    }
 }
+
+
