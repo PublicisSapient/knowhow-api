@@ -365,6 +365,27 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private List<String> aiRecommendationKpiList;
 
+	@Value("${severity.s1}")
+	private String severity1;
+
+	@Value("${severity.s2}")
+	private String severity2;
+
+	@Value("${severity.s3}")
+	private String severity3;
+
+	@Value("${severity.s4}")
+	private String severity4;
+
+	@Value("${severity.sh}")
+	private String severityH;
+
+	@Value("${severity.sl}")
+	private String severityL;
+
+	@Value("${severity.sm}")
+	private String severityM;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}

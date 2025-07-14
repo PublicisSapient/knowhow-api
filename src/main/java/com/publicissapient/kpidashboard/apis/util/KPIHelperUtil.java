@@ -354,6 +354,69 @@ public final class KPIHelperUtil {
 		return priorityCountMap;
 	}
 
+	public static Map<String, Long> setSeverityScrum(List<JiraIssue> sprintWiseDefectDataList,
+													 CustomApiConfig customApiConfig) {
+		Map<String, Long> severityCountMap = new HashMap<>();
+		Long dse1Count = 0L;
+		Long dse2Count = 0L;
+		Long dse3Count = 0L;
+		Long dse4Count = 0L;
+		Long dseHCount = 0L;
+		Long dseLCount = 0L;
+		Long dseMCount = 0L;
+
+		for (JiraIssue issue : sprintWiseDefectDataList) {
+
+			if (StringUtils.isBlank(issue.getSeverity())) {
+				dseHCount++;
+				severityCountMap.put(Constant.MISC, dseHCount);
+			} else {
+				if (StringUtils.containsIgnoreCase(customApiConfig.getSeverity1().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse1Count++;
+					severityCountMap.put(Constant.DSE_1, dse1Count);
+				} else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverity2().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse2Count++;
+					severityCountMap.put(Constant.DSE_2, dse2Count);
+				} else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverity3().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse3Count++;
+					severityCountMap.put(Constant.DSE_3, dse3Count);
+				} else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverity4().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse4Count++;
+					severityCountMap.put(Constant.DSE_4, dse4Count);
+				}else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverityH().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dseHCount++;
+					severityCountMap.put(Constant.DSE_H, dseHCount);
+				}else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverityL().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dseLCount++;
+					severityCountMap.put(Constant.DSE_L, dseLCount);
+				}else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverityM().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dseMCount++;
+					severityCountMap.put(Constant.DSE_M, dseMCount);
+				} else {
+					dseHCount++;
+					severityCountMap.put(Constant.MISC, dseHCount);
+				}
+			}
+		}
+
+		return severityCountMap;
+	}
+
+
+
 	public static Map<String, Long> setpriorityKanban(List<KanbanJiraIssue> sprintWiseDefectDataList,
 			CustomApiConfig customApiConfig) {
 		Map<String, Long> priorityCountMap = new HashMap<>();
