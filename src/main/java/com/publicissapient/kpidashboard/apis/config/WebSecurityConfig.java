@@ -131,7 +131,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 				.requestMatchers(HttpMethod.GET, "/analytics/switch").permitAll()
 				.requestMatchers("/stringShortener/shorten").permitAll().requestMatchers("/stringShortener/longString")
-				.permitAll().anyRequest().authenticated())
+				.permitAll().requestMatchers("/actuator/dashboard-health/**").permitAll().anyRequest().authenticated())
 				.addFilterBefore(standardLoginRequestFilter(authenticationManager),
 						UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
