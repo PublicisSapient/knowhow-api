@@ -282,13 +282,13 @@
   },
   {
     "kpiId" : "kpi3",
-    "categoryId" : "speed",
+    "categoryId" : "categoryOne",
     "kpiOrder" : 11,
     "kanban" : false
   },
   {
     "kpiId" : "kpi171",
-    "categoryId" : "speed",
+    "categoryId" : "categoryOne",
     "kpiOrder" : 12,
     "kanban" : false
   }
