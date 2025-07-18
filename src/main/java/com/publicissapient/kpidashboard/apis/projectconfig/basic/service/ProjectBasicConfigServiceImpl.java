@@ -408,6 +408,9 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 						assigneeDetailsRepository.delete(assigneeDetails);
 					}
 				}
+				if(!savedConfig.isProjectOnHold() && basicConfig.isProjectOnHold()) {
+					basicConfig.setProjectOnHoldTime(DateUtil.getTodayTime().toString());
+				}
 				basicConfig.setCreatedBy(savedConfig.getCreatedBy());
 				basicConfig.setCreatedAt(savedConfig.getCreatedAt());
 				basicConfig.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
