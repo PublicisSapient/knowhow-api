@@ -415,8 +415,8 @@ public abstract class ToolsKPIService<R, S> {
 				List<String> sprintIds = new ArrayList<>();
 				List<String> sprintNames = new ArrayList<>();
 				List<String> projectNames = new ArrayList<>();
-				String kpiGroup = indexWiseValuesList.get(i).get(0).getKpiGroup();
-				String subFilter = indexWiseValuesList.get(i).get(0).getSubFilter();
+				String kpiGroup = null;
+				String subFilter = null;
 				String hoverIdentifier = null;
 				Map<String, List<DataValue>> valueMultiLine = new HashMap<>();
 				for (DataCount dc : indexWiseValuesList.get(i)) {
@@ -428,6 +428,8 @@ public abstract class ToolsKPIService<R, S> {
 					projectName.append(dc.getSProjectName());
 					hoverIdentifier = dc.getDate();
 					collectAggregatedDataBasedOnLineType(valueMultiLine, dc);
+					kpiGroup = dc.getKpiGroup();
+					subFilter = dc.getSubFilter();
 				}
 				setDataCountValueBasedOnLineType(kpiId, dataCount, valueMultiLine);
 				dataCount.setSprintIds(sprintIds);
