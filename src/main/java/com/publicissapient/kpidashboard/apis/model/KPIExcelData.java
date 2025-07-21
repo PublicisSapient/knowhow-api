@@ -88,6 +88,13 @@ public class KPIExcelData {
 	@JsonProperty("DOD to Live")
 	private String dodToLive;
 
+
+	@JsonProperty("DOR Date")
+	private String dorDate;
+
+	@JsonProperty("DOD Date")
+	private String dodDate;
+
 	@JsonProperty("Open to Triage(In Days)")
 	private String openToTriage;
 

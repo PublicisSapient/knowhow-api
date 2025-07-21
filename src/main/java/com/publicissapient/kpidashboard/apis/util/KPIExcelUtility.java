@@ -927,12 +927,18 @@ public class KPIExcelUtility {
 			excelData.setIssueID(storyId);
 			excelData.setIssueDesc(leadTimeData.getIssueDesc());
 			excelData.setIssueType(leadTimeData.getIssueType());
-			if (ObjectUtils.isNotEmpty(leadTimeData.getIntakeTime()))
+			if (ObjectUtils.isNotEmpty(leadTimeData.getIntakeTime())) {
 				excelData.setIntakeToDOR(CommonUtils.convertIntoDays(Math.toIntExact(leadTimeData.getIntakeTime())));
-			if (ObjectUtils.isNotEmpty(leadTimeData.getDorTime()))
+				excelData.setDorDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(leadTimeData.getDorDate().toLocalDateTime().toString()));
+			}
+			if (ObjectUtils.isNotEmpty(leadTimeData.getDorTime())) {
 				excelData.setDorToDod(CommonUtils.convertIntoDays(Math.toIntExact(leadTimeData.getDorTime())));
-			if (ObjectUtils.isNotEmpty(leadTimeData.getDodTime()))
+				excelData.setDodDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(leadTimeData.getDodDate().toLocalDateTime().toString()));
+			}
+			if (ObjectUtils.isNotEmpty(leadTimeData.getDodTime())) {
 				excelData.setDodToLive(CommonUtils.convertIntoDays(Math.toIntExact(leadTimeData.getDodTime())));
+				excelData.setLiveDate(DateUtil.tranformUTCLocalDateTimeStringToZFormat(leadTimeData.getLiveDate().toLocalDateTime().toString()));
+			}
 			excelDataList.add(excelData);
 		}
 	}
