@@ -28,6 +28,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
+import com.publicissapient.kpidashboard.common.model.application.*;
+import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.MDC;
@@ -44,10 +46,6 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceR;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.application.DataCount;
-import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
-import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
-import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 import com.publicissapient.kpidashboard.common.repository.application.KpiMasterRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
@@ -71,7 +69,8 @@ public class KpiIntegrationServiceImpl {
 
 	@Autowired
 	KpiMasterRepository kpiMasterRepository;
-
+	@Autowired
+	private OrganizationHierarchyRepository organizationHierarchyRepository;
 	@Autowired
 	private JiraServiceR jiraService;
 
@@ -168,14 +167,21 @@ public class KpiIntegrationServiceImpl {
 	 *            received kpi request
 	 */
 	public void setKpiRequest(KpiRequest kpiRequest) {
-		String[] hierarchyIdList = kpiRequest.getIds();
+		String[] hierarchyIdList = null;
+		List<String> externalIDs = kpiRequest.getExternalIDs();
+		if (externalIDs != null) {
+			List<OrganizationHierarchy> byExternalIds = organizationHierarchyRepository.findByExternalIdsIn(externalIDs);
+			hierarchyIdList = byExternalIds.stream()
+					.map(OrganizationHierarchy::getNodeId)
+					.toArray(String[]::new);
+		}
 		Optional<HierarchyLevel> optionalHierarchyLevel = hierarchyLevelService.getFullHierarchyLevels(false).stream()
 				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == kpiRequest.getLevel()).findFirst();
 		if (optionalHierarchyLevel.isPresent()) {
 			HierarchyLevel hierarchyLevel = optionalHierarchyLevel.get();
 			if (hierarchyIdList == null) {
-				hierarchyIdList = new String[] { kpiRequest.getHierarchyName().concat(Constant.UNDERSCORE)
-						.concat(hierarchyLevel.getHierarchyLevelId()) };
+				hierarchyIdList = new String[]{kpiRequest.getHierarchyName().concat(Constant.UNDERSCORE)
+						.concat(hierarchyLevel.getHierarchyLevelId())};
 			}
 			if (MapUtils.isEmpty(kpiRequest.getSelectedMap())) {
 				Map<String, List<String>> selectedMap = new HashMap<>();
