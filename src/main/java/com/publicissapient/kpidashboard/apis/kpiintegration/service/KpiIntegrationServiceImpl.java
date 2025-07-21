@@ -170,7 +170,7 @@ public class KpiIntegrationServiceImpl {
 		String[] hierarchyIdList = null;
 		List<String> externalIDs = kpiRequest.getExternalIDs();
 		if (externalIDs != null) {
-			List<OrganizationHierarchy> byExternalIds = organizationHierarchyRepository.findByExternalIdsIn(externalIDs);
+			List<OrganizationHierarchy> byExternalIds = organizationHierarchyRepository.findByExternalIdIn(externalIDs);
 			hierarchyIdList = byExternalIds.stream()
 					.map(OrganizationHierarchy::getNodeId)
 					.toArray(String[]::new);
