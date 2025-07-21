@@ -106,7 +106,7 @@ public class LeadTimeServiceImpl extends JiraKPIService<Double, List<Object>, Ma
 		projectWiseLeafNodeValue(kpiElement, mapTmp, projectList, kpiRequest);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValue(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.LEAD_TIME);
+		calculateAggregatedValueMap(treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.LEAD_TIME);
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.LEAD_TIME);
 
@@ -163,6 +163,16 @@ public class LeadTimeServiceImpl extends JiraKPIService<Double, List<Object>, Ma
 		kpiElement.setxAxisValues(xAxisRange);
 		kpiElement.setExcelColumns(KPIExcelColumn.LEAD_TIME.getColumns());
 		kpiElement.setExcelData(excelData);
+	}
+
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> subCategoryMap) {
+		return 0.0d;
+	}
+
+	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiName) {
+		return calculateKpiValueForDouble(valueList, kpiName);
 	}
 
 	@Override
@@ -234,7 +244,7 @@ public class LeadTimeServiceImpl extends JiraKPIService<Double, List<Object>, Ma
 				cycleTimeValidationData.setIntakeDate(jiraIssueCustomHistory.getCreatedDate());
 
 				List<String> liveStatus = fieldMapping.getJiraLiveStatusKPI3().stream().filter(Objects::nonNull)
-						.map(String::toLowerCase).collect(Collectors.toList());
+						.map(String::toLowerCase).toList();
 				jiraIssueCustomHistory.getStatusUpdationLog()
 						.forEach(statusUpdateLog -> BacklogKpiHelper.setLiveTime(cycleTimeValidationData, cycleTime,
 								statusUpdateLog, DateTime.parse(statusUpdateLog.getUpdatedOn().toString()),
@@ -345,11 +355,6 @@ public class LeadTimeServiceImpl extends JiraKPIService<Double, List<Object>, Ma
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(fieldMapping.getThresholdValueKPI3(), KPICode.LEAD_TIME.getKpiId());
-	}
-
-	@Override
-	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return 0.0;
 	}
 
 }
