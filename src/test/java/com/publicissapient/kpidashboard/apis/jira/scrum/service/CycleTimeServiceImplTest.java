@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -156,7 +157,7 @@ public class CycleTimeServiceImplTest {
 				.collect(Collectors.toSet());
 		DataCount trendValue = new DataCount();
 		cycleTimeService.getCycleTimeDataCount(totalJiraIssueHistoryList, fieldMapping, cycleTimeValidationDataList,
-				kpiRequest.getKpiList().get(0));
+				new HashSet<>());
 		assertEquals(39, cycleTimeValidationDataList.size());
 	}
 
