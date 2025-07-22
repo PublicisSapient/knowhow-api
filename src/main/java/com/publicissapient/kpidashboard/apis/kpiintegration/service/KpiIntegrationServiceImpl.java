@@ -169,19 +169,16 @@ public class KpiIntegrationServiceImpl {
 	public void setKpiRequest(KpiRequest kpiRequest) {
 		String[] hierarchyIdList = null;
 		List<String> externalIDs = kpiRequest.getExternalIDs();
-		if (externalIDs != null) {
+		if (externalIDs != null && !externalIDs.isEmpty()) {
 			List<OrganizationHierarchy> byExternalIds = organizationHierarchyRepository.findByExternalIdIn(externalIDs);
-			hierarchyIdList = byExternalIds.stream()
-					.map(OrganizationHierarchy::getNodeId)
-					.toArray(String[]::new);
+			hierarchyIdList = byExternalIds.stream().map(OrganizationHierarchy::getNodeId).toArray(String[]::new);
 		}
 		Optional<HierarchyLevel> optionalHierarchyLevel = hierarchyLevelService.getFullHierarchyLevels(false).stream()
 				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == kpiRequest.getLevel()).findFirst();
 		if (optionalHierarchyLevel.isPresent()) {
 			HierarchyLevel hierarchyLevel = optionalHierarchyLevel.get();
 			if (hierarchyIdList == null) {
-				hierarchyIdList = new String[]{kpiRequest.getHierarchyName().concat(Constant.UNDERSCORE)
-						.concat(hierarchyLevel.getHierarchyLevelId())};
+				hierarchyIdList = getHierarchyIdList(kpiRequest, hierarchyLevel);
 			}
 			if (MapUtils.isEmpty(kpiRequest.getSelectedMap())) {
 				Map<String, List<String>> selectedMap = new HashMap<>();
@@ -193,6 +190,26 @@ public class KpiIntegrationServiceImpl {
 			kpiRequest.setLabel(hierarchyLevel.getHierarchyLevelId());
 			kpiRequest.setSprintIncluded(List.of(SPRINT_CLOSED));
 		}
+	}
+
+	private String[] getHierarchyIdList(KpiRequest kpiRequest, HierarchyLevel hierarchyLevel) {
+		String[] hierarchyIdList = null;
+		if (kpiRequest.getHierarchyName() != null) {
+			OrganizationHierarchy byNodeNameAndHierarchyLevelId = organizationHierarchyRepository
+					.findByNodeNameAndHierarchyLevelId(kpiRequest.getHierarchyName(),
+							hierarchyLevel.getHierarchyLevelId());
+			if (byNodeNameAndHierarchyLevelId != null && byNodeNameAndHierarchyLevelId.getNodeId() != null) {
+				String nodeId = byNodeNameAndHierarchyLevelId.getNodeId();
+				hierarchyIdList = new String[] { nodeId };
+			} else {
+				throw new IllegalArgumentException("No hierarchy data found for given name/level");
+			}
+		} else {
+			throw new IllegalArgumentException(
+					"valid external Id or hierarchy name not found in payload." + " Please maintain one of them");
+		}
+
+		return hierarchyIdList;
 	}
 
 	/**
