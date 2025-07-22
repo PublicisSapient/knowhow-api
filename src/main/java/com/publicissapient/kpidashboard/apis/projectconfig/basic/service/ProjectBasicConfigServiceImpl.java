@@ -408,9 +408,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 						assigneeDetailsRepository.delete(assigneeDetails);
 					}
 				}
-				if(!savedConfig.isProjectOnHold() && basicConfig.isProjectOnHold()) {
-					basicConfig.setProjectOnHoldTime(DateUtil.getTodayTime().toString());
-				}
+				setProjectOnHold(savedConfig, basicConfig);
 				basicConfig.setCreatedBy(savedConfig.getCreatedBy());
 				basicConfig.setCreatedAt(savedConfig.getCreatedAt());
 				basicConfig.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
@@ -429,6 +427,12 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 			response = new ServiceResponse(false, "Basic Config with id " + basicConfigId + " not present.", null);
 		}
 		return response;
+	}
+
+	private static void setProjectOnHold(ProjectBasicConfig savedConfig, ProjectBasicConfig basicConfig) {
+		if(!savedConfig.isProjectOnHold() && basicConfig.isProjectOnHold()) {
+			basicConfig.setProjectOnHoldTime(DateUtil.getTodayTime().toString());
+		}
 	}
 
 	private void updateProjectNameInOrgHierarchy(ProjectBasicConfig basicConfig, OrganizationHierarchy orgHierarchy) {
