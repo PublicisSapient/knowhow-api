@@ -110,9 +110,9 @@ public class DefectSeverityIndexChangeUnit {
         severityField.append("nestedFields", nestedFields);
         fieldMappings.add(severityField);
         
-        // Add jiraDefectCountlIssueTypeKPI194
+        // Add jiraDefectCountIssueTypeKPI194
         fieldMappings.add(new Document()
-                .append(FIELD_NAME, "jiraDefectCountlIssueTypeKPI194")
+                .append(FIELD_NAME, "jiraDefectCountIssueTypeKPI194")
                 .append(FIELD_LABEL, "Issue types with defect linkages")
                 .append(FIELD_TYPE, CHIPS)
                 .append(FIELD_CATEGORY, "Issue_Type")
@@ -210,9 +210,10 @@ public class DefectSeverityIndexChangeUnit {
                 .append("kanban", false)
                 .append("groupId", 24)
                 .append("kpiInfo", new Document()
-                        .append(DEFINITION, "Measures the number of defects grouped by severity in an iteration")
+                        .append(DEFINITION, "Defect Severity Index is a metric used to quantify the impact of defects on a software project.\n" +
+                                "It is calculated by summing the severity levels of individual defects and dividing by the total number of defects.")
                         .append("formula", List.of(
-                                new Document().append("lhs", "Defect Count By Severity=No. of defects linked to stories grouped by severity")
+                                new Document().append("lhs", "Defect Severity Index (DSI) = Sum of (Defect * Severity Level) / Total number of defects")
                         ))
                         .append("details", List.of(
                                 new Document()
