@@ -470,26 +470,8 @@ public class KPIExcelUtility {
 				severities = Arrays.asList("4");
 				severity = Constant.DSE_4;
 				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			}else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getSeverityH().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("High");
-				severity = Constant.DSE_H;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			}else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getSeverityL().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("Low");
-				severity = Constant.DSE_L;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			}else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getSeverityM().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("Medium");
-				severity = Constant.DSE_M;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
 			} else {
-				issueSeverity = Constant.MISC + "- " + jiraIssue.getSeverity();
+				issueSeverity = Constant.DSE_5 + "- " + jiraIssue.getSeverity();
 			}
 		}
 		return issueSeverity;
