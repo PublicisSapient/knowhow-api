@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -138,6 +137,7 @@ public class AccountHierarchyServiceImpl
 			}
 			if (acc.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)) {
 				data.setBasicProjectConfigId(acc.getBasicProjectConfigId());
+				data.setOnHold(acc.isOnHold());
 			}
 		}
 		return data;
@@ -349,12 +349,14 @@ public class AccountHierarchyServiceImpl
 						} else {
 							accountHierarchyData.setBasicProjectConfigId(hierarchy.getBasicProjectConfigId());
 							accountHierarchyData.setLabelName(hierarchy.getHierarchyLevelId());
+							accountHierarchyData.setOnHold(hierarchy.isOnHold());
 							listHierarchyData.add(accountHierarchyData);
 						}
 					});
 		} else {
 			accountHierarchyData.setBasicProjectConfigId(hierarchy.getBasicProjectConfigId());
 			accountHierarchyData.setLabelName(hierarchy.getHierarchyLevelId());
+			accountHierarchyData.setOnHold(hierarchy.isOnHold());
 			listHierarchyData.add(accountHierarchyData);
 		}
 	}
