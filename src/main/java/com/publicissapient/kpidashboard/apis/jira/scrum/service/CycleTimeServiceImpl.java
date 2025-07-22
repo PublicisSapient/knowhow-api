@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -241,11 +240,6 @@ public class CycleTimeServiceImpl extends JiraKPIService<Long, List<Object>, Map
 			List<Long> overAllDodLiveTime = new ArrayList<>();
 			List<Long> overAllLeadTimeList = new ArrayList<>();
 
-			List<JiraIssueCustomHistory> overAllIntakeDorModalValues = new ArrayList<>();
-			List<JiraIssueCustomHistory> overAllDorDodModalValues = new ArrayList<>();
-			List<JiraIssueCustomHistory> overAllDodLiveModalValues = new ArrayList<>();
-			List<JiraIssueCustomHistory> overAllLeadTimeModalValues = new ArrayList<>();
-
 			long overAllIntakeDor;
 			long overAllDorDod;
 			long overAllDodLive;
@@ -261,11 +255,6 @@ public class CycleTimeServiceImpl extends JiraKPIService<Long, List<Object>, Map
 				long intakeDor = 0L;
 				long dorDod = 0L;
 				long dodLive = 0L;
-
-				List<JiraIssueCustomHistory> intakeDorModalValues = new ArrayList<>();
-				List<JiraIssueCustomHistory> dorDodModalValues = new ArrayList<>();
-				List<JiraIssueCustomHistory> dodLiveModalValues = new ArrayList<>();
-				List<JiraIssueCustomHistory> leadTimeModalValues = new ArrayList<>();
 
 				if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
 					// in below loop create list of day difference between Intake and
@@ -314,16 +303,14 @@ public class CycleTimeServiceImpl extends JiraKPIService<Long, List<Object>, Map
 								cycleTime.getLiveTime(), DOD_TO_LIVE_KPI, cycleTimeValidationData, null);
 						String leadTime = BacklogKpiHelper.setValueInCycleTime(cycleTime.getIntakeTime(),
 								cycleTime.getLiveTime(), LEAD_TIME_KPI, cycleTimeValidationData, null);
-						transitionExist(overAllIntakeDorTime, overAllIntakeDorModalValues, intakeDorTime,
-								intakeDorModalValues, jiraIssueCustomHistory, intakeToReady);
-						transitionExist(overAllDorDodTime, overAllDorDodModalValues, dorDodTime, dorDodModalValues,
-								jiraIssueCustomHistory, readyToDeliver);
-						transitionExist(overAllDodLiveTime, overAllDodLiveModalValues, dodLiveTime, dodLiveModalValues,
-								jiraIssueCustomHistory, deliverToLive);
-						transitionExist(overAllLeadTimeList, overAllLeadTimeModalValues, leadTimeList,
-								leadTimeModalValues, jiraIssueCustomHistory, leadTime);
-
-						cycleTimeList.add(cycleTimeValidationData);
+						transitionExist(overAllIntakeDorTime, intakeDorTime, intakeToReady, cycleTimeList,
+								cycleTimeValidationData);
+						transitionExist(overAllDorDodTime, dorDodTime, readyToDeliver, cycleTimeList,
+								cycleTimeValidationData);
+						transitionExist(overAllDodLiveTime, dodLiveTime, deliverToLive, cycleTimeList,
+								cycleTimeValidationData);
+						transitionExist(overAllLeadTimeList, leadTimeList, leadTime, cycleTimeList,
+								cycleTimeValidationData);
 					}
 
 					dodLive = ObjectUtils.defaultIfNull(AggregationUtils.averageLong(dodLiveTime), 0).longValue();
@@ -392,15 +379,13 @@ public class CycleTimeServiceImpl extends JiraKPIService<Long, List<Object>, Map
 		}
 	}
 
-	private void transitionExist(List<Long> overAllTimeList, List<JiraIssueCustomHistory> overAllTransitionModalValues,
-			List<Long> filterTimeList, List<JiraIssueCustomHistory> transitionModalValues,
-			JiraIssueCustomHistory jiraIssueCustomHistory, String transitionTime) {
+	private void transitionExist(List<Long> overAllTimeList, List<Long> filterTimeList, String transitionTime,
+			List<CycleTimeValidationData> cycleTimeList, CycleTimeValidationData cycleTimeValidationData) {
 		if (!transitionTime.equalsIgnoreCase(Constant.NOT_AVAILABLE)) {
 			long time = KpiDataHelper.calculateTimeInDays(Long.parseLong(transitionTime));
 			filterTimeList.add(time);
 			overAllTimeList.add(time);
-			transitionModalValues.add(jiraIssueCustomHistory);
-			overAllTransitionModalValues.add(jiraIssueCustomHistory);
+			cycleTimeList.add(cycleTimeValidationData);
 		}
 	}
 
