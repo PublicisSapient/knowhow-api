@@ -39,11 +39,14 @@ public class CycleTimeKpiChangeLog {
 	public void execution() {
 		updateLeadTimeKpi();
 		addToKpiCategoryMapping();
+		updateKpiColumnConfig();
+		updateFieldMappingStructure();
 	}
 
 	private void updateLeadTimeKpi() {
 		Document updateFields = new Document("$set",
-				new Document("boxType", "3_column").append("chartType", "table").append("defaultOrder", 29))
+				new Document("boxType", "3_column").append("chartType", "table").append("defaultOrder", 29)
+						.append("aggregationCriteria", "sum").append("groupId", 33))
 				.append("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 	}
@@ -54,15 +57,36 @@ public class CycleTimeKpiChangeLog {
 		mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDocument);
 	}
 
+	public void updateKpiColumnConfig() {
+		Document query = new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue Id");
+		Document update = new Document("$set", new Document("kpiColumnDetails.$.columnName", "Issue ID"));
+		mongoTemplate.getCollection("kpi_column_configs").updateMany(query, update);
+	}
+
+	public void updateFieldMappingStructure() {
+		Document query = new Document("fieldName", "jiraIssueTypeKPI171");
+		Document update = new Document("$set", new Document("mandatory", true));
+		mongoTemplate.getCollection("field_mapping_structure").updateMany(query, update);
+	}
+
 	@RollbackExecution
 	public void rollback() {
-		Document updateFields = new Document("$set", new Document("kpiSubCategory", "defaultSubCategory")
-				.append("kpiCategory", "defaultCategory"))
-				.append("$unset", new Document("boxType", "").append("chartType", ""));
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION)
-				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
+		Document updateFields = new Document("$set",
+				new Document("kpiSubCategory", "defaultSubCategory").append("kpiCategory", "defaultCategory")
+						.append("groupId", 11))
+				.append("$unset",
+						new Document("boxType", "").append("chartType", "").append("aggregationCriteria", ""));
+		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
+
+		Document query = new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue ID");
+		Document update = new Document("$set", new Document("kpiColumnDetails.$.columnName", "Issue Id"));
+		mongoTemplate.getCollection("kpi_column_configs").updateMany(query, update);
 
 		mongoTemplate.getCollection("kpi_category_mapping")
 				.deleteOne(new Document(KPI_LABEL, KPI_ID).append("categoryId", "speed"));
+
+		Document query2 = new Document("fieldName", "jiraIssueTypeKPI171");
+		Document update2 = new Document("$set", new Document("mandatory", false));
+		mongoTemplate.getCollection("field_mapping_structure").updateMany(query2, update2);
 	}
 }
