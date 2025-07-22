@@ -36,6 +36,7 @@ public class KpiRequest implements Serializable {
 	private int level;
 	private String label;
 	private String[] ids;
+	private List<String> externalIDs;
 	private String[] platformIds;
 	private List<KpiElement> kpiList;
 	private List<String> kpiIdList;
@@ -164,6 +165,25 @@ public class KpiRequest implements Serializable {
 	 */
 	public void setIds(String[] ids) {
 		this.ids = ids == null ? null : ids.clone();
+	}
+
+	/**
+	 * Get external CH Ids string [ ].
+	 *
+	 * @return the string [ ]
+	 */
+	public List<String> getExternalIDs() {
+		return this.externalIDs;
+	}
+
+	/**
+	 * Sets externalIDs.
+	 *
+	 * @param externalIDs
+	 *          the CH Ids
+	 */
+	public void setExternalIDs(List<String> externalIDs) {
+		this.externalIDs = externalIDs;
 	}
 
 	/**

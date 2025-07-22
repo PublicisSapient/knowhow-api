@@ -31,7 +31,9 @@ import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.repository.application.KpiMasterRepository;
+import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +46,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -72,6 +75,8 @@ public class KpiIntegrationServiceImplTest {
 
 	@Mock
 	private HierarchyLevelService hierarchyLevelService;
+	@Mock
+	private OrganizationHierarchyRepository organizationHierarchyRepository;
 
 	@Mock
 	private AiGatewayClient aiGatewayClient;
@@ -103,6 +108,11 @@ public class KpiIntegrationServiceImplTest {
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
 		when(hierarchyLevelService.getFullHierarchyLevels(false)).thenReturn(hierarchyLevels);
+		OrganizationHierarchy organizationHierarchy = new OrganizationHierarchy();
+		organizationHierarchy.setNodeId("123");
+		organizationHierarchy.setNodeName("DTS");
+		when(organizationHierarchyRepository.findByNodeNameAndHierarchyLevelId(anyString(), anyString()))
+				.thenReturn( organizationHierarchy);
 	}
 
 	@Test
