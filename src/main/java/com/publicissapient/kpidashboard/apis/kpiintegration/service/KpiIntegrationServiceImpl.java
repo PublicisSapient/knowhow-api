@@ -170,9 +170,9 @@ public class KpiIntegrationServiceImpl {
 	public void setKpiRequest(KpiRequest kpiRequest) {
 		String[] hierarchyIdList = null;
 		List<String> externalIDs = kpiRequest.getExternalIDs();
-		if (externalIDs != null && !externalIDs.isEmpty()) {
-			List<OrganizationHierarchy> byExternalIds = organizationHierarchyRepository.findByExternalIdIn(externalIDs);
-			hierarchyIdList = byExternalIds.stream().map(OrganizationHierarchy::getNodeId).toArray(String[]::new);
+		if (CollectionUtils.isNotEmpty(externalIDs)) {
+			List<OrganizationHierarchy> orgHierarchyList = organizationHierarchyRepository.findByExternalIdIn(externalIDs);
+			hierarchyIdList = orgHierarchyList.stream().map(OrganizationHierarchy::getNodeId).toArray(String[]::new);
 		}
 		Optional<HierarchyLevel> optionalHierarchyLevel = hierarchyLevelService.getFullHierarchyLevels(false).stream()
 				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == kpiRequest.getLevel()).findFirst();
