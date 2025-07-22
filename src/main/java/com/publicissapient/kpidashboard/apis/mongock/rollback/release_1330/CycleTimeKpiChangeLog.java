@@ -50,6 +50,10 @@ public class CycleTimeKpiChangeLog {
 
 		mongoTemplate.getCollection("kpi_category_mapping")
 				.deleteOne(new Document(KPI_LABEL, KPI_ID).append("categoryId", "speed"));
+
+		Document query2 = new Document("fieldName", "jiraIssueTypeKPI171");
+		Document update2 = new Document("$set", new Document("mandatory", false));
+		mongoTemplate.getCollection("field_mapping_structure").updateMany(query2, update2);
 	}
 
 	private void updateLeadTimeKpi() {
@@ -72,10 +76,17 @@ public class CycleTimeKpiChangeLog {
 		mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDocument);
 	}
 
+	public void updateFieldMappingStructure() {
+		Document query = new Document("fieldName", "jiraIssueTypeKPI171");
+		Document update = new Document("$set", new Document("mandatory", true));
+		mongoTemplate.getCollection("field_mapping_structure").updateMany(query, update);
+	}
+
 	@RollbackExecution
 	public void rollback() {
 		updateLeadTimeKpi();
 		addToKpiCategoryMapping();
 		updateKpiColumnConfig();
+		updateFieldMappingStructure();
 	}
 }
