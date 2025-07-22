@@ -772,6 +772,7 @@
     "section": "Issue Types Mapping",
     "fieldDisplayOrder": 1,
     "sectionOrder": 2,
+    "mandatory": true,
     "tooltip": {
       "definition": "All issue types considered for Cycle calculation"
     }
