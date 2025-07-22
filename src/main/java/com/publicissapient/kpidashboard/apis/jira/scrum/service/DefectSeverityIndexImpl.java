@@ -161,7 +161,7 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 
 		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
 			if (Filters.getFilter(k) == Filters.SPRINT) {
-				sprintWiseLeafNodeValue(nodeIdMap, v, trendValueList, kpiElement, kpiRequest);
+				calculateDefectSeverityIndexForSprints(nodeIdMap, v, trendValueList, kpiElement, kpiRequest);
 			}
 		});
 
@@ -278,6 +278,75 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	}
 
 	/**
+	 * Data holder for sprint-wise processed data maps.
+	 * Groups related sprint data collections for better organization.
+	 */
+	private static class SprintDataMaps {
+		final Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap;
+		final Map<Pair<String, String>, Integer> sprintWiseTDCMap;
+		final Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap;
+
+		SprintDataMaps(Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap,
+				Map<Pair<String, String>, Integer> sprintWiseTDCMap,
+				Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap) {
+			this.sprintWiseDefectSeverityCountMap = sprintWiseDefectSeverityCountMap;
+			this.sprintWiseTDCMap = sprintWiseTDCMap;
+			this.sprintWiseDefectDataListMap = sprintWiseDefectDataListMap;
+		}
+	}
+
+	/**
+	 * Data holder for output and result collections.
+	 * Groups collections that store processing results.
+	 */
+	private static class OutputCollections {
+		final Map<String, Node> mapTmp;
+		final List<DataCount> trendValueList;
+		final List<KPIExcelData> excelData;
+
+		OutputCollections(Map<String, Node> mapTmp, List<DataCount> trendValueList, List<KPIExcelData> excelData) {
+			this.mapTmp = mapTmp;
+			this.trendValueList = trendValueList;
+			this.excelData = excelData;
+		}
+	}
+
+	/**
+	 * Context object for processing configuration and metadata.
+	 * Groups contextual information needed for sprint processing.
+	 */
+	private static class ProcessingContext {
+		final Set<String> projectWiseSeverityList;
+		final String requestTrackerId;
+		final List<JiraIssue> storyList;
+		final KpiElement kpiElement;
+
+		ProcessingContext(Set<String> projectWiseSeverityList, String requestTrackerId,
+				List<JiraIssue> storyList, KpiElement kpiElement) {
+			this.projectWiseSeverityList = projectWiseSeverityList;
+			this.requestTrackerId = requestTrackerId;
+			this.storyList = storyList;
+			this.kpiElement = kpiElement;
+		}
+	}
+
+	/**
+	 * Main context object that aggregates smaller context objects.
+	 * This reduces constructor parameter count while maintaining logical grouping.
+	 */
+	private static class SprintProcessingContext {
+		final SprintDataMaps sprintData;
+		final OutputCollections output;
+		final ProcessingContext context;
+
+		SprintProcessingContext(SprintDataMaps sprintData, OutputCollections output, ProcessingContext context) {
+			this.sprintData = sprintData;
+			this.output = output;
+			this.context = context;
+		}
+	}
+
+	/**
 	 * Filters out dropped defects from the list of defects linked with stories.
 	 * 
 	 * This method removes defects that have been marked as dropped from the
@@ -297,60 +366,138 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	}
 
 	/**
-	 * Populates KPI values to sprint leaf nodes and generates trend analysis data.
+	 * Populates Excel data for the current sprint node.
 	 * 
-	 * This method processes the defect data for each sprint and calculates the
-	 * defect counts by severity. It then populates the leaf nodes with this data
-	 * and generates trend analysis data for visualization.
+	 * This method populates Excel data if the project has severity data,
+	 * using the defect data associated with the current sprint.
 	 * 
-	 * @param mapTmp
-	 *            Map of node IDs to Node objects
-	 * @param sprintLeafNodeList
-	 *            List of sprint leaf nodes
-	 * @param trendValueList
-	 *            List to store trend values
-	 * @param kpiElement
-	 *            KPI element to be populated
-	 * @param kpiRequest
-	 *            KPI request containing parameters
+	 * @param projectWiseSeverityList
+	 *            Set of all severity types found across sprints
+	 * @param requestTrackerId
+	 *            Request tracker ID for logging
+	 * @param sprintName
+	 *            Name of the current sprint
+	 * @param excelData
+	 *            List to store Excel data objects
+	 * @param sprintDefectData
+	 *            List of defects for the current sprint
+	 * @param customApiConfig
+	 *            Configuration for API settings
+	 * @param storyList
+	 *            List of stories for context
 	 */
-	@SuppressWarnings(UNCHECKED)
-	private void sprintWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList,
-			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void populateExcelDataIfNeeded(Set<String> projectWiseSeverityList, String requestTrackerId,
+			String sprintName, List<KPIExcelData> excelData, List<JiraIssue> sprintDefectData,
+			CustomApiConfig customApiConfig, List<JiraIssue> storyList) {
+		
+		if (CollectionUtils.isNotEmpty(projectWiseSeverityList)) {
+			populateExcelDataObject(requestTrackerId, sprintName, excelData, sprintDefectData, customApiConfig, storyList);
+		}
+	}
 
-		String requestTrackerId = getRequestTrackerId();
+	/**
+	 * Creates DataCount objects for trend analysis visualization.
+	 * 
+	 * This method processes the final severity map and creates DataCount objects
+	 * for each severity, adding them to both the trend value list and data count map.
+	 * 
+	 * @param finalMap
+	 *            Map containing severity weights and overall weighted average
+	 * @param node
+	 *            Current sprint node
+	 * @param trendLineName
+	 *            Name of the trend line
+	 * @param overAllHoverValueMap
+	 *            Map containing hover values for visualization
+	 * @param trendValueList
+	 *            List to store calculated trend values
+	 * @param dataCountMap
+	 *            Map to store DataCount objects by severity
+	 */
+	private void createDataCountObjects(Map<String, Long> finalMap, Node node, String trendLineName,
+			Map<String, Object> overAllHoverValueMap, List<DataCount> trendValueList,
+			Map<String, List<DataCount>> dataCountMap) {
+		
+		finalMap.forEach((severity, value) -> {
+			DataCount dataCount = getDataCountObject(node, trendLineName, overAllHoverValueMap, severity, value);
+			trendValueList.add(dataCount);
+			dataCountMap.computeIfAbsent(severity, k -> new ArrayList<>()).add(dataCount);
+		});
+	}
 
-		String startDate;
-		String endDate;
+	/**
+	 * Calculates severity weights and overall weighted averages for defects.
+	 * 
+	 * This method processes severity data, calculates weighted averages based on
+	 * defect counts and severity weights, and prepares the final map with overall averages.
+	 * 
+	 * @param projectWiseSeverityList
+	 *            Set of all severity types found across sprints
+	 * @param severityMap
+	 *            Map of severity to defect counts for current sprint
+	 * @param totalDefects
+	 *            Total number of defects in the sprint
+	 * @param node
+	 *            Current sprint node for logging
+	 * @param overAllHoverValueMap
+	 *            Output map to store hover values for visualization
+	 * @return Map containing severity weights and overall weighted average
+	 */
+	private Map<String, Long> calculateSeverityWeights(Set<String> projectWiseSeverityList,
+			Map<String, Long> severityMap, long totalDefects, Node node, Map<String, Object> overAllHoverValueMap) {
+		
+		Map<String, Long> finalMap = new HashMap<>();
+		
+		if (CollectionUtils.isNotEmpty(projectWiseSeverityList)) {
+			// Process each severity and prepare data for visualization
+			projectWiseSeverityList.forEach(severity -> {
+				Long severityWiseCount = severityMap.getOrDefault(severity, 0L);
+				Long severityWeight = Long.valueOf(customApiConfig.getSeverityWeight().get(severity));
+				Long avgSeverityWeight = (severityWiseCount * severityWeight) / totalDefects;
+				log.debug("Weighted Average for sprint {}: {}", node.getSprintFilter().getName(),
+						avgSeverityWeight);
+				finalMap.put(StringUtils.capitalize(severity), avgSeverityWeight);
+				overAllHoverValueMap.put(StringUtils.capitalize(severity), avgSeverityWeight);
+			});
+			// Ensure all severities have entries, even if count is zero
+			projectWiseSeverityList.forEach(severity -> finalMap.computeIfAbsent(severity, val -> 0L));
+			// Calculate overall weighted average
+			Long overallWeightedSum = finalMap.entrySet().stream().mapToLong(entry -> entry.getValue()
+					* customApiConfig.getSeverityWeight().get(entry.getKey())).sum();
+			Long overallWeightedAverage = overallWeightedSum / totalDefects;
+			finalMap.put(CommonConstant.OVERALL, overallWeightedAverage);
+		}
+		
+		return finalMap;
+	}
 
-		// Sort sprint nodes by start date for chronological processing
-		sprintLeafNodeList.sort((node1, node2) -> node1.getSprintFilter().getStartDate()
-				.compareTo(node2.getSprintFilter().getStartDate()));
+	/**
+	 * Processes sprint-wise defect data and calculates severity counts.
+	 * 
+	 * This method groups stories by sprint, filters defects linked to those stories,
+	 * calculates severity counts, and stores the processed data in maps.
+	 * 
+	 * @param sprintWiseMap
+	 *            Map of sprint filters to their associated stories
+	 * @param storyDefectDataListMap
+	 *            Map containing all defect data from database
+	 * @param sprintWiseDefectSeverityCountMap
+	 *            Output map to store severity counts by sprint
+	 * @param sprintWiseTDCMap
+	 *            Output map to store total defect counts by sprint
+	 * @param sprintWiseDefectDataListMap
+	 *            Output map to store defect lists by sprint
+	 * @return Set of all severity types found across all sprints
+	 */
+	private Set<String> processSprintDefectData(
+			Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap,
+			Map<String, Object> storyDefectDataListMap,
+			Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap,
+			Map<Pair<String, String>, Integer> sprintWiseTDCMap,
+			Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap) {
 
-		startDate = sprintLeafNodeList.get(0).getSprintFilter().getStartDate();
-		endDate = sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
-
-		// Fetch data from database for the date range
-		Map<String, Object> storyDefectDataListMap = fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate,
-				kpiRequest);
-
-		List<JiraIssue> storyList = (List<JiraIssue>) storyDefectDataListMap.get(STORY_LIST);
-		List<SprintWiseStory> sprintWiseStoryList = (List<SprintWiseStory>) storyDefectDataListMap
-				.get(SPRINT_WISE_STORY_DATA);
-
-		// Group stories by sprint
-		Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap = sprintWiseStoryList.stream().collect(Collectors
-				.groupingBy(sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()), Collectors.toList()));
-
-		// Maps to store processed data
-		Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap = new HashMap<>();
-		Map<Pair<String, String>, Integer> sprintWiseTDCMap = new HashMap<>();
-		Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap = new HashMap<>();
-
-		List<KPIExcelData> excelData = new ArrayList<>();
-
-		// Process each sprint to calculate defect counts by severity
 		Set<String> projectWiseSeverityList = new HashSet<>();
+		
 		sprintWiseMap.forEach((sprintFilter, sprintWiseStories) -> {
 			List<String> storyIdList = new ArrayList<>();
 			sprintWiseStories.stream().map(SprintWiseStory::getStoryList).collect(Collectors.toList())
@@ -374,65 +521,104 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 			sprintWiseDefectSeverityCountMap.put(sprintFilter, severityCountMap);
 			sprintWiseTDCMap.put(sprintFilter, sprintWiseDefectDataList.size());
 		});
+		
+		return projectWiseSeverityList;
+	}
+
+	/**
+	 * Calculates and populates defect severity index values for sprint nodes.
+	 * 
+	 * This method processes defect data across sprints, calculates severity-weighted
+	 * defect counts, and populates the sprint nodes with KPI data for trend analysis.
+	 * 
+	 * @param mapTmp
+	 *            Map of node IDs to Node objects
+	 * @param sprintLeafNodeList
+	 *            List of sprint leaf nodes to process
+	 * @param trendValueList
+	 *            List to store calculated trend values
+	 * @param kpiElement
+	 *            KPI element to be populated with results
+	 * @param kpiRequest
+	 *            KPI request containing filtering parameters
+	 */
+	@SuppressWarnings(UNCHECKED)
+	private void calculateDefectSeverityIndexForSprints(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList,
+			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
+
+		String requestTrackerId = getRequestTrackerId();
+
+		// Sort sprints chronologically and determine date range
+		DateRange dateRange = prepareDateRangeFromSprints(sprintLeafNodeList);
+
+		// Fetch all required data from database
+		Map<String, Object> storyDefectDataListMap = fetchKPIDataFromDb(sprintLeafNodeList, 
+				dateRange.startDate, dateRange.endDate, kpiRequest);
+
+		List<JiraIssue> storyList = (List<JiraIssue>) storyDefectDataListMap.get(STORY_LIST);
+		List<SprintWiseStory> sprintWiseStoryList = (List<SprintWiseStory>) storyDefectDataListMap
+				.get(SPRINT_WISE_STORY_DATA);
+
+		// Group stories by sprint
+		Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap = sprintWiseStoryList.stream().collect(Collectors
+				.groupingBy(sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()), Collectors.toList()));
+
+		// Maps to store processed data
+		Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap = new HashMap<>();
+		Map<Pair<String, String>, Integer> sprintWiseTDCMap = new HashMap<>();
+		Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap = new HashMap<>();
+
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		// Process each sprint to calculate defect counts by severity
+		Set<String> projectWiseSeverityList = processSprintDefectData(sprintWiseMap, storyDefectDataListMap,
+				sprintWiseDefectSeverityCountMap, sprintWiseTDCMap, sprintWiseDefectDataListMap);
 		// Process each sprint node to populate with calculated data
+		SprintDataMaps sprintData = new SprintDataMaps(sprintWiseDefectSeverityCountMap, sprintWiseTDCMap, sprintWiseDefectDataListMap);
+		OutputCollections output = new OutputCollections(mapTmp, trendValueList, excelData);
+		ProcessingContext processingContext = new ProcessingContext(projectWiseSeverityList, requestTrackerId, storyList, kpiElement);
+		SprintProcessingContext context = new SprintProcessingContext(sprintData, output, processingContext);
+		processSprintNodes(sprintLeafNodeList, context);
+	}
+
+	private void processSprintNodes(List<Node> sprintLeafNodeList, SprintProcessingContext context) {
 		sprintLeafNodeList.forEach(node -> {
 			String trendLineName = node.getProjectFilter().getName();
 			Pair<String, String> currentNodeIdentifier = Pair
 					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
 
 			Map<String, List<DataCount>> dataCountMap = new HashMap<>();
-			Map<String, Long> severityMap = sprintWiseDefectSeverityCountMap.getOrDefault(currentNodeIdentifier,
+			Map<String, Long> severityMap = context.sprintData.sprintWiseDefectSeverityCountMap.getOrDefault(currentNodeIdentifier,
 					new HashMap<>());
 			long totalDefects = calculateTotalDefects(severityMap);
-			Map<String, Long> finalMap = new HashMap<>();
 			Map<String, Object> overAllHoverValueMap = new HashMap<>();
 
-			if (CollectionUtils.isNotEmpty(projectWiseSeverityList)) {
-				// Process each severity and prepare data for visualization
-				projectWiseSeverityList.forEach(severity -> {
-					Long severityWiseCount = severityMap.getOrDefault(severity, 0L);
-					Long severityWeight = Long.valueOf(customApiConfig.getSeverityWeight().get(severity));
-					Long avgSeverityWeight = (severityWiseCount * severityWeight) / totalDefects;
-					log.debug("Weighted Average for sprint {}: {}", node.getSprintFilter().getName(),
-							avgSeverityWeight);
-					finalMap.put(StringUtils.capitalize(severity), avgSeverityWeight);
-					overAllHoverValueMap.put(StringUtils.capitalize(severity), avgSeverityWeight);
-				});
-				// Ensure all serverites have entries, even if count is zero
-				projectWiseSeverityList.forEach(severity -> finalMap.computeIfAbsent(severity, val -> 0L));
-				// Calculate overall weighted average
-				Long overallWeightedSum = finalMap.entrySet().stream().mapToLong(entry -> entry.getValue()
-						* customApiConfig.getSeverityWeight().get(entry.getKey())).sum();
-				Long overallWeightedAverage = overallWeightedSum / totalDefects;
-				finalMap.put(CommonConstant.OVERALL, overallWeightedAverage);
+			// Calculate severity weights and overall weighted average
+			Map<String, Long> finalMap = calculateSeverityWeights(context.context.projectWiseSeverityList, severityMap, totalDefects,
+					node, overAllHoverValueMap);
+
+			if (CollectionUtils.isNotEmpty(context.context.projectWiseSeverityList)) {
 
 				// Create DataCount objects for each severity
-				String finalTrendLineName = trendLineName;
-
-				finalMap.forEach((severity, value) -> {
-					DataCount dataCount = getDataCountObject(node, finalTrendLineName, overAllHoverValueMap, severity,
-							value);
-					trendValueList.add(dataCount);
-					dataCountMap.computeIfAbsent(severity, k -> new ArrayList<>()).add(dataCount);
-				});
+				createDataCountObjects(finalMap, node, trendLineName, overAllHoverValueMap, context.output.trendValueList, dataCountMap);
 
 				// Populate Excel data if needed
-				populateExcelDataObject(requestTrackerId, node.getSprintFilter().getName(), excelData,
-						sprintWiseDefectDataListMap.get(currentNodeIdentifier), customApiConfig, storyList);
+				populateExcelDataIfNeeded(context.context.projectWiseSeverityList, context.context.requestTrackerId, node.getSprintFilter().getName(),
+						context.output.excelData, context.sprintData.sprintWiseDefectDataListMap.get(currentNodeIdentifier), customApiConfig, context.context.storyList);
 			}
 
 			// Log debug information
-			log.debug("[DC-SPRINT-WISE][{}]. DC for sprint {}  is {} and trend value is {}", requestTrackerId,
-					node.getSprintFilter().getName(), sprintWiseDefectSeverityCountMap.get(currentNodeIdentifier),
-					sprintWiseTDCMap.get(currentNodeIdentifier));
+			log.debug("[DC-SPRINT-WISE][{}]. DC for sprint {}  is {} and trend value is {}", context.context.requestTrackerId,
+					node.getSprintFilter().getName(), context.sprintData.sprintWiseDefectSeverityCountMap.get(currentNodeIdentifier),
+					context.sprintData.sprintWiseTDCMap.get(currentNodeIdentifier));
 
 			// Set value in the node
-			mapTmp.get(node.getId()).setValue(dataCountMap);
+			context.output.mapTmp.get(node.getId()).setValue(dataCountMap);
 		});
 
 		// Set Excel data and columns in KPI element
-		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(
+		context.context.kpiElement.setExcelData(context.output.excelData);
+		context.context.kpiElement.setExcelColumns(
 				KPIExcelColumn.DEFECT_SEVERITY_INDEX.getColumns(sprintLeafNodeList, cacheService, filterHelperService));
 	}
 
@@ -643,6 +829,36 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 		long dse5Count = severityMap.getOrDefault(Constant.DSE_5, 0L);
 
 		return dse1Count + dse2Count + dse3Count + dse4Count + dse5Count;
+	}
+
+	/**
+	 * Helper class to hold date range information.
+	 */
+	private static class DateRange {
+		final String startDate;
+		final String endDate;
+
+		DateRange(String startDate, String endDate) {
+			this.startDate = startDate;
+			this.endDate = endDate;
+		}
+	}
+
+	/**
+	 * Prepares date range from sprint list by sorting sprints chronologically.
+	 * 
+	 * @param sprintLeafNodeList List of sprint nodes
+	 * @return DateRange containing start and end dates
+	 */
+	private DateRange prepareDateRangeFromSprints(List<Node> sprintLeafNodeList) {
+		// Sort sprint nodes by start date for chronological processing
+		sprintLeafNodeList.sort((node1, node2) -> node1.getSprintFilter().getStartDate()
+				.compareTo(node2.getSprintFilter().getStartDate()));
+
+		String startDate = sprintLeafNodeList.get(0).getSprintFilter().getStartDate();
+		String endDate = sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
+
+		return new DateRange(startDate, endDate);
 	}
 
 }
