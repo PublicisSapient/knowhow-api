@@ -26,7 +26,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,6 +40,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.apis.util.CommonUtils;
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,8 +55,11 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
@@ -62,9 +70,6 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.apis.model.SprintFilter;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
-import com.publicissapient.kpidashboard.apis.util.CommonUtils;
-import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
-import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -87,6 +92,15 @@ public class DefectSeverityIndexImplTest {
 
     @Mock
     private ConfigHelperService configHelperService;
+
+    @Mock
+    private FilterHelperService filterHelperService;
+
+    @Mock
+    private CacheService cacheService;
+
+    @Mock
+    private CommonService commonService;
 
     @Spy
     @InjectMocks
