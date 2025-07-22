@@ -361,15 +361,12 @@ public final class KPIHelperUtil {
 		Long dse2Count = 0L;
 		Long dse3Count = 0L;
 		Long dse4Count = 0L;
-		Long dseHCount = 0L;
-		Long dseLCount = 0L;
-		Long dseMCount = 0L;
 
 		for (JiraIssue issue : sprintWiseDefectDataList) {
 
 			if (StringUtils.isBlank(issue.getSeverity())) {
-				dseHCount++;
-				severityCountMap.put(Constant.MISC, dseHCount);
+				dse4Count++;
+				severityCountMap.put(Constant.DSE_5, dse4Count);
 			} else {
 				if (StringUtils.containsIgnoreCase(customApiConfig.getSeverity1().replaceAll(Constant.WHITESPACE, "").trim(),
 						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
@@ -390,24 +387,9 @@ public final class KPIHelperUtil {
 						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
 					dse4Count++;
 					severityCountMap.put(Constant.DSE_4, dse4Count);
-				}else if (StringUtils.containsIgnoreCase(
-						customApiConfig.getSeverityH().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-					dseHCount++;
-					severityCountMap.put(Constant.DSE_H, dseHCount);
-				}else if (StringUtils.containsIgnoreCase(
-						customApiConfig.getSeverityL().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-					dseLCount++;
-					severityCountMap.put(Constant.DSE_L, dseLCount);
-				}else if (StringUtils.containsIgnoreCase(
-						customApiConfig.getSeverityM().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-					dseMCount++;
-					severityCountMap.put(Constant.DSE_M, dseMCount);
 				} else {
-					dseHCount++;
-					severityCountMap.put(Constant.MISC, dseHCount);
+					dse4Count++;
+					severityCountMap.put(Constant.DSE_5, dse4Count);
 				}
 			}
 		}
@@ -515,7 +497,7 @@ public final class KPIHelperUtil {
 			return Constant.MISC;
 		}
 	}
-	
+
 	public static Map<String, List<DataCount>> sortTrendMapByKeyOrder(Map<String, List<DataCount>> trendMap,
 			List<String> keyOrder) {
 		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();

@@ -156,13 +156,11 @@ public final class Constant {
 	public static final String PROJECT_LEVEL_THRESHOLD = "Project Level Threshold";
 	public static final String CACHE_PROJECT_KPI_DATA = "project_kpi_data_cache";
 	public static final String TOOL_RALLY = "Rally";
-	public static final String DSE_1 = "1";
-	public static final String DSE_2 = "2";
-	public static final String DSE_3 = "3";
-	public static final String DSE_4 = "4";
-	public static final String DSE_H = "High";
-	public static final String DSE_L = "Low";
-	public static final String DSE_M = "Medium";
+	public static final String DSE_1 = "S1";
+	public static final String DSE_2 = "S2";
+	public static final String DSE_3 = "S3";
+	public static final String DSE_4 = "S4";
+	public static final String DSE_5 = "S5";
 	private Constant() {
 	}
 }
