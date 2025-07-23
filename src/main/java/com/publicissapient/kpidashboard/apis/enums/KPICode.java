@@ -298,10 +298,7 @@ public enum KPICode {
 
 	// do not remove below codes as they are required for test case
 	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()), TEST_JIRA("TEST_JIRA",
-			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name()),
-
-	/** Defect severity index kpi */
-	DEFECT_SEVERITY_INDEX("kpi194", KPISource.JIRA.name());
+			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name());
 
 	// @formatter:on
 
