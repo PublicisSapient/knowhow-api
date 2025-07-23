@@ -2699,7 +2699,7 @@
       "definition": "Workflow status/es to identify that an issue is live in Production"
     },
     "mandatory": true,
-    "fieldDisplayOrder": 4
+    "fieldDisplayOrder" : 4
   },
   {
     "fieldName": "jiraSprintVelocityIssueTypeBR",
@@ -2771,7 +2771,7 @@
       "definition": "Workflow status/es that identify that a backlog item is ready to be taken in a sprint based on Definition of Ready (DOR)"
     },
     "mandatory": true,
-    "fieldDisplayOrder": 2
+    "fieldDisplayOrder" : 2
   },
   {
     "fieldName": "includeRCAForKPI135",
@@ -3010,7 +3010,7 @@
       "definition": "Default first status of all issue types in consideration"
     },
     "mandatory": true,
-    "fieldDisplayOrder": 1
+    "fieldDisplayOrder" : 1
   },
   {
     "fieldName": "storyFirstStatusKPI148",
@@ -3252,7 +3252,7 @@
       "definition": "Enabled State (Kpi from data on Upload data screen)"
     },
     "toggleLabelRight": "Upload Data",
-    "redirectUrl": "/dashboard/Config/Upload"
+    "redirectUrl" : "/dashboard/Config/Upload"
   },
   {
     "fieldName": "uploadDataKPI16",
@@ -3264,7 +3264,7 @@
       "definition": "Enabled State (Kpi from data on Upload data screen)"
     },
     "toggleLabelRight": "Upload Data",
-    "redirectUrl": "/dashboard/Config/Upload"
+    "redirectUrl" : "/dashboard/Config/Upload"
   },
   {
     "fieldName": "jiraDefectRejectionStatusKPI155",
@@ -3765,21 +3765,21 @@
     }
   },
   {
-    "fieldName": "thresholdValueKPI185",
-    "fieldLabel": "Target KPI Value",
-    "fieldType": "number",
-    "section": "Project Level Threshold",
-    "tooltip": {
-      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    "fieldName" : "thresholdValueKPI185",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
     }
   },
   {
-    "fieldName": "thresholdValueKPI186",
-    "fieldLabel": "Target KPI Value",
-    "fieldType": "number",
-    "section": "Project Level Threshold",
-    "tooltip": {
-      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    "fieldName" : "thresholdValueKPI186",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
     }
   },
   {
@@ -3796,19 +3796,19 @@
     "mandatory": true
   },
   {
-    "fieldName": "issueTypesToConsiderKpi113",
-    "fieldLabel": "Issue types to consider",
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "section": "Issue Types Mapping",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "All issue types used for epics or features"
+    "fieldName" : "issueTypesToConsiderKpi113",
+    "fieldLabel" : "Issue types to consider",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "section" : "Issue Types Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "All issue types used for epics or features"
     },
-    "fieldDisplayOrder": 1,
-    "sectionOrder": 1,
-    "mandatory": true,
-    "nodeSpecific": false
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 1,
+    "mandatory" : true,
+    "nodeSpecific" : false
   },
   {
     "fieldName": "closedIssueStatusToConsiderKpi113",
@@ -4349,18 +4349,18 @@
     }
   },
   {
-    "fieldName": "defectRejectionLabelsKPI37",
-    "fieldLabel": "Labels to filter issues in consideration",
-    "fieldType": "chips",
-    "section": "Custom Fields Mapping",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "Specify labels to identify and filter issues considered as rejected defects."
+    "fieldName" : "defectRejectionLabelsKPI37",
+    "fieldLabel" : "Labels to filter issues in consideration",
+    "fieldType" : "chips",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Specify labels to identify and filter issues considered as rejected defects."
     },
-    "fieldDisplayOrder": 2,
-    "sectionOrder": 2,
-    "mandatory": false,
-    "nodeSpecific": false
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 2,
+    "mandatory" : false,
+    "nodeSpecific" : false
   },
   {
     "fieldName": "jiraLabelsKPI120",
@@ -4372,19 +4372,19 @@
     }
   },
   {
-    "fieldName": "jiraIssueTypeNamesKPI187",
-    "fieldLabel": "Issue types to be included",
-    "placeHolderText": "Issue types to be included",
-    "fieldDisplayOrder": 1,
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "section": "Issue Types Mapping",
-    "sectionOrder": 1,
-    "tooltip": {
-      "definition": "All issue types used by your Jira project"
-    },
-    "mandatory": true
+  "fieldName": "jiraIssueTypeNamesKPI187",
+  "fieldLabel": "Issue types to be included",
+  "placeHolderText": "Issue types to be included",
+  "fieldDisplayOrder": 1,
+  "fieldType": "chips",
+  "fieldCategory": "Issue_Type",
+  "section": "Issue Types Mapping",
+  "sectionOrder": 1,
+  "tooltip": {
+    "definition": "All issue types used by your Jira project"
   },
+  "mandatory": true
+},
   {
     "fieldName": "jiraStatusKPI187",
     "fieldLabel": "Status/es before DoR",
@@ -4397,7 +4397,8 @@
       "definition": "Workflow statuses that does not belong to DOR, DOD and Live which indicate a work item has not yet been picked up in the sprint based on the Definition of Ready (DoR)"
     },
     "mandatory": true
-  },
+  }
+,
   {
     "fieldName": "jiraRefinementCriteriaKPI188",
     "fieldLabel": "Refinement criteria",
@@ -4573,149 +4574,5 @@
     "tooltip": {
       "definition": "Enter the workflow status to which a defect transitions when it is reopened."
     }
-  },
-  {
-    "fieldName": "jiraDefectSeverityKPI194",
-    "fieldLabel": "Defect Severity",
-    "fieldType": "radiobutton",
-    "section": "Custom Fields Mapping",
-    "fieldDisplayOrder": 1,
-    "sectionOrder": 3,
-    "mandatory": true,
-    "tooltip": {
-      "definition": "Custom field to consider for a defect severity."
-    },
-    "options": [
-      {
-        "label": "CustomField",
-        "value": "CustomField"
-      }
-    ],
-    "nestedFields": [
-      {
-        "fieldName": "jiraDefectSeverityByCustomFieldKPI194",
-        "fieldLabel": "Custom field to identify defect severity",
-        "placeHolderText": "Custom field to identify defect severity",
-        "fieldType": "text",
-        "fieldCategory": "fields",
-        "filterGroup": [
-          "CustomField"
-        ],
-        "tooltip": {
-          "definition": "Provide field name to identify a defect severity. Example: customfield_10500 or customfield_10103<hr>"
-        }
-      }
-    ],
-    "processorCommon": true
-  },
-  {
-    "fieldName": "jiraDefectCountlIssueTypeKPI194",
-    "fieldLabel": "Issue types with defect linkages",
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "toggleLabel": null,
-    "section": "Issue Types Mapping",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "All issue types that can have valid defect linkages",
-      "_class": "com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip"
-    },
-    "options": null,
-    "filterGroup": null,
-    "nestedFields": null,
-    "placeHolderText": null,
-    "fieldDisplayOrder": 1,
-    "toggleLabelLeft": null,
-    "toggleLabelRight": null,
-    "sectionOrder": 2,
-    "mandatory": true,
-    "readOnly": null,
-    "nodeSpecific": false
-  },
-  {
-    "fieldName": "jiraIssueTypeNamesKPI194",
-    "fieldLabel": "Issue types to be included",
-    "placeHolderText": "Issue types to be included",
-    "fieldDisplayOrder": 1,
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "section": "WorkFlow Status Mapping",
-    "sectionOrder": 1,
-    "tooltip": {
-      "definition": "All issue types used by your Jira project"
-    },
-    "mandatory": true
-  },
-  {
-    "fieldName": "resolutionTypeForRejectionKPI194",
-    "fieldLabel": "Resolution type to be excluded",
-    "fieldType": "chips",
-    "fieldCategory": null,
-    "toggleLabel": null,
-    "section": "WorkFlow Status Mapping",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "Resolution types for defects that can be excluded from Defect count by Severity calculation",
-      "_class": "com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip"
-    },
-    "options": null,
-    "filterGroup": null,
-    "nestedFields": null,
-    "placeHolderText": null,
-    "fieldDisplayOrder": 6,
-    "toggleLabelLeft": null,
-    "toggleLabelRight": null,
-    "sectionOrder": 4,
-    "mandatory": false,
-    "readOnly": null,
-    "nodeSpecific": false
-  },
-  {
-    "fieldName": "jiraDefectRejectionStatusKPI194",
-    "fieldLabel": "Status to identify rejected defects",
-    "fieldType": "text",
-    "fieldCategory": "workflow",
-    "toggleLabel": null,
-    "section": "WorkFlow Status Mapping",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "All workflow statuses used to reject defects.",
-      "_class": "com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip"
-    },
-    "options": null,
-    "filterGroup": null,
-    "nestedFields": null,
-    "placeHolderText": null,
-    "fieldDisplayOrder": 2,
-    "toggleLabelLeft": null,
-    "toggleLabelRight": null,
-    "sectionOrder": 4,
-    "mandatory": false,
-    "readOnly": null,
-    "nodeSpecific": false
-  },
-  {
-    "fieldName": "thresholdValueKPI194",
-    "fieldLabel": "Target KPI Value",
-    "fieldType": "number",
-    "fieldCategory": null,
-    "toggleLabel": null,
-    "section": "Project Level Threshold",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown",
-      "_class": "com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip"
-    },
-    "options": null,
-    "filterGroup": null,
-    "nestedFields": null,
-    "placeHolderText": null,
-    "fieldDisplayOrder": 1,
-    "toggleLabelLeft": null,
-    "toggleLabelRight": null,
-    "sectionOrder": 6,
-    "mandatory": false,
-    "readOnly": null,
-    "nodeSpecific": false
   }
 ]
