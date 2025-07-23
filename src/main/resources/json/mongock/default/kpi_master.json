@@ -3174,7 +3174,7 @@
     "showTrend": true,
     "kpiFilter": "dropdown",
     "isAdditionalFilterSupport": false,
-    "aggregationCriteria": "sum",
+    "aggregationCriteria": "average",
     "calculateMaturity": false,
     "lowerThresholdBG": "white",
     "upperThresholdBG": "red",
@@ -4350,6 +4350,7 @@
     "boxType": "3_column",
     "calculateMaturity": true,
     "isAggregationStacks": false,
+    "aggregationCriteria": "average",
     "kpiInfo": {
       "definition": "Cycle time helps ascertain time spent on each step of the complete issue lifecycle. It is being depicted in the visualization as 3 core cycles - Intake to DOR, DOR to DOD, DOD to Live",
       "details": [
