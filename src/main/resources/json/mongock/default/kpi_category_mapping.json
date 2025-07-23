@@ -294,7 +294,7 @@
   },
   {
     "kpiId" : "kpi194",
-    "categoryId" : "quality",
+    "categoryId" : "categoryTwo",
     "kpiOrder" : 7,
     "kanban" : false
   }
