@@ -28,6 +28,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
+
+
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
+import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
+import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.MDC;
@@ -44,10 +52,6 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceR;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.application.DataCount;
-import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
-import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
-import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 import com.publicissapient.kpidashboard.common.repository.application.KpiMasterRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
@@ -71,7 +75,8 @@ public class KpiIntegrationServiceImpl {
 
 	@Autowired
 	KpiMasterRepository kpiMasterRepository;
-
+	@Autowired
+	private OrganizationHierarchyRepository organizationHierarchyRepository;
 	@Autowired
 	private JiraServiceR jiraService;
 
@@ -168,14 +173,18 @@ public class KpiIntegrationServiceImpl {
 	 *            received kpi request
 	 */
 	public void setKpiRequest(KpiRequest kpiRequest) {
-		String[] hierarchyIdList = kpiRequest.getIds();
+		String[] hierarchyIdList = null;
+		List<String> externalIDs = kpiRequest.getExternalIDs();
+		if (CollectionUtils.isNotEmpty(externalIDs)) {
+			List<OrganizationHierarchy> orgHierarchyList = organizationHierarchyRepository.findByExternalIdIn(externalIDs);
+			hierarchyIdList = orgHierarchyList.stream().map(OrganizationHierarchy::getNodeId).toArray(String[]::new);
+		}
 		Optional<HierarchyLevel> optionalHierarchyLevel = hierarchyLevelService.getFullHierarchyLevels(false).stream()
 				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == kpiRequest.getLevel()).findFirst();
 		if (optionalHierarchyLevel.isPresent()) {
 			HierarchyLevel hierarchyLevel = optionalHierarchyLevel.get();
 			if (hierarchyIdList == null) {
-				hierarchyIdList = new String[] { kpiRequest.getHierarchyName().concat(Constant.UNDERSCORE)
-						.concat(hierarchyLevel.getHierarchyLevelId()) };
+				hierarchyIdList = getHierarchyIdList(kpiRequest, hierarchyLevel);
 			}
 			if (MapUtils.isEmpty(kpiRequest.getSelectedMap())) {
 				Map<String, List<String>> selectedMap = new HashMap<>();
@@ -187,6 +196,26 @@ public class KpiIntegrationServiceImpl {
 			kpiRequest.setLabel(hierarchyLevel.getHierarchyLevelId());
 			kpiRequest.setSprintIncluded(List.of(SPRINT_CLOSED));
 		}
+	}
+
+	private String[] getHierarchyIdList(KpiRequest kpiRequest, HierarchyLevel hierarchyLevel) {
+		String[] hierarchyIdList = null;
+		if (kpiRequest.getHierarchyName() != null) {
+			OrganizationHierarchy byNodeNameAndHierarchyLevelId = organizationHierarchyRepository
+					.findByNodeNameAndHierarchyLevelId(kpiRequest.getHierarchyName(),
+							hierarchyLevel.getHierarchyLevelId());
+			if (byNodeNameAndHierarchyLevelId != null && byNodeNameAndHierarchyLevelId.getNodeId() != null) {
+				String nodeId = byNodeNameAndHierarchyLevelId.getNodeId();
+				hierarchyIdList = new String[] { nodeId };
+			} else {
+				throw new IllegalArgumentException("No hierarchy data found for given name/level");
+			}
+		} else {
+			throw new IllegalArgumentException(
+					"valid external Id or hierarchy name not found in payload." + " Please maintain one of them");
+		}
+
+		return hierarchyIdList;
 	}
 
 	/**

@@ -104,12 +104,13 @@ public interface AccountHierarchyService<R, S> {
 				return new ProjectHierarchy(orgHierarchy.getNodeId(), orgHierarchy.getNodeName(),
 						orgHierarchy.getNodeDisplayName(), orgHierarchy.getHierarchyLevelId(),
 						orgHierarchy.getParentId(), orgHierarchy.getCreatedDate(), orgHierarchy.getModifiedDate(),
-						projectBasicId, orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy());
+						projectBasicId, orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy(),
+						orgHierarchy.getExternalId());
 			} else {
 				return new ProjectHierarchy(orgHierarchy.getNodeId(), orgHierarchy.getNodeName(),
 						orgHierarchy.getNodeDisplayName(), orgHierarchy.getHierarchyLevelId(),
 						orgHierarchy.getParentId(), orgHierarchy.getCreatedDate(), orgHierarchy.getModifiedDate(), null,
-						orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy());
+						orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy(), orgHierarchy.getExternalId());
 			}
 		}).forEach(configureHierarchies::add);
 		return configureHierarchies;
