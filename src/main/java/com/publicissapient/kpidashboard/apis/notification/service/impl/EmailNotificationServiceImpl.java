@@ -27,7 +27,6 @@ import com.publicissapient.kpidashboard.common.service.NotificationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -41,7 +40,6 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 	private final NotificationService notificationService;
 	private final CustomApiConfig customApiConfig;
 	private final CommonService commonService;
-	private final KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Override
 	public ServiceResponse sendEmail(String templateKey, String notificationSubjectKey, EmailRequestPayload request) {
@@ -53,8 +51,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 			String notificationSubject = getNotificationSubject(notificationSubjectKey);
 
 			notificationService.sendNotificationEvent(request.getRecipients(), customData, notificationSubject,
-					templateKey, customApiConfig.getKafkaMailTopic(), customApiConfig.isNotificationSwitch(),
-					kafkaTemplate, templateName, customApiConfig.isMailWithoutKafka());
+					customApiConfig.isNotificationSwitch(), templateName);
 		} catch (IllegalArgumentException e) {
 			log.error("Validation error: {}", e.getMessage());
 			return new ServiceResponse(false, e.getMessage(), null);
