@@ -226,6 +226,76 @@ public abstract class ToolsKPIService<R, S> {
 		return node.getValue();
 	}
 
+
+	/**
+	 * Calculates the aggregated KPI values for nodes in a hierarchical structure in
+	 * a bottom-up fashion.
+	 *
+	 * @param node
+	 *            The current node being processed.
+	 * @param nodeWiseKPIValue
+	 *            A map containing the KPI values for each node, keyed by a pair of
+	 *            group name and node ID.
+	 * @param kpiCode
+	 *            The KPI code representing the type of KPI being processed.
+	 * @return A map of aggregated KPI values grouped by filter keys.
+	 */
+	public Map<String, List<DataCount>> calculateAggregatedMultipleValueGroupMap(Node node,
+			Map<Pair<String, String>, Node> nodeWiseKPIValue, KPICode kpiCode) {
+
+		String kpiName = kpiCode.name();
+		String kpiId = kpiCode.getKpiId();
+
+		if (node == null) {
+			return new HashMap<>();
+		}
+
+		if (!(node.getValue() instanceof HashMap) && null != node.getValue() && (int) node.getValue() == 0) {
+			Map<String, Double> defaultMap = new HashMap<>();
+			defaultMap.put(Constant.DEFAULT, 0.0d);
+			node.setValue(defaultMap);
+		}
+
+		List<Node> children = node.getChildren();
+		if (CollectionUtils.isEmpty(children)) {
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+			return (Map<String, List<DataCount>>) node.getValue();
+		}
+
+		List<Map<String, List<DataCount>>> aggregatedValueList = new ArrayList<>();
+		for (Node child : children) {
+			Map<String, List<DataCount>> aggLeafValue = calculateAggregatedMultipleValueGroupMap(child, nodeWiseKPIValue,
+					kpiCode);
+			if (MapUtils.isNotEmpty(aggLeafValue)) {
+				aggregatedValueList.add(aggLeafValue);
+			}
+		}
+
+		Map<String, List<DataCount>> aggMap = new HashMap<>();
+		for (Map<String, List<DataCount>> capMap : aggregatedValueList) {
+			for (Map.Entry<String, List<DataCount>> dataMap : capMap.entrySet()) {
+				if (!(Constant.DEFAULT.equals(dataMap.getKey()))) {
+					aggMap.computeIfAbsent(dataMap.getKey(), k -> new ArrayList<>()).addAll(dataMap.getValue());
+				}
+			}
+		}
+
+		Map<String, List<DataCount>> kpiFilterWiseDc = new HashMap<>();
+		aggMap.forEach((key, value) -> {
+			List<DataCount> aggData = calculateAggregatedMultipleValueGroup(kpiName, value, node, kpiId);
+			kpiFilterWiseDc.put(key, aggData);
+		});
+
+		kpiFilterWiseDc.remove(Constant.DEFAULT);
+		if (MapUtils.isNotEmpty(kpiFilterWiseDc)) {
+			node.setValue(kpiFilterWiseDc);
+		}
+
+		nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+
+		return (Map<String, List<DataCount>>) node.getValue();
+	}
+
 	/**
 	 * This method set Data count
 	 *
@@ -253,6 +323,8 @@ public abstract class ToolsKPIService<R, S> {
 				dataCount.setHoverValue(dc.getHoverValue());
 				dataCount.setDate(dc.getDate() == null ? kpiName : dc.getDate());
 				dataCount.setDataValue(dc.getDataValue());
+				dataCount.setKpiGroup(dc.getKpiGroup());
+				dataCount.setSubFilter(dc.getSubFilter());
 				aggregatedDataCount.add(dataCount);
 			});
 		}
@@ -343,6 +415,8 @@ public abstract class ToolsKPIService<R, S> {
 				List<String> sprintIds = new ArrayList<>();
 				List<String> sprintNames = new ArrayList<>();
 				List<String> projectNames = new ArrayList<>();
+				String kpiGroup = null;
+				String subFilter = null;
 				String hoverIdentifier = null;
 				Map<String, List<DataValue>> valueMultiLine = new HashMap<>();
 				for (DataCount dc : indexWiseValuesList.get(i)) {
@@ -354,12 +428,20 @@ public abstract class ToolsKPIService<R, S> {
 					projectName.append(dc.getSProjectName());
 					hoverIdentifier = dc.getDate();
 					collectAggregatedDataBasedOnLineType(valueMultiLine, dc);
+					kpiGroup = dc.getKpiGroup();
+					subFilter = dc.getSubFilter();
 				}
-				setDataCountValueBasedOnLineType(kpiId, dataCount, valueMultiLine);
+				if(kpiName.equalsIgnoreCase(KPICode.CYCLE_TIME.name()))
+					setDataCountOnLineTypeForWeightedAgg(dataCount, valueMultiLine);
+				else
+					setDataCountValueBasedOnLineType(kpiId, dataCount, valueMultiLine);
 				dataCount.setSprintIds(sprintIds);
 				dataCount.setSprintNames(sprintNames);
 				dataCount.setProjectNames(projectNames);
 				dataCount.setSProjectName(node.getName());
+				dataCount.setKpiGroup(kpiGroup);
+				dataCount.setSubFilter(subFilter);
+
 				dataCount.setDate(hoverIdentifier == null ? howerKpiName : hoverIdentifier);
 				aggregatedDataCount.add(i, dataCount);
 			}
@@ -399,6 +481,60 @@ public abstract class ToolsKPIService<R, S> {
 			}
 			dataCount.setDataValue(aggregatedDataValueList);
 		}
+	}
+
+	/**
+	 * Sets the data count for weighted aggregation based on line type.
+	 * This method calculates a weighted average using lead time and issue count,
+	 * and aggregates data values for each line type in the provided map.
+	 *
+	 * @param dataCount The `DataCount` object to update with aggregated data values.
+	 * @param valueMultiLine A map containing lists of `DataValue` objects, grouped by line type.
+	 *                       Expected keys include "d" (lead time) and "issues" (issue count).
+	 */
+	private void setDataCountOnLineTypeForWeightedAgg(DataCount dataCount,
+			Map<String, List<DataValue>> valueMultiLine) {
+		if (MapUtils.isNotEmpty(valueMultiLine)) {
+			List<DataValue> aggregatedDataValueList = new ArrayList<>();
+			long totalLeadTime = 0;
+			long totalIssueCount = 0;
+			for (int i = 0; i < valueMultiLine.get("d").size(); i++) {
+				totalLeadTime += ((long) valueMultiLine.get("d").get(i).getValue())
+						* ((long) valueMultiLine.get("issues").get(i).getValue());
+				totalIssueCount += (long) valueMultiLine.get("issues").get(i).getValue();
+
+			}
+			long weightedAvg = totalIssueCount == 0 ? 0
+					: BigDecimal.valueOf(totalLeadTime)
+							.divide(BigDecimal.valueOf(totalIssueCount), 2, RoundingMode.HALF_UP).longValue();
+			for (Map.Entry<String, List<DataValue>> entry : valueMultiLine.entrySet()) {
+				DataValue aggregatedDataValue = getDataValue(entry, weightedAvg, totalIssueCount);
+				aggregatedDataValueList.add(aggregatedDataValue);
+			}
+			dataCount.setDataValue(aggregatedDataValueList);
+		}
+	}
+
+	private DataValue getDataValue(Map.Entry<String, List<DataValue>> entry, long weightedAvg, long totalIssueCount) {
+		DataValue aggregatedDataValue = new DataValue();
+		Map<String, Object> aggregatedHoverValue = new HashMap<>();
+		long aggregatedValue;
+		String lineType = entry.getKey();
+
+		List<DataValue> dataValueList = entry.getValue();
+		dataValueList.forEach(
+				dataValue -> collectHoverDataBaseOnLineType(dataValue.getHoverValue(), aggregatedHoverValue));
+		if (lineType.equalsIgnoreCase("d")) {
+			aggregatedValue = weightedAvg;
+		} else {
+			aggregatedValue = totalIssueCount;
+		}
+		aggregatedDataValue.setData(Long.toString(aggregatedValue));
+		aggregatedDataValue.setValue(aggregatedValue);
+		aggregatedDataValue.setHoverValue(aggregatedHoverValue);
+		aggregatedDataValue.setLineType(lineType);
+		aggregatedDataValue.setName(lineType);
+		return aggregatedDataValue;
 	}
 
 	/**
@@ -970,7 +1106,7 @@ public abstract class ToolsKPIService<R, S> {
 		} else if (kpiName.equals(KPICode.LEAD_TIME.name())) {
 			// the maturity has to be gven for < 3 Months value
 			List<DataCount> lessThan3Month = value.stream()
-					.filter(dataCount -> "< 3 Months".equalsIgnoreCase(dataCount.getsSprintID())).collect(Collectors.toList());
+					.filter(dataCount -> "< 3 Months".equalsIgnoreCase(dataCount.getDate())).toList();
 			if (CollectionUtils.isNotEmpty(lessThan3Month)) {
 				aggValue = (R) lessThan3Month.get(0).getValue();
 			}
