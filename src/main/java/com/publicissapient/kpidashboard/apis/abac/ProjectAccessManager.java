@@ -44,7 +44,6 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
@@ -140,9 +139,6 @@ public class ProjectAccessManager {
 
 	@Autowired
 	private NotificationService notificationService;
-
-	@Autowired
-	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Autowired
 	private OrganizationHierarchyService organizationHierarchyService;
@@ -457,11 +453,10 @@ public class ProjectAccessManager {
 			}
 			Map<String, String> customData = createCustomData(accessRequest, serverPath);
 			String subject = notificationSubjects.get(NOTIFICATION_SUBJECT_KEY);
-			log.info("Notification message sent to kafka with key : {}", NOTIFICATION_KEY);
+			log.info("Notification message sent with key : {}", NOTIFICATION_KEY);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
-			notificationService.sendNotificationEvent(emailAddresses, customData, subject, NOTIFICATION_KEY,
-					customApiConfig.getKafkaMailTopic(), customApiConfig.isNotificationSwitch(), kafkaTemplate,
-					templateKey, customApiConfig.isMailWithoutKafka());
+			notificationService.sendNotificationEvent(emailAddresses, customData, subject,
+					customApiConfig.isNotificationSwitch(), templateKey);
 		} else {
 			log.error("Notification Event not sent : No email address found associated with Superadmin role "
 					+ "or Property - notificationSubject.accessRequest not set in property file ");
