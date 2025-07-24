@@ -18,12 +18,24 @@
 
 package com.publicissapient.kpidashboard.apis.feedback.service;
 
+import static com.mongodb.assertions.Assertions.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,10 +135,89 @@ public class FeedbackServiceImplTest {
 		userInfo.setId(new ObjectId("61e4f7852747353d4405c762"));
 		userInfo.setAuthorities(Lists.newArrayList());
 		userInfo.setEmailAddress("xyz@example.com");
-		when(userInfoService.getUserInfo(Mockito.anyString())).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(anyString())).thenReturn(userInfo);
 		when(globalConfigRepository.findAll()).thenReturn(globalConfigs);
 		String loggedUserName = "testDummyUser";
 		boolean response = feedbackServiceImpl.submitFeedback(feedbackSubmitDTO, loggedUserName);
 		assertThat("status: ", response, equalTo(true));
+	}
+
+
+
+	@Test
+	public void testSubmitFeedback_Success() throws UnknownHostException {
+		// Arrange
+		FeedbackSubmitDTO feedback = new FeedbackSubmitDTO();
+		feedback.setFeedback("Great service!");
+		String loggedUserName = "testUser";
+		List<GlobalConfig> globalConfigs = Collections.singletonList(new GlobalConfig());
+		EmailServerDetail emailServerDetail = new EmailServerDetail();
+		emailServerDetail.setFeedbackEmailIds(Arrays.asList("feedback@example.com"));
+		globalConfigs.get(0).setEmailServerDetail(emailServerDetail);
+
+		when(globalConfigRepository.findAll()).thenReturn(globalConfigs);
+		when(customApiConfig.getFeedbackEmailSubject()).thenReturn("Feedback Subject");
+		when(commonService.getApiHost()).thenReturn("http://localhost");
+		when(userInfoService.getUserInfo(loggedUserName)).thenReturn(new UserInfo());
+
+		// Act
+		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+
+		// Assert
+		assertTrue(result);
+	}
+
+	@Test
+	public void testSubmitFeedback_NoEmailServerDetail() {
+		// Arrange
+		FeedbackSubmitDTO feedback = new FeedbackSubmitDTO();
+		feedback.setFeedback("Great service!");
+		String loggedUserName = "testUser";
+
+		when(globalConfigRepository.findAll()).thenReturn(Collections.emptyList());
+
+		// Act
+		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+
+		// Assert
+		assertFalse(result);
+		verify(notificationService, never()).sendNotificationEvent(anyList(), anyMap(), anyString(), anyBoolean(), anyString());
+	}
+
+	@Test
+	public void testSubmitFeedback_EmptyFeedback() {
+		// Arrange
+		FeedbackSubmitDTO feedback = new FeedbackSubmitDTO();
+		feedback.setFeedback("");
+		String loggedUserName = "testUser";
+
+		// Act
+		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+
+		// Assert
+		assertFalse(result);
+		verify(notificationService, never()).sendNotificationEvent(anyList(), anyMap(), anyString(), anyBoolean(), anyString());
+	}
+
+	@Test
+	public void testSubmitFeedback_UnknownHostException() throws UnknownHostException {
+		// Arrange
+		FeedbackSubmitDTO feedback = new FeedbackSubmitDTO();
+		feedback.setFeedback("Great service!");
+		String loggedUserName = "testUser";
+		List<GlobalConfig> globalConfigs = Collections.singletonList(new GlobalConfig());
+		EmailServerDetail emailServerDetail = new EmailServerDetail();
+		emailServerDetail.setFeedbackEmailIds(Arrays.asList("feedback@example.com"));
+		globalConfigs.get(0).setEmailServerDetail(emailServerDetail);
+
+		when(globalConfigRepository.findAll()).thenReturn(globalConfigs);
+		when(customApiConfig.getFeedbackEmailSubject()).thenReturn("Feedback Subject");
+		when(commonService.getApiHost()).thenThrow(new UnknownHostException());
+
+		// Act
+		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+
+		// Assert
+		assertFalse(result);
 	}
 }

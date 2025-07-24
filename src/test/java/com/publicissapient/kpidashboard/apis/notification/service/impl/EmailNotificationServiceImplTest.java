@@ -30,7 +30,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,9 +55,6 @@ class EmailNotificationServiceImplTest {
 	private CustomApiConfig customApiConfig;
 	@Mock
 	private CommonService commonService;
-
-	@Mock
-	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	private EmailRequestPayload createValidPayload() {
 		EmailRequestPayload payload = new EmailRequestPayload();
@@ -104,9 +100,7 @@ class EmailNotificationServiceImplTest {
 
 		when(customApiConfig.getMailTemplate()).thenReturn(mailTemplateMap);
 		when(customApiConfig.getNotificationSubject()).thenReturn(subjectMap);
-		when(customApiConfig.getKafkaMailTopic()).thenReturn("testTopic");
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
 		final Map<String, String> customData = getTemplateDataMap(payload);
 
@@ -116,8 +110,8 @@ class EmailNotificationServiceImplTest {
 					.thenReturn(new HashSet<>());
 			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 
-			verify(notificationService).sendNotificationEvent(eq(payload.getRecipients()), eq(customData), eq(subject),
-					eq(templateKey), eq("testTopic"), eq(true), eq(kafkaTemplate), eq(templateName), eq(false));
+			verify(notificationService).sendNotificationEvent(eq(payload.getRecipients()), eq(customData), eq(subject)
+					, eq(true), eq(templateName));
 			assertTrue(response.getSuccess());
 			assertEquals("Email sent successfully.", response.getMessage());
 		}
@@ -180,9 +174,7 @@ class EmailNotificationServiceImplTest {
 
 		when(customApiConfig.getMailTemplate()).thenReturn(mailTemplateMap);
 		when(customApiConfig.getNotificationSubject()).thenReturn(subjectMap);
-		when(customApiConfig.getKafkaMailTopic()).thenReturn("testTopic");
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
-		when(customApiConfig.isMailWithoutKafka()).thenReturn(false);
 
 		final Map<String, String> customData = getTemplateDataMap(payload);
 
@@ -190,9 +182,9 @@ class EmailNotificationServiceImplTest {
 			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
 			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
-			doThrow(new RuntimeException("Kafka failure")).when(notificationService).sendNotificationEvent(
-					Collections.singletonList(anyString()), anyMap(), anyString(), anyString(), anyString(),
-					anyBoolean(), any(), anyString(), anyBoolean());
+			doThrow(new RuntimeException("Notification failure")).when(notificationService).sendNotificationEvent(
+					Collections.singletonList(anyString()), anyMap(), anyString(),
+					anyBoolean(),  anyString());
 
 			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 			assertFalse(response.getSuccess());
