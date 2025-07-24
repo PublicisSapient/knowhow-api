@@ -431,7 +431,10 @@ public abstract class ToolsKPIService<R, S> {
 					kpiGroup = dc.getKpiGroup();
 					subFilter = dc.getSubFilter();
 				}
-				setDataCountValueBasedOnLineType(kpiId, dataCount, valueMultiLine);
+				if(kpiName.equalsIgnoreCase(KPICode.CYCLE_TIME.name()))
+					setDataCountOnLineTypeForWeightedAgg(dataCount, valueMultiLine);
+				else
+					setDataCountValueBasedOnLineType(kpiId, dataCount, valueMultiLine);
 				dataCount.setSprintIds(sprintIds);
 				dataCount.setSprintNames(sprintNames);
 				dataCount.setProjectNames(projectNames);
@@ -478,6 +481,60 @@ public abstract class ToolsKPIService<R, S> {
 			}
 			dataCount.setDataValue(aggregatedDataValueList);
 		}
+	}
+
+	/**
+	 * Sets the data count for weighted aggregation based on line type.
+	 * This method calculates a weighted average using lead time and issue count,
+	 * and aggregates data values for each line type in the provided map.
+	 *
+	 * @param dataCount The `DataCount` object to update with aggregated data values.
+	 * @param valueMultiLine A map containing lists of `DataValue` objects, grouped by line type.
+	 *                       Expected keys include "d" (lead time) and "issues" (issue count).
+	 */
+	private void setDataCountOnLineTypeForWeightedAgg(DataCount dataCount,
+			Map<String, List<DataValue>> valueMultiLine) {
+		if (MapUtils.isNotEmpty(valueMultiLine)) {
+			List<DataValue> aggregatedDataValueList = new ArrayList<>();
+			long totalLeadTime = 0;
+			long totalIssueCount = 0;
+			for (int i = 0; i < valueMultiLine.get("d").size(); i++) {
+				totalLeadTime += ((long) valueMultiLine.get("d").get(i).getValue())
+						* ((long) valueMultiLine.get("issues").get(i).getValue());
+				totalIssueCount += (long) valueMultiLine.get("issues").get(i).getValue();
+
+			}
+			long weightedAvg = totalIssueCount == 0 ? 0
+					: BigDecimal.valueOf(totalLeadTime)
+							.divide(BigDecimal.valueOf(totalIssueCount), 2, RoundingMode.HALF_UP).longValue();
+			for (Map.Entry<String, List<DataValue>> entry : valueMultiLine.entrySet()) {
+				DataValue aggregatedDataValue = getDataValue(entry, weightedAvg, totalIssueCount);
+				aggregatedDataValueList.add(aggregatedDataValue);
+			}
+			dataCount.setDataValue(aggregatedDataValueList);
+		}
+	}
+
+	private DataValue getDataValue(Map.Entry<String, List<DataValue>> entry, long weightedAvg, long totalIssueCount) {
+		DataValue aggregatedDataValue = new DataValue();
+		Map<String, Object> aggregatedHoverValue = new HashMap<>();
+		long aggregatedValue;
+		String lineType = entry.getKey();
+
+		List<DataValue> dataValueList = entry.getValue();
+		dataValueList.forEach(
+				dataValue -> collectHoverDataBaseOnLineType(dataValue.getHoverValue(), aggregatedHoverValue));
+		if (lineType.equalsIgnoreCase("d")) {
+			aggregatedValue = weightedAvg;
+		} else {
+			aggregatedValue = totalIssueCount;
+		}
+		aggregatedDataValue.setData(Long.toString(aggregatedValue));
+		aggregatedDataValue.setValue(aggregatedValue);
+		aggregatedDataValue.setHoverValue(aggregatedHoverValue);
+		aggregatedDataValue.setLineType(lineType);
+		aggregatedDataValue.setName(lineType);
+		return aggregatedDataValue;
 	}
 
 	/**
