@@ -1,0 +1,116 @@
+################################################################################
+# Copyright 2014 CapitalOne, LLC.
+# Further development Copyright 2022 Sapient Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License
+#
+##################################################################################
+
+# Configuration for dashboard health monitoring
+dashboard:
+  # Defines the types of dashboards (e.g., scrum, kanban) and their respective boards
+  types:
+    scrum:
+      boards:
+        categoryOne:
+          apis:
+            - "/jira/kpi"
+            - "/jenkins/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        categoryTwo:
+          apis:
+            - "/jira/kpi"
+            - "/sonar/kpi"
+            - "/zypher/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        categoryThree:
+          apis:
+            - "/jira/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        iteration:
+          apis:
+            - "/jira/nonTrend/kpi"
+            - "/processor/tracelog"
+        developer:
+          apis:
+            - "/bitbucket/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        dora:
+          apis:
+            - "/jira/kpi"
+            - "/jenkins/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        release:
+          apis:
+            - "/jira/nonTrend/kpi"
+            - "/processor/tracelog"
+        backlog:
+          apis:
+            - "/jira/nonTrend/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        maturity:
+          apis:
+            - "/jira/kpi"
+            - "/sonar/kpi"
+            - "/zypher/kpi"
+            - "/jenkins/kpi"
+            - "/processor/tracelog"
+
+    kanban:
+      boards:
+        categoryOne:
+          apis:
+            - "/jirakanban/kpi"
+            - "/jenkinskanban/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        categoryTwo:
+          apis:
+            - "/jirakanban/kpi"
+            - "/sonarkanban/kpi"
+            - "/zypherkanban/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        categoryThree:
+          apis:
+            - "/jirakanban/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        developer:
+          apis:
+            - "/bitbucketkanban/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        dora:
+          apis:
+            - "/jenkinskanban/kpi"
+            - "/processor/tracelog"
+            - "/comments/getCommentCount"
+        maturity:
+          apis:
+            - "/jirakanban/kpi"
+            - "/sonarkanban/kpi"
+            - "/zypherkanban/kpi"
+            - "/jenkinskanban/kpi"
+            - "/processor/tracelog"
+
+  # Maximum allowed API error rate (%) for health checks
+  maxApiErrorThreshold: 20.0
+  # Base path for dashboard health related API endpoints
+  healthApiBasePath: /health/dashboard
