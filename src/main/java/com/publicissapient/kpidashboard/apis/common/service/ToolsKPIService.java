@@ -506,7 +506,7 @@ public abstract class ToolsKPIService<R, S> {
 			}
 			long weightedAvg = totalIssueCount == 0 ? 0
 					: BigDecimal.valueOf(totalLeadTime)
-							.divide(BigDecimal.valueOf(totalIssueCount), 2, RoundingMode.HALF_UP).longValue();
+							.divide(BigDecimal.valueOf(totalIssueCount), 0, RoundingMode.HALF_UP).longValueExact();
 			for (Map.Entry<String, List<DataValue>> entry : valueMultiLine.entrySet()) {
 				DataValue aggregatedDataValue = getDataValue(entry, weightedAvg, totalIssueCount);
 				aggregatedDataValueList.add(aggregatedDataValue);
