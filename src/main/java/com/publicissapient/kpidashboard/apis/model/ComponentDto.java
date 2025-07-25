@@ -15,8 +15,10 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.management.dto;
+package com.publicissapient.kpidashboard.apis.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +28,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LinkDto {
-	private String href;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ComponentDto {
+	private String status;
+	private double max;
+	private int count;
+	private double totalTime;
+	@JsonProperty("_links")
+	private LinksDto links;
 }

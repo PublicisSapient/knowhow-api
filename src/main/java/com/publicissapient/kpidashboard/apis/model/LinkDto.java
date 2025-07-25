@@ -15,21 +15,17 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.management.dto;
+package com.publicissapient.kpidashboard.apis.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class DetailsDto {
-	private List<ApiDetailDto> apis;
+public class LinkDto {
+	private String href;
 }

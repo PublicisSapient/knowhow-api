@@ -17,8 +17,8 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
-import com.publicissapient.kpidashboard.apis.management.configs.DashboardConfig;
-import com.publicissapient.kpidashboard.apis.management.dto.ApiDetailDto;
+import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -35,7 +35,6 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

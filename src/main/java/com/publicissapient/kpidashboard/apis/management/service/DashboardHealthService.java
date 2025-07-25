@@ -17,7 +17,7 @@
 
 package com.publicissapient.kpidashboard.apis.management.service;
 
-import com.publicissapient.kpidashboard.apis.management.dto.HealthResponseDto;
+import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
 
 public interface DashboardHealthService {
 

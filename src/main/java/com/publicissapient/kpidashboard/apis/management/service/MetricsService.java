@@ -17,7 +17,7 @@
 
 package com.publicissapient.kpidashboard.apis.management.service;
 
-import com.publicissapient.kpidashboard.apis.management.dto.ApiDetailDto;
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
 
 import java.util.List;
 

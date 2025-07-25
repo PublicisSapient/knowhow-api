@@ -15,23 +15,21 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.management.dto;
+package com.publicissapient.kpidashboard.apis.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApiDetailDto {
-	private String name;
-	private String status;
-	private double max;
-	private int count;
-	private double totalTime;
-	private double errorRate;
-	private double errorThreshold;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class DetailsDto {
+	private List<ApiDetailDto> apis;
 }

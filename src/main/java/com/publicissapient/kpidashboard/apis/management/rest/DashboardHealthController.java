@@ -17,7 +17,7 @@
 
 package com.publicissapient.kpidashboard.apis.management.rest;
 
-import com.publicissapient.kpidashboard.apis.management.dto.HealthResponseDto;
+import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
 import com.publicissapient.kpidashboard.apis.management.service.DashboardHealthService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import io.swagger.v3.oas.annotations.Operation;
