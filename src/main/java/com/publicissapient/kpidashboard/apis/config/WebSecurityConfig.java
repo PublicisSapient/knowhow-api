@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
-import com.publicissapient.kpidashboard.apis.management.configs.DashboardConfig;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

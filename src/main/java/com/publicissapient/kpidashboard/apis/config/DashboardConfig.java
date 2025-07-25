@@ -15,7 +15,7 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.management.configs;
+package com.publicissapient.kpidashboard.apis.config;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;

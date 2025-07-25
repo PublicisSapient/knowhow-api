@@ -17,9 +17,9 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
-import com.publicissapient.kpidashboard.apis.management.configs.DashboardConfig;
-import com.publicissapient.kpidashboard.apis.management.dto.ApiDetailDto;
-import com.publicissapient.kpidashboard.apis.management.dto.HealthResponseDto;
+import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
+import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
 import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

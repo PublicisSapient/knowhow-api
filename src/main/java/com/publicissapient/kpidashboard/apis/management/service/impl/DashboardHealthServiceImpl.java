@@ -17,13 +17,13 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
-import com.publicissapient.kpidashboard.apis.management.configs.DashboardConfig;
-import com.publicissapient.kpidashboard.apis.management.dto.ApiDetailDto;
-import com.publicissapient.kpidashboard.apis.management.dto.ComponentDto;
-import com.publicissapient.kpidashboard.apis.management.dto.DetailsDto;
-import com.publicissapient.kpidashboard.apis.management.dto.HealthResponseDto;
-import com.publicissapient.kpidashboard.apis.management.dto.LinkDto;
-import com.publicissapient.kpidashboard.apis.management.dto.LinksDto;
+import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
+import com.publicissapient.kpidashboard.apis.model.ComponentDto;
+import com.publicissapient.kpidashboard.apis.model.DetailsDto;
+import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
+import com.publicissapient.kpidashboard.apis.model.LinkDto;
+import com.publicissapient.kpidashboard.apis.model.LinksDto;
 import com.publicissapient.kpidashboard.apis.management.service.DashboardHealthService;
 import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
 import lombok.AllArgsConstructor;
