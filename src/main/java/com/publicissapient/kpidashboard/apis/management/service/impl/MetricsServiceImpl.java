@@ -59,7 +59,7 @@ public class MetricsServiceImpl implements MetricsService {
 			return timerOpt.map(timer -> ApiDetailDto.builder().name(apiPath)
 					.status(isApiHealthy(apiPath) ? STATUS_UP : STATUS_DOWN).max(timer.max(TimeUnit.SECONDS))
 					.count((int) timer.count()).totalTime(timer.totalTime(TimeUnit.SECONDS))
-					.errorRate(getErrorRate(apiPath)).threshold(dashboardConfig.getMaxApiErrorThreshold()).build())
+					.errorRate(getErrorRate(apiPath)).errorThreshold(dashboardConfig.getMaxApiErrorThreshold()).build())
 					.orElseGet(() -> {
 						log.warn("No metrics found for API: {}", apiPath);
 						return buildDefaultApiDetail(apiPath, STATUS_UP);
@@ -152,7 +152,8 @@ public class MetricsServiceImpl implements MetricsService {
 	 * @return default API detail with status and zeroed metrics
 	 */
 	private ApiDetailDto buildDefaultApiDetail(String apiPath, String status) {
-		return ApiDetailDto.builder().name(apiPath).status(status).max(0).count(0).totalTime(0).build();
+		return ApiDetailDto.builder().name(apiPath).status(status).max(0).count(0).totalTime(0).errorRate(0)
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold()).build();
 	}
 
 }
