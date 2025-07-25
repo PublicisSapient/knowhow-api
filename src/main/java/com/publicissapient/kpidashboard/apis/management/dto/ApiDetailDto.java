@@ -32,4 +32,6 @@ public class ApiDetailDto {
 	private double max;
 	private int count;
 	private double totalTime;
+	private double errorRate;
+	private double threshold;
 }
