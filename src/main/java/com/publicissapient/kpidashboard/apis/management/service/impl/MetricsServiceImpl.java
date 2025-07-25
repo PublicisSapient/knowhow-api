@@ -56,10 +56,10 @@ public class MetricsServiceImpl implements MetricsService {
 		try {
 			Optional<Timer> timerOpt = getTimer(apiPath);
 
-			return timerOpt
-					.map(timer -> ApiDetailDto.builder().name(apiPath)
-							.status(isApiHealthy(apiPath) ? STATUS_UP : STATUS_DOWN).max(timer.max(TimeUnit.SECONDS))
-							.count((int) timer.count()).totalTime(timer.totalTime(TimeUnit.SECONDS)).build())
+			return timerOpt.map(timer -> ApiDetailDto.builder().name(apiPath)
+					.status(isApiHealthy(apiPath) ? STATUS_UP : STATUS_DOWN).max(timer.max(TimeUnit.SECONDS))
+					.count((int) timer.count()).totalTime(timer.totalTime(TimeUnit.SECONDS))
+					.errorRate(getErrorRate(apiPath)).threshold(dashboardConfig.getMaxApiErrorThreshold()).build())
 					.orElseGet(() -> {
 						log.warn("No metrics found for API: {}", apiPath);
 						return buildDefaultApiDetail(apiPath, STATUS_UP);
