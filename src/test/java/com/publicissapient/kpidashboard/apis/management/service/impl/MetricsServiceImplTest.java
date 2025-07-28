@@ -17,33 +17,64 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.metrics.MetricsEndpoint;
+
 import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
 import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
+
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.Statistic;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.search.Search;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import java.lang.reflect.Method;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class MetricsServiceImplTest {
+public class MetricsServiceImplTest {
 
-	@InjectMocks
-	private MetricsServiceImpl metricsService;
+	private static final String TEST_API_PATH = "/api/test";
+	private static final String METRIC_NAME = "http.server.requests";
+	private static final String URI_TAG = "uri";
+	private static final String STATUS_TAG = "status";
+	private static final String STATUS_UP = Status.UP.getCode();
+	private static final String STATUS_DOWN = Status.DOWN.getCode();
+	private static final double ERROR_THRESHOLD = 5.0;
 
 	@Mock
 	private MeterRegistry meterRegistry;
@@ -52,254 +83,326 @@ class MetricsServiceImplTest {
 	private DashboardConfig dashboardConfig;
 
 	@Mock
-	private Timer timer;
+	private MetricsEndpoint metricsEndpoint;
+
+	@Mock
+	private Search search;
+
+	@InjectMocks
+	private MetricsServiceImpl metricsService;
+
+	@BeforeEach
+	public void setup() {
+		Mockito.lenient().when(dashboardConfig.getMaxApiErrorThreshold()).thenReturn(ERROR_THRESHOLD);
+	}
 
 	@Test
-	void getApiMetrics_ReturnsDefaultApiDetailDto_WhenTimerNotFound() {
-		try (var searchMockedStatic = mockStatic(Search.class)) {
-			Search search = mock(Search.class);
-			when(Search.in(meterRegistry)).thenReturn(search);
-			when(search.name("http.server.requests")).thenReturn(search);
-			when(search.tag("uri", "/api/none")).thenReturn(search);
-			when(search.timer()).thenReturn(null);
+	@DisplayName("Test getApiMetrics with valid metrics")
+	public void testGetApiMetricsWithValidMetrics() {
+		// Setup MetricDescriptor with measurements
+		MetricsEndpoint.MetricDescriptor metricDescriptor = mockMetricDescriptor(10.0, 100.0, 500.0);
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenReturn(metricDescriptor);
 
-			ApiDetailDto result = metricsService.getApiMetrics("/api/none");
+		// Setup meters for error rate calculation
+		Collection<Meter> meters = createMeters(false);
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(URI_TAG, TEST_API_PATH)).thenReturn(search);
+		when(search.meters()).thenReturn(meters);
 
-			assertEquals("/api/none", result.getName());
-			assertEquals("UP", result.getStatus());
-			assertEquals(0, result.getMax());
-			assertEquals(0, result.getCount());
-			assertEquals(0, result.getTotalTime());
+		// Execute
+		ApiDetailDto result = metricsService.getApiMetrics(TEST_API_PATH);
+
+		// Verify
+		assertNotNull(result);
+		assertEquals(TEST_API_PATH, result.getName());
+		assertEquals(STATUS_UP, result.getStatus());
+		assertEquals(10.0, result.getMax());
+		assertEquals(100, result.getCount());
+		assertEquals(500.0, result.getTotalTime());
+		assertEquals(0.0, result.getErrorRate());
+		assertEquals(ERROR_THRESHOLD, result.getErrorThreshold());
+
+		// Verify interactions
+		verify(metricsEndpoint).metric(eq(METRIC_NAME), any());
+		verify(meterRegistry).find(METRIC_NAME);
+	}
+
+	@Test
+	@DisplayName("Test getApiMetrics with null MetricDescriptor")
+	public void testGetApiMetricsWithNullMetricDescriptor() {
+		// Setup
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenReturn(null);
+
+		// Execute
+		ApiDetailDto result = metricsService.getApiMetrics(TEST_API_PATH);
+
+		// Verify
+		assertNotNull(result);
+		assertEquals(TEST_API_PATH, result.getName());
+		assertEquals(STATUS_UP, result.getStatus());
+		assertEquals(0.0, result.getMax());
+		assertEquals(0, result.getCount());
+		assertEquals(0.0, result.getTotalTime());
+		assertEquals(0.0, result.getErrorRate());
+		assertEquals(ERROR_THRESHOLD, result.getErrorThreshold());
+	}
+
+	@Test
+	@DisplayName("Test getApiMetrics with empty measurements")
+	public void testGetApiMetricsWithEmptyMeasurements() {
+		// Setup
+		MetricsEndpoint.MetricDescriptor metricDescriptor = mockEmptyMetricDescriptor();
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenReturn(metricDescriptor);
+
+		// Execute
+		ApiDetailDto result = metricsService.getApiMetrics(TEST_API_PATH);
+
+		// Verify
+		assertNotNull(result);
+		assertEquals(TEST_API_PATH, result.getName());
+		assertEquals(STATUS_UP, result.getStatus());
+		assertEquals(0.0, result.getMax());
+		assertEquals(0, result.getCount());
+		assertEquals(0.0, result.getTotalTime());
+		assertEquals(0.0, result.getErrorRate());
+		assertEquals(ERROR_THRESHOLD, result.getErrorThreshold());
+	}
+
+	@Test
+	@DisplayName("Test getApiMetrics with exception")
+	public void testGetApiMetricsWithException() {
+		// Setup
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenThrow(new RuntimeException("Test exception"));
+
+		// Execute
+		ApiDetailDto result = metricsService.getApiMetrics(TEST_API_PATH);
+
+		// Verify
+		assertNotNull(result);
+		assertEquals(TEST_API_PATH, result.getName());
+		assertEquals(STATUS_DOWN, result.getStatus());
+		assertEquals(0.0, result.getMax());
+		assertEquals(0, result.getCount());
+		assertEquals(0.0, result.getTotalTime());
+		assertEquals(0.0, result.getErrorRate());
+		assertEquals(ERROR_THRESHOLD, result.getErrorThreshold());
+	}
+
+	@Test
+	@DisplayName("Test getApiMetrics with high error rate")
+	public void testGetApiMetricsWithHighErrorRate() {
+		// Setup MetricDescriptor with measurements
+		MetricsEndpoint.MetricDescriptor metricDescriptor = mockMetricDescriptor(10.0, 100.0, 500.0);
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenReturn(metricDescriptor);
+
+		// Setup meters for error rate calculation with high error rate
+		Collection<Meter> meters = createMeters(true);
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(URI_TAG, TEST_API_PATH)).thenReturn(search);
+		when(search.meters()).thenReturn(meters);
+
+		// Execute
+		ApiDetailDto result = metricsService.getApiMetrics(TEST_API_PATH);
+
+		// Verify
+		assertNotNull(result);
+		assertEquals(TEST_API_PATH, result.getName());
+		assertEquals(STATUS_DOWN, result.getStatus());
+		assertEquals(10.0, result.getMax());
+		assertEquals(100, result.getCount());
+		assertEquals(500.0, result.getTotalTime());
+		assertTrue(result.getErrorRate() > ERROR_THRESHOLD);
+		assertEquals(ERROR_THRESHOLD, result.getErrorThreshold());
+	}
+
+	@Test
+	@DisplayName("Test getApisMetrics with multiple API paths")
+	public void testGetApisMetrics() {
+		// Setup
+		List<String> apiPaths = Arrays.asList("/api/test1", "/api/test2", "/api/test3");
+
+		// Setup MetricDescriptor with measurements
+		MetricsEndpoint.MetricDescriptor metricDescriptor = mockMetricDescriptor(10.0, 100.0, 500.0);
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenReturn(metricDescriptor);
+
+		// Setup meters for error rate calculation
+		Collection<Meter> meters = createMeters(false);
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(eq(URI_TAG), anyString())).thenReturn(search);
+		when(search.meters()).thenReturn(meters);
+
+		// Execute
+		List<ApiDetailDto> results = metricsService.getApisMetrics(apiPaths);
+
+		// Verify
+		assertNotNull(results);
+		assertEquals(3, results.size());
+
+		// Verify each result
+		for (int i = 0; i < results.size(); i++) {
+			ApiDetailDto result = results.get(i);
+			assertEquals(apiPaths.get(i), result.getName());
+			assertEquals(STATUS_UP, result.getStatus());
+			assertEquals(10.0, result.getMax());
+			assertEquals(100, result.getCount());
+			assertEquals(500.0, result.getTotalTime());
+			assertEquals(0.0, result.getErrorRate());
+			assertEquals(ERROR_THRESHOLD, result.getErrorThreshold());
 		}
+
+		// Verify interactions
+		verify(metricsEndpoint, times(3)).metric(eq(METRIC_NAME), any());
 	}
 
 	@Test
-	void getApiMetrics_ReturnsDownStatus_WhenExceptionThrown() {
-		try (var searchMockedStatic = mockStatic(Search.class)) {
-			Search search = mock(Search.class);
-			when(Search.in(meterRegistry)).thenThrow(new RuntimeException("Registry error"));
+	@DisplayName("Test getApisMetrics when total request zero")
+	public void testGetApisMetricsTotalRequestZero() {
+		// Setup
+		List<String> apiPaths = Arrays.asList("/api/test1", "/api/test2", "/api/test3");
 
-			ApiDetailDto result = metricsService.getApiMetrics("/api/error");
+		// Setup MetricDescriptor with measurements
+		MetricsEndpoint.MetricDescriptor metricDescriptor = mockMetricDescriptor(10.0, 100.0, 500.0);
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenReturn(metricDescriptor);
 
-			assertEquals("/api/error", result.getName());
-			assertEquals("DOWN", result.getStatus());
-			assertEquals(0, result.getMax());
-			assertEquals(0, result.getCount());
-			assertEquals(0, result.getTotalTime());
-		}
+		// Setup meters for error rate calculation
+		Collection<Meter> meters = new ArrayList<>();
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(eq(URI_TAG), anyString())).thenReturn(search);
+		when(search.meters()).thenReturn(meters);
+
+		// Execute
+		List<ApiDetailDto> results = metricsService.getApisMetrics(apiPaths);
+
+		// Verify
+		assertNotNull(results);
+		assertEquals(3, results.size());
+
+		// Verify interactions
+		verify(metricsEndpoint, times(3)).metric(eq(METRIC_NAME), any());
 	}
 
 	@Test
-	void getApisMetrics_ReturnsListOfApiDetailDto_ForMultipleApis() {
-		MetricsServiceImpl spyService = spy(metricsService);
-		ApiDetailDto dto1 = ApiDetailDto.builder().name("/api/one").status("UP").max(1).count(1).totalTime(1).build();
-		ApiDetailDto dto2 = ApiDetailDto.builder().name("/api/two").status("DOWN").max(2).count(2).totalTime(2).build();
-		doReturn(dto1).when(spyService).getApiMetrics("/api/one");
-		doReturn(dto2).when(spyService).getApiMetrics("/api/two");
+	@DisplayName("Test isApiHealthy with healthy API")
+	public void testIsApiHealthyWithHealthyApi() {
+		// Setup meters for error rate calculation
+		Collection<Meter> meters = createMeters(false);
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(URI_TAG, TEST_API_PATH)).thenReturn(search);
+		when(search.meters()).thenReturn(meters);
 
-		List<ApiDetailDto> result = spyService.getApisMetrics(List.of("/api/one", "/api/two"));
+		// Execute
+		boolean result = metricsService.isApiHealthy(TEST_API_PATH);
 
-		assertEquals(2, result.size());
-		assertEquals("UP", result.get(0).getStatus());
-		assertEquals("DOWN", result.get(1).getStatus());
-	}
-
-	@Test
-	void getTimer_ReturnsEmptyOptional_WhenTimerNotFound_UsingReflection() throws Exception {
-		Method getTimerMethod = MetricsServiceImpl.class.getDeclaredMethod("getTimer", String.class);
-		getTimerMethod.setAccessible(true);
-
-		try (var searchMockedStatic = mockStatic(Search.class)) {
-			Search search = mock(Search.class);
-			when(Search.in(meterRegistry)).thenReturn(search);
-			when(search.name("http.server.requests")).thenReturn(search);
-			when(search.tag("uri", "/api/none")).thenReturn(search);
-			when(search.timer()).thenReturn(null);
-
-			Optional<Timer> result = (Optional<Timer>) getTimerMethod.invoke(metricsService, "/api/none");
-
-			assertTrue(result.isEmpty());
-		}
-	}
-
-	@Test
-	void getTimer_ReturnsTimer_WhenTimerExists_UsingReflection() throws Exception {
-		Method getTimerMethod = MetricsServiceImpl.class.getDeclaredMethod("getTimer", String.class);
-		getTimerMethod.setAccessible(true);
-
-		try (var searchMockedStatic = mockStatic(Search.class)) {
-			Search search = mock(Search.class);
-			when(Search.in(meterRegistry)).thenReturn(search);
-			when(search.name("http.server.requests")).thenReturn(search);
-			when(search.tag("uri", "/api/exists")).thenReturn(search);
-			when(search.timer()).thenReturn(timer);
-
-			Optional<Timer> result = (Optional<Timer>) getTimerMethod.invoke(metricsService, "/api/exists");
-
-			assertTrue(result.isPresent());
-			assertEquals(timer, result.get());
-		}
-	}
-
-	@Test
-	void getMetersForUri_ReturnsEmptyCollection_WhenNoMetersFound_UsingReflection() throws Exception {
-		Method getMetersForUriMethod = MetricsServiceImpl.class.getDeclaredMethod("getMetersForUri", String.class);
-		getMetersForUriMethod.setAccessible(true);
-
-		Search search = mock(Search.class);
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/none")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of());
-
-		Collection<Meter> result = (Collection<Meter>) getMetersForUriMethod.invoke(metricsService, "/api/none");
-
-		assertTrue(result.isEmpty());
-	}
-
-	@Test
-	void getMetersForUri_ReturnsMeters_WhenMetersExist_UsingReflection() throws Exception {
-		Method getMetersForUriMethod = MetricsServiceImpl.class.getDeclaredMethod("getMetersForUri", String.class);
-		getMetersForUriMethod.setAccessible(true);
-
-		Search search = mock(Search.class);
-		Meter meter = mock(Meter.class);
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/exists")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of(meter));
-
-		Collection<Meter> result = (Collection<Meter>) getMetersForUriMethod.invoke(metricsService, "/api/exists");
-
-		assertEquals(1, result.size());
-		assertTrue(result.contains(meter));
-	}
-
-	@Test
-	void getErrorRate_ReturnsZero_WhenNoMetersExist_UsingReflection() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
-
-		Search search = mock(Search.class);
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/noRequests")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of());
-
-		double result = (double) getErrorRateMethod.invoke(metricsService, "/api/noRequests");
-
-		assertEquals(0.0, result);
-	}
-
-	@Test
-	void getErrorRate_ReturnsCorrectRate_WhenMetersExist_UsingReflection() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
-
-		Search search = mock(Search.class);
-		Meter meter1 = mock(Meter.class);
-		Meter meter2 = mock(Meter.class);
-		Meter.Id meterId1 = mock(Meter.Id.class);
-		Meter.Id meterId2 = mock(Meter.Id.class);
-
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/withErrors")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of(meter1, meter2));
-
-		when(meter1.getId()).thenReturn(meterId1);
-		when(meterId1.getTag("status")).thenReturn("200");
-		when(meter1.measure()).thenReturn(List.of(new Measurement(() -> 10.0, Statistic.COUNT)));
-
-		when(meter2.getId()).thenReturn(meterId2);
-		when(meterId2.getTag("status")).thenReturn("500");
-		when(meter2.measure()).thenReturn(List.of(new Measurement(() -> 5.0, Statistic.COUNT)));
-
-		double result = (double) getErrorRateMethod.invoke(metricsService, "/api/withErrors");
-
-		assertEquals(0.0, result, 0.01);
-	}
-
-	@Test
-	void isApiHealthy_ReturnsTrue_WhenErrorRateBelowThreshold_UsingReflection() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
-
-		Search search = mock(Search.class);
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/healthy")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of());
-
-		when(dashboardConfig.getMaxApiErrorThreshold()).thenReturn(10.0);
-
-		double errorRate = (double) getErrorRateMethod.invoke(metricsService, "/api/healthy");
-		boolean result = errorRate < dashboardConfig.getMaxApiErrorThreshold();
-
+		// Verify
 		assertTrue(result);
 	}
 
 	@Test
-	void isApiHealthy_ReturnsTrue_WhenErrorRateAboveThreshold_UsingReflection() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
+	@DisplayName("Test isApiHealthy Exception Handling")
+	public void testIsApiHealthyExceptionHandling() {
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(URI_TAG, TEST_API_PATH)).thenReturn(search);
+		when(search.meters()).thenThrow(new RuntimeException("Test exception"));
 
-		Search search = mock(Search.class);
-		Meter meter = mock(Meter.class);
-		Meter.Id meterId = mock(Meter.Id.class);
+		// Execute
+		boolean result = metricsService.isApiHealthy(TEST_API_PATH);
 
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/unhealthy")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of(meter));
-
-		when(meter.getId()).thenReturn(meterId);
-		when(meterId.getTag("status")).thenReturn("500");
-		when(meter.measure()).thenReturn(List.of(new Measurement(() -> 15.0, Statistic.COUNT)));
-
-		when(dashboardConfig.getMaxApiErrorThreshold()).thenReturn(10.0);
-
-		double errorRate = (double) getErrorRateMethod.invoke(metricsService, "/api/unhealthy");
-		boolean result = errorRate < dashboardConfig.getMaxApiErrorThreshold();
-
-		assertTrue(result);
-	}
-
-	@Test
-	void isApiHealthy_ReturnsFalse_WhenExceptionOccurs_UsingReflection() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
-
-		try {
-			getErrorRateMethod.invoke(metricsService, "/api/error");
-			fail("Expected exception not thrown");
-		} catch (Exception e) {
-			boolean result = false;
-			assertFalse(result);
-		}
-	}
-
-	@Test
-	void isApiHealthyReturnsTrueWhenErrorRateIsBelowThreshold() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
-
-		when(dashboardConfig.getMaxApiErrorThreshold()).thenReturn(10.0);
-
-		Search search = mock(Search.class);
-		when(meterRegistry.find("http.server.requests")).thenReturn(search);
-		when(search.tag("uri", "/api/healthy")).thenReturn(search);
-		when(search.meters()).thenReturn(List.of());
-
-		double errorRate = (double) getErrorRateMethod.invoke(metricsService, "/api/healthy");
-		boolean result = metricsService.isApiHealthy("/api/healthy");
-
-		assertTrue(result);
-	}
-
-	@Test
-	void isApiHealthyReturnsFalseWhenExceptionOccurs() throws Exception {
-		Method getErrorRateMethod = MetricsServiceImpl.class.getDeclaredMethod("getErrorRate", String.class);
-		getErrorRateMethod.setAccessible(true);
-
-		when(meterRegistry.find("http.server.requests")).thenThrow(new RuntimeException("Error"));
-
-		boolean result = metricsService.isApiHealthy("/api/error");
-
+		// Verify
 		assertFalse(result);
+	}
+
+	@Test
+	@DisplayName("Test isApiHealthy with unhealthy API")
+	public void testIsApiHealthyWithUnhealthyApi() {
+		Collection<Meter> meters = createMeters(true);
+		when(meterRegistry.find(METRIC_NAME)).thenReturn(search);
+		when(search.tag(URI_TAG, TEST_API_PATH)).thenReturn(search);
+		when(search.meters()).thenReturn(meters);
+
+		// Execute
+		boolean result = metricsService.isApiHealthy(TEST_API_PATH);
+
+		// Verify
+		assertFalse(result);
+	}
+
+	private MetricsEndpoint.MetricDescriptor mockMetricDescriptor(double max, double count, double totalTime) {
+		List<MetricsEndpoint.Sample> measurements = new ArrayList<>();
+
+		MetricsEndpoint.Sample maxSample = mock(MetricsEndpoint.Sample.class);
+		when(maxSample.getStatistic()).thenReturn(Statistic.MAX);
+		when(maxSample.getValue()).thenReturn(max);
+		measurements.add(maxSample);
+
+		MetricsEndpoint.Sample countSample = mock(MetricsEndpoint.Sample.class);
+		when(countSample.getStatistic()).thenReturn(Statistic.COUNT);
+		when(countSample.getValue()).thenReturn(count);
+		measurements.add(countSample);
+
+		MetricsEndpoint.Sample totalTimeSample = mock(MetricsEndpoint.Sample.class);
+		when(totalTimeSample.getStatistic()).thenReturn(Statistic.TOTAL_TIME);
+		when(totalTimeSample.getValue()).thenReturn(totalTime);
+		measurements.add(totalTimeSample);
+
+		MetricsEndpoint.MetricDescriptor descriptor = mock(MetricsEndpoint.MetricDescriptor.class);
+		when(descriptor.getMeasurements()).thenReturn(measurements);
+
+		return descriptor;
+	}
+
+	private MetricsEndpoint.MetricDescriptor mockEmptyMetricDescriptor() {
+		MetricsEndpoint.MetricDescriptor descriptor = mock(MetricsEndpoint.MetricDescriptor.class);
+		when(descriptor.getMeasurements()).thenReturn(Collections.emptyList());
+		return descriptor;
+	}
+
+	private static Collection<Meter> createMeters(boolean highErrorRate) {
+		List<Meter> meters = new ArrayList<>();
+
+		// Add a 200 status meter
+		Meter successMeter = createMeter("200", 90);
+		meters.add(successMeter);
+
+		// Add a 404 status meter
+		Meter notFoundMeter = createMeter("404", 10);
+		meters.add(notFoundMeter);
+
+		if (highErrorRate) {
+			// Add a 500 status meter with high count for high error rate
+			Meter errorMeter = createMeter("500", 30);
+			meters.add(errorMeter);
+		}
+
+		return meters;
+	}
+
+	private static Meter createMeter(String status, double count) {
+		// Create meter ID with status tag
+		Id meterId = mock(Id.class);
+		when(meterId.getTag(STATUS_TAG)).thenReturn(status);
+
+		// Create measurement with COUNT statistic
+		Measurement measurement = mock(Measurement.class);
+		when(measurement.getStatistic()).thenReturn(Statistic.COUNT);
+		when(measurement.getValue()).thenReturn(count);
+
+		// Create meter with ID and measurement
+		Meter meter = mock(Meter.class);
+		when(meter.getId()).thenReturn(meterId);
+		when(meter.measure()).thenReturn(Collections.singletonList(measurement));
+
+		return meter;
+	}
+
+	@Test
+	@DisplayName("Test getApiMetrics with null API path")
+	public void testGetApiMetricsWithNullApiPath() {
+		// Execute
+		ApiDetailDto result = metricsService.getApiMetrics(null);
+
+		// Verify
+		assertNotNull(result);
+		assertNull(result.getName());
+		assertEquals(STATUS_UP, result.getStatus());
 	}
 }
