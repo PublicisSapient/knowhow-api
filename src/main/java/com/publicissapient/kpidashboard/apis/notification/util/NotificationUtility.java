@@ -48,7 +48,7 @@ public final class NotificationUtility {
 		}
 		Set<String> variables = new HashSet<>();
 		try (InputStream is = NotificationUtility.class.getClassLoader()
-				.getResourceAsStream("templates/" + templateName + ".html")) {
+				.getResourceAsStream("templates/" + templateName)) {
 			if (is == null) {
 				throw new IllegalArgumentException("Template not found: " + templateName);
 			}
