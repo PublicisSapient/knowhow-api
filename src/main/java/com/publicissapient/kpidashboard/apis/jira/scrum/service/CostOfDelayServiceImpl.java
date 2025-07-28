@@ -229,8 +229,7 @@ public class CostOfDelayServiceImpl extends JiraKPIService<Double, List<Object>,
 			String epicEndDate = epicEndDateOpt.orElse(null);
 			js.setEpicEndDate(epicEndDate);
 			if (epicEndDate != null) {
-
-                LocalDateTime formatDate = js.getChangeDate() == null ? LocalDateTime.parse(js.getUpdateDate()) : LocalDateTime.parse(js.getChangeDate());
+                LocalDateTime formatDate = LocalDateTime.parse(js.getEpicEndDate());
                 String date = (formatDate.getYear()) + String.valueOf(formatDate.getMonth());
                     lastNMonthMap.computeIfPresent(date, (key, value) -> {
                         timeFormatMap.put(key, DateUtil.tranformUTCLocalTimeToZFormat(formatDate));
