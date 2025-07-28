@@ -38,6 +38,7 @@ import com.publicissapient.kpidashboard.common.model.application.OrganizationHie
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -202,6 +203,10 @@ public class KpiIntegrationServiceImpl {
 
 	private String[] getHierarchyIdList(KpiRequest kpiRequest, HierarchyLevel hierarchyLevel) {
 		String[] hierarchyIdList = null;
+		if (ArrayUtils.isNotEmpty(kpiRequest.getIds())) {
+			log.debug("Using hierarchy IDs directly from request: {}", Arrays.toString(kpiRequest.getIds()));
+			return kpiRequest.getIds();
+		}
 		if (kpiRequest.getHierarchyName() != null) {
 			OrganizationHierarchy byNodeNameAndHierarchyLevelId = organizationHierarchyRepository
 					.findByNodeNameAndHierarchyLevelId(kpiRequest.getHierarchyName(),
