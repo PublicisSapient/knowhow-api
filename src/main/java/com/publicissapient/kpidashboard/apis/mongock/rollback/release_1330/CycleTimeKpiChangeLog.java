@@ -41,7 +41,8 @@ public class CycleTimeKpiChangeLog {
 
 		Document updateFields = new Document("$set",
 				new Document("kpiSubCategory", "defaultSubCategory").append("kpiCategory", "defaultCategory"))
-				.append("$unset", new Document("boxType", "").append("chartType", ""));
+				.append("$unset",
+						new Document("boxType", "").append("chartType", "").append("aggregationCriteria", ""));
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 
 		Document query = new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue ID");
@@ -59,7 +60,7 @@ public class CycleTimeKpiChangeLog {
 	private void updateLeadTimeKpi() {
 		Document updateFields = new Document("$set",
 				new Document("boxType", "3_column").append("chartType", "table").append("defaultOrder", 29)
-						.append("aggregationCriteria", "sum").append("groupId", 33))
+						.append("aggregationCriteria", "average").append("groupId", 33))
 				.append("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 	}
