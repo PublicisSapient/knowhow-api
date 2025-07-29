@@ -48,6 +48,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -55,6 +56,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +85,8 @@ import java.util.stream.Collectors;
  * @author girpatha
  * @see JiraKPIService
  */
-@Component
+@Service
+@RequiredArgsConstructor
 @Slf4j
 public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
 
@@ -106,23 +109,18 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	public static final String DEVELOPER_KPI = "DeveloperKpi";
 
 	/** Repository for accessing Jira issue data */
-	@Autowired
 	private JiraIssueRepository jiraIssueRepository;
 
 	/** Service for caching data */
-	@Autowired
 	private CacheService cacheService;
 
 	/** Service for filter-related operations */
-	@Autowired
 	private FilterHelperService filterHelperService;
 
 	/** Configuration for custom API settings */
-	@Autowired
 	private CustomApiConfig customApiConfig;
 
 	/** Service for configuration helper functions */
-	@Autowired
 	private ConfigHelperService configHelperService;
 
 	/**
