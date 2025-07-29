@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
@@ -200,7 +201,8 @@ public class CostOfDelayServiceImpl extends JiraKPIService<Double, List<Object>,
 	@SuppressWarnings("unchecked")
 	private void setProjectNodeValue(Map<String, Node> mapTmp, Node node, Map<String, Object> resultMap,
 			List<DataCount> trendValueList, String requestTrackerId, List<KPIExcelData> excelData) {
-		Map<String, Double> lastNMonthMap = getLastNMonth(customApiConfig.getJiraXaxisMonthCount());
+		Map<String, String> timeFormatMap = new HashMap<>();
+		Map<String, Double> lastNMonthMap = getLastNMonth(customApiConfig.getJiraXaxisMonthCount(), timeFormatMap);
 		String projectName = node.getProjectFilter().getName();
 		List<JiraIssue> epicList = new ArrayList<>();
 		Map<String, Map<String, Integer>> howerMap = new HashMap<>();
@@ -227,29 +229,29 @@ public class CostOfDelayServiceImpl extends JiraKPIService<Double, List<Object>,
 			String epicEndDate = epicEndDateOpt.orElse(null);
 			js.setEpicEndDate(epicEndDate);
 			if (epicEndDate != null) {
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(DateUtil.DATE_FORMAT).toFormatter();
-				LocalDate dateValue = LocalDate.parse(epicEndDate.split("T")[0], formatter);
-				String date = dateValue.getYear() + Constant.DASH + dateValue.getMonthValue();
-				lastNMonthMap.computeIfPresent(date, (key, value) -> {
-					epicList.add(js);
-					Integer costOfDelay = (int) js.getCostOfDelay();
-					Map<String, Integer> epicWiseCost = new HashMap<>();
-					epicWiseCost.put(number, costOfDelay);
-					if (howerMap.containsKey(date)) {
-						epicWiseCost.putAll(howerMap.get(date));
-						howerMap.put(date, epicWiseCost);
-					} else {
-						howerMap.put(date, epicWiseCost);
-					}
-					return value + costOfDelay;
-				});
+                LocalDateTime formatDate = LocalDateTime.parse(js.getEpicEndDate());
+                String date = (formatDate.getYear()) + String.valueOf(formatDate.getMonth());
+                    lastNMonthMap.computeIfPresent(date, (key, value) -> {
+                        timeFormatMap.put(key, DateUtil.tranformUTCLocalTimeToZFormat(formatDate));
+                        epicList.add(js);
+                        Integer costOfDelay = (int) js.getCostOfDelay();
+                        Map<String, Integer> epicWiseCost = new HashMap<>();
+                        epicWiseCost.put(number, costOfDelay);
+                        if (howerMap.containsKey(date)) {
+                            epicWiseCost.putAll(howerMap.get(date));
+                            howerMap.put(date, epicWiseCost);
+                        } else {
+                            howerMap.put(date, epicWiseCost);
+                        }
+                        return value + costOfDelay;
+                    });
 			}
 		}
 
 		List<DataCount> dcList = new ArrayList<>();
 		lastNMonthMap.forEach((k, v) -> {
 			DataCount dataCount = new DataCount();
-			dataCount.setDate(k);
+			dataCount.setDate(timeFormatMap.get(k));
 			dataCount.setValue(v);
 			dataCount.setData(v.toString());
 			dataCount.setSProjectName(projectName);

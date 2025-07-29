@@ -45,7 +45,6 @@ import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.kafka.producer.NotificationEventProducer;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyValue;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
@@ -71,10 +70,6 @@ public class CommonServiceImpl implements CommonService {
 
 	@Autowired
 	private AuthenticationRepository authenticationRepository;
-
-	@Autowired
-	private NotificationEventProducer notificationEventProducer;
-
 	@Autowired
 	private CustomApiConfig customApiConfig;
 

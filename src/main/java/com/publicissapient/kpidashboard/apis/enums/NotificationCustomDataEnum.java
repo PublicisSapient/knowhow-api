@@ -65,7 +65,13 @@ public enum NotificationCustomDataEnum {
 
 	HELP_URL("Help_Url"),
 
-	FIX_URL("Fix_Url");
+	FIX_URL("Fix_Url"),
+
+	EXPIRY_TIME("expiryTime"),
+
+	PDF_ATTACHMENT("pdf_attachment"),
+
+	RESET_URL("resetUrl");
 
 	private String value;
 

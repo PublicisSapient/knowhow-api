@@ -22,6 +22,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+
 import javax.net.ssl.SSLContext;
 
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -36,6 +37,7 @@ import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -63,11 +65,11 @@ import io.mongock.runner.springboot.EnableMongock;
  *
  * @author girpatha
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableCaching
 @EnableMongock
 @EnableMongoRepositories(basePackages = {"com.publicissapient.**.repository"})
-@ComponentScan(basePackages = {"com.publicissapient.kpidashboard"})
+@ComponentScan(basePackages = {"com.publicissapient.kpidashboard", "com.knowhow.retro.aigatewayclient", "com.knowhow.retro.notifications"})
 public class CustomApiApplication extends SpringBootServletInitializer {
 
 	/** {@inheritDoc} */

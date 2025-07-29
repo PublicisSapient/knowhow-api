@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.common.util.FieldMappingHelper;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +44,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMappingStr
 
 class FieldMappingHelperTest {
 	@InjectMocks
-	FieldMappingHelper fieldMappingHelper;
+    FieldMappingHelper fieldMappingHelper;
 
 	FieldMapping scrumFieldMapping;
 

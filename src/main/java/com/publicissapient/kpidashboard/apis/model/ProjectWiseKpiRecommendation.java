@@ -39,5 +39,6 @@ public class ProjectWiseKpiRecommendation {
 
 	private String projectId;
 	private String sprintId;
+	private Double projectScore;
 	private List<GenericKpiRecommendation> recommendations;
 }
