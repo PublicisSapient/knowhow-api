@@ -19,11 +19,18 @@
 package com.publicissapient.kpidashboard.apis.rbac.signupapproval.service;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mock;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
@@ -37,6 +44,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
+import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -71,17 +79,19 @@ public class SignupManagerTest {
 	private CustomApiConfig customApiConfig;
 	@Mock
 	private NotificationService notificationService;
+	@Mock
+	private TokenAuthenticationService tokenAuthenticationService;
 
 	@Test
 	public void testRejectAccessRequestSuccess() throws Exception {
 		when(authenticationRepository.save(ArgumentMatchers.any()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		when(authenticationService.getLoggedInUser()).thenReturn("");
-		when(authenticationRepository.findByUsername(ArgumentMatchers.anyString()))
+		when(authenticationRepository.findByUsername(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		userInfoRepository.deleteById(new ObjectId(testId));
-		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString())).thenReturn(userInfoObj());
-		when(authenticationService.getAuthentication(ArgumentMatchers.anyString()))
+		when(userInfoRepository.findByUsername(anyString())).thenReturn(userInfoObj());
+		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_APPROVED, false));
 		when(commonService.getApiHost()).thenReturn("http://www.test.com");
 		when(customApiConfig.getNotificationSubject()).thenReturn(testMap("approvalRequest"));
@@ -98,10 +108,10 @@ public class SignupManagerTest {
 
 	@Test
 	public void testGrantAccessRequestFailure() throws Exception {
-		when(authenticationService.getAuthentication(ArgumentMatchers.anyString()))
+		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_APPROVED, true));
 		when(authenticationService.getLoggedInUser()).thenReturn("");
-		when(authenticationRepository.findByUsername(ArgumentMatchers.anyString()))
+		when(authenticationRepository.findByUsername(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_APPROVED, false));
 		signupManager.grantAccess(testId, grantApprovalListener);
 		verify(grantApprovalListener, atLeastOnce())
@@ -112,10 +122,10 @@ public class SignupManagerTest {
 
 	@Test
 	public void testRejectAccessRequestFailure() throws Exception {
-		when(authenticationService.getAuthentication(ArgumentMatchers.anyString()))
+		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		when(authenticationService.getLoggedInUser()).thenReturn("");
-		when(authenticationRepository.findByUsername(ArgumentMatchers.anyString()))
+		when(authenticationRepository.findByUsername(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		when(authenticationRepository.save(ArgumentMatchers.any()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, true));
@@ -128,9 +138,9 @@ public class SignupManagerTest {
 
 	@Test
 	public void testDeleteAccessRequestById() {
-		when(authenticationService.getAuthentication(ArgumentMatchers.anyString()))
+		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
-		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString())).thenReturn(userInfoObj());
+		when(userInfoRepository.findByUsername(anyString())).thenReturn(userInfoObj());
 		assertTrue(signupManager.deleteUserById(testId));
 	}
 
@@ -150,5 +160,65 @@ public class SignupManagerTest {
 		authentication.setEmail("testUser@gmail.com");
 		authentication.setApproved(dbStatus);
 		return authentication;
+	}
+
+	@Test
+	public void testSendUserPreApprovalRequestEmailToAdmin() {
+		// Arrange
+		String username = "testUser";
+		String email = "testUser@example.com";
+		List<String> emailAddresses = Arrays.asList("admin@example.com");
+		Map<String, String> notificationSubjects = Map.of("preApproval", "Pre-Approval Request");
+
+		when(commonService.getEmailAddressBasedOnRoles(Arrays.asList("ROLE_SUPERADMIN"))).thenReturn(emailAddresses);
+		when(customApiConfig.getNotificationSubject()).thenReturn(notificationSubjects);
+		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Pre_Approval", "preApprovalTemplate"));
+
+		// Act
+		signupManager.sendUserPreApprovalRequestEmailToAdmin(username, email);
+	}
+
+	@Test
+	public void testGrantAccess_UserAlreadyApproved() {
+		// Arrange
+		String username = "testUser";
+		GrantApprovalListener listener = mock(GrantApprovalListener.class);
+		Authentication authentication = new Authentication();
+		authentication.setApproved(true);
+		authentication.setEmail("abc@gmail.com");
+
+		when(authenticationService.getLoggedInUser()).thenReturn("adminUser");
+		when(authenticationRepository.findByUsername("adminUser")).thenReturn(authentication);
+		when(authenticationService.getAuthentication(username)).thenReturn(authentication);
+
+		// Act
+		signupManager.grantAccess(username, listener);
+
+		// Assert
+		verify(listener, times(1)).onFailure(authentication, "Failed to accept the request");
+		verifyNoInteractions(tokenAuthenticationService, notificationService);
+	}
+
+	@Test
+	public void testGrantAccess_UserNotApproved() {
+		// Arrange
+		String username = "testUser";
+		GrantApprovalListener listener = mock(GrantApprovalListener.class);
+		Authentication authentication = new Authentication();
+		authentication.setApproved(false);
+		authentication.setEmail("abc@gmail.com");
+
+		when(authenticationService.getLoggedInUser()).thenReturn("adminUser");
+		when(authenticationRepository.findByUsername("adminUser")).thenReturn(authentication);
+		when(authenticationService.getAuthentication(username)).thenReturn(authentication);
+		when(authenticationRepository.save(authentication)).thenReturn(authentication);
+
+		// Act
+		signupManager.grantAccess(username, listener);
+
+		// Assert
+		verify(authenticationRepository, times(1)).save(authentication);
+		verify(listener, times(1)).onSuccess(authentication);
+		verify(tokenAuthenticationService, times(1)).updateExpiryDate(eq(username), anyString());
 	}
 }

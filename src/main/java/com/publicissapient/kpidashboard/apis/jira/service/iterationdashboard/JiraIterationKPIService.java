@@ -71,8 +71,7 @@ public abstract class JiraIterationKPIService implements NonTrendKPIService {
 		iterationKpiModalVal.setPriority(iterationStatus.getPriority());
 		iterationKpiModalVal.setDescription(iterationStatus.getIssueDescription());
 		iterationKpiModalVal.setIssueStatus(iterationStatus.getIssueStatus());
-		iterationKpiModalVal.setDueDate(DateUtil.dateTimeConverter(iterationStatus.getDueDate(),
-				DateUtil.TIME_FORMAT_WITH_SEC, DateUtil.DISPLAY_DATE_FORMAT));
+		iterationKpiModalVal.setDueDate(DateUtil.convertToGenericString(iterationStatus.getDueDate()));
 		if (iterationStatus.getRemainingEstimateMinutes() != null)
 			iterationKpiModalVal.setRemainingTime(iterationStatus.getRemainingEstimateMinutes());
 		else

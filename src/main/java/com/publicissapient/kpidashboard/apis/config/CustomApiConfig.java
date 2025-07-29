@@ -158,12 +158,6 @@ public class CustomApiConfig { // NOPMD
 	@Value("p5-trivial, 5, trivial")
 	private String priorityP5;
 
-	@Value("$spring.kafka.producer.bootstrap-servers")
-	private List<String> kafkaProducerBootStrapServers;
-
-	@Value("${kafka.mailtopic}")
-	private String kafkaMailTopic;
-
 	private Map<String, String> notificationSubject;
 
 	@Value("${notification.switch}")
@@ -219,10 +213,10 @@ public class CustomApiConfig { // NOPMD
 	private int latestKpiCommentsSummary;
 
 	@Value("${brokenConnection.MaximumEmailNotificationCount}")
-	private int brokenConnectionMaximumEmailNotificationCount;
+	private String brokenConnectionMaximumEmailNotificationCount;
 
 	@Value("${brokenConnection.EmailNotificationFrequency}")
-	private int brokenConnectionEmailNotificationFrequency;
+	private String brokenConnectionEmailNotificationFrequency;
 
 	@Value("${brokenConnection.EmailNotificationSubject}")
 	private String brokenConnectionEmailNotificationSubject;
@@ -238,12 +232,6 @@ public class CustomApiConfig { // NOPMD
 	private boolean ssoLogin;
 
 	private Map<String, String> mailTemplate;
-
-	@Value("${flag.mailWithoutKafka}")
-	private boolean mailWithoutKafka;
-
-	@Value("${sendGridEnabled}")
-	private boolean sendGridEnabled;
 
 	@Value(("${backlog.sprint.count}"))
 	private int sprintCountForBackLogStrength;
@@ -359,6 +347,11 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	@Getter
 	private int userSessionsExpiresOn;
+
+	@Value("${ai-recommendation-kpi-list}")
+	@Getter
+	@Setter
+	private List<String> aiRecommendationKpiList;
 
 	public String getDefectRateUrl() {
 		return defectRateUrl;
@@ -1060,28 +1053,6 @@ public class CustomApiConfig { // NOPMD
 		return gitlabTestConnection;
 	}
 
-	/**
-	 * @return String
-	 */
-	public String getKafkaMailTopic() {
-		return kafkaMailTopic;
-	}
-
-	/**
-	 * @param kafkaMailTopic
-	 */
-	public void setKafkaMailTopic(String kafkaMailTopic) {
-		this.kafkaMailTopic = kafkaMailTopic;
-	}
-
-	public List<String> getKafkaProducerBootStrapServers() {
-		return kafkaProducerBootStrapServers;
-	}
-
-	public void setKafkaProducerBootStrapServers(List<String> kafkaProducerBootStrapServers) {
-		this.kafkaProducerBootStrapServers = kafkaProducerBootStrapServers;
-	}
-
 	public Map<String, String> getNotificationSubject() {
 		return notificationSubject;
 	}
@@ -1239,22 +1210,6 @@ public class CustomApiConfig { // NOPMD
 
 	public void setMailTemplate(Map<String, String> mailTemplate) {
 		this.mailTemplate = mailTemplate;
-	}
-
-	public boolean isMailWithoutKafka() {
-		return mailWithoutKafka;
-	}
-
-	public void setMailWithoutKafka(boolean mailWithoutKafka) {
-		this.mailWithoutKafka = mailWithoutKafka;
-	}
-
-	public boolean isSendGridEnabled() {
-		return sendGridEnabled;
-	}
-
-	public void setSendGridEnabled(boolean sendGridEnabled) {
-		this.sendGridEnabled = sendGridEnabled;
 	}
 
 	public String getHostPath() {

@@ -29,6 +29,7 @@ import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITHU
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_GITLAB;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JENKINS;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_JIRA;
+import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_RALLY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_SONAR;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_TEAMCITY;
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHYR;
@@ -74,7 +75,6 @@ import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
 import com.publicissapient.kpidashboard.common.service.NotificationService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import java.time.format.DateTimeParseException;
 
 /**
@@ -125,9 +125,6 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	@Autowired
 	private RestAPIUtils restAPIUtils;
-
-	@Autowired
-	private KafkaTemplate<String, Object> kafkaTemplate;
 
 	/**
 	 * Fetch all connection data.
@@ -397,6 +394,11 @@ public class ConnectionServiceImpl implements ConnectionService {
 			case TOOL_ZEPHYR :
 				existingConnection = checkConnDetailsZephyr(inputConn, currConn, api);
 				break;
+			case TOOL_RALLY:
+				if (checkConnDetailsForRally(inputConn, currConn)) {
+					existingConnection = currConn;
+				}
+				break;
 			default :
 				existingConnection = new Connection();
 				break;
@@ -408,6 +410,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 		boolean b = false;
 		if (!inputConn.isOffline() && inputConn.getUsername().equals(currConn.getUsername()) &&
 				inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
+			b = true;
+		return b;
+	}
+
+	private boolean checkConnDetailsForRally(Connection inputConn, Connection currConn) {
+		boolean b = false;
+		if (inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
 			b = true;
 		return b;
 	}
@@ -596,6 +605,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 		existingConnection.setKrb5ConfigFilePath(connection.getKrb5ConfigFilePath());
 		existingConnection.setEmail(connection.getEmail());
 		existingConnection.setBrokenConnection(false);
+		existingConnection.setConnectionErrorMsg(null);
+		connection.setNotifiedOn(null);
+		connection.setNotificationCount(0);
 	}
 
 	private void saveConnection(Connection conn) {
@@ -854,7 +866,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
 		if (connection == null) return;
-
+		log.info("updating breaking connection for connection: {}",connection.getConnectionName());
 		connectionRepository.findById(connection.getId())
 							.ifPresent(existingConnection -> {
 								if (StringUtils.isEmpty(conErrorMsg)) {
@@ -885,15 +897,24 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private boolean shouldSendNotification(Connection connection) {
-		int maxCount = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
-		int frequencyDays = customApiConfig.getBrokenConnectionEmailNotificationFrequency();
+		String value = customApiConfig.getBrokenConnectionMaximumEmailNotificationCount();
+		log.info("BrokenConnectionMaximumEmailNotificationCount from config: {}", value);
+		int maxCount = 0;
+		try {
+			maxCount = Integer.parseInt(value.replace("'", "").trim());
+		} catch (NumberFormatException e) {
+			log.warn("Invalid max notification count: {}", value);
+		}
 
+		int frequencyDays = Integer.parseInt(customApiConfig.getBrokenConnectionEmailNotificationFrequency());
 		if (maxCount <= 0) return false;
 
 		int count = connection.getNotificationCount();
+		log.info("NotificationCount:{}",count);
 		if (count >= maxCount) return false;
 
-		String notifiedOn = connection.getNotifiedOn();
+		String notifiedOn = Optional.of(connection)
+									.map(Connection::getNotifiedOn).orElse("");
 		if (StringUtils.isBlank(notifiedOn)) return true;
 
 		try {
@@ -932,25 +953,17 @@ public class ConnectionServiceImpl implements ConnectionService {
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 
 			log.info("Sending broken connection notification to user: {}", email);
-			notificationService.sendNotificationEvent(
-					Collections.singletonList(email),
-					customData,
-					notificationSubject,
-					NOTIFICATION_KEY,
-					customApiConfig.getKafkaMailTopic(),
-					customApiConfig.isNotificationSwitch(),
-					kafkaTemplate,
-					templateKey,
-					customApiConfig.isMailWithoutKafka()
-			);
+			notificationService.sendNotificationEvent(Collections.singletonList(email), customData, notificationSubject,
+					customApiConfig.isNotificationSwitch(), templateKey);
 		} else {
 			log.info("Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
-					 email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
+					email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
 		}
 	}
 
 	private Boolean isErrorAlertNotificationEnabled(UserInfo userInfo) {
-		return Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
+		return userInfo.getNotificationEmail() != null
+			   && Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
 	}
 
 	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
@@ -966,8 +979,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *          connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
+		log.info("Validating the connection for {}",connection.getConnectionName());
 		if (connection.isBrokenConnection()) {
-			updateBreakingConnection(connection, null);
+			updateBreakingConnection(connection, connection.getConnectionErrorMsg());
 		}
 	}
 }

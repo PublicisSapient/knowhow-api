@@ -281,7 +281,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		List<ProjectToolConfig> clonedToolConfigs = cloneToolConfigurations(savedProjectBasicConfig);
 
 		// Step 2: Clone field mappings
-		cloneFieldMapping(savedProjectBasicConfig, clonedToolConfigs);
+		cloneFieldMapping(savedProjectBasicConfig);
 
 		// Step 3: Clone board metadata
 		cloneBoardMetadata(savedProjectBasicConfig, clonedToolConfigs);
@@ -313,19 +313,14 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		return projectToolConfigService.saveProjectToolConfigs(clonedToolConfigs);
 	}
 
-	private void cloneFieldMapping(ProjectBasicConfig savedProjectBasicConfig,
-			List<ProjectToolConfig> clonedToolConfigs) {
+	private void cloneFieldMapping(ProjectBasicConfig savedProjectBasicConfig) {
 		FieldMapping originalFieldMapping = fieldMappingService
 				.getFieldMappingByBasicconfigId(savedProjectBasicConfig.getClonedFrom().toString());
-		Optional<ProjectToolConfig> toolConfigOptional = clonedToolConfigs.stream()
-				.filter(tool -> Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()))
-				.findFirst();
-
-		if (originalFieldMapping != null && toolConfigOptional.isPresent()) {
+		if (originalFieldMapping != null) {
 			try {
 				FieldMapping clonedFieldMapping = originalFieldMapping.clone();
 				clonedFieldMapping.setId(null);
-				clonedFieldMapping.setProjectToolConfigId(toolConfigOptional.get().getId());
+				clonedFieldMapping.setProjectToolConfigId(null);
 				clonedFieldMapping.setBasicProjectConfigId(savedProjectBasicConfig.getId());
 				clonedFieldMapping.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), CommonConstant.TIME_FORMAT));
 				clonedFieldMapping.setUpdatedBy(authenticationService.getLoggedInUser());
@@ -342,7 +337,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		BoardMetadata originalBoardMetadata = boardMetadataRepository
 				.findByProjectBasicConfigId(savedProjectBasicConfig.getClonedFrom());
 		Optional<ProjectToolConfig> toolConfigOptional = clonedToolConfigs.stream()
-				.filter(tool -> Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()))
+				.filter(tool -> (Constant.TOOL_JIRA.equals(tool.getToolName()) || Constant.TOOL_AZURE.equals(tool.getToolName()) || Constant.TOOL_RALLY.equals(tool.getToolName())))
 				.findFirst();
 
 		if (originalBoardMetadata != null && toolConfigOptional.isPresent()) {
@@ -431,21 +426,6 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 			response = new ServiceResponse(false, "Basic Config with id " + basicConfigId + " not present.", null);
 		}
 		return response;
-	}
-
-	private void updateProjectNameInProjectHierch(ProjectBasicConfig savedConfigOpt, ProjectBasicConfig basicConfig,
-			List<ProjectHierarchy> projectHierarchyList) {
-		if (CollectionUtils.isNotEmpty(projectHierarchyList)) {
-			projectHierarchyList.stream().forEach(projectHierarchy -> {
-				if (projectHierarchy.getNodeDisplayName().contains(savedConfigOpt.getProjectDisplayName())) {
-					projectHierarchy.setNodeDisplayName(projectHierarchy.getNodeDisplayName()
-							.replace(savedConfigOpt.getProjectDisplayName(), basicConfig.getProjectDisplayName()));
-				}
-			});
-
-			projectHierarchyRepository.saveAll(projectHierarchyList);
-			cacheService.clearCache(CommonConstant.CACHE_PROJECT_HIERARCHY);
-		}
 	}
 
 	private void updateProjectNameInOrgHierarchy(ProjectBasicConfig basicConfig, OrganizationHierarchy orgHierarchy) {
@@ -591,7 +571,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				projectBasicConfig.getId().toHexString());
 
 		List<AccessRequest> accessRequests = accessRequestsHelperService
-				.getAccessRequestsByProject(projectBasicConfig.getId().toHexString());
+				.getAccessRequestsByProject(projectBasicConfig.getProjectNodeId());
 		accessRequests
 				.forEach(accessRequest -> projectAccessManager.rejectAccessRequest(accessRequest.getId().toHexString(),
 						"Rejected! due to project (" + projectBasicConfig.getProjectName() + ") was deleted", null));
@@ -638,7 +618,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 	}
 
 	private void removeProjectUserInfo(ProjectBasicConfig projectBasicConfig) {
-		projectAccessManager.removeProjectAccessFromAllUsers(projectBasicConfig.getId().toHexString());
+		projectAccessManager.removeProjectAccessFromAllUsers(projectBasicConfig.getProjectNodeId());
 	}
 
 	private void addToTraceLog(ProjectBasicConfig projectBasicConfig) {
