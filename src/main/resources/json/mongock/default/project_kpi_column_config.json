@@ -3494,6 +3494,72 @@
         "isDefault": true
       }
     ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi194",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Sprint Name",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect Description",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Story ID",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Story Description",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Squad",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Root Cause",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect Severity",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect Status",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Time Spent (in hours)",
+        "order" : 10,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 
