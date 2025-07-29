@@ -126,6 +126,7 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 	private ComponentDto buildBoardTypeComponentDto(String boardType, HealthResponseDto boardHealth) {
 		return ComponentDto.builder().status(boardHealth.getStatus()).max(boardHealth.getMax())
 				.count(boardHealth.getCount()).totalTime(boardHealth.getTotalTime())
+				.errorRate(boardHealth.getErrorRate()).errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
 				.links(LinksDto.builder()
 						.self(LinkDto.builder().href(dashboardConfig.getHealthApiBasePath() + "/" + boardType).build())
 						.build())
@@ -147,6 +148,7 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 			HealthResponseDto dashboardHealth) {
 		return ComponentDto.builder().status(dashboardHealth.getStatus()).max(dashboardHealth.getMax())
 				.count(dashboardHealth.getCount()).totalTime(dashboardHealth.getTotalTime())
+				.errorRate(dashboardHealth.getErrorRate()).errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
 				.links(LinksDto.builder().self(LinkDto.builder()
 						.href(dashboardConfig.getHealthApiBasePath() + "/" + boardType + "/" + dashboardName).build())
 						.build())
@@ -168,7 +170,8 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 			String path) {
 		return HealthResponseDto.builder().status(metrics.isAllUp() ? STATUS_UP : STATUS_DOWN)
 				.max(metrics.getMaxResponseTime()).count(metrics.getTotalCount())
-				.totalTime(metrics.getTotalResponseTime()).components(components)
+				.totalTime(metrics.getTotalResponseTime()).errorRate(metrics.getErrorRate())
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold()).components(components)
 				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build()).build();
 	}
 
@@ -187,7 +190,9 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 			String path) {
 		return HealthResponseDto.builder().status(metrics.isAllUp() ? STATUS_UP : STATUS_DOWN)
 				.max(metrics.getMaxResponseTime()).count(metrics.getTotalCount())
-				.totalTime(metrics.getTotalResponseTime()).details(DetailsDto.builder().apis(apiMetrics).build())
+				.totalTime(metrics.getTotalResponseTime()).errorRate(metrics.getErrorRate())
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
+				.details(DetailsDto.builder().apis(apiMetrics).build())
 				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build()).build();
 	}
 
@@ -201,11 +206,17 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 	 */
 	private void updateAggregatedMetrics(MetricsAggregate metrics, HealthResponseDto healthResponse) {
 		metrics.setMaxResponseTime(Math.max(metrics.getMaxResponseTime(), healthResponse.getMax()));
-		metrics.setTotalCount(metrics.getTotalCount() + healthResponse.getCount());
+		int originalTotalCount = metrics.getTotalCount();
+		metrics.setTotalCount(originalTotalCount + healthResponse.getCount());
 		metrics.setTotalResponseTime(metrics.getTotalResponseTime() + healthResponse.getTotalTime());
 		if (STATUS_DOWN.equals(healthResponse.getStatus())) {
 			metrics.setAllUp(false);
 		}
+		double totalWeightedErrorRate = (metrics.getErrorRate() * originalTotalCount)
+				+ (healthResponse.getErrorRate() * healthResponse.getCount());
+		int totalWeight = originalTotalCount + healthResponse.getCount();
+		metrics.setErrorRate(totalWeight == 0 ? 0 : totalWeightedErrorRate / totalWeight);
+		metrics.setErrorThreshold(dashboardConfig.getMaxApiErrorThreshold());
 	}
 
 	/**
@@ -221,7 +232,15 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		double totalResponseTime = apiMetrics.stream().mapToDouble(ApiDetailDto::getTotalTime).sum();
 		boolean allUp = apiMetrics.stream().allMatch(api -> STATUS_UP.equals(api.getStatus()));
 
-		return new MetricsAggregate(maxResponseTime, totalCount, totalResponseTime, allUp);
+		// Calculate weighted average error rate
+		double weightedErrorRate = apiMetrics.stream().mapToDouble(api -> api.getErrorRate() * api.getCount()).sum()
+				/ (totalCount > 0 ? totalCount : 1);
+
+		double errorThreshold = dashboardConfig.getMaxApiErrorThreshold();
+
+		return new MetricsAggregate(maxResponseTime, totalCount, totalResponseTime, allUp, weightedErrorRate,
+				errorThreshold);
+
 	}
 
 	/**
@@ -294,6 +313,8 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		private int totalCount = 0;
 		private double totalResponseTime = 0;
 		private boolean allUp = true;
+		private double errorRate = 0.0;
+		private double errorThreshold = 0.0;
 	}
 
 }

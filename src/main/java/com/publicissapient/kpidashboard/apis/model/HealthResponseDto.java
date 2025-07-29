@@ -36,6 +36,8 @@ public class HealthResponseDto {
 	private double max;
 	private int count;
 	private double totalTime;
+	private double errorRate;
+	private double errorThreshold;
 	private Map<String, ComponentDto> components;
 	private DetailsDto details;
 	@JsonProperty("_links")
