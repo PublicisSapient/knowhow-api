@@ -53,65 +53,49 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 	@Override
 	public HealthResponseDto getDashboardHealth() {
 		log.info("Starting dashboard health overview generation");
-		try {
-			Map<String, ComponentDto> components = new HashMap<>();
-			MetricsAggregate metricsAggregate = new MetricsAggregate();
-			dashboardConfig.getTypes().forEach((boardType, boardTypeConfig) -> {
-				log.debug("Processing board type: {}", boardType);
-				HealthResponseDto boardHealth = getBoardTypeHealth(boardType);
-				components.put(boardType, buildBoardTypeComponentDto(boardType, boardHealth));
-				updateAggregatedMetrics(metricsAggregate, boardHealth);
-			});
-			log.info("Dashboard health overview generation completed successfully");
-			return buildHealthResponseDto(metricsAggregate, components, dashboardConfig.getHealthApiBasePath());
-		} catch (Exception e) {
-			return handleException("Error generating dashboard health overview", e,
-					dashboardConfig.getHealthApiBasePath());
-		}
+		Map<String, ComponentDto> components = new HashMap<>();
+		MetricsAggregate metricsAggregate = new MetricsAggregate();
+		dashboardConfig.getTypes().forEach((boardType, boardTypeConfig) -> {
+			log.debug("Processing board type: {}", boardType);
+			HealthResponseDto boardHealth = getBoardTypeHealth(boardType);
+			components.put(boardType, buildBoardTypeComponentDto(boardType, boardHealth));
+			updateAggregatedMetrics(metricsAggregate, boardHealth);
+		});
+		log.info("Dashboard health overview generation completed successfully");
+		return buildHealthResponseDto(metricsAggregate, components, dashboardConfig.getHealthApiBasePath());
 	}
 
 	@Override
 	public HealthResponseDto getBoardTypeHealth(String boardType) {
 		log.info("Starting health generation for board type: {}", boardType);
-		try {
-			DashboardConfig.BoardType boardTypeConfig = validateBoardType(boardType, dashboardConfig);
-			Map<String, ComponentDto> components = new HashMap<>();
-			MetricsAggregate metricsAggregate = new MetricsAggregate();
+		DashboardConfig.BoardType boardTypeConfig = validateBoardType(boardType, dashboardConfig);
+		Map<String, ComponentDto> components = new HashMap<>();
+		MetricsAggregate metricsAggregate = new MetricsAggregate();
 
-			boardTypeConfig.getBoards().forEach((dashboardName, board) -> {
-				log.debug("Processing dashboard: {} in board type: {}", dashboardName, boardType);
-				HealthResponseDto dashboardHealth = getDashboardDetailHealth(boardType, dashboardName);
-				components.put(dashboardName, buildDashboardComponentDto(boardType, dashboardName, dashboardHealth));
-				updateAggregatedMetrics(metricsAggregate, dashboardHealth);
-			});
-			log.info("Health generation for board type: {} completed successfully", boardType);
-			return buildHealthResponseDto(metricsAggregate, components,
-					dashboardConfig.getHealthApiBasePath() + "/" + boardType);
-		} catch (Exception e) {
-			return handleException("Error generating board type health for " + boardType, e,
-					dashboardConfig.getHealthApiBasePath() + "/" + boardType);
-		}
+		boardTypeConfig.getBoards().forEach((dashboardName, board) -> {
+			log.debug("Processing dashboard: {} in board type: {}", dashboardName, boardType);
+			HealthResponseDto dashboardHealth = getDashboardDetailHealth(boardType, dashboardName);
+			components.put(dashboardName, buildDashboardComponentDto(boardType, dashboardName, dashboardHealth));
+			updateAggregatedMetrics(metricsAggregate, dashboardHealth);
+		});
+		log.info("Health generation for board type: {} completed successfully", boardType);
+		return buildHealthResponseDto(metricsAggregate, components,
+				dashboardConfig.getHealthApiBasePath() + "/" + boardType);
 	}
 
 	@Override
 	public HealthResponseDto getDashboardDetailHealth(String boardType, String dashboard) {
 		log.info("Starting health generation for dashboard: {} in board type: {}", dashboard, boardType);
-		try {
-			DashboardConfig.BoardType boardTypeConfig = validateBoardType(boardType, dashboardConfig);
-			DashboardConfig.Board board = validateDashboard(boardType, dashboard, boardTypeConfig);
-			log.debug("Fetching API metrics for dashboard: {}", dashboard);
+		DashboardConfig.BoardType boardTypeConfig = validateBoardType(boardType, dashboardConfig);
+		DashboardConfig.Board board = validateDashboard(boardType, dashboard, boardTypeConfig);
+		log.debug("Fetching API metrics for dashboard: {}", dashboard);
 
-			List<ApiDetailDto> apiMetrics = metricsService.getApisMetrics(board.getApis());
-			MetricsAggregate metricsAggregate = calculateAggregatedMetrics(apiMetrics);
+		List<ApiDetailDto> apiMetrics = metricsService.getApisMetrics(board.getApis());
+		MetricsAggregate metricsAggregate = calculateAggregatedMetrics(apiMetrics);
 
-			log.info("Health generation for dashboard: {} in board type: {} completed successfully", dashboard,
-					boardType);
-			return buildHealthResponseDto(metricsAggregate, apiMetrics,
-					dashboardConfig.getHealthApiBasePath() + "/" + boardType + "/" + dashboard);
-		} catch (Exception e) {
-			return handleException("Error generating dashboard detail health for " + boardType + "/" + dashboard, e,
-					dashboardConfig.getHealthApiBasePath() + "/" + boardType + "/" + dashboard);
-		}
+		log.info("Health generation for dashboard: {} in board type: {} completed successfully", dashboard, boardType);
+		return buildHealthResponseDto(metricsAggregate, apiMetrics,
+				dashboardConfig.getHealthApiBasePath() + "/" + boardType + "/" + dashboard);
 	}
 
 	/**
@@ -241,24 +225,6 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		return new MetricsAggregate(maxResponseTime, totalCount, totalResponseTime, allUp, weightedErrorRate,
 				errorThreshold);
 
-	}
-
-	/**
-	 * Handles exceptions and builds a DOWN health response.
-	 *
-	 * @param message
-	 *            error message
-	 * @param e
-	 *            exception
-	 * @param path
-	 *            API path
-	 * @return {@link HealthResponseDto}
-	 */
-	private HealthResponseDto handleException(String message, Exception e, String path) {
-		log.error("{}: {}", message, e.getMessage(), e);
-		return HealthResponseDto.builder().status(STATUS_DOWN).max(0).count(0).totalTime(0)
-				.components(Collections.emptyMap())
-				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build()).build();
 	}
 
 	/**
