@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.config; // NOPMD // do not remove 
 
 // ignores ExcessivePublicCount
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,10 @@ public class CustomApiConfig { // NOPMD
 
 	// priority kpi wise. Key : priority. Value: priority value
 	private Map<String, List<String>> priority;
+
+	private Map<String, List<String>> severity;
+	// Severity kpi wise. Key : severity. Value: weightage
+	private Map<String, Integer> severityWeight;
 	// Defect Aging x axis values list
 	private List<String> totalDefectCountAgingXAxisRange;
 
@@ -352,6 +357,18 @@ public class CustomApiConfig { // NOPMD
 	@Getter
 	@Setter
 	private List<String> aiRecommendationKpiList;
+
+	@Value("${severity.s1}")
+	private String severity1;
+
+	@Value("${severity.s2}")
+	private String severity2;
+
+	@Value("${severity.s3}")
+	private String severity3;
+
+	@Value("${severity.s4}")
+	private String severity4;
 
 	public String getDefectRateUrl() {
 		return defectRateUrl;
