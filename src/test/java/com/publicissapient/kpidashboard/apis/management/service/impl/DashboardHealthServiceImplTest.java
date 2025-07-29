@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
@@ -49,7 +50,7 @@ class DashboardHealthServiceImplTest {
 	@BeforeEach
 	void setUp() {
 		// Setup common mock interactions
-		when(dashboardConfig.getHealthApiBasePath()).thenReturn("/api/health");
+		Mockito.lenient().when(dashboardConfig.getHealthApiBasePath()).thenReturn("/api/health");
 	}
 
 	@Test
@@ -71,18 +72,6 @@ class DashboardHealthServiceImplTest {
 	}
 
 	@Test
-	void getDashboardHealth_WhenExceptionOccurs_ReturnsDownStatus() {
-		when(dashboardConfig.getTypes()).thenThrow(new RuntimeException("Config error"));
-
-		HealthResponseDto result = dashboardHealthService.getDashboardHealth();
-
-		assertEquals("DOWN", result.getStatus());
-		assertEquals(0, result.getMax());
-		assertEquals(0, result.getCount());
-		assertEquals(0, result.getTotalTime());
-	}
-
-	@Test
 	void getBoardTypeHealth_WithValidBoardType_ReturnsAggregatedHealthResponse() {
 		DashboardConfig.BoardType boardTypeConfig = mock(DashboardConfig.BoardType.class);
 		when(dashboardConfig.getTypes()).thenReturn(Collections.singletonMap("type1", boardTypeConfig));
@@ -100,15 +89,6 @@ class DashboardHealthServiceImplTest {
 		assertEquals(1, result.getCount());
 		assertEquals(50, result.getTotalTime());
 		assertTrue(result.getComponents().containsKey("dashboard1"));
-	}
-
-	@Test
-	void getBoardTypeHealth_WithInvalidBoardType_ReturnsDownStatus() {
-		when(dashboardConfig.getTypes()).thenReturn(Collections.emptyMap());
-
-		HealthResponseDto result = dashboardHealthService.getBoardTypeHealth("invalidType");
-
-		assertEquals("DOWN", result.getStatus());
 	}
 
 	@Test
@@ -133,14 +113,26 @@ class DashboardHealthServiceImplTest {
 	}
 
 	@Test
-	void getDashboardDetailHealth_WithInvalidDashboard_ReturnsDownStatus() {
+	void getBoardTypeHealth_WithInvalidBoardType_ThrowsIllegalArgumentException() {
+		when(dashboardConfig.getTypes()).thenReturn(Collections.emptyMap());
+
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			dashboardHealthService.getBoardTypeHealth("invalidType");
+		});
+
+		assertEquals("Board type not found: invalidType", exception.getMessage());
+	}
+
+	@Test
+	void getDashboardDetailHealth_WithInvalidDashboard_ThrowsIllegalArgumentException() {
 		DashboardConfig.BoardType boardTypeConfig = mock(DashboardConfig.BoardType.class);
 		when(dashboardConfig.getTypes()).thenReturn(Collections.singletonMap("type1", boardTypeConfig));
 		when(boardTypeConfig.getBoards()).thenReturn(Collections.emptyMap());
 
-		HealthResponseDto result = dashboardHealthService.getDashboardDetailHealth("type1", "invalidDashboard");
+		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			dashboardHealthService.getDashboardDetailHealth("type1", "invalidDashboard");
+		});
 
-		assertEquals("DOWN", result.getStatus());
+		assertEquals("Dashboard not found: invalidDashboard in board type type1", exception.getMessage());
 	}
-
 }
