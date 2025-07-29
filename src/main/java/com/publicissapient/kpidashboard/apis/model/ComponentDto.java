@@ -34,6 +34,8 @@ public class ComponentDto {
 	private double max;
 	private int count;
 	private double totalTime;
+	private double errorRate;
+	private double errorThreshold;
 	@JsonProperty("_links")
 	private LinksDto links;
 }
