@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.filter.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
@@ -78,8 +79,8 @@ public interface AccountHierarchyService<R, S> {
 
 		// required basicConfigId in final response list on project level but
 		// OrganizationHierarchy do not have basicConfigId.
-		Map<String, ObjectId> projectNodeWiseBasicConfigIdMap = projectBasicConfigList.stream()
-				.collect(Collectors.toMap(ProjectBasicConfig::getProjectNodeId, ProjectBasicConfig::getId));
+		Map<String, ProjectBasicConfig> projectNodeWiseBasicConfigIdMap = projectBasicConfigList.stream()
+				.collect(Collectors.toMap(ProjectBasicConfig::getProjectNodeId,Function.identity(),(e1,e2)->e1));
 
 		// required only configured Project Nodes and Above their Hierarchy Nodes
 		// filters from OrganizationHierarchy Collections
@@ -100,17 +101,17 @@ public interface AccountHierarchyService<R, S> {
 		// list
 		configureOrganizationHierarchyList.stream().map(orgHierarchy -> {
 			if (orgHierarchy.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.PROJECT)) {
-				ObjectId projectBasicId = projectNodeWiseBasicConfigIdMap.get(orgHierarchy.getNodeId());
+				ProjectBasicConfig projectBasicConfig = projectNodeWiseBasicConfigIdMap.get(orgHierarchy.getNodeId());
 				return new ProjectHierarchy(orgHierarchy.getNodeId(), orgHierarchy.getNodeName(),
 						orgHierarchy.getNodeDisplayName(), orgHierarchy.getHierarchyLevelId(),
 						orgHierarchy.getParentId(), orgHierarchy.getCreatedDate(), orgHierarchy.getModifiedDate(),
-						projectBasicId, orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy(),
-						orgHierarchy.getExternalId());
+                        projectBasicConfig.getId(), orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy(),
+						orgHierarchy.getExternalId(),  projectBasicConfig.isProjectOnHold());
 			} else {
 				return new ProjectHierarchy(orgHierarchy.getNodeId(), orgHierarchy.getNodeName(),
 						orgHierarchy.getNodeDisplayName(), orgHierarchy.getHierarchyLevelId(),
 						orgHierarchy.getParentId(), orgHierarchy.getCreatedDate(), orgHierarchy.getModifiedDate(), null,
-						orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy(), orgHierarchy.getExternalId());
+						orgHierarchy.getCreatedBy(), orgHierarchy.getUpdatedBy(), orgHierarchy.getExternalId(), false);
 			}
 		}).forEach(configureHierarchies::add);
 		return configureHierarchies;
