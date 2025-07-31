@@ -43,4 +43,6 @@ public class AccountHierarchyData implements Serializable {
 	private ObjectId basicProjectConfigId;
 
 	private List<Node> node;
+
+	private boolean onHold;
 }
