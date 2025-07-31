@@ -353,6 +353,11 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private List<String> aiRecommendationKpiList;
 
+	@Value("${is-repo-tool-enabled:false}")
+	@Setter
+	@Getter
+	private boolean isRepoToolEnabled;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}

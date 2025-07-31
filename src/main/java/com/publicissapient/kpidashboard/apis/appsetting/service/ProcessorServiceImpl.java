@@ -106,6 +106,10 @@ public class ProcessorServiceImpl implements ProcessorService {
 		String url = processorUrlConfig.getProcessorUrl(processorName);
 		List<String> scmToolList = Arrays.asList(ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
 				ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
+		if (scmToolList.contains(processorName)) {
+			// if scm processor is running, then set the scmProcessorName
+			processorExecutionBasicConfig.setScmProcessorName(processorName);
+		}
 		boolean isSuccess = true;
 		int statuscode = HttpStatus.NOT_FOUND.value();
 		String body = "";
@@ -115,7 +119,7 @@ public class ProcessorServiceImpl implements ProcessorService {
 			projectBasicConfigId = processorExecutionBasicConfig.getProjectBasicConfigIds().get(0);
 			isSCMToolEnabled = configHelperService.getProjectConfig(projectBasicConfigId).isDeveloperKpiEnabled();
 		}
-		if (scmToolList.contains(processorName) && isSCMToolEnabled) {
+		if (scmToolList.contains(processorName) && isSCMToolEnabled && customApiConfig.isRepoToolEnabled()) {
 			statuscode = repoToolsConfigService.triggerScanRepoToolProject(processorName, projectBasicConfigId);
 		} else {
 			httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
