@@ -86,6 +86,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
 	private StandardAuthenticationManager authenticationManager;
 
+	private DashboardConfig dashboardConfig;
+	
 	public static Properties getProps() throws IOException {
 		Properties prop = new Properties();
 		try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("crowd.properties")) {
@@ -131,6 +133,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 				.requestMatchers(HttpMethod.GET, "/analytics/switch").permitAll()
 				.requestMatchers("/stringShortener/shorten").permitAll().requestMatchers("/stringShortener/longString")
+				.permitAll()
+				.requestMatchers(dashboardConfig.getHealthApiBasePath(), dashboardConfig.getHealthApiBasePath() + "/*",
+						dashboardConfig.getHealthApiBasePath() + "/*/*")
 				.permitAll().anyRequest().authenticated())
 				.addFilterBefore(standardLoginRequestFilter(authenticationManager),
 						UsernamePasswordAuthenticationFilter.class)
