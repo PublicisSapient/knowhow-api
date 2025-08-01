@@ -364,10 +364,7 @@ public final class KPIHelperUtil {
 
 		for (JiraIssue issue : sprintWiseDefectDataList) {
 
-			if (StringUtils.isBlank(issue.getSeverity())) {
-				dse4Count++;
-				severityCountMap.put(Constant.DSE_5, dse4Count);
-			} else {
+			if(StringUtils.isNotEmpty(issue.getSeverity())) {
 				if (StringUtils.containsIgnoreCase(customApiConfig.getSeverity1().replaceAll(Constant.WHITESPACE, "").trim(),
 						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
 					dse1Count++;
