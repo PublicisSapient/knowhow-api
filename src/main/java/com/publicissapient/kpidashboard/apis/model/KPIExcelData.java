@@ -88,7 +88,6 @@ public class KPIExcelData {
 	@JsonProperty("DOD to Live")
 	private String dodToLive;
 
-
 	@JsonProperty("DOR Date")
 	private String dorDate;
 
@@ -530,4 +529,9 @@ public class KPIExcelData {
 	@JsonProperty("Defect Severity")
 	private String defectSeverity;
 
+	@JsonProperty("Defect SLA")
+	private String defectSLA;
+
+	@JsonProperty("SLA Breached (Y / N)")
+	private String slaBreached;
 }
