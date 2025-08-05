@@ -345,14 +345,12 @@ public enum FieldMappingEnum {
 	KPI195("Defects Breached SLAs",
 			KPISource.JIRA.name(),
 			List.of(
-					"defectSLAKPI195",
-					"issueTypeKPI195",
-					"jiraLabelsQAKPI195",
-					"defectPriorityKPI195",
-					"includeRCAForQAKPI195",
-					"jiraDefectRejectionStatusQAKPI195",
-					"resolutionTypeForRejectionQAKPI195",
-					"jiraDodQAKPI195",
+					"includedSeveritySlasKPI195",
+					"excludedDefectPrioritiesKPI195",
+					"includedDefectRootCausesKPI195",
+					"excludedDefectRejectionStatusesKPI195",
+					"excludedDefectResolutionTypesKPI195",
+					"includedDefectClosureStatusesKPI195",
 					"thresholdValueKPI195"
 			)
 	);

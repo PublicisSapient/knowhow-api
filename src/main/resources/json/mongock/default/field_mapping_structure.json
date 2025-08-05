@@ -4719,7 +4719,7 @@
     "nodeSpecific": false
   },
   {
-    "fieldName": "defectSLAKPI195",
+    "fieldName": "includedSeveritySlasKPI195",
     "fieldLabel": "Defect SLA",
     "fieldDisplayOrder": 1,
     "fieldType": "multiselect-dropdown",
@@ -4766,31 +4766,7 @@
     ]
   },
   {
-    "fieldName": "issueTypeKPI195",
-    "fieldLabel": "Issue types with defect linkages",
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "section": "Issue Types Mapping",
-    "fieldDisplayOrder": 1,
-    "sectionOrder": 2,
-    "tooltip": {
-      "definition": "All issue types that can have valid defect linkages"
-    },
-    "mandatory": true
-  },
-  {
-    "fieldName": "jiraLabelsQAKPI195",
-    "fieldLabel": "Labels to filter issues in consideration",
-    "fieldType": "chips",
-    "fieldDisplayOrder": 2,
-    "sectionOrder": 2,
-    "section": "Issue Types Mapping",
-    "tooltip": {
-      "definition": "Only issues with specified labels will be considered"
-    }
-  },
-  {
-    "fieldName": "defectPriorityKPI195",
+    "fieldName": "excludedDefectPrioritiesKPI195",
     "fieldLabel": "Priority to be excluded",
     "placeHolderText": "Select values to be excluded",
     "fieldType": "multiselect",
@@ -4824,7 +4800,7 @@
     ]
   },
   {
-    "fieldName": "includeRCAForQAKPI195",
+    "fieldName": "includedDefectRootCausesKPI195",
     "fieldLabel": "Root cause values to be included",
     "placeHolderText": " Root cause values to be included",
     "fieldType": "chips",
@@ -4836,7 +4812,7 @@
     }
   },
   {
-    "fieldName": "jiraDefectRejectionStatusQAKPI195",
+    "fieldName": "excludedDefectRejectionStatusesKPI195",
     "fieldLabel": "Status to identify rejected defects",
     "fieldType": "text",
     "fieldCategory": "workflow",
@@ -4848,7 +4824,7 @@
     }
   },
   {
-    "fieldName": "resolutionTypeForRejectionQAKPI195",
+    "fieldName": "excludedDefectResolutionTypesKPI195",
     "fieldLabel": "Resolution type to be excluded",
     "fieldType": "chips",
     "section": "WorkFlow Status Mapping",
@@ -4859,7 +4835,7 @@
     }
   },
   {
-    "fieldName": "jiraDodQAKPI195",
+    "fieldName": "includedDefectClosureStatusesKPI195",
     "fieldLabel": "Status Consider for Issue Closure",
     "fieldType": "chips",
     "fieldCategory": "workflow",

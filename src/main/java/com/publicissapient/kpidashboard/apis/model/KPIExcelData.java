@@ -61,7 +61,7 @@ public class KPIExcelData {
 	@JsonProperty("Issue Type")
 	private String issueType;
 
-	@JsonProperty("Resolution Time(In Days)")
+	@JsonProperty("Resolution Time")
 	private String resolutionTime;
 
 	@JsonProperty("Story ID")

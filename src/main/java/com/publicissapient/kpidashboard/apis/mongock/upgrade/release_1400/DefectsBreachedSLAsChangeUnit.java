@@ -14,7 +14,7 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1400;
+package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1400;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +26,15 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
-@ChangeUnit(id = "defects_breach_slas", order = "14002", author = "vladinu", systemVersion = "14.0.0")
-public class DefectsBreachSLAsChangeUnit {
+@ChangeUnit(id = "defects_breached_slas", order = "14002", author = "vladinu", systemVersion = "14.0.0")
+public class DefectsBreachedSLAsChangeUnit {
 
-    private static final String KPI_ID = "kpi";
-    private static final String KPI_195 = "195";
+    private static final String KPI_ID = "kpiId";
+    private static final String KPI_195 = "kpi195";
     private static final String DEFINITION = "definition";
     private static final String KANBAN = "kanban";
 
@@ -62,30 +64,31 @@ public class DefectsBreachSLAsChangeUnit {
 
     @Execution
     public void execution() {
+        mongoTemplate.getCollection("kpi_master").insertOne(constructKpiMasterDocument());
+		mongoTemplate.getCollection("field_mapping_structure").insertMany(constructFieldMappingStructureDocuments());
+        mongoTemplate.getCollection("kpi_category_mapping").insertOne(constructKpiCategoryMappingDocument());
+        mongoTemplate.getCollection("kpi_column_configs").insertOne(constructKpiColumnConfigDocument());
+    }
+
+    @RollbackExecution
+	public void rollback() {
+
+        log.error("Mongock upgrade failed");
+
         mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_195));
         mongoTemplate.getCollection("field_mapping_structure")
                 .deleteMany(new Document(FIELD_NAME, new Document("$in", List.of(
-                        "defectSLAKPI195",
-                        "issueTypeKPI195",
-                        "jiraLabelsQAKPI195",
-                        "defectPriorityKPI195",
-                        "includeRCAForQAKPI195",
-                        "jiraDefectRejectionStatusQAKPI195",
-                        "resolutionTypeForRejectionQAKPI195",
-                        "jiraDodQAKPI195",
+                        "includedSeveritySlasKPI195",
+                        "excludedDefectPrioritiesKPI195",
+                        "includedDefectRootCausesKPI195",
+                        "excludedDefectRejectionStatusesKPI195",
+                        "excludedDefectResolutionTypesKPI195",
+                        "includedDefectClosureStatusesKPI195",
                         "thresholdValueKPI195"
                 ))));
         mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_195));
         mongoTemplate.getCollection("kpi_column_configs").deleteOne(new Document(KPI_ID, KPI_195));
-    }
-
-    @RollbackExecution
-    public void rollback() {
-        mongoTemplate.getCollection("kpi_master").insertOne(constructKpiMasterDocument());
-        mongoTemplate.getCollection("field_mapping_structure").insertMany(constructFieldMappingStructureDocuments());
-        mongoTemplate.getCollection("kpi_category_mapping").insertOne(constructKpiCategoryMappingDocument());
-        mongoTemplate.getCollection("kpi_column_config").insertOne(constructKpiColumnConfigDocument());
-    }
+	}
 
     private Document createColumnDetail(String columnName, int order) {
         return new Document()
@@ -102,18 +105,14 @@ public class DefectsBreachSLAsChangeUnit {
                 .append("kpiColumnDetails", List.of(
                         createColumnDetail("Sprint Name", 0),
                         createColumnDetail("Defect ID", 1),
-                        createColumnDetail("Defect Description", 2),
-                        createColumnDetail("Story ID", 3),
-                        createColumnDetail("Story Description", 4),
-                        createColumnDetail("Squad", 5),
-                        createColumnDetail("Root Cause", 6),
-                        createColumnDetail("Defect Priority", 7),
-                        createColumnDetail("Defect Removed", 8),
-                        createColumnDetail("Defect Status", 9),
-                        createColumnDetail("Time Spent (in hours)", 10),
-                        createColumnDetail("Resolution Time", 11),
-                        createColumnDetail("Defect SLA", 12),
-                        createColumnDetail("SLA Breached", 12)
+                        createColumnDetail("Story ID", 2),
+                        createColumnDetail("Defect Priority", 3),
+                        createColumnDetail("Defect Severity", 4),
+                        createColumnDetail("Defect Status", 5),
+                        createColumnDetail("Time Spent (in hours)", 6),
+                        createColumnDetail("Resolution Time", 7),
+                        createColumnDetail("Defect SLA", 8),
+                        createColumnDetail("SLA Breached (Y / N)", 9)
                 ));
     }
 
@@ -121,7 +120,7 @@ public class DefectsBreachSLAsChangeUnit {
         List<Document> fieldMappingStructureDocuments = new ArrayList<>();
 
         fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "defectSLAKPI195")
+                .append(FIELD_NAME, "includedSeveritySlasKPI195")
                 .append(FIELD_LABEL, "Defect SLA")
                 .append(FIELD_DISPLAY_ORDER, 1)
                 .append(FIELD_TYPE, "multiselect-dropdown")
@@ -135,9 +134,9 @@ public class DefectsBreachSLAsChangeUnit {
                         new Document()
                                 .append(LABEL, "s1")
                                 .append(STRUCTURED_VALUE, new Document()
-                                        .append(SEVERITY, "s1")
-                                        .append(SLA, 24)
-                                        .append(TIMEUNIT, "Hours")),
+                                .append(SEVERITY, "s1")
+                                .append(SLA, 24)
+                                .append(TIMEUNIT, "Hours")),
                         new Document()
                                 .append(LABEL, "s2")
                                 .append(STRUCTURED_VALUE,
@@ -160,35 +159,9 @@ public class DefectsBreachSLAsChangeUnit {
                 ))
         );
 
-        // Issue types with defect linkages
-        fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "issueTypeKPI195")
-                .append(FIELD_LABEL, "Issue types with defect linkages")
-                .append(FIELD_TYPE, CHIPS)
-                .append(FIELD_CATEGORY, "Issue_Type")
-                .append(SECTION, "Issue Types Mapping")
-                .append(FIELD_DISPLAY_ORDER, 1)
-                .append(SECTION_ORDER, 2)
-                .append(MANDATORY, true)
-                .append(TOOLTIP, new Document()
-                        .append(DEFINITION, "All issue types that can have valid defect linkages"))
-        );
-
-        // Labels to filter issues in consideration
-        fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "jiraLabelsQAKPI195")
-                .append(FIELD_LABEL, "Labels to filter issues in consideration")
-                .append(FIELD_TYPE, CHIPS)
-                .append(FIELD_DISPLAY_ORDER, 2)
-                .append(SECTION_ORDER, 2)
-                .append(SECTION, "Issue Types Mapping")
-                .append(TOOLTIP, new Document()
-                        .append(DEFINITION, "Only issues with specified labels will be considered"))
-        );
-
         // Priority to be excluded
         fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "defectPriorityKPI195")
+                .append(FIELD_NAME, "excludedDefectPrioritiesKPI195")
                 .append(FIELD_LABEL, "Priority to be excluded")
                 .append(PLACEHOLDER_TEXT, "Select values to be excluded")
                 .append(FIELD_TYPE, "multiselect")
@@ -208,7 +181,7 @@ public class DefectsBreachSLAsChangeUnit {
 
         // Root cause values to be included
         fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "includeRCAForQAKPI195")
+                .append(FIELD_NAME, "includedDefectRootCausesKPI195")
                 .append(FIELD_LABEL, "Root cause values to be included")
                 .append(PLACEHOLDER_TEXT, " Root cause values to be included")
                 .append(FIELD_TYPE, CHIPS)
@@ -221,7 +194,7 @@ public class DefectsBreachSLAsChangeUnit {
 
         // Status to identify rejected defects
         fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "jiraDefectRejectionStatusQAKPI195")
+                .append(FIELD_NAME, "excludedDefectRejectionStatusesKPI195")
                 .append(FIELD_LABEL, "Status to identify rejected defects")
                 .append(FIELD_TYPE, "text")
                 .append(FIELD_CATEGORY, "workflow")
@@ -234,7 +207,7 @@ public class DefectsBreachSLAsChangeUnit {
 
         // Resolution type to be excluded
         fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "resolutionTypeForRejectionQAKPI195")
+                .append(FIELD_NAME, "excludedDefectResolutionTypesKPI195")
                 .append(FIELD_LABEL, "Resolution type to be excluded")
                 .append(FIELD_TYPE, CHIPS)
                 .append(SECTION, WORKFLOW_STATUS_MAPPING)
@@ -246,7 +219,7 @@ public class DefectsBreachSLAsChangeUnit {
 
         // Status Consider for Issue Closure
         fieldMappingStructureDocuments.add(new Document()
-                .append(FIELD_NAME, "jiraDodQAKPI195")
+                .append(FIELD_NAME, "includedDefectClosureStatusesKPI195")
                 .append(FIELD_LABEL, "Status Consider for Issue Closure")
                 .append(FIELD_TYPE, CHIPS)
                 .append(FIELD_CATEGORY, "workflow")
@@ -266,11 +239,11 @@ public class DefectsBreachSLAsChangeUnit {
                 .append(PROCESSOR_COMMON, false)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown")
-                        .append(FIELD_DISPLAY_ORDER, 1)
-                        .append(SECTION_ORDER, 6)
-                        .append(MANDATORY, false)
-                        .append(NODE_SPECIFIC, false)
-                ));
+                .append(FIELD_DISPLAY_ORDER, 1)
+                .append(SECTION_ORDER, 6)
+                .append(MANDATORY, false)
+                .append(NODE_SPECIFIC, false)
+        ));
 
         return fieldMappingStructureDocuments;
     }
@@ -284,48 +257,47 @@ public class DefectsBreachSLAsChangeUnit {
     }
 
     private Document constructKpiMasterDocument() {
-        return new Document()
-                .append(KPI_ID, KPI_195)
-                .append("kpiName", "Defects Breached SLAs")
-                .append("isDeleted", "False")
-                .append("defaultOrder", 28)
-                .append("kpiUnit", "%")
-                .append("chartType", "stacked-bar-chart")
-                .append("upperThresholdBG", "red")
-                .append("lowerThresholdBG", "white")
-                .append("xAxisLabel", "Sprints")
-                .append("yAxisLabel", "% defects that breached SLA")
-                .append("showTrend", true)
-                .append("isPositiveTrend", false)
-                .append("calculateMaturity", false)
-                .append("hideOverallFilter", false)
-                .append("kpiSource", "Jira")
-                .append("maxValue", 100)
-                .append("thresholdValue", 20)
-                .append(KANBAN, false)
-                .append("groupId", 26)
-                .append("kpiInfo",
-                        new Document().append(DEFINITION,
-                                        "Defects Breached SLAs (%) refers to the percentage of defects within a system or service that fail to meet the agreed-upon Service Level Agreement (SLA) timeframes.")
-                                .append("formula", List.of(
-                                        new Document()
-                                                .append("lhs", "Defects Breached SLA (%) = (Number of Resolved Defects that breached SLA / Total Resolved Defects) * 100")
-                                                .append("operator", "division")
-                                                .append("operands", List.of("Number of Resolved Defects that breached" +
-                                                        " SLA", "Total Resolved Defects"))
-                                ))
-                                .append("details", List.of(
-                                        new Document()
-                                                .append("type", "link")
-                                                .append("kpiLinkDetail", new Document()
-                                                        .append("text", "Detailed Information at")
-                                                        .append("link", "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/270794755/Defects+Breached+SLAs")
-                                                )
-                                )))
-                .append("aggregationCriteria", "average")
-                .append("isTrendCalculative", false)
-                .append("isAdditionalFilterSupport", true)
-                .append("combinedKpiSource", "Jira");
+            return new Document()
+                    .append(KPI_ID, KPI_195)
+                    .append("kpiName", "Defects Breached SLAs")
+                    .append("isDeleted", "False")
+                    .append("defaultOrder", 28)
+                    .append("kpiUnit", "%")
+                    .append("chartType", "stacked-bar-chart")
+                    .append("upperThresholdBG", "red")
+                    .append("lowerThresholdBG", "white")
+                    .append("xAxisLabel", "Sprints")
+                    .append("yAxisLabel", "% defects that breached SLA")
+                    .append("showTrend", true)
+                    .append("isPositiveTrend", false)
+                    .append("calculateMaturity", false)
+                    .append("hideOverallFilter", false)
+                    .append("kpiSource", "Jira")
+                    .append("maxValue", 100)
+                    .append("thresholdValue", 20)
+                    .append(KANBAN, false)
+                    .append("groupId", 26)
+                    .append("kpiInfo",
+                            new Document().append(DEFINITION,
+                                            "Defects Breached SLAs (%) refers to the percentage of defects within a system or service that fail to meet the agreed-upon Service Level Agreement (SLA) timeframes.")
+                            .append("formula", List.of(
+                                    new Document()
+                                            .append("lhs", "Defects Breached SLA (%)")
+                                            .append("operator", "division")
+                                            .append("operands", List.of("Number of Resolved Defects that breached SLA",
+                                                    "Total Resolved Defects"))
+                            ))
+                            .append("details", List.of(
+                                    new Document()
+                                            .append("type", "link")
+                                            .append("kpiLinkDetail", new Document()
+                                                    .append("text", "Detailed Information at")
+                                                    .append("link", "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/270794755/Defects+Breached+SLAs")
+                                            )
+                            )))
+                    .append("aggregationCriteria", "average")
+                    .append("isTrendCalculative", false)
+                    .append("isAdditionalFilterSupport", true)
+                    .append("combinedKpiSource", "Jira");
     }
 }
-

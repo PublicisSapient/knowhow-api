@@ -3575,63 +3575,43 @@
       "isShown": true,
       "isDefault": false
     }, {
-      "columnName": "Defect Description",
-      "order": 2,
-      "isShown": true,
-      "isDefault": true
-    }, {
       "columnName": "Story ID",
-      "order": 3,
-      "isShown": true,
-      "isDefault": false
-    }, {
-      "columnName": "Story Description",
-      "order": 4,
-      "isShown": true,
-      "isDefault": false
-    }, {
-      "columnName": "Squad",
-      "order": 5,
-      "isShown": true,
-      "isDefault": false
-    }, {
-      "columnName": "Root Cause",
-      "order": 6,
+      "order": 2,
       "isShown": true,
       "isDefault": false
     }, {
       "columnName": "Defect Priority",
-      "order": 7,
+      "order": 3,
       "isShown": true,
       "isDefault": false
-    }, {
-      "columnName": "Defect Removed",
-      "order": 8,
+    },{
+      "columnName": "Defect Severity",
+      "order": 4,
       "isShown": true,
       "isDefault": false
     }, {
       "columnName": "Defect Status",
-      "order": 9,
+      "order": 5,
       "isShown": true,
       "isDefault": false
     }, {
       "columnName": "Time Spent (in hours)",
-      "order": 10,
+      "order": 6,
       "isShown": true,
       "isDefault": false
     }, {
       "columnName": "Resolution Time",
-      "order": 11,
+      "order": 7,
       "isShown": true,
       "isDefault": false
     }, {
       "columnName": "Defect SLA",
-      "order": 12,
+      "order": 8,
       "isShown": true,
       "isDefault": false
     }, {
-      "columnName": "SLA Breached",
-      "order": 13,
+      "columnName": "SLA Breached (Y / N)",
+      "order": 9,
       "isShown": true,
       "isDefault": false
     }]
