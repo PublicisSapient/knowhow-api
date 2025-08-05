@@ -5245,7 +5245,7 @@
       "definition": "Defects Breached SLAs (%) refers to the percentage of defects within a system or service that fail to meet the agreed-upon Service Level Agreement (SLA) timeframes.",
       "formula": [
         {
-          "lhs": "Defects Breached SLA (%) = (Number of Resolved Defects that breached SLA / Total Resolved Defects) * 100",
+          "lhs": "Defects Breached SLA (%)",
           "operator": "division",
           "operands": ["Number of Resolved Defects that breached SLA", "Total Resolved Defects"]
         }
