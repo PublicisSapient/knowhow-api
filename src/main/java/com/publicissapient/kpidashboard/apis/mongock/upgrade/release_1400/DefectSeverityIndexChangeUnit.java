@@ -124,23 +124,7 @@ public class DefectSeverityIndexChangeUnit {
                 .append(MANDATORY, true)
                 .append(NODE_SPECIFIC, false)
         );
-        
-        // Add jiraIssueTypeNamesKPI194
-        fieldMappings.add(new Document()
-                .append(FIELD_NAME, "jiraIssueTypeNamesKPI194")
-                .append(FIELD_LABEL, "Issue types to be included")
-                .append("placeHolderText", "Issue types to be included")
-                .append(FIELD_TYPE, CHIPS)
-                .append(FIELD_CATEGORY, "Issue_Type")
-                .append(SECTION, WORK_FLOW_STATUS_MAPPING)
-                .append(SECTION_ORDER, 1)
-                .append(FIELD_DISPLAY_ORDER, 1)
-                .append(TOOLTIP, new Document(DEFINITION, "All issue types used by your Jira project"))
-                .append(MANDATORY, true)
-                .append(PROCESSOR_COMMON, false)
-                .append(NODE_SPECIFIC, false)
-        );
-        
+
         // Add resolutionTypeForRejectionKPI194
         fieldMappings.add(new Document()
                 .append(FIELD_NAME, "resolutionTypeForRejectionKPI194")
@@ -199,7 +183,7 @@ public class DefectSeverityIndexChangeUnit {
                 .append("upperThresholdBG", "red")
                 .append("lowerThresholdBG", "white")
                 .append("xAxisLabel", "Sprints")
-                .append("yAxisLabel", "Count")
+                .append("yAxisLabel", "Value")
                 .append("showTrend", true)
                 .append("isPositiveTrend", false)
                 .append("calculateMaturity", false)
