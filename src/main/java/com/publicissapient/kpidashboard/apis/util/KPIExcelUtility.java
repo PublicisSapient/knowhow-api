@@ -443,46 +443,11 @@ public class KPIExcelUtility {
 	}
 
 	private static String setSeverity(CustomApiConfig customApiConfig, JiraIssue jiraIssue) {
-		List<String> severities;
-		String severity;
 		String issueSeverity = " ";
 		if (StringUtils.isNotEmpty(jiraIssue.getSeverity())) {
-			if (StringUtils.containsIgnoreCase(customApiConfig.getSeverity1().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("1");
-				severity = Constant.DSE_1;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			} else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getSeverity2().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("2");
-				severity = Constant.DSE_2;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			} else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getSeverity3().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("3");
-				severity = Constant.DSE_3;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			} else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getSeverity4().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
-				severities = Arrays.asList("4");
-				severity = Constant.DSE_4;
-				issueSeverity = getIssueSeverity(jiraIssue, severities, severity);
-			} else {
-				issueSeverity = Constant.DSE_5 + "- " + jiraIssue.getSeverity();
-			}
+			issueSeverity = jiraIssue.getSeverity();
 		}
 		return issueSeverity;
-	}
-
-	private static String getIssueSeverity(JiraIssue jiraIssue, List<String> severities, String severity) {
-		if (severities.contains(jiraIssue.getSeverity())) {
-			return jiraIssue.getSeverity();
-		} else {
-			return severity + "- " + jiraIssue.getSeverity();
-		}
 	}
 
 	private static String getIssuePriority
