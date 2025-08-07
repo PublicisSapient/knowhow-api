@@ -34,7 +34,7 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "recommendation_update", order = "14002", author = "shi6", systemVersion = "14.0.0")
+@ChangeUnit(id = "recommendation_update", order = "14000", author = "shi6", systemVersion = "14.0.0")
 public class PromptDetailRecommendation {
 
 	private static final String PROMPT_DETAILS_COLLECTION = "prompt_details";
