@@ -21,6 +21,8 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -202,7 +204,8 @@ public class SprintVelocityServiceImplTest {
 		resultListMap.put(SPRINT_WISE_SPRINTDETAILS, sprintDetailsList);
 		resultListMap.put(PREVIOUS_SPRINT_VELOCITY, previousTotalIssueList);
 		resultListMap.put(PREVIOUS_SPRINT_WISE_DETAILS, new ArrayList<>());
-		when(kpiDataProvider.fetchSprintVelocityDataFromDb((eq(kpiRequest)), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchSprintVelocityData(any(),any(), any())).thenReturn(resultListMap);
+		when(filterHelperService.isFilterSelectedTillSprintLevel(anyInt(), anyBoolean())).thenReturn(true);
 
 		Map<String, Object> velocityListMap = sprintVelocityServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
 				kpiRequest);
