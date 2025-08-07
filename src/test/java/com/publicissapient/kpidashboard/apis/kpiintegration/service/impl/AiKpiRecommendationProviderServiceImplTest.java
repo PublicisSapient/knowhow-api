@@ -100,7 +100,8 @@ class AiKpiRecommendationProviderServiceImplTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setIds(new String[] { "project1" });
 		kpiRequest.setSelectedMap(new HashMap<>());
-	  content="{\"project_health_value\": 85.0, \"project_recommendations\": [{\"recommendation\": \"Improve code quality\", \"severity\": \"High\"}]}";
+
+	    content="{\"project_health_value\": 85.0, \"project_recommendations\": [{\"kpi\": \"kpi\",\"recommendation\": \"Improve code quality\",\"observation\": \"Observation\",\"correlated_kpis\": [\"Recommendation\"], \"severity\": \"High\"}]}";
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class))).thenReturn(new ChatGenerationResponseDTO(
 				content));
 		when(parserStategy.parse(any())).thenReturn(new ObjectMapper().readTree(content));
@@ -113,9 +114,9 @@ class AiKpiRecommendationProviderServiceImplTest {
 		assertEquals("project1", recommendations.get(0).getProjectId());
 		assertEquals(85.0, recommendations.get(0).getProjectScore());
 		assertEquals(1, recommendations.get(0).getRecommendations().size());
-		assertEquals("\"Improve code quality\"",
+		assertEquals("Improve code quality",
 				recommendations.get(0).getRecommendations().get(0).getRecommendationDetails());
-		assertEquals("\"High\"", recommendations.get(0).getRecommendations().get(0).getRecommendationType());
+		assertEquals("High", recommendations.get(0).getRecommendations().get(0).getRecommendationType());
 	}
 
 	@Test
