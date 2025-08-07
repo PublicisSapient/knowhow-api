@@ -235,7 +235,7 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 			final FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
 			mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
-					CommonUtils.convertToPatternList(fieldMapping.getJiraDefectCountlIssueTypeKPI28()));
+					CommonUtils.convertToPatternList(fieldMapping.getJiraDefectCountIssueTypeKPI194()));
 			KpiHelperService.getDroppedDefectsFilters(droppedDefects, basicProjectConfigId,
 					fieldMapping.getResolutionTypeForRejectionKPI28(),
 					fieldMapping.getJiraDefectRejectionStatusKPI28());
@@ -263,6 +263,7 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 
 		defectType.add(NormalizedJira.DEFECT_TYPE.getValue());
 		mapOfFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(), defectType);
+		mapOfFilters.put(JiraFeature.DEFECT_SEVERITY.getFieldValueInFeature(), Arrays.asList("exists:true"));
 
 		// remove keys when search defects based on stories
 		mapOfFilters.remove(JiraFeature.SPRINT_ID.getFieldValueInFeature());
@@ -284,11 +285,11 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 * collections for better organization.
 	 */
 	private static class SprintDataMaps {
-		final Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap;
+		final Map<Pair<String, String>, Map<String, Double>> sprintWiseDefectSeverityCountMap;
 		final Map<Pair<String, String>, Integer> sprintWiseTDCMap;
 		final Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap;
 
-		SprintDataMaps(Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap,
+		SprintDataMaps(Map<Pair<String, String>, Map<String, Double>> sprintWiseDefectSeverityCountMap,
 				Map<Pair<String, String>, Integer> sprintWiseTDCMap,
 				Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap) {
 			this.sprintWiseDefectSeverityCountMap = sprintWiseDefectSeverityCountMap;
@@ -418,12 +419,13 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 * @param dataCountMap
 	 *            Map to store DataCount objects by severity
 	 */
-	private void createDataCountObjects(Map<String, Long> finalMap, Node node, String trendLineName,
+	private void createDataCountObjects(Map<String, Double> finalMap, Node node, String trendLineName,
 			Map<String, Object> overAllHoverValueMap, List<DataCount> trendValueList,
-			Map<String, List<DataCount>> dataCountMap) {
+			Map<String, List<DataCount>> dataCountMap, Map<String, Double> severityMap) {
 
 		finalMap.forEach((severity, value) -> {
-			DataCount dataCount = getDataCountObject(node, trendLineName, overAllHoverValueMap, severity, value);
+			DataCount dataCount = getDataCountObject(node, trendLineName, overAllHoverValueMap, severity, value,
+					severityMap);
 			trendValueList.add(dataCount);
 			dataCountMap.computeIfAbsent(severity, k -> new ArrayList<>()).add(dataCount);
 		});
@@ -448,34 +450,46 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 *            Output map to store hover values for visualization
 	 * @return Map containing severity weights and overall weighted average
 	 */
-	private Map<String, Long> calculateSeverityWeights(Set<String> projectWiseSeverityList,
-			Map<String, Long> severityMap, long totalDefects, Node node, Map<String, Object> overAllHoverValueMap) {
+	private Map<String, Double> calculateSeverityWeights(Set<String> projectWiseSeverityList,
+			Map<String, Double> severityMap, double totalDefects, Node node, Map<String, Object> overAllHoverValueMap) {
 
-		Map<String, Long> finalMap = new HashMap<>();
+		Map<String, Double> finalMap = new HashMap<>();
 
 		if (CollectionUtils.isNotEmpty(projectWiseSeverityList)) {
 			// Process each severity and prepare data for visualization
 			projectWiseSeverityList.forEach(severity -> {
-				Long severityWiseCount = severityMap.getOrDefault(severity, 0L);
-				Long severityWeight = Long.valueOf(customApiConfig.getSeverityWeight().get(severity));
-				Long avgSeverityWeight = 0L;
+				Double severityWiseCount = severityMap.getOrDefault(severity, 0D);
+				Double severityWeight = Double.valueOf(customApiConfig.getSeverityWeight().get(severity));
+				Double avgSeverityWeight = 0D;
 				if (totalDefects > 0) {
 					avgSeverityWeight = (severityWiseCount * severityWeight) / totalDefects;
+					avgSeverityWeight = Math.round(avgSeverityWeight * 10.0) / 10.0;
 				}
 				log.debug("Weighted Average for sprint {}: {}", node.getSprintFilter().getName(), avgSeverityWeight);
-				finalMap.put(StringUtils.capitalize(severity), avgSeverityWeight);
+
+				// Store actual counts for individual severities (for individual filter display)
+				finalMap.put(StringUtils.capitalize(severity), severityWiseCount);
+				// Store weighted averages in hover map (for individual filter hover)
 				overAllHoverValueMap.put(StringUtils.capitalize(severity), avgSeverityWeight);
 			});
+
 			// Ensure all severities have entries, even if count is zero
-			projectWiseSeverityList.forEach(severity -> finalMap.computeIfAbsent(severity, val -> 0L));
+			projectWiseSeverityList
+					.forEach(severity -> finalMap.computeIfAbsent(StringUtils.capitalize(severity), val -> 0D));
+
 			// Calculate overall weighted average
-			Long overallWeightedSum = finalMap.entrySet().stream()
-					.mapToLong(entry -> entry.getValue() * customApiConfig.getSeverityWeight().get(entry.getKey()))
-					.sum();
-			Long overallWeightedAverage = 0L;
-			if (totalDefects > 0) {
-				overallWeightedAverage = overallWeightedSum / totalDefects;
+			Double overallWeightedSum = 0D;
+			for (String severity : projectWiseSeverityList) {
+				Double severityWiseCount = severityMap.getOrDefault(severity, 0D);
+				Double severityWeight = Double.valueOf(customApiConfig.getSeverityWeight().get(severity));
+				overallWeightedSum += severityWiseCount * severityWeight;
 			}
+			Double overallWeightedAverage = totalDefects > 0 ? overallWeightedSum / totalDefects : 0D;
+
+			// Round overall weighted average to 1 decimal place
+			overallWeightedAverage = Math.round(overallWeightedAverage * 10.0) / 10.0;
+
+			// Store weighted average for overall (for overall filter display)
 			finalMap.put(CommonConstant.OVERALL, overallWeightedAverage);
 		}
 
@@ -502,7 +516,7 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 */
 	private Set<String> processSprintDefectData(Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap,
 			Map<String, Object> storyDefectDataListMap,
-			Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap,
+			Map<Pair<String, String>, Map<String, Double>> sprintWiseDefectSeverityCountMap,
 			Map<Pair<String, String>, Integer> sprintWiseTDCMap,
 			Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap) {
 
@@ -519,13 +533,27 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 					.collect(Collectors.toList());
 
 			// Calculate severity counts for defects
-			Map<String, Long> severityCountMap = KPIHelperUtil.setSeverityScrum(sprintWiseDefectDataList,
+			Map<String, Double> severityCountMap = KPIHelperUtil.setSeverityScrum(sprintWiseDefectDataList,
 					customApiConfig);
+
+			// Debug logging to trace severity count values
+			log.info("=== DEBUG: processSprintDefectData for sprint {} ===", sprintFilter);
+			log.info("Defect count for this sprint: {}", sprintWiseDefectDataList.size());
+			log.info("Raw severity counts from setSeverityScrum: {}", severityCountMap);
+
 			projectWiseSeverityList.addAll(severityCountMap.keySet());
 			sprintWiseDefectDataListMap.put(sprintFilter, sprintWiseDefectDataList);
 
 			// Log sprint-wise details if detailed logging is enabled
 			setSprintWiseLogger(sprintFilter, storyIdList, sprintWiseDefectDataList, severityCountMap);
+
+			// Store severity counts and total defect count
+			sprintWiseDefectSeverityCountMap.put(sprintFilter, severityCountMap);
+			sprintWiseTDCMap.put(sprintFilter, sprintWiseDefectDataList.size());
+
+			// Debug logging to verify what was stored
+			log.info("Stored in sprintWiseDefectSeverityCountMap: {}",
+					sprintWiseDefectSeverityCountMap.get(sprintFilter));
 
 			// Store severity counts and total defect count
 			sprintWiseDefectSeverityCountMap.put(sprintFilter, severityCountMap);
@@ -575,13 +603,13 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 				.groupingBy(sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()), Collectors.toList()));
 
 		// Maps to store processed data
-		Map<Pair<String, String>, Map<String, Long>> sprintWiseDefectSeverityCountMap = new HashMap<>();
+		Map<Pair<String, String>, Map<String, Double>> sprintWiseDefectSeverityCountMap = new HashMap<>();
 		Map<Pair<String, String>, Integer> sprintWiseTDCMap = new HashMap<>();
 		Map<Pair<String, String>, List<JiraIssue>> sprintWiseDefectDataListMap = new HashMap<>();
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 
-		// Process each sprint to calculate defect counts by severity
+		// Process each sprint to calculate defect counts by severity check here
 		Set<String> projectWiseSeverityList = processSprintDefectData(sprintWiseMap, storyDefectDataListMap,
 				sprintWiseDefectSeverityCountMap, sprintWiseTDCMap, sprintWiseDefectDataListMap);
 		// Process each sprint node to populate with calculated data
@@ -601,20 +629,20 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
 
 			Map<String, List<DataCount>> dataCountMap = new HashMap<>();
-			Map<String, Long> severityMap = context.sprintData.sprintWiseDefectSeverityCountMap
+			Map<String, Double> severityMap = context.sprintData.sprintWiseDefectSeverityCountMap
 					.getOrDefault(currentNodeIdentifier, new HashMap<>());
-			long totalDefects = calculateTotalDefects(severityMap);
+			double totalDefects = calculateTotalDefects(severityMap);
 			Map<String, Object> overAllHoverValueMap = new HashMap<>();
 
 			// Calculate severity weights and overall weighted average
-			Map<String, Long> finalMap = calculateSeverityWeights(context.context.projectWiseSeverityList, severityMap,
-					totalDefects, node, overAllHoverValueMap);
+			Map<String, Double> finalMap = calculateSeverityWeights(context.context.projectWiseSeverityList,
+					severityMap, totalDefects, node, overAllHoverValueMap);
 
 			if (CollectionUtils.isNotEmpty(context.context.projectWiseSeverityList)) {
 
 				// Create DataCount objects for each severity
 				createDataCountObjects(finalMap, node, trendLineName, overAllHoverValueMap,
-						context.output.trendValueList, dataCountMap);
+						context.output.trendValueList, dataCountMap, severityMap);
 
 				// Populate Excel data if needed
 				populateExcelDataIfNeeded(context.context.projectWiseSeverityList, context.context.requestTrackerId,
@@ -659,18 +687,20 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 * @return DataCount object populated with the provided data
 	 */
 	private DataCount getDataCountObject(Node node, String trendLineName, Map<String, Object> overAllHoverValueMap,
-			String key, Long value) {
+			String key, Double value, Map<String, Double> severityMap) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(value));
 		dataCount.setSProjectName(trendLineName);
 		dataCount.setSSprintID(node.getSprintFilter().getId());
 		dataCount.setSSprintName(node.getSprintFilter().getName());
-		dataCount.setValue(value);
 		dataCount.setKpiGroup(key);
 		Map<String, Object> hoverValueMap = new HashMap<>();
 		if (key.equalsIgnoreCase(CommonConstant.OVERALL)) {
-			dataCount.setHoverValue(overAllHoverValueMap);
+			dataCount.setValue(value);
+			dataCount.setHoverValue(new HashMap<>(severityMap));
 		} else {
+			Double weightedAverage = (Double) overAllHoverValueMap.get(key);
+			dataCount.setValue(weightedAverage);
 			hoverValueMap.put(key, value.intValue());
 			dataCount.setHoverValue(hoverValueMap);
 		}
@@ -747,7 +777,7 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 *            Map of defect counts by severity
 	 */
 	private void setSprintWiseLogger(Pair<String, String> sprint, List<String> storyIdList,
-			List<JiraIssue> sprintWiseDefectDataList, Map<String, Long> severityCountMap) {
+			List<JiraIssue> sprintWiseDefectDataList, Map<String, Double> severityCountMap) {
 
 		if (customApiConfig.getApplicationDetailedLogger().equalsIgnoreCase("on")) {
 			log.info(SEPARATOR_ASTERISK);
@@ -838,12 +868,12 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 *            Map containing severity counts
 	 * @return Total number of defects
 	 */
-	private long calculateTotalDefects(Map<String, Long> severityMap) {
-		long dse1Count = severityMap.getOrDefault(Constant.DSE_1, 0L);
-		long dse2Count = severityMap.getOrDefault(Constant.DSE_2, 0L);
-		long dse3Count = severityMap.getOrDefault(Constant.DSE_3, 0L);
-		long dse4Count = severityMap.getOrDefault(Constant.DSE_4, 0L);
-		long dse5Count = severityMap.getOrDefault(Constant.DSE_5, 0L);
+	private double calculateTotalDefects(Map<String, Double> severityMap) {
+		double dse1Count = severityMap.getOrDefault(Constant.DSE_1, 0d);
+		double dse2Count = severityMap.getOrDefault(Constant.DSE_2, 0d);
+		double dse3Count = severityMap.getOrDefault(Constant.DSE_3, 0d);
+		double dse4Count = severityMap.getOrDefault(Constant.DSE_4, 0d);
+		double dse5Count = severityMap.getOrDefault(Constant.DSE_5, 0d);
 
 		return dse1Count + dse2Count + dse3Count + dse4Count + dse5Count;
 	}
