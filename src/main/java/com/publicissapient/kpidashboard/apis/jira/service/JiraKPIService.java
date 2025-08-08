@@ -22,11 +22,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.publicissapient.kpidashboard.apis.common.service.ApplicationKPIService;
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.ToolsKPIService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
@@ -34,6 +30,7 @@ import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 /**
  * This class is extention of ApplicationKPIService. All Jira KPIs service have
@@ -51,10 +48,6 @@ public abstract class JiraKPIService<R, S, T> extends ToolsKPIService<R, S> impl
 
 	public static final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 	public static final String BASIC_PROJECT_CONFIG_ID = "basicProjectConfigId";
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private JiraServiceR jiraService;
 
 	/**
 	 * Gets qualifier type
@@ -82,7 +75,7 @@ public abstract class JiraKPIService<R, S, T> extends ToolsKPIService<R, S> impl
 	 * @return Scrum Request Tracker Id
 	 */
 	public String getRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name());
+		return getCacheService().getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name());
 	}
 
 	/**
@@ -92,7 +85,7 @@ public abstract class JiraKPIService<R, S, T> extends ToolsKPIService<R, S> impl
 	 * @return Kanban Request Tracker Id
 	 */
 	public String getKanbanRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name());
+		return getCacheService().getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name());
 	}
 
 	public Map<String, Double> getLastNMonth(int count, Map<String, String> timeFormatMap) {

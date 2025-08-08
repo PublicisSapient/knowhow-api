@@ -127,16 +127,17 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_CATEGORY, "fields")
                 .append(SECTION, "Custom Fields Mapping")
                 .append(SECTION_ORDER, 1)
-                .append(MANDATORY, false)
+                .append(MANDATORY, true)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "The agreed-upon time limit within which a defect must be resolved, as defined by service-level agreements (SLAs)"))
                 .append(OPTIONS, List.of(
                         new Document()
                                 .append(LABEL, "s1")
-                                .append(STRUCTURED_VALUE, new Document()
-                                .append(SEVERITY, "s1")
-                                .append(SLA, 24)
-                                .append(TIMEUNIT, "Hours")),
+                                .append(STRUCTURED_VALUE,
+                                        new Document()
+                                                .append(SEVERITY, "s1")
+                                                .append(SLA, 24)
+                                                .append(TIMEUNIT, "Hours")),
                         new Document()
                                 .append(LABEL, "s2")
                                 .append(STRUCTURED_VALUE,
@@ -167,7 +168,7 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_TYPE, "multiselect")
                 .append(SECTION, "Defects Mapping")
                 .append(FIELD_DISPLAY_ORDER, 1)
-                .append(SECTION_ORDER, 3)
+                .append(SECTION_ORDER, 2)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "Priority values of defects that can be excluded from Defect Density calculation"))
                 .append(OPTIONS, List.of(
@@ -187,7 +188,7 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_TYPE, CHIPS)
                 .append(SECTION, "Defects Mapping")
                 .append(FIELD_DISPLAY_ORDER, 2)
-                .append(SECTION_ORDER, 3)
+                .append(SECTION_ORDER, 2)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "Root cause reasons for defects to be included In Defect Density calculation."))
         );
@@ -199,8 +200,8 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_TYPE, "text")
                 .append(FIELD_CATEGORY, "workflow")
                 .append(SECTION, WORKFLOW_STATUS_MAPPING)
-                .append(FIELD_DISPLAY_ORDER, 2)
-                .append(SECTION_ORDER, 4)
+                .append(FIELD_DISPLAY_ORDER, 1)
+                .append(SECTION_ORDER, 3)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "All workflow statuses used to reject defects."))
         );
@@ -211,8 +212,8 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_LABEL, "Resolution type to be excluded")
                 .append(FIELD_TYPE, CHIPS)
                 .append(SECTION, WORKFLOW_STATUS_MAPPING)
-                .append(FIELD_DISPLAY_ORDER, 6)
-                .append(SECTION_ORDER, 4)
+                .append(FIELD_DISPLAY_ORDER, 2)
+                .append(SECTION_ORDER, 3)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "Resolution types for defects that can be excluded from Defect Density calculation."))
         );
@@ -224,6 +225,7 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_TYPE, CHIPS)
                 .append(FIELD_CATEGORY, "workflow")
                 .append(SECTION, WORKFLOW_STATUS_MAPPING)
+                .append(FIELD_DISPLAY_ORDER, 3)
                 .append(SECTION_ORDER, 4)
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "Status considered for defect closure (Mention completed status of all types of defects)"))
@@ -240,7 +242,7 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(TOOLTIP, new Document()
                         .append(DEFINITION, "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown")
                 .append(FIELD_DISPLAY_ORDER, 1)
-                .append(SECTION_ORDER, 6)
+                .append(SECTION_ORDER, 4)
                 .append(MANDATORY, false)
                 .append(NODE_SPECIFIC, false)
         ));
