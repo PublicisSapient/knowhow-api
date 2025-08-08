@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -40,6 +41,9 @@ import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 
+import lombok.Getter;
+
+@Getter
 public abstract class ToolsKPIService<R, S> {
 
 	private Set<String> cumulativeTrend = new HashSet<>(Arrays.asList(KPICode.UNIT_TEST_COVERAGE.name(),
@@ -321,10 +325,11 @@ public abstract class ToolsKPIService<R, S> {
 				dataCount.setLineValue(dc.getLineValue());
 				dataCount.setData(dc.getData());
 				dataCount.setHoverValue(dc.getHoverValue());
-				dataCount.setDate(dc.getDate() == null ? kpiName : dc.getDate());
+				dataCount.setDate(StringUtils.isEmpty(dc.getDate()) ? StringUtils.EMPTY : dc.getDate());
 				dataCount.setDataValue(dc.getDataValue());
 				dataCount.setKpiGroup(dc.getKpiGroup());
 				dataCount.setSubFilter(dc.getSubFilter());
+				dataCount.setDrillDown(dc.getDrillDown());
 				aggregatedDataCount.add(dataCount);
 			});
 		}
@@ -363,6 +368,8 @@ public abstract class ToolsKPIService<R, S> {
 				// if 2nd chart is line on same chart
 				List<R> lineValues = new ArrayList<>();
 				List<R> aggregatedMapValues = new ArrayList<>();
+				List<Object> drillDownValues = new ArrayList<>();
+				List<Map<String, Object>> hoverValues = new ArrayList<>();
 				Map<String, Object> hoverValue = new HashMap<>();
 				for (DataCount dc : indexWiseValuesList.get(i)) {
 					if (CollectionUtils.isNotEmpty(dc.getSprintIds())) {
@@ -373,14 +380,24 @@ public abstract class ToolsKPIService<R, S> {
 					projectName.append(dc.getSProjectName());
 					hoverIdentifier = dc.getDate();
 					collectAggregatedData(values, lineValues, aggregatedMapValues, dc);
-					collectHoverData(hoverValue, dc);
+					if(KPICode.DEFECTS_BREACHED_SLAS.getKpiId().equalsIgnoreCase(kpiId)) {
+						hoverValues.add(dc.getHoverValue());
+					} else {
+						collectHoverData(hoverValue, dc);
+					}
+					drillDownValues.add(dc.getDrillDown());
 				}
 				setDataCountValue(kpiId, dataCount, values, lineValues, aggregatedMapValues);
+				dataCount.setDrillDown(calculateDrillDownValue(drillDownValues));
 				dataCount.setSprintIds(sprintIds);
 				dataCount.setSprintNames(sprintNames);
 				dataCount.setProjectNames(projectNames);
 				dataCount.setSProjectName(node.getName());
-				dataCount.setHoverValue(hoverValue);
+				if(KPICode.DEFECTS_BREACHED_SLAS.getKpiId().equalsIgnoreCase(kpiId)) {
+					dataCount.setHoverValue(calculateHoverMap(hoverValues));
+				} else {
+					dataCount.setHoverValue(hoverValue);
+				}
 				dataCount.setDate(hoverIdentifier == null ? howerKpiName : hoverIdentifier);
 				aggregatedDataCount.add(i, dataCount);
 			}
@@ -1086,6 +1103,14 @@ public abstract class ToolsKPIService<R, S> {
 	 */
 	public S calculateMapKpiMaturity(List<R> values, String kpiName) { // NOSONAR
 		return null;
+	}
+
+	public Object calculateDrillDownValue(List<Object> drillDownValues) {
+		return null;
+	}
+
+	public Map<String, Object> calculateHoverMap(List<Map<String, Object>> hoverMapValues) {
+		return Collections.emptyMap();
 	}
 
 	/**
