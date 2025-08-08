@@ -480,20 +480,31 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	 * @param defaultBoardList
 	 *          defaultBoardList
 	 * @param boardName
-	 *          boardName
+	 *          boardNamen
 	 */
 	private void setDefaultBoardInfoFromKpiMaster(int boardId, boolean kanban, List<String> kpiCategory,
 			List<BoardDTO> defaultBoardList, String boardName) {
-		BoardDTO defaultBoard = new BoardDTO();
-		defaultBoard.setBoardId(boardId);
-		defaultBoard.setBoardName(boardName);
-		defaultBoard.setBoardSlug("my-knowhow");
 		List<BoardKpisDTO> boardKpisList = new ArrayList<>();
 		kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(kanban, kpiCategory).stream()
 				.sorted(Comparator.comparing(KpiMaster::getDefaultOrder))
 				.forEach(kpiMaster -> setKpiUserBoardDefaultFromKpiMaster(boardKpisList, kpiMaster));
+		BoardDTO executive= setExecutiveDashboard(boardKpisList);
+		defaultBoardList.add(executive);
+		BoardDTO defaultBoard = new BoardDTO();
+		defaultBoard.setBoardId(boardId);
+		defaultBoard.setBoardName(boardName);
+		defaultBoard.setBoardSlug("my-knowhow");
 		defaultBoard.setKpis(boardKpisList);
 		defaultBoardList.add(defaultBoard);
+	}
+
+	private BoardDTO setExecutiveDashboard(List<BoardKpisDTO> boardKpisList) {
+		BoardDTO executiveDashBoard = new BoardDTO();
+		executiveDashBoard.setBoardId(0);
+		executiveDashBoard.setBoardName("Home");
+		executiveDashBoard.setBoardSlug("home");
+		executiveDashBoard.setKpis(boardKpisList);
+		return executiveDashBoard;
 	}
 
 	/**
