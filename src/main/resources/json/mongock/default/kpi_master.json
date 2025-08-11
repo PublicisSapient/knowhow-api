@@ -5204,7 +5204,7 @@
     "maturityLevel": null,
     "isRepoToolKpi": null,
     "yaxisOrder": null,
-    "combinedKpiSource": "Jira/Azure/Rally"
+    "combinedKpiSource": "Jira/Azure/Rally",
     "kpiFilter" : "dropDown",
     "aggregationCriteria" : "average",
     "isTrendCalculative" : false,
