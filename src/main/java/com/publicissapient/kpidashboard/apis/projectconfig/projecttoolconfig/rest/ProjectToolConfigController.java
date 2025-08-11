@@ -59,7 +59,7 @@ public class ProjectToolConfigController {
 	private ProjectAccessUtil projectAccessUtil;
 
 	/** Fetch all projectToolConfig */
-	@RequestMapping(value = "/basicconfigs/{basicConfigId}/tools", method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(value = "/basicconfigs/{basicConfigId}/tools", method = RequestMethod.GET) // NOSONAR
 	public ResponseEntity<ServiceResponse> getProjectTools(@PathVariable String basicConfigId,
 			@RequestParam(name = "toolType", required = false) String toolType) {
 		ServiceResponse response;
