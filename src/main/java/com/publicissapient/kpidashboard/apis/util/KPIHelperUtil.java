@@ -354,6 +354,49 @@ public final class KPIHelperUtil {
 		return priorityCountMap;
 	}
 
+	public static Map<String, Double> setSeverityScrum(List<JiraIssue> sprintWiseDefectDataList,
+													 CustomApiConfig customApiConfig) {
+		Map<String, Double> severityCountMap = new HashMap<>();
+		Double dse1Count = 0D;
+		Double dse2Count = 0D;
+		Double dse3Count = 0D;
+		Double dse4Count = 0D;
+		Double dse5Count = 0D;
+
+		for (JiraIssue issue : sprintWiseDefectDataList) {
+
+			if(StringUtils.isNotEmpty(issue.getSeverity())) {
+				if (StringUtils.containsIgnoreCase(customApiConfig.getSeverity1().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse1Count++;
+					severityCountMap.put(Constant.DSE_1, dse1Count);
+				} else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverity2().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse2Count++;
+					severityCountMap.put(Constant.DSE_2, dse2Count);
+				} else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverity3().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse3Count++;
+					severityCountMap.put(Constant.DSE_3, dse3Count);
+				} else if (StringUtils.containsIgnoreCase(
+						customApiConfig.getSeverity4().replaceAll(Constant.WHITESPACE, "").trim(),
+						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+					dse4Count++;
+					severityCountMap.put(Constant.DSE_4, dse4Count);
+				} else {
+					dse5Count++;
+					severityCountMap.put(Constant.DSE_5, dse5Count);
+				}
+			}
+		}
+
+		return severityCountMap;
+	}
+
+
+
 	public static Map<String, Long> setpriorityKanban(List<KanbanJiraIssue> sprintWiseDefectDataList,
 			CustomApiConfig customApiConfig) {
 		Map<String, Long> priorityCountMap = new HashMap<>();
@@ -452,7 +495,7 @@ public final class KPIHelperUtil {
 			return Constant.MISC;
 		}
 	}
-	
+
 	public static Map<String, List<DataCount>> sortTrendMapByKeyOrder(Map<String, List<DataCount>> trendMap,
 			List<String> keyOrder) {
 		Map<String, List<DataCount>> sortedMap = new LinkedHashMap<>();

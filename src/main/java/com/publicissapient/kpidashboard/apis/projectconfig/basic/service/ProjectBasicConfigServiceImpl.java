@@ -408,6 +408,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 						assigneeDetailsRepository.delete(assigneeDetails);
 					}
 				}
+				setProjectOnHold(savedConfig, basicConfig);
 				basicConfig.setCreatedBy(savedConfig.getCreatedBy());
 				basicConfig.setCreatedAt(savedConfig.getCreatedAt());
 				basicConfig.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
@@ -426,6 +427,12 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 			response = new ServiceResponse(false, "Basic Config with id " + basicConfigId + " not present.", null);
 		}
 		return response;
+	}
+
+	private static void setProjectOnHold(ProjectBasicConfig savedConfig, ProjectBasicConfig basicConfig) {
+		if(!savedConfig.isProjectOnHold() && basicConfig.isProjectOnHold()) {
+			basicConfig.setProjectOnHoldTime(DateUtil.getTodayTime().toString());
+		}
 	}
 
 	private void updateProjectNameInOrgHierarchy(ProjectBasicConfig basicConfig, OrganizationHierarchy orgHierarchy) {
@@ -475,10 +482,9 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 
 				Map<String, ProjectBasicConfig> basicConfigMap = null;
 
-				if (includeAll) {
-					basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
-				} else {
-					basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData();
+				basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
+				if (!includeAll) {
+					basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.filterOnHoldProjectBasicConfig();
 				}
 
 				List<ProjectBasicConfig> projectList = Optional.ofNullable(basicConfigMap).filter(MapUtils::isNotEmpty)
@@ -500,10 +506,9 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 
 		Map<String, ProjectBasicConfig> basicConfigMap = null;
 
-		if (includeAll) {
-			basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
-		} else {
-			basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData();
+		basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
+		if (!includeAll) {
+			basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.filterOnHoldProjectBasicConfig();
 		}
 
 		return Optional.ofNullable(basicConfigMap).filter(MapUtils::isNotEmpty).map(map -> new ArrayList<>(map.values()))
