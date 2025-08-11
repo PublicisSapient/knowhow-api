@@ -482,10 +482,9 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 
 				Map<String, ProjectBasicConfig> basicConfigMap = null;
 
-				if (includeAll) {
-					basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
-				} else {
-					basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData();
+				basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
+				if (!includeAll) {
+					basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.filterOnHoldProjectBasicConfig();
 				}
 
 				List<ProjectBasicConfig> projectList = Optional.ofNullable(basicConfigMap).filter(MapUtils::isNotEmpty)
@@ -507,10 +506,9 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 
 		Map<String, ProjectBasicConfig> basicConfigMap = null;
 
-		if (includeAll) {
-			basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
-		} else {
-			basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData();
+		basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.cacheAllProjectConfigMapData();
+		if (!includeAll) {
+			basicConfigMap = (Map<String, ProjectBasicConfig>) cacheService.filterOnHoldProjectBasicConfig();
 		}
 
 		return Optional.ofNullable(basicConfigMap).filter(MapUtils::isNotEmpty).map(map -> new ArrayList<>(map.values()))

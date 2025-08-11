@@ -436,12 +436,12 @@ public class DefectSeverityIndexImplTest {
         setupMocksForFetchKPIDataFromDb();
         
         try (MockedStatic<KPIHelperUtil> mockedStatic = Mockito.mockStatic(KPIHelperUtil.class)) {
-            Map<String, Long> severityMap = new HashMap<>();
-            severityMap.put(Constant.DSE_1, 5L);
-            severityMap.put(Constant.DSE_2, 3L);
-            severityMap.put(Constant.DSE_3, 2L);
-            severityMap.put(Constant.DSE_4, 1L);
-            severityMap.put(Constant.DSE_5, 1L);
+            Map<String, Double> severityMap = new HashMap<>();
+            severityMap.put(Constant.DSE_1, 5D);
+            severityMap.put(Constant.DSE_2, 3D);
+            severityMap.put(Constant.DSE_3, 2D);
+            severityMap.put(Constant.DSE_4, 1D);
+            severityMap.put(Constant.DSE_5, 1D);
             
             mockedStatic.when(() -> KPIHelperUtil.setSeverityScrum(anyList(), any(CustomApiConfig.class)))
                     .thenReturn(severityMap);
@@ -539,12 +539,12 @@ public class DefectSeverityIndexImplTest {
         
         try (MockedStatic<KPIHelperUtil> mockedStatic = Mockito.mockStatic(KPIHelperUtil.class)) {
             // Set up a scenario with minimal defects to avoid division by zero
-            Map<String, Long> minimalSeverityMap = new HashMap<>();
-            minimalSeverityMap.put(Constant.DSE_1, 1L); // At least one defect to avoid division by zero
-            minimalSeverityMap.put(Constant.DSE_2, 0L);
-            minimalSeverityMap.put(Constant.DSE_3, 0L);
-            minimalSeverityMap.put(Constant.DSE_4, 0L);
-            minimalSeverityMap.put(Constant.DSE_5, 0L);
+            Map<String, Double> minimalSeverityMap = new HashMap<>();
+            minimalSeverityMap.put(Constant.DSE_1, 1D); // At least one defect to avoid division by zero
+            minimalSeverityMap.put(Constant.DSE_2, 0D);
+            minimalSeverityMap.put(Constant.DSE_3, 0D);
+            minimalSeverityMap.put(Constant.DSE_4, 0D);
+            minimalSeverityMap.put(Constant.DSE_5, 0D);
             
             mockedStatic.when(() -> KPIHelperUtil.setSeverityScrum(anyList(), any(CustomApiConfig.class)))
                     .thenReturn(minimalSeverityMap);
