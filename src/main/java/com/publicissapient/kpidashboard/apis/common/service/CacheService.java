@@ -115,4 +115,6 @@ public interface CacheService {
 	List<ProjectHierarchy> getAllProjectHierarchy();
 
 	Map<String, PromptDetails> getPromptDetails();
+
+	Object filterOnHoldProjectBasicConfig();
 }

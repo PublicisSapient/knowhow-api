@@ -81,7 +81,9 @@ public enum JiraFeature {
 	CHANGE_DATE("changeDate"),
 	/** Jira production defect jira feature. */
 	JIRA_PRODUCTION_DEFECT("productionDefect"),
-
+  
+  DEFECT_SEVERITY("severity"),
+  
 	BASIC_PROJECT_CONFIG_ID("basicProjectConfigId"),
 	ADDITIONAL_FILTERS_FILTERID("additionalFilters.filterId"),
 	ADDITIONAL_FILTERS_FILTERVALUES_VALUEID("additionalFilters.filterValues.valueId");

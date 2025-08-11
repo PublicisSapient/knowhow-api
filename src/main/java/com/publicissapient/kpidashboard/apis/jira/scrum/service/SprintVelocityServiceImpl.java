@@ -384,10 +384,10 @@ public class SprintVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 			log.info("************* SPRINT WISE Sprint Velocity *******************");
 			log.info("Sprint: {}", sprint);
 			if (CollectionUtils.isNotEmpty(issueDetailsSet)) {
-				List<String> storyIdList = issueDetailsSet.stream().map(issueDetails -> issueDetails.getNumber())
+				List<String> storyIdList = issueDetailsSet.stream().map(JiraIssue::getNumber)
 						.collect(Collectors.toList());
 				log.info(STORY_LOG, storyIdList.size(), storyIdList);
-				List<Double> storyPointIdList = issueDetailsSet.stream().map(issueDetails -> issueDetails.getStoryPoints())
+				List<Double> storyPointIdList = issueDetailsSet.stream().map(JiraIssue::getStoryPoints)
 						.collect(Collectors.toList());
 				log.info(STORY_LOG, storyIdList.size(), storyPointIdList);
 			}
