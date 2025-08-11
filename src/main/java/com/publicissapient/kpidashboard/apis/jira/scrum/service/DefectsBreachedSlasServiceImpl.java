@@ -217,7 +217,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 			double breachedPercentagesSum = 0.0;
 
 			for (Map<String, Object> hoverMapValue : hoverMapValues) {
-				if (Objects.nonNull(hoverMapValue)) {
+				if(MapUtils.isNotEmpty(hoverMapValue)) {
 					totalResolvedIssuesSum += (int) hoverMapValue.get(TOTAL_RESOLVED_ISSUES);
 					breachedPercentagesSum += (double) hoverMapValue.get(BREACHED_PERCENTAGE);
 					breachedPercentagesCount++;
