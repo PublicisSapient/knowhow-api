@@ -354,20 +354,18 @@ public final class KPIHelperUtil {
 		return priorityCountMap;
 	}
 
-	public static Map<String, Long> setSeverityScrum(List<JiraIssue> sprintWiseDefectDataList,
+	public static Map<String, Double> setSeverityScrum(List<JiraIssue> sprintWiseDefectDataList,
 													 CustomApiConfig customApiConfig) {
-		Map<String, Long> severityCountMap = new HashMap<>();
-		Long dse1Count = 0L;
-		Long dse2Count = 0L;
-		Long dse3Count = 0L;
-		Long dse4Count = 0L;
+		Map<String, Double> severityCountMap = new HashMap<>();
+		Double dse1Count = 0D;
+		Double dse2Count = 0D;
+		Double dse3Count = 0D;
+		Double dse4Count = 0D;
+		Double dse5Count = 0D;
 
 		for (JiraIssue issue : sprintWiseDefectDataList) {
 
-			if (StringUtils.isBlank(issue.getSeverity())) {
-				dse4Count++;
-				severityCountMap.put(Constant.DSE_5, dse4Count);
-			} else {
+			if(StringUtils.isNotEmpty(issue.getSeverity())) {
 				if (StringUtils.containsIgnoreCase(customApiConfig.getSeverity1().replaceAll(Constant.WHITESPACE, "").trim(),
 						issue.getSeverity().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
 					dse1Count++;
@@ -388,8 +386,8 @@ public final class KPIHelperUtil {
 					dse4Count++;
 					severityCountMap.put(Constant.DSE_4, dse4Count);
 				} else {
-					dse4Count++;
-					severityCountMap.put(Constant.DSE_5, dse4Count);
+					dse5Count++;
+					severityCountMap.put(Constant.DSE_5, dse5Count);
 				}
 			}
 		}

@@ -167,7 +167,7 @@ public class CacheServiceImpl implements CacheService {
 		return configHelperService.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
 	}
 
-	private Object filterOnHoldProjectBasicConfig() {
+	public Object filterOnHoldProjectBasicConfig() {
 
 		Map<String, ProjectBasicConfig> projectConfigMap = (Map<String, ProjectBasicConfig>) configHelperService
 				.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
