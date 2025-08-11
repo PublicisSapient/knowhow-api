@@ -503,7 +503,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		executiveDashBoard.setBoardId(0);
 		executiveDashBoard.setBoardName("Home");
 		executiveDashBoard.setBoardSlug("home");
-		executiveDashBoard.setKpis(boardKpisList);
+		executiveDashBoard.setKpis(boardKpisList.stream().limit(1).collect(Collectors.toList()));
 		return executiveDashBoard;
 	}
 

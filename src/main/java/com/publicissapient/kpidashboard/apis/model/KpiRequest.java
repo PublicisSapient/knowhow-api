@@ -28,7 +28,7 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
 /** The type Kpi request. */
-public class KpiRequest implements Serializable {
+public class KpiRequest implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -51,6 +51,7 @@ public class KpiRequest implements Serializable {
 	private String duration = CommonConstant.MONTH;
 	private String hierarchyName;
 	private String hierarchyId;
+	private boolean isKanban;
 
 	/**
 	 * Gets kpi list.
@@ -372,10 +373,25 @@ public class KpiRequest implements Serializable {
 		this.duration = duration;
 	}
 
+
+	public boolean isKanban() {
+		return isKanban;
+	}
+
+	public void setKanban(boolean kanban) {
+		isKanban = kanban;
+	}
+
+
 	@Override
 	public String toString() {
 		return "KpiRequest [requestTrackerId=" + requestTrackerId + ", level=" + level + ", ids=" + Arrays.toString(ids) +
 				", platformIds=" + Arrays.toString(platformIds) + ", kpiList=" + kpiList + "]" + "sprintIncluded " +
 				sprintIncluded;
+	}
+
+	@Override
+	public KpiRequest clone() throws CloneNotSupportedException {
+		return (KpiRequest) super.clone();
 	}
 }
