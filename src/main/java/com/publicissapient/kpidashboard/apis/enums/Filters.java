@@ -34,8 +34,6 @@ public enum Filters {
 	 */
 	public static Filters getFilter(String filter) {
 
-		return Arrays.stream(Filters.values())
-				.filter(f -> f.name().equalsIgnoreCase(filter)).findAny()
-				.orElse(INVALID);
+		return Arrays.stream(Filters.values()).filter(f -> f.name().equalsIgnoreCase(filter)).findAny().orElse(INVALID);
 	}
 }

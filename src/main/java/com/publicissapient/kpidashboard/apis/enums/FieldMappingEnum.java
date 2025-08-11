@@ -339,8 +339,7 @@ public enum FieldMappingEnum {
 			Arrays.asList("jiraLiveStatusKPI997", "ticketCountIssueTypeKPI997", "jiraTicketClosedStatusKPI997",
 					"jiraTicketRejectedStatusKPI997", "thresholdValueKPI997")),
 	KPI194("Defect Severity Index (Scrum)", KPISource.JIRA.name(), Arrays.asList("jiraDefectSeverityKPI194",
-			"jiraDefectCountIssueTypeKPI194", "jiraIssueTypeNamesKPI194", "resolutionTypeForRejectionKPI194","jiraDefectRejectionStatusKPI194","thresholdValueKPI194","jiraDefectSeverityByCustomFieldKPI194",
-					"jiraTicketRejectedStatusKPI997", "thresholdValueKPI997")),
+			"jiraDefectCountIssueTypeKPI194", "jiraIssueTypeNamesKPI194", "resolutionTypeForRejectionKPI194","jiraDefectRejectionStatusKPI194","thresholdValueKPI194","jiraDefectSeverityByCustomFieldKPI194")),
 
 	KPI195("Defects Breached SLAs",
 			KPISource.JIRA.name(),
