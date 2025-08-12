@@ -70,7 +70,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -89,7 +89,6 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 	@Data
 	@Builder
 	@AllArgsConstructor
-	@NoArgsConstructor
 	private static class DefectsBreachedSLAsKPIData {
 		private String basicProjectConfigId;
 		private String projectName;
@@ -101,7 +100,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		private Set<String> severitiesFoundAcrossSprintIssues;
 	}
 
-	@Data
+	@Getter
 	@Builder
 	private static class SprintDataForKPI195 {
 		private String sprintId;
@@ -117,7 +116,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		private int breachedIssues;
 	}
 
-	@Data
+	@Getter
 	@AllArgsConstructor
 	private static class SeverityJiraDefectDrillDownValue {
 		private String severity;
@@ -125,7 +124,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		private double breachedPercentage;
 	}
 
-	@Data
+	@Getter
 	@Builder
 	private static class JiraDefectIssueDataForKPI195 {
 		private String issueKey;
@@ -144,9 +143,9 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		private LocalDateTime closedDate;
 	}
 
-	@Data
+	@Getter
 	@AllArgsConstructor
-	static class SLAData {
+	private static class SLAData {
 		private double sla;
 
 		private String generalSeverity;
@@ -300,18 +299,14 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 				List<JiraIssue> jiraIssuesAfterApplyingAllFilters = mongoTemplate.find(jiraIssuesQuery,
 						JiraIssue.class);
 
-				if (CollectionUtils.isNotEmpty(jiraIssuesAfterApplyingAllFilters)) {
-					Query jiraIssueCustomHistoryQuery = constructJiraIssueCustomHistoryQueryFromBasicProjectConfigIdAndFilteredJiraIssues(
-							defectsBreachedSLAsKPIData.getBasicProjectConfigId(), jiraIssuesAfterApplyingAllFilters);
-					if (Objects.nonNull(jiraIssueCustomHistoryQuery)) {
-						List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = mongoTemplate
-								.find(jiraIssueCustomHistoryQuery, JiraIssueCustomHistory.class);
+				Query jiraIssueCustomHistoryQuery = constructJiraIssueCustomHistoryQueryFromBasicProjectConfigIdAndFilteredJiraIssues(
+						defectsBreachedSLAsKPIData.getBasicProjectConfigId(), jiraIssuesAfterApplyingAllFilters);
+				if (Objects.nonNull(jiraIssueCustomHistoryQuery)) {
+					List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = mongoTemplate
+							.find(jiraIssueCustomHistoryQuery, JiraIssueCustomHistory.class);
 
-						if (CollectionUtils.isNotEmpty(jiraIssueCustomHistoryList)) {
-							populateSprintJiraDefectsDataForProject(defectsBreachedSLAsKPIData,
-									jiraIssueCustomHistoryList, jiraIssuesAfterApplyingAllFilters);
-						}
-					}
+					populateSprintJiraDefectsDataForProject(defectsBreachedSLAsKPIData, jiraIssueCustomHistoryList,
+							jiraIssuesAfterApplyingAllFilters);
 				}
 			}
 		});
