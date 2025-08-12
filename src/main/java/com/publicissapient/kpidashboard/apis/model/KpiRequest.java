@@ -51,8 +51,6 @@ public class KpiRequest implements Serializable, Cloneable {
 	private String duration = CommonConstant.MONTH;
 	private String hierarchyName;
 	private String hierarchyId;
-	private boolean isKanban;
-
 	/**
 	 * Gets kpi list.
 	 *
@@ -371,15 +369,6 @@ public class KpiRequest implements Serializable, Cloneable {
 
 	public void setDuration(String duration) {
 		this.duration = duration;
-	}
-
-
-	public boolean isKanban() {
-		return isKanban;
-	}
-
-	public void setKanban(boolean kanban) {
-		isKanban = kanban;
 	}
 
 
