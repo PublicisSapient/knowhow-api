@@ -405,10 +405,10 @@ public class DefectSeverityIndexImplTest {
 
     @Test
     public void testCalculateKpiValue() {
-        List<Long> valueList = Arrays.asList(10L, 20L, 30L);
+        List<Double> valueList = Arrays.asList(10D, 20D, 30D);
         String kpiName = "Test KPI";
-        
-        Long result = defectSeverityIndexImpl.calculateKpiValue(valueList, kpiName);
+
+        Double result = defectSeverityIndexImpl.calculateKpiValue(valueList, kpiName);
         assertNotNull(result);
     }
 
@@ -422,9 +422,9 @@ public class DefectSeverityIndexImplTest {
     public void testCalculateKPIMetrics() {
         Map<String, Object> objectMap = new HashMap<>();
         objectMap.put("test", "value");
-        
-        Long result = defectSeverityIndexImpl.calculateKPIMetrics(objectMap);
-        assertEquals(Long.valueOf(0L), result);
+
+        Double result = defectSeverityIndexImpl.calculateKPIMetrics(objectMap);
+        assertEquals(Double.valueOf(0D), result);
     }
 
 
@@ -575,18 +575,18 @@ public class DefectSeverityIndexImplTest {
 
     @Test
     public void testCalculateKpiValue_WithEmptyList() {
-        List<Long> emptyValueList = new ArrayList<>();
+        List<Double> emptyValueList = new ArrayList<>();
         String kpiName = "Test KPI";
-        
-        Long result = defectSeverityIndexImpl.calculateKpiValue(emptyValueList, kpiName);
+
+        Double result = defectSeverityIndexImpl.calculateKpiValue(emptyValueList, kpiName);
         assertNull(result); // Empty list should return null
     }
 
     @Test
     public void testCalculateKpiValue_WithNullList() {
         String kpiName = "Test KPI";
-        
-        Long result = defectSeverityIndexImpl.calculateKpiValue(null, kpiName);
+
+        Double result = defectSeverityIndexImpl.calculateKpiValue(null, kpiName);
         assertNull(result); // Null list should return null
     }
 
