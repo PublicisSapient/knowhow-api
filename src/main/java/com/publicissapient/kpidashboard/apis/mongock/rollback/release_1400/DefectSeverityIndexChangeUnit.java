@@ -245,9 +245,7 @@ public class DefectSeverityIndexChangeUnit {
                         createColumnDetail("Sprint Name", 1),
                         createColumnDetail("Defect ID", 2),
                         createColumnDetail("Defect Description", 3),
-                        createColumnDetail("Defect Severity", 4),
-                        createColumnDetail("Created Date", 5),
-                        createColumnDetail("Status", 6)
+                        createColumnDetail("Defect Severity", 4)
                 ));
 
         mongoTemplate.getCollection("kpi_column_configs").insertOne(kpiColumnConfig);
