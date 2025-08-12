@@ -26,16 +26,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -64,12 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ExecutiveServiceImpl implements ExecutiveService {
 
-	@Value("${executive.dashboard.batch.size:5}")
-	private int batchSize;
-
-	@Value("${executive.dashboard.thread.pool.size:10}")
-	private int threadPoolSize;
-
 	private final UserBoardConfigService userBoardConfigService;
 	private final ProjectEfficiencyService projectEfficiencyService;
 
@@ -77,30 +66,6 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	private final KpiIntegrationServiceImpl kpiIntegrationService;
 	private final CacheService cacheService;
 	private final ConfigHelperService configHelperService;
-
-	private final ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-
-	@PostConstruct
-	public void init() {
-		taskExecutor.setCorePoolSize(threadPoolSize);
-		taskExecutor.setMaxPoolSize(threadPoolSize * 2);
-		taskExecutor.setQueueCapacity(100);
-		taskExecutor.setThreadNamePrefix("executive-dashboard-");
-		taskExecutor.initialize();
-	}
-
-	@PreDestroy
-	public void destroy() {
-		taskExecutor.shutdown();
-		try {
-			if (!taskExecutor.getThreadPoolExecutor().awaitTermination(60, TimeUnit.SECONDS)) {
-				taskExecutor.shutdown();
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			taskExecutor.shutdown();
-		}
-	}
 
 	@Override
 	public ExecutiveDashboardResponseDTO getExecutiveDashboardScrum(KpiRequest kpiRequest) {
@@ -118,10 +83,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 
 		if (CollectionUtils.isEmpty(projectNodeIds) || CollectionUtils.isEmpty(boards)) {
 			log.warn("Project IDs or boards are empty");
-			return ExecutiveDashboardResponseDTO.builder()
-					.data(ExecutiveDashboardDataDTO.builder()
-							.matrix(ExecutiveMatrixDTO.builder().rows(Collections.emptyList()).build()).build())
-					.build();
+			return getDefaultResponse();
 		}
 
 		// Batch process project configurations
@@ -132,27 +94,9 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 
 		if (projectConfigs.isEmpty()) {
 			log.warn("No valid project configurations found for the provided IDs");
-			return ExecutiveDashboardResponseDTO.builder()
-					.data(ExecutiveDashboardDataDTO.builder()
-							.matrix(ExecutiveMatrixDTO.builder().rows(Collections.emptyList()).build()).build())
-					.build();
+			return getDefaultResponse();
 		}
 
-		// Process projects in parallel with controlled concurrency
-		/*
-		 * List<CompletableFuture<Void>> futures = new ArrayList<>();
-		 * 
-		 * for (List<String> batch : Lists.partition(projectNodeIds, Math.min(batchSize,
-		 * 6))) { CompletableFuture<Void> batchFuture = CompletableFuture
-		 * .supplyAsync(() -> processProjectBatch(batch, kpiRequest, projectConfigs,
-		 * boards), taskExecutor.getThreadPoolExecutor())
-		 * .thenAccept(finalResults::putAll);
-		 * 
-		 * futures.add(batchFuture); }
-		 * 
-		 * // Wait for all batches to complete
-		 * CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-		 */
 		Map<String, Map<String, Integer>> finalResults = new ConcurrentHashMap<>(
 				processProjectBatch(projectNodeIds, kpiRequest, projectConfigs, boards));
 		log.info("Completed processing {} projects in {} ms", projectNodeIds.size(),
@@ -170,11 +114,15 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies);
 	}
 
+	private static ExecutiveDashboardResponseDTO getDefaultResponse() {
+		return ExecutiveDashboardResponseDTO.builder().data(ExecutiveDashboardDataDTO.builder()
+				.matrix(ExecutiveMatrixDTO.builder().rows(Collections.emptyList()).build()).build()).build();
+	}
+
 	@Override
 	public ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(KpiRequest kpiRequest) {
 		log.warn("Kanban dashboard not implemented yet");
-		return ExecutiveDashboardResponseDTO.builder().data(ExecutiveDashboardDataDTO.builder()
-				.matrix(ExecutiveMatrixDTO.builder().rows(Collections.emptyList()).build()).build()).build();
+		return getDefaultResponse();
 	}
 
 	private Map<String, Map<String, Integer>> processProjectBatch(List<String> projectNodeIds, KpiRequest kpiRequest,
@@ -240,7 +188,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	private Map<String, Integer> processProjectKpis(String projectNodeId, KpiRequest kpiRequest,
 			Map<String, List<String>> boardWiseKpi) throws CloneNotSupportedException {
 		Map<String, Integer> results = new HashMap<>();
-		KpiRequest clonedKpiRequest = (KpiRequest) kpiRequest.clone();
+		KpiRequest clonedKpiRequest = kpiRequest.clone();
 
 		boardWiseKpi.forEach((boardName, kpiIds) -> {
 			try {
@@ -253,7 +201,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 								sourceWiseKpiMaster, true);
 
 						if (CollectionUtils.isNotEmpty(kpiElements)) {
-							int score = computeBoardSummary(boardName, kpiElements);
+							int score = computeBoardSummary(kpiElements);
 							results.put(boardName, score);
 						}
 					}
@@ -293,7 +241,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		return kpiSourceMap;
 	}
 
-	private int computeBoardSummary(String dashboard, List<KpiElement> elements) {
+	private int computeBoardSummary(List<KpiElement> elements) {
 		if (CollectionUtils.isEmpty(elements)) {
 			return 0;
 		}
