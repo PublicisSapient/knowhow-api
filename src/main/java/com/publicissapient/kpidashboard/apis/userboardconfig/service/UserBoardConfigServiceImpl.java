@@ -332,8 +332,15 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 				.collect(Collectors.toMap(Filters::getBoardId, Function.identity()));
 
 		// Helper method to set filters for a list of boards
-		ObjIntConsumer<List<BoardDTO>> setFiltersForBoards = (boards, offset) -> boards.forEach(boardDTO -> boardDTO
-				.setFilters(copyFiltersWithoutId(filtersMap.getOrDefault(boardDTO.getBoardId() - offset, filtersMap.get(1)))));
+		ObjIntConsumer<List<BoardDTO>> setFiltersForBoards = (boards, offset) -> boards.forEach(boardDTO -> {
+			if (boardDTO.getBoardId() == 0) {
+				boardDTO.setFilters(copyFiltersWithoutId(filtersMap.get(0)));
+			} else {
+				boardDTO.setFilters(copyFiltersWithoutId(
+						filtersMap.getOrDefault(boardDTO.getBoardId() - offset, filtersMap.get(1))));
+			}
+
+		});
 
 		// Set filters for each type of board
 		setFiltersForBoards.accept(scrumBoards, 0);

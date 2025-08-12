@@ -15,29 +15,26 @@
  * limitations under the License.
  *
  ******************************************************************************/
+
 package com.publicissapient.kpidashboard.apis.executive.dto;
 
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- * DTO representing the matrix data structure for the executive dashboard.
- * Contains a list of project metrics rows and column definitions.
+ * DTO representing a column definition for the executive dashboard.
+ * Defines the structure and display properties of a column.
  */
 @Data
 @Builder
-public class ExecutiveMatrixDTO {
+public class ColumnDefinitionDTO {
     /**
-     * List of project metrics rows.
-     * Each row contains metrics for a specific project.
+     * The field name that maps to the data property in the row.
      */
-    private List<ProjectMetricsDTO> rows;
+    private String field;
     
     /**
-     * List of column definitions.
-     * Defines the structure and display properties of each column.
+     * The display header text for the column.
      */
-    private List<ColumnDefinitionDTO> columns;
+    private String header;
 }
