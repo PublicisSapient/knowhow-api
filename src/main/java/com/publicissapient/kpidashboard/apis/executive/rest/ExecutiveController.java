@@ -19,8 +19,10 @@ package com.publicissapient.kpidashboard.apis.executive.rest;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
@@ -47,11 +49,10 @@ public class ExecutiveController {
 	 * @return Executive dashboard response with project metrics
 	 */
 	@GetMapping
-	public ResponseEntity<ExecutiveDashboardResponseDTO> getExecutive(@RequestBody KpiRequest kpiRequest) {
-		ExecutiveDashboardResponseDTO response = kpiRequest.isKanban()
+	public ResponseEntity<ExecutiveDashboardResponseDTO> getExecutive(@RequestBody KpiRequest kpiRequest, @RequestParam(required = true) boolean iskanban ) {
+		ExecutiveDashboardResponseDTO response = iskanban
 				? executiveService.getExecutiveDashboardKanban(kpiRequest)
 				: executiveService.getExecutiveDashboardScrum(kpiRequest);
-
 		return ResponseEntity.ok(response);
 	}
 }
