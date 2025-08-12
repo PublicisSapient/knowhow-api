@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
@@ -579,7 +580,7 @@ public class DefectSeverityIndexImplTest {
         String kpiName = "Test KPI";
 
         Double result = defectSeverityIndexImpl.calculateKpiValue(emptyValueList, kpiName);
-        assertNull(result); // Empty list should return null
+            assertEquals(0.0, result.doubleValue(), 0.0); // Empty list should return default value 0.0D
     }
 
     @Test
@@ -587,7 +588,7 @@ public class DefectSeverityIndexImplTest {
         String kpiName = "Test KPI";
 
         Double result = defectSeverityIndexImpl.calculateKpiValue(null, kpiName);
-        assertNull(result); // Null list should return null
+        assertEquals(0.0, result.doubleValue(), 0.0);
     }
 
     @Test
