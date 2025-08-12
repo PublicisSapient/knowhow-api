@@ -173,9 +173,8 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 
 		Map<String, List<Node>> userAccessibleDataByType = treeAggregatorDetail.getMapOfListOfLeafNodes();
 
-		userAccessibleDataByType.keySet().stream()
-				.filter(dataType -> Filters.getFilter(dataType).equals(Filters.SPRINT)).findFirst()
-				.ifPresent(dataType -> calculateDefectsBreachSLAsForSprints(mapTmp,
+		userAccessibleDataByType.keySet().stream().filter(dataType -> Filters.getFilter(dataType) == Filters.SPRINT)
+				.findFirst().ifPresent(dataType -> calculateDefectsBreachSLAsForSprints(mapTmp,
 						userAccessibleDataByType.get(dataType), trendValueList, kpiElement, kpiRequest));
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
@@ -187,21 +186,22 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 				List.of(CommonConstant.OVERALL, Constant.DSE_1, Constant.DSE_2, Constant.DSE_3, Constant.DSE_4));
 
 		Map<String, Map<String, List<DataCount>>> severityTypeProjectWiseDataCount = new LinkedHashMap<>();
-		trendValuesMap.forEach((issueType, dataCounts) -> {
+		trendValuesMap.forEach((String issueType, List<DataCount> dataCounts) -> {
 			Map<String, List<DataCount>> projectWiseDataCount = dataCounts.stream()
 					.collect(Collectors.groupingBy(DataCount::getData));
 			severityTypeProjectWiseDataCount.put(issueType, projectWiseDataCount);
 		});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		severityTypeProjectWiseDataCount.forEach((issueType, projectWiseDataCount) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDataCount.forEach((key, value) -> dataList.addAll(value));
-			dataCountGroup.setFilter(issueType);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		severityTypeProjectWiseDataCount
+				.forEach((String issueType, Map<String, List<DataCount>> projectWiseDataCount) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDataCount.forEach((key, value) -> dataList.addAll(value));
+					dataCountGroup.setFilter(issueType);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 
 		kpiElement.setTrendValueList(dataCountGroups);
 
@@ -217,15 +217,15 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 			double breachedPercentagesSum = 0.0;
 
 			for (Map<String, Object> hoverMapValue : hoverMapValues) {
-				if(MapUtils.isNotEmpty(hoverMapValue)) {
+				if (MapUtils.isNotEmpty(hoverMapValue)) {
 					totalResolvedIssuesSum += (int) hoverMapValue.get(TOTAL_RESOLVED_ISSUES);
 					breachedPercentagesSum += (double) hoverMapValue.get(BREACHED_PERCENTAGE);
 					breachedPercentagesCount++;
 				}
 			}
 			aggregatedHoverMapValues.put(TOTAL_RESOLVED_ISSUES, totalResolvedIssuesSum);
-			if (breachedPercentagesCount == 0.0) {
-				aggregatedHoverMapValues.put(BREACHED_PERCENTAGE, 0.0d);
+			if (breachedPercentagesCount == 0) {
+				aggregatedHoverMapValues.put(BREACHED_PERCENTAGE, 0.0D);
 			} else {
 				aggregatedHoverMapValues.put(BREACHED_PERCENTAGE,
 						Math.floor(breachedPercentagesSum / breachedPercentagesCount));
@@ -235,6 +235,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 	}
 
 	@Override
+	@SuppressWarnings("java:S3776")
 	public Object calculateDrillDownValue(List<Object> drillDownValues) {
 		List<SeverityJiraDefectDrillDownValue> aggregatedSeverityJiraDefectDrillDownValueList = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(drillDownValues)) {
@@ -251,8 +252,8 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 				}
 			}
 			if (MapUtils.isNotEmpty(severityIssuesBreachedPercentagesAcrossAllProjects)) {
-				severityIssuesBreachedPercentagesAcrossAllProjects.keySet().forEach(severity -> {
-					double averageBreachedPercentage = 0.0d;
+				severityIssuesBreachedPercentagesAcrossAllProjects.keySet().forEach((String severity) -> {
+					double averageBreachedPercentage = 0.0D;
 					if (severityIssuesBreachedPercentagesAcrossAllProjects.get(severity).isEmpty()) {
 						aggregatedSeverityJiraDefectDrillDownValueList
 								.add(new SeverityJiraDefectDrillDownValue(severity, averageBreachedPercentage));
@@ -273,21 +274,22 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		//intentionally left without implementation
+		// intentionally left without implementation
 		return Collections.emptyMap();
 	}
 
 	@Override
 	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		//intentionally left without implementation
-		return 0.0d;
+		// intentionally left without implementation
+		return 0.0D;
 	}
 
+	@SuppressWarnings("java:S3776")
 	private List<DefectsBreachedSLAsKPIData> constructKPIData(List<Node> sprintLeafNodesList) {
 		List<DefectsBreachedSLAsKPIData> defectsBreachedSLAsKPIDataList = constructProjectsAndSprintsDataFromSprintLeafNodeList(
 				sprintLeafNodesList);
 
-		defectsBreachedSLAsKPIDataList.forEach(defectsBreachedSLAsKPIData -> {
+		defectsBreachedSLAsKPIDataList.forEach((DefectsBreachedSLAsKPIData defectsBreachedSLAsKPIData) -> {
 			FieldMapping fieldMapping = defectsBreachedSLAsKPIData.getProjectKPISettingsFieldMapping();
 			if (projectDoesNotContainRequiredKPISettings(fieldMapping)) {
 				return;
@@ -324,7 +326,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 			List<KPIExcelData> kpiExcelDataList = new ArrayList<>();
 			Set<String> severitiesFoundAcrossAllProjects = new HashSet<>();
 
-			kpiDataFromDatabase.forEach(defectsBreachedSLAsKPIData -> {
+			kpiDataFromDatabase.forEach((DefectsBreachedSLAsKPIData defectsBreachedSLAsKPIData) -> {
 				if (CollectionUtils.isNotEmpty(defectsBreachedSLAsKPIData.getSeveritiesFoundAcrossSprintIssues())) {
 					severitiesFoundAcrossAllProjects
 							.addAll(defectsBreachedSLAsKPIData.getSeveritiesFoundAcrossSprintIssues());
@@ -332,7 +334,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 			});
 
 			if (CollectionUtils.isNotEmpty(severitiesFoundAcrossAllProjects)) {
-				kpiDataFromDatabase.forEach(defectsBreachedSLAsKPIData -> {
+				kpiDataFromDatabase.forEach((DefectsBreachedSLAsKPIData defectsBreachedSLAsKPIData) -> {
 					List<SprintDataForKPI195> sprintDataForKPI195List = defectsBreachedSLAsKPIData
 							.getSprintDataForKPI195List();
 					sprintDataForKPI195List
@@ -349,24 +351,27 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 	private Map<String, SeverityJiraIssuesDefectsBreachedSLAData> constructSeverityByJiraIssueDefectsDataMap(
 			SprintDataForKPI195 sprintDataForKPI195, KpiRequest kpiRequest, List<KPIExcelData> kpiExcelDataList) {
 		Map<String, SeverityJiraIssuesDefectsBreachedSLAData> severityByJiraIssueDefectsData = new HashMap<>();
-		sprintDataForKPI195.getJiraDefectIssueDataForKPI195List().forEach(jiraDefectIssueDataForKPI195 -> {
-			severityByJiraIssueDefectsData.putIfAbsent(jiraDefectIssueDataForKPI195.getSlaData().getGeneralSeverity(),
-					new SeverityJiraIssuesDefectsBreachedSLAData());
-			SeverityJiraIssuesDefectsBreachedSLAData severityJiraIssuesDefectsBreachedSLAData = severityByJiraIssueDefectsData
-					.get(jiraDefectIssueDataForKPI195.getSlaData().getGeneralSeverity());
-			severityJiraIssuesDefectsBreachedSLAData
-					.setSolvedIssues(severityJiraIssuesDefectsBreachedSLAData.getSolvedIssues() + 1);
-			boolean defectBreachedSLA = defectBreachedSLA(jiraDefectIssueDataForKPI195);
-			if (defectBreachedSLA) {
-				severityJiraIssuesDefectsBreachedSLAData
-						.setBreachedIssues(severityJiraIssuesDefectsBreachedSLAData.getBreachedIssues() + 1);
-			}
-			if (kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-				String breachedSlaFlagString = defectBreachedSLA ? "Y" : "N";
-				populateKPIExcelDataByJiraDefectIssueAndBreachedSlaFlag(kpiExcelDataList,
-						sprintDataForKPI195.getSprintName(), jiraDefectIssueDataForKPI195, breachedSlaFlagString);
-			}
-		});
+		sprintDataForKPI195.getJiraDefectIssueDataForKPI195List()
+				.forEach((JiraDefectIssueDataForKPI195 jiraDefectIssueDataForKPI195) -> {
+					severityByJiraIssueDefectsData.putIfAbsent(
+							jiraDefectIssueDataForKPI195.getSlaData().getGeneralSeverity(),
+							new SeverityJiraIssuesDefectsBreachedSLAData());
+					SeverityJiraIssuesDefectsBreachedSLAData severityJiraIssuesDefectsBreachedSLAData = severityByJiraIssueDefectsData
+							.get(jiraDefectIssueDataForKPI195.getSlaData().getGeneralSeverity());
+					severityJiraIssuesDefectsBreachedSLAData
+							.setSolvedIssues(severityJiraIssuesDefectsBreachedSLAData.getSolvedIssues() + 1);
+					boolean defectBreachedSLA = defectBreachedSLA(jiraDefectIssueDataForKPI195);
+					if (defectBreachedSLA) {
+						severityJiraIssuesDefectsBreachedSLAData
+								.setBreachedIssues(severityJiraIssuesDefectsBreachedSLAData.getBreachedIssues() + 1);
+					}
+					if (kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+						String breachedSlaFlagString = defectBreachedSLA ? "Y" : "N";
+						populateKPIExcelDataByJiraDefectIssueAndBreachedSlaFlag(kpiExcelDataList,
+								sprintDataForKPI195.getSprintName(), jiraDefectIssueDataForKPI195,
+								breachedSlaFlagString);
+					}
+				});
 		return severityByJiraIssueDefectsData;
 	}
 
@@ -393,7 +398,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 					.sSprintID(sprintDataForKPI195.getSprintId()).sSprintName(sprintDataForKPI195.getSprintName())
 					.kpiGroup(capitalisedSeverity);
 
-			double defectsBreachedSLAForSeverity = 0.0d;
+			double defectsBreachedSLAForSeverity = 0.0D;
 			Map<String, Object> hoverValueMap = new HashMap<>();
 			if (severityByJiraIssueDefectsData.containsKey(capitalisedSeverity.toLowerCase())) {
 				SeverityJiraIssuesDefectsBreachedSLAData severityJiraIssuesDefectsBreachedSLAData = severityByJiraIssueDefectsData
@@ -451,7 +456,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		// Sort the sprints by start date in ascending order
 		sprintLeafNodeList.sort(Comparator.comparing(node -> node.getSprintFilter().getStartDate()));
 
-		sprintLeafNodeList.forEach(sprintLeafNode -> {
+		sprintLeafNodeList.forEach((Node sprintLeafNode) -> {
 			String basicProjectConfigStringId = sprintLeafNode.getProjectFilter().getBasicProjectConfigId().toString();
 			String sprintId = sprintLeafNode.getSprintFilter().getId();
 			String sprintNodeId = sprintLeafNode.getId();
@@ -503,7 +508,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 
 		Map<String, List<String>> severityGeneralValuesMap = getCustomApiConfig().getSeverity();
 		List<String> generalSeverityValuesBasedOnIncludedSeveritiesList = new ArrayList<>();
-		fieldMapping.getIncludedSeveritySlasKPI195().forEach(severitySlaOption -> {
+		fieldMapping.getIncludedSeveritySlasKPI195().forEach((BaseFieldMappingStructure.Options severitySlaOption) -> {
 			Map<String, Object> severitySlaStructuredValue = (Map<String, Object>) severitySlaOption
 					.getStructuredValue();
 			String severityValueInLowerCase = ((String) severitySlaStructuredValue.get(SEVERITY)).toLowerCase();
@@ -524,7 +529,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		if (CollectionUtils.isNotEmpty(fieldMapping.getExcludedDefectPrioritiesKPI195())) {
 			Map<String, List<String>> priorityGeneralValuesMap = getCustomApiConfig().getPriority();
 			List<String> generalPriorityValuesBasedOnExcludedPriorityList = new ArrayList<>();
-			fieldMapping.getExcludedDefectPrioritiesKPI195().forEach(priority -> {
+			fieldMapping.getExcludedDefectPrioritiesKPI195().forEach((String priority) -> {
 				if (priorityGeneralValuesMap.containsKey(priority.toLowerCase())) {
 					generalPriorityValuesBasedOnExcludedPriorityList
 							.addAll(priorityGeneralValuesMap.get(priority.toLowerCase()));
@@ -544,7 +549,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		return new Query(criteria);
 	}
 
-	private Query constructJiraIssueCustomHistoryQueryFromBasicProjectConfigIdAndFilteredJiraIssues(
+	private static Query constructJiraIssueCustomHistoryQueryFromBasicProjectConfigIdAndFilteredJiraIssues(
 			String basicProjectConfigId, List<JiraIssue> jiraIssues) {
 		if (StringUtils.isEmpty(basicProjectConfigId) || CollectionUtils.isEmpty(jiraIssues)) {
 			return null;
@@ -560,7 +565,7 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList,
 			List<JiraIssue> jiraIssuesAfterApplyingAllKPISettingFilters) {
 		Set<String> severitiesFoundAcrossProject = new HashSet<>();
-		jiraIssueCustomHistoryList.forEach(jiraIssueCustomHistory -> {
+		jiraIssueCustomHistoryList.forEach((JiraIssueCustomHistory jiraIssueCustomHistory) -> {
 			List<JiraHistoryChangeLog> statusUpdateChangelog = jiraIssueCustomHistory.getStatusUpdationLog();
 			statusUpdateChangelog.sort(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
 			JiraHistoryChangeLog lastStatusUpdate = statusUpdateChangelog.get(statusUpdateChangelog.size() - 1);
@@ -606,23 +611,23 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		defectsBreachedSLAsKPIData.setSeveritiesFoundAcrossSprintIssues(severitiesFoundAcrossProject);
 	}
 
-	private boolean projectDoesNotContainRequiredKPISettings(FieldMapping fieldMapping) {
+	private static boolean projectDoesNotContainRequiredKPISettings(FieldMapping fieldMapping) {
 		return Objects.isNull(fieldMapping)
 				|| CollectionUtils.isEmpty(fieldMapping.getIncludedDefectClosureStatusesKPI195())
 				|| CollectionUtils.isEmpty(fieldMapping.getIncludedSeveritySlasKPI195());
 	}
 
-	private boolean defectBreachedSLA(JiraDefectIssueDataForKPI195 jiraDefectIssueDataForKPI195) {
+	private static boolean defectBreachedSLA(JiraDefectIssueDataForKPI195 jiraDefectIssueDataForKPI195) {
 		Duration durationToCloseTheDefect = calculateResolutionTimeForDefect(jiraDefectIssueDataForKPI195);
 
 		SLAData slaData = jiraDefectIssueDataForKPI195.getSlaData();
 		long slaInMillis;
 
-		if (slaData.getTimeUnit().equalsIgnoreCase("Hours")) {
+		if ("Hours".equalsIgnoreCase(slaData.getTimeUnit())) {
 			slaInMillis = (long) (slaData.getSla() * TimeUnit.HOURS.toMillis(1));
 			return durationToCloseTheDefect.toMillis() > slaInMillis;
 		}
-		if (slaData.getTimeUnit().equalsIgnoreCase("Days")) {
+		if ("Days".equalsIgnoreCase(slaData.getTimeUnit())) {
 			slaInMillis = (long) (slaData.getSla() * TimeUnit.DAYS.toMillis(1));
 			return durationToCloseTheDefect.toMillis() > slaInMillis;
 		}
@@ -630,7 +635,8 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 		return false;
 	}
 
-	private Duration calculateResolutionTimeForDefect(JiraDefectIssueDataForKPI195 jiraDefectIssueDataForKPI195) {
+	private static Duration calculateResolutionTimeForDefect(
+			JiraDefectIssueDataForKPI195 jiraDefectIssueDataForKPI195) {
 		LocalDateTime createdDate = jiraDefectIssueDataForKPI195.getCreatedDate();
 		LocalDateTime closedDate = jiraDefectIssueDataForKPI195.getClosedDate();
 
@@ -645,21 +651,22 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 				.filter(severity -> severitiesMap.get(severity).stream()
 						.anyMatch(severityMapping -> severityMapping.equalsIgnoreCase(jiraIssueSeverity)))
 				.findFirst();
-		return severityOptional.flatMap(severity -> includedSeveritySlasKPI195.stream().filter(severitySlaSetByUser -> {
-			Object severitySlaStructuredValue = severitySlaSetByUser.getStructuredValue();
-			if (Objects.nonNull(severitySlaStructuredValue)) {
-				Map<String, Object> severitySlaStructuredValueMap = (Map<String, Object>) severitySlaStructuredValue;
-				return ((String) severitySlaStructuredValueMap.get(SEVERITY)).equalsIgnoreCase(severity);
-			}
-			return false;
-		}).map(severitySlaSetByUser -> {
-			Map<String, Object> severitySlaStructuredValueMap = (Map<String, Object>) severitySlaSetByUser
-					.getStructuredValue();
+		return severityOptional.flatMap(severity -> includedSeveritySlasKPI195.stream()
+				.filter((BaseFieldMappingStructure.Options severitySlaSetByUser) -> {
+					Object severitySlaStructuredValue = severitySlaSetByUser.getStructuredValue();
+					if (Objects.nonNull(severitySlaStructuredValue)) {
+						Map<String, Object> severitySlaStructuredValueMap = (Map<String, Object>) severitySlaStructuredValue;
+						return ((String) severitySlaStructuredValueMap.get(SEVERITY)).equalsIgnoreCase(severity);
+					}
+					return false;
+				}).map((BaseFieldMappingStructure.Options severitySlaSetByUser) -> {
+					Map<String, Object> severitySlaStructuredValueMap = (Map<String, Object>) severitySlaSetByUser
+							.getStructuredValue();
 
-			return new SLAData(((Number) severitySlaStructuredValueMap.get("sla")).doubleValue(),
-					(String) severitySlaStructuredValueMap.get(SEVERITY),
-					(String) severitySlaStructuredValueMap.get("timeUnit"));
-		}).findFirst()).orElse(null);
+					return new SLAData(((Number) severitySlaStructuredValueMap.get("sla")).doubleValue(),
+							(String) severitySlaStructuredValueMap.get(SEVERITY),
+							(String) severitySlaStructuredValueMap.get("timeUnit"));
+				}).findFirst()).orElse(null);
 	}
 
 	private void populateKPIExcelDataByJiraDefectIssueAndBreachedSlaFlag(List<KPIExcelData> kpiExcelDataList,
