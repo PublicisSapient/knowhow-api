@@ -87,7 +87,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
+public class DefectSeverityIndexImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	/** Constant used for suppressing unchecked cast warnings */
 	public static final String UNCHECKED = "unchecked";
@@ -195,6 +195,11 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		return kpiElement;
+	}
+
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return 0.0;
 	}
 
 	/**
@@ -806,8 +811,8 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 * @return Calculated KPI value
 	 */
 	@Override
-	public Long calculateKpiValue(List<Long> valueList, String kpiName) {
-		return calculateKpiValueForLong(valueList, kpiName);
+	public Double calculateKpiValue(List<Double> valueList, String kpiName) {
+		return calculateKpiValueForDouble(valueList, kpiName);
 	}
 
 	/**
@@ -843,22 +848,6 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(fieldMapping.getThresholdValueKPI194(),
 				KPICode.DEFECT_SEVERITY_INDEX.getKpiId());
-	}
-
-	/**
-	 * Calculates KPI metrics from the provided data.
-	 *
-	 * This method processes the raw data to calculate the actual KPI metrics. For
-	 * Defect Count by Severity, it returns the object map as is since the actual
-	 * calculation is done in other methods.
-	 *
-	 * @param objectMap
-	 *            Map containing the data needed for calculation
-	 * @return Map with calculated KPI metrics
-	 */
-	@Override
-	public Long calculateKPIMetrics(Map<String, Object> objectMap) {
-		return 0L;
 	}
 
 	/**
