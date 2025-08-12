@@ -280,7 +280,7 @@ public class DefectsBreachedSlasServiceImplTest {
 	}
 
 	@Test
-	public void testCalculateKpiValue() {
+	public void when_ValueListIsReceived_Expect_CalculateKpiValueResultIsNotNull() {
 		List<Double> valueList = Arrays.asList(10.0D, 20.0D, 30.0D);
 		String kpiName = "Test KPI";
 
@@ -289,13 +289,13 @@ public class DefectsBreachedSlasServiceImplTest {
 	}
 
 	@Test
-	public void testCalculateThresholdValue() {
+	public void when_FieldMappingIsReceived_Expect_CalculateThresholdValueReturnsNull() {
 		Double result = defectsBreachedSlasService.calculateThresholdValue(fieldMapping);
 		assertNull(result);
 	}
 
 	@Test
-	public void testCalculateKPIMetrics() {
+	public void when_CalculateKPIMetricsIsInvolved_Expect_ResultIsEqualToZero() {
 		Map<String, Object> objectMap = new HashMap<>();
 		objectMap.put("test", "value");
 
