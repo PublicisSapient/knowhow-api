@@ -274,9 +274,9 @@ public class AuthenticationAndAuthorizationChangeLog {
 						.append("condition", "true").append("createdDate", new Date()).append("lastModifiedDate", new Date())
 						.append("isDeleted", false),
 				new Document("name", "ADD_USER").append("roleAllowed", "")
-						.append("description", "User with role ROLE_SUPERADMIN can add the users if granted access")
+						.append("description", "User with role ROLE_SUPERADMIN or Project Admin can add the users if granted access")
 						.append("roleActionCheck", "action == 'ADD_USER'")
-						.append("condition", "subject.authorities.contains('ROLE_SUPERADMIN')").append("createdDate", new Date())
+							.append("condition", "subject.authorities.contains('ROLE_SUPERADMIN') || subject.authorities.contains('ROLE_PROJECT_ADMIN')").append("createdDate", new Date())
 						.append("lastModifiedDate", new Date()));
 	}
 
