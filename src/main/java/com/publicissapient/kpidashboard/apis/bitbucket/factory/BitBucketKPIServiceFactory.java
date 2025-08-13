@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,9 @@ public class BitBucketKPIServiceFactory {
 	@Autowired
 	private List<BitBucketKPIService<?, ?, ?>> services;
 
+    @Autowired
+    private CustomApiConfig customApiConfig;
+
 	@SuppressWarnings("rawtypes")
 	public static BitBucketKPIService getBitBucketKPIService(String type) throws ApplicationException {
 		BitBucketKPIService<?, ?, ?> service = BIT_BUCKET_SERVICE_CACHE.get(type);
@@ -56,7 +60,13 @@ public class BitBucketKPIServiceFactory {
 	@PostConstruct
 	public void initMyServiceCache() {
 		for (BitBucketKPIService<?, ?, ?> service : services) {
-			BIT_BUCKET_SERVICE_CACHE.put(service.getQualifierType(), service);
+            //todo:: remove this once older services are removed
+			String className = service.getClass().getSimpleName().toLowerCase();
+			boolean isScmService = className.startsWith("scm");
+			if ((!customApiConfig.isRepoToolEnabled() && isScmService)
+					|| (customApiConfig.isRepoToolEnabled() && !isScmService)) {
+				BIT_BUCKET_SERVICE_CACHE.put(service.getQualifierType(), service);
+			}
 		}
 	}
 }
