@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -99,6 +100,7 @@ public abstract class JiraBacklogKPIService<R, S> extends ToolsKPIService<R, S> 
 		iterationKpiModalValue.setIssueId(jiraIssue.getNumber());
 		iterationKpiModalValue.setIssueURL(jiraIssue.getUrl());
 		iterationKpiModalValue.setDescription(jiraIssue.getName());
+		KPIExcelUtility.populateAssignee(jiraIssue, iterationKpiModalValue);
 		overAllModalValues.add(iterationKpiModalValue);
 	}
 }
