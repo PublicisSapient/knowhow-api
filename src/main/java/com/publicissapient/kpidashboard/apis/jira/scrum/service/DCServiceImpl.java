@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -80,11 +83,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
 
 	public static final String UNCHECKED = "unchecked";
-	private static final String SEPARATOR_ASTERISK = "*************************************";
+
 	private static final String TOTAL_DEFECT_DATA = "totalBugKey";
 	public static final String STORY_LIST = "storyList";
 	private static final String SPRINT_WISE_STORY_DATA = "storyData";
-	private static final String DEV = "DeveloperKpi";
 
 	@Autowired
 	private JiraIssueRepository jiraIssueRepository;
@@ -101,6 +103,17 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 	@Autowired
 	private CacheService cacheService;
 
+	@Autowired
+	private KpiDataCacheService kpiDataCacheService;
+	@Autowired
+	private KpiDataProvider kpiDataProvider;
+	@Autowired
+	private FilterHelperService filterHelperService;
+
+	private List<String> sprintIdList = Collections.synchronizedList(new ArrayList<>());
+
+	private static final String SEPARATOR_ASTERISK = "*************************************";
+
 	/** {@inheritDoc} */
 	@Override
 	public String getQualifierType() {
@@ -115,7 +128,8 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 		List<DataCount> trendValueList = new ArrayList<>();
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-
+		sprintIdList = treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER).stream()
+				.map(node -> node.getSprintFilter().getId()).collect(Collectors.toList());
 		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
 			if (Filters.getFilter(k) == Filters.SPRINT) {
 				sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
@@ -163,79 +177,39 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 	public Map<String, Object> fetchKPIDataFromDb(final List<Node> leafNodeList, final String startDate,
 			final String endDate, final KpiRequest kpiRequest) {
 
-		List<String> sprintList = new ArrayList<>();
-		List<String> basicProjectConfigIds = new ArrayList<>();
 
-		final Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
-		final Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
-		final List<String> defectType = new ArrayList<>();
-
+		Map<ObjectId, List<String>> projectWiseSprints = new HashMap<>();
 		leafNodeList.forEach(leaf -> {
 			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			sprintList.add(leaf.getSprintFilter().getId());
-			basicProjectConfigIds.add(basicProjectConfigId.toString());
-
-			final Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
-
-			final FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-
-			mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
-					CommonUtils.convertToPatternList(fieldMapping.getJiraDefectCountlIssueTypeKPI28()));
-			KpiHelperService.getDroppedDefectsFilters(droppedDefects, basicProjectConfigId,
-					fieldMapping.getResolutionTypeForRejectionKPI28(), fieldMapping.getJiraDefectRejectionStatusKPI28());
-			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+			String sprint = leaf.getSprintFilter().getId();
+			projectWiseSprints.putIfAbsent(basicProjectConfigId, new ArrayList<>());
+			projectWiseSprints.get(basicProjectConfigId).add(sprint);
 		});
-
-		final Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
+		List<SprintWiseStory> sprintWiseStoryList = new ArrayList<>();
+		List<JiraIssue> jiraIssueList = new ArrayList<>();
+		List<JiraIssue> defectListWoDrop = new ArrayList<>();
+		boolean fetchCachedData = filterHelperService.isFilterSelectedTillSprintLevel(kpiRequest.getLevel(), false);
+		projectWiseSprints.forEach((basicProjectConfigId, sprintList) -> {
+			Map<String, Object> result;
+			if (fetchCachedData) { // fetch data from cache only if Filter is selected till Sprint
+				// level.
+				result = kpiDataCacheService.fetchDCPData(kpiRequest, basicProjectConfigId, sprintIdList,
+						KPICode.DEFECT_COUNT_BY_PRIORITY.getKpiId());
+			} else { // fetch data from DB if filters below Sprint level (i.e. additional filters)
+				result = kpiDataProvider.fetchDCPData(kpiRequest, basicProjectConfigId, sprintList);
+			}
+			jiraIssueList.addAll((List<JiraIssue>) result.getOrDefault(STORY_LIST, new ArrayList<>() ));
+			sprintWiseStoryList.addAll((List<SprintWiseStory>) result
+					.getOrDefault(SPRINT_WISE_STORY_DATA, new ArrayList<>()));
+			defectListWoDrop.addAll((List<JiraIssue>) result.getOrDefault(TOTAL_DEFECT_DATA, new ArrayList<>()));
+		});
 		final Map<String, Object> resultListMap = new HashMap<>();
-
-		/** additional filter * */
-		KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
-
-		mapOfFilters.put(JiraFeature.SPRINT_ID.getFieldValueInFeature(),
-				sprintList.stream().distinct().collect(Collectors.toList()));
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
-
-		// Fetch Story ID List grouped by Sprint
-		List<SprintWiseStory> sprintWiseStoryList = jiraIssueRepository.findIssuesGroupBySprint(mapOfFilters,
-				uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEV);
-
-		final List<String> storyIdList = new ArrayList<>();
-		sprintWiseStoryList.forEach(s -> storyIdList.addAll(s.getStoryList()));
-
-		defectType.add(NormalizedJira.DEFECT_TYPE.getValue());
-		mapOfFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(), defectType);
-
-		// remove keys when search defects based on stories
-		mapOfFilters.remove(JiraFeature.SPRINT_ID.getFieldValueInFeature());
-
-		// Fetch Defects linked with story ID's
-		mapOfFilters.put(JiraFeature.DEFECT_STORY_ID.getFieldValueInFeature(), storyIdList);
-
-		List<JiraIssue> defectListWoDrop = getDefectListWoDrop(jiraIssueRepository.findIssuesByType(mapOfFilters),
-				droppedDefects);
-		setDbQueryLogger(storyIdList, defectListWoDrop);
 		resultListMap.put(SPRINT_WISE_STORY_DATA, sprintWiseStoryList);
 		resultListMap.put(TOTAL_DEFECT_DATA, defectListWoDrop);
-		resultListMap.put(STORY_LIST, jiraIssueRepository.findIssueAndDescByNumber(storyIdList));
+		resultListMap.put(STORY_LIST, jiraIssueList);
 		return resultListMap;
 	}
 
-	/**
-	 * Get DefectList without Drop
-	 *
-	 * @param defectLinkedWithStory
-	 * @param droppedDefects
-	 * @return
-	 */
-	private List<JiraIssue> getDefectListWoDrop(List<JiraIssue> defectLinkedWithStory,
-			Map<String, Map<String, List<String>>> droppedDefects) {
-		List<JiraIssue> defectListWoDrop = new ArrayList<>();
-		KpiHelperService.getDefectsWithoutDrop(droppedDefects, defectLinkedWithStory, defectListWoDrop);
-
-		return defectListWoDrop;
-	}
 
 	/**
 	 * This method populates KPI value to sprint leaf nodes. It also gives the trend
@@ -379,26 +353,6 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 		}
 	}
 
-	/**
-	 * Sets logging data.
-	 *
-	 * @param storyIdList
-	 *          list of story ids
-	 * @param defectLinkedWithStory
-	 *          defects linked with story
-	 */
-	private void setDbQueryLogger(List<String> storyIdList, List<JiraIssue> defectLinkedWithStory) {
-
-		if (customApiConfig.getApplicationDetailedLogger().equalsIgnoreCase("on")) {
-			log.info(SEPARATOR_ASTERISK);
-			log.info("************* DC (dB) *******************");
-			log.info("Story[{}]: {}", storyIdList.size(), storyIdList);
-			log.info("DefectLinkedWith -> story[{}]: {}", defectLinkedWithStory.size(),
-					defectLinkedWithStory.stream().map(JiraIssue::getNumber).collect(Collectors.toList()));
-			log.info(SEPARATOR_ASTERISK);
-			log.info("******************X----X*******************");
-		}
-	}
 
 	/**
 	 * Sets logger to log sprint level details.
