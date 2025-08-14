@@ -17,9 +17,12 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.executive.rest;
 
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,20 +42,29 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/executive")
 public class ExecutiveController {
 
-	private final ExecutiveServiceImpl executiveService;
+    private static final Logger log = LoggerFactory.getLogger(ExecutiveController.class);
 
-	/**
-	 * Retrieves executive dashboard data based on the provided KPI request.
-	 *
-	 * @param kpiRequest
-	 *            The KPI request containing filter criteria
-	 * @return Executive dashboard response with project metrics
-	 */
-	@GetMapping
-	public ResponseEntity<ExecutiveDashboardResponseDTO> getExecutive(@RequestBody KpiRequest kpiRequest, @RequestParam(required = true) boolean iskanban ) {
-		ExecutiveDashboardResponseDTO response = iskanban
-				? executiveService.getExecutiveDashboardKanban(kpiRequest)
-				: executiveService.getExecutiveDashboardScrum(kpiRequest);
-		return ResponseEntity.ok(response);
-	}
+    private final ExecutiveServiceImpl executiveService;
+
+    /**
+     * Retrieves executive dashboard data based on the provided KPI request.
+     *
+     * @param kpiRequest The KPI request containing filter criteria
+     * @param iskanban   Flag indicating whether to use Kanban (true) or Scrum (false) strategy
+     * @return Executive dashboard response with project metrics
+     */
+    @PostMapping()
+    public ResponseEntity<ExecutiveDashboardResponseDTO> getExecutive(
+            @Valid @RequestBody KpiRequest kpiRequest,
+            @RequestParam(required = true) boolean iskanban) {
+        
+        log.info("Processing executive dashboard request for {} methodology", iskanban ? "Kanban" : "Scrum");
+        
+        ExecutiveDashboardResponseDTO response = iskanban
+                ? executiveService.getExecutiveDashboardKanban(kpiRequest)
+                : executiveService.getExecutiveDashboardScrum(kpiRequest);
+                
+        log.debug("Successfully processed executive dashboard request");
+        return ResponseEntity.ok(response);
+    }
 }

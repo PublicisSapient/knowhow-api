@@ -146,6 +146,11 @@ public class KpiIntegrationServiceImpl {
 				log.error("Error while fetching kpi maturity data", ex);
 			}
 		});
+		calculateOverallMaturity(kpiElements);
+		return kpiElements;
+	}
+
+	public void calculateOverallMaturity(List<KpiElement> kpiElements) {
 		kpiElements.forEach(kpiElement -> {
 			List<?> trendValueList = (List<?>) kpiElement.getTrendValueList();
 			if (CollectionUtils.isNotEmpty(trendValueList)) {
@@ -170,7 +175,6 @@ public class KpiIntegrationServiceImpl {
 				}
 			}
 		});
-		return kpiElements;
 	}
 
 	/**

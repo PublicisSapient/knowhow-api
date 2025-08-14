@@ -113,7 +113,7 @@ public class ExecutiveDashboardMapper {
 		BoardMaturityDTO boardMaturity = BoardMaturityDTO.builder().metrics(metricsMap).build();
 
 		return ProjectMetricsDTO.builder().id(projectNodeId).completion(result.completion()).health(result.health())
-				.name(projectConfig != null ? projectConfig.getProjectName() : "Unknown").boardMaturity(boardMaturity)
+				.name(projectConfig != null ? projectConfig.getProjectDisplayName() : "Unknown").boardMaturity(boardMaturity)
 				.build();
 	}
 
