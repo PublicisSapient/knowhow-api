@@ -1,3 +1,20 @@
+/*******************************************************************************
+ * Copyright 2014 CapitalOne, LLC.
+ * Further development Copyright 2022 Sapient Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.zephyr.service;
 
 import java.util.*;
@@ -81,7 +98,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
-		// 3rd change : remove code to set trendValuelist and call getTrendValues method
+
 		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
 				KPICode.TEST_EXECUTION_TIME);
 		kpiElement.setTrendValueList(trendValues);
@@ -144,7 +161,6 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 			// Leaf node wise data
 			String trendLineName = node.getProjectFilter().getName();
 
-			// flow 2 : populating by configured tool
 			Pair<String, String> currentNodeIdentifier = Pair
 					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
 

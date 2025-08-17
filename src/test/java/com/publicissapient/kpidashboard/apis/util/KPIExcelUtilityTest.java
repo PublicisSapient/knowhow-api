@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -1603,4 +1604,129 @@ public class KPIExcelUtilityTest {
 		// The method should still process stories even with null defects
 		assertEquals(1, kpiExcelData.size());
 	}
+
+	@Test
+	public void when_ValidAutomatedAndManualCases_expect_ExcelRowsWithTypesAndAvgSeconds() {
+		String sprint = "Sprint-1";
+		List<TestCaseDetails> allTests = new ArrayList<>();
+		List<TestCaseDetails> automatedTests = new ArrayList<>();
+		List<TestCaseDetails> manualTests = new ArrayList<>();
+		Set<JiraIssue> linkedStories = new HashSet<>();
+		List<KPIExcelData> kpiExcelDataLocal = new ArrayList<>();
+
+		JiraIssue story = new JiraIssue();
+		story.setNumber("STORY-1");
+		story.setUrl("http://story-url");
+		linkedStories.add(story);
+
+		TestCaseDetails tcAutomated = new TestCaseDetails();
+		tcAutomated.setNumber("TC-1");
+		tcAutomated.setTestCaseStatus("Pass");
+		tcAutomated.setDefectStoryID(new HashSet<>(Arrays.asList("STORY-1")));
+
+		TestCaseExecutionData a1 = new TestCaseExecutionData();
+		a1.setExecutionTime(2000);
+		a1.setAutomated(true);
+		TestCaseExecutionData a2 = new TestCaseExecutionData();
+		a2.setExecutionTime(4000);
+		a2.setAutomated(true);
+		tcAutomated.setExecutions(Arrays.asList(a1, a2));
+
+		TestCaseDetails tcManual = new TestCaseDetails();
+		tcManual.setNumber("TC-2");
+		tcManual.setTestCaseStatus("Fail");
+		tcManual.setDefectStoryID(new HashSet<>(Arrays.asList("STORY-1")));
+
+		TestCaseExecutionData m1 = new TestCaseExecutionData();
+		m1.setExecutionTime(3000); // ms
+		m1.setAutomated(false);
+		tcManual.setExecutions(Arrays.asList(m1));
+
+		allTests.add(tcAutomated);
+		allTests.add(tcManual);
+		automatedTests.add(tcAutomated);
+		manualTests.add(tcManual);
+
+		KPIExcelUtility.populateTestExecutionTimeExcelData(
+				sprint, allTests, automatedTests, manualTests, linkedStories, kpiExcelDataLocal
+		);
+
+		assertEquals(2, kpiExcelDataLocal.size());
+
+		KPIExcelData rowTC1 = kpiExcelDataLocal.stream()
+				.filter(r -> "TC-1".equals(r.getTestCaseId()))
+				.findFirst().orElseThrow(AssertionError::new);
+
+		assertEquals("Sprint-1", rowTC1.getSprintName());
+		assertEquals("Automated", rowTC1.getTestCaseType());
+		assertEquals("Pass", rowTC1.getTestCaseStatus());
+		assertEquals("3.0", rowTC1.getExecutionTime()); // (2000+4000)/2 ms => 3.0 sec
+		assertTrue(rowTC1.getLinkedStory().containsKey("STORY-1"));
+
+		KPIExcelData rowTC2 = kpiExcelDataLocal.stream()
+				.filter(r -> "TC-2".equals(r.getTestCaseId()))
+				.findFirst().orElseThrow(AssertionError::new);
+
+		assertEquals("Sprint-1", rowTC2.getSprintName());
+		assertEquals("Manual", rowTC2.getTestCaseType());
+		assertEquals("Fail", rowTC2.getTestCaseStatus());
+		assertEquals("3.0", rowTC2.getExecutionTime()); // 3000 ms => 3.0 sec
+		assertTrue(rowTC2.getLinkedStory().containsKey("STORY-1"));
+	}
+
+	@Test
+	public void when_TestCaseNotInAutomatedOrManual_expect_EmptyTypeAndAvgSecondsComputed() {
+		String sprint = "Sprint-X";
+		List<TestCaseDetails> allTests = new ArrayList<>();
+		List<TestCaseDetails> automatedTests = new ArrayList<>();
+		List<TestCaseDetails> manualTests = new ArrayList<>();
+		Set<JiraIssue> linkedStories = new HashSet<>();
+		List<KPIExcelData> kpiExcelDataLocal = new ArrayList<>();
+
+		JiraIssue story = new JiraIssue();
+		story.setNumber("S-10");
+		story.setUrl("http://s-10");
+		linkedStories.add(story);
+
+		TestCaseDetails tcOther = new TestCaseDetails();
+		tcOther.setNumber("TC-3");
+		tcOther.setTestCaseStatus("Blocked");
+		tcOther.setDefectStoryID(new HashSet<>(Arrays.asList("S-10")));
+
+		TestCaseExecutionData e = new TestCaseExecutionData();
+		e.setExecutionTime(1500); // 1.5 sec
+		e.setAutomated(false);
+		tcOther.setExecutions(Arrays.asList(e));
+
+		allTests.add(tcOther);
+
+		KPIExcelUtility.populateTestExecutionTimeExcelData(
+				sprint, allTests, automatedTests, manualTests, linkedStories, kpiExcelDataLocal
+		);
+
+		assertEquals(1, kpiExcelDataLocal.size());
+		KPIExcelData row = kpiExcelDataLocal.get(0);
+		assertEquals("TC-3", row.getTestCaseId());
+		assertEquals("", row.getTestCaseType());         // not in either list
+		assertEquals("Blocked", row.getTestCaseStatus());
+		assertEquals("1.5", row.getExecutionTime());     // 1500 ms => 1.5 sec
+		assertTrue(row.getLinkedStory().containsKey("S-10"));
+	}
+
+	@Test
+	public void when_AllTestsEmpty_expect_NoRows() {
+		List<KPIExcelData> kpiExcelDataLocal = new ArrayList<>();
+
+		KPIExcelUtility.populateTestExecutionTimeExcelData(
+				"Sprint-Empty",
+				new ArrayList<>(),   // allTestList
+				new ArrayList<>(),   // automatedList
+				new ArrayList<>(),   // manualList
+				new HashSet<>(),     // linkedStories
+				kpiExcelDataLocal
+		);
+
+		assertTrue(kpiExcelDataLocal.isEmpty());
+	}
+
 }
