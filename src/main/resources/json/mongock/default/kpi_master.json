@@ -5160,7 +5160,7 @@
     "upperThresholdBG": "red",
     "lowerThresholdBG": "white",
     "xAxisLabel": "Sprints",
-    "yAxisLabel": "Count",
+    "yAxisLabel": "Value",
     "showTrend": true,
     "isPositiveTrend": false,
     "lineLegend": null,

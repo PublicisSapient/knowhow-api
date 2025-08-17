@@ -4633,20 +4633,6 @@
     "nodeSpecific": false
   },
   {
-    "fieldName": "jiraIssueTypeNamesKPI194",
-    "fieldLabel": "Issue types to be included",
-    "placeHolderText": "Issue types to be included",
-    "fieldDisplayOrder": 1,
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "section": "WorkFlow Status Mapping",
-    "sectionOrder": 1,
-    "tooltip": {
-      "definition": "All issue types used by your Jira project"
-    },
-    "mandatory": true
-  },
-  {
     "fieldName": "resolutionTypeForRejectionKPI194",
     "fieldLabel": "Resolution type to be excluded",
     "fieldType": "chips",
