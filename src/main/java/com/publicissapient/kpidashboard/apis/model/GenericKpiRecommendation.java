@@ -26,6 +26,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
+
 @Data
 @Builder
 @Getter
@@ -37,9 +39,11 @@ public class GenericKpiRecommendation {
 
 	private String kpiId;
 	private String kpiName;
+	private String observation;
 	private Integer maturity;
 	private String recommendationSummary;
 	private String recommendationDetails;
 	private String recommendationType;
+	private List<String> correlatedKpis;
 	private String filter;
 }
