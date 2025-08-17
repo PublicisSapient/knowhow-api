@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -50,18 +51,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private final ConfigHelperService configHelperService;
-	private final CacheService cacheService;
-	private final JiraIssueRepository jiraIssueRepository;
-	private final TestCaseDetailsRepository testCaseDetailsRepository;
-
-	public TestExecutionTimeServiceImpl(ConfigHelperService configHelperService, CacheService cacheService,
-			JiraIssueRepository jiraIssueRepository, TestCaseDetailsRepository testCaseDetailsRepository) {
-		this.configHelperService = configHelperService;
-		this.cacheService = cacheService;
-		this.jiraIssueRepository = jiraIssueRepository;
-		this.testCaseDetailsRepository = testCaseDetailsRepository;
-	}
+	@Autowired
+	private ConfigHelperService configHelperService;
+	@Autowired
+	private CacheService cacheService;
+	@Autowired
+	private JiraIssueRepository jiraIssueRepository;
+	@Autowired
+	TestCaseDetailsRepository testCaseDetailsRepository;
 
 	private static final String SPRINTSTORIES = "storyData";
 	private static final String TESTCASEKEY = "testCaseData";
