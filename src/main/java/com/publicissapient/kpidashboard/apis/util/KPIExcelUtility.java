@@ -632,6 +632,66 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populateTestExecutionTimeExcelData(String sprint,
+														  List<TestCaseDetails> allTestList,
+														  List<TestCaseDetails> automatedList,
+														  List<TestCaseDetails> manualList,
+														  Set<JiraIssue> linkedStories,
+														  List<KPIExcelData> kpiExcelData) {
+
+		if (CollectionUtils.isNotEmpty(allTestList)) {
+			// Build lookup lists for automated & manual cases
+			List<String> automatedIds = automatedList.stream()
+					.map(TestCaseDetails::getNumber)
+					.collect(Collectors.toList());
+
+			List<String> manualIds = manualList.stream()
+					.map(TestCaseDetails::getNumber)
+					.collect(Collectors.toList());
+
+			allTestList.forEach(testIssue -> {
+				// Derive TestCaseType
+				String testCaseType;
+				if (automatedIds.contains(testIssue.getNumber())) {
+					testCaseType = "Automated";
+				} else if (manualIds.contains(testIssue.getNumber())) {
+					testCaseType = "Manual";
+				} else {
+					testCaseType = Constant.EMPTY_STRING; // fallback
+				}
+
+				// Prepare linked story map
+				Map<String, String> linkedStoriesMap = new HashMap<>();
+				linkedStories.stream()
+						.filter(story -> testIssue.getDefectStoryID().contains(story.getNumber()))
+						.forEach(story -> linkedStoriesMap.putIfAbsent(story.getNumber(), checkEmptyURL(story)));
+
+				// ✅ Calculate average execution time in seconds
+				double avgExecutionTimeSec = 0.0;
+				if (CollectionUtils.isNotEmpty(testIssue.getExecutions())) {
+					avgExecutionTimeSec = testIssue.getExecutions().stream()
+							.mapToLong(execution -> execution.getExecutionTime()) // executionTime in ms
+							.average()
+							.orElse(0.0) / 1000.0; // convert ms → sec
+				}
+
+				// Populate Excel Data
+				KPIExcelData excelData = new KPIExcelData();
+				excelData.setSprintName(sprint);
+				excelData.setTestCaseId(testIssue.getNumber());
+				excelData.setTestCaseType(testCaseType);
+				excelData.setTestCaseStatus(testIssue.getTestCaseStatus());
+				excelData.setExecutionTime(String.valueOf(avgExecutionTimeSec));
+				excelData.setLinkedStory(linkedStoriesMap);
+
+				kpiExcelData.add(excelData);
+			});
+		}
+	}
+
+
+
+
 	private static String checkEmptyName(Object object) {
 		String description = "";
 		if (object instanceof JiraIssue) {
