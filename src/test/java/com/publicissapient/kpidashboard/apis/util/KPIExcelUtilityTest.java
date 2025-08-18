@@ -1611,13 +1611,7 @@ public class KPIExcelUtilityTest {
 		List<TestCaseDetails> allTests = new ArrayList<>();
 		List<TestCaseDetails> automatedTests = new ArrayList<>();
 		List<TestCaseDetails> manualTests = new ArrayList<>();
-		Set<JiraIssue> linkedStories = new HashSet<>();
 		List<KPIExcelData> kpiExcelDataLocal = new ArrayList<>();
-
-		JiraIssue story = new JiraIssue();
-		story.setNumber("STORY-1");
-		story.setUrl("http://story-url");
-		linkedStories.add(story);
 
 		TestCaseDetails tcAutomated = new TestCaseDetails();
 		tcAutomated.setNumber("TC-1");
@@ -1648,8 +1642,7 @@ public class KPIExcelUtilityTest {
 		manualTests.add(tcManual);
 
 		KPIExcelUtility.populateTestExecutionTimeExcelData(
-				sprint, allTests, automatedTests, manualTests, linkedStories, kpiExcelDataLocal
-		);
+				sprint, allTests, automatedTests, manualTests, kpiExcelDataLocal, KPICode.TEST_EXECUTION_TIME.getKpiId(), "");
 
 		assertEquals(2, kpiExcelDataLocal.size());
 
@@ -1661,7 +1654,6 @@ public class KPIExcelUtilityTest {
 		assertEquals("Automated", rowTC1.getTestCaseType());
 		assertEquals("Pass", rowTC1.getTestCaseStatus());
 		assertEquals("3.0", rowTC1.getExecutionTime()); // (2000+4000)/2 ms => 3.0 sec
-		assertTrue(rowTC1.getLinkedStory().containsKey("STORY-1"));
 
 		KPIExcelData rowTC2 = kpiExcelDataLocal.stream()
 				.filter(r -> "TC-2".equals(r.getTestCaseId()))
@@ -1671,7 +1663,6 @@ public class KPIExcelUtilityTest {
 		assertEquals("Manual", rowTC2.getTestCaseType());
 		assertEquals("Fail", rowTC2.getTestCaseStatus());
 		assertEquals("3.0", rowTC2.getExecutionTime()); // 3000 ms => 3.0 sec
-		assertTrue(rowTC2.getLinkedStory().containsKey("STORY-1"));
 	}
 
 	@Test
@@ -1680,13 +1671,7 @@ public class KPIExcelUtilityTest {
 		List<TestCaseDetails> allTests = new ArrayList<>();
 		List<TestCaseDetails> automatedTests = new ArrayList<>();
 		List<TestCaseDetails> manualTests = new ArrayList<>();
-		Set<JiraIssue> linkedStories = new HashSet<>();
 		List<KPIExcelData> kpiExcelDataLocal = new ArrayList<>();
-
-		JiraIssue story = new JiraIssue();
-		story.setNumber("S-10");
-		story.setUrl("http://s-10");
-		linkedStories.add(story);
 
 		TestCaseDetails tcOther = new TestCaseDetails();
 		tcOther.setNumber("TC-3");
@@ -1701,8 +1686,7 @@ public class KPIExcelUtilityTest {
 		allTests.add(tcOther);
 
 		KPIExcelUtility.populateTestExecutionTimeExcelData(
-				sprint, allTests, automatedTests, manualTests, linkedStories, kpiExcelDataLocal
-		);
+				sprint, allTests, automatedTests, manualTests, kpiExcelDataLocal, KPICode.TEST_EXECUTION_TIME.getKpiId(), "");
 
 		assertEquals(1, kpiExcelDataLocal.size());
 		KPIExcelData row = kpiExcelDataLocal.get(0);
@@ -1710,7 +1694,6 @@ public class KPIExcelUtilityTest {
 		assertEquals("", row.getTestCaseType());         // not in either list
 		assertEquals("Blocked", row.getTestCaseStatus());
 		assertEquals("1.5", row.getExecutionTime());     // 1500 ms => 1.5 sec
-		assertTrue(row.getLinkedStory().containsKey("S-10"));
 	}
 
 	@Test
@@ -1722,8 +1705,9 @@ public class KPIExcelUtilityTest {
 				new ArrayList<>(),   // allTestList
 				new ArrayList<>(),   // automatedList
 				new ArrayList<>(),   // manualList
-				new HashSet<>(),     // linkedStories
-				kpiExcelDataLocal
+				kpiExcelDataLocal,
+				KPICode.TEST_EXECUTION_TIME.getKpiId(),
+				""
 		);
 
 		assertTrue(kpiExcelDataLocal.isEmpty());

@@ -118,6 +118,8 @@ public enum KPICode {
 	TEST_EXECUTION_AND_PASS_PERCENTAGE("kpi70", KPISource.ZEPHYR.name()),
 	/** Test execution Time kpi code. */
 	TEST_EXECUTION_TIME("kpi196",KPISource.ZEPHYR.name()),
+	/** Test execution Time Kanban kpi code. */
+	TEST_EXECUTION_TIME_KANBAN("kpi197",KPISource.ZEPHYR.name()),
 	/** Test execution kanban kpi code. */
 	TEST_EXECUTION_KANBAN("kpi71", KPISource.ZEPHYRKANBAN.name()),
 	/** Sprint commitment reliability */
