@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.jetbrains.annotations.NotNull;
 
 import com.publicissapient.kpidashboard.apis.executive.dto.BoardMaturityDTO;
@@ -48,13 +49,13 @@ public class ExecutiveDashboardMapper {
 	 * @return The populated ExecutiveDashboardResponseDTO
 	 */
 	public static ExecutiveDashboardResponseDTO toExecutiveDashboardResponse(
-			Map<String, Map<String, Integer>> finalResults, Map<String, ProjectBasicConfig> projectConfigs,
+			Map<String, Map<String, Integer>> finalResults, Map<String, OrganizationHierarchy> projectConfigs,
 			Map<String, Map<String, Object>> projectEfficiencies) {
 
 		List<ProjectMetricsDTO> rows = finalResults.entrySet().stream().map(entry -> {
-			String projectId = entry.getKey();
-			Map<String, Object> efficiency = projectEfficiencies.getOrDefault(projectId, new HashMap<>());
-			return toProjectMetricsDTO(projectId, entry.getValue(), projectConfigs, efficiency);
+			String uniqueId = entry.getKey();
+			Map<String, Object> efficiency = projectEfficiencies.getOrDefault(uniqueId, new HashMap<>());
+			return toProjectMetricsDTO(uniqueId, entry.getValue(), projectConfigs, efficiency);
 		}).collect(Collectors.toList());
 
 		// Get all unique board names from all projects
@@ -90,10 +91,10 @@ public class ExecutiveDashboardMapper {
 		return columns;
 	}
 
-	private static ProjectMetricsDTO toProjectMetricsDTO(String projectNodeId, Map<String, Integer> boardScores,
-			Map<String, ProjectBasicConfig> projectConfigs, Map<String, Object> efficiency) {
+	private static ProjectMetricsDTO toProjectMetricsDTO(String uniqueId, Map<String, Integer> boardScores,
+														 Map<String, OrganizationHierarchy> projectConfigs, Map<String, Object> efficiency) {
 
-		ProjectBasicConfig projectConfig = projectConfigs.get(projectNodeId);
+		OrganizationHierarchy organizationHierarchy = projectConfigs.get(uniqueId);
 
 		// Create a new BoardMaturityDTO with a new HashMap for each project
 		Map<String, String> metricsMap = new HashMap<>();
@@ -112,8 +113,8 @@ public class ExecutiveDashboardMapper {
 		// Create the BoardMaturityDTO with the populated metrics map
 		BoardMaturityDTO boardMaturity = BoardMaturityDTO.builder().metrics(metricsMap).build();
 
-		return ProjectMetricsDTO.builder().id(projectNodeId).completion(result.completion()).health(result.health())
-				.name(projectConfig != null ? projectConfig.getProjectDisplayName() : "Unknown").boardMaturity(boardMaturity)
+		return ProjectMetricsDTO.builder().id(uniqueId).completion(result.completion()).health(result.health())
+				.name(organizationHierarchy != null ? organizationHierarchy.getNodeDisplayName() : "Unknown").boardMaturity(boardMaturity)
 				.build();
 	}
 

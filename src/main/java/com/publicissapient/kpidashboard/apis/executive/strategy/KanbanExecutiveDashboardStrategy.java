@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
@@ -48,10 +50,10 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 	public static final String STRATEGY_TYPE = "kanban";
 
 	public KanbanExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService,
-			CacheService cacheService, UserBoardConfigService userBoardConfigService,
-			KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository) {
+											CacheService cacheService, UserBoardConfigService userBoardConfigService,
+											KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, kanbanKpiMaturity,
-				kpiCategoryRepository);
+				kpiCategoryRepository, configHelperService);
 	}
 
 	@Override
@@ -62,14 +64,14 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 		log.info("Starting executive dashboard processing for Scrum projects");
 		// Pre-load all required data
 		Set<String> boards = getBoards();
-		List<String> projectNodeIds = getProjectNodeIds(kpiRequest);
+		List<String> projectNodeIds = getRequiredNodeIds(kpiRequest);
 
 		if (CollectionUtils.isEmpty(projectNodeIds) || CollectionUtils.isEmpty(boards)) {
 			log.warn("Project IDs or boards are empty");
 			return getDefaultResponse();
 		}
 		// Batch process project configurations
-		Map<String, ProjectBasicConfig> projectConfigs = getNodeidWiseProject(projectNodeIds, true);
+		Map<String, OrganizationHierarchy> projectConfigs = getNodeidWiseProject(projectNodeIds, true, kpiRequest);
 
 		if (projectConfigs.isEmpty()) {
 			log.warn("No valid project configurations found for the provided IDs");
