@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDataDTO;
+import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardRequestDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
 import com.publicissapient.kpidashboard.apis.executive.service.ExecutiveService;
@@ -39,11 +40,20 @@ public class ExecutiveControllerTest {
     private ObjectMapper objectMapper;
 
     private KpiRequest kpiRequest;
+    private ExecutiveDashboardRequestDTO requestDTO;
     private ExecutiveDashboardResponseDTO responseDTO;
 
     @BeforeEach
     public void setUp() {
         kpiRequest = new KpiRequest();
+
+        requestDTO = new ExecutiveDashboardRequestDTO();
+        requestDTO.setLevel(5);
+        requestDTO.setLabel("account");
+        requestDTO.setDate("Weeks");
+        requestDTO.setDuration(5);
+        requestDTO.setParentId("");
+
         responseDTO = ExecutiveDashboardResponseDTO.builder()
                 .data(ExecutiveDashboardDataDTO.builder()
                         .matrix(ExecutiveMatrixDTO.builder()
@@ -55,7 +65,7 @@ public class ExecutiveControllerTest {
 
     @Test
     public void testGetExecutiveDashboard_Kanban() throws Exception {
-        when(executiveService.getExecutiveDashboardKanban(any(KpiRequest.class))).thenReturn(responseDTO);
+        when(executiveService.getExecutiveDashboardKanban(any(ExecutiveDashboardRequestDTO.class))).thenReturn(responseDTO);
 
         mockMvc.perform(post("/executive?isKanban=true")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -66,11 +76,12 @@ public class ExecutiveControllerTest {
 
     @Test
     public void testGetExecutiveDashboard_Scrum() throws Exception {
-        when(executiveService.getExecutiveDashboardScrum(any(KpiRequest.class))).thenReturn(responseDTO);
+        when(executiveService.getExecutiveDashboardScrum(any(ExecutiveDashboardRequestDTO.class)))
+                .thenReturn(responseDTO);
 
         mockMvc.perform(post("/executive?isKanban=false")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(kpiRequest)))
+                .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.matrix.rows").isArray());
     }

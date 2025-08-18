@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
@@ -49,9 +51,9 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 
 	public ScrumExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService, CacheService cacheService,
 			UserBoardConfigService userBoardConfigService, ScrumKpiMaturity scrumKpiMaturity,
-			KpiCategoryRepository kpiCategoryRepository) {
+			KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, scrumKpiMaturity,
-				kpiCategoryRepository);
+				kpiCategoryRepository, configHelperService);
 	}
 
 	@Override
@@ -62,14 +64,14 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 		log.info("Starting executive dashboard processing for Scrum projects");
 		// Pre-load all required data
 		Set<String> boards = getBoards();
-		List<String> projectNodeIds = getProjectNodeIds(kpiRequest);
+		List<String> requiredNodeIds = getRequiredNodeIds(kpiRequest);
 
-		if (CollectionUtils.isEmpty(projectNodeIds) || CollectionUtils.isEmpty(boards)) {
+		if (CollectionUtils.isEmpty(requiredNodeIds) || CollectionUtils.isEmpty(boards)) {
 			log.warn("Project IDs or boards are empty");
 			return getDefaultResponse();
 		}
 		// Batch process project configurations
-		Map<String, ProjectBasicConfig> projectConfigs = getNodeidWiseProject(projectNodeIds, false);
+		Map<String, OrganizationHierarchy> projectConfigs = getNodeidWiseProject(requiredNodeIds, false, kpiRequest);
 
 		if (projectConfigs.isEmpty()) {
 			log.warn("No valid project configurations found for the provided IDs");
@@ -77,8 +79,8 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 		}
 
 		Map<String, Map<String, Integer>> finalResults = new ConcurrentHashMap<>(
-				processProjectBatch(projectNodeIds, kpiRequest, projectConfigs, boards, false));
-		log.info("Completed processing {} projects in {} ms", projectNodeIds.size(),
+				processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false));
+		log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
 				System.currentTimeMillis() - startTime);
 
 		// Calculate project efficiency for each project

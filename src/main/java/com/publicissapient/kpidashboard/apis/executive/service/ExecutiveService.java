@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.executive.service;
 
+import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardRequestDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 
@@ -25,21 +26,19 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
  */
 public interface ExecutiveService {
 
-	/**
-	 * Retrieves scrum metrics for the executive dashboard.
-	 *
-	 * @param kpiRequest
-	 *            The KPI request containing filter criteria
-	 * @return Executive dashboard response with scrum metrics
-	 */
-	ExecutiveDashboardResponseDTO getExecutiveDashboardScrum(KpiRequest kpiRequest);
+    /**
+     * Retrieves scrum metrics for the executive dashboard.
+     *
+     * @param request The executive dashboard request DTO
+     * @return Executive dashboard response with scrum metrics
+     */
+    ExecutiveDashboardResponseDTO getExecutiveDashboardScrum( ExecutiveDashboardRequestDTO request);
 
-	/**
-	 * Retrieves kanban metrics for the executive dashboard.
-	 *
-	 * @param kpiRequest
-	 *            The KPI request containing filter criteria
-	 * @return Executive dashboard response with kanban metrics
-	 */
-	ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(KpiRequest kpiRequest);
+    /**
+     * Retrieves kanban metrics for the executive dashboard.
+     *
+     * @param request The executive dashboard request DTO
+     * @return Executive dashboard response with kanban metrics
+     */
+    ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(ExecutiveDashboardRequestDTO request);
 }
