@@ -386,7 +386,8 @@ public enum KPIExcelColumn {
 	DEFECT_SEVERITY_INDEX("kpi194", Arrays.asList("Sprint Name", "Defect ID", "Defect Description", "Story ID",
 			"Story Description", "Squad", "Root Cause", "Defect Severity", "Defect Status", "Time Spent (in hours)")),
 
-	TEST_EXECUTION_TIME("kpi196", Arrays.asList("Sprint Name", "Test Case ID", "Test case Type", " Test Case Status", "Execution Time"));
+	TEST_EXECUTION_TIME("kpi196", Arrays.asList("Sprint Name", "Test Case ID", "Test case Type", " Test Case Status", "Execution Time")),
+	TEST_EXECUTION_TIME_KANBAN("kpi197", Arrays.asList("Project Name", "Test Case ID", "Test case Type", " Test Case Status", "Execution Time"));
 
 	// @formatter:on
 

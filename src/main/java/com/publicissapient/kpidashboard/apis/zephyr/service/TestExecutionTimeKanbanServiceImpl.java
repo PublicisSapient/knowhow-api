@@ -195,7 +195,7 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
             }
         });
         kpiElement.setExcelData(excelData);
-        kpiElement.setExcelColumns(KPIExcelColumn.KANBAN_REGRESSION_PASS_PERCENTAGE.getColumns());
+        kpiElement.setExcelColumns(KPIExcelColumn.TEST_EXECUTION_TIME_KANBAN.getColumns());
     }
 
     @SuppressWarnings("unchecked")
