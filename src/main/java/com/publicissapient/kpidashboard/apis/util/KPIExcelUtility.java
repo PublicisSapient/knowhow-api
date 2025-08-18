@@ -632,12 +632,15 @@ public class KPIExcelUtility {
 		}
 	}
 
-	public static void populateTestExecutionTimeExcelData(String sprint,
+	public static void populateTestExecutionTimeExcelData(String sprintProject,
 														  List<TestCaseDetails> allTestList,
 														  List<TestCaseDetails> automatedList,
 														  List<TestCaseDetails> manualList,
-														  Set<JiraIssue> linkedStories,
-														  List<KPIExcelData> kpiExcelData) {
+														  List<KPIExcelData> kpiExcelData,
+														  String kpiId,
+														  String date
+														  ) {
+
 
 		if (CollectionUtils.isNotEmpty(allTestList)) {
 			// Build lookup lists for automated & manual cases
@@ -660,12 +663,6 @@ public class KPIExcelUtility {
 					testCaseType = Constant.EMPTY_STRING; // fallback
 				}
 
-				// Prepare linked story map
-				Map<String, String> linkedStoriesMap = new HashMap<>();
-				linkedStories.stream()
-						.filter(story -> testIssue.getDefectStoryID().contains(story.getNumber()))
-						.forEach(story -> linkedStoriesMap.putIfAbsent(story.getNumber(), checkEmptyURL(story)));
-
 				// ✅ Calculate average execution time in seconds
 				double avgExecutionTimeSec = 0.0;
 				if (CollectionUtils.isNotEmpty(testIssue.getExecutions())) {
@@ -677,12 +674,17 @@ public class KPIExcelUtility {
 
 				// Populate Excel Data
 				KPIExcelData excelData = new KPIExcelData();
-				excelData.setSprintName(sprint);
+				if (kpiId.equalsIgnoreCase(KPICode.TEST_EXECUTION_TIME.getKpiId())) {
+					excelData.setSprintName(sprintProject);
+				} else {
+					excelData.setProject(sprintProject);
+					excelData.setDayWeekMonth(date);
+				}
+				excelData.setSprintName(sprintProject);
 				excelData.setTestCaseId(testIssue.getNumber());
 				excelData.setTestCaseType(testCaseType);
 				excelData.setTestCaseStatus(testIssue.getTestCaseStatus());
 				excelData.setExecutionTime(String.valueOf(avgExecutionTimeSec));
-				excelData.setLinkedStory(linkedStoriesMap);
 
 				kpiExcelData.add(excelData);
 			});

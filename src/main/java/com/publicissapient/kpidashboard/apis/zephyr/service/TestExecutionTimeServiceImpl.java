@@ -307,8 +307,8 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 					.get(MANUALTESTCASEKEY);
 			List<TestCaseDetails> totalTest = (List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap
 					.get(TESTCASEKEY);
-			KPIExcelUtility.populateTestExecutionTimeExcelData(sprint, totalTest, automatedTest, manualTest, jiraIssues,
-					excelData);
+			KPIExcelUtility.populateTestExecutionTimeExcelData(sprint, totalTest, automatedTest, manualTest,
+					excelData, KPICode.TEST_EXECUTION_TIME.getKpiId(),"");
 		}
 	}
 
