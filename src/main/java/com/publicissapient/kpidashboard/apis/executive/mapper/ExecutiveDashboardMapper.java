@@ -103,7 +103,8 @@ public class ExecutiveDashboardMapper {
 		if (boardScores != null) {
 			boardScores.forEach((boardName, score) -> {
 				if (boardName != null && score != null) {
-					metricsMap.put(capitalizeFirstLetter(boardName.trim()), "M" + score);
+					//metricsMap.put(capitalizeFirstLetter(boardName.trim()), "M" + score);
+					metricsMap.put(boardName.trim().toLowerCase(), "M" + score);
 				}
 			});
 		}

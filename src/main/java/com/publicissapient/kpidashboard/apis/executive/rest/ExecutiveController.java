@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.executive.rest;
 
 import javax.validation.Valid;
 
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,18 +56,23 @@ public class ExecutiveController {
      * @return Executive dashboard response with project metrics
      */
     @PostMapping()
-    public ResponseEntity<ExecutiveDashboardResponseDTO> getExecutive(
+    public ResponseEntity<ServiceResponse> getExecutive(
             @Valid @RequestBody ExecutiveDashboardRequestDTO request,
             @RequestParam(required = true) boolean iskanban) {
 
         log.info("Processing executive dashboard request for {} methodology with level: {}, label: {}",
                 iskanban ? "Kanban" : "Scrum", request.getLevel(), request.getLabel());
+        ExecutiveDashboardResponseDTO response= null;
+      try {
+          response = iskanban
+                  ? executiveService.getExecutiveDashboardKanban(request)
+                  : executiveService.getExecutiveDashboardScrum(request);
 
-        ExecutiveDashboardResponseDTO response = iskanban
-                ? executiveService.getExecutiveDashboardKanban(request)
-                : executiveService.getExecutiveDashboardScrum(request);
-
-        log.debug("Successfully processed executive dashboard request");
-        return ResponseEntity.ok(response);
+          log.debug("Successfully processed executive dashboard request");
+      } catch (Exception e) {
+          log.error("Error processing executive dashboard request", e);
+          return ResponseEntity.ok(new ServiceResponse(false,"Error Occurred, Try again later", response));
+      }
+        return ResponseEntity.ok(new ServiceResponse(true,"Data fetched successfully", response));
     }
 }
