@@ -18,6 +18,9 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service;
 
+import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.publicissapient.kpidashboard.apis.common.service.ApplicationKPIService;
@@ -31,6 +34,8 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
+
+import java.util.List;
 
 /**
  * Bitbucket Kpi service.
@@ -99,4 +104,17 @@ public abstract class BitBucketKPIService<R, S, T> extends ToolsKPIService<R, S>
 		}
 		return subfilter;
 	}
+
+    public List<ScmMergeRequests> getMergeRequestsFromBaseClass() {
+        return BitBucketServiceR.getThreadLocalMergeRequests();
+    }
+
+    public List<ScmCommits> getCommitsFromBaseClass() {
+        return BitBucketServiceR.getThreadLocalCommits();
+    }
+
+    public List<Assignee> getScmUsersFromBaseClass() {
+        return BitBucketServiceR.getThreadLocalAssignees();
+    }
+
 }

@@ -21,8 +21,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
@@ -32,14 +30,11 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
@@ -52,7 +47,6 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.jira.AssigneeDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -191,8 +185,8 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		setDataCount(projectName, dateLabel, overallKpiGroup, totalLinesChanged, totalMergeRequests, aggregatedDataMap);
 
 		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
-                .filter(req -> req.getAuthorDetails() != null && req.getAuthorDetails().getEmail() != null)//todo:: check
-				.collect(Collectors.groupingBy(request -> request.getAuthorDetails().getEmail()));
+                .filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)//todo:: check
+				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
 				dateLabel, aggregatedDataMap));
@@ -278,38 +272,10 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		List<ObjectId> toolIds = new ArrayList<>();
 		Map<String, Object> resultMap = new HashMap<>();
-		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-		ObjectId projectConfigId = leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
-		BasicDBList mergeFilter = new BasicDBList();
 
-		for (Node node : leafNodeList) {
-			List<Tool> scmTools = kpiHelperService
-					.getScmToolJobs(toolMap.get(node.getProjectFilter().getBasicProjectConfigId()), node);
-			if (CollectionUtils.isEmpty(scmTools))
-				continue;
-
-			for (Tool tool : scmTools) {
-				if (CollectionUtils.isEmpty(tool.getProcessorItemList()))
-					continue;
-				ObjectId processorItemId = tool.getProcessorItemList().get(0).getId();
-				toolIds.add(processorItemId);
-				mergeFilter.add(new BasicDBObject("processorItemId", processorItemId));
-			}
-		}
-
-		List<ScmMergeRequests> mergeRequests = scmMergeRequestsRepository.findMergeList(toolIds,
-				new DateTime(startDate, DateTimeZone.UTC).withTimeAtStartOfDay().getMillis(),
-				new DateTime(endDate, DateTimeZone.UTC).withTimeAtStartOfDay().plus(MILLISECONDS_IN_A_DAY).getMillis(),
-				mergeFilter);
-
-		AssigneeDetails assigneeDetails = assigneeDetailsRepository
-				.findByBasicProjectConfigId(projectConfigId.toString());
-		Set<Assignee> assignees = assigneeDetails != null ? assigneeDetails.getAssignee() : new HashSet<>();
-
-		resultMap.put(ASSIGNEE_SET, assignees);
-		resultMap.put(MERGE_REQUEST_LIST, mergeRequests);
+		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		resultMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
 		return resultMap;
 	}
 
