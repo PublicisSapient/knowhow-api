@@ -35,7 +35,6 @@ import com.publicissapient.kpidashboard.apis.executive.service.KanbanKpiMaturity
 import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiencyService;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
-import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.repository.application.KpiCategoryRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +91,6 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 		});
 
 		// Convert results to DTO with efficiency data
-		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies);
+		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies, kpiRequest.getLevelName());
 	}
 }

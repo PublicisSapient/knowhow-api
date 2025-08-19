@@ -51,6 +51,7 @@ public class KpiRequest implements Serializable, Cloneable {
 	private String duration = CommonConstant.MONTH;
 	private String hierarchyName;
 	private String hierarchyId;
+	private String levelName;
 	/**
 	 * Gets kpi list.
 	 *
@@ -377,6 +378,15 @@ public class KpiRequest implements Serializable, Cloneable {
 		return "KpiRequest [requestTrackerId=" + requestTrackerId + ", level=" + level + ", ids=" + Arrays.toString(ids) +
 				", platformIds=" + Arrays.toString(platformIds) + ", kpiList=" + kpiList + "]" + "sprintIncluded " +
 				sprintIncluded;
+	}
+
+
+	public String getLevelName() {
+		return levelName;
+	}
+
+	public void setLevelName(String levelName) {
+		this.levelName = levelName;
 	}
 
 	@Override

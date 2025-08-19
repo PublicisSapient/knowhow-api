@@ -92,7 +92,7 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 		});
 
 		// Convert results to DTO with efficiency data
-		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies);
+		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies, kpiRequest.getLevelName());
 
 	}
 

@@ -32,7 +32,6 @@ import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDat
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ProjectMetricsDTO;
-import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 
 /**
  * Mapper class to convert executive dashboard data to DTOs.
@@ -42,15 +41,14 @@ public class ExecutiveDashboardMapper {
 	/**
 	 * Converts the raw results into the executive dashboard response DTO.
 	 *
-	 * @param finalResults
-	 *            The map of project metrics by project ID
-	 * @param projectConfigs
-	 *            The map of project configurations by project ID
+	 * @param finalResults   The map of project metrics by project ID
+	 * @param projectConfigs The map of project configurations by project ID
+	 * @param levelName
 	 * @return The populated ExecutiveDashboardResponseDTO
 	 */
 	public static ExecutiveDashboardResponseDTO toExecutiveDashboardResponse(
 			Map<String, Map<String, Integer>> finalResults, Map<String, OrganizationHierarchy> projectConfigs,
-			Map<String, Map<String, Object>> projectEfficiencies) {
+			Map<String, Map<String, Object>> projectEfficiencies, String levelName) {
 
 		List<ProjectMetricsDTO> rows = finalResults.entrySet().stream().map(entry -> {
 			String uniqueId = entry.getKey();
@@ -63,7 +61,7 @@ public class ExecutiveDashboardMapper {
 				.distinct().sorted().collect(Collectors.toList());
 
 		// Create column definitions
-		List<ColumnDefinitionDTO> columns = addColumns(boardNames);
+		List<ColumnDefinitionDTO> columns = addColumns(boardNames, levelName);
 
 		ExecutiveMatrixDTO matrix = ExecutiveMatrixDTO.builder().rows(rows).columns(columns).build();
 
@@ -73,12 +71,12 @@ public class ExecutiveDashboardMapper {
 	}
 
 	@NotNull
-	private static List<ColumnDefinitionDTO> addColumns(List<String> boardNames) {
+	private static List<ColumnDefinitionDTO> addColumns(List<String> boardNames, String levelName) {
 		List<ColumnDefinitionDTO> columns = new ArrayList<>();
 
 		// Add static columns
 		columns.add(ColumnDefinitionDTO.builder().field("id").header("Project ID").build());
-		columns.add(ColumnDefinitionDTO.builder().field("name").header("Project name").build());
+		columns.add(ColumnDefinitionDTO.builder().field("name").header(levelName+ " name").build());
 		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Complete(%)").build());
 		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall health").build());
 

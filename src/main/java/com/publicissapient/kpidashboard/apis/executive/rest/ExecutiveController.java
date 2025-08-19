@@ -73,6 +73,6 @@ public class ExecutiveController {
           log.error("Error processing executive dashboard request", e);
           return ResponseEntity.ok(new ServiceResponse(false,"Error Occurred, Try again later", response));
       }
-        return ResponseEntity.ok(new ServiceResponse(true,"Data fetched successfully", response));
+        return ResponseEntity.ok(new ServiceResponse(true,"Data fetched successfully", response.getData()));
     }
 }
