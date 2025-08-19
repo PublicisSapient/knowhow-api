@@ -251,8 +251,8 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
 
     private List<TestCaseDetails> filterKanbanManualDataBasedOnStartAndEndDate(List<TestCaseDetails> tests,
                                                                                   LocalDateTime endDate) {
-        Predicate<TestCaseDetails> predicate = issue -> StringUtils.isEmpty(issue.getTestAutomatedDate())
-                && DateUtil.convertToUTCLocalDateTime(issue.getTestAutomatedDate()).isBefore(endDate);
+        Predicate<TestCaseDetails> predicate = issue -> "No".equalsIgnoreCase(issue.getIsTestAutomated())
+                && DateUtil.convertToUTCLocalDateTime(issue.getCreatedDate()).isBefore(endDate);
         return Optional.ofNullable(tests).orElse(Collections.emptyList()).stream().filter(predicate)
                 .collect(Collectors.toList());
     }

@@ -90,7 +90,6 @@ public class TestExecutionTimeKanbanServiceImplTest {
     TestCaseDetailsRepository testCaseDetailsRepository;
     @Mock
     CustomApiConfig customApiConfig;
-    private List<FieldMapping> fieldMappingList = new ArrayList<>();
     private KpiRequest kpiRequest;
     private KpiElement kpiElement;
     private Map<String, String> kpiWiseAggregation = new HashMap<>();
@@ -129,12 +128,8 @@ public class TestExecutionTimeKanbanServiceImplTest {
         Map<String, List<ProjectToolConfig>> projectTool = new HashMap<>();
 
         ProjectToolConfig zephyConfig = new ProjectToolConfig();
-        zephyConfig.setRegressionAutomationLabels(Arrays.asList("test1"));
-        zephyConfig.setTestRegressionValue(Arrays.asList("test1"));
-        zephyConfig.setRegressionAutomationFolderPath(Arrays.asList("test1"));
         projectTool.put(ProcessorConstants.ZEPHYR, Arrays.asList(zephyConfig));
         ProjectToolConfig jiraTest = new ProjectToolConfig();
-        jiraTest.setJiraRegressionTestValue(Arrays.asList("test1"));
         jiraTest.setTestCaseStatus(Arrays.asList("test1"));
         projectTool.put(ProcessorConstants.ZEPHYR, Arrays.asList(zephyConfig));
         projectTool.put(ProcessorConstants.JIRA_TEST, Arrays.asList(jiraTest));
@@ -143,7 +138,7 @@ public class TestExecutionTimeKanbanServiceImplTest {
     }
 
     @Test
-    public void testGetAutomatedTestPercentage() throws ApplicationException {
+    public void testGetExecutionTimeKpiData() throws ApplicationException {
         List<Node> leafNodeList = new ArrayList<>();
         TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
                 accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
@@ -158,12 +153,12 @@ public class TestExecutionTimeKanbanServiceImplTest {
         when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name()))
                 .thenReturn(kpiRequestTrackerId);
         try {
-            KpiElement kpiElement = testExecutionTimeKanbanServiceImpl.getKpiData(kpiRequest,
+             kpiElement = testExecutionTimeKanbanServiceImpl.getKpiData(kpiRequest,
                     kpiRequest.getKpiList().get(0), treeAggregatorDetail);
-            assertThat("Regression Percentage Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+            assertThat("Test Execution Time  :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
                     equalTo(1));
         } catch (ApplicationException enfe) {
-
+            enfe.printStackTrace();
         }
     }
 
