@@ -375,6 +375,11 @@ public class CustomApiConfig { // NOPMD
 	@Getter
 	private boolean isRepoToolEnabled;
 
+	@Value("${is-repo-tool-enabled:false}")
+	@Setter
+	@Getter
+	private boolean isRepoToolEnabled;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}
