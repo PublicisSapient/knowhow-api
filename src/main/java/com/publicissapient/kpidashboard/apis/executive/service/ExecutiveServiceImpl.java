@@ -145,6 +145,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 					.map(AccountFilteredData::getNodeId).collect(Collectors.toUnmodifiableSet());
 
 			kpiRequest.getSelectedMap().get(level.getHierarchyLevelId()).addAll(filteredSet);
+			kpiRequest.setLevelName(level.getHierarchyLevelName());
 			return filteredSet;
 
 		} catch (Exception e) {
