@@ -47,7 +47,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -100,8 +108,6 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
 
         kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
-        log.debug("[TEST-EXECUTION-TIME-KANBAN-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-                kpiRequest.getRequestTrackerId(), root);
         return kpiElement;
     }
 
@@ -175,7 +181,7 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
 
 
                     double executionTimeForCurrentLeaf = 0.0;
-                    executionTimeForCurrentLeaf = getValueFromHowerMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
+                    executionTimeForCurrentLeaf = getValueFromHoverMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
 
                     String date = getRange(dateRange, kpiRequest);
                     DataCount dcObj = getDataCountObject(executionTimeForCurrentLeaf, projectName, date, projectNodeId, hoverMap);
@@ -199,12 +205,12 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T getValueFromHowerMap(Map<String, Object> howerMap, String category, String key, Class<T> type) {
-        if (howerMap == null || !howerMap.containsKey(category)) {
+    public static <T> T getValueFromHoverMap(Map<String, Object> hoverMap, String category, String key, Class<T> type) {
+        if (hoverMap == null || !hoverMap.containsKey(category)) {
             return null;
         }
 
-        Object categoryObj = howerMap.get(category);
+        Object categoryObj = hoverMap.get(category);
         if (!(categoryObj instanceof Map)) {
             return null;
         }
@@ -393,7 +399,7 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
     /**
      * Helper method to compute count & average execution time for a category
      */
-    private void populateCategoryData(String category, List<TestCaseDetails> testCases, Map<String, Object> howerMap) {
+    private void populateCategoryData(String category, List<TestCaseDetails> testCases, Map<String, Object> hoverMap) {
         if (CollectionUtils.isNotEmpty(testCases)) {
             int totalCount = testCases.size();
 
@@ -414,12 +420,12 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
             categoryData.put(COUNT, totalCount);
             categoryData.put(AVGEXECUTIONTIME, avgExecTimeSec);
 
-            howerMap.put(category, categoryData);
+            hoverMap.put(category, categoryData);
         } else {
             Map<String, Object> categoryData = new HashMap<>();
             categoryData.put(COUNT, 0);
             categoryData.put(AVGEXECUTIONTIME, 0.0);
-            howerMap.put(category, categoryData);
+            hoverMap.put(category, categoryData);
         }
     }
 
