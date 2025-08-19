@@ -25,7 +25,8 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
-@ChangeUnit(id = "r_test_execution_time_kpi_kanban", order = "014005", author = "rendk", systemVersion = "14.0.0")
+// ⚠️ Disabled temporarily so that Mongock does not execute this unit
+//@ChangeUnit(id = "r_test_execution_time_kpi_kanban", order = "014005", author = "rendk", systemVersion = "14.0.0")
 public class TestExecutionTimeKpiKanban {
 
     public static final String KPI_ID = "kpiId";
@@ -37,7 +38,7 @@ public class TestExecutionTimeKpiKanban {
         this.mongoTemplate = mongoTemplate;
     }
 
-    @RollbackExecution
+    //@RollbackExecution
     public void rollback() {
         // Re-insert kpi_master document if needed (mirror of insert)
         Document kpiMasterDoc = new Document(KPI_ID, KPI_197)
@@ -79,7 +80,7 @@ public class TestExecutionTimeKpiKanban {
         log.info("Rollback executed: Re-inserted KPI: Test Execution Time Kanban (kpi197) into kpi_master and kpi_category_mapping");
     }
 
-    @Execution
+    //@Execution
     public void execution() {
         // Delete KPI documents (mirror of insert)
         mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_197));
