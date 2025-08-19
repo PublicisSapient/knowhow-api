@@ -70,7 +70,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	private static final String COUNT = "count";
 	private static final String TOOL_ZEPHYR = ProcessorConstants.ZEPHYR;
 	private static final String TOOL_JIRA_TEST = ProcessorConstants.JIRA_TEST;
-	private static final String DEV = "DeveloperKpi";
+	private static final String DEVELOPER_KPI = "DeveloperKpi";
 	private static final String NIN = "nin";
 
 	@Override
@@ -141,13 +141,13 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 			List<TestCaseDetails> sprintWiseTotalTestList = new ArrayList<>();
 			List<TestCaseDetails> sprintWiseManualTestList = new ArrayList<>();
 
-			sprintWiseAutomatedTestList.addAll(automatedTestCases(testCaseList, sprintWiseStories));
-			sprintWiseManualTestList.addAll(manualTestCases(testCaseList, sprintWiseStories));
-			sprintWiseTotalTestList.addAll(totalTestCases(testCaseList, sprintWiseStories));
+			sprintWiseAutomatedTestList.addAll(getAutomatedTestCases(testCaseList, sprintWiseStories));
+			sprintWiseManualTestList.addAll(getManualTestCases(testCaseList, sprintWiseStories));
+			sprintWiseTotalTestList.addAll(getTotalTestCases(testCaseList, sprintWiseStories));
 			Map<String, Object> currentSprintLeafNodeDefectDataMap = new HashMap<>();
 			currentSprintLeafNodeDefectDataMap.put(AUTOMATEDTESTCASEKEY,
-					automatedTestCases(testCaseList, sprintWiseStories));
-			currentSprintLeafNodeDefectDataMap.put(TESTCASEKEY, totalTestCases(testCaseList, sprintWiseStories));
+					getAutomatedTestCases(testCaseList, sprintWiseStories));
+			currentSprintLeafNodeDefectDataMap.put(TESTCASEKEY, getTotalTestCases(testCaseList, sprintWiseStories));
 
 			sprintWiseManualTestMap.put(sprintFilter, sprintWiseManualTestList);
 			sprintWiseAutoTestMap.put(sprintFilter, sprintWiseAutomatedTestList);
@@ -162,7 +162,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 			Pair<String, String> currentNodeIdentifier = Pair
 					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
 
-			Map<String, Object> howerMap = new LinkedHashMap<>();
+			Map<String, Object> hoverMap = new LinkedHashMap<>();
 			Map<String, Object> currentSprintLeafNodeDefectDataMap = new HashMap<>();
 			currentSprintLeafNodeDefectDataMap.put(MANUALTESTCASEKEY,
 					sprintWiseManualTestMap.get(currentNodeIdentifier));
@@ -172,11 +172,11 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 
 			populateExcelDataObject(requestTrackerId, currentSprintLeafNodeDefectDataMap, excelData, validationKey,
 					projectWiseStories.get(node.getProjectFilter().getBasicProjectConfigId().toString()));
-			setHowerMap(sprintWiseAutoTestMap, sprintWiseManualTestMap, sprintWiseTotalTestMap, currentNodeIdentifier,
-					howerMap);
+			setHoverMap(sprintWiseAutoTestMap, sprintWiseManualTestMap, sprintWiseTotalTestMap, currentNodeIdentifier,
+					hoverMap);
 
 			double executionTimeForCurrentLeaf = 0.0;
-			executionTimeForCurrentLeaf = getValueFromHowerMap(howerMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
+			executionTimeForCurrentLeaf = getValueFromHoverMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
 
 			mapTmp.get(node.getId()).setValue(executionTimeForCurrentLeaf);
 
@@ -189,7 +189,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 			dataCount.setSprintNames(new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
 			dataCount.setSSprintID(node.getSprintFilter().getId());
 			dataCount.setSSprintName(node.getSprintFilter().getName());
-			dataCount.setHoverValue(howerMap);
+			dataCount.setHoverValue(hoverMap);
 			dataCount.setValue(executionTimeForCurrentLeaf);
 			mapTmp.get(node.getId()).setValue(new ArrayList<>(Arrays.asList(dataCount)));
 			trendValueList.add(dataCount);
@@ -210,28 +210,28 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	 *            map of total test cases per sprint
 	 * @param sprintId
 	 *            sprint identifier
-	 * @param howerMap
+	 * @param hoverMap
 	 *            output map to populate
 	 */
-	private void setHowerMap(Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseAutomatedMap,
+	private void setHoverMap(Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseAutomatedMap,
 			Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseManualMap,
 			Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseTotalMap, Pair<String, String> sprintId,
-			Map<String, Object> howerMap) {
+			Map<String, Object> hoverMap) {
 
 		// Automated test cases
-		populateCategoryData("AUTOMATED", sprintWiseAutomatedMap.get(sprintId), howerMap);
+		populateCategoryData("AUTOMATED", sprintWiseAutomatedMap.get(sprintId), hoverMap);
 
 		// Manual test cases
-		populateCategoryData("MANUAL", sprintWiseManualMap.get(sprintId), howerMap);
+		populateCategoryData("MANUAL", sprintWiseManualMap.get(sprintId), hoverMap);
 
 		// Total test cases
-		populateCategoryData("TOTAL", sprintWiseTotalMap.get(sprintId), howerMap);
+		populateCategoryData("TOTAL", sprintWiseTotalMap.get(sprintId), hoverMap);
 	}
 
 	/**
 	 * Helper method to compute count & average execution time for a category
 	 */
-	private void populateCategoryData(String category, List<TestCaseDetails> testCases, Map<String, Object> howerMap) {
+	private void populateCategoryData(String category, List<TestCaseDetails> testCases, Map<String, Object> hoverMap) {
 		if (CollectionUtils.isNotEmpty(testCases)) {
 			int totalCount = testCases.size();
 
@@ -252,22 +252,22 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 			categoryData.put(COUNT, totalCount);
 			categoryData.put(AVGEXECUTIONTIME, avgExecTimeSec);
 
-			howerMap.put(category, categoryData);
+			hoverMap.put(category, categoryData);
 		} else {
 			Map<String, Object> categoryData = new HashMap<>();
 			categoryData.put(COUNT, 0);
 			categoryData.put(AVGEXECUTIONTIME, 0.0);
-			howerMap.put(category, categoryData);
+			hoverMap.put(category, categoryData);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getValueFromHowerMap(Map<String, Object> howerMap, String category, String key, Class<T> type) {
-		if (howerMap == null || !howerMap.containsKey(category)) {
+	public static <T> T getValueFromHoverMap(Map<String, Object> hoverMap, String category, String key, Class<T> type) {
+		if (hoverMap == null || !hoverMap.containsKey(category)) {
 			return null;
 		}
 
-		Object categoryObj = howerMap.get(category);
+		Object categoryObj = hoverMap.get(category);
 		if (!(categoryObj instanceof Map)) {
 			return null;
 		}
@@ -317,7 +317,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	 * @param testCaseList
 	 * @return
 	 */
-	private List<TestCaseDetails> automatedTestCases(List<TestCaseDetails> testCaseList,
+	private List<TestCaseDetails> getAutomatedTestCases(List<TestCaseDetails> testCaseList,
 			List<SprintWiseStory> sprintWiseStory) {
 		return testCaseList.stream()
 				.filter(tc -> sprintWiseStory.stream()
@@ -332,7 +332,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	 * @param testCaseList
 	 * @return
 	 */
-	private List<TestCaseDetails> manualTestCases(List<TestCaseDetails> testCaseList,
+	private List<TestCaseDetails> getManualTestCases(List<TestCaseDetails> testCaseList,
 			List<SprintWiseStory> sprintWiseStory) {
 		return testCaseList.stream()
 				.filter(tc -> sprintWiseStory.stream()
@@ -347,7 +347,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	 * @param testCaseList
 	 * @return
 	 */
-	private List<TestCaseDetails> totalTestCases(List<TestCaseDetails> testCaseList,
+	private List<TestCaseDetails> getTotalTestCases(List<TestCaseDetails> testCaseList,
 			List<SprintWiseStory> sprintWiseStory) {
 		return testCaseList.stream()
 				.filter(tc -> sprintWiseStory.stream()
@@ -426,7 +426,7 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 				basicProjectConfigIds.stream().distinct().toList());
 
 		List<SprintWiseStory> sprintWiseStoryList = jiraIssueRepository.findIssuesGroupBySprint(mapOfFilters,
-				uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEV);
+				uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEVELOPER_KPI);
 
 		Map<String, List<String>> projectStoryNumberMap = new HashMap<>();
 		List<String> storyIdList = new ArrayList<>();
