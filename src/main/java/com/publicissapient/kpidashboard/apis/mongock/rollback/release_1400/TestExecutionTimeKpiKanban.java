@@ -17,9 +17,6 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1400;
 
-import io.mongock.api.annotations.ChangeUnit;
-import io.mongock.api.annotations.Execution;
-import io.mongock.api.annotations.RollbackExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
