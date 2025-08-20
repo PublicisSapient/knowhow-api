@@ -135,7 +135,7 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode),
 				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
 		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) resultmap.get(MERGE_REQUEST_LIST);
-		Set<Assignee> assignees = (Set<Assignee>) resultmap.get(ASSIGNEE_SET);
+		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultmap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
