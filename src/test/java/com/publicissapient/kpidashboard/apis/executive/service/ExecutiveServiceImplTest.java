@@ -1,185 +1,282 @@
+/*******************************************************************************
+ * Copyright 2014 CapitalOne, LLC.
+ * Further development Copyright 2022 Sapient Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.executive.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
-import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDataDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardRequestDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
-import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
 import com.publicissapient.kpidashboard.apis.executive.strategy.ExecutiveDashboardStrategy;
 import com.publicissapient.kpidashboard.apis.executive.strategy.ExecutiveDashboardStrategyFactory;
+import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
+import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceKanbanImpl;
+import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * @author pkum34
+ */
+@RunWith(MockitoJUnitRunner.class)
 public class ExecutiveServiceImplTest {
 
-    @Mock
-    private CacheService cacheService;
+	@Mock
+	private CacheService cacheService;
 
-    @Mock
-    private ExecutiveDashboardStrategyFactory strategyFactory;
+	@Mock
+	private ExecutiveDashboardStrategyFactory strategyFactory;
 
-    @Mock
-    private ExecutiveDashboardStrategy kanbanStrategy;
+	@Mock
+	private ExecutiveDashboardStrategy kanbanStrategy;
 
-    @Mock
-    private ExecutiveDashboardStrategy scrumStrategy;
+	@Mock
+	private ExecutiveDashboardStrategy scrumStrategy;
 
-    @InjectMocks
-    private ExecutiveServiceImpl executiveService;
+	@InjectMocks
+	private ExecutiveServiceImpl service;
+	@Mock
+	private AccountHierarchyServiceImpl accountHierarchyService;
+	@Mock
+	private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
 
-    private KpiRequest kpiRequest;
-    private ExecutiveDashboardRequestDTO requestDTO;
-    private ExecutiveDashboardResponseDTO expectedResponse;
-    private Map<String, ProjectBasicConfig> projectConfigMap;
-    private Map<String, Object> hierarchyLevelMap;
+	private KpiRequest kpiRequest;
+	private ExecutiveDashboardRequestDTO requestDTO;
+	private ExecutiveDashboardResponseDTO expectedResponse;
+	private Map<String, ProjectBasicConfig> projectConfigMap;
+	private Map<String, Object> hierarchyLevelMap;
 
-    @BeforeEach
-    public void setUp() {
-        // Setup test data
-        kpiRequest = new KpiRequest();
-        Map<String, List<String>> selectedMap = new HashMap<>();
-        selectedMap.put(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, Collections.singletonList("project1"));
-        kpiRequest.setSelectedMap(selectedMap);
+	@Before
+	public void setup() {
 
-        // Setup request DTO
-        requestDTO = new ExecutiveDashboardRequestDTO();
-        requestDTO.setLevel(5);
-        requestDTO.setLabel("account");
-        requestDTO.setDate("Weeks");
-        requestDTO.setDuration(5);
-        requestDTO.setParentId("");
+		when(strategyFactory.getStrategy("scrum")).thenReturn(scrumStrategy);
+		when(strategyFactory.getStrategy("kanban")).thenReturn(kanbanStrategy);
 
-        // Setup expected response
-        expectedResponse = ExecutiveDashboardResponseDTO.builder()
-                .data(ExecutiveDashboardDataDTO.builder()
-                        .matrix(ExecutiveMatrixDTO.builder()
-                                .rows(Collections.emptyList())
-                                .build())
-                        .build())
-                .build();
+		ExecutiveDashboardResponseDTO executiveDashboardRequestDTO = ExecutiveDashboardResponseDTO.builder().data(null)
+				.build();
+		when(scrumStrategy.getExecutiveDashboard(any(KpiRequest.class))).thenReturn(executiveDashboardRequestDTO);
+		when(kanbanStrategy.getExecutiveDashboard(any())).thenReturn(executiveDashboardRequestDTO);
+	}
 
-        // Setup project config
-        ProjectBasicConfig projectConfig = new ProjectBasicConfig();
-        projectConfig.setProjectNodeId("project1");
-        projectConfig.setKanban(true);
-        projectConfigMap = Map.of("project1", projectConfig);
+	@Test
+	public void testGetExecutiveDashboardScrum_withParentIdNullAndValidData() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(2);
+		req.setLabel("Scrum Label");
+		req.setParentId(null);
 
-        // Setup hierarchy level map
-        hierarchyLevelMap = new HashMap<>();
-        hierarchyLevelMap.put("ACCOUNT", List.of("account1", "account2"));
-    }
+		HierarchyLevel hl = new HierarchyLevel();
+		hl.setHierarchyLevelId("acc");
+		hl.setHierarchyLevelName("Account");
+		hl.setLevel(2);
 
-    @Test
-    public void testGetExecutiveDashboardKanban() {
-        // Given
-        when(strategyFactory.getStrategy("kanban")).thenReturn(kanbanStrategy);
-        when(kanbanStrategy.getExecutiveDashboard(any(KpiRequest.class))).thenReturn(expectedResponse);
+		when(cacheService.getFullHierarchyLevel()).thenReturn(List.of(hl));
 
-        // When
-        ExecutiveDashboardResponseDTO response = executiveService.getExecutiveDashboardKanban( requestDTO);
+		AccountFilteredData afd = new AccountFilteredData();
+		afd.setLevel(2);
+		afd.setNodeId("N1");
+		afd.setParentId(null);
 
-        // Then
-        assertNotNull(response);
-        assertNotNull(response.getData());
-        assertNotNull(response.getData().getMatrix());
-        assertTrue(response.getData().getMatrix().getRows().isEmpty());
-    }
+		when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(afd));
 
-    @Test
-    public void testGetExecutiveDashboardScrum() {
-        // Given
-        when(strategyFactory.getStrategy("scrum")).thenReturn(scrumStrategy);
-        when(scrumStrategy.getExecutiveDashboard(any(KpiRequest.class))).thenReturn(expectedResponse);
-        // When
-        ExecutiveDashboardResponseDTO response = executiveService.getExecutiveDashboardScrum(requestDTO);
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardScrum(req);
 
-        // Then
-        assertNotNull(response);
-        assertNotNull(response.getData());
-        assertNotNull(response.getData().getMatrix());
-        assertTrue(response.getData().getMatrix().getRows().isEmpty());
-    }
+		assertNotNull(res);
+		verify(scrumStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
 
-    @Test
-    public void testGetAllAccountLevelIds() {
-        // Given
-        Map<String, HierarchyLevel> mockHierarchyMap = new HashMap<>();
-        HierarchyLevel account1 = new HierarchyLevel();
-        account1.setHierarchyLevelId("account1");
-        HierarchyLevel account2 = new HierarchyLevel();
-        account2.setHierarchyLevelId("account2");
-        mockHierarchyMap.put("ACCOUNT1", account1);
-        mockHierarchyMap.put("ACCOUNT2", account2);
+	@Test
+	public void testGetExecutiveDashboardScrum_withParentIdNotNullAndValidData() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(2);
+		req.setLabel("Scrum Label");
+		req.setParentId("parentId");
 
-        //when(filterHelperService.getHierarchyLevelMap(anyBoolean())).thenReturn(mockHierarchyMap);
+		HierarchyLevel hl = new HierarchyLevel();
+		hl.setHierarchyLevelId("acc");
+		hl.setHierarchyLevelName("Account");
+		hl.setLevel(2);
 
-        // When
-        List<String> accountIds = new ArrayList<>();
-        if (mockHierarchyMap != null && !mockHierarchyMap.isEmpty()) {
-            accountIds = mockHierarchyMap.values().stream()
-                    .filter(level -> level.getHierarchyLevelId() != null)
-                    .map(level -> level.getHierarchyLevelId().toString())
-                    .collect(Collectors.toList());
-        }
+		when(cacheService.getFullHierarchyLevel()).thenReturn(List.of(hl));
 
-        // Then
-        assertNotNull(accountIds);
-        assertEquals(2, accountIds.size());
-        assertTrue(accountIds.contains("account1"));
-        assertTrue(accountIds.contains("account2"));
-    }
+		AccountFilteredData afd = new AccountFilteredData();
+		afd.setLevel(2);
+		afd.setNodeId("N1");
+		afd.setParentId("parentId");
 
-    @Test
-    public void testGetNodeidWiseProject() {
-        // Given
-        List<String> projectNodeIds = Collections.singletonList("project1");
-        when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
+		when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(afd));
 
-        // When
-        Map<String, ProjectBasicConfig> result = new HashMap<>();
-                //executiveService.getNodeidWiseProject(projectNodeIds, true);
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardScrum(req);
 
-        // Then
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertTrue(result.containsKey("project1"));
-    }
+		assertNotNull(res);
+		verify(scrumStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
 
-    @Test
-    public void testGetDefaultResponse() {
-        // When
-        /*ExecutiveDashboardResponseDTO response = executiveService.getDefaultResponse();
+	@Test
+	public void testGetExecutiveDashboardScrum_withParentIdProvidedAndEmptyHierarchy() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(2);
+		req.setLabel("Scrum Label");
+		req.setParentId("PID");
 
-        // Then
-        assertNotNull(response);
-        assertNotNull(response.getData());
-        assertNotNull(response.getData().getMatrix());
-        assertTrue(response.getData().getMatrix().getRows().isEmpty());
+		when(cacheService.getFullHierarchyLevel()).thenReturn(Collections.emptyList());
 
-         */
-    }
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardScrum(req);
+
+		assertNotNull(res);
+		verify(scrumStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
+
+	@Test
+	public void testGetExecutiveDashboardScrum_withExceptionInGetNodeIds() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(2);
+		req.setLabel("Scrum Label");
+		req.setParentId("PID");
+
+		when(cacheService.getFullHierarchyLevel()).thenThrow(new RuntimeException("Cache error"));
+
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardScrum(req);
+
+		assertNotNull(res);
+		verify(scrumStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
+
+	@Test
+	public void testGetExecutiveDashboardKanban_withValidData() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(3);
+		req.setLabel("Kanban Label");
+		req.setParentId(null);
+
+		HierarchyLevel hl = new HierarchyLevel();
+		hl.setHierarchyLevelId("project");
+		hl.setHierarchyLevelName("Project");
+		hl.setLevel(3);
+
+		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(List.of(hl));
+
+		AccountFilteredData afd = new AccountFilteredData();
+		afd.setLevel(3);
+		afd.setNodeId("K1");
+		afd.setParentId(null);
+
+		when(accountHierarchyServiceKanban.getFilteredList(any())).thenReturn(Set.of(afd));
+
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardKanban(req);
+
+		assertNotNull(res);
+		verify(kanbanStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
+
+	@Test
+	public void testGetExecutiveDashboardKanban_withInValidLevel() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(3);
+		req.setLabel("Kanban Label");
+		req.setParentId(null);
+
+		HierarchyLevel hl = new HierarchyLevel();
+		hl.setHierarchyLevelId("project");
+		hl.setHierarchyLevelName("Project");
+		hl.setLevel(4);
+
+		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(List.of(hl));
+
+		AccountFilteredData afd = new AccountFilteredData();
+		afd.setLevel(3);
+		afd.setNodeId("K1");
+		afd.setParentId(null);
+
+		when(accountHierarchyServiceKanban.getFilteredList(any())).thenReturn(Set.of(afd));
+
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardKanban(req);
+
+		assertNotNull(res);
+		verify(kanbanStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
+
+	@Test
+	public void testGetExecutiveDashboardKanban_withEmptyHierarchy() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(3);
+		req.setLabel("Kanban Label");
+		req.setParentId("PID");
+
+		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(Collections.emptyList());
+
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardKanban(req);
+
+		assertNotNull(res);
+		verify(kanbanStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
+
+	@Test
+	public void testGetExecutiveDashboardKanban_withExceptionInGetNodeIds() {
+		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		req.setLevel(3);
+		req.setLabel("Kanban Label");
+		req.setParentId("PID");
+
+		when(cacheService.getFullKanbanHierarchyLevel()).thenThrow(new RuntimeException("Cache error"));
+
+		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardKanban(req);
+
+		assertNotNull(res);
+		verify(kanbanStrategy).getExecutiveDashboard(any(KpiRequest.class));
+	}
+
+	@Test
+	public void testCreateSelectedMap() {
+		Map<String, List<String>> map = invokeCreateSelectedMap();
+		assertTrue(map.containsKey("bu"));
+		assertTrue(map.containsKey("ver"));
+		assertTrue(map.containsKey("acc"));
+		assertTrue(map.containsKey("port"));
+		assertTrue(map.containsKey("project"));
+		assertTrue(map.containsKey("release"));
+		assertTrue(map.containsKey("sqd"));
+		assertTrue(map.containsKey("date"));
+		assertEquals(List.of("Weeks"), map.get("date"));
+	}
+
+	// helper to access private static method
+	private Map<String, List<String>> invokeCreateSelectedMap() {
+		return org.springframework.test.util.ReflectionTestUtils.invokeMethod(ExecutiveServiceImpl.class,
+				"createSelectedMap");
+	}
+
 }

@@ -17,11 +17,14 @@
 
 package com.publicissapient.kpidashboard.apis.executive.strategy;
 
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 
 /**
  * Strategy interface for different types of executive dashboards.
+ * Implementations should handle their specific business logic and data
+ * retrieval.
  */
 public interface ExecutiveDashboardStrategy {
 
@@ -31,13 +34,18 @@ public interface ExecutiveDashboardStrategy {
 	 * @param kpiRequest
 	 *            the KPI request containing filter criteria
 	 * @return the executive dashboard response DTO
+	 * @throws ExecutiveDataException
+	 *             if there is an error processing the dashboard data
+	 * @throws IllegalArgumentException
+	 *             if the request parameters are invalid
 	 */
-	ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest kpiRequest);
+	ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest kpiRequest)
+			throws ExecutiveDataException, IllegalArgumentException;
 
 	/**
 	 * Gets the type of strategy (e.g., "kanban", "scrum").
 	 *
-	 * @return the strategy type
+	 * @return the strategy type as a non-null, non-empty string
 	 */
 	String getStrategyType();
 }
