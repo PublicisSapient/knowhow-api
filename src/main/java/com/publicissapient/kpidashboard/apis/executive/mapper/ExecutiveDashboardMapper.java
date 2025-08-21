@@ -47,18 +47,18 @@ public class ExecutiveDashboardMapper {
 	 * @return The populated ExecutiveDashboardResponseDTO
 	 */
 	public static ExecutiveDashboardResponseDTO toExecutiveDashboardResponse(
-			Map<String, Map<String, Integer>> finalResults, Map<String, OrganizationHierarchy> projectConfigs,
+			Map<String, Map<String, String>> finalResults, Map<String, OrganizationHierarchy> projectConfigs,
 			Map<String, Map<String, Object>> projectEfficiencies, String levelName) {
 
 		List<ProjectMetricsDTO> rows = finalResults.entrySet().stream().map(entry -> {
 			String uniqueId = entry.getKey();
 			Map<String, Object> efficiency = projectEfficiencies.getOrDefault(uniqueId, new HashMap<>());
 			return toProjectMetricsDTO(uniqueId, entry.getValue(), projectConfigs, efficiency);
-		}).collect(Collectors.toList());
+		}).toList();
 
 		// Get all unique board names from all projects
 		List<String> boardNames = finalResults.values().stream().flatMap(boardScores -> boardScores.keySet().stream())
-				.distinct().sorted().collect(Collectors.toList());
+				.distinct().sorted().toList();
 
 		// Create column definitions
 		List<ColumnDefinitionDTO> columns = addColumns(boardNames, levelName);
@@ -77,7 +77,7 @@ public class ExecutiveDashboardMapper {
 		// Add static columns
 		columns.add(ColumnDefinitionDTO.builder().field("id").header("Project ID").build());
 		columns.add(ColumnDefinitionDTO.builder().field("name").header(levelName+ " name").build());
-		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Complete(%)").build());
+		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Efficiency(%)").build());
 		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall health").build());
 
 		// Add dynamic board columns
@@ -89,7 +89,7 @@ public class ExecutiveDashboardMapper {
 		return columns;
 	}
 
-	private static ProjectMetricsDTO toProjectMetricsDTO(String uniqueId, Map<String, Integer> boardScores,
+	private static ProjectMetricsDTO toProjectMetricsDTO(String uniqueId, Map<String, String> boardScores,
 														 Map<String, OrganizationHierarchy> projectConfigs, Map<String, Object> efficiency) {
 
 		OrganizationHierarchy organizationHierarchy = projectConfigs.get(uniqueId);
@@ -101,8 +101,12 @@ public class ExecutiveDashboardMapper {
 		if (boardScores != null) {
 			boardScores.forEach((boardName, score) -> {
 				if (boardName != null && score != null) {
-					//metricsMap.put(capitalizeFirstLetter(boardName.trim()), "M" + score);
-					metricsMap.put(boardName.trim().toLowerCase(), "M" + score);
+					if(score.equalsIgnoreCase("NA")) {
+						metricsMap.put(boardName.trim().toLowerCase(), score);
+					}
+					else {
+						metricsMap.put(boardName.trim().toLowerCase(), "M" + (int) Math.ceil(Double.parseDouble(score)));
+					}
 				}
 			});
 		}

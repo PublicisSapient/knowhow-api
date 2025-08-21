@@ -65,7 +65,7 @@ public class ProjectEfficiencyService {
 	 *            Map of board names to their maturity scores (1-5)
 	 * @return Map containing efficiency score and health status
 	 */
-	public Map<String, Object> calculateProjectEfficiency(Map<String, Integer> boardMaturities) {
+	public Map<String, Object> calculateProjectEfficiency(Map<String, String> boardMaturities) {
 		// Get configured weightages or use defaults
 		// Get all categories (default + any from DB)
 		Map<String, Integer> weightages = parseWeightageConfig();
@@ -210,19 +210,12 @@ public class ProjectEfficiencyService {
 	/**
 	 * Finds the best matching board maturity for a given category
 	 */
-	private int findBestMatchingBoardMaturity(String category, Map<String, Integer> boardMaturities) {
+	private int findBestMatchingBoardMaturity(String category, Map<String, String> boardMaturities) {
 		// Try exact match first
-		for (Map.Entry<String, Integer> entry : boardMaturities.entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(category)) {
-				return entry.getValue();
-			}
-		}
+		for (Map.Entry<String, String> entry : boardMaturities.entrySet()) {
+			if (entry.getKey().equalsIgnoreCase(category) && !entry.getValue().equalsIgnoreCase("NA"))
+				    return (int)Math.ceil(Double.parseDouble(entry.getValue()));
 
-		// Try partial match
-		for (Map.Entry<String, Integer> entry : boardMaturities.entrySet()) {
-			if (entry.getKey().toUpperCase().contains(category) || category.contains(entry.getKey().toUpperCase())) {
-				return entry.getValue();
-			}
 		}
 
 		return 0; // No match found

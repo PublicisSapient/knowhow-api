@@ -35,7 +35,6 @@ import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiency
 import com.publicissapient.kpidashboard.apis.executive.service.ScrumKpiMaturity;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
-import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.repository.application.KpiCategoryRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -71,14 +70,14 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 			return getDefaultResponse();
 		}
 		// Batch process project configurations
-		Map<String, OrganizationHierarchy> projectConfigs = getNodeidWiseProject(requiredNodeIds, false, kpiRequest);
+		Map<String, OrganizationHierarchy> projectConfigs = getNodeWiseHierarchy(requiredNodeIds);
 
 		if (projectConfigs.isEmpty()) {
 			log.warn("No valid project configurations found for the provided IDs");
 			return getDefaultResponse();
 		}
 
-		Map<String, Map<String, Integer>> finalResults = new ConcurrentHashMap<>(
+		Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
 				processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false));
 		log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
 				System.currentTimeMillis() - startTime);
