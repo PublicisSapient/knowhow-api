@@ -13,22 +13,21 @@ import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestRepositoryCustom;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper.MILLISECONDS_IN_A_DAY;
 
 @Service
+@AllArgsConstructor
 public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 
     private final ConfigHelperService configHelperService;
@@ -38,46 +37,33 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
     private final ScmMergeRequestRepositoryCustom scmMergeRequestsRepository;
 
     private final AssigneeDetailsRepository assigneeDetailsRepository;
+    
 
-    @Autowired
-    public ScmKpiHelperServiceImpl(
-            ConfigHelperService configHelperService,
-            KpiHelperService kpiHelperService,
-            ScmMergeRequestRepositoryCustom scmMergeRequestsRepository,
-            AssigneeDetailsRepository assigneeDetailsRepository) {
+	@Override
+	public List<ScmCommits> getCommitDetails(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
+		return List.of();
+	}
 
-        this.configHelperService = configHelperService;
-        this.kpiHelperService = kpiHelperService;
-        this.scmMergeRequestsRepository = scmMergeRequestsRepository;
-        this.assigneeDetailsRepository = assigneeDetailsRepository;
-    }
+	@Override
+	public List<ScmMergeRequests> getMergeRequests(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
 
-
-    @Override
-    public List<ScmCommits> getCommitDetails(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
-        return List.of();
-    }
-
-    @Override
-    public List<ScmMergeRequests> getMergeRequests(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
-
-        List<ObjectId> toolIds = new ArrayList<>();
-        Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-        Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectBasicConfigId, Map.of());
-        List<Tool> scmTools = kpiHelperService.populateSCMToolsRepoList(toolListMap);
-        BasicDBList mergeFilter = new BasicDBList();
-        for (Tool tool : scmTools) {
-            if (CollectionUtils.isEmpty(tool.getProcessorItemList()))
-                continue;
-            ObjectId processorItemId = tool.getProcessorItemList().get(0).getId();
-            toolIds.add(processorItemId);
-            mergeFilter.add(new BasicDBObject("processorItemId", processorItemId));
-        }
-        return scmMergeRequestsRepository.findMergeList(toolIds,
-                new DateTime(dateRange.getStartDateTime(), DateTimeZone.UTC).withTimeAtStartOfDay().getMillis(),
-                new DateTime(dateRange.getEndDateTime(), DateTimeZone.UTC).withTimeAtStartOfDay().plus(MILLISECONDS_IN_A_DAY).getMillis(),
-                mergeFilter);
-    }
+		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
+		Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectBasicConfigId, Map.of());
+		List<Tool> scmTools = kpiHelperService.populateSCMToolsRepoList(toolListMap);
+		BasicDBList mergeFilter = new BasicDBList();
+		for (Tool tool : scmTools) {
+			if (CollectionUtils.isEmpty(tool.getProcessorItemList()))
+				continue;
+			ObjectId processorItemId = tool.getProcessorItemList().get(0).getId();
+			mergeFilter.add(new BasicDBObject("processorItemId", processorItemId));
+		}
+		return scmMergeRequestsRepository.findMergeList(
+				DateUtil.localDateTimeToUTC(dateRange.getStartDate().atStartOfDay()).toInstant(ZoneOffset.UTC)
+						.toEpochMilli(),
+				DateUtil.localDateTimeToUTC(dateRange.getEndDate().atStartOfDay().plusDays(1)).toInstant(ZoneOffset.UTC)
+						.toEpochMilli(),
+				mergeFilter);
+	}
 
     @Override
     public List<Assignee> getScmUsers(ObjectId projectBasicConfigId) {
