@@ -48,7 +48,6 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
-import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.BoardDTO;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.ConfigLevel;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.ProjectListRequested;
@@ -105,31 +104,22 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	 * @return list of project node IDs
 	 */
 	protected List<String> getRequiredNodeIds(KpiRequest kpiRequest) {
-		return new ArrayList<>(kpiRequest.getSelectedMap().getOrDefault(kpiRequest.getLabel(),
-				Collections.emptyList()));
+		return new ArrayList<>(
+				kpiRequest.getSelectedMap().getOrDefault(kpiRequest.getLabel(), Collections.emptyList()));
 	}
 
 	/**
 	 * Gets project configurations by node IDs.
 	 *
-	 * @param projectNodeIds list of project node IDs
-	 * @param isKanban       whether to filter by Kanban projects
-	 * @param kpiRequest
+	 * @param projectNodeIds
+	 *            list of project node IDs
 	 * @return map of project node ID to project configuration
 	 */
 	@NotNull
-	protected Map<String, OrganizationHierarchy> getNodeidWiseProject(List<String> projectNodeIds, boolean isKanban, KpiRequest kpiRequest) {
-		/*if(kpiRequest.getLevel()==5){
-			Set<String> project = ((Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData()).values().stream()
-					.filter(config -> (config.isKanban() == isKanban) && projectNodeIds.contains(config.getProjectNodeId())).map(ProjectBasicConfig::getProjectNodeId).collect(Collectors.toSet());
-
-		}
-		else{*/
-			return configHelperService.loadAllOrganizationHierarchy().stream().filter(organizationHierarchy -> projectNodeIds.contains(organizationHierarchy.getNodeId()))
-					.collect(Collectors.toMap(OrganizationHierarchy::getNodeId, config -> config));
-
-
-		//return Collections.emptyMap();
+	protected Map<String, OrganizationHierarchy> getNodeWiseHierarchy(List<String> projectNodeIds) {
+		return configHelperService.loadAllOrganizationHierarchy().stream()
+				.filter(organizationHierarchy -> projectNodeIds.contains(organizationHierarchy.getNodeId()))
+				.collect(Collectors.toMap(OrganizationHierarchy::getNodeId, config -> config));
 	}
 
 	/**
@@ -143,27 +133,18 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				.matrix(ExecutiveMatrixDTO.builder().rows(Collections.emptyList()).build()).build()).build();
 	}
 
-	protected Map<String, Map<String, Integer>> processProjectBatch(List<String> uniqueIds, KpiRequest kpiRequest,
+	protected Map<String, Map<String, String>> processProjectBatch(List<String> uniqueIds, KpiRequest kpiRequest,
 			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban) {
-		Map<String, Map<String, Integer>> batchResults = new ConcurrentHashMap<>();
+		Map<String, Map<String, String>> batchResults = new ConcurrentHashMap<>();
 
 		// Process each project sequentially to avoid concurrency issues
 		for (String uniqueId : uniqueIds) {
 			OrganizationHierarchy organizationHierarchy = hierarchyMap.get(uniqueId);
-			/*ProjectBasicConfig projectConfig = projectConfigs.get(uniqueId);
-			if (projectConfig == null) {
-				log.warn("No configuration found for project node ID: {}", uniqueId);
-				continue;
-			}
-*/
 			try {
-				//log.info("Processing project: {} - {}", uniqueId, projectConfig.getProjectName());
-
 				// Get user board configuration for the project
 				ProjectListRequested projectListRequest = new ProjectListRequested();
-				//if project then provide id otherwise not
-				projectListRequest
-						.setBasicProjectConfigIds(Collections.singletonList(""));
+				// if project then provide id otherwise not
+				projectListRequest.setBasicProjectConfigIds(Collections.singletonList(""));
 
 				UserBoardConfigDTO config = userBoardConfigService.getBoardConfig(ConfigLevel.USER, projectListRequest);
 
@@ -172,12 +153,14 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				if (toolToBoardKpis == null)
 					continue;
 				if (!toolToBoardKpis.isEmpty()) {
-					Map<String, Integer> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis);
+					Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
 					if (!projectResults.isEmpty()) {
 						batchResults.put(uniqueId, projectResults);
-						log.info("Successfully processed project: {} - {}", uniqueId,organizationHierarchy.getNodeDisplayName());
+						log.info("Successfully processed project: {} - {}", uniqueId,
+								organizationHierarchy.getNodeDisplayName());
 					} else {
-						log.warn("No results for project: {} - {}", uniqueId, organizationHierarchy.getNodeDisplayName());
+						log.warn("No results for project: {} - {}", uniqueId,
+								organizationHierarchy.getNodeDisplayName());
 					}
 				} else {
 					log.warn("No matching boards with KPIs found for project: {} - {}", uniqueId,
@@ -224,8 +207,8 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 
 	}
 
-	private Map<String, Integer> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
-			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis) throws CloneNotSupportedException {
+	private Map<String, String> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
+			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards) {
 
 		ExecutorService executor = Executors
 				.newFixedThreadPool(Math.min(toolToBoardKpis.size(), Runtime.getRuntime().availableProcessors() * 2));
@@ -233,7 +216,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		Set<String> kpiIds = toolToBoardKpis.values().stream().flatMap(a -> a.values().stream())
 				.flatMap(a -> a.stream().map(KpiMaster::getKpiId)).collect(Collectors.toSet());
 
-		Map<String, Integer> results = new HashMap<>();
+		Map<String, String> results = new HashMap<>();
 
 		List<CompletableFuture<Map<String, List<KpiElement>>>> futures = toolToBoardKpis.entrySet().stream()
 				.map(entry -> CompletableFuture.supplyAsync(() -> {
@@ -248,15 +231,15 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 					} catch (CloneNotSupportedException e) {
 						throw new RuntimeException(e);
 					}
-					createKpiRequest(cloneKpiRequest, false, new HashSet<>(kpiIds), projectNodeId);
+					createKpiRequest(cloneKpiRequest, projectNodeId);
 					List<KpiElement> kpiResults = toolKpiMaturity.getKpiElements(cloneKpiRequest, sourceWiseKpiMaster);
 
 					// Map results back to boards using pre-existing mapping
 					Map<String, List<KpiElement>> resultsByBoard = new HashMap<>();
+
 					boardKpisForTool.forEach((boardName, masterList) -> {
 
-						List<String> kpiList = masterList.stream().map(KpiMaster::getKpiId)
-								.collect(Collectors.toList());
+						List<String> kpiList = masterList.stream().map(KpiMaster::getKpiId).toList();
 
 						List<KpiElement> boardResults = kpiResults.stream().filter(r -> kpiList.contains(r.getKpiId()))
 								.toList();
@@ -269,38 +252,38 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				}, executor)).toList();
 
 		Map<String, List<KpiElement>> boardWiseResults = new HashMap<>();
-		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> {
-			toolResultMap.forEach(
-					(board, kpis) -> boardWiseResults.computeIfAbsent(board, b -> new ArrayList<>()).addAll(kpis));
-		});
+		for (String board : boards) {
+			boardWiseResults.put(board, new ArrayList<>());
+		}
+
+		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap
+				.forEach((board, kpis) -> boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
+					value.addAll(kpis);
+					return value;
+				})));
 
 		// Shutdown executor
 		executor.shutdown();
 
-		boardWiseResults.forEach((board, kpiElements) -> {
-			int score = computeBoardSummary(kpiElements);
-			results.put(board, score);
-			// store/process maturity as needed
-		});
+		boardWiseResults.forEach((board, kpiElements) -> results.put(board, computeBoardSummary(kpiElements)));
 
 		return results;
 	}
 
-	private void createKpiRequest(KpiRequest kpiRequest, boolean kanban, Set<String> kpiIdList, String projectNodeId) {
+	private void createKpiRequest(KpiRequest kpiRequest, String projectNodeId) {
 		String[] strings = new String[1];
 		strings[0] = projectNodeId;
 		// Set request parameters
 		kpiRequest.setIds(strings);
-		kpiRequest.getSelectedMap().put(kpiRequest.getLabel(),
-				Collections.singletonList(projectNodeId));
+		kpiRequest.getSelectedMap().put(kpiRequest.getLabel(), Collections.singletonList(projectNodeId));
 	}
 
-	private int computeBoardSummary(List<KpiElement> elements) {
+	private String computeBoardSummary(List<KpiElement> elements) {
 		if (CollectionUtils.isEmpty(elements)) {
-			return 0;
+			return "NA";
 		}
 
-		return (int) Math.ceil(elements.stream().filter(Objects::nonNull).map(KpiElement::getOverallMaturity)
+		return String.valueOf(elements.stream().filter(Objects::nonNull).map(KpiElement::getOverallMaturity)
 				.filter(StringUtils::isNotBlank).mapToDouble(Double::parseDouble).filter(a -> a > 0).average()
 				.orElse(0.0));
 	}

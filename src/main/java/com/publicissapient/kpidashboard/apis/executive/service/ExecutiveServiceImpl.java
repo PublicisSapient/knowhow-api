@@ -54,6 +54,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 
 	private static final String KANBAN = "kanban";
 	private static final String SCRUM = "scrum";
+	private static final String CLOSED = "CLOSED";
 
 	private final ExecutiveDashboardStrategyFactory strategyFactory;
 	private final AccountHierarchyServiceImpl accountHierarchyService;
@@ -78,18 +79,18 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		kpiRequest.setLevel(request.getLevel());
 		kpiRequest.setLabel(request.getLabel());
 		kpiRequest.setSelectedMap(createSelectedMap());
-		kpiRequest.setSprintIncluded(List.of("CLOSED"));
+		kpiRequest.setSprintIncluded(List.of(CLOSED));
 
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
-		accountFilterRequest.setSprintIncluded(List.of("CLOSED", "ACTIVE"));
+		accountFilterRequest.setSprintIncluded(List.of(CLOSED, "ACTIVE"));
 
-		Set<String> accountIds = StringUtils.isBlank(request.getParentId())
+		Set<String> selectedIds = StringUtils.isBlank(request.getParentId())
 				? getNodeIds(kpiRequest, false, accountFilterRequest, null)
 				: getNodeIds(kpiRequest, false, accountFilterRequest, request.getParentId());
 
-		if (CollectionUtils.isNotEmpty(accountIds)) {
-			kpiRequest.setIds(accountIds.toArray(new String[0]));
+		if (CollectionUtils.isNotEmpty(selectedIds)) {
+			kpiRequest.setIds(selectedIds.toArray(new String[0]));
 		}
 
 		return strategyFactory.getStrategy(SCRUM).getExecutiveDashboard(kpiRequest);
@@ -103,14 +104,21 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		kpiRequest.setLevel(request.getLevel());
 		kpiRequest.setLabel(request.getLabel());
 		kpiRequest.setSelectedMap(createSelectedMap());
+		kpiRequest.getSelectedMap().put("date",List.of("Weeks"));
+		kpiRequest.setIds(new String[] { "5" });
+		kpiRequest.setSprintIncluded(List.of(CLOSED));
 
-		if (StringUtils.isNotBlank(request.getParentId())) {
-			kpiRequest.getSelectedMap().get("project").add(request.getParentId());
-		} else {
-			Set<String> accountIds = getNodeIds(kpiRequest, true, new AccountFilterRequest(), null);
-			if (CollectionUtils.isNotEmpty(accountIds)) {
-				kpiRequest.setIds(new String[] { "0" });
-			}
+		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
+		accountFilterRequest.setKanban(true);
+		accountFilterRequest.setSprintIncluded(List.of(CLOSED));
+
+
+		Set<String> selectedIds = StringUtils.isBlank(request.getParentId())
+				? getNodeIds(kpiRequest, true, accountFilterRequest, null)
+				: getNodeIds(kpiRequest, true, accountFilterRequest, request.getParentId());
+
+		if (CollectionUtils.isNotEmpty(selectedIds)) {
+			kpiRequest.setIds(selectedIds.toArray(new String[0]));
 		}
 
 		return strategyFactory.getStrategy(KANBAN).getExecutiveDashboard(kpiRequest);

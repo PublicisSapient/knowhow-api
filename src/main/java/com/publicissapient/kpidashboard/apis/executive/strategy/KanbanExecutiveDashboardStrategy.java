@@ -23,11 +23,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.mapper.ExecutiveDashboardMapper;
@@ -35,6 +34,7 @@ import com.publicissapient.kpidashboard.apis.executive.service.KanbanKpiMaturity
 import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiencyService;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.repository.application.KpiCategoryRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +49,9 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 	public static final String STRATEGY_TYPE = "kanban";
 
 	public KanbanExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService,
-											CacheService cacheService, UserBoardConfigService userBoardConfigService,
-											KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
+			CacheService cacheService, UserBoardConfigService userBoardConfigService,
+			KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository,
+			ConfigHelperService configHelperService) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, kanbanKpiMaturity,
 				kpiCategoryRepository, configHelperService);
 	}
@@ -63,23 +64,23 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 		log.info("Starting executive dashboard processing for Scrum projects");
 		// Pre-load all required data
 		Set<String> boards = getBoards();
-		List<String> projectNodeIds = getRequiredNodeIds(kpiRequest);
+		List<String> requiredNodeIds = getRequiredNodeIds(kpiRequest);
 
-		if (CollectionUtils.isEmpty(projectNodeIds) || CollectionUtils.isEmpty(boards)) {
-			log.warn("Project IDs or boards are empty");
+		if (CollectionUtils.isEmpty(requiredNodeIds) || CollectionUtils.isEmpty(boards)) {
+			log.warn("requiredNodeIds or boards are empty");
 			return getDefaultResponse();
 		}
 		// Batch process project configurations
-		Map<String, OrganizationHierarchy> projectConfigs = getNodeidWiseProject(projectNodeIds, true, kpiRequest);
+		Map<String, OrganizationHierarchy> nodeWiseHierachy = getNodeWiseHierarchy(requiredNodeIds);
 
-		if (projectConfigs.isEmpty()) {
-			log.warn("No valid project configurations found for the provided IDs");
+		if (nodeWiseHierachy.isEmpty()) {
+			log.warn("No valid projehierarchy configurations found for the provided IDs");
 			return getDefaultResponse();
 		}
 
-		Map<String, Map<String, Integer>> finalResults = new ConcurrentHashMap<>(
-				processProjectBatch(projectNodeIds, kpiRequest, projectConfigs, boards, true));
-		log.info("Completed processing {} projects in {} ms", projectNodeIds.size(),
+		Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
+				processProjectBatch(requiredNodeIds, kpiRequest, nodeWiseHierachy, boards, true));
+		log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
 				System.currentTimeMillis() - startTime);
 
 		// Calculate project efficiency for each project
@@ -91,6 +92,7 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 		});
 
 		// Convert results to DTO with efficiency data
-		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies, kpiRequest.getLevelName());
+		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, nodeWiseHierachy,
+				projectEfficiencies, kpiRequest.getLevelName());
 	}
 }
