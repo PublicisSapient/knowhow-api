@@ -391,9 +391,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				category.add(DEV_STATUS);
 				category2.get(DEV_STATUS).add(PLANNED_COMPLETION);
 				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
-					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-					populateDelay(delay, category2, DEV_STATUS);
+					if (jiraIssueData.get(ISSUE_DELAY) instanceof Integer && ((Integer) jiraIssueData.get(ISSUE_DELAY)) >= 0) {
+						int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
+						delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
+						populateDelay(delay, category2, DEV_STATUS);
+					}
 				}
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
@@ -404,9 +406,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				category.add(DEV_STATUS);
 				category2.get(DEV_STATUS).add(PLANNED_COMPLETION);
 				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
-					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-					populateDelay(delay, category2, DEV_STATUS);
+					if (jiraIssueData.get(ISSUE_DELAY) instanceof Integer && ((Integer) jiraIssueData.get(ISSUE_DELAY)) >= 0) {
+						int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
+						delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
+						populateDelay(delay, category2, DEV_STATUS);
+					}
 				}
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
@@ -782,7 +786,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				jiraIssueModalObject.setMarker(Constant.GREEN);
 			}
 			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-				jiraIssueModalObject.setDevDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
+					jiraIssueModalObject.setDevDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
 			} else {
 				jiraIssueModalObject.setDevDelayInDays(Constant.BLANK);
 			}
