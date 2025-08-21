@@ -131,8 +131,7 @@ public class CacheServiceImpl implements CacheService {
 	public Object cacheProjectConfigMapData() {
 		log.info("Creating Project Config Cache");
 		configHelperService.loadConfigData();
-		return configHelperService
-				.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
+		return filterOnHoldProjectBasicConfig();
 	}
 
 	/**
@@ -167,7 +166,7 @@ public class CacheServiceImpl implements CacheService {
 		return configHelperService.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
 	}
 
-	public Object filterOnHoldProjectBasicConfig() {
+	private Object filterOnHoldProjectBasicConfig() {
 
 		Map<String, ProjectBasicConfig> projectConfigMap = (Map<String, ProjectBasicConfig>) configHelperService
 				.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);

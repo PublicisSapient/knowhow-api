@@ -527,7 +527,4 @@ public class KPIExcelData {
 	@JsonProperty("Time taken to reopen")
 	private String durationToReopen;
 
-	@JsonProperty("Defect Severity")
-	private String defectSeverity;
-
 }

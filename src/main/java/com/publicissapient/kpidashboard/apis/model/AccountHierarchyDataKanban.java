@@ -42,7 +42,5 @@ public class AccountHierarchyDataKanban implements Serializable { // NOPMD
 
 	private ObjectId basicProjectConfigId;
 
-	private boolean onHold;
-
 	private List<Node> node;
 }

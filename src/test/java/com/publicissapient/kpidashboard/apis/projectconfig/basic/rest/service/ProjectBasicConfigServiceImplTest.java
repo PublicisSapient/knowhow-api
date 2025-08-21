@@ -489,8 +489,7 @@ public class ProjectBasicConfigServiceImplTest {
 		listOfProjectDetails.add(projectBasicConfig);
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
 		mapOfProjectDetails.put(UUID.randomUUID().toString(), projectBasicConfig);
-		Mockito.when(cacheService.cacheAllProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		Mockito.when(cacheService.filterOnHoldProjectBasicConfig()).thenReturn(mapOfProjectDetails);
+		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 		List<ProjectBasicConfig> list = projectBasicConfigServiceImpl.getFilteredProjectsBasicConfigs(Boolean.FALSE);
 		assertThat("response list size: ", list.size(), equalTo(1));
 	}

@@ -82,9 +82,6 @@ public enum JiraFeature {
 	/** Jira production defect jira feature. */
 	JIRA_PRODUCTION_DEFECT("productionDefect"),
 
-	/** for DEFECT type jira feature. */
-	DEFECT_SEVERITY("severity"),
-
 	BASIC_PROJECT_CONFIG_ID("basicProjectConfigId"), ADDITIONAL_FILTERS_FILTERID(
 			"additionalFilters.filterId"), ADDITIONAL_FILTERS_FILTERVALUES_VALUEID("additionalFilters.filterValues.valueId");
 
