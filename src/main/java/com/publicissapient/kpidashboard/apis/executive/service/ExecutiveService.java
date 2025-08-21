@@ -17,28 +17,40 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.executive.service;
 
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardRequestDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 
 /**
  * Service interface for executive dashboard operations.
  */
 public interface ExecutiveService {
 
-    /**
-     * Retrieves scrum metrics for the executive dashboard.
-     *
-     * @param request The executive dashboard request DTO
-     * @return Executive dashboard response with scrum metrics
-     */
-    ExecutiveDashboardResponseDTO getExecutiveDashboardScrum( ExecutiveDashboardRequestDTO request);
+	/**
+	 * Retrieves scrum metrics for the executive dashboard.
+	 *
+	 * @param request
+	 *            The executive dashboard request DTO containing filter criteria
+	 * @return Executive dashboard response with scrum metrics
+	 * @throws ExecutiveDataException
+	 *             if there is an error processing the request
+	 * @throws IllegalArgumentException
+	 *             if the request parameters are invalid
+	 */
+	ExecutiveDashboardResponseDTO getExecutiveDashboardScrum(ExecutiveDashboardRequestDTO request)
+			throws ExecutiveDataException, IllegalArgumentException;
 
-    /**
-     * Retrieves kanban metrics for the executive dashboard.
-     *
-     * @param request The executive dashboard request DTO
-     * @return Executive dashboard response with kanban metrics
-     */
-    ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(ExecutiveDashboardRequestDTO request);
+	/**
+	 * Retrieves kanban metrics for the executive dashboard.
+	 *
+	 * @param request
+	 *            The executive dashboard request DTO containing filter criteria
+	 * @return Executive dashboard response with kanban metrics
+	 * @throws ExecutiveDataException
+	 *             if there is an error processing the request
+	 * @throws IllegalArgumentException
+	 *             if the request parameters are invalid
+	 */
+	ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(ExecutiveDashboardRequestDTO request)
+			throws ExecutiveDataException, IllegalArgumentException;
 }

@@ -32,13 +32,13 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDataDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
@@ -48,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.BoardDTO;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.ConfigLevel;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.ProjectListRequested;
@@ -213,9 +214,6 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		ExecutorService executor = Executors
 				.newFixedThreadPool(Math.min(toolToBoardKpis.size(), Runtime.getRuntime().availableProcessors() * 2));
 
-		Set<String> kpiIds = toolToBoardKpis.values().stream().flatMap(a -> a.values().stream())
-				.flatMap(a -> a.stream().map(KpiMaster::getKpiId)).collect(Collectors.toSet());
-
 		Map<String, String> results = new HashMap<>();
 
 		List<CompletableFuture<Map<String, List<KpiElement>>>> futures = toolToBoardKpis.entrySet().stream()
@@ -229,7 +227,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 					try {
 						cloneKpiRequest = kpiRequest.clone();
 					} catch (CloneNotSupportedException e) {
-						throw new RuntimeException(e);
+						throw new ExecutiveDataException(e);
 					}
 					createKpiRequest(cloneKpiRequest, projectNodeId);
 					List<KpiElement> kpiResults = toolKpiMaturity.getKpiElements(cloneKpiRequest, sourceWiseKpiMaster);
