@@ -118,7 +118,6 @@ public class AccountHierarchyServiceKanbanImpl // NOPMD
 
 			if (acc.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.PROJECT)) {
 				data.setBasicProjectConfigId(acc.getBasicProjectConfigId());
-				data.setOnHold(acc.isOnHold());
 			}
 		}
 
@@ -178,7 +177,6 @@ public class AccountHierarchyServiceKanbanImpl // NOPMD
 		} else {
 			accountHierarchyData.setBasicProjectConfigId(hierarchy.getBasicProjectConfigId());
 			accountHierarchyData.setLabelName(hierarchy.getHierarchyLevelId());
-			accountHierarchyData.setOnHold(hierarchy.isOnHold());
 			listHierarchyData.add(accountHierarchyData);
 		}
 	}

@@ -382,9 +382,7 @@ public enum KPIExcelColumn {
                                   Arrays.asList("Issue Id", "Issue Description", "Sprint Name", "Issue Type", "Issue Status", "Un-Refined")),
 
 	DEFECT_REOPEN_RATE_QUALITY("kpi190", Arrays.asList("Issue Id", "Defect Description", "Issue Status",
-			"Defect Priority", "Closed Time", "Reopen Time", "Time taken to reopen")),
-	DEFECT_SEVERITY_INDEX("kpi194", Arrays.asList("Sprint Name", "Defect ID", "Defect Description", "Story ID",
-			"Story Description", "Squad", "Root Cause", "Defect Severity", "Defect Status", "Time Spent (in hours)"));
+			"Defect Priority", "Closed Time", "Reopen Time", "Time taken to reopen"));
 
 	// @formatter:on
 
