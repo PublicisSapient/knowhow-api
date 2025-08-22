@@ -455,7 +455,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				populateDelay(delay, category2, PLANNED);
+				if (delay >= 0)
+					populateDelay(delay, category2, PLANNED);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -465,7 +466,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				populateDelay(delay, category2, PLANNED);
+				if (delay >= 0)
+					populateDelay(delay, category2, PLANNED);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -786,7 +788,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				jiraIssueModalObject.setMarker(Constant.GREEN);
 			}
 			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-					jiraIssueModalObject.setDevDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
+				jiraIssueModalObject.setDevDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
 			} else {
 				jiraIssueModalObject.setDevDelayInDays(Constant.BLANK);
 			}
