@@ -135,7 +135,8 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	}
 
 	protected Map<String, Map<String, String>> processProjectBatch(List<String> uniqueIds, KpiRequest kpiRequest,
-			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban) {
+			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban,
+			ExecutorService executor) {
 		Map<String, Map<String, String>> batchResults = new ConcurrentHashMap<>();
 
 		// Process each project sequentially to avoid concurrency issues
@@ -154,7 +155,8 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				if (toolToBoardKpis == null)
 					continue;
 				if (!toolToBoardKpis.isEmpty()) {
-					Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
+					Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards,
+							executor);
 					if (!projectResults.isEmpty()) {
 						batchResults.put(uniqueId, projectResults);
 						log.info("Successfully processed project: {} - {}", uniqueId,
@@ -209,10 +211,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	}
 
 	private Map<String, String> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
-			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards) {
-
-		ExecutorService executor = Executors
-				.newFixedThreadPool(Math.min(toolToBoardKpis.size(), Runtime.getRuntime().availableProcessors() * 2));
+			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards, ExecutorService executor) {
 
 		Map<String, String> results = new HashMap<>();
 
@@ -247,21 +246,23 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 					return resultsByBoard;
 					// Split results by board
 
-				}, executor)).toList();
+				}, executor).exceptionally(ex -> {
+					log.error("Error processing tool {} for project {}: {}", entry.getKey(), projectNodeId,
+							ex.getMessage(), ex);
+					return Map.of();
+				})).toList();
 
 		Map<String, List<KpiElement>> boardWiseResults = new HashMap<>();
 		for (String board : boards) {
 			boardWiseResults.put(board, new ArrayList<>());
 		}
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
 		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap
 				.forEach((board, kpis) -> boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
 					value.addAll(kpis);
 					return value;
 				})));
-
-		// Shutdown executor
-		executor.shutdown();
 
 		boardWiseResults.forEach((board, kpiElements) -> results.put(board, computeBoardSummary(kpiElements)));
 
