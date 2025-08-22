@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
@@ -76,23 +78,31 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 			log.warn("No valid project configurations found for the provided IDs");
 			return getDefaultResponse();
 		}
+		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+		try {
 
-		Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
-				processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false));
-		log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
-				System.currentTimeMillis() - startTime);
+			Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
+					processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false, executor));
+			log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
+					System.currentTimeMillis() - startTime);
+			// Calculate project efficiency for each project
+			Map<String, Map<String, Object>> projectEfficiencies = new HashMap<>();
+			finalResults.forEach((projectId, boardMaturities) -> {
+				Map<String, Object> efficiency = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
+				projectEfficiencies.put(projectId, efficiency);
+				log.info("Project {} efficiency: {}", projectId, efficiency);
+			});
 
-		// Calculate project efficiency for each project
-		Map<String, Map<String, Object>> projectEfficiencies = new HashMap<>();
-		finalResults.forEach((projectId, boardMaturities) -> {
-			Map<String, Object> efficiency = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
-			projectEfficiencies.put(projectId, efficiency);
-			log.info("Project {} efficiency: {}", projectId, efficiency);
-		});
+			// Convert results to DTO with efficiency data
+			return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs,
+					projectEfficiencies, kpiRequest.getLevelName());
 
-		// Convert results to DTO with efficiency data
-		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies, kpiRequest.getLevelName());
+		} catch (Exception e) {
 
+		} finally {
+			executor.shutdown();
+		}
+		return getDefaultResponse();
 	}
 
 }
