@@ -15,7 +15,7 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -25,13 +25,11 @@ import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIServi
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
-import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -47,37 +45,22 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRepository;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper.MILLISECONDS_IN_A_DAY;
-
+import org.springframework.stereotype.Service;
 
 @Slf4j
-@Component
+@Service
+@AllArgsConstructor
 public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String MR_COUNT = "No of PRs";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
-	@Autowired
 	private ConfigHelperService configHelperService;
 
-	@Autowired
-	private AssigneeDetailsRepository assigneeDetailsRepository;
-
-	@Autowired
 	private KpiHelperService kpiHelperService;
-
-	@Autowired
-	private ScmMergeRequestsRepository scmMergeRequestsRepository;
-
-	@Override
-	public String getQualifierType() {
-		return KPICode.PR_SIZE.name();
-	}
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -148,13 +131,14 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		for (int i = 0; i < dataPoints; i++) {
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
-
-			List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream().filter(request -> request.getMergedAt() != null)
+			// todo:: check field used for filtering here
+			List<ScmMergeRequests> mergedRequestsInRange = mergeRequests.stream()
+					.filter(request -> request.getMergedAt() != null)
 					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
 							weekRange.getStartDateTime(), weekRange.getEndDateTime()))
 					.toList();
 
-			scmTools.forEach(tool -> processToolData(tool, filteredMergeRequests, assignees, aggregatedDataMap,
+			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
@@ -175,17 +159,19 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> matchingRequests = mergeRequests.stream()
+		List<ScmMergeRequests> mergeRequestsForBranch = mergeRequests.stream()
 				.filter(request -> request.getRepositoryName().equals(tool.getRepositoryName()))
 				.filter(request -> request.getToBranch().equals(tool.getBranch())).toList();
 
-		long totalLinesChanged = matchingRequests.stream().mapToLong(ScmMergeRequests::getLinesChanged).sum();
-		long totalMergeRequests = matchingRequests.size();
+		long totalLinesChanged = mergeRequestsForBranch.stream().mapToLong(ScmMergeRequests::getLinesChanged).sum();
+		long totalMergeRequests = mergeRequestsForBranch.size();
 
-		setDataCount(projectName, dateLabel, overallKpiGroup, totalLinesChanged, totalMergeRequests, aggregatedDataMap);
+		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, totalLinesChanged,
+				Map.of(MR_COUNT, totalMergeRequests), aggregatedDataMap);
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
-                .filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)//todo:: check
+		// todo:: check when no link in dbref
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = mergeRequestsForBranch.stream()
+				.filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)
 				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
@@ -209,7 +195,8 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 
 			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-			setDataCount(projectName, dateLabel, userKpiGroup, userLineChange, userMrCount, aggregatedDataMap);
+			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, userLineChange,
+					Map.of(MR_COUNT, userMrCount), aggregatedDataMap);
 
 			return createValidationData(projectName, tool, developerName, dateLabel, userLineChange, userMrCount);
 		}).collect(Collectors.toList());
@@ -226,27 +213,6 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		validationData.setPrSize(prSize);
 		validationData.setMrCount(mrCount);
 		return validationData;
-	}
-
-	private void setDataCount(String projectName, String dateLabel, String kpiGroup, long value, long mrCount,
-			Map<String, List<DataCount>> dataCountMap) {
-		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-		Optional<DataCount> existingDataCount = dataCounts.stream()
-				.filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
-
-		if (existingDataCount.isPresent()) {
-			DataCount updatedDataCount = existingDataCount.get();
-			updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
-		} else {
-			DataCount newDataCount = new DataCount();
-			newDataCount.setData(String.valueOf(value));
-			newDataCount.setSProjectName(projectName);
-			newDataCount.setDate(dateLabel);
-			newDataCount.setValue(value);
-			newDataCount.setKpiGroup(kpiGroup);
-			newDataCount.setHoverValue(Map.of(MR_COUNT, mrCount));
-			dataCounts.add(newDataCount);
-		}
 	}
 
 	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
@@ -277,6 +243,11 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
 		resultMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
 		return resultMap;
+	}
+
+	@Override
+	public String getQualifierType() {
+		return KPICode.PR_SIZE.name();
 	}
 
 	@Override
