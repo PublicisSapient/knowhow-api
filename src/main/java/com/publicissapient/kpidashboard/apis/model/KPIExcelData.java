@@ -152,6 +152,18 @@ public class KPIExcelData {
 	@JsonProperty("Automated")
 	private String automated;
 
+	@JsonProperty("Manual")
+	private String manual;
+
+	@JsonProperty("Test Case Type")
+	private String testCaseType;
+
+	@JsonProperty("Test Case Status")
+	private String testCaseStatus;
+
+	@JsonProperty("Execution Time")
+	private String executionTime;
+
 	@JsonProperty("Project")
 	private String project;
 
