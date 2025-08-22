@@ -84,4 +84,9 @@ public class TestCaseDetailsDataFactory {
 		return testCaseDetailsList.stream().filter(testCaseDetails -> testCaseDetails.getIsTestAutomated().equals("Yes"))
 				.collect(Collectors.toList());
 	}
+
+	public List<TestCaseDetails> findManualTestCases() {
+		return testCaseDetailsList.stream().filter(testCaseDetails -> testCaseDetails.getIsTestAutomated().equals("No"))
+				.collect(Collectors.toList());
+	}
 }
