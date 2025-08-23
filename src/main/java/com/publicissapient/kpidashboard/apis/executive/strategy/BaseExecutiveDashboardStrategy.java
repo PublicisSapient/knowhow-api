@@ -27,8 +27,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,15 +81,30 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	protected final KpiCategoryRepository kpiCategoryRepository;
 	protected final ConfigHelperService configHelperService;
 
+	protected abstract Executor getExecutor();
+
 	@Override
 	public String getStrategyType() {
 		return strategyType;
 	}
 
-	@Override
-	public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest kpiRequest) {
-		// Common preprocessing can be done here
-		return fetchDashboardData(kpiRequest);
+	public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
+		Executor executor = getExecutor();
+		FutureTask<ExecutiveDashboardResponseDTO> futureTask = new FutureTask<>(() -> fetchDashboardData(request));
+		executor.execute(futureTask);
+
+		try {
+			return futureTask.get(60, TimeUnit.SECONDS);
+		} catch (TimeoutException e) {
+			futureTask.cancel(true); // 🚨 interrupt if still running
+			throw new ExecutiveDataException(
+					"Strategy " + strategyType + " timed out after " + 60 + " " + TimeUnit.SECONDS, e);
+		} catch (ExecutionException e) {
+			throw new ExecutiveDataException("Strategy " + strategyType + " failed", e.getCause());
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new ExecutiveDataException("Strategy " + strategyType + " was interrupted", e);
+		}
 	}
 
 	/**
@@ -135,8 +155,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	}
 
 	protected Map<String, Map<String, String>> processProjectBatch(List<String> uniqueIds, KpiRequest kpiRequest,
-			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban,
-			ExecutorService executor) {
+			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban) {
 		Map<String, Map<String, String>> batchResults = new ConcurrentHashMap<>();
 
 		// Process each project sequentially to avoid concurrency issues
@@ -155,8 +174,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				if (toolToBoardKpis == null)
 					continue;
 				if (!toolToBoardKpis.isEmpty()) {
-					Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards,
-							executor);
+					Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
 					if (!projectResults.isEmpty()) {
 						batchResults.put(uniqueId, projectResults);
 						log.info("Successfully processed project: {} - {}", uniqueId,
@@ -211,7 +229,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	}
 
 	private Map<String, String> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
-			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards, ExecutorService executor) {
+			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards) {
 
 		Map<String, String> results = new HashMap<>();
 
@@ -246,7 +264,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 					return resultsByBoard;
 					// Split results by board
 
-				}, executor).exceptionally(ex -> {
+				}, getExecutor()).exceptionally(ex -> {
 					log.error("Error processing tool {} for project {}: {}", entry.getKey(), projectNodeId,
 							ex.getMessage(), ex);
 					return Map.of();

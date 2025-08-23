@@ -22,10 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -50,12 +53,21 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 
 	public static final String STRATEGY_TYPE = "kanban";
 
+	@Autowired
+	@Qualifier("kanbanExecutiveTaskExecutor")
+	private Executor kanbanExecutiveTaskExecutor;
+
 	public KanbanExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService,
 			CacheService cacheService, UserBoardConfigService userBoardConfigService,
 			KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository,
 			ConfigHelperService configHelperService) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, kanbanKpiMaturity,
 				kpiCategoryRepository, configHelperService);
+	}
+
+	@Override
+	protected Executor getExecutor() {
+		return kanbanExecutiveTaskExecutor;
 	}
 
 	@Override
@@ -79,10 +91,9 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 			log.warn("No valid projehierarchy configurations found for the provided IDs");
 			return getDefaultResponse();
 		}
-		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 		try {
 			Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
-					processProjectBatch(requiredNodeIds, kpiRequest, nodeWiseHierachy, boards, true, executor));
+					processProjectBatch(requiredNodeIds, kpiRequest, nodeWiseHierachy, boards, true));
 			log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
 					System.currentTimeMillis() - startTime);
 
@@ -100,7 +111,7 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 		} catch (Exception e) {
 
 		} finally {
-			executor.shutdown();
+
 		}
 		return getDefaultResponse();
 	}

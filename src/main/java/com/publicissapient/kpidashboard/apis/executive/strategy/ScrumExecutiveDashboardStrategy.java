@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executor;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.mapper.ExecutiveDashboardMapper;
@@ -37,6 +37,7 @@ import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiency
 import com.publicissapient.kpidashboard.apis.executive.service.ScrumKpiMaturity;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.repository.application.KpiCategoryRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,11 +51,20 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 
 	public static final String STRATEGY_TYPE = "scrum";
 
+	@Autowired
+	@Qualifier("scrumExecutiveTaskExecutor")
+	private Executor scrumExecutiveTaskExecutor;
+
 	public ScrumExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService, CacheService cacheService,
 			UserBoardConfigService userBoardConfigService, ScrumKpiMaturity scrumKpiMaturity,
 			KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, scrumKpiMaturity,
 				kpiCategoryRepository, configHelperService);
+	}
+
+	@Override
+	protected Executor getExecutor() {
+		return scrumExecutiveTaskExecutor;
 	}
 
 	@Override
@@ -78,11 +88,10 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 			log.warn("No valid project configurations found for the provided IDs");
 			return getDefaultResponse();
 		}
-		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 		try {
 
 			Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
-					processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false, executor));
+					processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false));
 			log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
 					System.currentTimeMillis() - startTime);
 			// Calculate project efficiency for each project
@@ -100,7 +109,7 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 		} catch (Exception e) {
 
 		} finally {
-			executor.shutdown();
+
 		}
 		return getDefaultResponse();
 	}

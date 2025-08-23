@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -95,6 +96,11 @@ public class BaseExecutiveDashboardStrategyTest {
 				KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
 			super("dummy", cacheService, projectEfficiencyService, userBoardConfigService, scrumKpiMaturity,
 					kpiCategoryRepository, configHelperService);
+		}
+
+		@Override
+		protected Executor getExecutor() {
+			return null;
 		}
 
 		@Override
@@ -211,10 +217,9 @@ public class BaseExecutiveDashboardStrategyTest {
 		List<KpiElement> kpiElements = new ArrayList<>();
 		kpiElements.add(kpiElement);
 		when(toolKpiMaturity.getKpiElements(any(KpiRequest.class), anyMap())).thenReturn(kpiElements);
-		ExecutorService executor = Executors.newFixedThreadPool(1);
 		// Act
 		Map<String, Map<String, String>> result = strategy.processProjectBatch(ids, request, hierarchyMap, boards,
-				false, executor);
+				false);
 
 		// Assert
 		assertNotNull(result);
