@@ -93,7 +93,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		ExecutorService overallExecutor = Executors.newSingleThreadExecutor();
 		Future<ExecutiveDashboardResponseDTO> future = overallExecutor.submit(() -> fetchDashboardData(request));
 		try {
-			return future.get(60, TimeUnit.SECONDS);
+			return future.get(1, TimeUnit.MINUTES);
 		} catch (TimeoutException e) {
 			future.cancel(true);
 			throw new ExecutiveDataException("Service taking longer than expected, try again later",
@@ -164,48 +164,52 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		String uniqueHierarchyId = "";
 		try {
 			for (String uniqueId : uniqueIds) {
+
 				uniqueHierarchyId = uniqueId;
 				checkInterrupted();
+
 				OrganizationHierarchy organizationHierarchy = hierarchyMap.get(uniqueId);
 				UserBoardConfigDTO config = projectBoardConfigs.get(uniqueId);
 
-				if (config == null) {
-					log.warn("Skipping project {}: no user board config found", uniqueId);
-					continue;
-				}
+				if (config != null) {
+					Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis = getBoardWiseUserBoardConfig(boards,
+							uniqueId, config, isKanban);
 
-				Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis = getBoardWiseUserBoardConfig(boards,
-						uniqueId, config, isKanban);
-				if (toolToBoardKpis == null || toolToBoardKpis.isEmpty()) {
-					log.warn("No KPIs to process for project {} - {}", uniqueId,
-							organizationHierarchy.getNodeDisplayName());
-					continue;
-				}
-
-				// Process KPIs for this project
-				Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
-				checkInterrupted();
-
-				if (!projectResults.isEmpty()) {
-					batchResults.put(uniqueId, projectResults);
-					log.info("Processed project {} successfully - {}", uniqueId,
-							organizationHierarchy.getNodeDisplayName());
+					if (toolToBoardKpis != null && !toolToBoardKpis.isEmpty()) {
+						// Process KPIs for this project
+						processKpis(kpiRequest, boards, uniqueId, toolToBoardKpis, batchResults, organizationHierarchy);
+					} else {
+						log.warn("No KPIs to process for project {} - {}", uniqueId,
+								organizationHierarchy.getNodeDisplayName());
+					}
 				} else {
-					log.warn("No KPI results for project {} - {}", uniqueId,
-							organizationHierarchy.getNodeDisplayName());
+					log.warn("Skipping project {}: no user board config found", uniqueId);
 				}
-
 			}
 		} catch (InterruptedException ie) {
 			log.warn("Processing interrupted for project {} due to timeout", uniqueHierarchyId);
 			Thread.currentThread().interrupt();
 
 		} catch (Exception e) {
-			log.error("Error processing project {}: {}", uniqueHierarchyId, e.getMessage(), e);
+			log.error("Unexpected error in processProjectBatch: {}", e.getMessage(), e);
 		}
 
 		return batchResults;
 
+	}
+
+	private void processKpis(KpiRequest kpiRequest, Set<String> boards, String uniqueId,
+			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Map<String, Map<String, String>> batchResults,
+			OrganizationHierarchy organizationHierarchy) throws InterruptedException {
+		Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
+		checkInterrupted();
+
+		if (!projectResults.isEmpty()) {
+			batchResults.put(uniqueId, projectResults);
+			log.info("Processed project {} successfully - {}", uniqueId, organizationHierarchy.getNodeDisplayName());
+		} else {
+			log.warn("No KPI results for project {} - {}", uniqueId, organizationHierarchy.getNodeDisplayName());
+		}
 	}
 
 	@Nullable
@@ -261,12 +265,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 						Map<String, List<KpiMaster>> sourceWiseKpiMaster = Map.of(tool, mergedKpis);
 
 						// Clone request for thread-safety
-						KpiRequest cloneKpiRequest;
-						try {
-							cloneKpiRequest = kpiRequest.clone();
-						} catch (CloneNotSupportedException e) {
-							throw new ExecutiveDataException(e);
-						}
+						KpiRequest cloneKpiRequest = new KpiRequest(kpiRequest);
 						createKpiRequest(cloneKpiRequest, projectNodeId);
 
 						// Compute KPIs
@@ -300,12 +299,11 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		// Wait for all tool computations
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap.forEach((board, kpis) -> {
-			boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
-				value.addAll(kpis);
-				return value;
-			});
-		}));
+		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap
+				.forEach((board, kpis) -> boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
+					value.addAll(kpis);
+					return value;
+				})));
 
 		// Compute summary per board
 		boardWiseResults.forEach((board, kpiElements) -> results.put(board, computeBoardSummary(kpiElements)));
