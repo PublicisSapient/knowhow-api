@@ -109,7 +109,7 @@ public class ProjectEfficiencyService {
 		return result;
 	}
 
-	private String calculateHealthStatus(double efficiencyPercentage) {
+	protected String calculateHealthStatus(double efficiencyPercentage) {
 		if (efficiencyPercentage >= 80) {
 			return "GREEN";
 		} else if (efficiencyPercentage >= 50) {
@@ -124,7 +124,7 @@ public class ProjectEfficiencyService {
 	 * 
 	 * @return Map of category to weightage
 	 */
-	private Map<String, Integer> parseWeightageConfig() {
+    protected Map<String, Integer> parseWeightageConfig() {
 		Map<String, Integer> weightages = new HashMap<>();
 
 		if (StringUtils.isBlank(efficiencyWeightageConfig)) {
@@ -172,7 +172,7 @@ public class ProjectEfficiencyService {
 	/**
 	 * Normalizes weightages to ensure they sum to 100
 	 */
-	private void normalizeWeightages(Map<String, Integer> weightages) {
+    protected void normalizeWeightages(Map<String, Integer> weightages) {
 		if (weightages.isEmpty()) {
 			weightages.putAll( calculateEqualWeightages(DEFAULT_CATEGORIES));
 			return;
@@ -197,7 +197,7 @@ public class ProjectEfficiencyService {
 	/**
 	 * Retrieves additional categories from the database
 	 */
-	private Set<String> getCategoriesFromDatabase() {
+    protected Set<String> getCategoriesFromDatabase() {
 		try {
 			return kpiCategoryRepository.findAll().stream().map(KpiCategory::getCategoryName).filter(Objects::nonNull)
 					.map(String::toUpperCase).collect(Collectors.toSet());
@@ -210,7 +210,7 @@ public class ProjectEfficiencyService {
 	/**
 	 * Finds the best matching board maturity for a given category
 	 */
-	private int findBestMatchingBoardMaturity(String category, Map<String, String> boardMaturities) {
+    protected int findBestMatchingBoardMaturity(String category, Map<String, String> boardMaturities) {
 		// Try exact match first
 		for (Map.Entry<String, String> entry : boardMaturities.entrySet()) {
 			if (entry.getKey().equalsIgnoreCase(category) && !entry.getValue().equalsIgnoreCase("NA"))

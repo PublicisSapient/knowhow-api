@@ -17,26 +17,83 @@
 
 package com.publicissapient.kpidashboard.apis.errors;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * Exception class for executive dashboard related exceptions.
  */
 public class ExecutiveDataException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
+	private final HttpStatus status;
+
+	/**
+	 * Constructs a new executive data exception with the specified detail message
+	 * and HTTP status.
+	 *
+	 * @param message
+	 *            the detail message
+	 * @param status
+	 *            the HTTP status code
+	 */
+	public ExecutiveDataException(String message, HttpStatus status) {
+		super(message);
+		this.status = status;
+	}
+
+	/**
+	 * Constructs a new executive data exception with the specified detail message,
+	 * HTTP status, and cause.
+	 *
+	 * @param message
+	 *            the detail message
+	 * @param status
+	 *            the HTTP status code
+	 * @param cause
+	 *            the cause (which is saved for later retrieval by the getCause()
+	 *            method)
+	 */
+	public ExecutiveDataException(String message, HttpStatus status, Throwable cause) {
+		super(message, cause);
+		this.status = status;
+	}
+
+	/**
+	 * Gets the HTTP status associated with this exception.
+	 *
+	 * @return the HTTP status
+	 */
+	public HttpStatus getStatus() {
+		return status;
+	}
+
+	/**
+	 * Constructs a new executive data exception with the specified cause and a
+	 * detail message of (cause==null ? null : cause.toString()). Uses HTTP 500
+	 * (Internal Server Error) as the status code.
+	 *
+	 * @param cause
+	 *            the cause (which is saved for later retrieval by the getCause()
+	 *            method)
+	 */
+	public ExecutiveDataException(Throwable cause) {
+		this(cause != null ? cause.toString() : null, HttpStatus.INTERNAL_SERVER_ERROR, cause);
+	}
 
 	/**
 	 * Constructs a new executive data exception with the specified detail message.
+	 * Uses HTTP 500 (Internal Server Error) as the status code.
 	 *
 	 * @param message
 	 *            the detail message
 	 */
 	public ExecutiveDataException(String message) {
-		super(message);
+		this(message, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	/**
 	 * Constructs a new executive data exception with the specified detail message
-	 * and cause.
+	 * and cause. Uses HTTP 500 (Internal Server Error) as the status code.
 	 *
 	 * @param message
 	 *            the detail message
@@ -45,19 +102,6 @@ public class ExecutiveDataException extends RuntimeException {
 	 *            method)
 	 */
 	public ExecutiveDataException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	/**
-	 * Constructs a new executive data exception with the specified cause and a
-	 * detail message of (cause==null ? null : cause.toString()) (which typically
-	 * contains the class and detail message of cause).
-	 *
-	 * @param cause
-	 *            the cause (which is saved for later retrieval by the getCause()
-	 *            method)
-	 */
-	public ExecutiveDataException(Throwable cause) {
-		super(cause);
+		this(message, HttpStatus.INTERNAL_SERVER_ERROR, cause);
 	}
 }
