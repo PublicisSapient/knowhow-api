@@ -221,8 +221,6 @@ public class ExecutiveServiceImplTest {
 		afd.setNodeId("K1");
 		afd.setParentId(null);
 
-		when(accountHierarchyServiceKanban.getFilteredList(any())).thenReturn(Set.of(afd));
-
 		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardKanban(req);
 
 		assertNotNull(res);
