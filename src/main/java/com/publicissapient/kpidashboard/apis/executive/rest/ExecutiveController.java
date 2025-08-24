@@ -93,10 +93,11 @@ public class ExecutiveController {
 
 		} catch (ExecutiveDataException e) {
 			log.error("{}: {}", REQUEST_PROCESSING_ERROR, e.getMessage(), e);
-			throw e; // Let GlobalExceptionHandler handle it
+			throw e;
 		} catch (Exception e) {
 			log.error("{}: {}", REQUEST_PROCESSING_ERROR, e.getMessage(), e);
-			throw new ExecutiveDataException("Service unavailable. Please try again later.", e);
+			throw new ExecutiveDataException("Service unavailable. Please try again later.",
+					HttpStatus.SERVICE_UNAVAILABLE, e);
 		}
 	}
 }

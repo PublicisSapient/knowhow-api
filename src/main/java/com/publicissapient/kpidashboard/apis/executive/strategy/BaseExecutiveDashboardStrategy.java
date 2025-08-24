@@ -21,17 +21,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -63,6 +63,7 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 /**
  * Base abstract class for executive dashboard strategies that provides common
@@ -89,21 +90,21 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	}
 
 	public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
-		Executor executor = getExecutor();
-		FutureTask<ExecutiveDashboardResponseDTO> futureTask = new FutureTask<>(() -> fetchDashboardData(request));
-		executor.execute(futureTask);
-
+		ExecutorService overallExecutor = Executors.newSingleThreadExecutor();
+		Future<ExecutiveDashboardResponseDTO> future = overallExecutor.submit(() -> fetchDashboardData(request));
 		try {
-			return futureTask.get(60, TimeUnit.SECONDS);
+			return future.get(60, TimeUnit.SECONDS);
 		} catch (TimeoutException e) {
-			futureTask.cancel(true); // 🚨 interrupt if still running
-			throw new ExecutiveDataException(
-					"Strategy " + strategyType + " timed out after " + 60 + " " + TimeUnit.SECONDS, e);
+			future.cancel(true);
+			throw new ExecutiveDataException("Service taking longer than expected, try again later",
+					HttpStatus.REQUEST_TIMEOUT, e);
 		} catch (ExecutionException e) {
 			throw new ExecutiveDataException("Strategy " + strategyType + " failed", e.getCause());
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new ExecutiveDataException("Strategy " + strategyType + " was interrupted", e);
+		} finally {
+			overallExecutor.shutdownNow();
 		}
 	}
 
@@ -143,56 +144,68 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				.collect(Collectors.toMap(OrganizationHierarchy::getNodeId, config -> config));
 	}
 
-	/**
-	 * Creates a default response for error cases.
-	 *
-	 * @return default response DTO
-	 */
-	protected ExecutiveDashboardResponseDTO getDefaultResponse() {
-
-		return ExecutiveDashboardResponseDTO.builder().data(ExecutiveDashboardDataDTO.builder()
-				.matrix(ExecutiveMatrixDTO.builder().rows(Collections.emptyList()).build()).build()).build();
-	}
-
 	protected Map<String, Map<String, String>> processProjectBatch(List<String> uniqueIds, KpiRequest kpiRequest,
 			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban) {
-		Map<String, Map<String, String>> batchResults = new ConcurrentHashMap<>();
 
-		// Process each project sequentially to avoid concurrency issues
-		for (String uniqueId : uniqueIds) {
-			OrganizationHierarchy organizationHierarchy = hierarchyMap.get(uniqueId);
-			try {
-				// Get user board configuration for the project
-				ProjectListRequested projectListRequest = new ProjectListRequested();
-				// if project then provide id otherwise not
-				projectListRequest.setBasicProjectConfigIds(Collections.singletonList(""));
+		Map<String, Map<String, String>> batchResults = new LinkedHashMap<>();
 
-				UserBoardConfigDTO config = userBoardConfigService.getBoardConfig(ConfigLevel.USER, projectListRequest);
+		// Preload all user board configs once per project
+		Map<String, UserBoardConfigDTO> projectBoardConfigs = uniqueIds.stream()
+				.collect(Collectors.toMap(projectId -> projectId, projectId -> {
+					try {
+						ProjectListRequested projectListRequest = new ProjectListRequested();
+						projectListRequest.setBasicProjectConfigIds(Collections.singletonList(""));
+						return userBoardConfigService.getBoardConfig(ConfigLevel.USER, projectListRequest);
+					} catch (NullPointerException e) {
+						log.error("Failed to load board config for project {}: {}", projectId, e.getMessage(), e);
+						return null;
+					}
+				}));
+		String uniqueHierarchyId = "";
+		try {
+			for (String uniqueId : uniqueIds) {
+				uniqueHierarchyId = uniqueId;
+				checkInterrupted();
+				OrganizationHierarchy organizationHierarchy = hierarchyMap.get(uniqueId);
+				UserBoardConfigDTO config = projectBoardConfigs.get(uniqueId);
+
+				if (config == null) {
+					log.warn("Skipping project {}: no user board config found", uniqueId);
+					continue;
+				}
 
 				Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis = getBoardWiseUserBoardConfig(boards,
 						uniqueId, config, isKanban);
-				if (toolToBoardKpis == null)
+				if (toolToBoardKpis == null || toolToBoardKpis.isEmpty()) {
+					log.warn("No KPIs to process for project {} - {}", uniqueId,
+							organizationHierarchy.getNodeDisplayName());
 					continue;
-				if (!toolToBoardKpis.isEmpty()) {
-					Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
-					if (!projectResults.isEmpty()) {
-						batchResults.put(uniqueId, projectResults);
-						log.info("Successfully processed project: {} - {}", uniqueId,
-								organizationHierarchy.getNodeDisplayName());
-					} else {
-						log.warn("No results for project: {} - {}", uniqueId,
-								organizationHierarchy.getNodeDisplayName());
-					}
+				}
+
+				// Process KPIs for this project
+				Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
+				checkInterrupted();
+
+				if (!projectResults.isEmpty()) {
+					batchResults.put(uniqueId, projectResults);
+					log.info("Processed project {} successfully - {}", uniqueId,
+							organizationHierarchy.getNodeDisplayName());
 				} else {
-					log.warn("No matching boards with KPIs found for project: {} - {}", uniqueId,
+					log.warn("No KPI results for project {} - {}", uniqueId,
 							organizationHierarchy.getNodeDisplayName());
 				}
-			} catch (Exception e) {
-				log.error("Error processing project {}: {}", uniqueId, e.getMessage(), e);
+
 			}
+		} catch (InterruptedException ie) {
+			log.warn("Processing interrupted for project {} due to timeout", uniqueHierarchyId);
+			Thread.currentThread().interrupt();
+
+		} catch (Exception e) {
+			log.error("Error processing project {}: {}", uniqueHierarchyId, e.getMessage(), e);
 		}
 
 		return batchResults;
+
 	}
 
 	@Nullable
@@ -228,60 +241,73 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 
 	}
 
-	private Map<String, String> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
+	protected Map<String, String> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
 			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards) {
 
 		Map<String, String> results = new HashMap<>();
-
-		List<CompletableFuture<Map<String, List<KpiElement>>>> futures = toolToBoardKpis.entrySet().stream()
-				.map(entry -> CompletableFuture.supplyAsync(() -> {
-					String tool = entry.getKey();
-					Map<String, List<KpiMaster>> boardKpisForTool = entry.getValue();
-					// Merge all boards’ KPIs into one request
-					List<KpiMaster> mergedKpis = boardKpisForTool.values().stream().flatMap(List::stream).toList();
-					Map<String, List<KpiMaster>> sourceWiseKpiMaster = Map.of(tool, mergedKpis);
-					KpiRequest cloneKpiRequest = null;
-					try {
-						cloneKpiRequest = kpiRequest.clone();
-					} catch (CloneNotSupportedException e) {
-						throw new ExecutiveDataException(e);
-					}
-					createKpiRequest(cloneKpiRequest, projectNodeId);
-					List<KpiElement> kpiResults = toolKpiMaturity.getKpiElements(cloneKpiRequest, sourceWiseKpiMaster);
-
-					// Map results back to boards using pre-existing mapping
-					Map<String, List<KpiElement>> resultsByBoard = new HashMap<>();
-
-					boardKpisForTool.forEach((boardName, masterList) -> {
-
-						List<String> kpiList = masterList.stream().map(KpiMaster::getKpiId).toList();
-
-						List<KpiElement> boardResults = kpiResults.stream().filter(r -> kpiList.contains(r.getKpiId()))
-								.toList();
-						resultsByBoard.put(boardName, boardResults);
-					});
-
-					return resultsByBoard;
-					// Split results by board
-
-				}, getExecutor()).exceptionally(ex -> {
-					log.error("Error processing tool {} for project {}: {}", entry.getKey(), projectNodeId,
-							ex.getMessage(), ex);
-					return Map.of();
-				})).toList();
-
 		Map<String, List<KpiElement>> boardWiseResults = new HashMap<>();
 		for (String board : boards) {
 			boardWiseResults.put(board, new ArrayList<>());
 		}
+
+		List<CompletableFuture<Map<String, List<KpiElement>>>> futures = toolToBoardKpis.entrySet().stream()
+				.map(entry -> CompletableFuture.supplyAsync(() -> {
+					try {
+						String tool = entry.getKey();
+						Map<String, List<KpiMaster>> boardKpisForTool = entry.getValue();
+
+						// Merge all boards’ KPIs into one request
+						List<KpiMaster> mergedKpis = boardKpisForTool.values().stream().flatMap(List::stream).toList();
+						Map<String, List<KpiMaster>> sourceWiseKpiMaster = Map.of(tool, mergedKpis);
+
+						// Clone request for thread-safety
+						KpiRequest cloneKpiRequest;
+						try {
+							cloneKpiRequest = kpiRequest.clone();
+						} catch (CloneNotSupportedException e) {
+							throw new ExecutiveDataException(e);
+						}
+						createKpiRequest(cloneKpiRequest, projectNodeId);
+
+						// Compute KPIs
+						List<KpiElement> kpiResults = toolKpiMaturity.getKpiElements(cloneKpiRequest,
+								sourceWiseKpiMaster);
+
+						// Map results back to boards
+						Map<String, List<KpiElement>> resultsByBoard = new HashMap<>();
+						boardKpisForTool.forEach((boardName, masterList) -> {
+							List<String> kpiList = masterList.stream().map(KpiMaster::getKpiId).toList();
+							List<KpiElement> boardResults = kpiResults.stream()
+									.filter(r -> kpiList.contains(r.getKpiId())).toList();
+							resultsByBoard.put(boardName, boardResults);
+						});
+						return resultsByBoard;
+
+					} catch (Exception e) {
+						log.error("Error processing tool {} for project {}: {}", entry.getKey(), projectNodeId,
+								e.getMessage(), e);
+						return Map.<String, List<KpiElement>>of();
+					}
+				}, getExecutor())
+						// Enforce 1-minute timeout per tool
+						.orTimeout(1, TimeUnit.MINUTES).exceptionally(ex -> {
+							log.error("Tool computation timed out for project {} tool {}: {}", projectNodeId,
+									entry.getKey(), ex.getMessage());
+							return Map.of();
+						}))
+				.toList();
+
+		// Wait for all tool computations
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap
-				.forEach((board, kpis) -> boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
-					value.addAll(kpis);
-					return value;
-				})));
+		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap.forEach((board, kpis) -> {
+			boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
+				value.addAll(kpis);
+				return value;
+			});
+		}));
 
+		// Compute summary per board
 		boardWiseResults.forEach((board, kpiElements) -> results.put(board, computeBoardSummary(kpiElements)));
 
 		return results;
@@ -295,7 +321,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		kpiRequest.getSelectedMap().put(kpiRequest.getLabel(), Collections.singletonList(projectNodeId));
 	}
 
-	private String computeBoardSummary(List<KpiElement> elements) {
+	protected String computeBoardSummary(List<KpiElement> elements) {
 		if (CollectionUtils.isEmpty(elements)) {
 			return "NA";
 		}
@@ -312,5 +338,11 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				.collect(Collectors.toCollection(HashSet::new));
 		boards.add("dora");
 		return boards;
+	}
+
+	protected void checkInterrupted() throws InterruptedException {
+		if (Thread.currentThread().isInterrupted()) {
+			throw new InterruptedException("Task interrupted due to timeout");
+		}
 	}
 }

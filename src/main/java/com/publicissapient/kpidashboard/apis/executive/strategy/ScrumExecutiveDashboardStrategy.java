@@ -24,9 +24,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -78,40 +80,35 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 		List<String> requiredNodeIds = getRequiredNodeIds(kpiRequest);
 
 		if (CollectionUtils.isEmpty(requiredNodeIds) || CollectionUtils.isEmpty(boards)) {
-			log.warn("Project IDs or boards are empty");
-			return getDefaultResponse();
+			log.warn("ids or boards are empty");
+			throw new ExecutiveDataException("Invalid request parameters, ids or boards are empty",
+					HttpStatus.BAD_REQUEST);
 		}
 		// Batch process project configurations
 		Map<String, OrganizationHierarchy> projectConfigs = getNodeWiseHierarchy(requiredNodeIds);
 
 		if (projectConfigs.isEmpty()) {
 			log.warn("No valid project configurations found for the provided IDs");
-			return getDefaultResponse();
+			throw new ExecutiveDataException("No valid project configurations found for the provided IDs",
+					HttpStatus.BAD_REQUEST);
 		}
-		try {
 
-			Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
-					processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false));
-			log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
-					System.currentTimeMillis() - startTime);
-			// Calculate project efficiency for each project
-			Map<String, Map<String, Object>> projectEfficiencies = new HashMap<>();
-			finalResults.forEach((projectId, boardMaturities) -> {
-				Map<String, Object> efficiency = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
-				projectEfficiencies.put(projectId, efficiency);
-				log.info("Project {} efficiency: {}", projectId, efficiency);
-			});
+		Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
+				processProjectBatch(requiredNodeIds, kpiRequest, projectConfigs, boards, false));
+		log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
+				System.currentTimeMillis() - startTime);
+		// Calculate project efficiency for each project
+		Map<String, Map<String, Object>> projectEfficiencies = new HashMap<>();
+		finalResults.forEach((projectId, boardMaturities) -> {
+			Map<String, Object> efficiency = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
+			projectEfficiencies.put(projectId, efficiency);
+			log.info("Project {} efficiency: {}", projectId, efficiency);
+		});
 
-			// Convert results to DTO with efficiency data
-			return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs,
-					projectEfficiencies, kpiRequest.getLevelName());
+		// Convert results to DTO with efficiency data
+		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, projectConfigs, projectEfficiencies,
+				kpiRequest.getLevelName());
 
-		} catch (Exception e) {
-
-		} finally {
-
-		}
-		return getDefaultResponse();
 	}
 
 }

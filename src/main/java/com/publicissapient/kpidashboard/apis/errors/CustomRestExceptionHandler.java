@@ -328,9 +328,11 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 	 * @return the response entity with error details
 	 */
 	@ExceptionHandler(ExecutiveDataException.class)
-	public final ResponseEntity<ServiceResponse> handleExecutiveDataException(ExecutiveDataException ex,
+	public final ResponseEntity<Map<String, Object>> handleExecutiveDataException(ExecutiveDataException ex,
 			WebRequest request) {
-		return new ResponseEntity<>(new ServiceResponse(false, ex.getMessage(), null),
-				HttpStatus.INTERNAL_SERVER_ERROR);
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", false);
+		response.put("message", ex.getMessage());
+		return new ResponseEntity<>(response, ex.getStatus());
 	}
 }
