@@ -332,6 +332,7 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 			WebRequest request) {
 		Map<String, Object> response = new HashMap<>();
 		response.put("success", false);
+		response.put("status", ex.getStatus().value());
 		response.put("message", ex.getMessage());
 		return new ResponseEntity<>(response, ex.getStatus());
 	}
