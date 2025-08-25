@@ -160,9 +160,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
         String branchName = getBranchSubFilter(tool, projectName);
         String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> matchingRequests = mergeRequests.stream()
-				.filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
-				.toList();
+		List<ScmMergeRequests> matchingRequests = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
 		List<Long> pickUpTimes = matchingRequests.stream()
                 .map(mr -> {

@@ -105,8 +105,9 @@ public final class DeveloperKpiHelper {
 	}
 
 	public static List<ScmMergeRequests> filterMergeRequestsForBranch(List<ScmMergeRequests> mergeRequests, Tool tool) {
-		return mergeRequests.stream().filter(request -> request.getRepositoryName().equals(tool.getRepositoryName()))
-				.filter(request -> request.getToBranch().equals(tool.getBranch())).toList();
+		return mergeRequests.stream()
+				.filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
+				.toList();
 	}
 
 	public static Map<String, List<ScmMergeRequests>> groupMergeRequestsByUser(List<ScmMergeRequests> mergeRequests) {
