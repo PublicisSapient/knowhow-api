@@ -94,11 +94,14 @@ public final class DeveloperKpiHelper {
 				.toList();
 	}
 
+    //todo:: check field used here
 	public static List<ScmMergeRequests> filterMergeRequestsByDate(List<ScmMergeRequests> mergeRequests,
 			CustomDateRange dateRange) {
-		return mergeRequests.stream().filter(request -> request.getMergedAt() != null).filter(request -> DateUtil
-				.isWithinDateTimeRange(request.getMergedAt(), dateRange.getStartDateTime(), dateRange.getEndDateTime()))
-				.toList();
+		return mergeRequests.stream().filter(request -> request.getUpdatedDate() != null).filter(request -> {
+			LocalDateTime updatedDateTime = DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate());
+			return DateUtil.isWithinDateTimeRange(updatedDateTime, dateRange.getStartDateTime(),
+					dateRange.getEndDateTime());
+		}).toList();
 	}
 
 	public static List<ScmMergeRequests> filterMergeRequestsForBranch(List<ScmMergeRequests> mergeRequests, Tool tool) {
@@ -122,7 +125,7 @@ public final class DeveloperKpiHelper {
 				&& tool.getProcessorItemList().get(0).getId() != null;
 	}
 
-	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, double value,
+	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, Number value,
 			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
 		Optional<DataCount> existingDataCount = dataCounts.stream()
@@ -130,8 +133,11 @@ public final class DeveloperKpiHelper {
 
 		if (existingDataCount.isPresent()) {
 			DataCount updatedDataCount = existingDataCount.get();
-			Number currentValue = (Number) updatedDataCount.getValue();
-			updatedDataCount.setValue(currentValue.doubleValue() + value);
+			if (value instanceof Long) {
+				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value.longValue());
+			} else if (value instanceof Double) {
+				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
+			}
 		} else {
 			DataCount newDataCount = new DataCount();
 			newDataCount.setData(String.valueOf(value));
@@ -142,10 +148,5 @@ public final class DeveloperKpiHelper {
 			newDataCount.setHoverValue(hoverValue);
 			dataCounts.add(newDataCount);
 		}
-	}
-
-	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, long value,
-			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
-		setDataCount(projectName, dateLabel, kpiGroup, (double) value, hoverValue, dataCountMap);
 	}
 }
