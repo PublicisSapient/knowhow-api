@@ -155,7 +155,9 @@ public class RepoToolsConfigServiceImpl {
 						: "";
 			}
 			return new ServiceResponse(false, errorMessage, null);
-		}
+		} catch (Exception ex) {
+            log.error("Configuration failed for {}", projectToolConfig.getBasicProjectConfigId().toString(), ex);
+        }
 		return new ServiceResponse(true, "", null);
 	}
 

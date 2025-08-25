@@ -160,9 +160,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
         String branchName = getBranchSubFilter(tool, projectName);
         String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-        List<ScmMergeRequests> matchingRequests = mergeRequests.stream()
-                .filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
-                .toList();
+        List<ScmMergeRequests> matchingRequests = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
         long defectMergeRequestsCount = matchingRequests.stream()
                 .filter(mergeRequest -> mergeRequest.getTitle() != null &&

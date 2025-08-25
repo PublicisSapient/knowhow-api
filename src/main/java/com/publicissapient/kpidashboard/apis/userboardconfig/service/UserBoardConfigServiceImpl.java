@@ -33,6 +33,7 @@ import java.util.function.ObjIntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.owasp.encoder.Encode;
@@ -74,7 +75,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 
 	private static final String ITERATION = "Iteration";
 	private static final String DEFAULT_BOARD_NAME = "My KnowHOW";
-	private boolean handleDeveloperKpi = false;
+	private boolean handleDeveloperKpi = true;
 	@Autowired
 	private UserBoardConfigRepository userBoardConfigRepository;
 	@Autowired
@@ -91,6 +92,8 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	private CacheService cacheService;
 	@Autowired
 	private UserBoardConfigMapper userBoardConfigMapper;
+    @Autowired
+    private CustomApiConfig customApiConfig;
 
 	/**
 	 * Retrieves or prepares the user board configuration based on
@@ -119,8 +122,11 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		defaultUserBoardConfigDTO.setBasicProjectConfigId(configLevel == ConfigLevel.PROJECT ? basicProjectConfigId : null);
 		defaultUserBoardConfigDTO.setUsername(configLevel == ConfigLevel.USER ? loggedInUser : null);
 
-		handleDeveloperKpi = configHelperService.getProjectConfig(basicProjectConfigId) != null &&
-				configHelperService.getProjectConfig(basicProjectConfigId).isDeveloperKpiEnabled();
+//        TODO: need to remove this condition after testing
+        if(customApiConfig.isRepoToolEnabled() == true) {
+            handleDeveloperKpi = configHelperService.getProjectConfig(basicProjectConfigId) != null &&
+                    configHelperService.getProjectConfig(basicProjectConfigId).isDeveloperKpiEnabled();
+        }
 
 		if (null == existingUserBoardConfigDTO) {
 			setUserBoardConfigBasedOnCategoryForFreshUser(defaultUserBoardConfigDTO, kpiCategoryList, kpiMasterMap);
