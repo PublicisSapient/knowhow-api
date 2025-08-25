@@ -59,7 +59,6 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
 	private ConfigHelperService configHelperService;
-
 	private KpiHelperService kpiHelperService;
 
 	@Override
@@ -131,12 +130,8 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		for (int i = 0; i < dataPoints; i++) {
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
-			// todo:: check field used for filtering here
-			List<ScmMergeRequests> mergedRequestsInRange = mergeRequests.stream()
-					.filter(request -> request.getMergedAt() != null)
-					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-							weekRange.getStartDateTime(), weekRange.getEndDateTime()))
-					.toList();
+			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper.filterMergeRequestsByDate(mergeRequests,
+					weekRange);
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
@@ -151,17 +146,15 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
 			Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
 			String dateLabel, String projectName) {
-		if (CollectionUtils.isEmpty(tool.getProcessorItemList())
-				|| tool.getProcessorItemList().get(0).getId() == null) {
+		if (DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
 
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> mergeRequestsForBranch = mergeRequests.stream()
-				.filter(request -> request.getRepositoryName().equals(tool.getRepositoryName()))
-				.filter(request -> request.getToBranch().equals(tool.getBranch())).toList();
+		List<ScmMergeRequests> mergeRequestsForBranch = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests,
+				tool);
 
 		long totalLinesChanged = mergeRequestsForBranch.stream().mapToLong(ScmMergeRequests::getLinesChanged).sum();
 		long totalMergeRequests = mergeRequestsForBranch.size();
@@ -170,9 +163,8 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 				Map.of(MR_COUNT, totalMergeRequests), aggregatedDataMap);
 
 		// todo:: check when no link in dbref
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = mergeRequestsForBranch.stream()
-				.filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)
-				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
+				.groupMergeRequestsByUser(mergeRequestsForBranch);
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
 				dateLabel, aggregatedDataMap));
@@ -185,11 +177,7 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 			String userEmail = entry.getKey();
 			List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
-			Optional<Assignee> assignee = assignees.stream()
-					.filter(a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail))
-					.findFirst();
-
-			String developerName = assignee.map(Assignee::getAssigneeName).orElse(userEmail);
+			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 			long userLineChange = userMergeRequests.stream().mapToLong(ScmMergeRequests::getLinesChanged).sum();
 			long userMrCount = userMergeRequests.size();
 

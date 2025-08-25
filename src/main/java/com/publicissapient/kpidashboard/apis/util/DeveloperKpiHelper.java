@@ -21,10 +21,13 @@ import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.application.Tool;
+import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -45,7 +49,7 @@ public final class DeveloperKpiHelper {
 	private DeveloperKpiHelper() {
 	}
 
-    public static final int MILLISECONDS_IN_A_DAY = 86_399_999;
+	public static final int MILLISECONDS_IN_A_DAY = 86_399_999;
 
 	public static List<DataCountGroup> prepareDataCountGroups(Map<String, List<DataCount>> trendValuesMap) {
 		return trendValuesMap.entrySet().stream().map(entry -> {
@@ -82,41 +86,60 @@ public final class DeveloperKpiHelper {
 		return nextDate;
 	}
 
+	public static List<ScmCommits> filterCommitsByDate(List<ScmCommits> commits, CustomDateRange dateRange) {
+		return commits.stream()
+				.filter(commit -> DateUtil.isWithinDateTimeRange(
+						DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
+						dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+				.toList();
+	}
 
-    public static List<ScmCommits> filterCommitsByDate(List<ScmCommits> commits, CustomDateRange dateRange) {
-        return commits.stream()
-                .filter(commit -> DateUtil.isWithinDateTimeRange(
-                        DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
-                        dateRange.getStartDateTime(), dateRange.getEndDateTime()))
-                .toList();
-    }
+	public static List<ScmMergeRequests> filterMergeRequestsByDate(List<ScmMergeRequests> mergeRequests,
+			CustomDateRange dateRange) {
+		return mergeRequests.stream().filter(request -> request.getMergedAt() != null).filter(request -> DateUtil
+				.isWithinDateTimeRange(request.getMergedAt(), dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+				.toList();
+	}
 
-    public static List<ScmMergeRequests> filterMergeRequestsByDate(List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
-        return mergeRequests.stream()
-                .filter(request -> request.getMergedAt() != null)
-                .filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-                        dateRange.getStartDateTime(), dateRange.getEndDateTime()))
-                .toList();
-    }
+	public static List<ScmMergeRequests> filterMergeRequestsForBranch(List<ScmMergeRequests> mergeRequests, Tool tool) {
+		return mergeRequests.stream().filter(request -> request.getRepositoryName().equals(tool.getRepositoryName()))
+				.filter(request -> request.getToBranch().equals(tool.getBranch())).toList();
+	}
 
-    public static void setDataCount(String projectName, String dateLabel, String kpiGroup, long value,
-                                    Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
-        List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-        Optional<DataCount> existingDataCount = dataCounts.stream()
-                .filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
+	public static Map<String, List<ScmMergeRequests>> groupMergeRequestsByUser(List<ScmMergeRequests> mergeRequests) {
+		return mergeRequests.stream().filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)
+				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
+	}
 
-        if (existingDataCount.isPresent()) {
-            DataCount updatedDataCount = existingDataCount.get();
-            updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
-        } else {
-            DataCount newDataCount = new DataCount();
-            newDataCount.setData(String.valueOf(value));
-            newDataCount.setSProjectName(projectName);
-            newDataCount.setDate(dateLabel);
-            newDataCount.setValue(value);
-            newDataCount.setKpiGroup(kpiGroup);
-            newDataCount.setHoverValue(hoverValue);
-            dataCounts.add(newDataCount);
-        }
-    }
+	public static String getDeveloperName(String userEmail, Set<Assignee> assignees) {
+		Optional<Assignee> assignee = assignees.stream()
+				.filter(a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail)).findFirst();
+		return assignee.map(Assignee::getAssigneeName).orElse(userEmail);
+	}
+
+	public static boolean isValidTool(Tool tool) {
+		return CollectionUtils.isEmpty(tool.getProcessorItemList())
+				|| tool.getProcessorItemList().get(0).getId() == null;
+	}
+
+	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, long value,
+			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
+		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
+		Optional<DataCount> existingDataCount = dataCounts.stream()
+				.filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
+
+		if (existingDataCount.isPresent()) {
+			DataCount updatedDataCount = existingDataCount.get();
+			updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
+		} else {
+			DataCount newDataCount = new DataCount();
+			newDataCount.setData(String.valueOf(value));
+			newDataCount.setSProjectName(projectName);
+			newDataCount.setDate(dateLabel);
+			newDataCount.setValue(value);
+			newDataCount.setKpiGroup(kpiGroup);
+			newDataCount.setHoverValue(hoverValue);
+			dataCounts.add(newDataCount);
+		}
+	}
 }
