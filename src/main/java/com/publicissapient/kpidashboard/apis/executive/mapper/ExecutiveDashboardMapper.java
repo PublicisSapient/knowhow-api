@@ -148,6 +148,9 @@ public class ExecutiveDashboardMapper {
 		if (str == null || str.isEmpty()) {
 			return str;
 		}
+		if(str.equalsIgnoreCase("dora")){
+			return "DORA";
+		}
 		return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
 	}
 
