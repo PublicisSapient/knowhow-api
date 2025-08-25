@@ -155,7 +155,7 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
 			Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
 			String dateLabel, String projectName) {
-		if (DeveloperKpiHelper.isValidTool(tool)) {
+		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
 
