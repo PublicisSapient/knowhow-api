@@ -18,12 +18,14 @@ package com.publicissapient.kpidashboard.apis.executive.dto;
 
 import javax.validation.constraints.NotNull;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
  * DTO for executive dashboard request payload.
  */
 @Data
+@Builder
 public class ExecutiveDashboardRequestDTO {
 
 	/**

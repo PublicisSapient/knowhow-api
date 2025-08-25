@@ -21,9 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.jetbrains.annotations.NotNull;
 
 import com.publicissapient.kpidashboard.apis.executive.dto.BoardMaturityDTO;
@@ -32,6 +30,7 @@ import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDat
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ProjectMetricsDTO;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 
 /**
  * Mapper class to convert executive dashboard data to DTOs.
@@ -76,9 +75,9 @@ public class ExecutiveDashboardMapper {
 
 		// Add static columns
 		columns.add(ColumnDefinitionDTO.builder().field("id").header("Project ID").build());
-		columns.add(ColumnDefinitionDTO.builder().field("name").header(levelName+ " name").build());
+		columns.add(ColumnDefinitionDTO.builder().field("name").header(levelName+ " Name").build());
 		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Efficiency(%)").build());
-		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall health").build());
+		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall Health").build());
 
 		// Add dynamic board columns
 		boardNames.forEach(boardName -> {

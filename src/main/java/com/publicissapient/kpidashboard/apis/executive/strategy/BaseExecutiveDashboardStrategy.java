@@ -40,13 +40,12 @@ import java.util.stream.Stream;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
-import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDataDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
-import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
 import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiencyService;
 import com.publicissapient.kpidashboard.apis.executive.service.ToolKpiMaturity;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -60,10 +59,8 @@ import com.publicissapient.kpidashboard.common.model.userboardconfig.ProjectList
 import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardConfigDTO;
 import com.publicissapient.kpidashboard.common.repository.application.KpiCategoryRepository;
 
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 
 /**
  * Base abstract class for executive dashboard strategies that provides common
@@ -212,11 +209,10 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		}
 	}
 
-	@Nullable
 	private static Map<String, Map<String, List<KpiMaster>>> getBoardWiseUserBoardConfig(Set<String> boards,
 			String projectNodeId, UserBoardConfigDTO config, boolean isKanban) {
 		if (config == null)
-			return null;
+			return new HashMap<>();
 		List<BoardDTO> boardDTOList;
 		if (isKanban) {
 			boardDTOList = config.getKanban();
@@ -226,7 +222,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 
 		if (CollectionUtils.isEmpty(boardDTOList)) {
 			log.warn("No board configuration found for project: {}", projectNodeId);
-			return null;
+			return new HashMap<>();
 		}
 
 		return boardDTOList.stream().filter(board -> boards.contains(board.getBoardName().toLowerCase().trim()))
