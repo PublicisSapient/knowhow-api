@@ -90,6 +90,9 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		ExecutorService overallExecutor = Executors.newSingleThreadExecutor();
 		Future<ExecutiveDashboardResponseDTO> future = overallExecutor.submit(() -> fetchDashboardData(request));
 		try {
+			log.info(">>> About to call future.get()");
+			ExecutiveDashboardResponseDTO dto = future.get(1, TimeUnit.MINUTES);
+			log.info(">>> Future completed, returning DTO = {}", dto);
 			return future.get(1, TimeUnit.MINUTES);
 		} catch (TimeoutException e) {
 			future.cancel(true);
