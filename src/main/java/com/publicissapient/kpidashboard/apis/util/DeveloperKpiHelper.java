@@ -118,11 +118,11 @@ public final class DeveloperKpiHelper {
 	}
 
 	public static boolean isValidTool(Tool tool) {
-		return CollectionUtils.isEmpty(tool.getProcessorItemList())
-				|| tool.getProcessorItemList().get(0).getId() == null;
+		return !CollectionUtils.isEmpty(tool.getProcessorItemList())
+				&& tool.getProcessorItemList().get(0).getId() != null;
 	}
 
-	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, long value,
+	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, double value,
 			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
 		Optional<DataCount> existingDataCount = dataCounts.stream()
@@ -130,7 +130,8 @@ public final class DeveloperKpiHelper {
 
 		if (existingDataCount.isPresent()) {
 			DataCount updatedDataCount = existingDataCount.get();
-			updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
+			Number currentValue = (Number) updatedDataCount.getValue();
+			updatedDataCount.setValue(currentValue.doubleValue() + value);
 		} else {
 			DataCount newDataCount = new DataCount();
 			newDataCount.setData(String.valueOf(value));
@@ -141,5 +142,10 @@ public final class DeveloperKpiHelper {
 			newDataCount.setHoverValue(hoverValue);
 			dataCounts.add(newDataCount);
 		}
+	}
+
+	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, long value,
+			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
+		setDataCount(projectName, dateLabel, kpiGroup, (double) value, hoverValue, dataCountMap);
 	}
 }
