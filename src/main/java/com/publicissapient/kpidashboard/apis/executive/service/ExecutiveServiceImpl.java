@@ -80,7 +80,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setLevel(request.getLevel());
 		kpiRequest.setLabel(request.getLabel());
-		kpiRequest.setSelectedMap(createSelectedMap());
+		kpiRequest.setSelectedMap(createSelectedMap(false));
 		kpiRequest.setSprintIncluded(List.of(CLOSED));
 
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
@@ -105,7 +105,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setLevel(request.getLevel());
 		kpiRequest.setLabel(request.getLabel());
-		kpiRequest.setSelectedMap(createSelectedMap());
+		kpiRequest.setSelectedMap(createSelectedMap(true));
 		kpiRequest.getSelectedMap().put("date",List.of("Weeks"));
 		kpiRequest.setIds(new String[] { "5" });
 		kpiRequest.setSprintIncluded(List.of(CLOSED));
@@ -133,8 +133,7 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	private Set<String> getNodeIds(KpiRequest kpiRequest, boolean isKanban, AccountFilterRequest accountFilterRequest,
 			String parentId) {
 		try {
-			List<HierarchyLevel> hierarchyLevels = isKanban ? cacheService.getFullKanbanHierarchyLevel()
-					: cacheService.getFullHierarchyLevel();
+			List<HierarchyLevel> hierarchyLevels = getHierarchyLevels(isKanban);
 
 			if (CollectionUtils.isEmpty(hierarchyLevels)) {
 				log.warn("No hierarchy levels found for isKanban={}", isKanban);
@@ -165,17 +164,17 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		}
 	}
 
+	private List<HierarchyLevel> getHierarchyLevels(boolean isKanban) {
+		List<HierarchyLevel> hierarchyLevels = isKanban ? cacheService.getFullKanbanHierarchyLevel()
+				: cacheService.getFullHierarchyLevel();
+		return hierarchyLevels;
+	}
+
 	@NotNull
-	private static Map<String, List<String>> createSelectedMap() {
+	private Map<String, List<String>> createSelectedMap(boolean isKanban) {
 		Map<String, List<String>> selectedMap = new HashMap<>();
-		selectedMap.put("bu", new ArrayList<>());
-		selectedMap.put("ver", new ArrayList<>());
-		selectedMap.put("acc", new ArrayList<>());
-		selectedMap.put("port", new ArrayList<>());
-		selectedMap.put("project", new ArrayList<>());
-		selectedMap.put("release", new ArrayList<>());
-		selectedMap.put("sqd", new ArrayList<>());
-		selectedMap.put("date", new ArrayList<>(List.of("Weeks")));
+		List<HierarchyLevel> hierarchyLevels = getHierarchyLevels(isKanban);
+		hierarchyLevels.forEach(hierarchyLevel -> selectedMap.put(hierarchyLevel.getHierarchyLevelId(), new ArrayList<>()));
 		return selectedMap;
 	}
 

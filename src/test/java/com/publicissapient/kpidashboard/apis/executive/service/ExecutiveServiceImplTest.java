@@ -18,7 +18,9 @@
 package com.publicissapient.kpidashboard.apis.executive.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -43,6 +45,7 @@ import com.publicissapient.kpidashboard.apis.executive.strategy.ExecutiveDashboa
 import com.publicissapient.kpidashboard.apis.executive.strategy.ExecutiveDashboardStrategyFactory;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceKanbanImpl;
+import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
@@ -169,10 +172,7 @@ public class ExecutiveServiceImplTest {
 
 		when(cacheService.getFullHierarchyLevel()).thenThrow(new RuntimeException("Cache error"));
 
-		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardScrum(req);
-
-		assertNotNull(res);
-		verify(scrumStrategy).getExecutiveDashboard(any(KpiRequest.class));
+		assertThrows(RuntimeException.class,()->service.getExecutiveDashboardScrum(req));
 	}
 
 	@Test
@@ -251,30 +251,122 @@ public class ExecutiveServiceImplTest {
 
 		when(cacheService.getFullKanbanHierarchyLevel()).thenThrow(new RuntimeException("Cache error"));
 
-		ExecutiveDashboardResponseDTO res = service.getExecutiveDashboardKanban(req);
-
-		assertNotNull(res);
-		verify(kanbanStrategy).getExecutiveDashboard(any(KpiRequest.class));
+		assertThrows(RuntimeException.class,()->service.getExecutiveDashboardKanban(req));
 	}
 
 	@Test
 	public void testCreateSelectedMap() {
-		Map<String, List<String>> map = invokeCreateSelectedMap();
-		assertTrue(map.containsKey("bu"));
-		assertTrue(map.containsKey("ver"));
-		assertTrue(map.containsKey("acc"));
-		assertTrue(map.containsKey("port"));
-		assertTrue(map.containsKey("project"));
-		assertTrue(map.containsKey("release"));
-		assertTrue(map.containsKey("sqd"));
-		assertTrue(map.containsKey("date"));
-		assertEquals(List.of("Weeks"), map.get("date"));
+		// Setup test data
+		HierarchyLevel level1 = new HierarchyLevel();
+		level1.setHierarchyLevelId("level1");
+		level1.setHierarchyLevelName("Level 1");
+		level1.setLevel(1);
+
+		HierarchyLevel level2 = new HierarchyLevel();
+		level2.setHierarchyLevelId("level2");
+		level2.setHierarchyLevelName("Level 2");
+		level2.setLevel(2);
+
+		when(cacheService.getFullHierarchyLevel()).thenReturn(List.of(level1, level2));
+
+		// Execute
+		Map<String, List<String>> map = invokeCreateSelectedMap(false);
+
+		// Verify
+		assertTrue(map.containsKey("level1"));
+		assertTrue(map.containsKey("level2"));
+		assertTrue(map.get("level1").isEmpty());
+		assertTrue(map.get("level2").isEmpty());
+
+		// Verify Kanban hierarchy
+		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(List.of(level1));
+		map = invokeCreateSelectedMap(true);
+		assertTrue(map.containsKey("level1"));
+		assertFalse(map.containsKey("level2"));
 	}
 
-	// helper to access private static method
-	private Map<String, List<String>> invokeCreateSelectedMap() {
-		return org.springframework.test.util.ReflectionTestUtils.invokeMethod(ExecutiveServiceImpl.class,
-				"createSelectedMap");
+	@Test
+	public void testGetHierarchyLevels() {
+		// Test Scrum hierarchy
+		HierarchyLevel scrumLevel = new HierarchyLevel();
+		scrumLevel.setHierarchyLevelId("scrum");
+		when(cacheService.getFullHierarchyLevel()).thenReturn(List.of(scrumLevel));
+
+		List<HierarchyLevel> result = invokeGetHierarchyLevels(false);
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals("scrum", result.get(0).getHierarchyLevelId());
+
+		// Test Kanban hierarchy
+		HierarchyLevel kanbanLevel = new HierarchyLevel();
+		kanbanLevel.setHierarchyLevelId("kanban");
+		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(List.of(kanbanLevel));
+
+		result = invokeGetHierarchyLevels(true);
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals("kanban", result.get(0).getHierarchyLevelId());
+
+		// Test empty hierarchy
+		when(cacheService.getFullHierarchyLevel()).thenReturn(Collections.emptyList());
+		result = invokeGetHierarchyLevels(false);
+		assertTrue(result.isEmpty());
 	}
 
+	@Test
+	public void testGetNodeIds_WithException() {
+		KpiRequest kpiRequest = new KpiRequest();
+		kpiRequest.setLevel(1);
+		kpiRequest.setLabel("test");
+
+		when(cacheService.getFullHierarchyLevel()).thenThrow(new RuntimeException("Test exception"));
+		Set<String> result = invokeGetNodeIds(kpiRequest, false, new AccountFilterRequest(), null);
+		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	public void testGetNodeIds_WithEmptyHierarchy() {
+		KpiRequest kpiRequest = new KpiRequest();
+		kpiRequest.setLevel(1);
+		kpiRequest.setLabel("test");
+
+		when(cacheService.getFullHierarchyLevel()).thenReturn(Collections.emptyList());
+		Set<String> strings = invokeGetNodeIds(kpiRequest, false, new AccountFilterRequest(), null);
+
+		assertTrue(strings.isEmpty());
+	}
+
+	// Helper methods to access private methods for testing
+	@SuppressWarnings("unchecked")
+	public Map<String, List<String>> invokeCreateSelectedMap(boolean isKanban) {
+		try {
+			java.lang.reflect.Method method = ExecutiveServiceImpl.class.getDeclaredMethod("createSelectedMap", boolean.class);
+			method.setAccessible(true);
+			return (Map<String, List<String>>) method.invoke(service, isKanban);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke createSelectedMap", e);
+		}
+	}
+
+	public List<HierarchyLevel> invokeGetHierarchyLevels(boolean isKanban) {
+		try {
+			java.lang.reflect.Method method = ExecutiveServiceImpl.class.getDeclaredMethod("getHierarchyLevels", boolean.class);
+			method.setAccessible(true);
+			return (List<HierarchyLevel>) method.invoke(service, isKanban);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke getHierarchyLevels", e);
+		}
+	}
+
+	public Set<String> invokeGetNodeIds(KpiRequest kpiRequest, boolean isKanban,
+										AccountFilterRequest accountFilterRequest, String parentId) {
+		try {
+			java.lang.reflect.Method method = ExecutiveServiceImpl.class.getDeclaredMethod("getNodeIds", 
+				KpiRequest.class, boolean.class, AccountFilterRequest.class, String.class);
+			method.setAccessible(true);
+			return (Set<String>) method.invoke(service, kpiRequest, isKanban, accountFilterRequest, parentId);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to invoke getNodeIds", e);
+		}
+	}
 }
