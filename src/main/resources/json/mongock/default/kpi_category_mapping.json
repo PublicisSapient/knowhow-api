@@ -297,5 +297,18 @@
     "categoryId" : "categoryTwo",
     "kpiOrder" : 7,
     "kanban" : false
+  },
+  {
+    "kpiId" : "kpi196",
+    "categoryId" : "categoryTwo",
+    "kpiOrder" : 4,
+    "kanban" : false
+  },
+  {
+    "kpiId" : "kpi197",
+    "categoryId" : "categoryTwo",
+    "kpiOrder" : 4,
+    "kanban" : true
   }
+
 ]

@@ -47,11 +47,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
+public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
     private static final String MR_COUNT = "No of PRs";
     private static final String ASSIGNEE_SET = "assigneeSet";
     private static final String MERGE_REQUEST_LIST = "mergeRequestList";
+    private static final List<String> DEFECT_KEYWORDS = List.of("fix", "bug", "repair", "defect");
 
     @Autowired
     private ConfigHelperService configHelperService;
@@ -61,7 +62,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
     @Override
     public String getQualifierType() {
-        return KPICode.PICKUP_TIME.name();
+        return KPICode.DEFECT_RATE.name();
     }
 
     @Override
@@ -74,10 +75,10 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
                 projectNode);
 
         Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-        calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PICKUP_TIME);
+        calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.DEFECT_RATE);
 
         Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-                KPICode.PICKUP_TIME);
+                KPICode.DEFECT_RATE);
         kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
         return kpiElement;
     }
@@ -134,8 +135,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
             CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
             String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
 
-            List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream().filter(request -> request.getPickedForReviewOn() != null)
-                    .filter(request -> DateUtil.isWithinDateTimeRange(DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
+            List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream().filter(request -> DateUtil.isWithinDateTimeRange(DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate()),
                             weekRange.getStartDateTime(), weekRange.getEndDateTime()))
                     .toList();
 
@@ -160,23 +160,22 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
         String branchName = getBranchSubFilter(tool, projectName);
         String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> matchingRequests = mergeRequests.stream()
-				.filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
-				.toList();
-
-		List<Long> pickUpTimes = matchingRequests.stream()
-                .map(mr -> {
-                    LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
-                    LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-                    return Duration.between(createdDate, pickedForReviewOn).toHours();
-                })
+        List<ScmMergeRequests> matchingRequests = mergeRequests.stream()
+                .filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
                 .toList();
 
-        long averagePickUpTime = pickUpTimes.isEmpty() ? 0 :
-                (long) pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        long defectMergeRequestsCount = matchingRequests.stream()
+                .filter(mergeRequest -> mergeRequest.getTitle() != null &&
+                        DEFECT_KEYWORDS.stream().anyMatch(keyword ->
+                                mergeRequest.getTitle().toLowerCase().contains(keyword.toLowerCase())))
+                .count();
+
         long totalMergeRequests = matchingRequests.size();
 
-        setDataCount(projectName, dateLabel, overallKpiGroup, averagePickUpTime, totalMergeRequests, aggregatedDataMap);
+        double defectRate = totalMergeRequests > 0 ?
+                (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
+
+        setDataCount(projectName, dateLabel, overallKpiGroup, defectRate, defectMergeRequestsCount, aggregatedDataMap);
 
         Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
                 .filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)//todo:: check
@@ -198,37 +197,39 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
                     .findFirst();
 
             String developerName = assignee.map(Assignee::getAssigneeName).orElse(userEmail);
-            AtomicLong pickUpTime = new AtomicLong(0L);
-            userMergeRequests.forEach(mr -> {
-                LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
-                LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-                pickUpTime.addAndGet(Duration.between(createdDate, pickedForReviewOn).toHours());
+            long defectMergeRequestsCount = userMergeRequests.stream()
+                    .filter(mergeRequest -> mergeRequest.getTitle() != null &&
+                            DEFECT_KEYWORDS.stream().anyMatch(keyword ->
+                                    mergeRequest.getTitle().toLowerCase().contains(keyword.toLowerCase())))
+                    .count();
 
-            });
-            long userMrCount = userMergeRequests.size();
+            long totalMergeRequests = userMergeRequests.size();
+
+            double defectRate = totalMergeRequests > 0 ?
+                    (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
 
             String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-            setDataCount(projectName, dateLabel, userKpiGroup, pickUpTime.longValue(), userMrCount, aggregatedDataMap);
+            setDataCount(projectName, dateLabel, userKpiGroup, defectRate, defectMergeRequestsCount, aggregatedDataMap);
 
-            return createValidationData(projectName, tool, developerName, dateLabel, pickUpTime.longValue(), userMrCount);
+            return createValidationData(projectName, tool, developerName, dateLabel, defectRate, defectMergeRequestsCount);
         }).collect(Collectors.toList());
     }
 
     private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-                                                        String dateLabel, long pickUpTime, long mrCount) {
+                                                        String dateLabel, double defectRate, long mrCount) {
         RepoToolValidationData validationData = new RepoToolValidationData();
         validationData.setProjectName(projectName);
         validationData.setBranchName(tool.getBranch());
         validationData.setRepoUrl(tool.getRepositoryName());
         validationData.setDeveloperName(developerName);
         validationData.setDate(dateLabel);
-        validationData.setPickupTime((double) pickUpTime);
+        validationData.setDefectRate(defectRate);
         validationData.setMrCount(mrCount);
         return validationData;
     }
 
-    private void setDataCount(String projectName, String dateLabel, String kpiGroup, long value, long mrCount,
+    private void setDataCount(String projectName, String dateLabel, String kpiGroup, double value, long mrCount,
                               Map<String, List<DataCount>> dataCountMap) {
         List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
         Optional<DataCount> existingDataCount = dataCounts.stream()
@@ -236,7 +237,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
         if (existingDataCount.isPresent()) {
             DataCount updatedDataCount = existingDataCount.get();
-            updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
+            updatedDataCount.setValue(((Number) updatedDataCount.getValue()).doubleValue() + value);
         } else {
             DataCount newDataCount = new DataCount();
             newDataCount.setData(String.valueOf(value));
@@ -255,18 +256,18 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
             List<KPIExcelData> excelData = new ArrayList<>();
             KPIExcelUtility.populatePRSizeExcelData(validationDataList, excelData);
             kpiElement.setExcelData(excelData);
-            kpiElement.setExcelColumns(KPIExcelColumn.PICKUP_TIME.getColumns());
+            kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_RATE.getColumns());
         }
     }
 
     @Override
-    public Long calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+    public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
         return null;
     }
 
     @Override
-    public Long calculateKpiValue(List<Long> valueList, String kpiId) {
-        return calculateKpiValueForLong(valueList, kpiId);
+    public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+        return calculateKpiValueForDouble(valueList, kpiId);
     }
 
     @Override
@@ -281,6 +282,6 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
     @Override
     public Double calculateThresholdValue(FieldMapping fieldMapping) {
-        return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PICKUP_TIME.getKpiId());
+        return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.DEFECT_RATE.getKpiId());
     }
 }
