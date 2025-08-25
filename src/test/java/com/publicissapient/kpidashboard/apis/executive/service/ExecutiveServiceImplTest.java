@@ -93,7 +93,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardScrum_withParentIdNullAndValidData() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(2);
 		req.setLabel("Scrum Label");
 		req.setParentId(null);
@@ -120,7 +120,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardScrum_withParentIdNotNullAndValidData() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(2);
 		req.setLabel("Scrum Label");
 		req.setParentId("parentId");
@@ -147,7 +147,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardScrum_withParentIdProvidedAndEmptyHierarchy() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(2);
 		req.setLabel("Scrum Label");
 		req.setParentId("PID");
@@ -162,7 +162,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardScrum_withExceptionInGetNodeIds() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(2);
 		req.setLabel("Scrum Label");
 		req.setParentId("PID");
@@ -177,7 +177,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardKanban_withValidData() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(3);
 		req.setLabel("Kanban Label");
 		req.setParentId(null);
@@ -204,7 +204,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardKanban_withInValidLevel() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(3);
 		req.setLabel("Kanban Label");
 		req.setParentId(null);
@@ -229,7 +229,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardKanban_withEmptyHierarchy() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(3);
 		req.setLabel("Kanban Label");
 		req.setParentId("PID");
@@ -244,7 +244,7 @@ public class ExecutiveServiceImplTest {
 
 	@Test
 	public void testGetExecutiveDashboardKanban_withExceptionInGetNodeIds() {
-		ExecutiveDashboardRequestDTO req = new ExecutiveDashboardRequestDTO();
+		ExecutiveDashboardRequestDTO req = ExecutiveDashboardRequestDTO.builder().build();
 		req.setLevel(3);
 		req.setLabel("Kanban Label");
 		req.setParentId("PID");
