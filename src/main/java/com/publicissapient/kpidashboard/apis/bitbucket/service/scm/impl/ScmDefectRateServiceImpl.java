@@ -105,12 +105,8 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
         int dataPoints = kpiRequest.getXAxisDataPoints();
         String duration = kpiRequest.getDuration();
 
-        Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-        ObjectId projectConfigId = Optional.ofNullable(projectLeafNode.getProjectFilter())
-                .map(ProjectFilter::getBasicProjectConfigId).orElse(null);
-
-        Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectConfigId, Map.of());
-        List<Tool> scmTools = kpiHelperService.populateSCMToolsRepoList(toolListMap);
+        List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
+                kpiHelperService);
 
         if (CollectionUtils.isEmpty(scmTools)) {
             log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
@@ -152,8 +148,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
     private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
                                  Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
                                  String dateLabel, String projectName) {
-        if (CollectionUtils.isEmpty(tool.getProcessorItemList())
-                || tool.getProcessorItemList().get(0).getId() == null) {
+        if (!DeveloperKpiHelper.isValidTool(tool)) {
             return;
         }
 
@@ -173,7 +168,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
         double defectRate = totalMergeRequests > 0 ?
                 (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
 
-        setDataCount(projectName, dateLabel, overallKpiGroup, defectRate, defectMergeRequestsCount, aggregatedDataMap);
+        DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, defectRate,Map.of(MR_COUNT, defectMergeRequestsCount), aggregatedDataMap);
 
         Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
                 .filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)//todo:: check
@@ -190,11 +185,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
             String userEmail = entry.getKey();
             List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
-            Optional<Assignee> assignee = assignees.stream()
-                    .filter(a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail))
-                    .findFirst();
-
-            String developerName = assignee.map(Assignee::getAssigneeName).orElse(userEmail);
+            String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
             long defectMergeRequestsCount = userMergeRequests.stream()
                     .filter(mergeRequest -> mergeRequest.getTitle() != null &&
                             DEFECT_KEYWORDS.stream().anyMatch(keyword ->
@@ -208,7 +199,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 
             String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-            setDataCount(projectName, dateLabel, userKpiGroup, defectRate, defectMergeRequestsCount, aggregatedDataMap);
+            DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, defectRate, Map.of(MR_COUNT, defectMergeRequestsCount), aggregatedDataMap);
 
             return createValidationData(projectName, tool, developerName, dateLabel, defectRate, defectMergeRequestsCount);
         }).collect(Collectors.toList());
@@ -227,26 +218,6 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
         return validationData;
     }
 
-    private void setDataCount(String projectName, String dateLabel, String kpiGroup, double value, long mrCount,
-                              Map<String, List<DataCount>> dataCountMap) {
-        List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-        Optional<DataCount> existingDataCount = dataCounts.stream()
-                .filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
-
-        if (existingDataCount.isPresent()) {
-            DataCount updatedDataCount = existingDataCount.get();
-            updatedDataCount.setValue(((Number) updatedDataCount.getValue()).doubleValue() + value);
-        } else {
-            DataCount newDataCount = new DataCount();
-            newDataCount.setData(String.valueOf(value));
-            newDataCount.setSProjectName(projectName);
-            newDataCount.setDate(dateLabel);
-            newDataCount.setValue(value);
-            newDataCount.setKpiGroup(kpiGroup);
-            newDataCount.setHoverValue(Map.of(MR_COUNT, mrCount));
-            dataCounts.add(newDataCount);
-        }
-    }
 
     private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
                                    KpiElement kpiElement) {

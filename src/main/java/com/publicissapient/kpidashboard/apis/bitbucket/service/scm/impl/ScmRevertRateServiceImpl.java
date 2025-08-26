@@ -106,7 +106,8 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
-		List<Tool> scmTools = getScmTools(projectLeafNode);
+		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
+				kpiHelperService);
 		if (CollectionUtils.isEmpty(scmTools)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
@@ -141,15 +142,6 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 		mapTmp.get(projectLeafNode.getId()).setValue(aggregatedDataMap);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
-	}
-
-	private List<Tool> getScmTools(Node projectLeafNode) {
-		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-		ObjectId projectConfigId = Optional.ofNullable(projectLeafNode.getProjectFilter())
-				.map(ProjectFilter::getBasicProjectConfigId).orElse(null);
-
-		Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectConfigId, Map.of());
-		return kpiHelperService.populateSCMToolsRepoList(toolListMap);
 	}
 
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,

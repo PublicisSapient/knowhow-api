@@ -17,7 +17,11 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
+import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
@@ -28,6 +32,7 @@ import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.bson.types.ObjectId;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -94,7 +99,7 @@ public final class DeveloperKpiHelper {
 				.toList();
 	}
 
-    //todo:: check field used here
+	// todo:: check field used here
 	public static List<ScmMergeRequests> filterMergeRequestsByDate(List<ScmMergeRequests> mergeRequests,
 			CustomDateRange dateRange) {
 		return mergeRequests.stream().filter(request -> request.getUpdatedDate() != null).filter(request -> {
@@ -102,6 +107,16 @@ public final class DeveloperKpiHelper {
 			return DateUtil.isWithinDateTimeRange(updatedDateTime, dateRange.getStartDateTime(),
 					dateRange.getEndDateTime());
 		}).toList();
+	}
+
+	public static List<Tool> getScmToolsForProject(Node projectNode, ConfigHelperService configHelperService,
+			KpiHelperService kpiHelperService) {
+		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
+		ObjectId projectConfigId = Optional.ofNullable(projectNode.getProjectFilter())
+				.map(ProjectFilter::getBasicProjectConfigId).orElse(null);
+
+		Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectConfigId, Map.of());
+		return kpiHelperService.populateSCMToolsRepoList(toolListMap);
 	}
 
 	public static List<ScmMergeRequests> filterMergeRequestsForBranch(List<ScmMergeRequests> mergeRequests, Tool tool) {
