@@ -29,7 +29,6 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -125,8 +124,8 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		for (int i = 0; i < dataPoints; i++) {
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
-			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper.filterMergeRequestsByDate(mergeRequests,
-					weekRange);
+			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper
+					.filterMergeRequestsByUpdateDate(mergeRequests, weekRange);
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));

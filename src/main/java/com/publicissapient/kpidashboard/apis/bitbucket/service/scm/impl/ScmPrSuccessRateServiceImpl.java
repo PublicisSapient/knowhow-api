@@ -40,7 +40,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -124,8 +123,8 @@ public class ScmPrSuccessRateServiceImpl extends BitBucketKPIService<Double, Lis
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
 
-			List<ScmMergeRequests> mergeRequestsInRange = DeveloperKpiHelper.filterMergeRequestsByDate(mergeRequests,
-					weekRange);
+			List<ScmMergeRequests> mergeRequestsInRange = DeveloperKpiHelper
+					.filterMergeRequestsByUpdateDate(mergeRequests, weekRange);
 			scmTools.forEach(tool -> processToolData(tool, mergeRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
 
