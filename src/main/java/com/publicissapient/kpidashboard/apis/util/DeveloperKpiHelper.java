@@ -54,8 +54,14 @@ public final class DeveloperKpiHelper {
 	private DeveloperKpiHelper() {
 	}
 
-	public static final int MILLISECONDS_IN_A_DAY = 86_399_999;
-
+	/**
+	 * Transforms a map of trend values into structured DataCountGroup objects.
+	 * Splits the map key by "#" to extract filter values.
+	 *
+	 * @param trendValuesMap
+	 *            Map with keys in format "filter1#filter2"
+	 * @return List of DataCountGroup objects with separated filters
+	 */
 	public static List<DataCountGroup> prepareDataCountGroups(Map<String, List<DataCount>> trendValuesMap) {
 		return trendValuesMap.entrySet().stream().map(entry -> {
 			String[] filters = entry.getKey().split("#");
@@ -91,6 +97,16 @@ public final class DeveloperKpiHelper {
 		return nextDate;
 	}
 
+	/**
+	 * Filters SCM commits within a specified date range. Converts commit timestamps
+	 * from milliseconds to LocalDateTime.
+	 *
+	 * @param commits
+	 *            List of SCM commits
+	 * @param dateRange
+	 *            Date range for filtering
+	 * @return Filtered list of commits within the date range
+	 */
 	public static List<ScmCommits> filterCommitsByDate(List<ScmCommits> commits, CustomDateRange dateRange) {
 		return commits.stream()
 				.filter(commit -> DateUtil.isWithinDateTimeRange(
@@ -99,6 +115,15 @@ public final class DeveloperKpiHelper {
 				.toList();
 	}
 
+	/**
+	 * Filters merge requests by updated date within a date range.
+	 * 
+	 * @param mergeRequests
+	 *            List of merge requests
+	 * @param dateRange
+	 *            Date range for filtering
+	 * @return Filtered merge requests with non-null updated dates
+	 */
 	// todo:: check field used here
 	public static List<ScmMergeRequests> filterMergeRequestsByDate(List<ScmMergeRequests> mergeRequests,
 			CustomDateRange dateRange) {
@@ -109,6 +134,18 @@ public final class DeveloperKpiHelper {
 		}).toList();
 	}
 
+	/**
+	 * Retrieves SCM tools configured for a specific project. Looks up tools by
+	 * project configuration ID.
+	 *
+	 * @param projectNode
+	 *            Project node containing project filter
+	 * @param configHelperService
+	 *            Service for configuration management
+	 * @param kpiHelperService
+	 *            Service for KPI operations
+	 * @return List of SCM tools for the project
+	 */
 	public static List<Tool> getScmToolsForProject(Node projectNode, ConfigHelperService configHelperService,
 			KpiHelperService kpiHelperService) {
 		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
@@ -119,28 +156,81 @@ public final class DeveloperKpiHelper {
 		return kpiHelperService.populateSCMToolsRepoList(toolListMap);
 	}
 
+	/**
+	 * Filters merge requests for a specific tool/branch. Matches by processor item
+	 * ID.
+	 *
+	 * @param mergeRequests
+	 *            List of merge requests
+	 * @param tool
+	 *            Tool containing processor item information
+	 * @return Filtered merge requests for the tool
+	 */
 	public static List<ScmMergeRequests> filterMergeRequestsForBranch(List<ScmMergeRequests> mergeRequests, Tool tool) {
 		return mergeRequests.stream()
 				.filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
 				.toList();
 	}
 
+	/**
+	 * Groups merge requests by author email. Filters out requests with null author
+	 * or email.
+	 *
+	 * @param mergeRequests
+	 *            List of merge requests
+	 * @return Map of email to list of merge requests
+	 */
 	public static Map<String, List<ScmMergeRequests>> groupMergeRequestsByUser(List<ScmMergeRequests> mergeRequests) {
 		return mergeRequests.stream().filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)
 				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
 	}
 
+	/**
+	 * Resolves developer name from email using assignee mapping. Falls back to
+	 * email if no assignee found.
+	 *
+	 * @param userEmail
+	 *            Developer's email address
+	 * @param assignees
+	 *            Set of assignee mappings
+	 * @return Developer name or email as fallback
+	 */
 	public static String getDeveloperName(String userEmail, Set<Assignee> assignees) {
 		Optional<Assignee> assignee = assignees.stream()
 				.filter(a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail)).findFirst();
 		return assignee.map(Assignee::getAssigneeName).orElse(userEmail);
 	}
 
+	/**
+	 * Validates if a tool has proper processor configuration. Checks for non-empty
+	 * processor list with valid ID.
+	 *
+	 * @param tool
+	 *            Tool to validate
+	 * @return true if tool has valid processor configuration
+	 */
 	public static boolean isValidTool(Tool tool) {
 		return !CollectionUtils.isEmpty(tool.getProcessorItemList())
 				&& tool.getProcessorItemList().get(0).getId() != null;
 	}
 
+	/**
+	 * Creates or updates data count entries for KPI metrics. Supports both Long and
+	 * Double value types with proper aggregation.
+	 *
+	 * @param projectName
+	 *            Project name for the data
+	 * @param dateLabel
+	 *            Date label for the data point
+	 * @param kpiGroup
+	 *            KPI group identifier
+	 * @param value
+	 *            Numeric value (Long or Double)
+	 * @param hoverValue
+	 *            Additional hover information
+	 * @param dataCountMap
+	 *            Map to store/update data counts
+	 */
 	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, Number value,
 			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
