@@ -25,13 +25,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -47,7 +45,6 @@ import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
@@ -131,8 +128,8 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
 
-			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper.filterMergeRequestsByDate(mergeRequests,
-					weekRange);
+			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper
+					.filterMergeRequestsByUpdateDate(mergeRequests, weekRange);
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
