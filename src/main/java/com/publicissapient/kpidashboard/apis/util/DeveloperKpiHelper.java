@@ -180,8 +180,12 @@ public final class DeveloperKpiHelper {
 	 * @return Map of email to list of merge requests
 	 */
 	public static Map<String, List<ScmMergeRequests>> groupMergeRequestsByUser(List<ScmMergeRequests> mergeRequests) {
-		return mergeRequests.stream().filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)
-				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
+		return mergeRequests.stream()
+				.filter(req -> req.getAuthorId() != null
+						&& (req.getAuthorId().getEmail() != null || req.getAuthorId().getUsername() != null))
+				.collect(Collectors.groupingBy(
+						request -> request.getAuthorId().getEmail() != null ? request.getAuthorId().getEmail()
+								: request.getAuthorId().getUsername()));
 	}
 
 	/**
