@@ -104,12 +104,8 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
         int dataPoints = kpiRequest.getXAxisDataPoints();
         String duration = kpiRequest.getDuration();
 
-        Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-        ObjectId projectConfigId = Optional.ofNullable(projectLeafNode.getProjectFilter())
-                .map(ProjectFilter::getBasicProjectConfigId).orElse(null);
-
-        Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectConfigId, Map.of());
-        List<Tool> scmTools = kpiHelperService.populateSCMToolsRepoList(toolListMap);
+        List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
+                kpiHelperService);
 
         if (CollectionUtils.isEmpty(scmTools)) {
             log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
@@ -152,8 +148,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
     private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
                                  Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
                                  String dateLabel, String projectName) {
-        if (CollectionUtils.isEmpty(tool.getProcessorItemList())
-                || tool.getProcessorItemList().get(0).getId() == null) {
+        if (!DeveloperKpiHelper.isValidTool(tool)) {
             return;
         }
 
@@ -174,7 +169,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
                 (long) pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
         long totalMergeRequests = matchingRequests.size();
 
-        setDataCount(projectName, dateLabel, overallKpiGroup, averagePickUpTime, totalMergeRequests, aggregatedDataMap);
+        DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, averagePickUpTime,Map.of(MR_COUNT, totalMergeRequests) , aggregatedDataMap);
 
         Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
                 .filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)//todo:: check
@@ -191,11 +186,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
             String userEmail = entry.getKey();
             List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
-            Optional<Assignee> assignee = assignees.stream()
-                    .filter(a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail))
-                    .findFirst();
-
-            String developerName = assignee.map(Assignee::getAssigneeName).orElse(userEmail);
+            String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
             AtomicLong pickUpTime = new AtomicLong(0L);
             userMergeRequests.forEach(mr -> {
                 LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
@@ -207,7 +198,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
             String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-            setDataCount(projectName, dateLabel, userKpiGroup, pickUpTime.longValue(), userMrCount, aggregatedDataMap);
+            DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, pickUpTime.longValue(), Map.of(MR_COUNT, userMrCount), aggregatedDataMap);
 
             return createValidationData(projectName, tool, developerName, dateLabel, pickUpTime.longValue(), userMrCount);
         }).collect(Collectors.toList());

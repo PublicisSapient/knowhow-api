@@ -101,13 +101,8 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
-		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-		ObjectId projectConfigId = Optional.ofNullable(projectLeafNode.getProjectFilter())
-				.map(ProjectFilter::getBasicProjectConfigId).orElse(null);
-
-		Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectConfigId, Map.of());
-		List<Tool> scmTools = kpiHelperService.populateSCMToolsRepoList(toolListMap);
-
+		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
+				kpiHelperService);
 		if (CollectionUtils.isEmpty(scmTools)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
