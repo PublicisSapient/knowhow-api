@@ -125,9 +125,9 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
 			List<ScmMergeRequests> mergedRequestsInRange = mergeRequests.stream()
-					.filter(request -> request.getUpdatedDate() != null)
+					.filter(request -> request.getMergedAt() != null)
 					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-							dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+                            weekRange.getStartDateTime(), weekRange.getEndDateTime()))
 					.toList();
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
