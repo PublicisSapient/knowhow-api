@@ -188,9 +188,8 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, defectRate,
 				Map.of(MR_COUNT, defectMergeRequestsCount), aggregatedDataMap);
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
-				.filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)// todo:: check
-				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
+				.groupMergeRequestsByUser(matchingRequests);
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
 				dateLabel, aggregatedDataMap));

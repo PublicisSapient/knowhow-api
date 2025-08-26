@@ -190,9 +190,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, averagePickUpTime,
 				Map.of(MR_COUNT, totalMergeRequests), aggregatedDataMap);
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = matchingRequests.stream()
-				.filter(req -> req.getAuthorId() != null && req.getAuthorId().getEmail() != null)// todo:: check
-				.collect(Collectors.groupingBy(request -> request.getAuthorId().getEmail()));
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper.groupMergeRequestsByUser(matchingRequests);
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
 				dateLabel, aggregatedDataMap));
@@ -250,27 +248,6 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		validationData.setPrActivityTime(String.valueOf(pickUpDateTimeUTC));
 		validationData.setPrStatus(mergeRequest.getState());
 		return validationData;
-	}
-
-	private void setDataCount(String projectName, String dateLabel, String kpiGroup, long value, long mrCount,
-			Map<String, List<DataCount>> dataCountMap) {
-		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-		Optional<DataCount> existingDataCount = dataCounts.stream()
-				.filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
-
-		if (existingDataCount.isPresent()) {
-			DataCount updatedDataCount = existingDataCount.get();
-			updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
-		} else {
-			DataCount newDataCount = new DataCount();
-			newDataCount.setData(String.valueOf(value));
-			newDataCount.setSProjectName(projectName);
-			newDataCount.setDate(dateLabel);
-			newDataCount.setValue(value);
-			newDataCount.setKpiGroup(kpiGroup);
-			newDataCount.setHoverValue(Map.of(MR_COUNT, mrCount));
-			dataCounts.add(newDataCount);
-		}
 	}
 
 	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
