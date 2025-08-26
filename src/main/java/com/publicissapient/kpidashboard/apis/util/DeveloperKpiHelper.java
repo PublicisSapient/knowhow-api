@@ -124,8 +124,7 @@ public final class DeveloperKpiHelper {
 	 *            Date range for filtering
 	 * @return Filtered merge requests with non-null updated dates
 	 */
-	// todo:: check field used here
-	public static List<ScmMergeRequests> filterMergeRequestsByDate(List<ScmMergeRequests> mergeRequests,
+	public static List<ScmMergeRequests> filterMergeRequestsByUpdateDate(List<ScmMergeRequests> mergeRequests,
 			CustomDateRange dateRange) {
 		return mergeRequests.stream().filter(request -> request.getUpdatedDate() != null).filter(request -> {
 			LocalDateTime updatedDateTime = DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate());

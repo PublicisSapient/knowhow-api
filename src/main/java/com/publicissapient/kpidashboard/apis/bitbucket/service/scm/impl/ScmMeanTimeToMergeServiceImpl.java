@@ -41,11 +41,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -126,8 +124,11 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		for (int i = 0; i < dataPoints; i++) {
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
-			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper.filterMergeRequestsByDate(mergeRequests,
-					weekRange);
+			List<ScmMergeRequests> mergedRequestsInRange = mergeRequests.stream()
+					.filter(request -> request.getUpdatedDate() != null)
+					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
+							dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+					.toList();
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
