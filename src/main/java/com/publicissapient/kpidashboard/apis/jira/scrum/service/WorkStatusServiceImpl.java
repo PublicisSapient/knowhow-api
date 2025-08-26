@@ -415,6 +415,16 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
 		}
+		delay = getDelay(
+				issue, jiraIssueData, devCompletedIssues, data, category2, issueWiseDelay, delay, actualCompletionData);
+		data.getCategoryWiseDelay().put(DEV_STATUS, delay);
+	}
+
+	private int getDelay(
+			JiraIssue issue, Map<String, Object> jiraIssueData, Map<JiraIssue, String> devCompletedIssues,
+			IssueKpiModalValue data, Map<String, List<String>> category2,
+			Map<String, IterationPotentialDelay> issueWiseDelay, int delay, Map<String, Object> actualCompletionData
+	) {
 		// Calculating actual work status for only completed issues
 		if (devCompletedIssues.containsKey(issue)) {
 			category2.get(DEV_STATUS).add(ACTUAL_COMPLETION);
@@ -425,7 +435,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			}
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 		}
-		data.getCategoryWiseDelay().put(DEV_STATUS, delay);
+		return delay;
 	}
 
 	/**
@@ -474,6 +484,17 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
 		}
+		calculateForPlannedAndCompletedIssues(issue, jiraIssueData, allCompletedIssuesList, issueWiseDelay, data, category, category2, delay,
+				  actualCompletionData
+		);
+		return category2;
+	}
+
+	private void calculateForPlannedAndCompletedIssues(
+			JiraIssue issue, Map<String, Object> jiraIssueData, List<String> allCompletedIssuesList,
+			Map<String, IterationPotentialDelay> issueWiseDelay, IssueKpiModalValue data, Set<String> category,
+			Map<String, List<String>> category2, int delay, Map<String, Object> actualCompletionData
+	) {
 		// Calculating actual work status for only completed issues
 		if (allCompletedIssuesList.contains(issue.getNumber())) {
 			category.add(PLANNED);
@@ -484,8 +505,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			}
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 		}
-		return category2;
 	}
+
 	private static void populateDelay(int delay, Map<String, List<String>> category2, String categoryKey) {
 		if (delay != 0) {
 			category2.get(categoryKey).add(DELAY_COUNT);
@@ -775,31 +796,43 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			jiraIssueModalObject.setActualStartDate(Constant.BLANK);
 
 		if (isPlanned) {
-			if (DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(DateUtil.getTodayTime().minusDays(1))) {
-				jiraIssueModalObject.setMarker(Constant.GREEN);
-			}
-			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-				jiraIssueModalObject.setDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
-			} else {
-				jiraIssueModalObject.setDelayInDays(Constant.BLANK);
-			}
+			calculateKpiSpecificDataForPlanned(jiraIssueModalObject, jiraIssue, jiraIssueData);
 		} else {
-			if (DateUtil.stringToLocalDateTime(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(DateUtil.getTodayTime().minusDays(1))) {
-				jiraIssueModalObject.setMarker(Constant.GREEN);
-			}
-			if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-				jiraIssueModalObject.setDevDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
-			} else {
-				jiraIssueModalObject.setDevDelayInDays(Constant.BLANK);
-			}
+			calculateKpiSpecificDataForNonPlanned(jiraIssueModalObject, jiraIssue, jiraIssueData);
 		}
 		if (StringUtils.isNotEmpty(jiraIssue.getDueDate()) && issueWiseDelay.containsKey(jiraIssue.getNumber()) &&
 				issueWiseDelay.get(jiraIssue.getNumber()).isMaxMarker()) {
 			IterationPotentialDelay iterationPotentialDelay = issueWiseDelay.get(jiraIssue.getNumber());
 			jiraIssueModalObject.setPotentialDelay(iterationPotentialDelay.getPotentialDelay() + "d");
 			jiraIssueModalObject.setPredictedCompletionDate(iterationPotentialDelay.getPredictedCompletedDate());
+		}
+	}
+
+	private static void calculateKpiSpecificDataForPlanned(
+			IssueKpiModalValue jiraIssueModalObject, JiraIssue jiraIssue, Map<String, Object> jiraIssueData
+	) {
+		if (DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+				.isAfter(DateUtil.getTodayTime().minusDays(1))) {
+			jiraIssueModalObject.setMarker(Constant.GREEN);
+		}
+		if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
+			jiraIssueModalObject.setDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
+		} else {
+			jiraIssueModalObject.setDelayInDays(Constant.BLANK);
+		}
+	}
+
+	private static void calculateKpiSpecificDataForNonPlanned(
+			IssueKpiModalValue jiraIssueModalObject, JiraIssue jiraIssue, Map<String, Object> jiraIssueData
+	) {
+		if (DateUtil.stringToLocalDateTime(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+				.isAfter(DateUtil.getTodayTime().minusDays(1))) {
+			jiraIssueModalObject.setMarker(Constant.GREEN);
+		}
+		if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
+			jiraIssueModalObject.setDevDelayInDays(jiraIssueData.get(ISSUE_DELAY) + "d");
+		} else {
+			jiraIssueModalObject.setDevDelayInDays(Constant.BLANK);
 		}
 	}
 }
