@@ -18,9 +18,14 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.controller;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.helper.ReaderRetryHelper;
 import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.HierarchyDetailParser;
 import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.IntegerationService;
 import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.SF360Parser;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,36 +34,51 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Set;
+
 @Service
+@Slf4j
 public class IntegerateHierarchyScheduler {
 
-	@Autowired
-	private IntegerationService integerationService;
-	@Autowired
-	RestTemplate restTemplate;
+    @Autowired
+    private IntegerationService integerationService;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private ReaderRetryHelper retryHelper;
+    @Autowired
+    private CustomApiConfig customApiConfig;
 
-	// @Scheduled(cron = "${hierarchySync.cron}")
-	public void callApi() {
-		String apiUrl = "https://hierarchy.tools.publicis.sapient.com/api/data/fetch/hierarchy/MAP/SF360Hierarchy";
+    // @Scheduled(cron = "${hierarchySync.cron}")
+    public void callApi() {
+        String apiUrl = customApiConfig.getCentralHierarchyUrl();
 
-		HttpHeaders headers = new HttpHeaders();
-		//add x-api-key
-	
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+        HttpHeaders headers = new HttpHeaders();
+        // add x-api-keyx
+        headers.add("x-api-key", customApiConfig.getCentralHierarchyApiKey());
 
-		try {
-			ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity,
-					String.class);
-			// json response to central hierarchy list
-			HierarchyDetailParser hierarchyDetailParser = new SF360Parser();
-			hierarchyDetailParser.convertToHierachyDetail(response.getBody());
-			integerationService
-					.syncOrganizationHierarchy(integerationService.convertHieracyResponseToOrganizationHierachy());
-		} catch (HttpClientErrorException exception) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
-		}
-	}
+        ReaderRetryHelper.RetryableOperation<ResponseEntity<String>> retryableOperation = () -> restTemplate
+                .exchange(apiUrl, HttpMethod.GET, requestEntity, String.class);
+
+        try {
+            ResponseEntity<String> response = retryHelper.executeWithRetry(retryableOperation);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                HierarchyDetailParser hierarchyDetailParser = new SF360Parser();
+                HierarchyDetails hierarchyDetails = hierarchyDetailParser.convertToHierachyDetail(response.getBody());
+                Set<OrganizationHierarchy> centralHieravhies = integerationService.convertHieracyResponseToOrganizationHierachy(hierarchyDetails);
+                integerationService.syncOrganizationHierarchy(centralHieravhies);
+            } else {
+                throw new HttpServerErrorException(response.getStatusCode(), "API call failed");
+            }
+        } catch (Exception e) {
+            log.error("API call failed after retries. Error: {}", e.getMessage());
+        }
+    }
+
 }

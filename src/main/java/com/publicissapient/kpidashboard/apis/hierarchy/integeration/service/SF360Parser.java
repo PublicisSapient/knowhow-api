@@ -18,9 +18,12 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.service;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
 import org.modelmapper.ModelMapper;
@@ -30,21 +33,16 @@ import java.util.Map;
 
 public class SF360Parser implements HierarchyDetailParser {
 
-	@Override
-	public void convertToHierachyDetail(String jsonResponse) {
-		ObjectMapper objectMapper = new ObjectMapper();
-		try {
-			Map<String, Object> jsonMap = objectMapper.readValue(jsonResponse, new TypeReference<>() {
-			});
-			ModelMapper modelMapper = new ModelMapper();
-			List<Map<String, Object>> list = (List<Map<String, Object>>) jsonMap.get("data");
-			HierarchyDetails hierarchyDetails = modelMapper.map(list.get(0).get("hierarchyDetails"),
-					HierarchyDetails.class);
+    @Override
+    public HierarchyDetails convertToHierachyDetail(String jsonResponse) {
+        ObjectMapper objectMapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        try (JsonParser parser = objectMapper.createParser(jsonResponse)) {
+            JsonNode rootNode = objectMapper.readTree(parser);
+            JsonNode hierarchyDetailsNode = rootNode.path("data").get(0).path("hierarchyDetails");
+            return objectMapper.treeToValue(hierarchyDetailsNode, HierarchyDetails.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse hierarchy details due to " + e.getMessage(), e);
+        }
+    }
 
-		} catch (JsonMappingException e) {
-			throw new RuntimeException(e);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
-	}
 }

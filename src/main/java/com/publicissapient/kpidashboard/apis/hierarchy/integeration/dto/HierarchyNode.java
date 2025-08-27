@@ -23,106 +23,113 @@ import lombok.Data;
 @Data
 public class HierarchyNode {
 
-	@JsonProperty("Opportunity")
-	private String opportunity;
+    @JsonProperty("Opportunity_unique_id")
+    private String opportunityUniqueId;
 
-	@JsonProperty("Opportunity_unique_id")
-	private String opportunityUniqueId;
+    @JsonProperty("Portfolio_unique_id")
+    private String portfolioUniqueId;
 
-	@JsonProperty("Opportunity_id")
-	private String opportunityId;
+    @JsonProperty("Account_unique_id")
+    private String accountUniqueId;
 
-	@JsonProperty("poc")
-	private String poc;
+    @JsonProperty("Vertical_unique_id")
+    private String verticalUniqueId;
 
-	@JsonProperty("alternate_poc")
-	private String alternatePoc;
+    @JsonProperty("BU_unique_id")
+    private String buUniqueId;
 
-	@JsonProperty("pid")
-	private String pid;
+    @JsonProperty("Root_unique_id")
+    private String rootUniqueId;
 
-	@JsonProperty("archetype")
-	private String archetype;
+    @JsonProperty("Opportunity")
+    private String opportunity;
 
-	@JsonProperty("probability")
-	private String probability;
+    @JsonProperty("Opportunity_id")
+    private String opportunityId;
 
-	@JsonProperty("clientPartnerLeadName")
-	private String clientPartnerLeadName;
+    @JsonProperty("poc")
+    private String poc;
 
-	@JsonProperty("clientPartnerLeadEmail")
-	private String clientPartnerLeadEmail;
+    @JsonProperty("alternate_poc")
+    private String alternatePoc;
 
-	@JsonProperty("deliveryLeadName")
-	private String deliveryLeadName;
+    @JsonProperty("pid")
+    private String pid;
 
-	@JsonProperty("deliveryLeadEmail")
-	private String deliveryLeadEmail;
+    @JsonProperty("archetype")
+    private String archetype;
 
-	@JsonProperty("engineeringLeadName")
-	private String engineeringLeadName;
+    @JsonProperty("probability")
+    private String probability;
 
-	@JsonProperty("engineeringLeadEmail")
-	private String engineeringLeadEmail;
+    @JsonProperty("clientPartnerLeadName")
+    private String clientPartnerLeadName;
 
-	@JsonProperty("buGroup")
-	private String buGroup;
+    @JsonProperty("clientPartnerLeadEmail")
+    private String clientPartnerLeadEmail;
 
-	@JsonProperty("team")
-	private String team;
+    @JsonProperty("deliveryLeadName")
+    private String deliveryLeadName;
 
-	@JsonProperty("projectType")
-	private String projectType;
+    @JsonProperty("deliveryLeadEmail")
+    private String deliveryLeadEmail;
 
-	@JsonProperty("capabilityGroup")
-	private String capabilityGroup;
+    @JsonProperty("engineeringLeadName")
+    private String engineeringLeadName;
 
-	@JsonProperty("Portfolio")
-	private String portfolio;
+    @JsonProperty("engineeringLeadEmail")
+    private String engineeringLeadEmail;
 
-	@JsonProperty("Portfolio_unique_id")
-	private String portfolioUniqueId;
+    @JsonProperty("buGroup")
+    private String buGroup;
 
-	@JsonProperty("Portfolio_id")
-	private String portfolioId;
+    @JsonProperty("team")
+    private String team;
 
-	@JsonProperty("Account")
-	private String account;
+    @JsonProperty("projectType")
+    private String projectType;
 
-	@JsonProperty("Account_unique_id")
-	private String accountUniqueId;
+    @JsonProperty("capabilityGroup")
+    private String capabilityGroup;
 
-	@JsonProperty("Account_id")
-	private String accountId;
+    @JsonProperty("Portfolio")
+    private String portfolio;
 
-	@JsonProperty("Vertical")
-	private String vertical;
+    @JsonProperty("Portfolio_id")
+    private String portfolioId;
 
-	@JsonProperty("Vertical_unique_id")
-	private String verticalUniqueId;
+    @JsonProperty("Account")
+    private String account;
 
-	@JsonProperty("Vertical_id")
-	private String verticalId;
+    @JsonProperty("Account_id")
+    private String accountId;
 
-	@JsonProperty("BU")
-	private String bu;
+    @JsonProperty("Vertical")
+    private String vertical;
 
-	@JsonProperty("BU_unique_id")
-	private String buUniqueId;
+    @JsonProperty("Vertical_id")
+    private String verticalId;
 
-	@JsonProperty("BU_id")
-	private String buId;
+    @JsonProperty("BU")
+    private String bu;
 
-	@JsonProperty("Root")
-	private String root;
+    @JsonProperty("BU_id")
+    private String buId;
 
-	@JsonProperty("Root_unique_id")
-	private String rootUniqueId;
+    @JsonProperty("Root")
+    private String root;
 
-	@JsonProperty("Root_id")
-	private String rootId;
 
-	@JsonProperty("Id")
-	private String id;
+    @JsonProperty("Root_id")
+    private String rootId;
 
+    @JsonProperty("Id")
+    private String id;
+
+    @JsonProperty("startDate")
+    private String startDate;
+
+    @JsonProperty("endDate")
+    private String endDate;
 }
+
