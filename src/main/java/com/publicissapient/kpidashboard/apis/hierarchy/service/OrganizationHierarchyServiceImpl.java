@@ -99,4 +99,9 @@ public class OrganizationHierarchyServiceImpl implements OrganizationHierarchySe
 		clearCache();
 		return new ServiceResponse(true, "Hierarchy Updated", original);
 	}
+
+	@Override
+	public void saveAll(List<OrganizationHierarchy> organizationHierarchyList) {
+		organizationHierarchyRepository.saveAll(organizationHierarchyList);
+	}
 }
