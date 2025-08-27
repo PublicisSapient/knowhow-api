@@ -18,7 +18,9 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.service;
 
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
+
 public interface HierarchyDetailParser {
 
-	void convertToHierachyDetail(String jsonResponse);
+	HierarchyDetails convertToHierachyDetail(String jsonResponse);
 }
