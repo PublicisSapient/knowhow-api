@@ -583,7 +583,7 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 		}
 
 		if (StringUtils.isNotEmpty(iterationKpiModalValue.getActualStartDateInTime()) && iterationKpiModalValue.isSpill())
-			iterationKpiModalValue.setActualStartDateInTime(sprintStartDateInTime);
+			iterationKpiModalValue.setActualStartDateInTime(DateUtil.tranformUTCLocalDateTimeStringToZFormat(sprintStartDateInTime));
 
 		// Getting the max date of closed and test status.
 		iterationKpiModalValue.setActualCompletionDateInTime(DateUtil.tranformUTCLocalDateTimeStringToZFormat(closedStatusDateMap.values().stream().filter(Objects::nonNull)
