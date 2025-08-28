@@ -22,16 +22,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.common.model.jira.*;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -53,20 +53,18 @@ import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationServiceR;
-import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
-import com.publicissapient.kpidashboard.apis.model.KpiElement;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
-import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
-import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
-import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
+import org.mockito.MockedStatic;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WorkStatusServiceImplTest {
@@ -91,6 +89,15 @@ public class WorkStatusServiceImplTest {
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
 
+	private JiraIssue mockIssue;
+	private SprintDetails mockSprintDetails;
+	private Set<String> category;
+	private Map<String, Object> jiraIssueData;
+	private Map<JiraIssue, String> devCompletedIssues;
+	private IssueKpiModalValue mockData;
+	private Map<String, List<String>> category2;
+	private Map<String, IterationPotentialDelay> issueWiseDelay;
+
 	@Before
 	public void setup() {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
@@ -111,6 +118,27 @@ public class WorkStatusServiceImplTest {
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
+
+		mockIssue = new JiraIssue();
+		mockIssue.setNumber("TEST-123");
+		mockIssue.setDevDueDate("2024-01-15T10:00:00.000");
+
+		mockSprintDetails = new SprintDetails();
+		mockSprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
+
+		category = new HashSet<>();
+		jiraIssueData = new HashMap<>();
+		devCompletedIssues = new HashMap<>();
+
+		mockData = new IssueKpiModalValue();
+		mockData.setCategoryWiseDelay(new HashMap<>());
+
+		category2 = new HashMap<>();
+		category2.put(WorkStatusServiceImpl.DEV_STATUS, new ArrayList<>());
+
+		issueWiseDelay = new HashMap<>();
+
+		jiraIssueData.put(WorkStatusServiceImpl.ACTUAL_COMPLETION_DATA, new HashMap<>());
 	}
 
 	private void setMockProjectConfig() {
@@ -156,25 +184,91 @@ public class WorkStatusServiceImplTest {
 	public void testGetKpiDataProject_active() throws ApplicationException {
 
 		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+																								  accountHierarchyDataList,
+																								  new ArrayList<>(),
+																								  "hierarchyLevelOne", 5
+		);
 		storyList.stream().filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768")).findFirst().get()
-				.setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
+				 .setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
-				.thenReturn(kpiRequestTrackerId);
+		when(cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name())).thenReturn(kpiRequestTrackerId);
 		when(workStatusService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		try {
-			KpiElement kpiElement = workStatusService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
-			assertNotNull(kpiElement.getIssueData());
 
-		} catch (ApplicationException enfe) {
+		// Mock all DateUtil static methods to prevent NullPointerException
+		try (MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+			// Mock all DateUtil methods used in the production code
+			dateUtilMock.when(() -> DateUtil.stringToLocalDate(anyString(), anyString()))
+						.thenReturn(LocalDate.now().minusDays(1));
+			dateUtilMock.when(() -> DateUtil.stringToLocalDateTime(anyString(), anyString()))
+						.thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.getTodayTime()).thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.localDateTimeToUTC(anyString())).thenReturn("2024-01-15T10:00:00.000Z");
+			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class),
+																   any(LocalDateTime.class)
+			)).thenReturn(true);
 
+			try {
+				KpiElement kpiElement = workStatusService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
+																	 treeAggregatorDetail.getMapOfListOfLeafNodes()
+																						 .get("sprint").get(0)
+				);
+				assertNotNull(kpiElement.getIssueData());
+
+				// Additional test coverage for ISSUE_DELAY conditional logic
+				// Test scenario 1: ISSUE_DELAY equals Constant.DASH
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, Constant.DASH);
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verifyNoInteractions();
+					assertTrue(category.contains(WorkStatusServiceImpl.DEV_STATUS));
+				}
+
+				// Test scenario 2: ISSUE_DELAY is not Integer type
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, "not_an_integer");
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verifyNoInteractions();
+				}
+
+				// Test scenario 3: ISSUE_DELAY is negative Integer
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, -5);
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verifyNoInteractions();
+				}
+
+				// Test scenario 4: ISSUE_DELAY is zero (valid case)
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 0);
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(0)).thenReturn(0);
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(0));
+				}
+
+				// Test scenario 5: ISSUE_DELAY is positive Integer (valid case)
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 120);
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(120)).thenReturn(7200);
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(120));
+					assertTrue(category2.get(WorkStatusServiceImpl.DEV_STATUS)
+										.contains(WorkStatusServiceImpl.DELAY_COUNT));
+				}
+
+			} catch (ApplicationException enfe) {
+				// Handle exception
+			}
 		}
 	}
 

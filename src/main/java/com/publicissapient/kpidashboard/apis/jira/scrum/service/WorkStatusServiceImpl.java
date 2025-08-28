@@ -379,7 +379,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param devCompletedIssues
 	 * @param data
 	 */
-	private void setDataForDevCompletion(JiraIssue issue, SprintDetails sprintDetails, Set<String> category,
+	 void setDataForDevCompletion(JiraIssue issue, SprintDetails sprintDetails, Set<String> category,
 			Map<String, Object> jiraIssueData, Map<JiraIssue, String> devCompletedIssues, IssueKpiModalValue data,
 			Map<String, List<String>> category2, Map<String, IterationPotentialDelay> issueWiseDelay) {
 		int delay = 0;
