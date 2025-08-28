@@ -937,6 +937,20 @@
     "testCaseFolderName" : "/KnowHOW/knowHowFolderwiseTestcase/Dashboard/kpi widjets/Iteration Dashboard",
     "defectStoryID" : [ "TEST-17770" ],
     "defectRaisedBy" : "JIRAUSER178886",
+    "executions" : [
+      {
+        "executionId" : 1437395441,
+        "key" : "COREAI-E9",
+        "executionTime" : 0,
+        "estimatedTime" : 0,
+        "actualEndDate" : "2025-01-16T08:46:01Z",
+        "testCycleId" : 31456455,
+        "testCaseId" : 222401567,
+        "executedById" : "6033d879d416ea0070e67261",
+        "assignedToId" : "6033d879d416ea0070e67261",
+        "automated" : false
+      }
+    ],
     "_class" : "com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails"
   }
 ]
