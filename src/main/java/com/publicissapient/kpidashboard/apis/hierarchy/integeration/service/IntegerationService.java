@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
  *
@@ -6,35 +6,27 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *
+ ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.hierarchy.service;
+package com.publicissapient.kpidashboard.apis.hierarchy.integeration.service;
 
-import java.util.List;
-
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 
-public interface OrganizationHierarchyService {
+import java.util.List;
+import java.util.Set;
 
-	List<OrganizationHierarchy> findAll();
+public interface IntegerationService {
 
-	OrganizationHierarchy findByNodeId(String nodeId);
+    void syncOrganizationHierarchy(Set<OrganizationHierarchy> externalList);
 
-	OrganizationHierarchy save(OrganizationHierarchy organizationHierarchy);
-
-	void deleteByNodeId(String nodeId);
-
-	void clearCache();
-
-	ServiceResponse updateName(String name, String nodeId);
-
-	void saveAll(List<OrganizationHierarchy> organizationHierarchyList );
+    Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(HierarchyDetails hierarchyDetails);
 }
