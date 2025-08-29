@@ -119,12 +119,13 @@ public class KpiIntegrationServiceImplTest {
 	public void getMaturityValuesTestSuccess() throws EntityNotFoundException {
 		when(kpiMasterRepository.findByKpiIdIn(kpiIdList))
 				.thenReturn(kpiMasterDataFactory.getSpecificKpis(kpiIdList));
-		when(jiraService.processWithExposedApiToken(kpiRequest)).thenReturn(Arrays.asList(kpiElement1));
-		when(sonarService.processWithExposedApiToken(kpiRequest))
+		when(jiraService.processWithExposedApiToken(kpiRequest, false)).thenReturn(Arrays.asList(kpiElement1));
+		boolean withCache= false;
+		when(sonarService.processWithExposedApiToken(kpiRequest, withCache))
 				.thenReturn(Arrays.asList(kpiElement2));
-		when(zephyrService.processWithExposedApiToken(kpiRequest))
+		when(zephyrService.processWithExposedApiToken(kpiRequest, withCache))
 				.thenReturn(Arrays.asList(kpiElement2));
-		when(jenkinsService.processWithExposedApiToken(kpiRequest))
+		when(jenkinsService.processWithExposedApiToken(kpiRequest, withCache))
 				.thenReturn(Arrays.asList(kpiElement2));
 		List<KpiElement> kpiElementList = maturityService.getKpiResponses(kpiRequest);
 		assertEquals(4, kpiElementList.size());

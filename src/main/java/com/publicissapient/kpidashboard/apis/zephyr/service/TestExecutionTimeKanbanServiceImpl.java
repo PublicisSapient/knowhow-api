@@ -123,7 +123,7 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
 
     @Override
     public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-        return fetchTestExecutionTimeKPIDataFromDb(leafNodeList, true);
+        return fetchTestExecutionTimeKPIDataFromDb(leafNodeList);
     }
 
     /**
@@ -332,7 +332,7 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
      * @param
      * @return Map of automated and all regression test cases
      */
-    public Map<String, Object> fetchTestExecutionTimeKPIDataFromDb(List<Node> leafNodeList, boolean isKanban) {
+    public Map<String, Object> fetchTestExecutionTimeKPIDataFromDb(List<Node> leafNodeList) {
         Map<String, Object> resultListMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(leafNodeList)) {
             Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();

@@ -555,7 +555,7 @@ public class KPIExcelDataService {
 
 		Callable<List<KpiElement>> zephyrKpiDataTask = () -> {
 			if (Boolean.TRUE.equals(apiAuth)) {
-				return zephyrService.processWithExposedApiToken(pair.getValue());
+				return zephyrService.processWithExposedApiToken(pair.getValue(), false);
 			} else {
 				return zephyrService.process(pair.getValue());
 			}
@@ -582,7 +582,7 @@ public class KPIExcelDataService {
 
 		Callable<List<KpiElement>> sonarKpiDataTask = () -> {
 			if (Boolean.TRUE.equals(apiAuth)) {
-				return sonarServiceR.processWithExposedApiToken(pair.getValue());
+				return sonarServiceR.processWithExposedApiToken(pair.getValue(), false);
 			} else {
 				return sonarServiceR.process(pair.getValue());
 			}
@@ -609,7 +609,7 @@ public class KPIExcelDataService {
 
 		Callable<List<KpiElement>> jenkinsKpiDataTask = () -> {
 			if (Boolean.TRUE.equals(apiAuth)) {
-				return jenkinsServiceR.processWithExposedApiToken(pair.getValue());
+				return jenkinsServiceR.processWithExposedApiToken(pair.getValue(), false);
 			} else {
 				return jenkinsServiceR.process(pair.getValue());
 			}
@@ -648,7 +648,7 @@ public class KPIExcelDataService {
 			} else {
 				// when request coming from trend boards
 				if (Boolean.TRUE.equals(apiAuth)) {
-					return jiraServiceR.processWithExposedApiToken(pair.getValue());
+					return jiraServiceR.processWithExposedApiToken(pair.getValue(), false);
 				}
 				return jiraServiceR.process(pair.getValue());
 			}

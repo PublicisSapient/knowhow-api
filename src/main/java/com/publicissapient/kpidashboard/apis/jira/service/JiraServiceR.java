@@ -318,8 +318,8 @@ public class JiraServiceR {
 	 * @throws EntityNotFoundException
 	 *           EntityNotFoundException
 	 */
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest) throws EntityNotFoundException {
-		referFromProjectCache = false;
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache) throws EntityNotFoundException {
+		referFromProjectCache = withCache;
 		List<KpiElement> kpiElementList = process(kpiRequest);
 		referFromProjectCache = true;
 		return kpiElementList;

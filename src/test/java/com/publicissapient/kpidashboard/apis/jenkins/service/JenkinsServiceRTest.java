@@ -224,7 +224,7 @@ public class JenkinsServiceRTest {
 		KpiRequest kpiRequest = createKpiRequest(4, "Jenkins");
 		when(filterHelperService.getFilteredBuilds(kpiRequest, "project")).thenReturn(accountHierarchyDataList);
 		when(cacheService.getFromApplicationCache(any(), any(), any(), any())).thenReturn(Arrays.asList(buildKpiElement));
-		List<KpiElement> resultList = jenkinsServiceR.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> resultList = jenkinsServiceR.processWithExposedApiToken(kpiRequest, false);
 		assertEquals(1, resultList.size());
 	}
 

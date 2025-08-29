@@ -271,13 +271,13 @@ public class SonarServiceR {
 	/**
 	 * This method is called when the request for kpi is done from exposed API
 	 *
-	 * @param kpiRequest
-	 *          SONAR KPI request true if flow for precalculated, false for direct *
-	 *          flow.
+	 * @param kpiRequest SONAR KPI request true if flow for precalculated, false for direct *
+	 *                   flow.
+	 * @param withCache
 	 * @return List of KPI data
 	 */
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest) {
-		referFromProjectCache = false;
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache) {
+		referFromProjectCache = withCache;
 		List<KpiElement> kpiElementList = process(kpiRequest);
 		referFromProjectCache = true;
 		return kpiElementList;

@@ -254,7 +254,7 @@ public class SonarServiceRTest {
 	@Test
 	public void processWithExposedApiToken() throws EntityNotFoundException {
 		createKpiRequest("Excel-Sonar", 2, kpiRequest);
-		List<KpiElement> resultList = sonarService.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> resultList = sonarService.processWithExposedApiToken(kpiRequest, false);
 		assertEquals(1, resultList.size());
 	}
 
