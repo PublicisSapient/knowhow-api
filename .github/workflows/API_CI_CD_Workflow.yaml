@@ -55,6 +55,9 @@ env:
   ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }}  # without .azurecr.io
   ACR_LOGIN_SERVER: ${{ secrets.SPEEDTOOLS_ACR_LOGIN_SERVER }}  # e.g. myacr.azurecr.io
   BITBUCKET_HELM_REPO: ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }} # HTTPS clone URL (without creds)
+  sonartoken: ${{ secrets.SONARQUBE_TOKEN }}  # Secret for SonarQube authentication
+  sonarurl: ${{ secrets.SONARURL }}  # SonarQube URL stored in secrets
+  GITHUB_HEAD_NAME: $GITHUB_HEAD_REF  # Store the head branch name used in sonarqube
 
 jobs:
 
