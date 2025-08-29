@@ -51,7 +51,7 @@ env:
 jobs:
 
   # ✅ CustomAPI Build skipping test
-  api_ci:
+  build:
     runs-on: ubuntu-latest
     steps:
 
