@@ -245,4 +245,12 @@ public class KpiDataCacheServiceImpl implements KpiDataCacheService {
 		log.info("Fetching DSR KPI Data for Project {} and KPI {}", basicProjectConfigId.toString(), kpiId);
 		return kpiDataProvider.fetchDSRData(kpiRequest, basicProjectConfigId, sprintList);
 	}
+
+	@Cacheable(value = Constant.CACHE_PROJECT_KPI_DATA, key = "#basicProjectConfigId.toString().concat('_').concat(#kpiId)")
+	@Override
+	public Map<String, Object> fetchDCPData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
+											List<String> sprintList, String kpiId) {
+		log.info("Fetching DCP KPI Data for Project {} and KPI {}", basicProjectConfigId.toString(), kpiId);
+		return kpiDataProvider.fetchDCPData(kpiRequest, basicProjectConfigId, sprintList);
+	}
 }
