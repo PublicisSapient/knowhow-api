@@ -142,7 +142,7 @@ jobs:
           BRANCH_TO_CLONE="${{ github.event.inputs.knowhow_common_branch }}"
           git clone --branch $BRANCH_TO_CLONE https://github.com/PublicisSapient/knowhow-common.git
           cd knowhow-common
-          mvn clean install -Ddockerfile.skip=true -X
+          mvn clean install -Ddockerfile.skip=true
       
       # ✅ Get common version using Maven Help Plugin
       - name: Get common version using Maven Help Plugin
@@ -163,7 +163,7 @@ jobs:
       # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
       - name: Build & skip Test CustomAPI
         if: ${{ github.event.inputs.test == 'false' }}
-        run: mvn clean install -Ddockerfile.skip=true -DskipTests -X
+        run: mvn clean install -Ddockerfile.skip=true -DskipTests
 
        # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
       - name: Build & Test CustomAPI
