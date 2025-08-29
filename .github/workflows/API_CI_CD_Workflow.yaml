@@ -6,6 +6,12 @@ on:
   #     - master
   workflow_dispatch:
     inputs:
+      knowhow_common_branch:
+        description: 'Type the Branch to use from knowhow-common repo'
+        required: true
+        default: 'develop'
+        type: string
+
       test:
         description: 'Run tests'
         required: true
@@ -22,6 +28,8 @@ on:
         options:
           - dev
           - dev1
+          - qa-master
+          - stage
       mongock_operation:
         description: 'Environment to deploy'
         required: true
@@ -40,7 +48,7 @@ on:
         description: 'End version for Mongock(e.g: 1.0.0)'
         required: true
         default: ''
-        type: string    
+        type: string
 
 env:
   IMAGE_NAME: knowhow-customapi
@@ -58,20 +66,18 @@ jobs:
       - name: Set IMAGE_TAG and values file
         id: set_env
         run: |
-          BRANCH="${GITHUB_REF##*/}"
-          if [[ "$BRANCH" == "qa-master" ]]; then
+          ENV="${{ github.event.inputs.env }}"
+          if [[ "$ENV" == "qa" ]]; then
             echo "IMAGE_TAG=qa-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-qa.yaml" >> $GITHUB_ENV
             echo "ARGOCD_APP_NAME=knh-api-qa" >> $GITHUB_ENV
             echo "argocd_app_name=knh-api-qa" >> $GITHUB_OUTPUT
-          elif [[ "$BRANCH" == "master" ]]; then
+          elif [[ "$ENV" == "stage" ]]; then
             echo "IMAGE_TAG=master-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-stage.yaml" >> $GITHUB_ENV
             echo "ARGOCD_APP_NAME=knh-api-stage" >> $GITHUB_ENV
             echo "argocd_app_name=knh-api-stage" >> $GITHUB_OUTPUT
-          else
-            ENV="${{ github.event.inputs.env }}"
-            if [[ "$ENV" == "dev1" ]]; then
+          elif [[ "$ENV" == "dev1" ]]; then
               echo "IMAGE_TAG=dev1-${GITHUB_SHA::8}" >> $GITHUB_ENV
               echo "VALUES_FILE=values-dev1.yaml" >> $GITHUB_ENV
               echo "ARGOCD_APP_NAME=knh-api-dev1" >> $GITHUB_ENV
@@ -134,16 +140,7 @@ jobs:
       # ✅ Clone & Build knowhow-common dependency
       - name: Clone & Build knowhow-common dependency
         run: |
-          SOURCE_BRANCH="${{ github.head_ref }}"
-          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
-          
-          echo "Checking if branch '$SOURCE_BRANCH' exists in knowhow-common repo..."
-          if git ls-remote --heads https://github.com/PublicisSapient/knowhow-common.git $SOURCE_BRANCH | grep $SOURCE_BRANCH; then
-            BRANCH_TO_CLONE=$SOURCE_BRANCH
-          else
-            echo "Branch '$SOURCE_BRANCH' not found. Falling back to target branch '$TARGET_BRANCH'."
-            BRANCH_TO_CLONE=$TARGET_BRANCH
-          fi
+          BRANCH_TO_CLONE="${{ github.event.inputs.knowhow_common_branch }}"
           git clone --branch $BRANCH_TO_CLONE https://github.com/PublicisSapient/knowhow-common.git
           cd knowhow-common
           mvn clean install -Ddockerfile.skip=true -X
