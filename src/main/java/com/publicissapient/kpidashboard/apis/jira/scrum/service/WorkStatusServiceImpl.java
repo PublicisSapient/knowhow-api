@@ -808,7 +808,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
-	private static void calculateKpiSpecificDataForPlanned(
+	private void calculateKpiSpecificDataForPlanned(
 			IssueKpiModalValue jiraIssueModalObject, JiraIssue jiraIssue, Map<String, Object> jiraIssueData
 	) {
 		if (DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
@@ -822,7 +822,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
-	private static void calculateKpiSpecificDataForNonPlanned(
+	private void calculateKpiSpecificDataForNonPlanned(
 			IssueKpiModalValue jiraIssueModalObject, JiraIssue jiraIssue, Map<String, Object> jiraIssueData
 	) {
 		if (DateUtil.stringToLocalDateTime(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)

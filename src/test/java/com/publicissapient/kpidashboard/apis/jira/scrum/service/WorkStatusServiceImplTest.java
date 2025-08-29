@@ -301,6 +301,210 @@ public class WorkStatusServiceImplTest {
 	}
 
 	@Test
+	public void testGetKpiDataProject_non_active() throws ApplicationException {
+
+		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
+																								  accountHierarchyDataList,
+																								  new ArrayList<>(),
+																								  "hierarchyLevelOne", 5
+		);
+		storyList.stream().filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768")).findFirst().get()
+				 .setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
+
+		// Set sprint to CLOSED state to test the else branch
+		sprintDetails.setState(SprintDetails.SPRINT_STATE_CLOSED);
+		sprintDetails.setEndDate("2024-01-20T23:59:59.000");
+
+		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
+		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
+		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
+		when(cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name())).thenReturn(kpiRequestTrackerId);
+		when(workStatusService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+
+		// Mock all DateUtil static methods to prevent NullPointerException
+		try (MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+			// Mock all DateUtil methods used in the production code
+			dateUtilMock.when(() -> DateUtil.stringToLocalDate(anyString(), anyString()))
+						.thenReturn(LocalDate.now().minusDays(1));
+			dateUtilMock.when(() -> DateUtil.stringToLocalDateTime(anyString(), anyString()))
+						.thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.getTodayTime()).thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.localDateTimeToUTC(anyString())).thenReturn("2024-01-15T10:00:00.000Z");
+			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class),
+																   any(LocalDateTime.class)
+			)).thenReturn(true);
+
+			try {
+				KpiElement kpiElement = workStatusService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
+																	 treeAggregatorDetail.getMapOfListOfLeafNodes()
+																						 .get("sprint").get(0)
+				);
+				assertNotNull(kpiElement.getIssueData());
+
+				// Test coverage for ISSUE_DELAY conditional logic in CLOSED sprint (lines 418-428)
+				// Test scenario 1: ISSUE_DELAY equals Constant.DASH for closed sprint
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, Constant.DASH);
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verifyNoInteractions();
+					assertTrue(category.contains(WorkStatusServiceImpl.DEV_STATUS));
+				}
+
+				// Test scenario 2: ISSUE_DELAY is not Integer type for closed sprint
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, "not_an_integer");
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verifyNoInteractions();
+				}
+
+				// Test scenario 3: ISSUE_DELAY is negative Integer for closed sprint
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, -5);
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verifyNoInteractions();
+				}
+
+				// Test scenario 4: ISSUE_DELAY is zero (valid case) for closed sprint - covers lines 418-428
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 0);
+				category2.get(WorkStatusServiceImpl.DEV_STATUS).clear(); // Reset category2 for clean test
+				mockSprintDetails.setState(SprintDetails.SPRINT_STATE_CLOSED);
+				mockSprintDetails.setEndDate("2024-01-20T23:59:59.000");
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(0)).thenReturn(0);
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(0));
+					// Verify populateDelay was called but DELAY_COUNT not added since delay is 0
+					assertFalse(category2.get(WorkStatusServiceImpl.DEV_STATUS).contains(WorkStatusServiceImpl.DELAY_COUNT));
+				}
+
+				// Test scenario 5: ISSUE_DELAY is positive Integer (valid case) for closed sprint - covers lines 418-428
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 120);
+				category2.get(WorkStatusServiceImpl.DEV_STATUS).clear(); // Reset category2 for clean test
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(120)).thenReturn(7200);
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(120));
+					// Verify populateDelay was called and DELAY_COUNT was added since delay > 0
+					assertTrue(category2.get(WorkStatusServiceImpl.DEV_STATUS).contains(WorkStatusServiceImpl.DELAY_COUNT));
+				}
+
+				// Test scenario 6: ISSUE_DELAY is positive but getDelayInMinutes returns 0 for closed sprint
+				jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 60);
+				category2.get(WorkStatusServiceImpl.DEV_STATUS).clear(); // Reset category2 for clean test
+				try (MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+					kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(60)).thenReturn(0);
+					workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+															  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+					kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(60));
+					// Verify populateDelay was called but DELAY_COUNT not added since calculated delay is 0
+					assertFalse(category2.get(WorkStatusServiceImpl.DEV_STATUS).contains(WorkStatusServiceImpl.DELAY_COUNT));
+				}
+
+			} catch (ApplicationException enfe) {
+				// Handle exception
+			}
+		}
+	}
+
+	@Test
+	public void testGetDelayForCompletedDevIssues() throws ApplicationException {
+		// Test coverage for lines 433-434 in getDelay method
+
+		// Setup mock data for completed dev issues scenario
+		mockIssue.setDevDueDate("2024-01-15T10:00:00.000");
+		devCompletedIssues.put(mockIssue, "2024-01-16T10:00:00.000");
+		jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 120);
+		jiraIssueData.put(WorkStatusServiceImpl.ACTUAL_COMPLETION_DATA, new HashMap<>());
+
+		category2.put(WorkStatusServiceImpl.DEV_STATUS, new ArrayList<>());
+
+		// Mock all DateUtil static methods
+		try (MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class);
+			 MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+
+			// Test scenario 1: Dev due date is after today minus 1 day AND ISSUE_DELAY is not DASH
+			dateUtilMock.when(() -> DateUtil.stringToLocalDate(anyString(), anyString()))
+						.thenReturn(LocalDate.now().plusDays(1)); // Dev due date is in future
+			dateUtilMock.when(() -> DateUtil.stringToLocalDateTime(anyString(), anyString()))
+						.thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.getTodayTime()).thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.localDateTimeToUTC(anyString())).thenReturn("2024-01-15T10:00:00.000Z");
+
+			kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(120)).thenReturn(7200);
+
+			workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+													  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+
+			// Verify that KpiDataHelper.getDelayInMinutes was called (line 434)
+			kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(120));
+			// Verify ACTUAL_COMPLETION was added to category2
+			assertTrue(category2.get(WorkStatusServiceImpl.DEV_STATUS).contains(WorkStatusServiceImpl.ACTUAL_COMPLETION));
+		}
+	}
+
+	@Test
+	public void testGetDelayForCompletedDevIssues_EdgeCases() throws ApplicationException {
+		// Additional test scenarios for lines 433-434 edge cases
+
+		mockIssue.setDevDueDate("2024-01-15T10:00:00.000");
+		devCompletedIssues.put(mockIssue, "2024-01-16T10:00:00.000");
+		jiraIssueData.put(WorkStatusServiceImpl.ACTUAL_COMPLETION_DATA, new HashMap<>());
+		category2.put(WorkStatusServiceImpl.DEV_STATUS, new ArrayList<>());
+
+		try (MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class);
+			 MockedStatic<KpiDataHelper> kpiDataHelperMock = mockStatic(KpiDataHelper.class)) {
+
+			dateUtilMock.when(() -> DateUtil.stringToLocalDateTime(anyString(), anyString()))
+						.thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.getTodayTime()).thenReturn(LocalDateTime.now());
+			dateUtilMock.when(() -> DateUtil.localDateTimeToUTC(anyString())).thenReturn("2024-01-15T10:00:00.000Z");
+
+			// Test scenario 1: Dev due date is NOT after today minus 1 day
+			dateUtilMock.when(() -> DateUtil.stringToLocalDate(anyString(), anyString()))
+						.thenReturn(LocalDate.now().minusDays(2)); // Dev due date is in past
+			jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 60);
+
+			workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+													  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+
+			// Reset mock for next scenario
+			kpiDataHelperMock.reset();
+
+			// Test scenario 2: ISSUE_DELAY equals Constant.DASH
+			dateUtilMock.when(() -> DateUtil.stringToLocalDate(anyString(), anyString()))
+						.thenReturn(LocalDate.now().plusDays(1)); // Dev due date is in future
+			jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, Constant.DASH);
+
+			workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+													  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+
+			// Reset mock for next scenario
+			kpiDataHelperMock.reset();
+
+			// Test scenario 3: Both conditions are met - dev due date is future AND ISSUE_DELAY is valid
+			jiraIssueData.put(WorkStatusServiceImpl.ISSUE_DELAY, 180);
+			kpiDataHelperMock.when(() -> KpiDataHelper.getDelayInMinutes(180)).thenReturn(10800);
+
+			workStatusService.setDataForDevCompletion(mockIssue, mockSprintDetails, category,
+													  jiraIssueData, devCompletedIssues, mockData, category2, issueWiseDelay);
+
+			// Verify KpiDataHelper.getDelayInMinutes was called with correct parameter for scenario 3 only
+			kpiDataHelperMock.verify(() -> KpiDataHelper.getDelayInMinutes(180));
+			assertTrue(category2.get(WorkStatusServiceImpl.DEV_STATUS).contains(WorkStatusServiceImpl.ACTUAL_COMPLETION));
+		}
+	}
+
+
+
+	@Test
 	public void testGetQualifierType() {
 		assertThat(workStatusService.getQualifierType(), equalTo("WORK_STATUS"));
 	}
