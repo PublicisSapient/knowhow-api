@@ -28,7 +28,7 @@ on:
         options:
           - dev
           - dev1
-          - qa-master
+          - qa
           - stage
       mongock_operation:
         description: 'Environment to deploy'
@@ -67,7 +67,7 @@ jobs:
         id: set_env
         run: |
           ENV="${{ github.event.inputs.env }}"
-          if [[ "$ENV" == "qa-master" ]]; then
+          if [[ "$ENV" == "qa" ]]; then
             echo "IMAGE_TAG=qa-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-qa.yaml" >> $GITHUB_ENV
             echo "ARGOCD_APP_NAME=knh-api-qa" >> $GITHUB_ENV
