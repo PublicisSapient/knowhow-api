@@ -1,4 +1,4 @@
-name: Unified_CI_Workflow  # Define the name of the workflows
+name: API_CI_Workflow  # Define the name of the workflows
 
 # Define when the workflow should trigger
 on:
