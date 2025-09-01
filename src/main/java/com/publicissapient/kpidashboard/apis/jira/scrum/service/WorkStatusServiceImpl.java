@@ -829,13 +829,13 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			jiraIssueList = jiraIssueList.stream()
 					.filter(jiraIssue -> jiraIssue.getDueDate() != null && DateUtil
 							.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now()))
-					.collect(Collectors.toList());
+					.toList();
 		} else {
 			jiraIssueList = jiraIssueList.stream()
 					.filter(jiraIssue -> jiraIssue.getDueDate() != null &&
 							DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(
 									DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1)))
-					.collect(Collectors.toList());
+					.toList();
 		}
 		Map<String, List<JiraIssue>> assigneeWiseJiraIssue = assigneeWiseJiraIssue(jiraIssueList);
 		List<IterationPotentialDelay> maxDelayList = new ArrayList<>();
@@ -893,7 +893,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			List<JiraIssue> inProgressIssues = allIssues.stream()
 					.filter(jiraIssue -> (jiraIssue.getAssigneeId() == null) && StringUtils.isNotEmpty(jiraIssue.getDueDate()) &&
 							(fieldMapping.getJiraStatusForInProgressKPI128().contains(jiraIssue.getStatus())))
-					.collect(Collectors.toList());
+					.toList();
 
 			List<JiraIssue> openIssues = new ArrayList<>();
 			iterationPotentialDelayList.addAll(sprintWiseDelayCalculation(inProgressIssues, openIssues, sprintDetails));
