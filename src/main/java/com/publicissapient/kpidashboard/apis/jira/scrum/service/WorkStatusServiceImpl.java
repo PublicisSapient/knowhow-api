@@ -80,6 +80,79 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	@Autowired
 	private ConfigHelperService configHelperService;
 
+	// CHANGE: Added parameter object to reduce getDelay method parameter count
+	public static class DelayCalculationContext {
+		private final JiraIssue issue;
+		private final Map<String, Object> jiraIssueData;
+		private final Map<JiraIssue, String> devCompletedIssues;
+		private final IssueKpiModalValue data;
+		private final Map<String, List<String>> category2;
+		private final Map<String, IterationPotentialDelay> issueWiseDelay;
+		private final int currentDelay;
+		private final Map<String, Object> actualCompletionData;
+
+		public DelayCalculationContext(JiraIssue issue, Map<String, Object> jiraIssueData,
+									   Map<JiraIssue, String> devCompletedIssues, IssueKpiModalValue data,
+									   Map<String, List<String>> category2, Map<String, IterationPotentialDelay> issueWiseDelay,
+									   int currentDelay, Map<String, Object> actualCompletionData) {
+			this.issue = issue;
+			this.jiraIssueData = jiraIssueData;
+			this.devCompletedIssues = devCompletedIssues;
+			this.data = data;
+			this.category2 = category2;
+			this.issueWiseDelay = issueWiseDelay;
+			this.currentDelay = currentDelay;
+			this.actualCompletionData = actualCompletionData;
+		}
+
+		public JiraIssue getIssue() { return issue; }
+		public Map<String, Object> getJiraIssueData() { return jiraIssueData; }
+		public Map<JiraIssue, String> getDevCompletedIssues() { return devCompletedIssues; }
+		public IssueKpiModalValue getData() { return data; }
+		public Map<String, List<String>> getCategory2() { return category2; }
+		public Map<String, IterationPotentialDelay> getIssueWiseDelay() { return issueWiseDelay; }
+		public int getCurrentDelay() { return currentDelay; }
+		public Map<String, Object> getActualCompletionData() { return actualCompletionData; }
+	}
+
+	// CHANGE: Added parameter object to reduce calculateForPlannedAndCompletedIssues method parameter count
+	public static class PlannedCompletedIssueContext {
+		private final JiraIssue issue;
+		private final Map<String, Object> jiraIssueData;
+		private final List<String> allCompletedIssuesList;
+		private final Map<String, IterationPotentialDelay> issueWiseDelay;
+		private final IssueKpiModalValue data;
+		private final Set<String> category;
+		private final Map<String, List<String>> category2;
+		private final int delay;
+		private final Map<String, Object> actualCompletionData;
+
+		public PlannedCompletedIssueContext(JiraIssue issue, Map<String, Object> jiraIssueData,
+											List<String> allCompletedIssuesList, Map<String, IterationPotentialDelay> issueWiseDelay,
+											IssueKpiModalValue data, Set<String> category, Map<String, List<String>> category2,
+											int delay, Map<String, Object> actualCompletionData) {
+			this.issue = issue;
+			this.jiraIssueData = jiraIssueData;
+			this.allCompletedIssuesList = allCompletedIssuesList;
+			this.issueWiseDelay = issueWiseDelay;
+			this.data = data;
+			this.category = category;
+			this.category2 = category2;
+			this.delay = delay;
+			this.actualCompletionData = actualCompletionData;
+		}
+
+		public JiraIssue getIssue() { return issue; }
+		public Map<String, Object> getJiraIssueData() { return jiraIssueData; }
+		public List<String> getAllCompletedIssuesList() { return allCompletedIssuesList; }
+		public Map<String, IterationPotentialDelay> getIssueWiseDelay() { return issueWiseDelay; }
+		public IssueKpiModalValue getData() { return data; }
+		public Set<String> getCategory() { return category; }
+		public Map<String, List<String>> getCategory2() { return category2; }
+		public int getDelay() { return delay; }
+		public Map<String, Object> getActualCompletionData() { return actualCompletionData; }
+	}
+
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node sprintNode)
 			throws ApplicationException {
@@ -415,25 +488,29 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
 		}
-		delay = getDelay(
-				issue, jiraIssueData, devCompletedIssues, data, category2, issueWiseDelay, delay, actualCompletionData);
+		 // CHANGE: Using parameter object instead of individual parameters
+		 DelayCalculationContext delayContext = new DelayCalculationContext(issue, jiraIssueData, devCompletedIssues,
+																			data, category2, issueWiseDelay, delay, actualCompletionData);
+		 delay = getDelay(delayContext);
 		data.getCategoryWiseDelay().put(DEV_STATUS, delay);
 	}
 
-	private int getDelay(
-			JiraIssue issue, Map<String, Object> jiraIssueData, Map<JiraIssue, String> devCompletedIssues,
-			IssueKpiModalValue data, Map<String, List<String>> category2,
-			Map<String, IterationPotentialDelay> issueWiseDelay, int delay, Map<String, Object> actualCompletionData
-	) {
+	/**
+	 * CHANGE: Refactored method to use parameter object instead of 8 individual parameters
+	 * @param context DelayCalculationContext containing all required data
+	 */
+	private int getDelay(DelayCalculationContext context) {
+		int delay = context.getCurrentDelay();
 		// Calculating actual work status for only completed issues
-		if (devCompletedIssues.containsKey(issue)) {
-			category2.get(DEV_STATUS).add(ACTUAL_COMPLETION);
-			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(LocalDate.now().minusDays(1)) && !jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-				int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
+		if (context.getDevCompletedIssues().containsKey(context.getIssue())) {
+			context.getCategory2().get(DEV_STATUS).add(ACTUAL_COMPLETION);
+			if (DateUtil.stringToLocalDate(context.getIssue().getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+						.isAfter(LocalDate.now().minusDays(1)) && !context.getJiraIssueData().get(ISSUE_DELAY).equals(Constant.DASH)) {
+				int jiraIssueDelay = (int) context.getJiraIssueData().get(ISSUE_DELAY);
 				delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
 			}
-			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
+			setKpiSpecificData(context.getData(), context.getIssueWiseDelay(), context.getIssue(),
+							   context.getJiraIssueData(), context.getActualCompletionData(), false);
 		}
 		return delay;
 	}
@@ -484,26 +561,28 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
 		}
-		calculateForPlannedAndCompletedIssues(issue, jiraIssueData, allCompletedIssuesList, issueWiseDelay, data, category, category2, delay,
-				  actualCompletionData
-		);
+		// CHANGE: Using parameter object instead of individual parameters
+		PlannedCompletedIssueContext context = new PlannedCompletedIssueContext(issue, jiraIssueData,
+																				allCompletedIssuesList, issueWiseDelay, data, category, category2, delay, actualCompletionData);
+		calculateForPlannedAndCompletedIssues(context);
 		return category2;
 	}
 
-	private void calculateForPlannedAndCompletedIssues(
-			JiraIssue issue, Map<String, Object> jiraIssueData, List<String> allCompletedIssuesList,
-			Map<String, IterationPotentialDelay> issueWiseDelay, IssueKpiModalValue data, Set<String> category,
-			Map<String, List<String>> category2, int delay, Map<String, Object> actualCompletionData
-	) {
+	/**
+	 * CHANGE: Refactored method to use parameter object instead of 9 individual parameters
+	 * @param context PlannedCompletedIssueContext containing all required data
+	 */
+	private void calculateForPlannedAndCompletedIssues(PlannedCompletedIssueContext context) {
 		// Calculating actual work status for only completed issues
-		if (allCompletedIssuesList.contains(issue.getNumber())) {
-			category.add(PLANNED);
-			category2.get(PLANNED).add(ACTUAL_COMPLETION);
-			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(LocalDate.now().minusDays(1)) && delay >= 0) {
-					data.getCategoryWiseDelay().put(PLANNED, delay);
+		if (context.getAllCompletedIssuesList().contains(context.getIssue().getNumber())) {
+			context.getCategory().add(PLANNED);
+			context.getCategory2().get(PLANNED).add(ACTUAL_COMPLETION);
+			if (DateUtil.stringToLocalDate(context.getIssue().getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+						.isAfter(LocalDate.now().minusDays(1)) && context.getDelay() >= 0) {
+				context.getData().getCategoryWiseDelay().put(PLANNED, context.getDelay());
 			}
-			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
+			setKpiSpecificData(context.getData(), context.getIssueWiseDelay(), context.getIssue(),
+							   context.getJiraIssueData(), context.getActualCompletionData(), true);
 		}
 	}
 
