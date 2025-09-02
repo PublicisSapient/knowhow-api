@@ -107,7 +107,7 @@ public final class DeveloperKpiHelper {
 	 *            Date range for filtering
 	 * @return Filtered list of commits within the date range
 	 */
-	public static List<ScmCommits> filterCommitsByDate(List<ScmCommits> commits, CustomDateRange dateRange) {
+	public static List<ScmCommits> filterCommitsByCommitTimeStamp(List<ScmCommits> commits, CustomDateRange dateRange) {
 		return commits.stream()
 				.filter(commit -> DateUtil.isWithinDateTimeRange(
 						DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
