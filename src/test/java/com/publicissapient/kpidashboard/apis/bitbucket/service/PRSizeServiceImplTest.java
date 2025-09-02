@@ -119,7 +119,7 @@ public class PRSizeServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi11");
 		Map<String, List<String>> selectedMap = kpiRequest.getSelectedMap();
-		selectedMap.put(CommonConstant.date, Arrays.asList("DAYS"));
+		selectedMap.put(CommonConstant.DATE, Arrays.asList("DAYS"));
 		kpiRequest.setSelectedMap(selectedMap);
 		kpiRequest.setLabel("Project");
 		kpiElement = kpiRequest.getKpiList().get(0);

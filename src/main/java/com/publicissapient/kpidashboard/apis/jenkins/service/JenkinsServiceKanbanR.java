@@ -231,7 +231,7 @@ public class JenkinsServiceKanbanR {
 			kpiRequest.setKanbanXaxisDataPoints(Integer.parseInt(id));
 		}
 
-		List<String> durationList = kpiRequest.getSelectedMap().get(CommonConstant.date);
+		List<String> durationList = kpiRequest.getSelectedMap().get(CommonConstant.DATE);
 		if (CollectionUtils.isNotEmpty(durationList)) {
 			String duration = durationList.get(0);
 			if (NumberUtils.isCreatable(duration)) {
