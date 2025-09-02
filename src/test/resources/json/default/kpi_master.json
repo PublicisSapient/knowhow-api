@@ -76,7 +76,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-175","175-125","125-75","75-25","25-"]
+    "maturityRange": [
+      "-175",
+      "175-125",
+      "125-75",
+      "75-25",
+      "25-"
+    ]
   },
   {
     "kpiId": "kpi82",
@@ -156,7 +162,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-25","25-50","50-75","75-90","90-"]
+    "maturityRange": [
+      "-25",
+      "25-50",
+      "50-75",
+      "75-90",
+      "90-"
+    ]
   },
   {
     "kpiId": "kpi111",
@@ -239,7 +251,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-90","90-60","60-25","25-10","10-"]
+    "maturityRange": [
+      "-90",
+      "90-60",
+      "60-25",
+      "25-10",
+      "10-"
+    ]
   },
   {
     "kpiId": "kpi35",
@@ -318,7 +336,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-90","90-75","75-50","50-25","25-"]
+    "maturityRange": [
+      "-90",
+      "90-75",
+      "75-50",
+      "50-25",
+      "25-"
+    ]
   },
   {
     "kpiId": "kpi34",
@@ -397,7 +421,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-25","25-50","50-75","75-90","90-"]
+    "maturityRange": [
+      "-25",
+      "25-50",
+      "50-75",
+      "75-90",
+      "90-"
+    ]
   },
   {
     "kpiId": "kpi37",
@@ -476,7 +506,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-75","75-50","50-30","30-10","10-"]
+    "maturityRange": [
+      "-75",
+      "75-50",
+      "50-30",
+      "30-10",
+      "10-"
+    ]
   },
   {
     "kpiId": "kpi28",
@@ -685,7 +721,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi16",
@@ -760,7 +802,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi17",
@@ -831,8 +879,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi38",
@@ -946,8 +1000,14 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-100","100-50","50-30","30-10","10-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-100",
+      "100-50",
+      "50-30",
+      "30-10",
+      "10-"
+    ]
   },
   {
     "kpiId": "kpi116",
@@ -1027,8 +1087,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-50","50-30","30-20","20-10","10-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-50",
+      "50-30",
+      "30-20",
+      "20-10",
+      "10-"
+    ]
   },
   {
     "kpiId": "kpi70",
@@ -1106,7 +1172,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi40",
@@ -1210,7 +1282,13 @@
     "kpiFilter": "radioButton",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "maturityRange": ["-40","40-60","60-75","75-90","90-"]
+    "maturityRange": [
+      "-40",
+      "40-60",
+      "60-75",
+      "75-90",
+      "90-"
+    ]
   },
   {
     "kpiId": "kpi5",
@@ -1389,8 +1467,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-10","10-8","8-5","5-3","3-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-10",
+      "10-8",
+      "8-5",
+      "5-3",
+      "3-"
+    ]
   },
   {
     "kpiId": "kpi84",
@@ -1456,8 +1540,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-16","16-8","8-4","4-2","2-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-16",
+      "16-8",
+      "8-4",
+      "4-2",
+      "2-"
+    ]
   },
   {
     "kpiId": "kpi11",
@@ -1521,8 +1611,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-2","2-4","4-8","8-16","16-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-2",
+      "2-4",
+      "4-8",
+      "8-16",
+      "16-"
+    ]
   },
   {
     "kpiId": "kpi8",
@@ -1588,8 +1684,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-45","45-30","30-15","15-5","5-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-45",
+      "45-30",
+      "30-15",
+      "15-5",
+      "5-"
+    ]
   },
   {
     "kpiId": "kpi3",
@@ -1755,23 +1857,53 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-60","60-45","45-30","30-10","10-"],
-
-    "maturityLevel": [{
-      "level": "LeadTime",
-      "range": ["-60", "60-45", "45-30", "30-10", "10-"]
-    },
+    "maturityRange": [
+      "-60",
+      "60-45",
+      "45-30",
+      "30-10",
+      "10-"
+    ],
+    "maturityLevel": [
+      {
+        "level": "LeadTime",
+        "range": [
+          "-60",
+          "60-45",
+          "45-30",
+          "30-10",
+          "10-"
+        ]
+      },
       {
         "level": "Intake-DoR",
-        "range": ["-30", "30-20", "20-10", "10-5", "5-"]
+        "range": [
+          "-30",
+          "30-20",
+          "20-10",
+          "10-5",
+          "5-"
+        ]
       },
       {
         "level": "DoR-DoD",
-        "range": ["-20", "20-10", "10-7", "7-3", "3-"]
+        "range": [
+          "-20",
+          "20-10",
+          "10-7",
+          "7-3",
+          "3-"
+        ]
       },
       {
         "level": "DoD-Live",
-        "range": ["-30", "30-15", "15-5", "5-2", "2-"]
+        "range": [
+          "-30",
+          "30-15",
+          "15-5",
+          "5-2",
+          "2-"
+        ]
       }
     ]
   },
@@ -1845,7 +1977,13 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-1","1-2","2-5","5-10","10-"]
+    "maturityRange": [
+      "-1",
+      "1-2",
+      "2-5",
+      "5-10",
+      "10-"
+    ]
   },
   {
     "kpiId": "kpi73",
@@ -2222,7 +2360,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi62",
@@ -2293,8 +2437,14 @@
     "showTrend": true,
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi64",
@@ -2404,8 +2554,14 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-100","100-50","50-30","30-10","10-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-100",
+      "100-50",
+      "50-30",
+      "30-10",
+      "10-"
+    ]
   },
   {
     "kpiId": "kpi71",
@@ -2483,7 +2639,13 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-20","20-40","40-60","60-80","80-"]
+    "maturityRange": [
+      "-20",
+      "20-40",
+      "40-60",
+      "60-80",
+      "80-"
+    ]
   },
   {
     "kpiId": "kpi49",
@@ -2595,8 +2757,14 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-45","45-30","30-15","15-5","5-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-45",
+      "45-30",
+      "30-15",
+      "15-5",
+      "5-"
+    ]
   },
   {
     "kpiId": "kpi65",
@@ -2662,8 +2830,14 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "hideOverallFilter" : true,
-    "maturityRange": ["-2","2-4","4-8","8-16","16-"]
+    "hideOverallFilter": true,
+    "maturityRange": [
+      "-2",
+      "2-4",
+      "4-8",
+      "8-16",
+      "16-"
+    ]
   },
   {
     "kpiId": "kpi53",
@@ -2829,23 +3003,53 @@
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "maturityRange": ["-60","60-45","45-30","30-10","10-"],
-
-    "maturityLevel": [{
-      "level": "LeadTime",
-      "range": ["-60", "60-45", "45-30", "30-10", "10-"]
-    },
+    "maturityRange": [
+      "-60",
+      "60-45",
+      "45-30",
+      "30-10",
+      "10-"
+    ],
+    "maturityLevel": [
+      {
+        "level": "LeadTime",
+        "range": [
+          "-60",
+          "60-45",
+          "45-30",
+          "30-10",
+          "10-"
+        ]
+      },
       {
         "level": "Open-Triage",
-        "range": ["-30", "30-20", "20-10", "10-5", "5-"]
+        "range": [
+          "-30",
+          "30-20",
+          "20-10",
+          "10-5",
+          "5-"
+        ]
       },
       {
         "level": "Triage-Complete",
-        "range": ["-20", "20-10", "10-7", "7-3", "3-"]
+        "range": [
+          "-20",
+          "20-10",
+          "10-7",
+          "7-3",
+          "3-"
+        ]
       },
       {
         "level": "Complete-Live",
-        "range": ["-30", "30-15", "15-5", "5-2", "2-"]
+        "range": [
+          "-30",
+          "30-15",
+          "15-5",
+          "5-2",
+          "2-"
+        ]
       }
     ]
   },
@@ -3516,30 +3720,30 @@
     "calculateMaturity": false
   },
   {
-  "kpiId": "kpi139",
-  "kpiName": "Refinement Rejection Rate",
-  "kpiUnit": "%",
-  "isDeleted": "False",
-  "defaultOrder": 4,
-  "kpiCategory": "Backlog",
-  "kpiSource": "Jira",
-  "groupId": 2,
-  "thresholdValue": "",
-  "kanban": false,
-  "chartType": "line",
-  "kpiInfo": {
-    "definition": "Refinement rejection rate measures the percentage of stories rejected during refinement as compared to the overall stories discussed."
+    "kpiId": "kpi139",
+    "kpiName": "Refinement Rejection Rate",
+    "kpiUnit": "%",
+    "isDeleted": "False",
+    "defaultOrder": 4,
+    "kpiCategory": "Backlog",
+    "kpiSource": "Jira",
+    "groupId": 2,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": "line",
+    "kpiInfo": {
+      "definition": "Refinement rejection rate measures the percentage of stories rejected during refinement as compared to the overall stories discussed."
+    },
+    "xAxisLabel": "Weeks",
+    "yAxisLabel": "Count",
+    "isPositiveTrend": false,
+    "kpiFilter": "",
+    "showTrend": false,
+    "aggregationCriteria": "sum",
+    "isAdditionalFilterSupport": false,
+    "calculateMaturity": false
   },
-  "xAxisLabel": "Weeks",
-  "yAxisLabel": "Count",
-  "isPositiveTrend": false,
-  "kpiFilter": "",
-  "showTrend": false,
-  "aggregationCriteria": "sum",
-  "isAdditionalFilterSupport": false,
-  "calculateMaturity": false
-},
-{
+  {
     "kpiId": "kpi168",
     "kpiName": "Sonar Code Quality",
     "kpiUnit": "unit",
@@ -3583,54 +3787,66 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "hideOverallFilter": true,
-    "maturityRange": ["5", "4", "3", "2", "1"],
-    "yaxisOrder" : {
-      "5" : "E",
-      "4" : "D",
-      "3" : "C",
-      "2" : "B",
-      "1" : "A"
+    "maturityRange": [
+      "5",
+      "4",
+      "3",
+      "2",
+      "1"
+    ],
+    "yaxisOrder": {
+      "5": "E",
+      "4": "D",
+      "3": "C",
+      "2": "B",
+      "1": "A"
     }
   },
   {
-    "kpiId" : "kpi182",
-    "kpiName" : "PR Success Rate",
-    "maxValue" : "",
-    "kpiUnit" : "%",
-    "isDeleted" : false,
-    "defaultOrder" : 5,
-    "groupId" : 2,
-    "kpiSource" : "BitBucket",
+    "kpiId": "kpi182",
+    "kpiName": "PR Success Rate",
+    "maxValue": "",
+    "kpiUnit": "%",
+    "isDeleted": false,
+    "defaultOrder": 5,
+    "groupId": 2,
+    "kpiSource": "BitBucket",
     "combinedKpiSource": "RepoTool",
-    "kanban" : false,
-    "chartType" : "line",
-    "kpiInfo" : {
-      "definition" : "PR success rate measures the number of pull requests that went through the process without being abandoned or discarded as against the total PRs raised in a defined period  A low or declining Pull Request Success Rate represents high or increasing waste",
-      "details" : [
+    "kanban": false,
+    "chartType": "line",
+    "kpiInfo": {
+      "definition": "PR success rate measures the number of pull requests that went through the process without being abandoned or discarded as against the total PRs raised in a defined period  A low or declining Pull Request Success Rate represents high or increasing waste",
+      "details": [
         {
-          "type" : "link",
-          "kpiLinkDetail" : {
-            "text" : "Detailed Information at",
-            "link" : "https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/106528769/Developer+PR+Success+Rate"
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/106528769/Developer+PR+Success+Rate"
           }
         }
       ]
     },
-    "upperThresholdBG" : "red",
-    "lowerThresholdBG" : "white",
-    "thresholdValue" : "50",
-    "xAxisLabel" : "Weeks",
-    "yAxisLabel" : "Percentage",
-    "isPositiveTrend" : false,
-    "showTrend" : true,
-    "kpiFilter" : "dropDown",
-    "aggregationCriteria" : "average",
-    "isAdditionalFilterSupport" : false,
-    "calculateMaturity" : false,
-    "hideOverallFilter" : true,
-    "isRepoToolKpi" : true,
-    "kpiCategory" : "Developer",
-    "maturityRange" : [ "-80", "80-50", "50-20", "20-5", "5-" ]
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "thresholdValue": "50",
+    "xAxisLabel": "Weeks",
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": false,
+    "showTrend": true,
+    "kpiFilter": "dropDown",
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": false,
+    "calculateMaturity": false,
+    "hideOverallFilter": true,
+    "isRepoToolKpi": true,
+    "kpiCategory": "Developer",
+    "maturityRange": [
+      "-80",
+      "80-50",
+      "50-20",
+      "20-5",
+      "5-"
+    ]
   },
   {
     "kpiId": "kpi187",
@@ -3731,5 +3947,4 @@
     "isAdditionalFilterSupport": false,
     "combinedKpiSource": "Jira/Azure"
   }
-
 ]
