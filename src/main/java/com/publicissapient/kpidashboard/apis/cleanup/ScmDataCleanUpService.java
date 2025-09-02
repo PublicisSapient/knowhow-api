@@ -23,8 +23,11 @@ import static com.publicissapient.kpidashboard.common.constant.CommonConstant.CA
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.service.ProjectToolConfigService;
+import com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.service.ProjectToolConfigServiceImpl;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +72,9 @@ public class ScmDataCleanUpService implements ToolDataCleanUpService {
     @Autowired
     private ScmMergeRequestsRepository scmMergeRequestsRepository;
 
+    @Autowired
+    private ScmUserRepository scmUserRepository;
+
 	@Autowired
 	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
@@ -98,6 +104,8 @@ public class ScmDataCleanUpService implements ToolDataCleanUpService {
             scmCommitsRepository.deleteByProcessorItemIdIn(itemsIds);
 
             scmMergeRequestsRepository.deleteByProcessorItemIdIn(itemsIds);
+
+            scmUserRepository.deleteByProcessorItemIdIn(itemsIds);
 
 			// delete corresponding documents from processor_items
 			processorItemRepository.deleteByToolConfigId(tool.getId());
