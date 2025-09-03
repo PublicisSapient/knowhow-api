@@ -65,8 +65,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      argocd_app_name: ${{ steps.set_env.outputs.argocd_app_name }}
     steps:
-
       - name: Set IMAGE_TAG and values file
         id: set_env
         run: |
