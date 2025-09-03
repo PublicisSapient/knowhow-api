@@ -459,7 +459,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				populateDelayPositive(delay, category2, PLANNED);
+				populateDelayPositiveForPlanned(delay, category2);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -469,7 +469,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				populateDelayPositive(delay, category2, PLANNED);
+				populateDelayPositiveForPlanned(delay, category2);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -487,7 +487,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		return category2;
 	}
 
-	private static void populateDelayPositive(int delay, Map<String, List<String>> category2, String categoryKey) {
+	private static void populateDelayPositiveForPlanned(int delay, Map<String, List<String>> category2) {
 		if(delay>=0)
 			populateDelay(delay, category2, PLANNED);
 	}
