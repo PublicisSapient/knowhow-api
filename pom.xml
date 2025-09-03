@@ -56,8 +56,7 @@
 			**com/publicissapient/kpidashboard/apis/datamigration/**/*</sonar.coverage.exclusions>
     <sonar.test.exclusions>**src/test/java/**</sonar.test.exclusions>
     <sonar.exclusions>**src/test/java/**</sonar.exclusions>
-    <sonar.cpd.exclusions>**com/publicissapient/kpidashboard/apis/mongock/**/*</sonar.cpd.exclusions>//todo:: remove after coverage.
-      <sonar.exclusions>**/com/publicissapient/kpidashboard/apis/bitbucket/service/scm/**/*.java,${sonar.exclusions}</sonar.exclusions>
+    <sonar.cpd.exclusions>**com/publicissapient/kpidashboard/apis/mongock/**/*</sonar.cpd.exclusions>
   </properties>
   <dependencyManagement>
     <dependencies>
