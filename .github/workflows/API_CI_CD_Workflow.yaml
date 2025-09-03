@@ -75,23 +75,23 @@ jobs:
           if [[ "$ENV" == "qa" ]]; then
             echo "IMAGE_TAG=qa-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-qa.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-api-qa" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-api-qa" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knh-customapi-qa" >> $GITHUB_ENV
+            echo "argocd_app_name=knh-customapi-qa" >> $GITHUB_OUTPUT
           elif [[ "$ENV" == "stage" ]]; then
             echo "IMAGE_TAG=master-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-stage.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-api-stage" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-api-stage" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knh-customapi-stage" >> $GITHUB_ENV
+            echo "argocd_app_name=knh-customapi-stage" >> $GITHUB_OUTPUT
           elif [[ "$ENV" == "dev1" ]]; then
             echo "IMAGE_TAG=dev1-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev1.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-api-dev1" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-api-dev1" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knh-customapi-dev1" >> $GITHUB_ENV
+            echo "argocd_app_name=knh-customapi-dev1" >> $GITHUB_OUTPUT
           else
             echo "IMAGE_TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-api-dev" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-api-dev" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knh-customapi-dev" >> $GITHUB_ENV
+            echo "argocd_app_name=knh-customapi-dev" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout Repository
@@ -245,51 +245,12 @@ jobs:
             --password ${{ secrets.SPEEDTOOLS_ARGOCD_PASSWORD }} \
             --plaintext
       
-       # Step 2: Sync the application
+       # Sync the application
       - name: Sync application
         id: sync-app
         run: argocd app sync ${{ env.ARGOCD_APP_NAME }}
-        continue-on-error: true # Allow the workflow to proceed even if sync fails
-        
-      # Step 3: Get application URL
-      - name: Get app URL for errors
-        id: get-url
-        if: ${{ steps.sync-app.outcome != 'success' }}
-        run: |
-          app_url=$(argocd app get ${{ env.ARGOCD_APP_NAME }} | grep 'URL:' | awk '{print $2}')
-          echo "APP_URL=${app_url}" >> $GITHUB_ENV
-        
-      # Step 4: Handle sync failure
-      - name: Handle Sync Failure
-        if: ${{ steps.sync-app.outcome != 'success' && env.APP_URL }}
-        run: |
-          echo "❌ Deployment failed: Sync for '${{ env.ARGOCD_APP_NAME }}' did not complete."
-          echo "View details here: ${{ env.APP_URL }}"
-          exit 1 # Fail the job
       
-      # Step 5: Wait for the application to become healthy
+      # Wait for the application to become healthy
       - name: Wait for application health
-        id: wait-app
         run: argocd app wait ${{ env.ARGOCD_APP_NAME }} --health --timeout 300
-        continue-on-error: true # Allow the workflow to proceed if the wait times out
-
-      # Step 6: Get application URL for wait failure
-      - name: Get app URL for wait failure
-        id: get-wait-url
-        if: ${{ steps.wait-app.outcome != 'success' }}
-        run: |
-          app_url=$(argocd app get ${{ env.ARGOCD_APP_NAME }} | grep 'URL:' | awk '{print $2}')
-          echo "APP_URL=${app_url}" >> $GITHUB_ENV
-
-      # Step 7: Handle wait failure
-      - name: Handle Wait Failure
-        if: ${{ steps.wait-app.outcome != 'success' && env.APP_URL }}
-        run: |
-          echo "⚠️ '${{ env.ARGOCD_APP_NAME }}' is deployed but not healthy after timeout."
-          echo "Check app status and logs here: ${{ env.APP_URL }}"
-          exit 1 # Fail the job
-      
-      - name: Deployment Succeeded
-        if: ${{ steps.sync-app.outcome == 'success' && steps.wait-app.outcome == 'success' }}
-        run: |
-          echo "✅ Deployment successful!"
+        
