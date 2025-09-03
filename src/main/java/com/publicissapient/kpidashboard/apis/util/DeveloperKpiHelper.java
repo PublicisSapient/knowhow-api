@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 /**
  * The class contains all required common methods for developer kpis
  *
- * @author shi6
+ * @author shunaray
  */
 @Slf4j
 public final class DeveloperKpiHelper {
