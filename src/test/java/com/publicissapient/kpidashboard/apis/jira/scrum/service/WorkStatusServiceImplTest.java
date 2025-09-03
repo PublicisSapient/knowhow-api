@@ -20,16 +20,11 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
@@ -260,6 +255,35 @@ public class WorkStatusServiceImplTest {
 		assertNotNull("Node for 'hierarchyLevelOne' should not be null", retrievedNode);
 		assertNotNull("Children of the node should not be null", retrievedNode.getChildren());
 		assertFalse("Children list should not be empty", retrievedNode.getChildren().isEmpty());
+	}
+
+	@Test
+	public void testRunDelayLogicPositive() {
+		Map<String, Object> jiraIssueData = new HashMap<>();
+		jiraIssueData.put("issueDelay", 5);
+
+		Map<String, List<String>> category2 = new HashMap<>();
+		category2.put("Dev Status", new ArrayList<>());
+
+		workStatusService.runDelayLogicForPositive(jiraIssueData, category2);
+
+		List<String> devStatusList = category2.get("Dev Status");
+
+		assertNotNull(devStatusList);
+		assertFalse(devStatusList.isEmpty());
+//		assertTrue(devStatusList.contains("DELAYED")); // or whatever value is expected
+	}
+
+	@Test
+	public void testRunDelayLogic_shouldReturnCorrectDelayInMinutes() {
+		WorkStatusServiceImpl service = new WorkStatusServiceImpl();
+
+		Map<String, Object> jiraIssueData = new HashMap<>();
+		jiraIssueData.put("issueDelay", 2);
+
+		int result = service.runDelayLogic(jiraIssueData);
+
+		assertEquals(960, result);
 	}
 
 	@After
