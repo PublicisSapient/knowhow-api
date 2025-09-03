@@ -40,14 +40,14 @@ on:
           - com.publicissapient.kpidashboard.apis.mongock.installation
       mongock_start_version:
         description: 'Start version for Mongock(e.g: 1.0.0)'
-        required: false
-        default: ''
+        required: true
+        default: '13.0.0'
         type: string
 
       mongock_end_version:
         description: 'End version for Mongock(e.g: 1.0.0)'
-        required: false
-        default: ''
+        required: true
+        default: '14.0.0'
         type: string
 
 env:
