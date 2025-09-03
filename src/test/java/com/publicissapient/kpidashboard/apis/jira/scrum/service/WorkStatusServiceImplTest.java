@@ -27,8 +27,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.model.*;
-import com.publicissapient.kpidashboard.common.model.jira.*;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
