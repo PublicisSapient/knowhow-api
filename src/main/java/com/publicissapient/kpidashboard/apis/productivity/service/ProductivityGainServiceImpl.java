@@ -788,6 +788,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 						.build(),
 				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId(),
 				KPIConfiguration.builder().kpiCode(KPICode.MEAN_TIME_TO_MERGE)
+						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.BITBUCKET)
 						.positiveGainTrend(KPIConfiguration.PositiveGainTrend.DESCENDING)
