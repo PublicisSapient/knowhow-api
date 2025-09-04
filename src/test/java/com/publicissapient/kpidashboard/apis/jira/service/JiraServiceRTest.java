@@ -353,7 +353,7 @@ public class JiraServiceRTest {
 				.thenReturn(new ArrayList<KpiElement>());
 		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean())).thenReturn(accountHierarchyDataList);
 		when(kpiHelperService.getProjectKeyCache(any(), any(), anyBoolean())).thenReturn(kpiRequest.getIds());
-		List<KpiElement> resultList = jiraServiceR.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> resultList = jiraServiceR.processWithExposedApiToken(kpiRequest,true);
 		assertEquals(1, resultList.size());
 	}
 }
