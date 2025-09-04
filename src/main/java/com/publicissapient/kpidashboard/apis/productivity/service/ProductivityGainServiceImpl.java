@@ -28,7 +28,6 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -392,14 +391,11 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 		List<KpiMaster> kpiMasterList = new ArrayList<>();
 
-		Iterator<KpiMaster> kpiMastersIterator = configHelperService.loadKpiMaster().iterator();
-
-		while(kpiMastersIterator.hasNext()) {
-			KpiMaster kpiMaster = kpiMastersIterator.next();
-			if(kpiIds.contains(kpiMaster.getKpiId())) {
-				kpiMasterList.add(kpiMastersIterator.next());
-			}
-		}
+        for (KpiMaster kpiMaster : configHelperService.loadKpiMaster()) {
+            if (kpiIds.contains(kpiMaster.getKpiId())) {
+                kpiMasterList.add(kpiMaster);
+            }
+        }
 
 		Map<Integer, List<KpiMaster>> groupIdKpiMasterMap = kpiMasterList.stream()
 				.collect(Collectors.groupingBy(KpiMaster::getGroupId));
