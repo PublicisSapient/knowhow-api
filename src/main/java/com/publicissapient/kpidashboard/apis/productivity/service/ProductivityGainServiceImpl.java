@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +41,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -133,8 +132,6 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		}
 	}
 
-	private final MongoTemplate mongoTemplate;
-
 	private final ProductivityGainConfig productivityGainConfig;
 
 	private final JiraServiceR jiraServiceR;
@@ -143,6 +140,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	private final BitBucketServiceR bitBucketServiceR;
 
 	private final CacheService cacheService;
+	private final ConfigHelperService configHelperService;
 
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
@@ -392,12 +390,16 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		Set<String> kpiIds = CATEGORY_KPI_ID_CONFIGURATION_MAP.values().stream()
 				.flatMap(value -> value.keySet().stream()).collect(Collectors.toSet());
 
-		Criteria criteria = new Criteria();
-		criteria.and("kpiId").in(kpiIds);
-		Query query = new Query();
-		query.addCriteria(criteria);
+		List<KpiMaster> kpiMasterList = new ArrayList<>();
 
-		List<KpiMaster> kpiMasterList = mongoTemplate.find(query, KpiMaster.class, "kpi_master");
+		Iterator<KpiMaster> kpiMastersIterator = configHelperService.loadKpiMaster().iterator();
+
+		while(kpiMastersIterator.hasNext()) {
+			KpiMaster kpiMaster = kpiMastersIterator.next();
+			if(kpiIds.contains(kpiMaster.getKpiId())) {
+				kpiMasterList.add(kpiMastersIterator.next());
+			}
+		}
 
 		Map<Integer, List<KpiMaster>> groupIdKpiMasterMap = kpiMasterList.stream()
 				.collect(Collectors.groupingBy(KpiMaster::getGroupId));
