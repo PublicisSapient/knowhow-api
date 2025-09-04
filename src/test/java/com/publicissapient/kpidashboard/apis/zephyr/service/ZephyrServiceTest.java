@@ -228,7 +228,7 @@ public class ZephyrServiceTest {
 	public void processWithExposedApiToken() throws EntityNotFoundException {
 		KpiRequest kpiRequest = new KpiRequest();
 		createKpiRequest("zephyr", 5, kpiRequest);
-		List<KpiElement> resultList = zephyrService.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> resultList = zephyrService.processWithExposedApiToken(kpiRequest, false);
 		assertEquals(1, resultList.size());
 	}
 

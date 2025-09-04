@@ -1,5 +1,22 @@
 [
   {
+    "boardId": 0,
+    "projectTypeSwitch": {
+      "enabled": true,
+      "visible": true
+    },
+    "primaryFilter": {
+      "type": "singleSelect",
+      "defaultLevel": {
+        "labelName": "project",
+        "sortBy": null
+      }
+    },
+    "parentFilter": {
+      "labelName": "Organization Level"
+    }
+  },
+  {
     "boardId": 1,
     "projectTypeSwitch": {
       "enabled": true,
