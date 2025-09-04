@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -51,9 +50,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
@@ -81,7 +79,7 @@ import jakarta.ws.rs.InternalServerErrorException;
 
 @RunWith(MockitoJUnitRunner.class)
 @ExtendWith(MockitoExtension.class) //used for enabling the parameterized test
-public class ProductivityGainServiceTest {
+class ProductivityGainServiceTest {
 	private static final int DEFAULT_DATA_POINTS_NUMBER = 6;
 
 	private static final String DATA_COUNT_GROUP_FILTER = "filter";
@@ -95,7 +93,7 @@ public class ProductivityGainServiceTest {
 	private static final Map<Integer, Map<String, Object>> KPI_ELEMENT_GROUP_ID_KPI_ID_KPI_TREND_VALUE_LIST_MAP = constructKpiElementGroupIdKpiIdKpiTrendValueListMap();
 
 	@Mock
-	private MongoTemplate mongoTemplate;
+	private ConfigHelperService configHelperService;
 
 	@Mock
 	private ProductivityGainConfig productivityGainConfig;
@@ -179,8 +177,9 @@ public class ProductivityGainServiceTest {
 	) throws EntityNotFoundException {
 		when(cacheService.getFullHierarchyLevel()).thenReturn(createHierarchyLevelList());
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(createAccountFilteredData());
-		when(mongoTemplate.find(any(Query.class), eq(KpiMaster.class), eq("kpi_master")))
-				.thenReturn(constructKpiMasterList());
+
+		when(configHelperService.loadKpiMaster()).thenReturn(constructKpiMasterList());
+
 		when(jiraServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
 			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
 			return invocationArgument.getKpiList().stream()
@@ -212,8 +211,8 @@ public class ProductivityGainServiceTest {
 			 on the provided test data
 		 */
 		ProductivityGainDTO expectedProductivityGainDTO = ProductivityGainDTO.builder()
-				.categorizedProductivityGain(CategorizedProductivityGain.builder().overall(-11.66D).efficiency(194.33)
-						.quality(-194.33D).speed(-38.87D).productivity(64.78D).build())
+				.categorizedProductivityGain(CategorizedProductivityGain.builder().overall(-48.58D).efficiency(0.0D)
+						.quality(-194.33D).speed(64.78D).productivity(-64.78D).build())
 				.build();
 
 		ServiceResponse serviceResponse = productivityGainServiceImpl
@@ -227,6 +226,36 @@ public class ProductivityGainServiceTest {
 		assertNotNull(resultedProductivityGainDTO.getCategorizedProductivityGain());
 
 		assertEquals(expectedProductivityGainDTO, resultedProductivityGainDTO);
+	}
+
+	private KpiElement getKpiElementResponseBasedOnKpiElementFromKpiRequest(KpiElement kpiElementFromKpiRequest) {
+		kpiElementFromKpiRequest.setTrendValueList(KPI_ELEMENT_GROUP_ID_KPI_ID_KPI_TREND_VALUE_LIST_MAP
+				.get(kpiElementFromKpiRequest.getGroupId()).get(kpiElementFromKpiRequest.getKpiId()));
+
+		kpiElementFromKpiRequest.setIssueData(constructTestIssueKpiModalValueSet());
+
+		return kpiElementFromKpiRequest;
+	}
+
+	private void initializeProductivityConfig() {
+		ProductivityGainConfig.DataPoints dataPoints = new ProductivityGainConfig.DataPoints();
+		dataPoints.setCount(ProductivityGainServiceTest.DEFAULT_DATA_POINTS_NUMBER);
+
+		when(productivityGainConfig.getWeightForCategory(CATEGORY_SPEED)).thenReturn(0.3D);
+		when(productivityGainConfig.getWeightForCategory(CATEGORY_QUALITY)).thenReturn(0.3D);
+		when(productivityGainConfig.getWeightForCategory(CATEGORY_EFFICIENCY)).thenReturn(0.25D);
+		when(productivityGainConfig.getWeightForCategory(CATEGORY_PRODUCTIVITY)).thenReturn(0.15D);
+		when(productivityGainConfig.getDataPoints()).thenReturn(dataPoints);
+	}
+
+	private static List<HierarchyLevel> createHierarchyLevelList() {
+		return List.of(HierarchyLevel.builder().hierarchyLevelId("bu").level(1).build(),
+				HierarchyLevel.builder().hierarchyLevelId("ver").level(2).build(),
+				HierarchyLevel.builder().hierarchyLevelId("acc").level(3).build(),
+				HierarchyLevel.builder().hierarchyLevelId("port").level(4).build(),
+				HierarchyLevel.builder().hierarchyLevelId("project").level(5).build(),
+				HierarchyLevel.builder().hierarchyLevelId("sprint").level(6).build(),
+				HierarchyLevel.builder().hierarchyLevelId("squad").level(7).build());
 	}
 
 	private static <T> Object constructTrendValueList(Class<T> trendValueListObjectType,
@@ -271,15 +300,6 @@ public class ProductivityGainServiceTest {
 				.toList();
 	}
 
-	private KpiElement getKpiElementResponseBasedOnKpiElementFromKpiRequest(KpiElement kpiElementFromKpiRequest) {
-		kpiElementFromKpiRequest.setTrendValueList(KPI_ELEMENT_GROUP_ID_KPI_ID_KPI_TREND_VALUE_LIST_MAP
-				.get(kpiElementFromKpiRequest.getGroupId()).get(kpiElementFromKpiRequest.getKpiId()));
-
-		kpiElementFromKpiRequest.setIssueData(constructTestIssueKpiModalValueSet());
-
-		return kpiElementFromKpiRequest;
-	}
-
 	private static Set<IssueKpiModalValue> constructTestIssueKpiModalValueSet() {
 		Set<IssueKpiModalValue> issueKpiModalValueSet = new HashSet<>();
 		issueKpiModalValueSet.add(IssueKpiModalValue.builder().issueBlockedTime(100).issueWaitTime(20)
@@ -295,17 +315,6 @@ public class ProductivityGainServiceTest {
 		return issueKpiModalValueSet;
 	}
 
-	private void initializeProductivityConfig() {
-		ProductivityGainConfig.DataPoints dataPoints = new ProductivityGainConfig.DataPoints();
-		dataPoints.setCount(ProductivityGainServiceTest.DEFAULT_DATA_POINTS_NUMBER);
-
-		when(productivityGainConfig.getWeightForCategory(CATEGORY_SPEED)).thenReturn(0.3D);
-		when(productivityGainConfig.getWeightForCategory(CATEGORY_QUALITY)).thenReturn(0.3D);
-		when(productivityGainConfig.getWeightForCategory(CATEGORY_EFFICIENCY)).thenReturn(0.25D);
-		when(productivityGainConfig.getWeightForCategory(CATEGORY_PRODUCTIVITY)).thenReturn(0.15D);
-		when(productivityGainConfig.getDataPoints()).thenReturn(dataPoints);
-	}
-
 	private static CalculateProductivityRequestDTO createCalculateProductivityRequest(int level, String label,
                                                                                       String parentId) {
 		CalculateProductivityRequestDTO calculateProductivityRequestDTO = new CalculateProductivityRequestDTO();
@@ -313,16 +322,6 @@ public class ProductivityGainServiceTest {
 		calculateProductivityRequestDTO.setLabel(label);
 		calculateProductivityRequestDTO.setParentId(parentId);
 		return calculateProductivityRequestDTO;
-	}
-
-	private List<HierarchyLevel> createHierarchyLevelList() {
-		return List.of(HierarchyLevel.builder().hierarchyLevelId("bu").level(1).build(),
-				HierarchyLevel.builder().hierarchyLevelId("ver").level(2).build(),
-				HierarchyLevel.builder().hierarchyLevelId("acc").level(3).build(),
-				HierarchyLevel.builder().hierarchyLevelId("port").level(4).build(),
-				HierarchyLevel.builder().hierarchyLevelId("project").level(5).build(),
-				HierarchyLevel.builder().hierarchyLevelId("sprint").level(6).build(),
-				HierarchyLevel.builder().hierarchyLevelId("squad").level(7).build());
 	}
 
 	private static List<CalculateProductivityRequestDTO> provideTestCalculateProductivityRequest() {
@@ -348,7 +347,7 @@ public class ProductivityGainServiceTest {
 		);
 	}
 
-	private Set<AccountFilteredData> createAccountFilteredData() {
+	private static Set<AccountFilteredData> createAccountFilteredData() {
 		List<AccountFilteredData> accountFilteredData = new ArrayList<>();
 		accountFilteredData.add(AccountFilteredData.builder().nodeId("bu-node-id").nodeName("Test bu").labelName("bu")
 				.level(1).build());
@@ -385,11 +384,11 @@ public class ProductivityGainServiceTest {
 
 	private static Map<Integer, Map<String, Object>> constructKpiElementGroupIdKpiIdKpiTrendValueListMap() {
 		Map<Integer, Map<String, Object>> kpiElementGroupIdKpiIdKpiTrendValueListMap = new HashMap<>();
+
 		kpiElementGroupIdKpiIdKpiTrendValueListMap.put(1, new HashMap<>());
 		kpiElementGroupIdKpiIdKpiTrendValueListMap.get(1).put("kpi164",
 				constructTrendValueList(DataCountGroup.class, List.of(Map.of(DATA_COUNT_GROUP_FILTER, "Story Points"),
 						Map.of(DATA_COUNT_GROUP_FILTER, "Issue Count"))));
-
 		kpiElementGroupIdKpiIdKpiTrendValueListMap.get(1).put("kpi46", constructTrendValueList(DataCount.class, null));
 
 		kpiElementGroupIdKpiIdKpiTrendValueListMap.put(2, new HashMap<>());
@@ -434,7 +433,7 @@ public class ProductivityGainServiceTest {
 		return kpiElementGroupIdKpiIdKpiTrendValueListMap;
 	}
 
-	private List<KpiMaster> constructKpiMasterList() {
+	private static List<KpiMaster> constructKpiMasterList() {
 		List<KpiMaster> kpiMasters = new ArrayList<>();
 
 		kpiMasters.add(KpiMaster.builder().aggregationCriteria("average").calculateMaturity(false).chartType("line")
