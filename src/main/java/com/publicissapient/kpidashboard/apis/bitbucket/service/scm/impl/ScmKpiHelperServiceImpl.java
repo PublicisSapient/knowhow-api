@@ -98,7 +98,7 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	/**
 	 * Builds a MongoDB filter for processor items based on SCM tools configured for
 	 * the project.
-	 * 
+	 *
 	 * @param projectBasicConfigId
 	 *            Project configuration ID
 	 * @return BasicDBList filter for processor items

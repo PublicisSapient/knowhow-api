@@ -1,20 +1,3 @@
-/*
- *   Copyright 2014 CapitalOne, LLC.
- *   Further development Copyright 2022 Sapient Corporation.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -38,7 +21,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -46,6 +29,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,12 +43,10 @@ import java.util.Set;
 
 @Slf4j
 @Service
-public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final String MR_COUNT = "No of PRs";
 	private static final String ASSIGNEE_SET = "assigneeSet";
-	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
-	private static final List<String> DEFECT_KEYWORDS = List.of("fix", "bug", "repair", "defect");
+	private static final String COMMITS_LIST = "commitsList";
 
 	@Autowired
 	private ConfigHelperService configHelperService;
@@ -73,7 +56,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 	@Override
 	public String getQualifierType() {
-		return KPICode.DEFECT_RATE.name();
+		return KPICode.INNOVATION_RATE.name();
 	}
 
 	@Override
@@ -86,10 +69,10 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.DEFECT_RATE);
+		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.INNOVATION_RATE);
 
 		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.DEFECT_RATE);
+				KPICode.INNOVATION_RATE);
 		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
 		return kpiElement;
 	}
@@ -127,7 +110,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode),
 				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) resultmap.get(MERGE_REQUEST_LIST);
+		List<ScmCommits> mergeRequests = (List<ScmCommits>) resultmap.get(COMMITS_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultmap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
@@ -142,13 +125,13 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
 
-			List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream()
+			List<ScmCommits> filteredCommitsList = mergeRequests.stream()
 					.filter(request -> DateUtil.isWithinDateTimeRange(
-							DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate()),
+							DateUtil.convertMillisToLocalDateTime(request.getCommitTimestamp()),
 							weekRange.getStartDateTime(), weekRange.getEndDateTime()))
 					.toList();
 
-			scmTools.forEach(tool -> processToolData(tool, filteredMergeRequests, assignees, aggregatedDataMap,
+			scmTools.forEach(tool -> processToolData(tool, filteredCommitsList, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
@@ -158,7 +141,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
+	private void processToolData(Tool tool, List<ScmCommits> commitsList, Set<Assignee> assignees,
 			Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
 			String dateLabel, String projectName) {
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
@@ -168,65 +151,62 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> matchingRequests = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
+		List<ScmCommits> matchingCommits = DeveloperKpiHelper.filterCommitsForBranch(commitsList, tool);
 
-		long defectMergeRequestsCount = matchingRequests.stream()
-				.filter(mergeRequest -> mergeRequest.getTitle() != null && DEFECT_KEYWORDS.stream()
-						.anyMatch(keyword -> mergeRequest.getTitle().toLowerCase().contains(keyword.toLowerCase())))
-				.count();
+		double innovationRate = getInnovationRate(matchingCommits);
 
-		long totalMergeRequests = matchingRequests.size();
+		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, innovationRate, new HashMap<>(),
+				aggregatedDataMap);
 
-		double defectRate = totalMergeRequests > 0 ? (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
+		Map<String, List<ScmCommits>> userWiseScmCommits = DeveloperKpiHelper.groupCommitsByUser(matchingCommits);
 
-		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, defectRate,
-				Map.of(MR_COUNT, defectMergeRequestsCount), aggregatedDataMap);
-
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
-				.groupMergeRequestsByUser(matchingRequests);
-
-		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
-				dateLabel, aggregatedDataMap));
+		validationDataList.addAll(prepareUserValidationData(userWiseScmCommits, assignees, tool, projectName, dateLabel,
+				aggregatedDataMap));
 	}
 
-	private List<RepoToolValidationData> prepareUserValidationData(
-			Map<String, List<ScmMergeRequests>> userWiseMergeRequests, Set<Assignee> assignees, Tool tool,
-			String projectName, String dateLabel, Map<String, List<DataCount>> aggregatedDataMap) {
-		return userWiseMergeRequests.entrySet().stream().map(entry -> {
+	private double getInnovationRate(List<ScmCommits> commits) {
+		return commits.stream().mapToDouble(commit -> {
+			long linesOfCodeChanged = commit.getChangedLines();
+			return linesOfCodeChanged != 0
+					? BigDecimal.valueOf((commit.getAddedLines() * 100.0 / linesOfCodeChanged) / 10)
+							.setScale(2, RoundingMode.HALF_UP).doubleValue()
+					: 0.0;
+		}).average().orElse(0.0);
+	}
+
+	private List<RepoToolValidationData> prepareUserValidationData(Map<String, List<ScmCommits>> userWiseCommits,
+			Set<Assignee> assignees, Tool tool, String projectName, String dateLabel,
+			Map<String, List<DataCount>> aggregatedDataMap) {
+		return userWiseCommits.entrySet().stream().map(entry -> {
 			String userEmail = entry.getKey();
-			List<ScmMergeRequests> userMergeRequests = entry.getValue();
+			List<ScmCommits> userCommits = entry.getValue();
 
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			long defectMergeRequestsCount = userMergeRequests.stream()
-					.filter(mergeRequest -> mergeRequest.getTitle() != null && DEFECT_KEYWORDS.stream()
-							.anyMatch(keyword -> mergeRequest.getTitle().toLowerCase().contains(keyword.toLowerCase())))
-					.count();
-
-			long totalMergeRequests = userMergeRequests.size();
-
-			double defectRate = totalMergeRequests > 0 ? (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
+			double innovationRate = getInnovationRate(userCommits);
+			int addedLines = userCommits.stream().mapToInt(ScmCommits::getAddedLines).sum();
+			int changedLines = userCommits.stream().mapToInt(ScmCommits::getChangedLines).sum();
 
 			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, defectRate,
-					Map.of(MR_COUNT, defectMergeRequestsCount), aggregatedDataMap);
+			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, innovationRate, new HashMap<>(),
+					aggregatedDataMap);
 
-			return createValidationData(projectName, tool, developerName, dateLabel, defectRate,
-					defectMergeRequestsCount, totalMergeRequests);
+			return createValidationData(projectName, tool, developerName, dateLabel, innovationRate, addedLines,
+					changedLines);
 		}).toList();
 	}
 
 	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, double defectRate, long defectMrCount, long mrCount) {
+			String dateLabel, double innovationRate, long addedLines, long changedLines) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
 		validationData.setRepoUrl(tool.getRepositoryName());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
-		validationData.setDefectRate(defectRate);
-		validationData.setKpiPRs(defectMrCount);
-		validationData.setMrCount(mrCount);
+		validationData.setInnovationRate(innovationRate);
+		validationData.setAddedLines(addedLines);
+		validationData.setChangedLines(changedLines);
 		return validationData;
 	}
 
@@ -236,7 +216,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 			List<KPIExcelData> excelData = new ArrayList<>();
 			KPIExcelUtility.populateDefectRate(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_RATE.getColumns());
+			kpiElement.setExcelColumns(KPIExcelColumn.INNOVATION_RATE.getColumns());
 		}
 	}
 
@@ -256,7 +236,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		Map<String, Object> resultMap = new HashMap<>();
 
 		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		resultMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		resultMap.put(COMMITS_LIST, getCommitsFromBaseClass());
 		return resultMap;
 	}
 

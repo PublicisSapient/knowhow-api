@@ -171,6 +171,12 @@ public final class DeveloperKpiHelper {
 				.toList();
 	}
 
+    public static List<ScmCommits> filterCommitsForBranch(List<ScmCommits> commitsList, Tool tool) {
+        return commitsList.stream()
+                .filter(commits -> commits.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
+                .toList();
+    }
+
 	/**
 	 * Groups merge requests by author email. Filters out requests with null author
 	 * or email.
@@ -186,6 +192,14 @@ public final class DeveloperKpiHelper {
 				.collect(Collectors.groupingBy(
 						request -> request.getAuthorId().getEmail() != null ? request.getAuthorId().getEmail()
 								: request.getAuthorId().getUsername()));
+	}
+
+	public static Map<String, List<ScmCommits>> groupCommitsByUser(List<ScmCommits> commits) {
+		return commits.stream().filter(commit -> commit.getCommitAuthor() != null
+				&& (commit.getCommitAuthor().getEmail() != null || commit.getCommitAuthor().getUsername() != null))
+				.collect(Collectors.groupingBy(
+						commit -> commit.getCommitAuthor().getEmail() != null ? commit.getCommitAuthor().getEmail()
+								: commit.getCommitAuthor().getUsername()));
 	}
 
 	/**
