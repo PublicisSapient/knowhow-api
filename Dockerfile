@@ -23,7 +23,7 @@ ENV CONFIG_LOCATION="/app/properties/customapi.properties" \
 WORKDIR /app
 
 # Copy your application files to the container
-ARG JAR_FILE
+ARG JAR_FILE=target/customapi-exec.jar
 ADD ${JAR_FILE} /app/customapi.jar
 
 COPY src/main/resources/application.properties /app/properties/customapi.properties
