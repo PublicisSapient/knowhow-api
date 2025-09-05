@@ -112,7 +112,7 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi65");
 		Map<String, List<String>> selectedMap = kpiRequest.getSelectedMap();
-		selectedMap.put(CommonConstant.date, Arrays.asList("DAYS"));
+		selectedMap.put(CommonConstant.DATE, Arrays.asList("DAYS"));
 		kpiRequest.setSelectedMap(selectedMap);
 		kpiRequest.setLabel("PROJECT");
 		String[] ids = {"5"};

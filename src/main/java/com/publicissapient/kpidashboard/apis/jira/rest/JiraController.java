@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.jira.rest;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.collections4.CollectionUtils;

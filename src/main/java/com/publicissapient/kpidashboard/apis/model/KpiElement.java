@@ -35,6 +35,9 @@ import com.publicissapient.kpidashboard.common.model.application.MaturityLevel;
 import com.publicissapient.kpidashboard.common.model.application.TotalDefectAgingResponse;
 import com.publicissapient.kpidashboard.common.model.application.ValidationData;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /** Represents Kpi element. KPI detail. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KpiElement implements Serializable { // NOPMD
@@ -108,6 +111,10 @@ public class KpiElement implements Serializable { // NOPMD
 
 	private transient IterationKpiFilters filters;
 	private String sprint;
+
+	@Getter
+	@Setter
+	private String sprintId;
 	private List<String> modalHeads;
 
 	@JsonIgnore
