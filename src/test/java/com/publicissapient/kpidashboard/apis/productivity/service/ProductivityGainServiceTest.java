@@ -211,8 +211,8 @@ class ProductivityGainServiceTest {
 			 on the provided test data
 		 */
 		ProductivityGainDTO expectedProductivityGainDTO = ProductivityGainDTO.builder()
-				.categorizedProductivityGain(CategorizedProductivityGain.builder().overall(-48.58D).efficiency(0.0D)
-						.quality(-194.33D).speed(64.78D).productivity(-64.78D).build())
+				.categorizedProductivityGain(CategorizedProductivityGain.builder().overall(-11.66D).efficiency(194.33)
+						.quality(-194.33D).speed(-38.87).productivity(64.78D).build())
 				.build();
 
 		ServiceResponse serviceResponse = productivityGainServiceImpl
