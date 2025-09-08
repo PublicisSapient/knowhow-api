@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.util;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -32,9 +33,11 @@ import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.bson.types.ObjectId;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -272,4 +275,24 @@ public final class DeveloperKpiHelper {
 			dataCounts.add(newDataCount);
 		}
 	}
+
+    public static LocalDate convertStringToDate(String dateString) {
+        return LocalDate.parse(dateString.split("T")[0]);
+    }
+
+    public static CustomDateRange getStartAndEndDate(KpiRequest kpiRequest) {
+        int dataPoint = (int) ObjectUtils.defaultIfNull(kpiRequest.getXAxisDataPoints(), 5) + 1;
+        CustomDateRange cdr = new CustomDateRange();
+        cdr.setEndDate(DateUtil.getTodayDate());
+        LocalDate startDate = null;
+        if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
+            startDate = DateUtil.getTodayDate().minusWeeks(dataPoint);
+        } else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
+            startDate = DateUtil.getTodayDate().minusMonths(dataPoint);
+        } else {
+            startDate = DateUtil.getTodayDate().minusDays(dataPoint);
+        }
+        cdr.setStartDate(startDate);
+        return cdr;
+    }
 }

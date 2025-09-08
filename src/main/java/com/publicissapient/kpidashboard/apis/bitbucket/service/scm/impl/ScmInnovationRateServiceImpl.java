@@ -214,7 +214,7 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populateDefectRate(validationDataList, excelData);
+			KPIExcelUtility.populateInnovationRateExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.INNOVATION_RATE.getColumns());
 		}
@@ -242,6 +242,6 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.DEFECT_RATE.getKpiId());
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.INNOVATION_RATE.getKpiId());
 	}
 }
