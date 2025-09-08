@@ -30,12 +30,14 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author anisingh4
  */
 @Slf4j
+@Getter
 public class KpiMasterDataFactory {
 
 	private static final String FILE_PATH_KPI_LIST = "/json/default/kpi_master.json";
@@ -64,8 +66,8 @@ public class KpiMasterDataFactory {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
 			kpiList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KpiMaster>>() {
-					});
+                    new TypeReference<>() {
+                    });
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}
@@ -79,10 +81,6 @@ public class KpiMasterDataFactory {
 			mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		}
-	}
-
-	public List<KpiMaster> getKpiList() {
-		return kpiList;
 	}
 
 	public List<KpiMaster> getSpecificKpis(List<String> kpis) {

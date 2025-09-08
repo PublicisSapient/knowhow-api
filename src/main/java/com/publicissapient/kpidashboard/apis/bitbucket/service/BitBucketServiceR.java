@@ -294,7 +294,7 @@ public class BitBucketServiceR {
             log.warn("Error cleaning up ThreadLocal data: {}", e.getMessage());
         }
     }
-    
+
 
     /**
      * Static methods to access ThreadLocal data from other classes
@@ -375,19 +375,18 @@ public class BitBucketServiceR {
 		}
 
 	/**
-	 * This method is called when the request for kpi is done from exposed API
-	 *
-	 * @param kpiRequest
-	 *            JIRA KPI request true if flow for precalculated, false for direct
-	 *            flow.
-	 * @return List of KPI data
-	 * @throws EntityNotFoundException
-	 *             EntityNotFoundException
-	 */
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest) throws EntityNotFoundException {
+     * This method is called when the request for kpi is done from exposed API
+     *
+     * @param kpiRequest JIRA KPI request true if flow for precalculated, false for direct
+     *                   flow.
+     * @param withCache
+     * @return List of KPI data
+     * @throws EntityNotFoundException EntityNotFoundException
+     */
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache) throws EntityNotFoundException {
 		boolean originalReferFromProjectCache = referFromProjectCache;
 		try {
-			referFromProjectCache = false;
+			referFromProjectCache = withCache;
 			return process(kpiRequest);
 		} finally {
 			referFromProjectCache = originalReferFromProjectCache;
