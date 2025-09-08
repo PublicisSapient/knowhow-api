@@ -18,11 +18,20 @@
 
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
-import static com.publicissapient.kpidashboard.apis.util.IterationKpiHelper.*;
+import static com.publicissapient.kpidashboard.apis.util.IterationKpiHelper.getFilteredJiraIssue;
+import static com.publicissapient.kpidashboard.apis.util.IterationKpiHelper.getFilteredJiraIssueHistory;
+import static com.publicissapient.kpidashboard.apis.util.IterationKpiHelper.transformIterSprintdetail;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -35,7 +44,15 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
-import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.apis.model.Filter;
+import com.publicissapient.kpidashboard.apis.model.FilterGroup;
+import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
+import com.publicissapient.kpidashboard.apis.model.KpiData;
+import com.publicissapient.kpidashboard.apis.model.KpiDataGroup;
+import com.publicissapient.kpidashboard.apis.model.KpiDataSummary;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
@@ -172,6 +189,7 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 				data.setWastage(CommonUtils.convertIntoDays(jiraIssueBlockedTime + jiraIssueWaitedTime));
 			});
 
+			kpiElement.setSprintId(sprintLeafNode.getSprintFilter().getId());
 			kpiElement.setSprint(sprintLeafNode.getName());
 			kpiElement.setModalHeads(KPIExcelColumn.WASTAGE.getColumns());
 			kpiElement.setIssueData(new HashSet<>(issueKpiModalObject.values()));

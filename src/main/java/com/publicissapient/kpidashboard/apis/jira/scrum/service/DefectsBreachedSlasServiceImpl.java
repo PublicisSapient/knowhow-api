@@ -525,9 +525,9 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 			Map<String, List<String>> priorityGeneralValuesMap = getCustomApiConfig().getPriority();
 			List<String> generalPriorityValuesBasedOnExcludedPriorityList = new ArrayList<>();
 			fieldMapping.getExcludedDefectPrioritiesKPI195().forEach((String priority) -> {
-				if (priorityGeneralValuesMap.containsKey(priority.toLowerCase())) {
+				if (priorityGeneralValuesMap.containsKey(priority.toUpperCase())) {
 					generalPriorityValuesBasedOnExcludedPriorityList
-							.addAll(priorityGeneralValuesMap.get(priority.toLowerCase()));
+							.addAll(priorityGeneralValuesMap.get(priority.toUpperCase()));
 				}
 			});
 			criteria = criteria.and(JiraFeature.DEFECT_PRIORITY.getFieldValueInFeature())
@@ -686,10 +686,9 @@ public class DefectsBreachedSlasServiceImpl extends JiraKPIService<Double, List<
 				.slaBreached(breachedSlaFlagString);
 
 		Duration resolutionTime = calculateResolutionTimeForDefect(jiraDefectIssueDataForKPI195);
-		long totalSeconds = resolutionTime.getSeconds();
-		long days = (totalSeconds / (24 * 3600));
-		long hours = ((totalSeconds / (24 * 3600)) / 3600);
-		long minutes = ((totalSeconds % 3600) / 60);
+		long days = resolutionTime.toDays();
+		long hours = resolutionTime.toHours() % 24;
+		long minutes = resolutionTime.toMinutes() % 60;
 
 		kpiExcelDataBuilder.resolutionTime(String.format("%d days %d hours %d minutes", days, hours, minutes));
 		kpiExcelDataList.add(kpiExcelDataBuilder.build());
