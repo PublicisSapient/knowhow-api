@@ -129,7 +129,7 @@ public class BitBucketServiceR {
 
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);
 				kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
-				kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.date).get(0));
+				kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
                 responseList = executeParallelKpiProcessing(kpiRequest, filteredNode, filteredAccountDataList.get(0));
 
                 List<KpiElement> finalResponseList = responseList;
