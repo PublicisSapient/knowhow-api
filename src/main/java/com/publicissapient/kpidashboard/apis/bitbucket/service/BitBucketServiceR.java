@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
+import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
@@ -177,12 +178,12 @@ public class BitBucketServiceR {
             CompletableFuture<List<ScmCommits>> commitsFuture = CompletableFuture.supplyAsync(() ->
                     scmKpiHelperService.getCommitDetails(
                             accountData.getBasicProjectConfigId(),
-                            KpiDataHelper.getStartAndEndDate(kpiRequest)));
+                            DeveloperKpiHelper.getStartAndEndDate(kpiRequest)));
 
             CompletableFuture<List<ScmMergeRequests>> mergeRequestsFuture = CompletableFuture.supplyAsync(() ->
                     scmKpiHelperService.getMergeRequests(
                             accountData.getBasicProjectConfigId(),
-                            KpiDataHelper.getStartAndEndDate(kpiRequest)));
+                            DeveloperKpiHelper.getStartAndEndDate(kpiRequest)));
 
             CompletableFuture<List<Assignee>> assigneesFuture = CompletableFuture.supplyAsync(() ->
                     scmKpiHelperService.getScmUsers(accountData.getBasicProjectConfigId()));
