@@ -18,10 +18,15 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /** Class used for common response from All services */
+@Setter
+@Getter
 public class ServiceResponse extends BaseResponse {
 
-	private Object data;
+    private Object data;
 
 	// --- auth-N-auth required code starts here --------------
 	public ServiceResponse() {
@@ -36,23 +41,7 @@ public class ServiceResponse extends BaseResponse {
 	public ServiceResponse(Boolean isSuccess, String msg, Object data) {
 		super();
 		this.data = data;
-		setMessage(msg);
-		setSuccess(isSuccess);
-	}
-
-	/**
-	 * @return data
-	 */
-	public Object getData() {
-		return data;
-	}
-
-	/**
-	 * Sets data
-	 *
-	 * @param data
-	 */
-	public void setData(Object data) {
-		this.data = data;
+		super.setMessage(msg);
+		super.setSuccess(isSuccess);
 	}
 }
