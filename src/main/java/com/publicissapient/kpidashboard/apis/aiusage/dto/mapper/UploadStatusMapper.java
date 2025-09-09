@@ -20,14 +20,14 @@ package com.publicissapient.kpidashboard.apis.aiusage.dto.mapper;
 
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
 public class UploadStatusMapper {
-    public UploadStatusResponse mapToDto(AIUsageUploadStatus status) {
+    public UploadStatusResponse mapToDto(AIUsageRequest status) {
         return UploadStatusResponse.builder()
                 .requestId(UUID.fromString(status.getRequestId()))
                 .status(UploadStatus.valueOf(String.valueOf(status.getStatus())))

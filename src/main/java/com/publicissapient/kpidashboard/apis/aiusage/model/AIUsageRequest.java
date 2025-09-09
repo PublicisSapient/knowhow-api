@@ -34,7 +34,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 @Document(collection = "ai_usage_requests")
-public class AIUsageUploadStatus extends BasicModel {
+public class AIUsageRequest extends BasicModel {
     @Indexed
     private String requestId;
     private String userId;

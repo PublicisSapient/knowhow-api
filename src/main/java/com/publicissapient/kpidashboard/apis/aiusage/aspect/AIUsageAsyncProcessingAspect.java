@@ -23,7 +23,7 @@ import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.RequiredHeaders;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -60,7 +60,7 @@ public class AIUsageAsyncProcessingAspect {
 
     private final AIUsageService aiUsageService;
     private final AIUsageFileFormat aiUsageFileFormat;
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
     @AfterReturning(pointcut = "execution(* com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService.uploadFile(..))",
             returning = "response")
@@ -71,7 +71,7 @@ public class AIUsageAsyncProcessingAspect {
 
         log.info("Starting async processing for requestId: {}", requestId);
 
-        AIUsageUploadStatus uploadStatus = aiUsageService.findByRequestId(requestId);
+        AIUsageRequest uploadStatus = aiUsageService.findByRequestId(requestId);
         uploadStatus.setStatus(UploadStatus.PROCESSING);
 
         Map<String, String> headerMapping = aiUsageFileFormat.getHeaderToMappingMap();
@@ -96,10 +96,10 @@ public class AIUsageAsyncProcessingAspect {
                 while ((line = reader.readLine()) != null) {
                     totalRecordsCount.incrementAndGet();
                     String[] columns = line.split(COMMA_DELIMITER);
-                    AtomicInteger previousFailedRecordsCount = failedRecordsCount;
+                    int previousFailedRecordsCount = failedRecordsCount.get();
                     AIUsage aiUsage = createAIUsageFromColumns(columns, columnIndexMap, headerMapping, failedRecordsCount, uploadStatus);
                     upsertAIUsage(aiUsage);
-                    if (Objects.equals(previousFailedRecordsCount.get(), failedRecordsCount.get())) {
+                    if (Objects.equals(previousFailedRecordsCount, failedRecordsCount.get())) {
                         successfulRecordsCount.incrementAndGet();
                     }
                 }
@@ -127,7 +127,7 @@ public class AIUsageAsyncProcessingAspect {
 
     private AIUsage createAIUsageFromColumns(String[] columns, Map<String, Integer> columnIndexMap,
                                              Map<String, String> headerMapping, AtomicInteger failedRecordsCount,
-                                             AIUsageUploadStatus uploadStatus) {
+                                             AIUsageRequest uploadStatus) {
         AIUsage aiUsage = new AIUsage();
         for (Map.Entry<String, String> entry : headerMapping.entrySet()) {
             String csvColumn = entry.getKey();
