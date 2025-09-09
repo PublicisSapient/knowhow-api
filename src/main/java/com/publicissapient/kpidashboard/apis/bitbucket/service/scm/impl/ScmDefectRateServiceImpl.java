@@ -221,7 +221,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName());
+        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setDefectRate(defectRate);
