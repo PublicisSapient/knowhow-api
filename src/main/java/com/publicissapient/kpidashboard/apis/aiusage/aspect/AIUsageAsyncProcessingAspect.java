@@ -57,7 +57,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Validated
 public class AIUsageAsyncProcessingAspect {
     public static final String COMMA_DELIMITER = ",";
-    public static final String RECORD_PROCESSING_FAILED = "Record processing failed for requestId: {}. Cause: {}";
 
     private final AIUsageService aiUsageService;
     private final AIUsageFileFormat aiUsageFileFormat;
