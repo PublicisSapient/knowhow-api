@@ -138,7 +138,6 @@ public class BitBucketServiceR {
                         .filter(reqKpi -> finalResponseList.stream()
                                 .noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
                         .toList();
-                //todo:: check why this mutablity exption
                 List<KpiElement> mutableResponseList = new ArrayList<>(responseList);
                 mutableResponseList.addAll(missingKpis);
                 responseList = mutableResponseList;

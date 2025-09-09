@@ -20,11 +20,20 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.mock;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +58,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.bitbucket.factory.BitBucketKPIServiceFactory;
@@ -59,6 +69,7 @@ import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFact
 import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
 import com.publicissapient.kpidashboard.apis.enums.Filters;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
@@ -66,11 +77,13 @@ import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
+import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
@@ -234,6 +247,204 @@ public class BitBucketServiceRTest {
 		assertEquals(0, resultList.size());
 	}
 
+	@Test
+	public void testProcess_EmptyFilteredAccountData() throws Exception {
+		when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(new ArrayList<>());
+
+		List<KpiElement> resultList = bitBucketServiceR.process(kpiRequest);
+
+		assertEquals(1, resultList.size());
+		assertEquals(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(), resultList.get(0).getKpiId());
+	}
+
+	@Test
+	public void testProcess_ExceptionDuringProcessing() throws Exception {
+		when(filterHelperService.getFilteredBuilds(any(), anyString()))
+				.thenThrow(new RuntimeException("Test exception"));
+
+		assertThrows(HttpMessageNotWritableException.class, () -> {
+			bitBucketServiceR.process(kpiRequest);
+		});
+	}
+
+	@Test
+	public void testLoadDataIntoThreadLocal_Exception() throws Exception {
+		when(scmKpiHelperService.getCommitDetails(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenThrow(new RuntimeException("Database error"));
+
+		try (MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
+			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
+					.thenReturn(new CustomDateRange());
+
+			Method method = BitBucketServiceR.class.getDeclaredMethod("loadDataIntoThreadLocal",
+					AccountHierarchyData.class, KpiRequest.class);
+			method.setAccessible(true);
+
+			method.invoke(bitBucketServiceR, accountHierarchyDataList.get(0), kpiRequest);
+		}
+	}
+
+	@Test
+	public void testExecuteParallelKpiProcessing_KpiException() throws Exception {
+		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
+		when(scmKpiHelperService.getCommitDetails(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenReturn(List.of(new ScmCommits()));
+		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenReturn(List.of(new ScmMergeRequests()));
+		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
+
+		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+				.mockStatic(BitBucketKPIServiceFactory.class);
+				MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
+
+			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
+					.thenThrow(new ApplicationException(KpiRequest.class, "kpiRequestTrackerId", kpiRequest.getRequestTrackerId()));
+			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
+					.thenReturn(new CustomDateRange());
+
+			List<KpiElement> resultList = bitBucketServiceR.process(kpiRequest);
+
+			assertEquals(CommonConstant.KPI_FAILED, resultList.get(0).getResponseCode());
+		}
+	}
+
+	@Test
+	public void testShutdownExecutorService_Timeout() throws Exception {
+		ExecutorService mockExecutor = mock(ExecutorService.class);
+		when(mockExecutor.awaitTermination(60, TimeUnit.SECONDS)).thenReturn(false);
+		when(mockExecutor.awaitTermination(30, TimeUnit.SECONDS)).thenReturn(false);
+
+		Method method = BitBucketServiceR.class.getDeclaredMethod("shutdownExecutorService", ExecutorService.class);
+		method.setAccessible(true);
+		method.invoke(bitBucketServiceR, mockExecutor);
+
+		verify(mockExecutor).shutdown();
+		verify(mockExecutor).shutdownNow();
+	}
+
+	@Test
+	public void testShutdownExecutorService_Interrupted() throws Exception {
+		ExecutorService mockExecutor = mock(ExecutorService.class);
+		when(mockExecutor.awaitTermination(anyLong(), any(TimeUnit.class)))
+				.thenThrow(new InterruptedException("Test interruption"));
+
+		Method method = BitBucketServiceR.class.getDeclaredMethod("shutdownExecutorService", ExecutorService.class);
+		method.setAccessible(true);
+		method.invoke(bitBucketServiceR, mockExecutor);
+
+		verify(mockExecutor).shutdownNow();
+		assertTrue(Thread.currentThread().isInterrupted() || Thread.interrupted());
+	}
+
+	@Test
+	public void testCleanupThreadLocalData_Exception() throws Exception {
+		Method method = BitBucketServiceR.class.getDeclaredMethod("cleanupThreadLocalData");
+		method.setAccessible(true);
+
+		method.invoke(bitBucketServiceR);
+	}
+
+	@Test
+	public void testThreadLocalAccessors() {
+		List<ScmCommits> commits = Arrays.asList(new ScmCommits());
+		List<ScmMergeRequests> mergeRequests = Arrays.asList(new ScmMergeRequests());
+		List<Assignee> assignees = Arrays.asList(new Assignee());
+
+		try {
+			Field commitsField = BitBucketServiceR.class.getDeclaredField("THREAD_LOCAL_COMMITS");
+			commitsField.setAccessible(true);
+			ThreadLocal<List<ScmCommits>> threadLocalCommits = (ThreadLocal<List<ScmCommits>>) commitsField.get(null);
+			threadLocalCommits.set(commits);
+
+			Field mergeField = BitBucketServiceR.class.getDeclaredField("THREAD_LOCAL_MERGE_REQUESTS");
+			mergeField.setAccessible(true);
+			ThreadLocal<List<ScmMergeRequests>> threadLocalMerge = (ThreadLocal<List<ScmMergeRequests>>) mergeField
+					.get(null);
+			threadLocalMerge.set(mergeRequests);
+
+			Field assigneeField = BitBucketServiceR.class.getDeclaredField("THREAD_LOCAL_ASSIGNEES");
+			assigneeField.setAccessible(true);
+			ThreadLocal<List<Assignee>> threadLocalAssignees = (ThreadLocal<List<Assignee>>) assigneeField.get(null);
+			threadLocalAssignees.set(assignees);
+
+			List<ScmCommits> retrievedCommits = BitBucketServiceR.getThreadLocalCommits();
+			List<ScmMergeRequests> retrievedMergeRequests = BitBucketServiceR.getThreadLocalMergeRequests();
+			List<Assignee> retrievedAssignees = BitBucketServiceR.getThreadLocalAssignees();
+
+			assertNotNull(retrievedCommits);
+			assertNotNull(retrievedMergeRequests);
+			assertNotNull(retrievedAssignees);
+			assertEquals(1, retrievedCommits.size());
+			assertEquals(1, retrievedMergeRequests.size());
+			assertEquals(1, retrievedAssignees.size());
+
+			// Clean up
+			threadLocalCommits.remove();
+			threadLocalMerge.remove();
+			threadLocalAssignees.remove();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Test
+	public void testSetIntoApplicationCache() throws Exception {
+		KpiRequest kpiRequest = createKpiRequest(5);
+		List<KpiElement> responseList = new ArrayList<>();
+		responseList.add(new KpiElement());
+
+		Method method = BitBucketServiceR.class.getDeclaredMethod("setIntoApplicationCache", KpiRequest.class,
+				List.class, Integer.class, String[].class);
+		method.setAccessible(true);
+		method.invoke(bitBucketServiceR, kpiRequest, responseList, 1, new String[] { "project1" });
+
+		verify(cacheService, times(1)).setIntoApplicationCache(any(), any(), eq(KPISource.BITBUCKET.name()), eq(1),
+				any());
+	}
+
+	@Test
+	public void testGetBranchSubFilter_AllScenarios() {
+		BitBucketKPIService testService = new TestBitBucketKPIService();
+
+		// Test with repoSlug
+		Tool tool1 = new Tool();
+		tool1.setBranch("main");
+		tool1.setRepoSlug("repo-slug");
+		String result1 = testService.getBranchSubFilter(tool1, "Project1");
+		assertEquals("main -> repo-slug -> Project1", result1);
+
+		// Test with repositoryName
+		Tool tool2 = new Tool();
+		tool2.setBranch("develop");
+		tool2.setRepositoryName("repo-name");
+		String result2 = testService.getBranchSubFilter(tool2, "Project2");
+		assertEquals("develop -> repo-name -> Project2", result2);
+
+		// Test with neither repoSlug nor repositoryName
+		Tool tool3 = new Tool();
+		tool3.setBranch("feature");
+		String result3 = testService.getBranchSubFilter(tool3, "Project3");
+		assertEquals("feature -> Project3", result3);
+	}
+
+	@Test
+	public void testProcess_AuthorizedProjectsEmpty() throws Exception {
+		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean())).thenReturn(new ArrayList<>());
+
+		List<KpiElement> resultList = bitBucketServiceR.process(kpiRequest);
+
+		assertEquals(0, resultList.size());
+	}
+
+	@Test
+	public void testProcessWithExposedApiToken_NoCache() throws EntityNotFoundException {
+		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), eq(false))).thenReturn(accountHierarchyDataList);
+
+		List<KpiElement> resultList = bitBucketServiceR.processWithExposedApiToken(kpiRequest, false);
+
+		assertNotNull(resultList);
+	}
+
 	private KpiRequest createKpiRequest(int level) {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
@@ -263,4 +474,28 @@ public class BitBucketServiceRTest {
 		kpiElement.setChartType("gaugeChart");
 		kpiList.add(kpiElement);
 	}
+
+	private static class TestBitBucketKPIService extends BitBucketKPIService<Object, Object, Object> {
+
+        @Override
+        public String getQualifierType() {
+            return "TEST";
+        }
+
+        @Override
+        public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode) {
+            return kpiElement;
+        }
+
+        @Override
+        public Object calculateKPIMetrics(Object o) {
+            return null;
+        }
+
+        @Override
+        public Object fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
+            return null;
+        }
+
+    }
 }

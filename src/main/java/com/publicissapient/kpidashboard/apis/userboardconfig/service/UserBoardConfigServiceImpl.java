@@ -123,7 +123,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		defaultUserBoardConfigDTO.setUsername(configLevel == ConfigLevel.USER ? loggedInUser : null);
 
 //        TODO: need to remove this condition after testing
-        if(customApiConfig.isRepoToolEnabled() == true) {
+        if(customApiConfig.isRepoToolEnabled()) {
             handleDeveloperKpi = configHelperService.getProjectConfig(basicProjectConfigId) != null &&
                     configHelperService.getProjectConfig(basicProjectConfigId).isDeveloperKpiEnabled();
         }
