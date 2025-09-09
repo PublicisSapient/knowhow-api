@@ -37,10 +37,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.time.Instant;
 
 @Service
 @Slf4j
@@ -55,19 +55,24 @@ public class AIUsageService {
     private final UploadStatusMapper uploadStatusMapper;
 
     @Transactional
-    public InitiateUploadRequest uploadFile(@NonNull String filePath, UUID requestId, OffsetDateTime submittedAt) {
-        boolean isFileValid = isValidAIUsageCSVFile(filePath);
-
-        if (isFileValid) {
+    public InitiateUploadRequest uploadFile(@NonNull String filePath, UUID requestId, Instant submittedAt) {
+        try {
+            isValidAIUsageCSVFile(filePath);
             AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
                     .requestId(String.valueOf(requestId))
-                    .submittedAt(submittedAt.toInstant())
+                    .submittedAt(submittedAt)
                     .status(UploadStatus.PENDING)
                     .build();
             aiUsageUploadStatusRepository.save(receivedStatus);
 
             return new InitiateUploadRequest("File upload request accepted for processing", requestId, filePath);
-        } else {
+        } catch (IllegalArgumentException e) {
+            AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
+                    .requestId(String.valueOf(requestId))
+                    .submittedAt(submittedAt)
+                    .status(UploadStatus.FAILED)
+                    .build();
+            aiUsageUploadStatusRepository.save(receivedStatus);
             return new InitiateUploadRequest("Error while processing the file", requestId, filePath);
         }
     }
@@ -93,7 +98,7 @@ public class AIUsageService {
         aiUsageRepository.save(aiUsage);
     }
 
-    private boolean isValidAIUsageCSVFile(@NonNull String filePath) throws IllegalArgumentException {
+    private void isValidAIUsageCSVFile(@NonNull String filePath) throws IllegalArgumentException {
         File file = new File(filePath);
         if (!(file.exists() && file.canRead())) {
             throw new IllegalArgumentException("Unable to access file at location: " + filePath);
@@ -121,9 +126,7 @@ public class AIUsageService {
                 }
             }
         } catch (IOException e) {
-            log.error("Error reading CSV file: {}", e.getMessage());
+            throw new IllegalArgumentException("Error reading the file: " + e.getMessage());
         }
-
-        return true;
     }
 }

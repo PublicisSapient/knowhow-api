@@ -27,8 +27,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.UUID;
-import java.time.OffsetDateTime;
 
 @RestController
 @AllArgsConstructor
@@ -39,14 +39,14 @@ public class AIUsageController implements AIUsageAPI {
     @Override
     public InitiateUploadRequest uploadAiUsageData(@RequestBody InputAIUsage inputAIUsage) {
         UUID requestId = UUID.randomUUID();
-        OffsetDateTime submittedAt = OffsetDateTime.now();
+        Instant submittedAt = Instant.now();
         return aiUsageService.uploadFile(inputAIUsage.filePath(), requestId, submittedAt);
     }
 
     @Override
     public InitiateUploadRequest uploadAiUsageDataFile(@RequestPart MultipartFile file) {
         UUID requestId = UUID.randomUUID();
-        OffsetDateTime submittedAt = OffsetDateTime.now();
+        Instant submittedAt = Instant.now();
         String filePath = System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename();
         return aiUsageService.uploadFile(filePath, requestId, submittedAt);
     }

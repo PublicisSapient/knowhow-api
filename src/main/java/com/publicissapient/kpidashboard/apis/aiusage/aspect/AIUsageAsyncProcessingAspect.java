@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.aiusage.aspect;
 
 import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
+import com.publicissapient.kpidashboard.apis.aiusage.enumeration.RequiredHeaders;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
@@ -42,7 +43,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -137,25 +137,11 @@ public class AIUsageAsyncProcessingAspect {
             if (index != null && index < columns.length) {
                 String value = columns[index].trim();
                 try {
-                    switch (mappedField) {
-                        case "email":
-                            aiUsage.setEmail(value);
-                            break;
-                        case "promptCount":
-                            setPromptCount(aiUsage, value, failedRecordsCount, uploadStatus);
-                            break;
-                        case "businessUnit":
-                            aiUsage.setBusinessUnit(value);
-                            break;
-                        case "account":
-                            aiUsage.setAccount(value);
-                            break;
-                        case "vertical":
-                            aiUsage.setVertical(value);
-                            break;
-                        default:
-                            log.error("No mapping found for field: {}", mappedField);
-                            failedRecordsCount.incrementAndGet();
+                    RequiredHeaders field = RequiredHeaders.fromString(mappedField);
+                    if (field != null) {
+                        field.apply(aiUsage, value, failedRecordsCount, uploadStatus);
+                    } else {
+                        failedRecordsCount.incrementAndGet();
                     }
                 } catch (NumberFormatException e) {
                     log.error("Error parsing integer for field {}: {}", mappedField, e.getMessage());
@@ -170,27 +156,14 @@ public class AIUsageAsyncProcessingAspect {
     }
 
     private void upsertAIUsage(AIUsage aiUsage) {
-        Query query = new Query(Criteria.where("email").is(aiUsage.getEmail())
-                .and("businessUnit").is(aiUsage.getBusinessUnit()));
+        Query query = new Query(Criteria.where(RequiredHeaders.EMAIL.getName()).is(aiUsage.getEmail())
+                .and(RequiredHeaders.BUSINESS_UNIT.getName()).is(aiUsage.getBusinessUnit()));
 
         Update update = new Update();
-        update.set("promptCount", aiUsage.getPromptCount());
-        update.set("account", aiUsage.getAccount());
-        update.set("vertical", aiUsage.getVertical());
+        update.set(RequiredHeaders.PROMPT_COUNT.getName(), aiUsage.getPromptCount());
+        update.set(RequiredHeaders.ACCOUNT.getName(), aiUsage.getAccount());
+        update.set(RequiredHeaders.VERTICAL.getName(), aiUsage.getVertical());
 
         mongoTemplate.upsert(query, update, AIUsage.class);
     }
-
-    private void setPromptCount(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
-        try {
-            Integer integerValue = Integer.parseInt(value);
-            aiUsage.setPromptCount(integerValue);
-        } catch (NumberFormatException e) {
-            aiUsage.setPromptCount(null);
-            failedRecordsCount.incrementAndGet();
-            uploadStatus.setStatus(UploadStatus.FAILED);
-            log.error(RECORD_PROCESSING_FAILED, uploadStatus.getRequestId(), "Invalid promptCount value. Must be an integer.");
-        }
-    }
-
 }
