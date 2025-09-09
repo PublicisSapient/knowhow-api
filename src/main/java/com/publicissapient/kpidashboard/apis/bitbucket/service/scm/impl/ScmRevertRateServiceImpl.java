@@ -97,7 +97,6 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
@@ -111,10 +110,9 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 			return;
 		}
 
-		Map<String, Object> resultMap = fetchKPIDataFromDb(List.of(projectLeafNode),
-				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) resultMap.get(MERGE_REQUEST_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultMap.get(ASSIGNEE_SET));
+		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
@@ -181,7 +179,6 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 			List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			;
 			double userRevertRate = calculateRevertRate(userMergeRequests);
 			long userMrCount = userMergeRequests.size();
 			long revertedPRs = countRevertedPRs(userMergeRequests);
@@ -274,11 +271,11 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> scmDataMap = new HashMap<>();
 
-		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		resultMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return resultMap;
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
 	}
 
 	@Override

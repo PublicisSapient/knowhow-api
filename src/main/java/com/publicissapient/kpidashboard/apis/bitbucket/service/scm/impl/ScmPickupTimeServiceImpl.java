@@ -17,6 +17,24 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -30,7 +48,6 @@ import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
@@ -41,41 +58,21 @@ import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String MR_COUNT = "No of PRs";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	private final ConfigHelperService configHelperService;
+	private final KpiHelperService kpiHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -116,7 +113,6 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
@@ -131,10 +127,10 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 			return;
 		}
 
-		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode),
-				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) resultmap.get(MERGE_REQUEST_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultmap.get(ASSIGNEE_SET));
+		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+
+		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
@@ -190,7 +186,8 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, averagePickUpTime,
 				Map.of(MR_COUNT, totalMergeRequests), aggregatedDataMap);
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper.groupMergeRequestsByUser(matchingRequests);
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
+				.groupMergeRequestsByUser(matchingRequests);
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
 				dateLabel, aggregatedDataMap));
@@ -240,7 +237,8 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		LocalDateTime pickUpDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, pickUpDateTime);
-		validationData.setPickupTime((double) KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.00));
+		validationData
+				.setPickupTime((double) KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.00));
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
 		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
 		LocalDateTime pickUpDateTimeUTC = DateUtil.localDateTimeToUTC(pickUpDateTime);
@@ -273,11 +271,11 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> scmDataMap = new HashMap<>();
 
-		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		resultMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return resultMap;
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
 	}
 
 	@Override

@@ -18,6 +18,22 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -26,7 +42,11 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
-import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
@@ -37,16 +57,9 @@ import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,8 +69,8 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
-	private ConfigHelperService configHelperService;
-	private KpiHelperService kpiHelperService;
+	private final ConfigHelperService configHelperService;
+	private final KpiHelperService kpiHelperService;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -93,7 +106,7 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
+
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
@@ -108,10 +121,10 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 			return;
 		}
 
-		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode),
-				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) resultmap.get(MERGE_REQUEST_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultmap.get(ASSIGNEE_SET));
+		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+
+		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
@@ -127,7 +140,7 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 			List<ScmMergeRequests> mergedRequestsInRange = mergeRequests.stream()
 					.filter(request -> request.getMergedAt() != null)
 					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-                            weekRange.getStartDateTime(), weekRange.getEndDateTime()))
+							weekRange.getStartDateTime(), weekRange.getEndDateTime()))
 					.toList();
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
@@ -203,7 +216,7 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 
 		LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, mergeRequest.getMergedAt());
-		validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000));
+		validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.0));
 
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
 		// validationData.setMergeRequestComment(mergeRequest.getTitle());
@@ -261,11 +274,11 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> scmDataMap = new HashMap<>();
 
-		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		resultMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return resultMap;
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
 	}
 
 	@Override
