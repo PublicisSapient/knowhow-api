@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThrows;
@@ -28,6 +29,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
@@ -45,6 +47,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
+import org.apache.commons.lang3.SerializationUtils;
 import org.bson.types.ObjectId;
 import org.hamcrest.MatcherAssert;
 import org.junit.After;
@@ -298,7 +301,8 @@ public class BitBucketServiceRTest {
 				MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
 
 			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
-					.thenThrow(new ApplicationException(KpiRequest.class, "kpiRequestTrackerId", kpiRequest.getRequestTrackerId()));
+					.thenThrow(new ApplicationException(KpiElement.class, "kpiRequestTrackerId",
+							kpiRequest.getRequestTrackerId()));
 			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
 					.thenReturn(new CustomDateRange());
 
@@ -475,27 +479,158 @@ public class BitBucketServiceRTest {
 		kpiList.add(kpiElement);
 	}
 
+	@Test
+	public void testCalculateAllKPIAggregatedMetrics_Success() throws Exception {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		Node node = accountHierarchyDataList.get(0).getNode().get(kpiRequest.getLevel() - 1);
+
+		when(kpiHelperService.isToolConfigured(any(KPICode.class), any(KpiElement.class), any(Node.class)))
+				.thenReturn(true);
+
+		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+				.mockStatic(BitBucketKPIServiceFactory.class)) {
+			KpiElement responseKpi = new KpiElement();
+			responseKpi.setKpiId(kpiElement.getKpiId());
+			responseKpi.setKpiName("Test KPI");
+			responseKpi.setValue("100");
+
+			when(bitBucketKPIService.getKpiData(any(KpiRequest.class), any(KpiElement.class), any(Node.class)))
+					.thenReturn(responseKpi);
+			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
+					.thenReturn(bitBucketKPIService);
+
+			Method method = BitBucketServiceR.class.getDeclaredMethod("calculateAllKPIAggregatedMetrics",
+					KpiRequest.class, KpiElement.class, Node.class);
+			method.setAccessible(true);
+
+			KpiElement result = (KpiElement) method.invoke(bitBucketServiceR, kpiRequest, kpiElement, node);
+
+			assertEquals(CommonConstant.KPI_PASSED, result.getResponseCode());
+			assertEquals("100", result.getValue());
+			verify(kpiHelperService).isMandatoryFieldSet(any(KPICode.class), eq(result), any(Node.class));
+		}
+	}
+
+	@Test
+	public void testCalculateAllKPIAggregatedMetrics_NullNodeClone() throws Exception {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		Node node = mock(Node.class);
+
+		try (MockedStatic<SerializationUtils> serializationMock = Mockito.mockStatic(SerializationUtils.class);
+             MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+						.mockStatic(BitBucketKPIServiceFactory.class)) {
+
+			serializationMock.when(() -> SerializationUtils.clone(any())).thenReturn(null);
+			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
+					.thenReturn(bitBucketKPIService);
+
+			Method method = BitBucketServiceR.class.getDeclaredMethod("calculateAllKPIAggregatedMetrics",
+					KpiRequest.class, KpiElement.class, Node.class);
+			method.setAccessible(true);
+
+			KpiElement result = (KpiElement) method.invoke(bitBucketServiceR, kpiRequest, kpiElement, node);
+
+			assertNotEquals(CommonConstant.KPI_PASSED, result.getResponseCode());
+			verify(bitBucketKPIService, never()).getKpiData(any(), any(), any());
+		}
+	}
+
+	@Test
+	public void testCalculateAllKPIAggregatedMetrics_ToolNotConfigured() throws Exception {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		Node node = accountHierarchyDataList.get(0).getNode().get(kpiRequest.getLevel() - 1);
+
+		when(kpiHelperService.isToolConfigured(any(KPICode.class), any(KpiElement.class), any(Node.class)))
+				.thenReturn(false);
+
+		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+				.mockStatic(BitBucketKPIServiceFactory.class)) {
+			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
+					.thenReturn(bitBucketKPIService);
+
+			Method method = BitBucketServiceR.class.getDeclaredMethod("calculateAllKPIAggregatedMetrics",
+					KpiRequest.class, KpiElement.class, Node.class);
+			method.setAccessible(true);
+
+			KpiElement result = (KpiElement) method.invoke(bitBucketServiceR, kpiRequest, kpiElement, node);
+
+			assertNotEquals(CommonConstant.KPI_PASSED, result.getResponseCode());
+			verify(bitBucketKPIService, never()).getKpiData(any(), any(), any());
+		}
+	}
+
+	@Test
+	public void testCalculateAllKPIAggregatedMetrics_ApplicationException() throws Exception {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		Node node = accountHierarchyDataList.get(0).getNode().get(kpiRequest.getLevel() - 1);
+
+		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+				.mockStatic(BitBucketKPIServiceFactory.class)) {
+			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
+					.thenThrow(new ApplicationException(KpiElement.class, "field", "Test ApplicationException"));
+
+			Method method = BitBucketServiceR.class.getDeclaredMethod("calculateAllKPIAggregatedMetrics",
+					KpiRequest.class, KpiElement.class, Node.class);
+			method.setAccessible(true);
+
+			KpiElement result = (KpiElement) method.invoke(bitBucketServiceR, kpiRequest, kpiElement, node);
+
+			assertEquals(CommonConstant.KPI_FAILED, result.getResponseCode());
+		}
+	}
+
+	@Test
+	public void testCalculateAllKPIAggregatedMetrics_RuntimeException() throws Exception {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		Node node = accountHierarchyDataList.get(0).getNode().get(kpiRequest.getLevel() - 1);
+
+		when(kpiHelperService.isToolConfigured(any(KPICode.class), any(KpiElement.class), any(Node.class)))
+				.thenReturn(true);
+
+		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+				.mockStatic(BitBucketKPIServiceFactory.class)) {
+			when(bitBucketKPIService.getKpiData(any(), any(), any()))
+					.thenThrow(new RuntimeException("Test runtime exception"));
+			factoryMock.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(anyString()))
+					.thenReturn(bitBucketKPIService);
+
+			Method method = BitBucketServiceR.class.getDeclaredMethod("calculateAllKPIAggregatedMetrics",
+					KpiRequest.class, KpiElement.class, Node.class);
+			method.setAccessible(true);
+
+			KpiElement result = (KpiElement) method.invoke(bitBucketServiceR, kpiRequest, kpiElement, node);
+
+			assertEquals(CommonConstant.KPI_FAILED, result.getResponseCode());
+		}
+	}
+
 	private static class TestBitBucketKPIService extends BitBucketKPIService<Object, Object, Object> {
 
-        @Override
-        public String getQualifierType() {
-            return "TEST";
-        }
+		@Override
+		public String getQualifierType() {
+			return "TEST";
+		}
 
-        @Override
-        public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode) {
-            return kpiElement;
-        }
+		@Override
+		public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode) {
+			return kpiElement;
+		}
 
-        @Override
-        public Object calculateKPIMetrics(Object o) {
-            return null;
-        }
+		@Override
+		public Object calculateKPIMetrics(Object o) {
+			return null;
+		}
 
-        @Override
-        public Object fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-            return null;
-        }
+		@Override
+		public Object fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+				KpiRequest kpiRequest) {
+			return null;
+		}
 
-    }
+	}
 }
