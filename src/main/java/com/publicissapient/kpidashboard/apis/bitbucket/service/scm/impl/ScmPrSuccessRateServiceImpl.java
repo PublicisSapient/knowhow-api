@@ -133,11 +133,11 @@ public class ScmPrSuccessRateServiceImpl extends BitBucketKPIService<Double, Lis
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
+			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
 			List<ScmMergeRequests> mergeRequestsInRange = DeveloperKpiHelper
-					.filterMergeRequestsByUpdateDate(mergeRequests, weekRange);
+					.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
 			scmTools.forEach(tool -> processToolData(tool, mergeRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
 

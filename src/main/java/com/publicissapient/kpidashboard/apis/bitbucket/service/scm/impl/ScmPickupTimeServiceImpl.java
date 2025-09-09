@@ -141,14 +141,14 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
+			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
 			List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream()
 					.filter(request -> request.getPickedForReviewOn() != null)
 					.filter(request -> DateUtil.isWithinDateTimeRange(
 							DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
-							weekRange.getStartDateTime(), weekRange.getEndDateTime()))
+							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
 					.toList();
 
 			scmTools.forEach(tool -> processToolData(tool, filteredMergeRequests, assignees, aggregatedDataMap,

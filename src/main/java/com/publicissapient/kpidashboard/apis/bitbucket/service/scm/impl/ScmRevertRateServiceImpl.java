@@ -123,11 +123,11 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
+			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
 			List<ScmMergeRequests> mergedRequestsInRange = DeveloperKpiHelper
-					.filterMergeRequestsByUpdateDate(mergeRequests, weekRange);
+					.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
 
 			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
