@@ -28,6 +28,7 @@ import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageUploadStatusRepository;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -53,33 +55,31 @@ public class AIUsageService {
     private final UploadStatusMapper uploadStatusMapper;
 
     @Transactional
-    public InitiateUploadRequest uploadFile(String filePath, String requestId, OffsetDateTime submittedAt) {
-        if (!isFileAccessible(filePath)) {
-            throw new IllegalArgumentException("Unable to access file at location: " + filePath);
+    public InitiateUploadRequest uploadFile(@NonNull String filePath, UUID requestId, OffsetDateTime submittedAt) {
+        boolean isFileValid = isValidAIUsageCSVFile(filePath);
+
+        if (isFileValid) {
+            AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
+                    .requestId(String.valueOf(requestId))
+                    .submittedAt(submittedAt.toInstant())
+                    .status(UploadStatus.PENDING)
+                    .build();
+            aiUsageUploadStatusRepository.save(receivedStatus);
+
+            return new InitiateUploadRequest("File upload request accepted for processing", requestId, filePath);
+        } else {
+            return new InitiateUploadRequest("Error while processing the file", requestId, filePath);
         }
-        validateFileFormat(filePath);
-
-        validateCSVHeaders(filePath);
-
-        AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
-                .requestId(requestId)
-                .submittedAt(submittedAt.toInstant())
-                .status(UploadStatus.PENDING)
-                .userId(null)
-                .build();
-        aiUsageUploadStatusRepository.save(receivedStatus);
-
-        return new InitiateUploadRequest("File upload request accepted for processing", requestId, filePath);
     }
 
-    public UploadStatusResponse getProcessingStatus(String requestId) {
-        AIUsageUploadStatus uploadStatus = aiUsageUploadStatusRepository.findByRequestId(requestId).orElseThrow(
-                () -> new IllegalArgumentException("No upload status found for requestId: " + requestId));
+    public UploadStatusResponse getProcessingStatus(UUID requestId) {
+        AIUsageUploadStatus uploadStatus = aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))
+                .orElseThrow(() -> new IllegalArgumentException("No upload status found for requestId: " + requestId));
         return uploadStatusMapper.mapToDto(uploadStatus);
     }
 
-    public AIUsageUploadStatus findByRequestId(String requestId) {
-        return aiUsageUploadStatusRepository.findByRequestId(requestId).orElseThrow(
+    public AIUsageUploadStatus findByRequestId(UUID requestId) {
+        return aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId)).orElseThrow(
                 () -> new IllegalArgumentException("No upload status found for requestId: " + requestId));
     }
 
@@ -93,18 +93,16 @@ public class AIUsageService {
         aiUsageRepository.save(aiUsage);
     }
 
-    private boolean isFileAccessible(String filePath) {
+    private boolean isValidAIUsageCSVFile(@NonNull String filePath) throws IllegalArgumentException {
         File file = new File(filePath);
-        return file.exists() && file.canRead();
-    }
+        if (!(file.exists() && file.canRead())) {
+            throw new IllegalArgumentException("Unable to access file at location: " + filePath);
+        }
 
-    private void validateFileFormat(String filePath) {
-        if(filePath == null || !filePath.endsWith(".csv")) {
+        if(!filePath.endsWith(".csv")) {
             throw new IllegalArgumentException("Invalid file format. Only CSV files are accepted.");
         }
-    }
 
-    private void validateCSVHeaders(String filePath) throws IllegalArgumentException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String headerLine = reader.readLine();
             if (headerLine == null) {
@@ -125,5 +123,7 @@ public class AIUsageService {
         } catch (IOException e) {
             log.error("Error reading CSV file: {}", e.getMessage());
         }
+
+        return true;
     }
 }

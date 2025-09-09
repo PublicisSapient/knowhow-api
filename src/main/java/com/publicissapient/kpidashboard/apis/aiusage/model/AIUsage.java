@@ -22,6 +22,7 @@ import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -29,9 +30,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Document(collection = "ai_usage")
 public class AIUsage extends BasicModel {
+    @Indexed
     private String email;
     private Integer promptCount;
+    @Indexed
     private String businessUnit;
+    @Indexed
     private String account;
+    @Indexed
     private String vertical;
 }

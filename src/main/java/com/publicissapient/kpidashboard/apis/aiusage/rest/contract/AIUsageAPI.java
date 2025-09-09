@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.ws.rs.BadRequestException;
 import java.util.UUID;
@@ -37,7 +38,45 @@ public interface AIUsageAPI {
 
     @Operation(
             summary = "Upload CSV file for processing AI usage data of multiple hierarchy levels",
-            description = "Accepts a CSV file location and processes it asynchronously, returning a request ID for tracking." +
+            description = """
+                    Accepts a CSV file location and processes it asynchronously, returning a request ID for tracking.
+                    Predefined format (required CSV headers in the provided file): email, promptCount, businessUnit, vertical, account.
+                    Custom mapping of CSV headers to expected fields can be configured in application properties.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "202",
+                            description = "File upload request accepted for processing",
+                            content = @Content(schema = @Schema(implementation = InitiateUploadRequest.class),
+                                    examples = @ExampleObject(
+                                            name = "Accepted Response",
+                                            value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
+                                                    " \"filePath\":\"\"/absolute/path/to/your/file.csv\"\"," +
+                                                    " \"message\":\"\",Request accepted for processing\"}"
+                                    ))
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Bad request - Invalid input or file not accessible",
+                            content = @Content(schema = @Schema(implementation = BadRequestException.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(schema = @Schema(implementation = HttpServerErrorException.InternalServerError.class))
+                    )
+            }
+    )
+    @PostMapping("/ai-usage/upload/path")
+    InitiateUploadRequest uploadAiUsageData(
+            @Parameter(description = "Absolute path to the CSV file to be processed", required = true,
+                    example = "/absolute/path/to/your/file.csv")
+            @RequestBody InputAIUsage filePath
+    );
+
+    @Operation(
+            summary = "Upload CSV file for processing AI usage data via file upload",
+            description = "Accepts a CSV file via multipart upload and processes it asynchronously, returning a request ID for tracking." +
                     "Required CSV headers(case-sensitive) in the provided file: Email Address, PROMPT COUNT, BU Name, Industry, Client Name",
             responses = {
                     @ApiResponse(
@@ -46,9 +85,9 @@ public interface AIUsageAPI {
                             content = @Content(schema = @Schema(implementation = InitiateUploadRequest.class),
                                     examples = @ExampleObject(
                                             name = "Accepted Response",
-                                            value = "[{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
+                                            value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
                                                     " \"filePath\":\"\"/absolute/path/to/your/file.csv\"\"," +
-                                                    " \"message\":\"\",Request accepted for processing\"}]"
+                                                    " \"message\":\"\",Request accepted for processing\"}"
                                     ))
                     ),
                     @ApiResponse(
@@ -64,10 +103,9 @@ public interface AIUsageAPI {
             }
     )
     @PostMapping("/ai-usage/upload")
-    InitiateUploadRequest uploadAiUsageData(
-            @Parameter(description = "Absolute path to the CSV file to be processed", required = true,
-                    example = "/absolute/path/to/your/file.csv")
-            @RequestBody InputAIUsage filePath
+    InitiateUploadRequest uploadAiUsageDataFile(
+            @Parameter(description = "CSV file to be processed", required = true)
+            @RequestPart("file") MultipartFile file
     );
 
     @Operation(
@@ -80,13 +118,13 @@ public interface AIUsageAPI {
                             content = @Content(schema = @Schema(implementation = UploadStatusResponse.class),
                                     examples = @ExampleObject(
                                             name = "Example Response",
-                                            value = "[{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
+                                            value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
                                                     " \"status\":\"PROCESSING\"," +
                                                     " \"submittedAt\":\"2024-10-01T12:00:00Z\"," +
                                                     " \"completedAt\":null," +
                                                     " \"totalRecords\":100," +
                                                     " \"successfulRecords\":50," +
-                                                    " \"failedRecords\":5}]"
+                                                    " \"failedRecords\":5}"
                                     )
                             )
                     ),

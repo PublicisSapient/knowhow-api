@@ -18,16 +18,20 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
 import lombok.Builder;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Builder
 public record UploadStatusResponse(
-        String requestId,
+        UUID requestId,
         UploadStatus status,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss 'UTC'", timezone = "UTC")
         Instant submittedAt,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss 'UTC'", timezone = "UTC")
         Instant completedAt,
         int totalRecords,
         int successfulRecords,
