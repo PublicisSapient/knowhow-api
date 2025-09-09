@@ -121,13 +121,13 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(weekRange, duration);
+			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
 			List<ScmCommits> filteredCommitsList = mergeRequests.stream()
 					.filter(request -> DateUtil.isWithinDateTimeRange(
 							DateUtil.convertMillisToLocalDateTime(request.getCommitTimestamp()),
-							weekRange.getStartDateTime(), weekRange.getEndDateTime()))
+							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
 					.toList();
 
 			scmTools.forEach(tool -> processToolData(tool, filteredCommitsList, assignees, aggregatedDataMap,
