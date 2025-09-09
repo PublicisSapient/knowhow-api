@@ -192,7 +192,7 @@ public class ScmPrSuccessRateServiceImpl extends BitBucketKPIService<Double, Lis
 			RepoToolValidationData validationData = new RepoToolValidationData();
 			validationData.setProjectName(projectName);
 			validationData.setBranchName(tool.getBranch());
-			validationData.setRepoUrl(tool.getRepositoryName());
+            validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 			validationData.setDeveloperName(developerName);
 			validationData.setDate(dateLabel);
 

@@ -205,8 +205,8 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName());
-		validationData.setDeveloperName(developerName);
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+        validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setCommitCount(commitCount);
 		validationData.setMrCount(mrCount);
