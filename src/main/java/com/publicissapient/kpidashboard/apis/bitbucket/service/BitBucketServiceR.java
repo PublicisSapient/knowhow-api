@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -200,9 +201,13 @@ public class BitBucketServiceR {
                     scmMergeRequestList.size(),
                     assigneeList.size());
 
-        } catch (Exception e) {
+        } catch (ExecutionException | InterruptedException e) {
             log.error("[BITBUCKET][{}]. Error loading data into ThreadLocal: {}",
                     kpiRequest.getRequestTrackerId(), e.getMessage(), e);
+            // CHANGE: Re-interrupt the thread to preserve interrupted status
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
