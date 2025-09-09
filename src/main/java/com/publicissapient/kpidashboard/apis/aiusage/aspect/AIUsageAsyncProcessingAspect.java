@@ -42,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -56,6 +57,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Validated
 public class AIUsageAsyncProcessingAspect {
     public static final String COMMA_DELIMITER = ",";
+    public static final String RECORD_PROCESSING_FAILED = "Record processing failed for requestId: {}. Cause: {}";
 
     private final AIUsageService aiUsageService;
     private final AIUsageFileFormat aiUsageFileFormat;
@@ -66,11 +68,11 @@ public class AIUsageAsyncProcessingAspect {
     @Transactional
     public void processFileAsync(@NotNull @Valid InitiateUploadRequest response) {
         String filePath = response.filePath();
-        UUID requestId = UUID.fromString(response.requestId());
+        UUID requestId = response.requestId();
 
         log.info("Starting async processing for requestId: {}", requestId);
 
-        AIUsageUploadStatus uploadStatus = aiUsageService.findByRequestId(String.valueOf(requestId));
+        AIUsageUploadStatus uploadStatus = aiUsageService.findByRequestId(requestId);
         uploadStatus.setStatus(UploadStatus.PROCESSING);
 
         Map<String, String> headerMapping = aiUsageFileFormat.getHeaderToMappingMap();
@@ -96,8 +98,7 @@ public class AIUsageAsyncProcessingAspect {
                     totalRecordsCount.incrementAndGet();
                     String[] columns = line.split(COMMA_DELIMITER);
                     AtomicInteger previousFailedRecordsCount = failedRecordsCount;
-                    AIUsage aiUsage = createAIUsageFromColumns(columns, columnIndexMap, headerMapping, failedRecordsCount);
-                    log.info(String.valueOf(successfulRecordsCount));
+                    AIUsage aiUsage = createAIUsageFromColumns(columns, columnIndexMap, headerMapping, failedRecordsCount, uploadStatus);
                     upsertAIUsage(aiUsage);
                     if (Objects.equals(previousFailedRecordsCount.get(), failedRecordsCount.get())) {
                         successfulRecordsCount.incrementAndGet();
@@ -126,7 +127,8 @@ public class AIUsageAsyncProcessingAspect {
     }
 
     private AIUsage createAIUsageFromColumns(String[] columns, Map<String, Integer> columnIndexMap,
-                                             Map<String, String> headerMapping, AtomicInteger failedRecordsCount) {
+                                             Map<String, String> headerMapping, AtomicInteger failedRecordsCount,
+                                             AIUsageUploadStatus uploadStatus) {
         AIUsage aiUsage = new AIUsage();
         for (Map.Entry<String, String> entry : headerMapping.entrySet()) {
             String csvColumn = entry.getKey();
@@ -140,7 +142,7 @@ public class AIUsageAsyncProcessingAspect {
                             aiUsage.setEmail(value);
                             break;
                         case "promptCount":
-                            setPromptCount(aiUsage, value, failedRecordsCount);
+                            setPromptCount(aiUsage, value, failedRecordsCount, uploadStatus);
                             break;
                         case "businessUnit":
                             aiUsage.setBusinessUnit(value);
@@ -179,13 +181,15 @@ public class AIUsageAsyncProcessingAspect {
         mongoTemplate.upsert(query, update, AIUsage.class);
     }
 
-    private void setPromptCount(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount) {
+    private void setPromptCount(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
         try {
             Integer integerValue = Integer.parseInt(value);
             aiUsage.setPromptCount(integerValue);
         } catch (NumberFormatException e) {
             aiUsage.setPromptCount(null);
             failedRecordsCount.incrementAndGet();
+            uploadStatus.setStatus(UploadStatus.FAILED);
+            log.error(RECORD_PROCESSING_FAILED, uploadStatus.getRequestId(), "Invalid promptCount value. Must be an integer.");
         }
     }
 

@@ -24,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -34,6 +35,7 @@ import java.time.Instant;
 @Builder
 @Document(collection = "ai_usage_requests")
 public class AIUsageUploadStatus extends BasicModel {
+    @Indexed
     private String requestId;
     private String userId;
     private Instant submittedAt;

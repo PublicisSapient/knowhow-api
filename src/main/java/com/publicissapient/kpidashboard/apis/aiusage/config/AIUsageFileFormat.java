@@ -29,9 +29,10 @@ import java.util.Objects;
 
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "ai-usage-file-format")
+@ConfigurationProperties(prefix = "ai-usage-file-format.required-headers")
 public class AIUsageFileFormat {
-    private List<String> requiredHeaders;
+    private List<String> requiredHeaders = List.of("email", "promptCount", "businessUnit", "vertical", "account");
+
     private List<String> mappings;
 
     public Map<String, String> getHeaderToMappingMap() {

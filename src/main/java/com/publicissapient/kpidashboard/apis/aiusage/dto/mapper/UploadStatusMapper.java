@@ -23,11 +23,13 @@ import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class UploadStatusMapper {
     public UploadStatusResponse mapToDto(AIUsageUploadStatus status) {
         return UploadStatusResponse.builder()
-                .requestId(status.getRequestId())
+                .requestId(UUID.fromString(status.getRequestId()))
                 .status(UploadStatus.valueOf(String.valueOf(status.getStatus())))
                 .submittedAt(status.getSubmittedAt())
                 .completedAt(status.getCompletedAt())

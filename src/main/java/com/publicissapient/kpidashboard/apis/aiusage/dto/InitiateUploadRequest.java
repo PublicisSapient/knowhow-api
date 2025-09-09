@@ -20,7 +20,9 @@ package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
 import jakarta.validation.constraints.NotNull;
 
-public record InitiateUploadRequest(String message, @NotNull String requestId, @NotNull String filePath) {
+import java.util.UUID;
+
+public record InitiateUploadRequest(String message, @NotNull UUID requestId, @NotNull String filePath) {
     public String getMessage() {
         return message;
     }
