@@ -60,7 +60,6 @@ public class BitBucketKPIServiceFactory {
 	@PostConstruct
 	public void initMyServiceCache() {
 		for (BitBucketKPIService<?, ?, ?> service : services) {
-            //todo:: remove this once older services are removed
 			String className = service.getClass().getSimpleName().toLowerCase();
 			boolean isScmService = className.startsWith("scm");
 			if ((!customApiConfig.isRepoToolEnabled() && isScmService)

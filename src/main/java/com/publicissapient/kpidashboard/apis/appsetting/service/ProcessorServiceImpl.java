@@ -67,7 +67,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ProcessorServiceImpl implements ProcessorService {
 
 	public static final String AUTHORIZATION = "Authorization";
-	@Context
+    private static final List<String> SCM_TOOLS = Arrays.asList(
+            ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
+            ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
+    private static final String PROCESSOR_ERROR_TEMPLATE = "Error in running %s processor. Please try after some time.";
+
+    @Context
 	HttpServletRequest httpServletRequest;
 	@Autowired
 	SprintTraceLogRepository sprintTraceLogRepository;
@@ -104,51 +109,80 @@ public class ProcessorServiceImpl implements ProcessorService {
 			ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
 
 		String url = processorUrlConfig.getProcessorUrl(processorName);
-		List<String> scmToolList = Arrays.asList(ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
-				ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
-		if (scmToolList.contains(processorName)) {
-			// if scm processor is running, then set the scmProcessorName
+
+		if (isScmProcessor(processorName)) {
 			processorExecutionBasicConfig.setScmProcessorName(processorName);
 		}
-		boolean isSuccess = true;
-		int statuscode = HttpStatus.NOT_FOUND.value();
-		String body = "";
-		boolean isSCMToolEnabled = false;
-		String projectBasicConfigId = "";
-		if (processorExecutionBasicConfig != null) {
-			projectBasicConfigId = processorExecutionBasicConfig.getProjectBasicConfigIds().get(0);
-			isSCMToolEnabled = configHelperService.getProjectConfig(projectBasicConfigId).isDeveloperKpiEnabled();
-		}
-		if (scmToolList.contains(processorName) && isSCMToolEnabled && customApiConfig.isRepoToolEnabled()) {
-			statuscode = repoToolsConfigService.triggerScanRepoToolProject(processorName, projectBasicConfigId);
-		} else {
-			httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-			String token = httpServletRequest.getHeader(AUTHORIZATION);
-			token = CommonUtils.handleCrossScriptingTaintedValue(token);
-			if (StringUtils.isNotEmpty(url)) {
-				try {
-					HttpHeaders headers = new HttpHeaders();
-					headers.add(AUTHORIZATION, token);
 
-					HttpEntity<ProcessorExecutionBasicConfig> requestEntity = new HttpEntity<>(processorExecutionBasicConfig,
-							headers);
-					ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-					statuscode = resp.getStatusCode().value();
-				} catch (HttpClientErrorException ex) {
-					statuscode = ex.getStatusCode().value();
-					isSuccess = false;
-					body = getBody(ex);
-				} catch (ResourceAccessException ex) {
-					isSuccess = false;
-					body = "Error in running " + processorName + " processor. Please try after some time.";
-				}
-			}
-			if (HttpStatus.NOT_FOUND.value() == statuscode || HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
-				isSuccess = false;
-				body = "Error in running " + processorName + " processor. Please try after some time.";
-			}
+		ProcessorResult result = shouldExecuteScmTool(processorName, processorExecutionBasicConfig)
+				? executeScmTool(processorName, processorExecutionBasicConfig)
+				: executeRegularProcessor(url, processorName, processorExecutionBasicConfig);
+
+		return new ServiceResponse(result.isSuccess(),
+				String.format("Got HTTP response: %d on url: %s", result.statusCode(), url), result.body());
+	}
+
+	private boolean isScmProcessor(String processorName) {
+		return SCM_TOOLS.contains(processorName);
+	}
+
+	private boolean shouldExecuteScmTool(String processorName, ProcessorExecutionBasicConfig config) {
+		return isScmProcessor(processorName) && isSCMToolEnabled(config) && customApiConfig.isRepoToolEnabled();
+	}
+
+	private ProcessorResult executeScmTool(String processorName, ProcessorExecutionBasicConfig config) {
+		String projectBasicConfigId = config.getProjectBasicConfigIds().get(0);
+		int statusCode = repoToolsConfigService.triggerScanRepoToolProject(processorName, projectBasicConfigId);
+		boolean isSuccess = statusCode >= 200 && statusCode < 300;
+		String body = isSuccess ? "" : String.format(PROCESSOR_ERROR_TEMPLATE, processorName);
+		return new ProcessorResult(isSuccess, statusCode, body);
+	}
+
+	private ProcessorResult executeRegularProcessor(String url, String processorName,
+			ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
+
+		if (StringUtils.isEmpty(url)) {
+			return new ProcessorResult(false, HttpStatus.NOT_FOUND.value(),
+					String.format(PROCESSOR_ERROR_TEMPLATE, processorName));
 		}
-		return new ServiceResponse(isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, body);
+
+		httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		String token = CommonUtils.handleCrossScriptingTaintedValue(httpServletRequest.getHeader(AUTHORIZATION));
+
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.add(AUTHORIZATION, token);
+			HttpEntity<ProcessorExecutionBasicConfig> requestEntity = new HttpEntity<>(processorExecutionBasicConfig,
+					headers);
+			ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+			int statusCode = resp.getStatusCode().value();
+			boolean isSuccess = statusCode >= 200 && statusCode < 300;
+			String body = "";
+			if (!isSuccess && (statusCode == HttpStatus.NOT_FOUND.value()
+					|| statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value())) {
+				body = String.format(PROCESSOR_ERROR_TEMPLATE, processorName);
+			}
+			return new ProcessorResult(isSuccess, statusCode, body);
+		} catch (HttpClientErrorException ex) {
+			log.error("HTTP client error while running processor {}: {}", processorName, ex.getMessage(), ex);
+			return new ProcessorResult(false, ex.getStatusCode().value(), getBody(ex));
+		} catch (ResourceAccessException ex) {
+			log.error("Resource access error while running processor {}: {}", processorName, ex.getMessage(), ex);
+			return new ProcessorResult(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+					String.format(PROCESSOR_ERROR_TEMPLATE, processorName));
+		}
+	}
+
+	private boolean isSCMToolEnabled(ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
+		if (processorExecutionBasicConfig == null || processorExecutionBasicConfig.getProjectBasicConfigIds() == null
+				|| processorExecutionBasicConfig.getProjectBasicConfigIds().isEmpty()) {
+			return false;
+		}
+		String projectBasicConfigId = processorExecutionBasicConfig.getProjectBasicConfigIds().get(0);
+		return configHelperService.getProjectConfig(projectBasicConfigId).isDeveloperKpiEnabled();
+	}
+
+	private record ProcessorResult(boolean isSuccess, int statusCode, String body) {
 	}
 
 	private String getBody(HttpClientErrorException ex) {

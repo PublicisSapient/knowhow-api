@@ -219,9 +219,6 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.0));
 
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
-		// validationData.setMergeRequestComment(mergeRequest.getTitle());
-		// todo:: check mergeReqComments field
-
 		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
 		LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());
 
