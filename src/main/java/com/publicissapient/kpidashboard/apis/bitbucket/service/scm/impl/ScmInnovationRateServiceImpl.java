@@ -165,7 +165,7 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 
 	private double getInnovationRate(List<ScmCommits> commits) {
 		return commits.stream().mapToDouble(commit -> {
-			long linesOfCodeChanged = commit.getChangedLines();
+			long linesOfCodeChanged = commit.getTotalLinesAffected();
 			return linesOfCodeChanged != 0
 					? BigDecimal.valueOf((commit.getAddedLines() * 100.0 / linesOfCodeChanged) / 10)
 							.setScale(2, RoundingMode.HALF_UP).doubleValue()
@@ -200,7 +200,7 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName());
+        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setInnovationRate(innovationRate);
