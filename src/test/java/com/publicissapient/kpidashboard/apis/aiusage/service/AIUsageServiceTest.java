@@ -221,10 +221,4 @@ class AIUsageServiceTest {
             assertEquals(expectedHeader, headerLine);
         }
     }
-
-    private Method testPrivateMethod(String methodName, Class<?>... parameterTypes) throws NoSuchMethodException {
-        Method method = AIUsageService.class.getDeclaredMethod(methodName, parameterTypes);
-        method.setAccessible(true);
-        return method;
-    }
 }
