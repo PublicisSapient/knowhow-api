@@ -21,11 +21,14 @@ package com.publicissapient.kpidashboard.apis.aiusage.model;
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+
 @Data
+@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "ai_usage")
