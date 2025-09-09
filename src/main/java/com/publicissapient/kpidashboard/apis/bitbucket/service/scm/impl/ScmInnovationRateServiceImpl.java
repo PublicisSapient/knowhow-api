@@ -1,5 +1,21 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -23,36 +39,20 @@ import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String COMMITS_LIST = "commitsList";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	private final ConfigHelperService configHelperService;
+	private final KpiHelperService kpiHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -93,7 +93,6 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
@@ -108,10 +107,10 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 			return;
 		}
 
-		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode),
-				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
-		List<ScmCommits> mergeRequests = (List<ScmCommits>) resultmap.get(COMMITS_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultmap.get(ASSIGNEE_SET));
+		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+
+		List<ScmCommits> mergeRequests = (List<ScmCommits>) scmDataMap.get(COMMITS_LIST);
+		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
@@ -233,11 +232,11 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> scmDataMap = new HashMap<>();
 
-		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		resultMap.put(COMMITS_LIST, getCommitsFromBaseClass());
-		return resultMap;
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(COMMITS_LIST, getCommitsFromBaseClass());
+		return scmDataMap;
 	}
 
 	@Override

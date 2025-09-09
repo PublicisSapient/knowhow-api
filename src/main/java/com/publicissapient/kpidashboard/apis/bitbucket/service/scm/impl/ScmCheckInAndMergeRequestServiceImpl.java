@@ -18,35 +18,47 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
-import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
-import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
-import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
-import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
+import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * This service is used to calculate the SCM Check-in and Merge Request KPI.
@@ -63,8 +75,8 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String COMMIT_LIST = "commitList";
 
-	private ConfigHelperService configHelperService;
-	private KpiHelperService kpiHelperService;
+	private final ConfigHelperService configHelperService;
+	private final KpiHelperService kpiHelperService;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -101,7 +113,6 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
@@ -115,10 +126,9 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 			return;
 		}
 
-		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode),
-				dateRange.getStartDate().toString(), dateRange.getEndDate().toString(), kpiRequest);
-		List<ScmCommits> allCommits = (List<ScmCommits>) resultmap.get(COMMIT_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) resultmap.get(ASSIGNEE_SET));
+		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+		List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
+		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(allCommits)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No commits found for project {}", projectLeafNode);
@@ -159,7 +169,7 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(commits, tool);
 
 		List<ScmCommits> nonMergeCommits = commitsForBranch.stream()
-				.filter(commit -> !Boolean.TRUE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
+				.filter(commit -> Boolean.FALSE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
 
 		List<ScmCommits> mergeCommits = commitsForBranch.stream()
 				.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
@@ -242,12 +252,12 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
 			KpiRequest kpiRequest) {
-		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> scmDataMap = new HashMap<>();
 
-		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		resultMap.put(COMMIT_LIST, getCommitsFromBaseClass());
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(COMMIT_LIST, getCommitsFromBaseClass());
 
-		return resultMap;
+		return scmDataMap;
 	}
 
 	/** {@inheritDoc} */

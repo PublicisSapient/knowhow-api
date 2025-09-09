@@ -17,6 +17,15 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -32,16 +41,9 @@ import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRe
 import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.bson.types.ObjectId;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
