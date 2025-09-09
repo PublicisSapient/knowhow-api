@@ -24,7 +24,7 @@ import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.mapper.UploadStatusMapper;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageUploadStatusRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +39,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
@@ -82,7 +81,7 @@ class AIUsageServiceTest {
     void when_UploadFile_And_ValidInput_ExpectRequestSaved() {
         // Given
         String validFilePath = "src/test/resources/csv/valid_ai_usage.csv";
-        AIUsageUploadStatus uploadStatus = AIUsageUploadStatus.builder()
+        AIUsageRequest uploadStatus = AIUsageRequest.builder()
                 .requestId(String.valueOf(requestId))
                 .submittedAt(submittedAt)
                 .status(UploadStatus.PENDING)
@@ -91,21 +90,21 @@ class AIUsageServiceTest {
         // When
         when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
-        when(aiUsageUploadStatusRepository.save(any(AIUsageUploadStatus.class))).thenReturn(uploadStatus);
+        when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
         InitiateUploadRequest result = aiUsageService.uploadFile(validFilePath, requestId, submittedAt);
 
         // Then
         assertNotNull(result);
         assertEquals("File upload request accepted for processing", result.getMessage());
-        verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageUploadStatus.class));
+        verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageRequest.class));
     }
 
     @Test
     void when_UploadFile_And_InvalidFile_ExpectRequestFailed() {
         // Given
         String invalidFilePath = "src/test/resources/csv/invalid_ai_usage.csv";
-        AIUsageUploadStatus uploadStatus = AIUsageUploadStatus.builder()
+        AIUsageRequest uploadStatus = AIUsageRequest.builder()
                 .requestId(String.valueOf(requestId))
                 .submittedAt(submittedAt)
                 .status(UploadStatus.FAILED)
@@ -113,14 +112,14 @@ class AIUsageServiceTest {
 
         // When
         when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
-        when(aiUsageUploadStatusRepository.save(any(AIUsageUploadStatus.class))).thenReturn(uploadStatus);
+        when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
         InitiateUploadRequest result = aiUsageService.uploadFile(invalidFilePath, requestId, submittedAt);
 
         // Then
         assertNotNull(result);
         assertEquals("Error while processing the file", result.getMessage());
-        verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageUploadStatus.class));
+        verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageRequest.class));
     }
 
     @ParameterizedTest
@@ -132,7 +131,7 @@ class AIUsageServiceTest {
     void when_UploadFile_And_InvalidFilePath_expectException(String filePath) {
         lenient().when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
-        AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
+        AIUsageRequest receivedStatus = AIUsageRequest.builder()
                 .requestId(String.valueOf(requestId))
                 .submittedAt(submittedAt)
                 .status(UploadStatus.FAILED)
@@ -148,7 +147,7 @@ class AIUsageServiceTest {
 
     @Test
     void when_GetProcessingStatus_And_ValidRequestId_expectResponse() {
-        AIUsageUploadStatus uploadStatus = new AIUsageUploadStatus();
+        AIUsageRequest uploadStatus = new AIUsageRequest();
         when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))).thenReturn(Optional.of(uploadStatus));
         when(uploadStatusMapper.mapToDto(uploadStatus))
                 .thenReturn(new UploadStatusResponse(requestId, UploadStatus.PENDING, Instant.now(), null, 0,0,0, null));
@@ -169,10 +168,10 @@ class AIUsageServiceTest {
 
     @Test
     void when_FindByRequestId_And_ValidRequestId_expect() {
-        AIUsageUploadStatus uploadStatus = new AIUsageUploadStatus();
+        AIUsageRequest uploadStatus = new AIUsageRequest();
         when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))).thenReturn(Optional.of(uploadStatus));
 
-        AIUsageUploadStatus result = aiUsageService.findByRequestId(requestId);
+        AIUsageRequest result = aiUsageService.findByRequestId(requestId);
 
         assertNotNull(result);
         verify(aiUsageUploadStatusRepository, times(1)).findByRequestId(String.valueOf(requestId));
@@ -188,7 +187,7 @@ class AIUsageServiceTest {
 
     @Test
     void when_SaveUploadStatus_And_ValidStatus_expectSuccess() {
-        AIUsageUploadStatus uploadStatus = new AIUsageUploadStatus();
+        AIUsageRequest uploadStatus = new AIUsageRequest();
 
         aiUsageService.saveUploadStatus(uploadStatus);
 

@@ -18,13 +18,13 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.repository;
 
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface AIUsageUploadStatusRepository extends MongoRepository<AIUsageUploadStatus, String> {
-    Optional<AIUsageUploadStatus> findByRequestId(String requestId);
+public interface AIUsageUploadStatusRepository extends MongoRepository<AIUsageRequest, String> {
+    Optional<AIUsageRequest> findByRequestId(String requestId);
 }

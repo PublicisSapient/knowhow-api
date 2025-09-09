@@ -19,7 +19,7 @@
 package com.publicissapient.kpidashboard.apis.aiusage.enumeration;
 
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,40 +32,40 @@ import java.util.concurrent.atomic.AtomicInteger;
 public enum RequiredHeaders {
     EMAIL("email") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
+        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
             aiUsage.setEmail(value);
         }
     },
     PROMPT_COUNT("promptCount") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
+        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
             setPromptCount(aiUsage, value, failedRecordsCount, uploadStatus);
         }
     },
     BUSINESS_UNIT("businessUnit") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
+        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
             aiUsage.setBusinessUnit(value);
         }
     },
     ACCOUNT("account") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
+        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
             aiUsage.setAccount(value);
         }
     },
     VERTICAL("vertical") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
+        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
             aiUsage.setVertical(value);
         }
     };
 
     private final String name;
 
-    public abstract void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus);
+    public abstract void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus);
 
-    protected static void setPromptCount(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageUploadStatus uploadStatus) {
+    protected static void setPromptCount(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
         try {
             Integer integerValue = Integer.parseInt(value);
             aiUsage.setPromptCount(integerValue);

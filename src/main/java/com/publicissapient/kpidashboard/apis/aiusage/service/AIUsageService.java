@@ -23,7 +23,7 @@ import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.mapper.UploadStatusMapper;
 import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageUploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageUploadStatusRepository;
@@ -58,7 +58,7 @@ public class AIUsageService {
     public InitiateUploadRequest uploadFile(@NonNull String filePath, UUID requestId, Instant submittedAt) {
         try {
             isValidAIUsageCSVFile(filePath);
-            AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
+            AIUsageRequest receivedStatus = AIUsageRequest.builder()
                     .requestId(String.valueOf(requestId))
                     .submittedAt(submittedAt)
                     .status(UploadStatus.PENDING)
@@ -67,7 +67,7 @@ public class AIUsageService {
 
             return new InitiateUploadRequest("File upload request accepted for processing", requestId, filePath);
         } catch (IllegalArgumentException e) {
-            AIUsageUploadStatus receivedStatus = AIUsageUploadStatus.builder()
+            AIUsageRequest receivedStatus = AIUsageRequest.builder()
                     .requestId(String.valueOf(requestId))
                     .submittedAt(submittedAt)
                     .status(UploadStatus.FAILED)
@@ -78,18 +78,18 @@ public class AIUsageService {
     }
 
     public UploadStatusResponse getProcessingStatus(UUID requestId) {
-        AIUsageUploadStatus uploadStatus = aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))
+        AIUsageRequest uploadStatus = aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))
                 .orElseThrow(() -> new IllegalArgumentException("No upload status found for requestId: " + requestId));
         return uploadStatusMapper.mapToDto(uploadStatus);
     }
 
-    public AIUsageUploadStatus findByRequestId(UUID requestId) {
+    public AIUsageRequest findByRequestId(UUID requestId) {
         return aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId)).orElseThrow(
                 () -> new IllegalArgumentException("No upload status found for requestId: " + requestId));
     }
 
     @Transactional
-    public void saveUploadStatus(AIUsageUploadStatus uploadStatus) {
+    public void saveUploadStatus(AIUsageRequest uploadStatus) {
         aiUsageUploadStatusRepository.save(uploadStatus);
     }
 
