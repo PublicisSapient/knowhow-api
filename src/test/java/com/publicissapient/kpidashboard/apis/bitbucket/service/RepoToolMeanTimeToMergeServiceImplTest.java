@@ -117,7 +117,7 @@ public class RepoToolMeanTimeToMergeServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi84");
 		kpiRequest.setLabel("PROJECT");
-		kpiRequest.getSelectedMap().put(CommonConstant.date, Arrays.asList("DAYS"));
+		kpiRequest.getSelectedMap().put(CommonConstant.DATE, Arrays.asList("DAYS"));
 		kpiRequest.setXAxisDataPoints(5);
 		kpiRequest.setDuration("WEEKS");
 

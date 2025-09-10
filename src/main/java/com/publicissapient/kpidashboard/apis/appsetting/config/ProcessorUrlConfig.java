@@ -18,7 +18,9 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.config;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +42,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProcessorUrlConfig {
+    
+    @Autowired
+    CustomApiConfig customApiConfig;
 
 	String zephyr;
 	String bamboo;
@@ -58,45 +63,46 @@ public class ProcessorUrlConfig {
 	String githubAction;
 	String argocd;
 	String rally;
+    String knowhowScmProcessor;
 
 	public String getProcessorUrl(String processor) {
 		switch (processor) {
-			case ProcessorConstants.ZEPHYR :
-				return getZephyr();
-			case ProcessorConstants.SONAR :
-				return getSonar();
-			case ProcessorConstants.BITBUCKET :
-				return getBitbucket();
-			case ProcessorConstants.GITLAB :
-				return getGitlab();
-			case ProcessorConstants.GITHUB :
-				return getGithub();
-			case ProcessorConstants.GITHUBACTION :
-				return getGithubAction();
-			case ProcessorConstants.EXCEL :
-				return getExcel();
-			case ProcessorConstants.BAMBOO :
-				return getBamboo();
-			case ProcessorConstants.JENKINS :
-				return getJenkins();
-			case ProcessorConstants.JIRA :
-				return getJira();
-			case ProcessorConstants.JIRA_TEST :
-				return getJiraTest();
-			case ProcessorConstants.AZURE :
-				return getAzure();
-			case ProcessorConstants.AZUREPIPELINE :
-				return getAzurepipeline();
-			case ProcessorConstants.AZUREREPO :
-				return getAzurerepository();
-			case ProcessorConstants.TEAMCITY :
-				return getTeamcity();
-			case ProcessorConstants.ARGOCD :
-				return getArgocd();
-			case ProcessorConstants.RALLY:
-				return getRally();			
-			default :
-				return StringUtils.EMPTY;
+		case ProcessorConstants.ZEPHYR:
+			return getZephyr();
+		case ProcessorConstants.SONAR:
+			return getSonar();
+		case ProcessorConstants.BITBUCKET:
+			return customApiConfig.isRepoToolEnabled() ? getBitbucket() : getKnowhowScmProcessor();
+		case ProcessorConstants.GITLAB:
+			return customApiConfig.isRepoToolEnabled() ? getGitlab() : getKnowhowScmProcessor();
+		case ProcessorConstants.GITHUB:
+			return customApiConfig.isRepoToolEnabled() ? getGithub() : getKnowhowScmProcessor();
+		case ProcessorConstants.GITHUBACTION:
+			return getGithubAction();
+		case ProcessorConstants.EXCEL:
+			return getExcel();
+		case ProcessorConstants.BAMBOO:
+			return getBamboo();
+		case ProcessorConstants.JENKINS:
+			return getJenkins();
+		case ProcessorConstants.JIRA:
+			return getJira();
+		case ProcessorConstants.JIRA_TEST:
+			return getJiraTest();
+		case ProcessorConstants.AZURE:
+			return getAzure();
+		case ProcessorConstants.AZUREPIPELINE:
+			return getAzurepipeline();
+		case ProcessorConstants.AZUREREPO:
+			return customApiConfig.isRepoToolEnabled() ? getAzurerepository() : getKnowhowScmProcessor();
+		case ProcessorConstants.TEAMCITY:
+			return getTeamcity();
+		case ProcessorConstants.ARGOCD:
+			return getArgocd();
+		case ProcessorConstants.RALLY:
+			return getRally();
+		default:
+			return StringUtils.EMPTY;
 		}
 	}
 }

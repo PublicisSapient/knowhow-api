@@ -17,13 +17,15 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1400;
 
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
-// ⚠️ Disabled temporarily so that Mongock does not execute this unit
-//@ChangeUnit(id = "r_test_execution_time_kpi", order = "014004", author = "rendk", systemVersion = "14.0.0")
+@ChangeUnit(id = "r_test_execution_time_kpi", order = "014004", author = "rendk", systemVersion = "14.0.0")
 public class TestExecutionTimeKpi {
 
     public static final String KPI_ID = "kpiId";
@@ -35,7 +37,7 @@ public class TestExecutionTimeKpi {
         this.mongoTemplate = mongoTemplate;
     }
 
-    //@RollbackExecution
+    @RollbackExecution
     public void rollback() {
         // Insert document in kpi_master
         Document kpiMasterDoc = new Document(KPI_ID, KPI_196)
@@ -77,7 +79,7 @@ public class TestExecutionTimeKpi {
         log.info("Rollback executed: Inserted Test Execution Time KPI (kpi196) into kpi_category_mapping");
     }
 
-    //@Execution
+    @Execution
     public void execution() {
         // Delete the KPI
         mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_196));

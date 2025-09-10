@@ -294,7 +294,7 @@ public class JiraServiceKanbanRTest {
 		kpiRequest.setRequestTrackerId();
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put("Project", Arrays.asList("Kanban Project_6335368249794a18e8a4479f"));
-		selectedMap.put(CommonConstant.date, Arrays.asList("10"));
+		selectedMap.put(CommonConstant.DATE, Arrays.asList("10"));
 		kpiRequest.setSelectedMap(selectedMap);
 		kpiRequest.setLabel("PROJECT");
 		return kpiRequest;
