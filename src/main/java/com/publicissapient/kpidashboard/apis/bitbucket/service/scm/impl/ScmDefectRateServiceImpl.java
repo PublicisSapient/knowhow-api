@@ -80,7 +80,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
-		projectWiseLeafNodeValue(kpiElement, nodeMap, projectNode, kpiRequest);
+		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 
 		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
 				projectNode);
@@ -133,7 +133,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 	 *            kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
