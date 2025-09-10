@@ -57,8 +57,7 @@ public class AIUsageService {
     @Transactional
     public InitiateUploadResponse uploadFile(@NonNull String filePath, UUID requestId, Instant submittedAt) {
         try {
-            File file = new File(filePath);
-            validateAIUsageCSVFile(file);
+            validateAIUsageCSVFile(filePath);
             AIUsageRequest receivedStatus = AIUsageRequest.builder()
                     .requestId(String.valueOf(requestId))
                     .submittedAt(submittedAt)
@@ -99,7 +98,8 @@ public class AIUsageService {
         aiUsageRepository.save(aiUsage);
     }
 
-    private void validateAIUsageCSVFile(File file) throws IllegalArgumentException {
+    private void validateAIUsageCSVFile(String filePath) throws IllegalArgumentException {
+        File file = new File(filePath);
         if (Boolean.FALSE.equals(file.exists() && file.canRead())) {
             throw new IllegalArgumentException("Unable to access file at given location.");
         }
@@ -108,7 +108,7 @@ public class AIUsageService {
             throw new IllegalArgumentException("Invalid file format. Only CSV files are accepted.");
         }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
             Set<String> headerSet = new HashSet<>();
             while ((line = reader.readLine()) != null) {
