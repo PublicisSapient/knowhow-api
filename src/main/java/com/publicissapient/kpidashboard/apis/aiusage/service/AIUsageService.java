@@ -45,6 +45,7 @@ import java.time.Instant;
 @Service
 @Slf4j
 @AllArgsConstructor
+@SuppressWarnings("squid:S2083")
 public class AIUsageService {
 
     public static final String COMMA_DELIMITER = ",";
