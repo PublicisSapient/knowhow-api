@@ -94,6 +94,31 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		return kpiElement;
 	}
 
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return null;
+	}
+
+	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+		return calculateKpiValueForDouble(valueList, kpiId);
+	}
+
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
+	}
+
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.DEFECT_RATE.getKpiId());
+	}
+
 	/**
 	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
 	 * project wise.
@@ -220,7 +245,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setDefectRate(defectRate);
@@ -237,30 +262,5 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_RATE.getColumns());
 		}
-	}
-
-	@Override
-	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
-
-	@Override
-	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
-	}
-
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
-
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.DEFECT_RATE.getKpiId());
 	}
 }

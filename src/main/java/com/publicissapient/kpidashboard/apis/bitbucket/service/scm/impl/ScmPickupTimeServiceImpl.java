@@ -97,6 +97,31 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		return kpiElement;
 	}
 
+	@Override
+	public Long calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return null;
+	}
+
+	@Override
+	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
+		return calculateKpiValueForLong(valueList, kpiId);
+	}
+
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
+	}
+
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PICKUP_TIME.getKpiId());
+	}
+
 	/**
 	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
 	 * project wise.
@@ -230,7 +255,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
@@ -256,30 +281,5 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.PICKUP_TIME.getColumns());
 		}
-	}
-
-	@Override
-	public Long calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
-
-	@Override
-	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
-		return calculateKpiValueForLong(valueList, kpiId);
-	}
-
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
-
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PICKUP_TIME.getKpiId());
 	}
 }

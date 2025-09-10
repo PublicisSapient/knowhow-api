@@ -204,7 +204,6 @@ public class BitBucketServiceR {
         } catch (ExecutionException | InterruptedException e) {
             log.error("[BITBUCKET][{}]. Error loading data into ThreadLocal: {}",
                     kpiRequest.getRequestTrackerId(), e.getMessage(), e);
-            // CHANGE: Re-interrupt the thread to preserve interrupted status
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }

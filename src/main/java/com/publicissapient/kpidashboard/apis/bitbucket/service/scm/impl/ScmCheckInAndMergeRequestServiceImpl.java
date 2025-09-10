@@ -78,6 +78,12 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
 
+	/** {@inheritDoc} */
+	@Override
+	public String getQualifierType() {
+		return KPICode.REPO_TOOL_CODE_COMMIT.name();
+	}
+
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
@@ -95,6 +101,37 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 
 		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
 		return kpiElement;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public Long calculateKPIMetrics(Map<String, Object> t) {
+		return null;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(COMMIT_LIST, getCommitsFromBaseClass());
+
+		return scmDataMap;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
+		return calculateKpiValueForLong(valueList, kpiId);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI157(),
+				KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
 	}
 
 	/**
@@ -200,17 +237,14 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		});
 	}
 
-	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, long commitCount, long mrCount) {
-		RepoToolValidationData validationData = new RepoToolValidationData();
-		validationData.setProjectName(projectName);
-		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
-        validationData.setDeveloperName(developerName);
-		validationData.setDate(dateLabel);
-		validationData.setCommitCount(commitCount);
-		validationData.setMrCount(mrCount);
-		return validationData;
+	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
+			KpiElement kpiElement) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+			List<KPIExcelData> excelData = new ArrayList<>();
+			KPIExcelUtility.populateCodeCommit(validationDataList, excelData);
+			kpiElement.setExcelData(excelData);
+			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_CODE_COMMIT.getColumns());
+		}
 	}
 
 	private void setDataCount(String projectName, String week, String kpiGroup, Long commitValue, Long mrCount,
@@ -238,50 +272,16 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		dataCount.setHoverValue(hoverValues);
 	}
 
-	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
-			KpiElement kpiElement) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populateCodeCommit(validationDataList, excelData);
-			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_CODE_COMMIT.getColumns());
-		}
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(COMMIT_LIST, getCommitsFromBaseClass());
-
-		return scmDataMap;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public String getQualifierType() {
-		return KPICode.REPO_TOOL_CODE_COMMIT.name();
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public Long calculateKPIMetrics(Map<String, Object> t) {
-		return null;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
-		return calculateKpiValueForLong(valueList, kpiId);
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI157(),
-				KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
+			String dateLabel, long commitCount, long mrCount) {
+		RepoToolValidationData validationData = new RepoToolValidationData();
+		validationData.setProjectName(projectName);
+		validationData.setBranchName(tool.getBranch());
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setDeveloperName(developerName);
+		validationData.setDate(dateLabel);
+		validationData.setCommitCount(commitCount);
+		validationData.setMrCount(mrCount);
+		return validationData;
 	}
 }

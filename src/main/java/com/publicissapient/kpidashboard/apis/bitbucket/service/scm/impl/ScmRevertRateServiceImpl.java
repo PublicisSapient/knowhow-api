@@ -94,6 +94,49 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 		return kpiElement;
 	}
 
+	/**
+	 * Fetch data from db
+	 *
+	 * @param leafNodeList
+	 *            leaf node list
+	 * @param startDate
+	 *            start date
+	 * @param endDate
+	 *            end date
+	 * @param kpiRequest
+	 *            kpi request
+	 * @return map of data
+	 */
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
+	}
+
+	@Override
+	public String getQualifierType() {
+		return KPICode.REVERT_RATE.name();
+	}
+
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return null;
+	}
+
+	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+		return calculateKpiValueForDouble(valueList, kpiId);
+	}
+
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI180(), KPICode.REVERT_RATE.getKpiId());
+	}
+
 	@SuppressWarnings("unchecked")
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
@@ -210,7 +253,7 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setRevertRate(revertRate);
@@ -221,7 +264,7 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 	/**
 	 * Calculate revert rate from merge requests
-	 * 
+	 *
 	 * @param mergeRequests
 	 *            list of merge requests```java
 	 * @return revert rate percentage
@@ -253,48 +296,5 @@ public class ScmRevertRateServiceImpl extends BitBucketKPIService<Double, List<O
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.REVERT_RATE.getColumns());
 		}
-	}
-
-	/**
-	 * Fetch data from db
-	 *
-	 * @param leafNodeList
-	 *            leaf node list
-	 * @param startDate
-	 *            start date
-	 * @param endDate
-	 *            end date
-	 * @param kpiRequest
-	 *            kpi request
-	 * @return map of data
-	 */
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
-
-	@Override
-	public String getQualifierType() {
-		return KPICode.REVERT_RATE.name();
-	}
-
-	@Override
-	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
-
-	@Override
-	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
-	}
-
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI180(), KPICode.REVERT_RATE.getKpiId());
 	}
 }

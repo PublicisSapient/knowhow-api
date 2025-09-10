@@ -90,6 +90,37 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		return kpiElement;
 	}
 
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return null;
+	}
+
+	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+		return calculateKpiValueForDouble(valueList, kpiId);
+	}
+
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
+	}
+
+	@Override
+	public String getQualifierType() {
+		return KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.name();
+	}
+
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI158(),
+				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId());
+	}
+
 	/**
 	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
 	 * project wise.
@@ -256,36 +287,5 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_MEAN_TIME_TO_MERGE.getColumns());
 		}
-	}
-
-	@Override
-	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
-
-	@Override
-	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
-	}
-
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
-
-	@Override
-	public String getQualifierType() {
-		return KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.name();
-	}
-
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI158(),
-				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId());
 	}
 }

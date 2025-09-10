@@ -89,6 +89,36 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		return kpiElement;
 	}
 
+	@Override
+	public Long calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return null;
+	}
+
+	@Override
+	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
+		return calculateKpiValueForLong(valueList, kpiId);
+	}
+
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
+	}
+
+	@Override
+	public String getQualifierType() {
+		return KPICode.PR_SIZE.name();
+	}
+
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PR_SIZE.getKpiId());
+	}
+
 	/**
 	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
 	 * project wise.
@@ -199,7 +229,7 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setPrSize(prSize);
@@ -215,35 +245,5 @@ public class ScmPRSizeServiceImpl extends BitBucketKPIService<Long, List<Object>
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.PR_SIZE.getColumns());
 		}
-	}
-
-	@Override
-	public Long calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
-
-	@Override
-	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
-		return calculateKpiValueForLong(valueList, kpiId);
-	}
-
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
-
-	@Override
-	public String getQualifierType() {
-		return KPICode.PR_SIZE.name();
-	}
-
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PR_SIZE.getKpiId());
 	}
 }
