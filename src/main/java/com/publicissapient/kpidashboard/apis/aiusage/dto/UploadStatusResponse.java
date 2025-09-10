@@ -19,7 +19,7 @@
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import lombok.Builder;
 
 import java.time.Instant;

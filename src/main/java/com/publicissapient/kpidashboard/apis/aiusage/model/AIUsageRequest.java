@@ -18,7 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.model;
 
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

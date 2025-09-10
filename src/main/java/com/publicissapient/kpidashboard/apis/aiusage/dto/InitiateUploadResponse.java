@@ -19,6 +19,12 @@
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
 import jakarta.validation.constraints.NotNull;
+import net.minidev.json.annotate.JsonIgnore;
 
-public record InputAIUsage(@NotNull String filePath) {
+import java.util.UUID;
+
+public record InitiateUploadResponse(String message, @NotNull UUID requestId, @JsonIgnore String filePath) {
+    public String getMessage() {
+        return message;
+    }
 }

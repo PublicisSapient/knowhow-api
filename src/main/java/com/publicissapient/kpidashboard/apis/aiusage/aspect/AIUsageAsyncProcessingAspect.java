@@ -19,9 +19,9 @@
 package com.publicissapient.kpidashboard.apis.aiusage.aspect;
 
 import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.RequiredHeaders;
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.RequiredHeaders;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
@@ -65,7 +65,7 @@ public class AIUsageAsyncProcessingAspect {
     @AfterReturning(pointcut = "execution(* com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService.uploadFile(..))",
             returning = "response")
     @Transactional
-    public void processFileAsync(@NotNull @Valid InitiateUploadRequest response) {
+    public void processFileAsync(@NotNull @Valid InitiateUploadResponse response) {
         String filePath = response.filePath();
         UUID requestId = response.requestId();
 
@@ -136,12 +136,7 @@ public class AIUsageAsyncProcessingAspect {
             if (index != null && index < columns.length) {
                 String value = columns[index].trim();
                 try {
-                    RequiredHeaders field = RequiredHeaders.fromString(mappedField);
-                    if (field != null) {
-                        field.apply(aiUsage, value, failedRecordsCount, uploadStatus);
-                    } else {
-                        failedRecordsCount.incrementAndGet();
-                    }
+                    setValuesInDocument(failedRecordsCount, uploadStatus, mappedField, aiUsage, value);
                 } catch (NumberFormatException e) {
                     log.error("Error parsing integer for field {}: {}", mappedField, e.getMessage());
                     failedRecordsCount.incrementAndGet();
@@ -152,6 +147,20 @@ public class AIUsageAsyncProcessingAspect {
             }
         }
         return aiUsage;
+    }
+
+    private static void setValuesInDocument(AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus, String mappedField, AIUsage aiUsage, String value) {
+        RequiredHeaders field = RequiredHeaders.fromString(mappedField);
+        if (field != null) {
+            try {
+                field.apply(aiUsage, value);
+            } catch (Exception e) {
+                uploadStatus.setStatus(UploadStatus.FAILED);
+                failedRecordsCount.incrementAndGet();
+            }
+        } else {
+            failedRecordsCount.incrementAndGet();
+        }
     }
 
     private void upsertAIUsage(AIUsage aiUsage) {

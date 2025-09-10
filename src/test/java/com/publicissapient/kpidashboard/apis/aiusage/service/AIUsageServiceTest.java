@@ -19,10 +19,10 @@
 package com.publicissapient.kpidashboard.apis.aiusage.service;
 
 import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.mapper.UploadStatusMapper;
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
@@ -92,7 +92,7 @@ class AIUsageServiceTest {
 
         when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
-        InitiateUploadRequest result = aiUsageService.uploadFile(validFilePath, requestId, submittedAt);
+        InitiateUploadResponse result = aiUsageService.uploadFile(validFilePath, requestId, submittedAt);
 
         // Then
         assertNotNull(result);
@@ -114,7 +114,7 @@ class AIUsageServiceTest {
         when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
         when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
-        InitiateUploadRequest result = aiUsageService.uploadFile(invalidFilePath, requestId, submittedAt);
+        InitiateUploadResponse result = aiUsageService.uploadFile(invalidFilePath, requestId, submittedAt);
 
         // Then
         assertNotNull(result);
@@ -137,9 +137,9 @@ class AIUsageServiceTest {
                 .status(UploadStatus.FAILED)
                 .build();
 
-        InitiateUploadRequest expected = new InitiateUploadRequest("Error while processing the file", requestId, filePath);
+        InitiateUploadResponse expected = new InitiateUploadResponse("Error while processing the file", requestId, filePath);
 
-        InitiateUploadRequest actual = aiUsageService.uploadFile(filePath, requestId, submittedAt);
+        InitiateUploadResponse actual = aiUsageService.uploadFile(filePath, requestId, submittedAt);
 
         verify(aiUsageUploadStatusRepository, times(1)).save(receivedStatus);
         assertEquals(expected, actual);

@@ -16,11 +16,10 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.enumeration;
+package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
-public enum UploadStatus {
-    PENDING,
-    PROCESSING,
-    COMPLETED,
-    FAILED
+import jakarta.validation.constraints.NotEmpty;
+
+public record UploadAIUsageRequest(@NotEmpty String filePath) {
 }
+

@@ -18,8 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest.contract;
 
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InputAIUsage;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadAIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.ws.rs.BadRequestException;
 import java.util.UUID;
 
+@RequestMapping("/ai-usage")
 public interface AIUsageAPI {
 
     @Operation(
@@ -47,7 +49,7 @@ public interface AIUsageAPI {
                     @ApiResponse(
                             responseCode = "202",
                             description = "File upload request accepted for processing",
-                            content = @Content(schema = @Schema(implementation = InitiateUploadRequest.class),
+                            content = @Content(schema = @Schema(implementation = InitiateUploadResponse.class),
                                     examples = @ExampleObject(
                                             name = "Accepted Response",
                                             value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
@@ -67,22 +69,25 @@ public interface AIUsageAPI {
                     )
             }
     )
-    @PostMapping("/ai-usage/upload/path")
-    InitiateUploadRequest uploadAiUsageData(
+    @PostMapping("/upload/path")
+    InitiateUploadResponse uploadAiUsageData(
             @Parameter(description = "Absolute path to the CSV file to be processed", required = true,
                     example = "/absolute/path/to/your/file.csv")
-            @RequestBody InputAIUsage filePath
+            @RequestBody UploadAIUsageRequest filePath
     );
 
     @Operation(
             summary = "Upload CSV file for processing AI usage data via file upload",
-            description = "Accepts a CSV file via multipart upload and processes it asynchronously, returning a request ID for tracking." +
-                    "Required CSV headers(case-sensitive) in the provided file: Email Address, PROMPT COUNT, BU Name, Industry, Client Name",
+            description = """
+                    Accepts a CSV file via multipart upload and processes it asynchronously, returning a request ID for tracking.
+                    Predefined format (required CSV headers in the provided file): email, promptCount, businessUnit, vertical, account.
+                    Custom mapping of CSV headers to expected fields can be configured in application properties.
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "202",
                             description = "File upload request accepted for processing",
-                            content = @Content(schema = @Schema(implementation = InitiateUploadRequest.class),
+                            content = @Content(schema = @Schema(implementation = InitiateUploadResponse.class),
                                     examples = @ExampleObject(
                                             name = "Accepted Response",
                                             value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
@@ -102,8 +107,9 @@ public interface AIUsageAPI {
                     )
             }
     )
-    @PostMapping("/ai-usage/upload")
-    InitiateUploadRequest uploadAiUsageDataFile(
+    @PostMapping(value = "/upload/file",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    InitiateUploadResponse uploadAiUsageDataFile(
             @Parameter(description = "CSV file to be processed", required = true)
             @RequestPart("file") MultipartFile file
     );
@@ -140,7 +146,7 @@ public interface AIUsageAPI {
                     )
             }
     )
-    @GetMapping("/ai-usage/status/{requestId}")
+    @GetMapping("/{requestId}/status")
     UploadStatusResponse getProcessingStatus(
             @Parameter(description = "Unique identifier for the upload request", required = true,
                     example = "123e4567-e89b-12d3-a456-426614174000")
