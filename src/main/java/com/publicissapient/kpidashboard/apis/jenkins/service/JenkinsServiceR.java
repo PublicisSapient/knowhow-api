@@ -298,15 +298,14 @@ public class JenkinsServiceR {
 	/**
 	 * This method is called when the request for kpi is done from exposed API
 	 *
-	 * @param kpiRequest
-	 *          Jenkins KPI request true if flow for precalculated, false for direct
-	 *          flow.
+	 * @param kpiRequest Jenkins KPI request true if flow for precalculated, false for direct
+	 *                   flow.
+	 * @param withCache
 	 * @return List of KPI data
-	 * @throws EntityNotFoundException
-	 *           EntityNotFoundException
+	 * @throws EntityNotFoundException EntityNotFoundException
 	 */
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest) throws EntityNotFoundException {
-		referFromProjectCache = false;
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache) throws EntityNotFoundException {
+		referFromProjectCache = withCache;
 		List<KpiElement> kpiElementList = process(kpiRequest);
 		referFromProjectCache = true;
 		return kpiElementList;

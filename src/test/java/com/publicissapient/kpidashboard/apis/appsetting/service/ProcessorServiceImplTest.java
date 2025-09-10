@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -148,13 +149,21 @@ public class ProcessorServiceImplTest {
 	/** Methods tests insertion of Project configurations with null values. */
 	@Test
 	public void testRunProcessorBitbucket() {
-		Mockito.when(processorUrlConfig.getProcessorUrl(Mockito.anyString())).thenReturn("validUrlToBitbucketProcessor");
+		Mockito.when(processorUrlConfig.getProcessorUrl(Mockito.anyString()))
+				.thenReturn("validUrlToBitbucketProcessor");
 		Mockito.when(restTemplate.exchange(Mockito.anyString(), Mockito.any(HttpMethod.class), Mockito.any(),
 				Mockito.<Class<String>>any())).thenReturn(mockResponseEntity);
 		Mockito.when(mockResponseEntity.getStatusCode()).thenReturn(HttpStatus.OK);
+
+		// Mock ProjectBasicConfig and ConfigHelperService
+		ProjectBasicConfig mockProjectConfig = Mockito.mock(ProjectBasicConfig.class);
+		Mockito.when(mockProjectConfig.isDeveloperKpiEnabled()).thenReturn(false);
+		Mockito.when(configHelperService.getProjectConfig(Mockito.anyString())).thenReturn(mockProjectConfig);
+
 		ProcessorExecutionBasicConfig processorExecutionBasicConfig = new ProcessorExecutionBasicConfig();
 		processorExecutionBasicConfig.setProjectBasicConfigIds(Arrays.asList(""));
-		ServiceResponse response = processorService.runProcessor("Bitbucket", null);
+
+		ServiceResponse response = processorService.runProcessor("Bitbucket", processorExecutionBasicConfig);
 		assertTrue(response.getSuccess());
 	}
 

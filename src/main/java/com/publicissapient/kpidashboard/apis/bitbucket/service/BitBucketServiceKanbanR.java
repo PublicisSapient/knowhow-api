@@ -116,7 +116,7 @@ public class BitBucketServiceKanbanR {
 				return (List<KpiElement>) cachedData;
 			}
 			kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
-			kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.date).get(0));
+			kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
 			Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);
 
 			for (KpiElement kpiEle : kpiRequest.getKpiList()) {
@@ -242,7 +242,7 @@ public class BitBucketServiceKanbanR {
 			kpiRequest.setKanbanXaxisDataPoints(Integer.parseInt(id));
 		}
 
-		List<String> durationList = kpiRequest.getSelectedMap().get(CommonConstant.date);
+		List<String> durationList = kpiRequest.getSelectedMap().get(CommonConstant.DATE);
 		if (CollectionUtils.isNotEmpty(durationList)) {
 			String duration = durationList.get(0);
 			if (NumberUtils.isCreatable(duration)) {

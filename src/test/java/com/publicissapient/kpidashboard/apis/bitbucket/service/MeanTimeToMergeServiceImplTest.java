@@ -111,7 +111,7 @@ public class MeanTimeToMergeServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi84");
 		Map<String, List<String>> selectedMap = kpiRequest.getSelectedMap();
-		selectedMap.put(CommonConstant.date, Arrays.asList("DAYS"));
+		selectedMap.put(CommonConstant.DATE, Arrays.asList("DAYS"));
 		kpiRequest.setSelectedMap(selectedMap);
 		kpiRequest.setLabel("Project");
 		kpiRequest.setLabel("PROJECT");
