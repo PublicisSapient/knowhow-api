@@ -370,6 +370,9 @@ public class CustomApiConfig { // NOPMD
 	@Value("${severity.s4}")
 	private String severity4;
 
+	@Value("${is.repo.tool.enabled:false}")
+	private boolean isRepoToolEnabled;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}
