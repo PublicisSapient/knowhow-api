@@ -172,7 +172,7 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 			return;
 		}
 
-		Map<String, List<DataCount>> aggregatedDataMap = new LinkedHashMap<>();
+		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
@@ -183,17 +183,17 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 					periodRange);
 
 			scmTools.forEach(tool -> processToolData(tool, commitsInRange, assignees, dateLabel,
-					projectLeafNode.getProjectFilter().getName(), aggregatedDataMap, validationDataList));
+					projectLeafNode.getProjectFilter().getName(), kpiTrendDataByGroup, validationDataList));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
 
-		mapTmp.get(projectLeafNode.getId()).setValue(aggregatedDataMap);
+		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
 	private void processToolData(Tool tool, List<ScmCommits> commits, Set<Assignee> assignees, String dateLabel,
-			String projectName, Map<String, List<DataCount>> aggregatedDataMap,
+			String projectName, Map<String, List<DataCount>> kpiTrendDataByGroup,
 			List<RepoToolValidationData> validationDataList) {
 
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
@@ -214,7 +214,7 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		long totalCommits = nonMergeCommits.size();
 		long totalMergeRequests = mergeCommits.size();
 
-		setDataCount(projectName, dateLabel, overallKpiGroup, totalCommits, totalMergeRequests, aggregatedDataMap);
+		setDataCount(projectName, dateLabel, overallKpiGroup, totalCommits, totalMergeRequests, kpiTrendDataByGroup);
 
 		Map<String, List<ScmCommits>> userWiseNonMergeCommits = DeveloperKpiHelper.groupCommitsByUser(nonMergeCommits);
 		Map<String, List<ScmCommits>> userWiseMergeCommits = DeveloperKpiHelper.groupCommitsByUser(mergeCommits);
@@ -231,7 +231,7 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 			long commitCount = userNonMergeCommits.size();
 			long mrCount = userMergeCommits.size();
 			String userKpiGroup = branchName + "#" + developerName;
-			setDataCount(projectName, dateLabel, userKpiGroup, commitCount, mrCount, aggregatedDataMap);
+			setDataCount(projectName, dateLabel, userKpiGroup, commitCount, mrCount, kpiTrendDataByGroup);
 			validationDataList
 					.add(createValidationData(projectName, tool, developerName, dateLabel, commitCount, mrCount));
 		});

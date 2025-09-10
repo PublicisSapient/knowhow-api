@@ -142,7 +142,7 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 			return;
 		}
 
-		Map<String, List<DataCount>> aggregatedDataMap = new LinkedHashMap<>();
+		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
@@ -155,18 +155,18 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
 					.toList();
 
-			scmTools.forEach(tool -> processToolData(tool, filteredCommitsList, assignees, aggregatedDataMap,
+			scmTools.forEach(tool -> processToolData(tool, filteredCommitsList, assignees, kpiTrendDataByGroup,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
 
-		mapTmp.get(projectLeafNode.getId()).setValue(aggregatedDataMap);
+		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
 	private void processToolData(Tool tool, List<ScmCommits> commitsList, Set<Assignee> assignees,
-			Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
+			Map<String, List<DataCount>> kpiTrendDataByGroup, List<RepoToolValidationData> validationDataList,
 			String dateLabel, String projectName) {
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
@@ -180,12 +180,12 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 		double innovationRate = getInnovationRate(matchingCommits);
 
 		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, innovationRate, new HashMap<>(),
-				aggregatedDataMap);
+				kpiTrendDataByGroup);
 
 		Map<String, List<ScmCommits>> userWiseScmCommits = DeveloperKpiHelper.groupCommitsByUser(matchingCommits);
 
 		validationDataList.addAll(prepareUserValidationData(userWiseScmCommits, assignees, tool, projectName, dateLabel,
-				aggregatedDataMap));
+				kpiTrendDataByGroup));
 	}
 
 	private double getInnovationRate(List<ScmCommits> commits) {
@@ -200,7 +200,7 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 
 	private List<RepoToolValidationData> prepareUserValidationData(Map<String, List<ScmCommits>> userWiseCommits,
 			Set<Assignee> assignees, Tool tool, String projectName, String dateLabel,
-			Map<String, List<DataCount>> aggregatedDataMap) {
+			Map<String, List<DataCount>> kpiTrendDataByGroup) {
 		return userWiseCommits.entrySet().stream().map(entry -> {
 			String userEmail = entry.getKey();
 			List<ScmCommits> userCommits = entry.getValue();
@@ -213,7 +213,7 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
 			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, innovationRate, new HashMap<>(),
-					aggregatedDataMap);
+					kpiTrendDataByGroup);
 
 			return createValidationData(projectName, tool, developerName, dateLabel, innovationRate, addedLines,
 					changedLines);
