@@ -162,7 +162,7 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 			return;
 		}
 
-		Map<String, List<DataCount>> aggregatedDataMap = new LinkedHashMap<>();
+		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
@@ -174,18 +174,18 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
 					.toList();
 
-			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, aggregatedDataMap,
+			scmTools.forEach(tool -> processToolData(tool, mergedRequestsInRange, assignees, kpiTrendDataByGroup,
 					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
 
-		mapTmp.get(projectLeafNode.getId()).setValue(aggregatedDataMap);
+		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
-			Map<String, List<DataCount>> aggregatedDataMap, List<RepoToolValidationData> validationDataList,
+			Map<String, List<DataCount>> kpiTrendDataByGroup, List<RepoToolValidationData> validationDataList,
 			String dateLabel, String projectName) {
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
@@ -201,18 +201,18 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		long meanTimeToMergeHours = KpiHelperService.convertMilliSecondsToHours(meanTimeToMergeSeconds * 1000);
 
 		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, meanTimeToMergeHours, new HashMap<>(),
-				aggregatedDataMap);
+				kpiTrendDataByGroup);
 
 		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
 				.groupMergeRequestsByUser(mergeRequestsForBranch);
 
 		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
-				dateLabel, aggregatedDataMap));
+				dateLabel, kpiTrendDataByGroup));
 	}
 
 	private List<RepoToolValidationData> prepareUserValidationData(
 			Map<String, List<ScmMergeRequests>> userWiseMergeRequests, Set<Assignee> assignees, Tool tool,
-			String projectName, String dateLabel, Map<String, List<DataCount>> aggregatedDataMap) {
+			String projectName, String dateLabel, Map<String, List<DataCount>> kpiTrendDataByGroup) {
 		return userWiseMergeRequests.entrySet().stream().map(entry -> {
 			String userEmail = entry.getKey();
 			List<ScmMergeRequests> userMergeRequests = entry.getValue();
@@ -224,7 +224,7 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
 			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, userAverageHrs, new HashMap<>(),
-					aggregatedDataMap);
+					kpiTrendDataByGroup);
 
 			List<RepoToolValidationData> userValidationData = new ArrayList<>();
 			userMergeRequests.forEach(mr -> {
