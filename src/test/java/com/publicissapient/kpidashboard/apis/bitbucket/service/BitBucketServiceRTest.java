@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -122,6 +123,31 @@ public class BitBucketServiceRTest {
 	private UserAuthorizedProjectsService authorizedProjectsService;
 
 	private KpiRequest kpiRequest;
+
+	private static class TestBitBucketKPIService extends BitBucketKPIService<Object, Object, Object> {
+
+		@Override
+		public String getQualifierType() {
+			return "TEST";
+		}
+
+		@Override
+		public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode) {
+			return kpiElement;
+		}
+
+		@Override
+		public Object calculateKPIMetrics(Object o) {
+			return null;
+		}
+
+		@Override
+		public Object fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+				KpiRequest kpiRequest) {
+			return null;
+		}
+
+	}
 
 	@Before
 	public void setup() throws ApplicationException {
@@ -272,18 +298,85 @@ public class BitBucketServiceRTest {
 
 	@Test
 	public void testLoadDataIntoThreadLocal_Exception() throws Exception {
+		// Arrange
 		when(scmKpiHelperService.getCommitDetails(any(ObjectId.class), any(CustomDateRange.class)))
 				.thenThrow(new RuntimeException("Database error"));
+		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenReturn(List.of(new ScmMergeRequests()));
+		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
 			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
 					.thenReturn(new CustomDateRange());
 
+			// Use reflection to test private method
 			Method method = BitBucketServiceR.class.getDeclaredMethod("loadDataIntoThreadLocal",
 					AccountHierarchyData.class, KpiRequest.class);
 			method.setAccessible(true);
 
+			// Act - Should not throw exception
 			method.invoke(bitBucketServiceR, accountHierarchyDataList.get(0), kpiRequest);
+
+			// Assert - Verify the method completed without throwing
+			// The method logs the error but doesn't propagate it
+			assertTrue(true); // Method completed successfully
+		}
+	}
+
+	@Test
+	public void testLoadDataIntoThreadLocal_InterruptedException() throws Exception {
+		// Arrange
+		CompletableFuture<List<ScmCommits>> interruptedFuture = new CompletableFuture<>();
+		interruptedFuture.completeExceptionally(new InterruptedException("Thread interrupted"));
+
+		when(scmKpiHelperService.getCommitDetails(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenAnswer(invocation -> {
+					throw new InterruptedException("Thread interrupted");
+				});
+
+		try (MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
+			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
+					.thenReturn(new CustomDateRange());
+
+			// Use reflection to test private method
+			Method method = BitBucketServiceR.class.getDeclaredMethod("loadDataIntoThreadLocal",
+					AccountHierarchyData.class, KpiRequest.class);
+			method.setAccessible(true);
+
+			// Clear interrupt status before test
+			Thread.interrupted();
+
+			// Act
+			method.invoke(bitBucketServiceR, accountHierarchyDataList.get(0), kpiRequest);
+
+			// Assert - Verify thread interrupt flag is set
+			assertTrue(Thread.currentThread().isInterrupted() || Thread.interrupted());
+		}
+	}
+
+	@Test
+	public void testLoadDataIntoThreadLocal_ExecutionException() throws Exception {
+		// Arrange
+		when(scmKpiHelperService.getCommitDetails(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenReturn(List.of(new ScmCommits()));
+		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
+				.thenThrow(new RuntimeException("Merge request fetch failed"));
+		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
+
+		try (MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
+			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
+					.thenReturn(new CustomDateRange());
+
+			// Use reflection to test private method
+			Method method = BitBucketServiceR.class.getDeclaredMethod("loadDataIntoThreadLocal",
+					AccountHierarchyData.class, KpiRequest.class);
+			method.setAccessible(true);
+
+			// Act - Should handle ExecutionException gracefully
+			method.invoke(bitBucketServiceR, accountHierarchyDataList.get(0), kpiRequest);
+
+			// Assert - Method completes without throwing
+			assertTrue(true);
 		}
 	}
 
@@ -449,36 +542,6 @@ public class BitBucketServiceRTest {
 		assertNotNull(resultList);
 	}
 
-	private KpiRequest createKpiRequest(int level) {
-		KpiRequest kpiRequest = new KpiRequest();
-		List<KpiElement> kpiList = new ArrayList<>();
-
-		addKpiElement(kpiList, KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(), KPICode.REPO_TOOL_CODE_COMMIT.name());
-		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[] { "7" });
-		kpiRequest.setKpiList(kpiList);
-		kpiRequest.setRequestTrackerId();
-		kpiRequest.setLabel("project");
-		Map<String, List<String>> s = new HashMap<>();
-		s.put(CommonConstant.DATE, List.of("WEEKS"));
-		kpiRequest.setSelectedMap(s);
-		kpiRequest.setSprintIncluded(Arrays.asList("CLOSED", "ACTIVE"));
-		return kpiRequest;
-	}
-
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName) {
-		KpiElement kpiElement = new KpiElement();
-		kpiElement.setKpiId(kpiId);
-		kpiElement.setKpiName(kpiName);
-		kpiElement.setKpiCategory("Developer");
-		kpiElement.setKpiUnit("");
-		kpiElement.setKpiSource("BitBucket");
-		kpiElement.setGroupId(1);
-		kpiElement.setMaxValue("500");
-		kpiElement.setChartType("gaugeChart");
-		kpiList.add(kpiElement);
-	}
-
 	@Test
 	public void testCalculateAllKPIAggregatedMetrics_Success() throws Exception {
 		KpiElement kpiElement = new KpiElement();
@@ -519,7 +582,7 @@ public class BitBucketServiceRTest {
 		Node node = mock(Node.class);
 
 		try (MockedStatic<SerializationUtils> serializationMock = Mockito.mockStatic(SerializationUtils.class);
-             MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
+				MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
 						.mockStatic(BitBucketKPIServiceFactory.class)) {
 
 			serializationMock.when(() -> SerializationUtils.clone(any())).thenReturn(null);
@@ -609,28 +672,33 @@ public class BitBucketServiceRTest {
 		}
 	}
 
-	private static class TestBitBucketKPIService extends BitBucketKPIService<Object, Object, Object> {
+	private KpiRequest createKpiRequest(int level) {
+		KpiRequest kpiRequest = new KpiRequest();
+		List<KpiElement> kpiList = new ArrayList<>();
 
-		@Override
-		public String getQualifierType() {
-			return "TEST";
-		}
+		addKpiElement(kpiList, KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(), KPICode.REPO_TOOL_CODE_COMMIT.name());
+		kpiRequest.setLevel(level);
+		kpiRequest.setIds(new String[] { "7" });
+		kpiRequest.setKpiList(kpiList);
+		kpiRequest.setRequestTrackerId();
+		kpiRequest.setLabel("project");
+		Map<String, List<String>> s = new HashMap<>();
+		s.put(CommonConstant.DATE, List.of("WEEKS"));
+		kpiRequest.setSelectedMap(s);
+		kpiRequest.setSprintIncluded(Arrays.asList("CLOSED", "ACTIVE"));
+		return kpiRequest;
+	}
 
-		@Override
-		public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode) {
-			return kpiElement;
-		}
-
-		@Override
-		public Object calculateKPIMetrics(Object o) {
-			return null;
-		}
-
-		@Override
-		public Object fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-				KpiRequest kpiRequest) {
-			return null;
-		}
-
+	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName) {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(kpiId);
+		kpiElement.setKpiName(kpiName);
+		kpiElement.setKpiCategory("Developer");
+		kpiElement.setKpiUnit("");
+		kpiElement.setKpiSource("BitBucket");
+		kpiElement.setGroupId(1);
+		kpiElement.setMaxValue("500");
+		kpiElement.setChartType("gaugeChart");
+		kpiList.add(kpiElement);
 	}
 }

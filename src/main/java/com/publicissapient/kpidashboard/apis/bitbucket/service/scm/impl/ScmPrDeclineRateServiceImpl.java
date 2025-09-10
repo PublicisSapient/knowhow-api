@@ -88,6 +88,36 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 		return kpiElement;
 	}
 
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
+			KpiRequest kpiRequest) {
+		Map<String, Object> scmDataMap = new HashMap<>();
+
+		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		return scmDataMap;
+	}
+
+	@Override
+	public String getQualifierType() {
+		return KPICode.PR_DECLINE_RATE.name();
+	}
+
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return null;
+	}
+
+	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+		return calculateKpiValueForDouble(valueList, kpiId);
+	}
+
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI181(), KPICode.PR_DECLINE_RATE.getKpiId());
+	}
+
 	/**
 	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
 	 * project wise.
@@ -192,7 +222,7 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 			RepoToolValidationData validationData = new RepoToolValidationData();
 			validationData.setProjectName(projectName);
 			validationData.setBranchName(tool.getBranch());
-            validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+			validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 			validationData.setDeveloperName(developerName);
 			validationData.setDate(dateLabel);
 
@@ -212,7 +242,7 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 
 	/**
 	 * Calculate PR decline rate as (non-merged PRs / closed PRs) * 100
-	 * 
+	 *
 	 * @param mergeRequests
 	 *            list of merge requests
 	 * @return PR decline rate percentage
@@ -243,35 +273,5 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.PR_DECLINE_RATE.getColumns());
 		}
-	}
-
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
-
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
-
-	@Override
-	public String getQualifierType() {
-		return KPICode.PR_DECLINE_RATE.name();
-	}
-
-	@Override
-	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
-
-	@Override
-	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
-	}
-
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI181(), KPICode.PR_DECLINE_RATE.getKpiId());
 	}
 }
