@@ -4760,7 +4760,7 @@
     "fieldDisplayOrder": 1,
     "sectionOrder": 3,
     "tooltip": {
-      "definition": "Priority values of defects that can be excluded from Defect Density calculation"
+      "definition": "Priority values of defects that can be excluded from Defects Breached SLAs calculation"
     },
     "options": [
       {
@@ -4794,7 +4794,7 @@
     "fieldDisplayOrder": 2,
     "sectionOrder": 3,
     "tooltip": {
-      "definition": "Root cause reasons for defects to be included In Defect Density calculation."
+      "definition": "Root cause reasons for defects to be included in Defects Breached SLAs calculation."
     }
   },
   {
@@ -4817,7 +4817,7 @@
     "fieldDisplayOrder": 6,
     "sectionOrder": 4,
     "tooltip": {
-      "definition": "Resolution types for defects that can be excluded from Defect Density calculation."
+      "definition": "Resolution types for defects that can be excluded from Defects Breached SLAs calculation."
     }
   },
   {

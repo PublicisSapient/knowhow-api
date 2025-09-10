@@ -26,6 +26,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
+import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,6 +63,12 @@ public class ScmDataCleanUpServiceTest {
 
 	@Mock
 	private CommitRepository commitRepository;
+	@Mock
+	private ScmCommitsRepository scmCommitsRepository;
+	@Mock
+	private ScmMergeRequestsRepository scmMergeRequestsRepository;
+	@Mock
+	private ScmUserRepository scmUserRepository;
 
 	@Mock
 	private MergeRequestRepository mergReqRepo;
