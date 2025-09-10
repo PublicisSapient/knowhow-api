@@ -1259,7 +1259,7 @@ public class KPIExcelUtility {
 			repoToolValidationDataList.forEach(repoToolValidationData -> {
 				KPIExcelData excelData = new KPIExcelData();
 				excelData.setProject(repoToolValidationData.getProjectName());
-				excelData.setRepo(repoToolValidationData.getProjectName());
+				excelData.setRepo(repoToolValidationData.getRepoUrl());
 				excelData.setBranch(repoToolValidationData.getBranchName());
 				excelData.setAuthor(repoToolValidationData.getDeveloperName());
 				excelData.setDaysWeeks(repoToolValidationData.getDate());
