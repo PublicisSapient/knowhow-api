@@ -17,13 +17,15 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1400;
 
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
-// ⚠️ Disabled temporarily so that Mongock does not execute this unit
-//@ChangeUnit(id = "test_execution_time_kpi_kanban", order = "14005", author = "rendk", systemVersion = "14.0.0")
+@ChangeUnit(id = "test_execution_time_kpi_kanban", order = "14005", author = "rendk", systemVersion = "14.0.0")
 public class TestExecutionTimeKpiKanban {
 
     public static final String KPI_ID = "kpiId";
@@ -35,7 +37,7 @@ public class TestExecutionTimeKpiKanban {
         this.mongoTemplate = mongoTemplate;
     }
 
-    //@Execution
+    @Execution
     public void execution() {
         // Insert document in kpi_master
         Document kpiMasterDoc = new Document(KPI_ID, KPI_197)
@@ -77,7 +79,7 @@ public class TestExecutionTimeKpiKanban {
         log.info("Inserted KPI: Test Execution Time Kanban (kpi197) into kpi_master and kpi_category_mapping");
     }
 
-    //@RollbackExecution
+    @RollbackExecution
     public void rollback() {
         mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_197));
         mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_197));
