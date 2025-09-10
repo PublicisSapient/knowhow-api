@@ -174,9 +174,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 			return new ServiceResponse(false, "Jira already configured for this project", null);
 		}
 		if (isRepoTool(projectToolConfig, projectToolConfig.getBasicProjectConfigId().toString())) {
-			ServiceResponse repoToolServiceResponse = setRepoToolConfig(projectToolConfig);
-			if (Boolean.FALSE.equals(repoToolServiceResponse.getSuccess()))
-				return repoToolServiceResponse;
+			setRepoToolConfig(projectToolConfig);
 		}
 
 		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA_TEST) &&
@@ -338,11 +336,10 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 		ProjectToolConfig tool = optionalProjectToolConfig.get();
 		if (isValidTool(basicProjectConfigId, tool)) {
-			if (isRepoTool(tool, basicProjectConfigId) && !repoToolsConfigService.updateRepoToolProjectConfiguration(
-					toolList.stream().filter(projectToolConfig -> projectToolConfig.getToolName().equals(tool.getToolName()))
-							.collect(Collectors.toList()),
-					tool, basicProjectConfigId)) {
-				return false;
+			if (isRepoTool(tool, basicProjectConfigId)) {
+				repoToolsConfigService.updateRepoToolProjectConfiguration(toolList.stream()
+						.filter(projectToolConfig -> projectToolConfig.getToolName().equals(tool.getToolName()))
+						.toList(), tool, basicProjectConfigId);
 			}
 			cleanData(tool);
 			toolRepository.deleteById(new ObjectId(projectToolId));
@@ -488,7 +485,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	private List<ProjectToolConfig> getRepoTool(ObjectId basicProjectConfigId, Connection connection, String type) {
 		List<ProjectToolConfig> tools = toolRepository.findByToolNameAndBasicProjectConfigId(type, basicProjectConfigId);
 		return tools.stream().filter(projectToolConfig -> projectToolConfig.getConnectionId().equals(connection.getId()))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	private ServiceResponse setRepoToolConfig(ProjectToolConfig projectToolConfig) {

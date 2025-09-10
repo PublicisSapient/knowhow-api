@@ -25,7 +25,7 @@ package com.publicissapient.kpidashboard.apis.constant;
  */
 public final class Constant {
 
-	public static final Short TREND_LIMIT = (short) 15;
+	public static final Short TREND_LIMIT = (short) 20;
 
 	public static final String MIN = "min ";
 	public static final String SEC = "sec";
