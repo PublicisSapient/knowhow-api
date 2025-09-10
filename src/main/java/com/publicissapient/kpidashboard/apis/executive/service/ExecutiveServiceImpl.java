@@ -165,9 +165,8 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	}
 
 	private List<HierarchyLevel> getHierarchyLevels(boolean isKanban) {
-		List<HierarchyLevel> hierarchyLevels = isKanban ? cacheService.getFullKanbanHierarchyLevel()
-				: cacheService.getFullHierarchyLevel();
-		return hierarchyLevels;
+        return isKanban ? cacheService.getFullKanbanHierarchyLevel()
+                : cacheService.getFullHierarchyLevel();
 	}
 
 	@NotNull
