@@ -16,15 +16,13 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.enumeration;
+package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @AllArgsConstructor
@@ -32,51 +30,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 public enum RequiredHeaders {
     EMAIL("email") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
+        public void apply(AIUsage aiUsage, String value) {
             aiUsage.setEmail(value);
         }
     },
     PROMPT_COUNT("promptCount") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
-            setPromptCount(aiUsage, value, failedRecordsCount, uploadStatus);
+        public void apply(AIUsage aiUsage, String value) throws NumberFormatException {
+            Integer integerValue = Integer.parseInt(value);
+            aiUsage.setPromptCount(integerValue);
         }
     },
     BUSINESS_UNIT("businessUnit") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
+        public void apply(AIUsage aiUsage, String value) {
             aiUsage.setBusinessUnit(value);
         }
     },
     ACCOUNT("account") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
+        public void apply(AIUsage aiUsage, String value) {
             aiUsage.setAccount(value);
         }
     },
     VERTICAL("vertical") {
         @Override
-        public void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
+        public void apply(AIUsage aiUsage, String value) {
             aiUsage.setVertical(value);
         }
     };
 
     private final String name;
 
-    public abstract void apply(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus);
-
-    protected static void setPromptCount(AIUsage aiUsage, String value, AtomicInteger failedRecordsCount, AIUsageRequest uploadStatus) {
-        try {
-            Integer integerValue = Integer.parseInt(value);
-            aiUsage.setPromptCount(integerValue);
-        } catch (NumberFormatException e) {
-            aiUsage.setPromptCount(null);
-            failedRecordsCount.incrementAndGet();
-            uploadStatus.setStatus(UploadStatus.FAILED);
-            log.error("Record processing failed for requestId: {}. Cause: Invalid promptCount value. Must be an integer.",
-                    uploadStatus.getRequestId());
-        }
-    }
+    public abstract void apply(AIUsage aiUsage, String value);
 
     public static RequiredHeaders fromString(String field) {
         for (RequiredHeaders mappedField : RequiredHeaders.values()) {

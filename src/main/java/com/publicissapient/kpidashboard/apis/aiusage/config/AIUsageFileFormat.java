@@ -18,7 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.config;
 
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.RequiredHeaders;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.RequiredHeaders;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +32,7 @@ import java.util.Objects;
 @Configuration
 @ConfigurationProperties(prefix = "ai-usage-file-format.required-headers")
 public class AIUsageFileFormat {
-    private List<String> requiredHeaders = List.of(
+    private final List<String> requiredHeaders = List.of(
             RequiredHeaders.EMAIL.getName(),
             RequiredHeaders.PROMPT_COUNT.getName(),
             RequiredHeaders.BUSINESS_UNIT.getName(),
@@ -43,10 +43,10 @@ public class AIUsageFileFormat {
 
     public Map<String, String> getHeaderToMappingMap() {
         Map<String, String> headerToMappingMap = new HashMap<>();
-        if (Objects.nonNull(requiredHeaders)) {
-            if (Objects.nonNull(mappings) && requiredHeaders.size() == mappings.size()) {
+        if (Objects.nonNull(mappings)) {
+            if (requiredHeaders.size() == mappings.size()) {
                 for (int i = 0; i < requiredHeaders.size(); i++) {
-                    headerToMappingMap.put(requiredHeaders.get(i), mappings.get(i));
+                    headerToMappingMap.put(mappings.get(i), requiredHeaders.get(i));
                 }
             } else {
                 for (String header : requiredHeaders) {

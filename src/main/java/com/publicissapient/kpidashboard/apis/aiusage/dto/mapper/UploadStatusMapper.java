@@ -19,7 +19,7 @@
 package com.publicissapient.kpidashboard.apis.aiusage.dto.mapper;
 
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import org.springframework.stereotype.Component;
 

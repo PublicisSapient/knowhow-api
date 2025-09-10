@@ -19,10 +19,10 @@
 package com.publicissapient.kpidashboard.apis.aiusage.service;
 
 import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.mapper.UploadStatusMapper;
-import com.publicissapient.kpidashboard.apis.aiusage.enumeration.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
@@ -55,9 +55,10 @@ public class AIUsageService {
     private final UploadStatusMapper uploadStatusMapper;
 
     @Transactional
-    public InitiateUploadRequest uploadFile(@NonNull String filePath, UUID requestId, Instant submittedAt) {
+    public InitiateUploadResponse uploadFile(@NonNull String filePath, UUID requestId, Instant submittedAt) {
         try {
-            isValidAIUsageCSVFile(filePath);
+            File file = new File(filePath);
+            validateAIUsageCSVFile(file);
             AIUsageRequest receivedStatus = AIUsageRequest.builder()
                     .requestId(String.valueOf(requestId))
                     .submittedAt(submittedAt)
@@ -65,7 +66,7 @@ public class AIUsageService {
                     .build();
             aiUsageUploadStatusRepository.save(receivedStatus);
 
-            return new InitiateUploadRequest("File upload request accepted for processing", requestId, filePath);
+            return new InitiateUploadResponse("File upload request accepted for processing", requestId, filePath);
         } catch (IllegalArgumentException e) {
             AIUsageRequest receivedStatus = AIUsageRequest.builder()
                     .requestId(String.valueOf(requestId))
@@ -73,7 +74,7 @@ public class AIUsageService {
                     .status(UploadStatus.FAILED)
                     .build();
             aiUsageUploadStatusRepository.save(receivedStatus);
-            return new InitiateUploadRequest("Error while processing the file", requestId, filePath);
+            return new InitiateUploadResponse("Error while processing the file", requestId, filePath);
         }
     }
 
@@ -98,26 +99,35 @@ public class AIUsageService {
         aiUsageRepository.save(aiUsage);
     }
 
-    private void isValidAIUsageCSVFile(@NonNull String filePath) throws IllegalArgumentException {
-        File file = new File(filePath);
-        if (!(file.exists() && file.canRead())) {
-            throw new IllegalArgumentException("Unable to access file at location: " + filePath);
+    private void validateAIUsageCSVFile(File file) throws IllegalArgumentException {
+        if (Boolean.FALSE.equals(file.exists() && file.canRead())) {
+            throw new IllegalArgumentException("Unable to access file at given location.");
         }
 
-        if(!filePath.endsWith(".csv")) {
+        if(!file.getName().toLowerCase().endsWith(".csv")) {
             throw new IllegalArgumentException("Invalid file format. Only CSV files are accepted.");
         }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String headerLine = reader.readLine();
-            if (headerLine == null) {
-                throw new IllegalArgumentException("CSV file is empty.");
-            }
-
-            String[] headers = headerLine.split(COMMA_DELIMITER);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
             Set<String> headerSet = new HashSet<>();
-            for (String header : headers) {
-                headerSet.add(header.trim());
+            while ((line = reader.readLine()) != null) {
+                if (!line.trim().isEmpty()) { // Check for non-empty line
+                    String[] headers = line.split(COMMA_DELIMITER);
+                    for (String header : headers) {
+                        headerSet.add(header.trim());
+                    }
+
+                    for (String requiredHeader : aiUsageFileFormat.getRequiredHeaders()) {
+                        if (!headerSet.contains(requiredHeader)) {
+                            throw new IllegalArgumentException("Missing required header: " + requiredHeader);
+                        }
+                    }
+                    break;
+                }
+            }
+            if (line == null) {
+                throw new IllegalArgumentException("CSV file is empty or contains only empty lines.");
             }
 
             for (String requiredHeader : aiUsageFileFormat.getRequiredHeaders()) {

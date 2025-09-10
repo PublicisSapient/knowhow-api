@@ -16,14 +16,11 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.dto;
+package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
-import jakarta.validation.constraints.NotNull;
-
-import java.util.UUID;
-
-public record InitiateUploadRequest(String message, @NotNull UUID requestId, @NotNull String filePath) {
-    public String getMessage() {
-        return message;
-    }
+public enum UploadStatus {
+    PENDING,
+    PROCESSING,
+    COMPLETED,
+    FAILED
 }

@@ -18,20 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest;
 
+import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadAIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadRequest;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InputAIUsage;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
-import jakarta.ws.rs.BadRequestException;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -41,27 +38,17 @@ public class AIUsageController implements AIUsageAPI {
     private final AIUsageService aiUsageService;
 
     @Override
-    public InitiateUploadRequest uploadAiUsageData(@RequestBody InputAIUsage inputAIUsage) {
+    public InitiateUploadResponse uploadAiUsageData(@RequestBody UploadAIUsageRequest inputAIUsage) {
         UUID requestId = UUID.randomUUID();
         Instant submittedAt = Instant.now();
         return aiUsageService.uploadFile(inputAIUsage.filePath(), requestId, submittedAt);
     }
 
     @Override
-    public InitiateUploadRequest uploadAiUsageDataFile(@RequestPart MultipartFile file) {
+    public InitiateUploadResponse uploadAiUsageDataFile(@RequestPart MultipartFile file) {
         UUID requestId = UUID.randomUUID();
         Instant submittedAt = Instant.now();
-
-        String filePath;
-        try {
-            Path tempFile = Files.createTempFile("ai_usage_", "_" + file.getOriginalFilename());
-            file.transferTo(tempFile.toFile()); 
-            filePath = tempFile.toString();
-        } catch (IOException e) {
-            throw new BadRequestException("Failed to process the uploaded file: " + e.getMessage());
-        }
-
-        return aiUsageService.uploadFile(filePath, requestId, submittedAt);
+        return aiUsageService.uploadFile(Objects.requireNonNull(file.getOriginalFilename()), requestId, submittedAt);
     }
 
     @Override
