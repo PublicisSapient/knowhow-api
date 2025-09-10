@@ -19,7 +19,9 @@
 package com.publicissapient.kpidashboard.apis.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -51,7 +53,7 @@ public class KpiRequest implements Serializable {
 	private String duration = CommonConstant.MONTH;
 	private String hierarchyName;
 	private String hierarchyId;
-
+	private String levelName;
 	/**
 	 * Gets kpi list.
 	 *
@@ -372,10 +374,53 @@ public class KpiRequest implements Serializable {
 		this.duration = duration;
 	}
 
+
 	@Override
 	public String toString() {
 		return "KpiRequest [requestTrackerId=" + requestTrackerId + ", level=" + level + ", ids=" + Arrays.toString(ids) +
 				", platformIds=" + Arrays.toString(platformIds) + ", kpiList=" + kpiList + "]" + "sprintIncluded " +
 				sprintIncluded;
+	}
+
+
+	public String getLevelName() {
+		return levelName;
+	}
+
+	public void setLevelName(String levelName) {
+		this.levelName = levelName;
+	}
+
+	public KpiRequest() {}
+
+	/**
+	 * Copy constructor that creates a deep copy of the provided KpiRequest.
+	 *
+	 * @param original the KpiRequest to copy
+	 */
+
+	public KpiRequest(KpiRequest original) {
+		if (original != null) {
+			this.requestTrackerId = original.requestTrackerId;
+			this.level = original.level;
+			this.label = original.label;
+			this.ids = original.ids != null ? original.ids.clone() : null;
+			this.externalIDs = original.externalIDs != null ? new ArrayList<>(original.externalIDs) : null;
+			this.platformIds = original.platformIds != null ? original.platformIds.clone() : null;
+			this.kpiList = original.kpiList != null ? original.kpiList.stream().map(KpiElement::new).toList() : null;
+			this.kpiIdList = original.kpiIdList != null ? new ArrayList<>(original.kpiIdList) : null;
+			this.selectedMap = original.selectedMap != null ? new HashMap<>(original.selectedMap) : null;
+			this.startDate = original.startDate;
+			this.endDate = original.endDate;
+			this.filterToShowOnTrend = original.filterToShowOnTrend;
+			this.sprintIncluded = original.sprintIncluded != null ? new ArrayList<>(original.sprintIncluded) : null;
+			this.selecedHierarchyLabel = original.selecedHierarchyLabel;
+			this.kanbanXaxisDataPoints = original.kanbanXaxisDataPoints;
+			this.xAxisDataPoints = original.xAxisDataPoints;
+			this.duration = original.duration;
+			this.hierarchyName = original.hierarchyName;
+			this.hierarchyId = original.hierarchyId;
+			this.levelName = original.levelName;
+		}
 	}
 }

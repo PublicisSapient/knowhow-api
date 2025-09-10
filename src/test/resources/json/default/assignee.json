@@ -1,0 +1,122 @@
+[
+  {
+    "_id": "659cbf29c51aea1393531a3f",
+    "basicProjectConfigId": "65118da7965fbb0d14bce23c",
+    "source": "Jira",
+    "assignee": [
+      {
+        "assigneeId": "5ca22cf649d4611664b22e94",
+        "assigneeName": "Test User 1"
+      },
+      {
+        "assigneeId": "712020:ae576174-0779-4291-a2ba-73945915b3e5",
+        "assigneeName": "John Doe"
+      },
+      {
+        "assigneeId": "712020:c7860cf3-cbed-4e1d-a095-c504abf3bf05",
+        "assigneeName": "Jane Smith"
+      },
+      {
+        "assigneeId": "63f4a9aad6722987749d0296",
+        "assigneeName": "Test User 2"
+      },
+      {
+        "assigneeId": "712020:fc46bde2-418e-4533-8276-964f9f40aa0c",
+        "assigneeName": "Charlie Brown"
+      },
+      {
+        "assigneeId": "63903d9400cb2fc3f98bd006",
+        "assigneeName": "Alice Johnson"
+      },
+      {
+        "assigneeId": "5f0eabfe502ce1001d162133",
+        "assigneeName": "Bob White"
+      },
+      {
+        "assigneeId": "712020:91a18589-b4e8-4e39-9876-d21dd6c7195e",
+        "assigneeName": "Grace Lee"
+      },
+      {
+        "assigneeId": "712020:18098818-00ec-4c22-9ebc-2a448bfd7fd2",
+        "assigneeName": "Hank Taylor"
+      },
+      {
+        "assigneeId": "712020:098c880c-3241-4c3c-b07f-354bf09428bb",
+        "assigneeName": "Ivy Moore"
+      },
+      {
+        "assigneeId": "712020:adb55df0-b41b-44fe-9862-7ebeadb59ef6",
+        "assigneeName": "Jack Black",
+        "email": ["jack.black@example.com"]
+      },
+      {
+        "assigneeId": "6114bde5627b5600688a15f2",
+        "assigneeName": "Karen Green",
+        "email": ["karen.green@example.com", "karen.green@mock.com"]
+      },
+      {
+        "assigneeId": "634918c848be855a65ed8350",
+        "assigneeName": "Liam Brown"
+      },
+      {
+        "assigneeId": "6116066c1e9ac700680d6380",
+        "assigneeName": "Mia White",
+        "email": ["mia.white@example.com"]
+      },
+      {
+        "assigneeId": "712020:d4fff0ec-c00d-48e4-9225-24720fafad8a",
+        "assigneeName": "Noah Adams"
+      },
+      {
+        "assigneeId": "712020:1800057d-a05c-4580-8f96-6f8678a768da",
+        "assigneeName": "Olivia Clark"
+      },
+      {
+        "assigneeId": "62a1fd9d8783e7006f6274e4",
+        "assigneeName": "Paul Evans"
+      },
+      {
+        "assigneeId": "611604451e9ac700680d4d66",
+        "assigneeName": "Quinn Harris"
+      },
+      {
+        "assigneeId": "712020:f50ab650-0581-4567-98d4-fba06cc99317",
+        "assigneeName": "Ryan Scott"
+      },
+      {
+        "assigneeId": "712020:399ac152-b8ea-4b9a-aa5c-7e9875f9b176",
+        "assigneeName": "Sophia King"
+      },
+      {
+        "assigneeId": "5f0322761c682d0029dfa64e",
+        "assigneeName": "Tom Baker"
+      },
+      {
+        "assigneeId": "70121:b09f43e9-f285-453c-bdcd-7d55fd0f8d95",
+        "assigneeName": "Uma Patel"
+      },
+      {
+        "assigneeId": "712020:c9ce4317-404c-4f91-b74e-028a8fd19a80",
+        "assigneeName": "Victor Carter"
+      },
+      {
+        "assigneeId": "712020:3f06d478-a308-4cca-9a38-38a5ec36c8b8",
+        "assigneeName": "Wendy Lopez"
+      },
+      {
+        "assigneeId": "712020:b0b32bef-83a7-4272-ab3f-a2df25cf68f2",
+        "assigneeName": "Xander Hill"
+      },
+      {
+        "assigneeId": "712020:c948f2f7-f568-4210-a624-8fbdf71f245e",
+        "assigneeName": "Yara Reed"
+      },
+      {
+        "assigneeId": "712020:890705a8-4768-44a0-a324-e07fea347c38",
+        "assigneeName": "Zane Brooks"
+      }
+    ],
+    "assigneeSequence": 0,
+    "_class": "com.publicissapient.kpidashboard.common.model.jira.AssigneeDetails"
+  }
+]

@@ -319,4 +319,21 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 		ApiError apiError = new ApiError(HttpStatus.PAYLOAD_TOO_LARGE, ex.getMessage(), errorDetail, ex);
 		return buildResponseEntity(apiError);
 	}
+
+	/**
+	 * Handles ExecutiveDataException.
+	 *
+	 * @param ex      the exception
+	 * @param request the web request
+	 * @return the response entity with error details
+	 */
+	@ExceptionHandler(ExecutiveDataException.class)
+	public final ResponseEntity<Map<String, Object>> handleExecutiveDataException(ExecutiveDataException ex,
+			WebRequest request) {
+		Map<String, Object> response = new HashMap<>();
+		response.put("success", false);
+		response.put("status", ex.getStatus().value());
+		response.put("message", ex.getMessage());
+		return new ResponseEntity<>(response, ex.getStatus());
+	}
 }

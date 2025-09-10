@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
 
-
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
@@ -39,11 +38,11 @@ import com.publicissapient.kpidashboard.common.repository.application.Organizati
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsServiceR;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceR;
@@ -66,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 public class KpiIntegrationServiceImpl {
 
 	private static final List<String> FILTER_LIST = Arrays.asList("Final Scope (Story Points)", "Average Coverage",
-			"Story Points", "Overall");
+			"Story Points", "Overall", "Lead Time");
 	private static final String KPI_SOURCE_JIRA = "Jira";
 	private static final String KPI_SOURCE_SONAR = "Sonar";
 	private static final String KPI_SOURCE_ZEPHYR = "Zypher";
@@ -110,27 +109,33 @@ public class KpiIntegrationServiceImpl {
 		List<KpiMaster> kpiMasterList = kpiMasterRepository.findByKpiIdIn(kpiRequest.getKpiIdList());
 		Map<String, List<KpiMaster>> sourceWiseKpiList = kpiMasterList.stream()
 				.collect(Collectors.groupingBy(KpiMaster::getKpiSource));
-		List<KpiElement> kpiElements = new ArrayList<>();
 		setKpiRequest(kpiRequest);
+		return getKpiElements(kpiRequest, sourceWiseKpiList, false);
+	}
+
+	@NotNull
+	public List<KpiElement> getKpiElements(KpiRequest kpiRequest, Map<String, List<KpiMaster>> sourceWiseKpiList,
+			boolean withCache) {
+		List<KpiElement> kpiElements = new ArrayList<>();
 		sourceWiseKpiList.forEach((source, kpiList) -> {
 			try {
 				kpiRequest.setKpiList(
 						sourceWiseKpiList.get(source).stream().map(this::mapKpiMasterToKpiElement).toList());
 				switch (source) {
 				case KPI_SOURCE_JIRA:
-					kpiElements.addAll(getJiraKpiMaturity(kpiRequest));
+					kpiElements.addAll(getJiraKpiMaturity(kpiRequest, withCache));
 					break;
 				case KPI_SOURCE_SONAR:
-					kpiElements.addAll(getSonarKpiMaturity(kpiRequest));
+					kpiElements.addAll(getSonarKpiMaturity(kpiRequest, withCache));
 					break;
 				case KPI_SOURCE_ZEPHYR:
-					kpiElements.addAll(getZephyrKpiMaturity(kpiRequest));
+					kpiElements.addAll(getZephyrKpiMaturity(kpiRequest, withCache));
 					break;
 				case KPI_SOURCE_JENKINS:
-					kpiElements.addAll(getJenkinsKpiMaturity(kpiRequest));
+					kpiElements.addAll(getJenkinsKpiMaturity(kpiRequest, withCache));
 					break;
 				case KPI_SOURCE_DEVELOPER:
-					kpiElements.addAll(getDeveloperKpiMaturity(kpiRequest));
+					kpiElements.addAll(getDeveloperKpiMaturity(kpiRequest, withCache));
 					break;
 				default:
 					log.error("Invalid Kpi");
@@ -139,6 +144,11 @@ public class KpiIntegrationServiceImpl {
 				log.error("Error while fetching kpi maturity data", ex);
 			}
 		});
+		calculateOverallMaturity(kpiElements);
+		return kpiElements;
+	}
+
+	public void calculateOverallMaturity(List<KpiElement> kpiElements) {
 		kpiElements.forEach(kpiElement -> {
 			List<?> trendValueList = (List<?>) kpiElement.getTrendValueList();
 			if (CollectionUtils.isNotEmpty(trendValueList)) {
@@ -151,7 +161,10 @@ public class KpiIntegrationServiceImpl {
 							.map(DataCountGroup::getValue).flatMap(List::stream).findFirst();
 
 					firstMatchingDataCount.ifPresent(dataCount -> {
-						kpiElement.setOverAllMaturityValue((String) dataCount.getMaturityValue());
+						Object maturityValue = dataCount.getMaturityValue();
+
+						kpiElement.setOverAllMaturityValue(String.valueOf(maturityValue));
+
 						kpiElement.setOverallMaturity(dataCount.getMaturity());
 					});
 				} else {
@@ -163,8 +176,6 @@ public class KpiIntegrationServiceImpl {
 				}
 			}
 		});
-
-		return kpiElements;
 	}
 
 	/**
@@ -177,9 +188,11 @@ public class KpiIntegrationServiceImpl {
 		String[] hierarchyIdList = null;
 		List<String> externalIDs = kpiRequest.getExternalIDs();
 		if (CollectionUtils.isNotEmpty(externalIDs)) {
-			List<OrganizationHierarchy> orgHierarchyList = organizationHierarchyRepository.findByExternalIdIn(externalIDs);
-			if(CollectionUtils.isNotEmpty(orgHierarchyList)){
-				hierarchyIdList = orgHierarchyList.stream().map(OrganizationHierarchy::getNodeId).toArray(String[]::new);
+			List<OrganizationHierarchy> orgHierarchyList = organizationHierarchyRepository
+					.findByExternalIdIn(externalIDs);
+			if (CollectionUtils.isNotEmpty(orgHierarchyList)) {
+				hierarchyIdList = orgHierarchyList.stream().map(OrganizationHierarchy::getNodeId)
+						.toArray(String[]::new);
 			}
 		}
 		Optional<HierarchyLevel> optionalHierarchyLevel = hierarchyLevelService.getFullHierarchyLevels(false).stream()
@@ -234,7 +247,8 @@ public class KpiIntegrationServiceImpl {
 	 * @throws EntityNotFoundException
 	 *             entity not found exception for jira service method
 	 */
-	private List<KpiElement> getJiraKpiMaturity(KpiRequest kpiRequest) throws EntityNotFoundException {
+	private List<KpiElement> getJiraKpiMaturity(KpiRequest kpiRequest, boolean withCache)
+			throws EntityNotFoundException {
 		MDC.put("JiraScrumKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request {}", kpiRequest);
 		long jiraRequestStartTime = System.currentTimeMillis();
@@ -249,7 +263,7 @@ public class KpiIntegrationServiceImpl {
 			responseList = serviceFactory.getService(kpiRequest.getKpiList().get(0).getKpiCategory())
 					.processWithExposedApiToken(kpiRequest);
 		} else {
-			responseList = jiraService.processWithExposedApiToken(kpiRequest);
+			responseList = jiraService.processWithExposedApiToken(kpiRequest, withCache);
 		}
 		MDC.put("TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 		MDC.clear();
@@ -261,14 +275,15 @@ public class KpiIntegrationServiceImpl {
 	 *
 	 * @param kpiRequest
 	 *            kpiRequest to fetch kpi data
+	 * @param withCache
 	 * @return list of sonar KpiElement
 	 */
-	private List<KpiElement> getSonarKpiMaturity(KpiRequest kpiRequest) {
+	private List<KpiElement> getSonarKpiMaturity(KpiRequest kpiRequest, boolean withCache) {
 		MDC.put("SonarKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info("Received Sonar KPI request {}", kpiRequest);
 		long sonarRequestStartTime = System.currentTimeMillis();
 		MDC.put("SonarRequestStartTime", String.valueOf(sonarRequestStartTime));
-		List<KpiElement> responseList = sonarService.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> responseList = sonarService.processWithExposedApiToken(kpiRequest, withCache);
 		MDC.put("TotalSonarRequestTime", String.valueOf(System.currentTimeMillis() - sonarRequestStartTime));
 		MDC.clear();
 		return responseList;
@@ -279,16 +294,18 @@ public class KpiIntegrationServiceImpl {
 	 *
 	 * @param kpiRequest
 	 *            kpiRequest to fetch kpi data
+	 * @param withCache
 	 * @return list of sonar KpiElement
 	 * @throws EntityNotFoundException
 	 *             entity not found exception for zephyr service method
 	 */
-	private List<KpiElement> getZephyrKpiMaturity(KpiRequest kpiRequest) throws EntityNotFoundException {
+	private List<KpiElement> getZephyrKpiMaturity(KpiRequest kpiRequest, boolean withCache)
+			throws EntityNotFoundException {
 		MDC.put("ZephyrKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info("Received Zephyr KPI request {}", kpiRequest);
 		long zypherRequestStartTime = System.currentTimeMillis();
 		MDC.put("ZephyrRequestStartTime", String.valueOf(zypherRequestStartTime));
-		List<KpiElement> responseList = zephyrService.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> responseList = zephyrService.processWithExposedApiToken(kpiRequest, withCache);
 		MDC.put("TotalZephyrRequestTime", String.valueOf(System.currentTimeMillis() - zypherRequestStartTime));
 		MDC.clear();
 		return responseList;
@@ -299,16 +316,18 @@ public class KpiIntegrationServiceImpl {
 	 *
 	 * @param kpiRequest
 	 *            kpiRequest to fetch kpi data
+	 * @param withCache
 	 * @return list of sonar KpiElement
 	 * @throws EntityNotFoundException
 	 *             entity not found exception for jenkins service method
 	 */
-	private List<KpiElement> getJenkinsKpiMaturity(KpiRequest kpiRequest) throws EntityNotFoundException {
+	private List<KpiElement> getJenkinsKpiMaturity(KpiRequest kpiRequest, boolean withCache)
+			throws EntityNotFoundException {
 		MDC.put("JenkinsKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info("Received Zephyr KPI request {}", kpiRequest);
 		long jenkinsRequestStartTime = System.currentTimeMillis();
 		MDC.put("JenkinsRequestStartTime", String.valueOf(jenkinsRequestStartTime));
-		List<KpiElement> responseList = jenkinsServiceR.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> responseList = jenkinsServiceR.processWithExposedApiToken(kpiRequest, withCache);
 		MDC.put("TotalJenkinsRequestTime", String.valueOf(System.currentTimeMillis() - jenkinsRequestStartTime));
 		MDC.clear();
 		return responseList;
@@ -319,17 +338,19 @@ public class KpiIntegrationServiceImpl {
 	 *
 	 * @param kpiRequest
 	 *            kpiRequest to fetch kpi data
+	 * @param withCache
 	 * @return list of sonar KpiElement
 	 * @throws EntityNotFoundException
 	 *             entity not found exception for jenkins service method
 	 */
-	private List<KpiElement> getDeveloperKpiMaturity(KpiRequest kpiRequest) throws EntityNotFoundException {
+	private List<KpiElement> getDeveloperKpiMaturity(KpiRequest kpiRequest, boolean withCache)
+			throws EntityNotFoundException {
 		MDC.put("DeveloperKpiRequest", kpiRequest.getRequestTrackerId());
 		String sanitizedRequestTrackerId = kpiRequest.getRequestTrackerId().replaceAll("[^a-zA-Z0-9-_]", "_");
 		log.info("Received Developer KPI request {}", sanitizedRequestTrackerId);
 		long developerRequestStartTime = System.currentTimeMillis();
 		MDC.put("JenkinsRequestStartTime", String.valueOf(developerRequestStartTime));
-		List<KpiElement> responseList = bitBucketServiceR.processWithExposedApiToken(kpiRequest);
+		List<KpiElement> responseList = bitBucketServiceR.processWithExposedApiToken(kpiRequest, withCache);
 		MDC.put("TotalJenkinsRequestTime", String.valueOf(System.currentTimeMillis() - developerRequestStartTime));
 		MDC.clear();
 		return responseList;

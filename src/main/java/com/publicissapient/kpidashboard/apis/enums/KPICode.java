@@ -305,7 +305,12 @@ public enum KPICode {
 			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name()),
 
 	/** Defect severity index kpi */
-	DEFECT_SEVERITY_INDEX("kpi194", KPISource.JIRA.name());
+	DEFECT_SEVERITY_INDEX("kpi194", KPISource.JIRA.name()),
+
+	/**
+	 * Defects Breached SLAs (Service Level Agreements)
+	 */
+	DEFECTS_BREACHED_SLAS("kpi195", KPISource.JIRA.name());
 
 	// @formatter:on
 
