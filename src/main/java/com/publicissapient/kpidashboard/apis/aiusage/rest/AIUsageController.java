@@ -23,12 +23,14 @@ import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
+import jakarta.ws.rs.BadRequestException;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -48,7 +50,14 @@ public class AIUsageController implements AIUsageAPI {
     public InitiateUploadResponse uploadAiUsageDataFile(@RequestPart MultipartFile file) {
         UUID requestId = UUID.randomUUID();
         Instant submittedAt = Instant.now();
-        return aiUsageService.uploadFile(Objects.requireNonNull(file.getOriginalFilename()), requestId, submittedAt);
+        try {
+            File tempFile = File.createTempFile("ai-usage-", ".csv");
+            file.transferTo(tempFile);
+
+            return aiUsageService.uploadFile(tempFile.getAbsolutePath(), requestId, submittedAt);
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to process the uploaded file.", e);
+        }
     }
 
     @Override

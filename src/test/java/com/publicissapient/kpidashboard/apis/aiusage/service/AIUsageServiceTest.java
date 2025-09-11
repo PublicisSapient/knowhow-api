@@ -88,7 +88,7 @@ class AIUsageServiceTest {
                 .build();
 
         // When
-        when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+        when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
         when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
@@ -111,7 +111,7 @@ class AIUsageServiceTest {
                 .build();
 
         // When
-        when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+        when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
         when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
         InitiateUploadResponse result = aiUsageService.uploadFile(invalidFilePath, requestId, submittedAt);
@@ -126,10 +126,11 @@ class AIUsageServiceTest {
     @ValueSource(strings = {
             "src/test/resources/csv/invalid_ai_usage.csv",
             "src/test/resources/csv/empty.csv",
-            "invalid.xlx"
+            "src/test/resources/csv/invalid_ai_usage.xlx",
+            "nonexistent.csv"
     })
     void when_UploadFile_And_InvalidFilePath_expectException(String filePath) {
-        lenient().when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+        lenient().when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
         AIUsageRequest receivedStatus = AIUsageRequest.builder()
                 .requestId(String.valueOf(requestId))
@@ -219,5 +220,12 @@ class AIUsageServiceTest {
             // Then
             assertEquals(expectedHeader, headerLine);
         }
+    }
+
+    @Test
+    void when_UploadFile_And_NullFilePath_expectException() {
+        assertThrows(NullPointerException.class, () -> {
+            aiUsageService.uploadFile(null, requestId, submittedAt);
+        });
     }
 }
