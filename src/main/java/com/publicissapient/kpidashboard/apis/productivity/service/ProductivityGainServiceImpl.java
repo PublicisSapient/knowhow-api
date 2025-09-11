@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.enums.FieldMappingEnum;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
@@ -60,6 +61,8 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig;
 import com.publicissapient.kpidashboard.apis.productivity.dto.CalculateProductivityRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.CategorizedProductivityGain;
+import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendDTO;
+import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendsDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainDTO;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
@@ -100,6 +103,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	private static final class KPIConfiguration {
 		private double weightInProductivityScoreCalculation;
 
+		private String kpiName;
 		private String dataCountGroupFilterUsedForCalculation;
 		private String dataCountGroupFilter1UsedForCalculation;
 		private String dataCountGroupFilter2UsedForCalculation;
@@ -129,6 +133,15 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		private enum SupportedKPIHierarchyLevelAggregation {
 			ALL, PROJECT, SPRINT
 		}
+	}
+
+	@Getter
+	@Builder
+	private static final class KPIGainTrendCalculationData {
+		private double dataPointGainWeightSumProduct;
+		private double weightParts;
+
+		private String kpiName;
 	}
 
 	private final ProductivityGainConfig productivityGainConfig;
@@ -202,20 +215,38 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		return kpiElementList;
 	}
 
+	private Map<String, List<KPIGainTrendCalculationData>> constructCategoryBasedKPIGainTrendCalculationDataMap(
+			Map<String, List<KpiElement>> kpiIdKpiElementsMap, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap) {
+		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationDataMap = new HashMap<>();
+		for (String kpiCategory : productivityGainConfig.getAllCategories()) {
+			categoryBasedKPIGainTrendCalculationDataMap.put(kpiCategory,
+					constructGainTrendCalculationDataForAllKPIsInCategory(kpiIdKpiElementsMap,
+							projectNodeIdSprintNodeIdsMap, kpiCategory));
+		}
+		return categoryBasedKPIGainTrendCalculationDataMap;
+	}
+
 	private ProductivityGainDTO calculateProductivityGain(Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
 			List<KpiElement> kpisFromAllCategories) {
 		Map<String, List<KpiElement>> kpiIdKpiElementsMap = kpisFromAllCategories.stream()
 				.collect(Collectors.groupingBy(KpiElement::getKpiId));
 
+		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationData = constructCategoryBasedKPIGainTrendCalculationDataMap(
+				kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap);
+
+		KPITrendsDTO kpiTrendsDTO = constructKPITrendsByCategoryBasedKPIGainTrendCalculationDataMap(
+				categoryBasedKPIGainTrendCalculationData);
+
 		ProductivityGainDTO productivityGainDTO = new ProductivityGainDTO();
-		CategorizedProductivityGain categorizedProductivityGain = new CategorizedProductivityGain();
-		double speedGain = calculateCategorizedGain(kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap, CATEGORY_SPEED);
-		double qualityGain = calculateCategorizedGain(kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap,
-				CATEGORY_QUALITY);
-		double productivityGain = calculateCategorizedGain(kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap,
-				CATEGORY_PRODUCTIVITY);
-		double efficiencyGain = calculateCategorizedGain(kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap,
-				CATEGORY_EFFICIENCY);
+
+		productivityGainDTO.setKpiTrends(kpiTrendsDTO);
+
+		double speedGain = calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_SPEED));
+		double qualityGain = calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_QUALITY));
+		double productivityGain = calculateCategorizedGain(
+				categoryBasedKPIGainTrendCalculationData.get(CATEGORY_PRODUCTIVITY));
+		double efficiencyGain = calculateCategorizedGain(
+				categoryBasedKPIGainTrendCalculationData.get(CATEGORY_EFFICIENCY));
 
 		double overallGain = (speedGain * productivityGainConfig.getWeightForCategory(CATEGORY_SPEED))
 				+ (qualityGain * productivityGainConfig.getWeightForCategory(CATEGORY_QUALITY))
@@ -225,6 +256,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		double overallGainRounded = Math.round((overallGain) * TWO_DECIMAL_ROUNDING_COEFFICIENT)
 				/ TWO_DECIMAL_ROUNDING_COEFFICIENT;
 
+		CategorizedProductivityGain categorizedProductivityGain = new CategorizedProductivityGain();
 		categorizedProductivityGain.setSpeed(speedGain);
 		categorizedProductivityGain.setQuality(qualityGain);
 		categorizedProductivityGain.setProductivity(productivityGain);
@@ -391,11 +423,11 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 		List<KpiMaster> kpiMasterList = new ArrayList<>();
 
-        for (KpiMaster kpiMaster : configHelperService.loadKpiMaster()) {
-            if (kpiIds.contains(kpiMaster.getKpiId())) {
-                kpiMasterList.add(kpiMaster);
-            }
-        }
+		for (KpiMaster kpiMaster : configHelperService.loadKpiMaster()) {
+			if (kpiIds.contains(kpiMaster.getKpiId())) {
+				kpiMasterList.add(kpiMaster);
+			}
+		}
 
 		Map<Integer, List<KpiMaster>> groupIdKpiMasterMap = kpiMasterList.stream()
 				.collect(Collectors.groupingBy(KpiMaster::getGroupId));
@@ -471,12 +503,39 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		}
 	}
 
-	@SuppressWarnings({ "java:S3776", "java:S134" })
-	private static double calculateCategorizedGain(Map<String, List<KpiElement>> kpiIdKpiElementsMap,
-			Map<String, Set<String>> projectNodeIdSprintNodeIdsMap, String categoryName) {
-		int totalNumberOfParts = 0;
-		double totalWeightSum = 0.0D;
+	private static KPITrendsDTO constructKPITrendsByCategoryBasedKPIGainTrendCalculationDataMap(
+			Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationData) {
+		KPITrendsDTO.KPITrendsDTOBuilder kpiTrendsDTOBuilder = KPITrendsDTO.builder();
+		List<KPITrendDTO> positiveTrends = new ArrayList<>();
+		List<KPITrendDTO> negativeTrends = new ArrayList<>();
+		double trendValue;
+		for (Map.Entry<String, List<KPIGainTrendCalculationData>> categoryBasedKpiGainTrendCalculationDataEntry : categoryBasedKPIGainTrendCalculationData
+				.entrySet()) {
+			for (KPIGainTrendCalculationData kpiGainTrendCalculationData : categoryBasedKpiGainTrendCalculationDataEntry
+					.getValue()) {
+				trendValue = Math
+						.round((kpiGainTrendCalculationData.getDataPointGainWeightSumProduct()
+								/ kpiGainTrendCalculationData.getWeightParts()) * TWO_DECIMAL_ROUNDING_COEFFICIENT)
+						/ TWO_DECIMAL_ROUNDING_COEFFICIENT;
+				KPITrendDTO kpiTrendDTO = KPITrendDTO.builder()
+						.kpiCategory(categoryBasedKpiGainTrendCalculationDataEntry.getKey())
+						.kpiName(kpiGainTrendCalculationData.getKpiName()).trendValue(trendValue).build();
+				if (kpiGainTrendCalculationData.getDataPointGainWeightSumProduct() > 0.0) {
+					positiveTrends.add(kpiTrendDTO);
+				} else {
+					negativeTrends.add(kpiTrendDTO);
+				}
+			}
+		}
+		return kpiTrendsDTOBuilder.positive(positiveTrends).negative(negativeTrends).build();
+	}
 
+	@SuppressWarnings({ "java:S3776", "java:S134" })
+	private static List<KPIGainTrendCalculationData> constructGainTrendCalculationDataForAllKPIsInCategory(
+			Map<String, List<KpiElement>> kpiIdKpiElementsMap, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
+			String categoryName) {
+		List<KPIGainTrendCalculationData> kpiGainTrendCalculationDataList = new ArrayList<>();
+		int kpiWeightParts;
 		for (Map.Entry<String, KPIConfiguration> kpiIdKpiConfigurationMapEntry : CATEGORY_KPI_ID_CONFIGURATION_MAP
 				.get(categoryName).entrySet()) {
 			KPIConfiguration kpiConfiguration = kpiIdKpiConfigurationMapEntry.getValue();
@@ -493,27 +552,41 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								0.0D) != 0)
 						.findFirst();
 				if (entryContainingTheBaseLineValue.isPresent()) {
-					double kpiWeightSum = 0.0D;
+					double kpiDataPointGainWeightSumProduct = 0.0D;
 					double baseLineValue = entryContainingTheBaseLineValue.get().getValue().stream()
 							.mapToDouble(Double::doubleValue).average().orElse(0.0D);
 
-					totalNumberOfParts += (int) (kpiValuesByDataPointMap.keySet().size()
+					kpiWeightParts = (int) (kpiValuesByDataPointMap.keySet().size()
 							* kpiConfiguration.weightInProductivityScoreCalculation);
 
 					for (Map.Entry<Integer, List<Double>> entry : kpiValuesByDataPointMap.entrySet()) {
 						double average = entry.getValue().stream().mapToDouble(Double::doubleValue).average()
 								.orElse(0.0D);
 						if (KPIConfiguration.PositiveGainTrend.ASCENDING == kpiConfiguration.positiveGainTrend) {
-							kpiWeightSum += ((average - baseLineValue) / baseLineValue) * PERCENTAGE_MULTIPLIER
-									* kpiConfiguration.weightInProductivityScoreCalculation;
+							kpiDataPointGainWeightSumProduct += ((average - baseLineValue) / baseLineValue)
+									* PERCENTAGE_MULTIPLIER * kpiConfiguration.weightInProductivityScoreCalculation;
 						} else {
-							kpiWeightSum += ((baseLineValue - average) / baseLineValue) * PERCENTAGE_MULTIPLIER
-									* kpiConfiguration.weightInProductivityScoreCalculation;
+							kpiDataPointGainWeightSumProduct += ((baseLineValue - average) / baseLineValue)
+									* PERCENTAGE_MULTIPLIER * kpiConfiguration.weightInProductivityScoreCalculation;
 						}
 					}
-					totalWeightSum += kpiWeightSum;
+					kpiGainTrendCalculationDataList.add(KPIGainTrendCalculationData.builder()
+							.dataPointGainWeightSumProduct(kpiDataPointGainWeightSumProduct).weightParts(kpiWeightParts)
+							.kpiName(getKpiNameByKpiId(kpiIdKpiConfigurationMapEntry.getKey())).build());
 				}
 			}
+		}
+		return kpiGainTrendCalculationDataList;
+	}
+
+	private static double calculateCategorizedGain(
+			List<KPIGainTrendCalculationData> kpiGainTrendCalculationDataListForCategory) {
+		int totalNumberOfParts = 0;
+		double totalWeightSum = 0.0D;
+
+		for (KPIGainTrendCalculationData kpiGainTrendCalculationData : kpiGainTrendCalculationDataListForCategory) {
+			totalWeightSum += kpiGainTrendCalculationData.getDataPointGainWeightSumProduct();
+			totalNumberOfParts += (int) kpiGainTrendCalculationData.getWeightParts();
 		}
 
 		if (totalNumberOfParts != 0) {
@@ -765,6 +838,10 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 			}
 		}
 		return sprintDataSortedBySprintStartDateDescending;
+	}
+
+	private static String getKpiNameByKpiId(String kpiId) {
+		return FieldMappingEnum.valueOf(kpiId.toUpperCase()).getKpiName();
 	}
 
 	private static Map<String, Map<String, KPIConfiguration>> constructCategoryKpiIdConfigurationMap() {
