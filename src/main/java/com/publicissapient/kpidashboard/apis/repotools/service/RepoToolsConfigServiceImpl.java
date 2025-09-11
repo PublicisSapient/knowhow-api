@@ -155,7 +155,9 @@ public class RepoToolsConfigServiceImpl {
 						: "";
 			}
 			return new ServiceResponse(false, errorMessage, null);
-		}
+		} catch (Exception ex) {
+            log.error("Configuration failed for {}", projectToolConfig.getBasicProjectConfigId().toString(), ex);
+        }
 		return new ServiceResponse(true, "", null);
 	}
 
@@ -277,29 +279,33 @@ public class RepoToolsConfigServiceImpl {
 	 * @return true if the project configuration was successfully updated, false
 	 *         otherwise
 	 */
-	public boolean updateRepoToolProjectConfiguration(List<ProjectToolConfig> toolList, ProjectToolConfig tool,
+    public boolean updateRepoToolProjectConfiguration(List<ProjectToolConfig> toolList, ProjectToolConfig tool,
 			String basicProjectConfigId) {
 		int httpStatus = HttpStatus.NOT_FOUND.value();
-		if (toolList.size() > 1) {
-			toolList.remove(tool);
-			if (CollectionUtils.isNotEmpty(getToolByRepo(tool, toolList))) {
-				return true;
+		List<ProjectToolConfig> mutableToolList = new ArrayList<>(toolList);
+		try {
+			if (mutableToolList.size() > 1) {
+				Optional<ProjectToolConfig> projectToolConfig = mutableToolList.stream()
+						.filter(toolConfig -> toolConfig.getId().equals(tool.getId())).findFirst();
+				projectToolConfig.ifPresent(mutableToolList::remove);
+				if (CollectionUtils.isNotEmpty(getToolByRepo(tool, mutableToolList))) {
+					return true;
+				} else {
+
+					// delete only the repository
+					String deleteRepoUrl = customApiConfig.getRepoToolURL()
+							+ String.format(customApiConfig.getRepoToolDeleteRepoUrl(),
+									URLEncoder.encode(createProjectCode(basicProjectConfigId), StandardCharsets.UTF_8),
+									tool.getRepositoryName());
+					httpStatus = repoToolsClient.deleteRepositories(deleteRepoUrl, customApiConfig.getRepoToolAPIKey());
+				}
 			} else {
-				// delete only the repository
-				String deleteRepoUrl = customApiConfig.getRepoToolURL() +
-						String.format(customApiConfig.getRepoToolDeleteRepoUrl(),
-								URLEncoder.encode(createProjectCode(basicProjectConfigId), StandardCharsets.UTF_8),
-								tool.getRepositoryName());
-				httpStatus = repoToolsClient.deleteRepositories(deleteRepoUrl, customApiConfig.getRepoToolAPIKey());
-			}
-		} else {
-			try {
 				ProjectBasicConfig projectBasicConfig = configHelperService.getProjectConfig(basicProjectConfigId);
 				// delete the project from repo tool if only one repository is present
 				httpStatus = deleteRepoToolProject(projectBasicConfig, false);
-			} catch (Exception ex) {
-				log.error("Exception while deleting project {}", ex);
 			}
+		} catch (Exception ex) {
+			log.error("Exception while deleting project {}", ex);
 		}
 		return httpStatus == HttpStatus.OK.value();
 	}
