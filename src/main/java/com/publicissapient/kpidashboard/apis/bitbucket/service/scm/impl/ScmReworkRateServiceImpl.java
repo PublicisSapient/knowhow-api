@@ -172,10 +172,11 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		LocalDateTime extendedStartDate = dateRange.getStartDate().atStartOfDay().minusDays(REWORK_DAYS_AGO);
 		LocalDateTime endDateTime = dateRange.getEndDate().atTime(23, 59, 59);
+        CustomDateRange extendedDateRange = new CustomDateRange();
+        extendedDateRange.setStartDate(extendedStartDate.toLocalDate());
+        extendedDateRange.setEndDate(endDateTime.toLocalDate());
 
 		ObjectId projectBasicConfigId = leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
-		CustomDateRange extendedDateRange = new CustomDateRange(extendedStartDate.toLocalDate(),
-				endDateTime.toLocalDate());
 
 		List<ScmCommits> commits = scmKpiHelperService.getCommitDetails(projectBasicConfigId, extendedDateRange);
 
@@ -234,8 +235,12 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 			// Get commits for the extended period (including reference period)
 			LocalDateTime referenceStartDate = periodRange.getStartDateTime().minusDays(REWORK_DAYS_AGO);
+			final CustomDateRange extendedDateRange = new CustomDateRange();
+			extendedDateRange.setStartDateTime(referenceStartDate);
+			extendedDateRange.setEndDateTime(periodRange.getEndDateTime());
+
 			List<ScmCommits> periodCommits = DeveloperKpiHelper.filterCommitsByCommitTimeStamp(allCommits,
-					new CustomDateRange(referenceStartDate, periodRange.getEndDateTime()));
+					extendedDateRange);
 
 			for (Tool tool : scmTools) {
 				ToolDataContext context = ToolDataContext.builder().tool(tool).commits(periodCommits)
