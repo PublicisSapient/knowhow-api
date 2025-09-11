@@ -77,10 +77,13 @@ class AIUsageServiceTest {
         submittedAt = Instant.now();
     }
 
-    @Test
-    void when_UploadFile_And_ValidInput_ExpectRequestSaved() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "src/test/resources/csv/valid_ai_usage.csv",
+            "src/test/resources/csv/ai_usage_with_empty_lines.csv"
+    })
+    void when_UploadFile_And_ValidInput_ExpectRequestSaved(String validFilePath) {
         // Given
-        String validFilePath = "src/test/resources/csv/valid_ai_usage.csv";
         AIUsageRequest uploadStatus = AIUsageRequest.builder()
                 .requestId(String.valueOf(requestId))
                 .submittedAt(submittedAt)
@@ -127,7 +130,8 @@ class AIUsageServiceTest {
             "src/test/resources/csv/invalid_ai_usage.csv",
             "src/test/resources/csv/empty.csv",
             "src/test/resources/csv/invalid_ai_usage.xlx",
-            "nonexistent.csv"
+            "nonexistent.csv",
+            "/random/path/to/file.csv"
     })
     void when_UploadFile_And_InvalidFilePath_expectException(String filePath) {
         lenient().when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
