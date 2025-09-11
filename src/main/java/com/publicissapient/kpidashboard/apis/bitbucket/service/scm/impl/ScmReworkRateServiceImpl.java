@@ -53,7 +53,6 @@ import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
-import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
@@ -172,9 +171,10 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		LocalDateTime extendedStartDate = dateRange.getStartDate().atStartOfDay().minusDays(REWORK_DAYS_AGO);
 		LocalDateTime endDateTime = dateRange.getEndDate().atTime(23, 59, 59);
-        CustomDateRange extendedDateRange = new CustomDateRange();
-        extendedDateRange.setStartDate(extendedStartDate.toLocalDate());
-        extendedDateRange.setEndDate(endDateTime.toLocalDate());
+
+		CustomDateRange extendedDateRange = new CustomDateRange();
+		extendedDateRange.setStartDate(extendedStartDate.toLocalDate());
+		extendedDateRange.setEndDate(endDateTime.toLocalDate());
 
 		ObjectId projectBasicConfigId = leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
 
