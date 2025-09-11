@@ -41,6 +41,13 @@ public class AIUsageFileFormat {
 
     private List<String> mappings;
 
+    public List<String> getExpectedHeaders() {
+        if(Objects.nonNull(mappings) && mappings.size() == requiredHeaders.size()) {
+            return mappings;
+        }
+        return requiredHeaders;
+    }
+
     public Map<String, String> getHeaderToMappingMap() {
         Map<String, String> headerToMappingMap = new HashMap<>();
         if (Objects.nonNull(mappings)) {

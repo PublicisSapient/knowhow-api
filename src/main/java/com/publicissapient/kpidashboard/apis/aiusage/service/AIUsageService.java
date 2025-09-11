@@ -27,8 +27,8 @@ import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
 import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageUploadStatusRepository;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +56,7 @@ public class AIUsageService {
     private final UploadStatusMapper uploadStatusMapper;
 
     @Transactional
-    public InitiateUploadResponse uploadFile(@NonNull String filePath, UUID requestId, Instant submittedAt) {
+    public InitiateUploadResponse uploadFile(@NotNull String filePath, UUID requestId, Instant submittedAt) {
         try {
             validateAIUsageCSVFile(filePath);
             AIUsageRequest receivedStatus = AIUsageRequest.builder()
@@ -113,16 +113,10 @@ public class AIUsageService {
             String line;
             Set<String> headerSet = new HashSet<>();
             while ((line = reader.readLine()) != null) {
-                if (!line.trim().isEmpty()) { // Check for non-empty line
+                if (!line.trim().isEmpty()) {
                     String[] headers = line.split(COMMA_DELIMITER);
                     for (String header : headers) {
                         headerSet.add(header.trim());
-                    }
-
-                    for (String requiredHeader : aiUsageFileFormat.getRequiredHeaders()) {
-                        if (!headerSet.contains(requiredHeader)) {
-                            throw new IllegalArgumentException("Missing required header: " + requiredHeader);
-                        }
                     }
                     break;
                 }
@@ -131,9 +125,9 @@ public class AIUsageService {
                 throw new IllegalArgumentException("CSV file is empty or contains only empty lines.");
             }
 
-            for (String requiredHeader : aiUsageFileFormat.getRequiredHeaders()) {
-                if (!headerSet.contains(requiredHeader)) {
-                    throw new IllegalArgumentException("Missing required header: " + requiredHeader);
+            for (String expectedHeader : aiUsageFileFormat.getExpectedHeaders()) {
+                if (!headerSet.contains(expectedHeader)) {
+                    throw new IllegalArgumentException("Missing required header: " + expectedHeader);
                 }
             }
         } catch (IOException e) {

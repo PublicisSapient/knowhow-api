@@ -19,7 +19,7 @@
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
 import jakarta.validation.constraints.NotNull;
-import net.minidev.json.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.UUID;
 
