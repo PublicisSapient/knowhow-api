@@ -53,7 +53,6 @@ public interface AIUsageAPI {
                                     examples = @ExampleObject(
                                             name = "Accepted Response",
                                             value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
-                                                    " \"filePath\":\"\"/absolute/path/to/your/file.csv\"\"," +
                                                     " \"message\":\"\",Request accepted for processing\"}"
                                     ))
                     ),
@@ -91,7 +90,6 @@ public interface AIUsageAPI {
                                     examples = @ExampleObject(
                                             name = "Accepted Response",
                                             value = "{\"requestId\":\"123e4567-e89b-12d3-a456-426614174000\"," +
-                                                    " \"filePath\":\"\"/absolute/path/to/your/file.csv\"\"," +
                                                     " \"message\":\"\",Request accepted for processing\"}"
                                     ))
                     ),
