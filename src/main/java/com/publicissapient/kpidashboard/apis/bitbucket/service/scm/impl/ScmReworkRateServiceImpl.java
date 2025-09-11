@@ -65,8 +65,36 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * SCM Rework Rate Service Implementation Calculates rework rate using SCM
- * commits from database
+ * SCM Rework Rate Service Implementation
+ *
+ * <h3>REWORK RATE LOGIC</h3>
+ *
+ * <b>What:</b> Measures how much code is being changed that was already changed
+ * in the past 21 days.
+ *
+ * <b>Why:</b> High rework indicates quality issues - developers are
+ * fixing/changing recently written code.
+ *
+ * <b>How it works:</b>
+ * 
+ * <pre>
+ * 1. Look back 21 days to build a "reference pool" of all changed lines
+ * 2. For current period, check if any changed lines were in the reference pool
+ * 3. Rework Rate = (1 - (reworked lines / total lines changed)) * 100
+ *
+ * Example:
+ * - Day 1: Changed lines 10-20 in FileA.java (goes into reference pool)
+ * - Day 15: Changed lines 15-25 in FileA.java
+ *   - Lines 15-20 are rework (were changed before)
+ *   - Lines 21-25 are new changes
+ *   - Rework = 6 lines, Total = 11 lines
+ *   - Rate = (1 - 6/11) * 100 = 45.45%
+ *
+ * Lower percentage = More rework (bad)
+ * Higher percentage = Less rework (good)
+ * </pre>
+ *
+ * @author shunaray
  */
 @Slf4j
 @Service
@@ -81,6 +109,9 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 	private final ScmKpiHelperService scmKpiHelperService;
 	private final ConfigHelperService configHelperService;
 
+	/**
+	 * Helper class to track rework calculation
+	 */
 	private static class ReworkCalculation {
 		private int totalChanges = 0;
 		private int reworkChanges = 0;
@@ -137,12 +168,14 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 			KpiRequest kpiRequest) {
 		Map<String, Object> resultMap = new HashMap<>();
 
+		// Fetch commits from (current - dataPoints - 21 days) for reference data
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		LocalDateTime extendedStartDate = dateRange.getStartDate().atStartOfDay().minusDays(REWORK_DAYS_AGO);
 		LocalDateTime endDateTime = dateRange.getEndDate().atTime(23, 59, 59);
 
 		ObjectId projectBasicConfigId = leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
-		CustomDateRange extendedDateRange = new CustomDateRange(extendedStartDate, endDateTime);
+		CustomDateRange extendedDateRange = new CustomDateRange(extendedStartDate.toLocalDate(),
+				endDateTime.toLocalDate());
 
 		List<ScmCommits> commits = scmKpiHelperService.getCommitDetails(projectBasicConfigId, extendedDateRange);
 
@@ -204,7 +237,6 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 			List<ScmCommits> periodCommits = DeveloperKpiHelper.filterCommitsByCommitTimeStamp(allCommits,
 					new CustomDateRange(referenceStartDate, periodRange.getEndDateTime()));
 
-			// CHANGE: Create context object to reduce parameters
 			for (Tool tool : scmTools) {
 				ToolDataContext context = ToolDataContext.builder().tool(tool).commits(periodCommits)
 						.assignees(assignees).dateLabel(dateLabel)
@@ -239,7 +271,6 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		DeveloperKpiHelper.setDataCount(context.projectName(), context.dateLabel(), overallKpiGroup, overallReworkRate,
 				Map.of(), context.kpiTrendDataByGroup());
 
-		// Process user-wise rework rates
 		Map<String, List<ScmCommits>> userWiseCommits = DeveloperKpiHelper.groupCommitsByUser(nonMergeCommits);
 
 		context.validationDataList()
@@ -268,6 +299,15 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 				}).collect(Collectors.toList());
 	}
 
+	/**
+	 * Core rework calculation logic
+	 *
+	 * @param commits
+	 *            All commits (reference + analysis period)
+	 * @param periodRange
+	 *            Current analysis period
+	 * @return Rework rate percentage (higher is better)
+	 */
 	private Double calculateReworkRateForPeriod(List<ScmCommits> commits, CustomDateRange periodRange) {
 		if (CollectionUtils.isEmpty(commits)) {
 			return 0.0;
@@ -275,17 +315,29 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 		LocalDateTime periodStart = periodRange.getStartDateTime();
 
+		// Step 1: Split commits into reference (past 21 days) and analysis (current
+		// period)
 		Map<Boolean, List<ScmCommits>> partitionedCommits = commits.stream().collect(Collectors.partitioningBy(
 				commit -> DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()).isBefore(periodStart)));
 
 		List<ScmCommits> referenceCommits = partitionedCommits.get(true);
 		List<ScmCommits> analysisCommits = partitionedCommits.get(false);
 
+		// Step 2: Build reference pool (all lines changed in past 21 days)
 		Map<String, Set<Integer>> referencePool = createReferencePool(referenceCommits);
 
+		// Step 3: Calculate how many current changes are rework
 		return calculateReworkPercentage(analysisCommits, referencePool);
 	}
 
+	/**
+	 * Creates a map of files to line numbers that were changed in the reference
+	 * period
+	 *
+	 * @param referenceCommits
+	 *            Commits from the past 21 days
+	 * @return Map of file path to set of changed line numbers
+	 */
 	private Map<String, Set<Integer>> createReferencePool(List<ScmCommits> referenceCommits) {
 		Map<String, Set<Integer>> referencePool = new HashMap<>();
 
@@ -303,6 +355,15 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		return referencePool;
 	}
 
+	/**
+	 * Calculates the rework percentage for analysis period commits
+	 *
+	 * @param commits
+	 *            Analysis period commits
+	 * @param referencePool
+	 *            Lines changed in reference period
+	 * @return Percentage (100 = no rework, 0 = all rework)
+	 */
 	private Double calculateReworkPercentage(List<ScmCommits> commits, Map<String, Set<Integer>> referencePool) {
 		if (CollectionUtils.isEmpty(commits)) {
 			return 0.0;
@@ -321,6 +382,16 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		return fileChange.getFilePath() != null && CollectionUtils.isNotEmpty(fileChange.getChangedLineNumbers());
 	}
 
+	/**
+	 * Processes a single file change to count rework
+	 *
+	 * @param fileChange
+	 *            Current file change
+	 * @param referencePool
+	 *            Reference pool of past changes
+	 * @param calculation
+	 *            Rework calculation tracker
+	 */
 	private void processFileChange(ScmCommits.FileChange fileChange, Map<String, Set<Integer>> referencePool,
 			ReworkCalculation calculation) {
 		String filePath = fileChange.getFilePath();
@@ -328,7 +399,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		Set<Integer> referenceLines = referencePool.get(filePath);
 
 		if (referenceLines != null) {
-			// Count rework (intersection of changed lines with reference pool)
+			// File was changed before - count rework
 			Set<Integer> changedLineSet = new HashSet<>(changedLines);
 			long reworkCount = referenceLines.stream().filter(changedLineSet::contains).count();
 			calculation.addRework((int) reworkCount);
@@ -336,7 +407,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 			// Add current changes to reference pool for cumulative tracking
 			referenceLines.addAll(changedLines);
 		} else {
-			// New file, add to reference pool
+			// New file - no rework, add to reference pool
 			referencePool.put(filePath, new HashSet<>(changedLines));
 		}
 
@@ -349,7 +420,6 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 				commit -> !DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()).isBefore(periodStart));
 	}
 
-	// CHANGE: Simplified validation data creation
 	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
 			String dateLabel, Double reworkRate) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
