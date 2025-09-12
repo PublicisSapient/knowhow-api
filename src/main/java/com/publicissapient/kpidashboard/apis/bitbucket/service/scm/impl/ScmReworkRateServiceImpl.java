@@ -75,11 +75,11 @@ import lombok.extern.slf4j.Slf4j;
  * fixing/changing recently written code.
  *
  * <b>How it works:</b>
- * 
+ *
  * <pre>
- * 1. Look back 21 days to build a "reference pool" of all changed lines
+ * 1. Look back 21 days (Past three weeks) to build a "reference pool" of all changed lines
  * 2. For current period, check if any changed lines were in the reference pool
- * 3. Rework Rate = (1 - (reworked lines / total lines changed)) * 100
+ * 3. Rework Rate = (reworked lines / total lines changed) * 100
  *
  * Example:
  * - Day 1: Changed lines 10-20 in FileA.java (goes into reference pool)
@@ -87,10 +87,10 @@ import lombok.extern.slf4j.Slf4j;
  *   - Lines 15-20 are rework (were changed before)
  *   - Lines 21-25 are new changes
  *   - Rework = 6 lines, Total = 11 lines
- *   - Rate = (1 - 6/11) * 100 = 45.45%
+ *   - Rate = (6/11) * 100 = 54.55%
  *
- * Lower percentage = More rework (bad)
- * Higher percentage = Less rework (good)
+ * Higher percentage = More rework (bad)
+ * Lower percentage = Less rework (good)
  * </pre>
  *
  * @author shunaray
@@ -127,8 +127,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 			if (totalChanges == 0) {
 				return 0.0;
 			}
-			double score = (double) reworkChanges / totalChanges;
-			return (1 - score) * 100;
+			return ((double) reworkChanges / totalChanges) * 100;
 		}
 	}
 
@@ -311,7 +310,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 	 *            All commits (reference + analysis period)
 	 * @param periodRange
 	 *            Current analysis period
-	 * @return Rework rate percentage (higher is better)
+	 * @return Rework rate percentage (higher = more rework)
 	 */
 	private Double calculateReworkRateForPeriod(List<ScmCommits> commits, CustomDateRange periodRange) {
 		if (CollectionUtils.isEmpty(commits)) {
@@ -367,7 +366,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 	 *            Analysis period commits
 	 * @param referencePool
 	 *            Lines changed in reference period
-	 * @return Percentage (100 = no rework, 0 = all rework)
+	 * @return Percentage (higher = more rework)
 	 */
 	private Double calculateReworkPercentage(List<ScmCommits> commits, Map<String, Set<Integer>> referencePool) {
 		if (CollectionUtils.isEmpty(commits)) {
