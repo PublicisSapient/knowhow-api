@@ -23,7 +23,13 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmUserService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.common.model.scm.User;
 import org.apache.commons.collections4.CollectionUtils;
+import org.bson.types.ObjectId;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -67,7 +73,8 @@ public class BitBucketController {
 	@Autowired
 	private CacheService cacheService;
 	@Autowired
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
+	private ScmUserService scmUserService;
+
 
 	/**
 	 * Gets bit bucket aggregated metrics.
@@ -148,6 +155,6 @@ public class BitBucketController {
 	@GetMapping(value = "repotool/assignees/email/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getRepoToolProjectMembers(@PathVariable("id") String projectConfigId) {
 		return ResponseEntity.status(HttpStatus.OK)
-				.body(new ServiceResponse(true, "", repoToolsConfigService.getProjectRepoToolMembers(projectConfigId)));
+				.body(new ServiceResponse(true, "", scmUserService.getScmToolUsersMailList(projectConfigId)));
 	}
 }

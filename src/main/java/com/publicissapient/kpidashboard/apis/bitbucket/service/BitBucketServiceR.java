@@ -186,7 +186,7 @@ public class BitBucketServiceR {
                             DeveloperKpiHelper.getStartAndEndDate(kpiRequest)));
 
             CompletableFuture<List<Assignee>> assigneesFuture = CompletableFuture.supplyAsync(() ->
-                    scmKpiHelperService.getScmUsers(accountData.getBasicProjectConfigId()));
+                    scmKpiHelperService.getJiraAssigneeForScmUsers(accountData.getBasicProjectConfigId()));
 
             CompletableFuture.allOf(commitsFuture, mergeRequestsFuture, assigneesFuture).join();
 
