@@ -351,8 +351,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 		referenceCommits.stream().filter(commit -> CollectionUtils.isNotEmpty(commit.getFileChanges()))
 				.flatMap(commit -> commit.getFileChanges().stream())
-				.filter(fileChange -> fileChange.getFilePath() != null
-						&& CollectionUtils.isNotEmpty(fileChange.getChangedLineNumbers()))
+				.filter(this::isValidFileChange)
 				.forEach(fileChange -> referencePool.computeIfAbsent(fileChange.getFilePath(), k -> new HashSet<>())
 						.addAll(fileChange.getChangedLineNumbers()));
 
