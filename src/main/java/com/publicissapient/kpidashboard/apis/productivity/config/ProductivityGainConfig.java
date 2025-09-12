@@ -17,6 +17,7 @@
 package com.publicissapient.kpidashboard.apis.productivity.config;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -43,5 +44,9 @@ public class ProductivityGainConfig {
 
     public Double getWeightForCategory(String category) {
         return this.weights.get(category);
+    }
+
+    public Set<String> getAllCategories() {
+        return weights.keySet();
     }
 }

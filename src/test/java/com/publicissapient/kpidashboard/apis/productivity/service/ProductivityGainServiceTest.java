@@ -20,6 +20,7 @@ import static com.publicissapient.kpidashboard.apis.productivity.config.Producti
 import static com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig.CATEGORY_PRODUCTIVITY;
 import static com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig.CATEGORY_QUALITY;
 import static com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig.CATEGORY_SPEED;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,7 +40,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.assertj.core.api.Assertions;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,6 +70,8 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig;
 import com.publicissapient.kpidashboard.apis.productivity.dto.CalculateProductivityRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.CategorizedProductivityGain;
+import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendDTO;
+import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendsDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainDTO;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
@@ -78,7 +83,7 @@ import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.InternalServerErrorException;
 
 @RunWith(MockitoJUnitRunner.class)
-@ExtendWith(MockitoExtension.class) //used for enabling the parameterized test
+@ExtendWith(MockitoExtension.class) // used for enabling the parameterized test
 class ProductivityGainServiceTest {
 	private static final int DEFAULT_DATA_POINTS_NUMBER = 6;
 
@@ -162,7 +167,7 @@ class ProductivityGainServiceTest {
 	}
 
 	@Test
-    public void when_ParentIdExistsButLabelAndLevelAreNotCorrespondingToTheNextChildLevel_Expect_BadRequestExceptionIsThrown() {
+	public void when_ParentIdExistsButLabelAndLevelAreNotCorrespondingToTheNextChildLevel_Expect_BadRequestExceptionIsThrown() {
 		when(cacheService.getFullHierarchyLevel()).thenReturn(createHierarchyLevelList());
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(createAccountFilteredData());
 
@@ -173,8 +178,77 @@ class ProductivityGainServiceTest {
 	@ParameterizedTest
 	@MethodSource("provideTestCalculateProductivityRequest")
 	void when_ProductivityCalculationRequestIsValid_Expect_CategorizedProductivityResultIsReturned(
-			CalculateProductivityRequestDTO calculateProductivityRequestDTO
-	) throws EntityNotFoundException {
+			CalculateProductivityRequestDTO calculateProductivityRequestDTO) throws EntityNotFoundException {
+
+		initializeProductivityGainRequestMocks();
+
+		/*
+		 * The expected categorized productivity and kpi trends from below results from
+		 * a manual calculation of the algorithm based on the provided test data
+		 */
+		List<KPITrendDTO> expectedPositiveTrends = List.of(
+				KPITrendDTO.builder().trendValue(194.33D).kpiName("Sprint Capacity Utilization")
+						.kpiCategory(CATEGORY_EFFICIENCY).build(),
+				KPITrendDTO.builder().trendValue(194.33D).kpiName("Commitment Reliability")
+						.kpiCategory(CATEGORY_PRODUCTIVITY).build(),
+				KPITrendDTO.builder().trendValue(194.33D).kpiName("Check-Ins & Merge Requests (Developer) ")
+						.kpiCategory(CATEGORY_PRODUCTIVITY).build(),
+				KPITrendDTO.builder().trendValue(194.33D).kpiName("PR Success Rate").kpiCategory(CATEGORY_PRODUCTIVITY)
+						.build(),
+				KPITrendDTO.builder().trendValue(194.33D).kpiName("Sprint Velocity").kpiCategory(CATEGORY_SPEED)
+						.build());
+		List<KPITrendDTO> expectedNegativeTrends = List.of(
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Revert Rate").kpiCategory(CATEGORY_PRODUCTIVITY)
+						.build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Scope Churn").kpiCategory(CATEGORY_SPEED).build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Pickup Time (Developer) ")
+						.kpiCategory(CATEGORY_SPEED).build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Code Build Time").kpiCategory(CATEGORY_SPEED)
+						.build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Defect Reopen Rate").kpiCategory(CATEGORY_QUALITY)
+						.build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Defect Density").kpiCategory(CATEGORY_QUALITY)
+						.build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Defect Seepage Rate").kpiCategory(CATEGORY_QUALITY)
+						.build(),
+				KPITrendDTO.builder().trendValue(-194.33D).kpiName("Defect Severity Index (Scrum)")
+						.kpiCategory(CATEGORY_QUALITY).build());
+		ProductivityGainDTO expectedProductivityGainDTO = ProductivityGainDTO.builder()
+				.categorizedProductivityGain(CategorizedProductivityGain.builder().overall(-11.66D).efficiency(194.33)
+						.quality(-194.33D).speed(-38.87).productivity(64.78D).build())
+				.kpiTrends(KPITrendsDTO.builder().positive(expectedPositiveTrends).negative(expectedNegativeTrends)
+						.build())
+				.build();
+
+		ServiceResponse serviceResponse = productivityGainServiceImpl
+				.processCalculateProductivityRequest(calculateProductivityRequestDTO);
+
+		assertNotNull(serviceResponse);
+		assertNotNull(serviceResponse.getData());
+		assertInstanceOf(ProductivityGainDTO.class, serviceResponse.getData());
+		ProductivityGainDTO resultedProductivityGainDTO = (ProductivityGainDTO) serviceResponse.getData();
+
+		assertNotNull(resultedProductivityGainDTO.getCategorizedProductivityGain());
+
+		assertEquals(expectedProductivityGainDTO.getCategorizedProductivityGain(),
+				resultedProductivityGainDTO.getCategorizedProductivityGain());
+
+		assertNotNull(((ProductivityGainDTO) serviceResponse.getData()).getKpiTrends());
+		KPITrendsDTO resultedKPITrendsDTO = ((ProductivityGainDTO) serviceResponse.getData()).getKpiTrends();
+
+		assertTrue(CollectionUtils.isNotEmpty(resultedKPITrendsDTO.getPositive()));
+		assertTrue(resultedKPITrendsDTO.getPositive().stream()
+				.allMatch(kpiTrendDTO -> kpiTrendDTO.getTrendValue() > 0.0D));
+
+		assertTrue(CollectionUtils.isNotEmpty(resultedKPITrendsDTO.getNegative()));
+		assertTrue(resultedKPITrendsDTO.getNegative().stream()
+				.allMatch(kpiTrendDTO -> kpiTrendDTO.getTrendValue() < 0.0D));
+
+		Assertions.assertThat(resultedKPITrendsDTO.getPositive()).containsExactlyInAnyOrderElementsOf(expectedPositiveTrends);
+		Assertions.assertThat(resultedKPITrendsDTO.getNegative()).containsExactlyInAnyOrderElementsOf(expectedNegativeTrends);
+	}
+
+	private void initializeProductivityGainRequestMocks() throws EntityNotFoundException {
 		when(cacheService.getFullHierarchyLevel()).thenReturn(createHierarchyLevelList());
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(createAccountFilteredData());
 
@@ -205,27 +279,6 @@ class ProductivityGainServiceTest {
 		});
 
 		initializeProductivityConfig();
-
-		/*
-			The expected categorized productivity from below results from a manual calculation of the algorithm based
-			 on the provided test data
-		 */
-		ProductivityGainDTO expectedProductivityGainDTO = ProductivityGainDTO.builder()
-				.categorizedProductivityGain(CategorizedProductivityGain.builder().overall(-11.66D).efficiency(194.33)
-						.quality(-194.33D).speed(-38.87).productivity(64.78D).build())
-				.build();
-
-		ServiceResponse serviceResponse = productivityGainServiceImpl
-				.processCalculateProductivityRequest(calculateProductivityRequestDTO);
-
-		assertNotNull(serviceResponse);
-		assertNotNull(serviceResponse.getData());
-		assertInstanceOf(ProductivityGainDTO.class, serviceResponse.getData());
-		ProductivityGainDTO resultedProductivityGainDTO = (ProductivityGainDTO) serviceResponse.getData();
-
-		assertNotNull(resultedProductivityGainDTO.getCategorizedProductivityGain());
-
-		assertEquals(expectedProductivityGainDTO, resultedProductivityGainDTO);
 	}
 
 	private KpiElement getKpiElementResponseBasedOnKpiElementFromKpiRequest(KpiElement kpiElementFromKpiRequest) {
@@ -246,6 +299,8 @@ class ProductivityGainServiceTest {
 		when(productivityGainConfig.getWeightForCategory(CATEGORY_EFFICIENCY)).thenReturn(0.25D);
 		when(productivityGainConfig.getWeightForCategory(CATEGORY_PRODUCTIVITY)).thenReturn(0.15D);
 		when(productivityGainConfig.getDataPoints()).thenReturn(dataPoints);
+		when(productivityGainConfig.getAllCategories())
+				.thenReturn(Set.of(CATEGORY_SPEED, CATEGORY_QUALITY, CATEGORY_EFFICIENCY, CATEGORY_PRODUCTIVITY));
 	}
 
 	private static List<HierarchyLevel> createHierarchyLevelList() {
@@ -316,7 +371,7 @@ class ProductivityGainServiceTest {
 	}
 
 	private static CalculateProductivityRequestDTO createCalculateProductivityRequest(int level, String label,
-                                                                                      String parentId) {
+			String parentId) {
 		CalculateProductivityRequestDTO calculateProductivityRequestDTO = new CalculateProductivityRequestDTO();
 		calculateProductivityRequestDTO.setLevel(level);
 		calculateProductivityRequestDTO.setLabel(label);
@@ -340,11 +395,9 @@ class ProductivityGainServiceTest {
 		calculateProductivityRequestDTO2.setLabel("sprint");
 		calculateProductivityRequestDTO2.setParentId("project-node-id");
 
-		return List.of(
-				createCalculateProductivityRequest(5, "project", null),
+		return List.of(createCalculateProductivityRequest(5, "project", null),
 				createCalculateProductivityRequest(5, "project", "port-node-id"),
-				createCalculateProductivityRequest(6, "sprint", "project-node-id")
-		);
+				createCalculateProductivityRequest(6, "sprint", "project-node-id"));
 	}
 
 	private static Set<AccountFilteredData> createAccountFilteredData() {
