@@ -196,7 +196,7 @@ public class BitBucketServiceRTest {
 				.thenReturn(List.of(new ScmCommits()));
 		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
 				.thenReturn(List.of(new ScmMergeRequests()));
-		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
 
 		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
 				.mockStatic(BitBucketKPIServiceFactory.class);
@@ -229,7 +229,7 @@ public class BitBucketServiceRTest {
 				.thenReturn(List.of(new ScmCommits()));
 		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
 				.thenReturn(List.of(new ScmMergeRequests()));
-		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
 
 		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
 				.mockStatic(BitBucketKPIServiceFactory.class);
@@ -325,7 +325,7 @@ public class BitBucketServiceRTest {
 				.thenReturn(List.of(new ScmCommits()));
 		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
 				.thenReturn(List.of(new ScmMergeRequests()));
-		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenAnswer(invocation -> {
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenAnswer(invocation -> {
 			Thread.currentThread().interrupt();
 			throw new RuntimeException("Interrupted", new InterruptedException());
 		});
@@ -358,7 +358,7 @@ public class BitBucketServiceRTest {
 				.thenAnswer(invocation -> {
 					throw new RuntimeException("Merge request fetch failed");
 				});
-		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = Mockito.mockStatic(DeveloperKpiHelper.class)) {
 			helperMock.when(() -> DeveloperKpiHelper.getStartAndEndDate(any(KpiRequest.class)))
@@ -384,7 +384,7 @@ public class BitBucketServiceRTest {
 				.thenReturn(List.of(new ScmCommits()));
 		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any(CustomDateRange.class)))
 				.thenReturn(List.of(new ScmMergeRequests()));
-		when(scmKpiHelperService.getScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenReturn(Arrays.asList(new Assignee()));
 
 		try (MockedStatic<BitBucketKPIServiceFactory> factoryMock = Mockito
 				.mockStatic(BitBucketKPIServiceFactory.class);
