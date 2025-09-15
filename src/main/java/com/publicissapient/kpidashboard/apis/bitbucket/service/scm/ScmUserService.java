@@ -14,19 +14,10 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.dto;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.databind.JsonNode;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductivityGainDTO {
-    private CategorizedProductivityGain categorizedProductivityGain;
-
-    private KPITrendsDTO kpiTrends;
+public interface ScmUserService {
+    JsonNode getScmToolUsersMailList(String projectConfigId);
 }
