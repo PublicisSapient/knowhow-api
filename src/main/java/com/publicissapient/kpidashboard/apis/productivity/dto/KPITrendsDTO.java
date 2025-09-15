@@ -16,17 +16,14 @@
 
 package com.publicissapient.kpidashboard.apis.productivity.dto;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductivityGainDTO {
-    private CategorizedProductivityGain categorizedProductivityGain;
-
-    private KPITrendsDTO kpiTrends;
+public class KPITrendsDTO {
+    private List<KPITrendDTO> positive;
+    private List<KPITrendDTO> negative;
 }
