@@ -18,16 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.adapter;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyLevel;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyNode;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
-import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,169 +31,252 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyLevel;
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyNode;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
+import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
+
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Component
 public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAdapter {
-    private final Map<String, OrganizationHierarchy> hierarchyMap = new HashMap<>();
-    @Autowired
-    private HierarchyLevelService hierarchyLevelService;
+	private final Map<String, OrganizationHierarchy> hierarchyMap = new HashMap<>();
+	@Autowired
+	private HierarchyLevelService hierarchyLevelService;
 
-    /*
-     * add logic of converting input datalist to Organization Hierarchy
-     */
-    @Override
-    public Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails) {
-        Set<OrganizationHierarchy> transformedList = new HashSet<>();
-        List<HierarchyNode> hierarchyNodes = hierarchyDetails.getHierarchyNode();
-        List<String> centralHieracyLevels = hierarchyDetails.getHierarchyLevels().parallelStream()
-                .filter(a -> a.getLevel() > 0).sorted(Comparator.comparing(HierarchyLevel::getLevel))
-                .map(k -> k.getDisplayName().toUpperCase()).toList();
-        Map<String, String> localLevels = getHierachyLevelTillProject().stream().limit(centralHieracyLevels.size())
-                .collect(Collectors.toMap(
-                        (com.publicissapient.kpidashboard.common.model.application.HierarchyLevel h) -> h
-                                .getHierarchyLevelName().toUpperCase(),
-                        com.publicissapient.kpidashboard.common.model.application.HierarchyLevel::getHierarchyLevelId));
-        List<String> levels = new ArrayList<>();
-        for (String hierarchyNode : centralHieracyLevels) {
-            levels.add(getMatchingValue(localLevels, hierarchyNode));
-        }
+	/*
+	 * add logic of converting input datalist to Organization Hierarchy
+	 */
+	@Override
+	public Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails,
+			List<OrganizationHierarchy> allDbNodes) {
+		Set<OrganizationHierarchy> transformedList = new HashSet<>();
+		List<HierarchyNode> hierarchyNodes = hierarchyDetails.getHierarchyNode();
+		List<String> centralHieracyLevels = hierarchyDetails.getHierarchyLevels().parallelStream()
+				.filter(a -> a.getLevel() > 0).sorted(Comparator.comparing(HierarchyLevel::getLevel))
+				.map(k -> k.getDisplayName().toUpperCase()).toList();
+		Map<String, String> localLevels = getHierachyLevelTillProject().stream().limit(centralHieracyLevels.size())
+				.collect(Collectors.toMap(
+						(com.publicissapient.kpidashboard.common.model.application.HierarchyLevel h) -> h
+								.getHierarchyLevelName().toUpperCase(),
+						com.publicissapient.kpidashboard.common.model.application.HierarchyLevel::getHierarchyLevelId));
+		List<String> levels = new ArrayList<>();
+		for (String hierarchyNode : centralHieracyLevels) {
+			levels.add(getMatchingValue(localLevels, hierarchyNode));
+		}
 
-        ensureHierarchyExists(hierarchyNodes, transformedList, levels);
-        return transformedList;
+		ensureHierarchyExists(hierarchyNodes, transformedList, levels, allDbNodes);
+		return transformedList;
 
-    }
+	}
 
-    private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> getHierachyLevelTillProject() {
-        List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> topHierarchyLevels = hierarchyLevelService
-                .getTopHierarchyLevels();
-        //topHierarchyLevels.add(hierarchyLevelService.getProjectHierarchyLevel());
-        return topHierarchyLevels;
-    }
+	private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> getHierachyLevelTillProject() {
+		List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> topHierarchyLevels = hierarchyLevelService
+				.getTopHierarchyLevels();
+		return topHierarchyLevels;
+	}
 
-    public void ensureHierarchyExists(List<HierarchyNode> nodes, Set<OrganizationHierarchy> transformedList,
-                                      List<String> centralHierarchyLevels) {
-        for (HierarchyNode node : nodes) {
-            try {
-                List<OrganizationHierarchy> fullNode = processHierarchyNode(node, centralHierarchyLevels);
-                if (!fullNode.isEmpty()) {
-                    transformedList.addAll(fullNode);
-                }
-            } catch (Exception e) {
-                log.error("Error processing node: " + node.getOpportunityUniqueId() + " - " + e.getMessage(), e);
-            }
-        }
-    }
+	public void ensureHierarchyExists(List<HierarchyNode> nodes, Set<OrganizationHierarchy> transformedList,
+			List<String> centralHierarchyLevels, List<OrganizationHierarchy> allDbNodes) {
+		for (HierarchyNode node : nodes) {
+			try {
+				List<OrganizationHierarchy> fullNode = processHierarchyNode(node, centralHierarchyLevels, allDbNodes);
+				if (!fullNode.isEmpty()) {
+					transformedList.addAll(fullNode);
+				}
+			} catch (Exception e) {
+				log.error("Error processing node: " + node.getOpportunityUniqueId() + " - " + e.getMessage(), e);
+			}
+		}
+	}
 
-    private List<OrganizationHierarchy> processHierarchyNode(HierarchyNode node, List<String> centralHierarchyLevels) {
-        List<OrganizationHierarchy> fullNode = new ArrayList<>();
+	/*
+	 * private List<OrganizationHierarchy> processHierarchyNode(HierarchyNode node,
+	 * List<String> centralHierarchyLevels, List<OrganizationHierarchy> allDbNodes)
+	 * { List<OrganizationHierarchy> fullNode = new ArrayList<>();
+	 * 
+	 * Map<String, OrganizationHierarchy> createdNodes = new HashMap<>();
+	 * Map<String, String> idMappings = getNodeIdMappings(node); // Extracts all IDs
+	 * 
+	 * for (String chsLevel : centralHierarchyLevels) { String parentLevel =
+	 * getParentLevel(chsLevel);
+	 *//*
+	    * String parentId = parentLevel == null ? null :
+	    * createdNodes.getOrDefault(parentLevel, null) != null ?
+	    * createdNodes.get(parentLevel).getNodeId() : null;
+	    *//*
+		   * 
+		   * 
+		   * String parentId = null; if (parentLevel != null) { if
+		   * (createdNodes.containsKey(parentLevel)) { parentId =
+		   * createdNodes.get(parentLevel).getNodeId(); // Newly created in this run }
+		   * else { // Look in DB for parent String parentExternalId =
+		   * idMappings.get(parentLevel); OrganizationHierarchy existingParent =
+		   * findByExternalId(allDbNodes, parentExternalId, parentLevel); if
+		   * (existingParent != null) { parentId = existingParent.getNodeId(); } } }
+		   * 
+		   * 
+		   * // If it's not "bu" and parent is null, skip hierarchy if
+		   * (!"bu".equals(chsLevel) && parentId == null) { log.warn("Skipping " +
+		   * chsLevel + " as parent is missing for node: " + node); return
+		   * Collections.emptyList(); }
+		   * 
+		   * OrganizationHierarchy newNode = createOrUpdateNode(idMappings.get(chsLevel),
+		   * getNodeName(node, chsLevel), chsLevel, parentId);
+		   * 
+		   * createdNodes.put(chsLevel, newNode); fullNode.add(newNode); }
+		   * 
+		   * return fullNode; }
+		   */
 
-        Map<String, OrganizationHierarchy> createdNodes = new HashMap<>();
-        Map<String, String> idMappings = getNodeIdMappings(node); // Extracts all IDs
+	private List<OrganizationHierarchy> processHierarchyNode(HierarchyNode node, List<String> centralHierarchyLevels,
+			List<OrganizationHierarchy> allDbNodes) {
 
-        for (String chsLevel : centralHierarchyLevels) {
-            String parentLevel = getParentLevel(chsLevel);
-            String parentId = parentLevel == null ? null
-                    : createdNodes.getOrDefault(parentLevel, null) != null ? createdNodes.get(parentLevel).getNodeId()
-                    : null;
+		List<OrganizationHierarchy> fullNode = new ArrayList<>();
+		Map<String, OrganizationHierarchy> createdNodes = new HashMap<>();
+		Map<String, String> idMappings = getNodeIdMappings(node); // Extracts all externalIds
 
-            // If it's not "bu" and parent is null, skip hierarchy
-            if (!"bu".equals(chsLevel) && parentId == null) {
-                log.warn("Skipping " + chsLevel + " as parent is missing for node: " + node);
-                return Collections.emptyList();
-            }
+		for (String chsLevel : centralHierarchyLevels) {
+			String parentLevel = getParentLevel(chsLevel);
 
-            OrganizationHierarchy newNode = createOrUpdateNode(idMappings.get(chsLevel), getNodeName(node, chsLevel),
-                    chsLevel, parentId);
+			// Step 1: Determine parentId
+			String parentId = null;
+			if (parentLevel != null) {
+				if (createdNodes.containsKey(parentLevel)) {
+					// Parent was created in current iteration
+					parentId = createdNodes.get(parentLevel).getNodeId();
+				} else {
+					// Parent might already exist in DB
+					String parentExternalId = idMappings.get(parentLevel);
+					if (parentExternalId != null) {
+						OrganizationHierarchy existingParent = allDbNodes.stream()
+								.filter(dbNode -> parentExternalId.equalsIgnoreCase(dbNode.getExternalId())).findFirst()
+								.orElse(null);
+						if (existingParent != null) {
+							parentId = existingParent.getNodeId();
+						}
+					}
+				}
+			}
 
-            createdNodes.put(chsLevel, newNode);
-            fullNode.add(newNode);
-        }
+			// Step 2: Skip if not BU and parent is still missing
+			if (!"bu".equals(chsLevel) && parentId == null) {
+				log.warn("Skipping " + chsLevel + " as parent is missing for node: " + node);
+				return Collections.emptyList();
+			}
 
-        return fullNode;
-    }
+			// Step 3: Check if node already exists in DB by externalId
+			String externalId = idMappings.get(chsLevel);
+			OrganizationHierarchy existingNode = null;
+			if (externalId != null) {
+				existingNode = allDbNodes.stream()
+						.filter(dbNode -> chsLevel.equalsIgnoreCase(dbNode.getHierarchyLevelId())
+								&& externalId.equalsIgnoreCase(dbNode.getExternalId()))
+						.findFirst().orElse(null);
+			}
 
-    private Map<String, String> getNodeIdMappings(HierarchyNode node) {
-        Map<String, String> idMappings = new HashMap<>();
-        idMappings.put("bu", node.getBuUniqueId());
-        idMappings.put("ver", node.getVerticalUniqueId());
-        idMappings.put("acc", node.getAccountUniqueId());
-        idMappings.put("port", node.getPortfolioUniqueId());
-        //idMappings.put("project", node.getOpportunityUniqueId());
+			OrganizationHierarchy newNode;
+			if (existingNode != null) {
+				// Reuse existing node, just update parentId if needed
+				newNode = existingNode;
+				if (parentId != null) {
+					newNode.setParentId(parentId);
+				}
+			} else {
+				// Create new node
+				newNode = createOrUpdateNode(externalId, getNodeName(node, chsLevel), chsLevel, parentId);
+			}
 
-        idMappings.replaceAll((k, v) -> StringUtils.isEmpty(v) ? k + "_unique_" + UUID.randomUUID() : v);
-        return idMappings;
-    }
+			createdNodes.put(chsLevel, newNode);
+			fullNode.add(newNode);
+		}
 
-    private String getNodeName(HierarchyNode node, String chsLevel) {
-        switch (chsLevel) {
-            case "bu":
-                return node.getBu();
-            case "ver":
-                return node.getVertical();
-            case "acc":
-                return node.getAccount();
-            case "port":
-                return node.getPortfolio();
-            //case "project":
-              //  return node.getOpportunity();
-            default:
-                throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
-        }
-    }
+		return fullNode;
+	}
 
-    private String getParentLevel(String chsLevel) {
-        switch (chsLevel) {
-            case "bu":
-                return null;
-            case "ver":
-                return "bu";
-            case "acc":
-                return "ver";
-            case "port":
-                return "acc";
-            //case "project":
-              //  return "port";
-            default:
-                throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
-        }
-    }
+	private Map<String, String> getNodeIdMappings(HierarchyNode node) {
+		Map<String, String> idMappings = new HashMap<>();
+		idMappings.put("bu", node.getBuUniqueId());
+		idMappings.put("ver", node.getVerticalUniqueId());
+		idMappings.put("acc", node.getAccountUniqueId());
+		idMappings.put("port", node.getPortfolioUniqueId());
 
-    public OrganizationHierarchy createOrUpdateNode(String nodeId, String nodeName, String hierarchyLevelId,
-                                                    String parentId) {
+		idMappings.replaceAll((k, v) -> StringUtils.isEmpty(v) ? k + "_unique_" + UUID.randomUUID() : v);
+		return idMappings;
+	}
 
-        if (hierarchyMap.containsKey(nodeId)) {
-            OrganizationHierarchy existingNode = hierarchyMap.get(nodeId);
+	private String getNodeName(HierarchyNode node, String chsLevel) {
+		switch (chsLevel) {
+		case "bu":
+			return node.getBu();
+		case "ver":
+			return node.getVertical();
+		case "acc":
+			return node.getAccount();
+		case "port":
+			return node.getPortfolio();
+		default:
+			throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
+		}
+	}
 
-            // Ensure child has only one parent
-            if (!Objects.equals(existingNode.getParentId(), parentId)) {
-                throw new IllegalStateException("Node " + nodeId + " cannot have multiple parents!");
-            }
-            return existingNode;
-        }
+	private String getParentLevel(String chsLevel) {
+		switch (chsLevel) {
+		case "bu":
+			return null;
+		case "ver":
+			return "bu";
+		case "acc":
+			return "ver";
+		case "port":
+			return "acc";
+		default:
+			throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
+		}
+	}
 
-        // Create a new node if not exists
-        OrganizationHierarchy newNode = new OrganizationHierarchy();
-        newNode.setNodeId(UUID.randomUUID().toString());
-        newNode.setExternalId(nodeId);
-        newNode.setNodeName(nodeName);
-        newNode.setNodeDisplayName(nodeName);
-        newNode.setHierarchyLevelId(hierarchyLevelId);
-        newNode.setParentId(parentId);
-        newNode.setCreatedDate(LocalDateTime.now());
-        newNode.setModifiedDate(LocalDateTime.now());
+	public OrganizationHierarchy createOrUpdateNode(String nodeId, String nodeName, String hierarchyLevelId,
+			String parentId) {
 
-        hierarchyMap.put(nodeId, newNode);
-        return newNode;
-    }
+		if (hierarchyMap.containsKey(nodeId)) {
+			OrganizationHierarchy existingNode = hierarchyMap.get(nodeId);
 
-    public static String getMatchingValue(Map<String, String> dataMap, String inputKey) {
-        String[] possibleKeys = inputKey.split("[/\\s]+");
-        for (String key : possibleKeys) {
-            if (dataMap.containsKey(key)) {
-                return dataMap.get(key); // Return value of "Project"
-            }
-        }
-        throw new RuntimeException("Hierarchy Missing");
-    }
+			// Ensure child has only one parent
+			if (!Objects.equals(existingNode.getParentId(), parentId)) {
+				throw new IllegalStateException("Node " + nodeId + " cannot have multiple parents!");
+			}
+			return existingNode;
+		}
+
+		// Create a new node if not exists
+		OrganizationHierarchy newNode = new OrganizationHierarchy();
+		newNode.setNodeId(UUID.randomUUID().toString());
+		newNode.setExternalId(nodeId);
+		newNode.setNodeName(nodeName);
+		newNode.setNodeDisplayName(nodeName);
+		newNode.setHierarchyLevelId(hierarchyLevelId);
+		newNode.setParentId(parentId);
+		newNode.setCreatedDate(LocalDateTime.now());
+		newNode.setModifiedDate(LocalDateTime.now());
+
+		hierarchyMap.put(nodeId, newNode);
+		return newNode;
+	}
+
+	public static String getMatchingValue(Map<String, String> dataMap, String inputKey) {
+		String[] possibleKeys = inputKey.split("[/\\s]+");
+		for (String key : possibleKeys) {
+			if (dataMap.containsKey(key)) {
+				return dataMap.get(key); // Return value of "Project"
+			}
+		}
+		throw new RuntimeException("Hierarchy Missing");
+	}
 
 }

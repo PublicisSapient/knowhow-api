@@ -25,5 +25,5 @@ import java.util.List;
 import java.util.Set;
 
 public interface OrganizationHierarchyAdapter {
-    Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails);
+    Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes);
 }
