@@ -26,7 +26,7 @@ import java.util.Set;
 
 public interface IntegerationService {
 
-    void syncOrganizationHierarchy(Set<OrganizationHierarchy> externalList);
+    void syncOrganizationHierarchy(Set<OrganizationHierarchy> externalList, List<OrganizationHierarchy> allDbNodes);
 
-    Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(HierarchyDetails hierarchyDetails);
+    Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes);
 }
