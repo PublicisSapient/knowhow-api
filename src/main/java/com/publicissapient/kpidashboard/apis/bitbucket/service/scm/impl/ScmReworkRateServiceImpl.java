@@ -134,7 +134,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 	@Builder
 	private record ToolDataContext(Tool tool, List<ScmCommits> commits, Set<Assignee> assignees, String dateLabel,
 			String projectName, CustomDateRange periodRange, Map<String, List<DataCount>> kpiTrendDataByGroup,
-			List<RepoToolValidationData> validationDataList) {
+			List<RepoToolValidationData> validationDataList, Map<ScmCommits, LocalDateTime> commitTimestampMap) {
 	}
 
 	@Override
@@ -228,6 +228,10 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
+		Map<ScmCommits, LocalDateTime> commitTimestampMap = allCommits.stream()
+				.filter(commit -> commit.getCommitTimestamp() != null).collect(Collectors.toMap(commit -> commit,
+						commit -> DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp())));
+
 		for (int i = 0; i < dataPoints; i++) {
 			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
@@ -238,16 +242,20 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 			extendedDateRange.setStartDateTime(referenceStartDate);
 			extendedDateRange.setEndDateTime(periodRange.getEndDateTime());
 
-			List<ScmCommits> periodCommits = DeveloperKpiHelper.filterCommitsByCommitTimeStamp(allCommits,
-					extendedDateRange);
+			List<ScmCommits> periodCommits = allCommits.stream().filter(commit -> {
+				LocalDateTime commitTime = commitTimestampMap.get(commit);
+				return DateUtil.isWithinDateTimeRange(commitTime, extendedDateRange.getStartDateTime(),
+						extendedDateRange.getEndDateTime());
+			}).collect(Collectors.toList());
 
 			for (Tool tool : scmTools) {
-				ToolDataContext context = ToolDataContext.builder().tool(tool).commits(periodCommits)
+				ToolDataContext toolContext = ToolDataContext.builder().tool(tool).commits(periodCommits)
 						.assignees(assignees).dateLabel(dateLabel)
 						.projectName(projectLeafNode.getProjectFilter().getName()).periodRange(periodRange)
-						.kpiTrendDataByGroup(kpiTrendDataByGroup).validationDataList(validationDataList).build();
+						.kpiTrendDataByGroup(kpiTrendDataByGroup).validationDataList(validationDataList)
+						.commitTimestampMap(commitTimestampMap).build();
 
-				processToolData(context);
+				processToolData(toolContext);
 			}
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
@@ -257,49 +265,49 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-	private void processToolData(ToolDataContext context) {
-		if (!DeveloperKpiHelper.isValidTool(context.tool())) {
+	private void processToolData(ToolDataContext toolContext) {
+		if (!DeveloperKpiHelper.isValidTool(toolContext.tool())) {
 			return;
 		}
 
-		String branchName = getBranchSubFilter(context.tool(), context.projectName());
+		String branchName = getBranchSubFilter(toolContext.tool(), toolContext.projectName());
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(context.commits(),
-				context.tool());
+		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(toolContext.commits(),
+				toolContext.tool());
 
 		List<ScmCommits> nonMergeCommits = commitsForBranch.stream()
 				.filter(commit -> !Boolean.TRUE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
 
-		Double overallReworkRate = calculateReworkRateForPeriod(nonMergeCommits, context.periodRange());
-		DeveloperKpiHelper.setDataCount(context.projectName(), context.dateLabel(), overallKpiGroup, overallReworkRate,
-				Map.of(), context.kpiTrendDataByGroup());
+		Double overallReworkRate = calculateReworkRateForPeriod(nonMergeCommits, toolContext.periodRange(),
+				toolContext.commitTimestampMap());
+		DeveloperKpiHelper.setDataCount(toolContext.projectName(), toolContext.dateLabel(), overallKpiGroup,
+				overallReworkRate, Map.of(), toolContext.kpiTrendDataByGroup());
 
 		Map<String, List<ScmCommits>> userWiseCommits = DeveloperKpiHelper.groupCommitsByUser(nonMergeCommits);
 
-		context.validationDataList()
-				.addAll(prepareUserValidationData(userWiseCommits, context.assignees(), context.tool(),
-						context.projectName(), context.dateLabel(), context.kpiTrendDataByGroup(),
-						context.periodRange()));
+		toolContext.validationDataList().addAll(prepareUserValidationData(userWiseCommits, toolContext));
 	}
 
 	private List<RepoToolValidationData> prepareUserValidationData(Map<String, List<ScmCommits>> userWiseCommits,
-			Set<Assignee> assignees, Tool tool, String projectName, String dateLabel,
-			Map<String, List<DataCount>> kpiTrendDataByGroup, CustomDateRange periodRange) {
+			ToolDataContext toolContext) {
 
-		return userWiseCommits.entrySet().stream().filter(entry -> hasCommitsInPeriod(entry.getValue(), periodRange))
-				.map(entry -> {
+		return userWiseCommits.entrySet().stream().filter(entry -> hasCommitsInPeriod(entry.getValue(),
+				toolContext.periodRange(), toolContext.commitTimestampMap())).map(entry -> {
 					String userEmail = entry.getKey();
 					List<ScmCommits> userCommits = entry.getValue();
 
-					String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-					Double userReworkRate = calculateReworkRateForPeriod(userCommits, periodRange);
+					String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, toolContext.assignees());
+					Double userReworkRate = calculateReworkRateForPeriod(userCommits, toolContext.periodRange(),
+							toolContext.commitTimestampMap());
 
-					String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
-					DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, userReworkRate, Map.of(),
-							kpiTrendDataByGroup);
+					String userKpiGroup = getBranchSubFilter(toolContext.tool(), toolContext.projectName()) + "#"
+							+ developerName;
+					DeveloperKpiHelper.setDataCount(toolContext.projectName(), toolContext.dateLabel(), userKpiGroup,
+							userReworkRate, Map.of(), toolContext.kpiTrendDataByGroup());
 
-					return createValidationData(projectName, tool, developerName, dateLabel, userReworkRate);
+					return createValidationData(toolContext.projectName(), toolContext.tool(), developerName,
+							toolContext.dateLabel(), userReworkRate);
 				}).collect(Collectors.toList());
 	}
 
@@ -310,9 +318,12 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 	 *            All commits (reference + analysis period)
 	 * @param periodRange
 	 *            Current analysis period
+	 * @param commitTimestampMap
+	 *            Map of commit timestamps
 	 * @return Rework rate percentage (higher = more rework)
 	 */
-	private Double calculateReworkRateForPeriod(List<ScmCommits> commits, CustomDateRange periodRange) {
+	private Double calculateReworkRateForPeriod(List<ScmCommits> commits, CustomDateRange periodRange,
+			Map<ScmCommits, LocalDateTime> commitTimestampMap) {
 		if (CollectionUtils.isEmpty(commits)) {
 			return 0.0;
 		}
@@ -321,8 +332,10 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 		// Step 1: Split commits into reference (past 21 days) and analysis (current
 		// period)
-		Map<Boolean, List<ScmCommits>> partitionedCommits = commits.stream().collect(Collectors.partitioningBy(
-				commit -> DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()).isBefore(periodStart)));
+		Map<Boolean, List<ScmCommits>> partitionedCommits = commits.stream()
+				.collect(Collectors.partitioningBy(commit -> commitTimestampMap
+						.getOrDefault(commit, DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()))
+						.isBefore(periodStart)));
 
 		List<ScmCommits> referenceCommits = partitionedCommits.get(true);
 		List<ScmCommits> analysisCommits = partitionedCommits.get(false);
@@ -350,8 +363,7 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		}
 
 		referenceCommits.stream().filter(commit -> CollectionUtils.isNotEmpty(commit.getFileChanges()))
-				.flatMap(commit -> commit.getFileChanges().stream())
-				.filter(this::isValidFileChange)
+				.flatMap(commit -> commit.getFileChanges().stream()).filter(this::isValidFileChange)
 				.forEach(fileChange -> referencePool.computeIfAbsent(fileChange.getFilePath(), k -> new HashSet<>())
 						.addAll(fileChange.getChangedLineNumbers()));
 
@@ -401,11 +413,15 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		List<Integer> changedLines = fileChange.getChangedLineNumbers();
 		Set<Integer> referenceLines = referencePool.get(filePath);
 
-		if (referenceLines != null) {
-			// File was changed before - count rework
+		int totalChanges = changedLines.size();
+		calculation.addTotalChanges(totalChanges);
+
+		if (CollectionUtils.isNotEmpty(referenceLines)) {
 			Set<Integer> changedLineSet = new HashSet<>(changedLines);
-			long reworkCount = referenceLines.stream().filter(changedLineSet::contains).count();
-			calculation.addRework((int) reworkCount);
+			changedLineSet.retainAll(referenceLines);
+			int reworkCount = changedLineSet.size();
+
+			calculation.addRework(reworkCount);
 
 			// Add current changes to reference pool for cumulative tracking
 			referenceLines.addAll(changedLines);
@@ -413,14 +429,15 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 			// New file - no rework, add to reference pool
 			referencePool.put(filePath, new HashSet<>(changedLines));
 		}
-
-		calculation.addTotalChanges(changedLines.size());
 	}
 
-	private boolean hasCommitsInPeriod(List<ScmCommits> commits, CustomDateRange periodRange) {
+	private boolean hasCommitsInPeriod(List<ScmCommits> commits, CustomDateRange periodRange,
+			Map<ScmCommits, LocalDateTime> commitTimestampCache) {
 		LocalDateTime periodStart = periodRange.getStartDateTime();
-		return commits.stream().anyMatch(
-				commit -> !DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()).isBefore(periodStart));
+		return commits.stream()
+				.anyMatch(commit -> !commitTimestampCache
+						.getOrDefault(commit, DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()))
+						.isBefore(periodStart));
 	}
 
 	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
