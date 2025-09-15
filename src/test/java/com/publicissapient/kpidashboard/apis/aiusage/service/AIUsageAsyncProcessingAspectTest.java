@@ -1,6 +1,8 @@
 package com.publicissapient.kpidashboard.apis.aiusage.service;
 
 import com.publicissapient.kpidashboard.apis.aiusage.aspect.AIUsageAsyncProcessingAspect;
+import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.enums.RequiredHeaders;
 import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
@@ -8,6 +10,7 @@ import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,13 +19,22 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.io.FileWriter;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AIUsageAsyncProcessingAspectTest {
@@ -37,6 +49,12 @@ class AIUsageAsyncProcessingAspectTest {
     private Method createAIUsageFromColumnsMethod;
 
     private AIUsage aiUsage;
+
+    @Mock
+    private AIUsageService aiUsageService;
+
+    @Mock
+    private AIUsageFileFormat aiUsageFileFormat;
 
     @BeforeEach
     void setUp() throws NoSuchMethodException {
@@ -194,6 +212,46 @@ class AIUsageAsyncProcessingAspectTest {
                 aiUsageAsyncProcessingAspect, columns, columnIndexMap, headerMapping, failedRecordsCount, uploadStatus);
 
         assertEquals(1, failedRecordsCount.get()); // Invalid number format
+    }
+
+    @Test
+    void shouldProcessCsvFileSuccessfully() throws Exception {
+        // given
+        Path tempFile = Files.createTempFile("aiusage", ".csv");
+        try (FileWriter writer = new FileWriter(tempFile.toFile())) {
+
+            writer.write("email,businessUnit,promptCount,vertical,account\n");
+            writer.write("user@test.com,BU1,5,V1,A1\n");
+        }
+
+        UUID requestId = UUID.randomUUID();
+        AIUsageRequest request = new AIUsageRequest();
+        request.setRequestId(String.valueOf(requestId));
+        request.setStatus(UploadStatus.PENDING);
+
+        when(aiUsageService.findByRequestId(requestId)).thenReturn(request);
+
+        when(aiUsageFileFormat.getHeaderToMappingMap()).thenReturn(Map.of(
+                "email", "email",
+                "businessUnit", "businessUnit",
+                "promptCount", "promptCount",
+                "vertical", "vertical",
+                "account", "account"
+        ));
+
+        InitiateUploadResponse response = new InitiateUploadResponse("", requestId, tempFile.toString());
+
+        // when
+        aiUsageAsyncProcessingAspect.processFileAsync(response);
+
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            ArgumentCaptor<AIUsageRequest> captor = ArgumentCaptor.forClass(AIUsageRequest.class);
+            verify(aiUsageService, atLeastOnce()).saveUploadStatus(captor.capture());
+
+            AIUsageRequest saved = captor.getValue();
+            assertThat(saved.getStatus()).isEqualTo(UploadStatus.COMPLETED);
+            assertThat(saved.getSuccessfulRecords()).isEqualTo(1);
+        });
     }
 }
 

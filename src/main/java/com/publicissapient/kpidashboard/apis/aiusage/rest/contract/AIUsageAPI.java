@@ -144,7 +144,7 @@ public interface AIUsageAPI {
                     )
             }
     )
-    @GetMapping("/{requestId}/status")
+    @GetMapping("/upload/{requestId}/status")
     UploadStatusResponse getProcessingStatus(
             @Parameter(description = "Unique identifier for the upload request", required = true,
                     example = "123e4567-e89b-12d3-a456-426614174000")
