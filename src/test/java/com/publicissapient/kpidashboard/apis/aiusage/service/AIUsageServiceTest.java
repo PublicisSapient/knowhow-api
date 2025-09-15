@@ -34,6 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.BufferedReader;
@@ -62,7 +63,7 @@ class AIUsageServiceTest {
     @Mock
     private AIUsageFileFormat aiUsageFileFormat;
 
-    @Mock
+    @Spy
     private UploadStatusMapper uploadStatusMapper;
 
     @InjectMocks
@@ -75,6 +76,7 @@ class AIUsageServiceTest {
     void setUp() {
         requestId = UUID.randomUUID();
         submittedAt = Instant.now();
+        uploadStatusMapper = new UploadStatusMapper();
     }
 
     @ParameterizedTest
@@ -152,15 +154,33 @@ class AIUsageServiceTest {
 
     @Test
     void when_GetProcessingStatus_And_ValidRequestId_expectResponse() {
-        AIUsageRequest uploadStatus = new AIUsageRequest();
-        when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))).thenReturn(Optional.of(uploadStatus));
-        when(uploadStatusMapper.mapToDto(uploadStatus))
-                .thenReturn(new UploadStatusResponse(requestId, UploadStatus.PENDING, Instant.now(), null, 0,0,0, null));
+        AIUsageRequest aiUsageRequest = AIUsageRequest.builder()
+                .requestId(requestId.toString())
+                .status(UploadStatus.PROCESSING)
+                .submittedAt(Instant.now())
+                .completedAt(null)
+                .errorMessage(null)
+                .failedRecords(0)
+                .totalRecords(0)
+                .successfulRecords(0)
+                .build();
+
+        UploadStatusResponse expectedResponse = UploadStatusResponse.builder()
+                .status(UploadStatus.PROCESSING)
+                .requestId(UUID.fromString(aiUsageRequest.getRequestId()))
+                .submittedAt(aiUsageRequest.getSubmittedAt())
+                .completedAt(aiUsageRequest.getCompletedAt())
+                .errorMessage(aiUsageRequest.getErrorMessage())
+                .failedRecords(aiUsageRequest.getFailedRecords())
+                .totalRecords(aiUsageRequest.getTotalRecords())
+                .successfulRecords(aiUsageRequest.getSuccessfulRecords())
+                .build();
+
+        when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))).thenReturn(Optional.of(aiUsageRequest));
 
         UploadStatusResponse response = aiUsageService.getProcessingStatus(requestId);
 
-        assertNotNull(response);
-        verify(aiUsageUploadStatusRepository, times(1)).findByRequestId(String.valueOf(requestId));
+        assertEquals(expectedResponse, response);
     }
 
     @Test
@@ -231,5 +251,35 @@ class AIUsageServiceTest {
         assertThrows(NullPointerException.class, () -> {
             aiUsageService.uploadFile(null, requestId, submittedAt);
         });
+    }
+
+    @Test
+    void when_MapToDto_expectMappedValues() {
+        // Given
+        Instant completedAt = Instant.now();
+
+        AIUsageRequest status = AIUsageRequest.builder()
+                .requestId(requestId.toString())
+                .status(UploadStatus.COMPLETED)
+                .submittedAt(submittedAt)
+                .completedAt(completedAt)
+                .totalRecords(10)
+                .successfulRecords(9)
+                .failedRecords(1)
+                .errorMessage("some error")
+                .build();
+
+        // When
+        UploadStatusResponse response = uploadStatusMapper.mapToDto(status);
+
+        // Then
+        assertEquals(requestId, response.requestId());
+        assertEquals(UploadStatus.COMPLETED, response.status());
+        assertEquals(submittedAt, response.submittedAt());
+        assertEquals(completedAt, response.completedAt());
+        assertEquals(10, response.totalRecords());
+        assertEquals(9, response.successfulRecords());
+        assertEquals(1, response.failedRecords());
+        assertEquals("some error", response.errorMessage());
     }
 }
