@@ -281,8 +281,8 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 		Double overallReworkRate = calculateReworkRateForPeriod(nonMergeCommits, toolContext.periodRange(),
 				toolContext.commitTimestampMap());
 
-		DeveloperKpiHelper.setDataCount(toolContext.projectName(), toolContext.dateLabel(), overallKpiGroup, overallReworkRate,
-				Map.of(), toolContext.kpiTrendDataByGroup());
+		DeveloperKpiHelper.setDataCount(toolContext.projectName(), toolContext.dateLabel(), overallKpiGroup,
+				overallReworkRate, Map.of(), toolContext.kpiTrendDataByGroup());
 
 		Map<String, List<ScmCommits>> userWiseCommits = DeveloperKpiHelper.groupCommitsByUser(nonMergeCommits);
 
@@ -292,9 +292,8 @@ public class ScmReworkRateServiceImpl extends BitBucketKPIService<Double, List<O
 	private List<RepoToolValidationData> prepareUserValidationData(Map<String, List<ScmCommits>> userWiseCommits,
 			ToolDataContext toolContext) {
 
-		return userWiseCommits.entrySet().stream().filter(
-				entry -> hasCommitsInPeriod(entry.getValue(), toolContext.periodRange(), toolContext.commitTimestampMap()))
-				.map(entry -> {
+		return userWiseCommits.entrySet().stream().filter(entry -> hasCommitsInPeriod(entry.getValue(),
+				toolContext.periodRange(), toolContext.commitTimestampMap())).map(entry -> {
 					String userEmail = entry.getKey();
 					List<ScmCommits> userCommits = entry.getValue();
 
