@@ -22,6 +22,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.common.model.scm.User;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -55,6 +57,7 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	private final ScmCommitsRepository scmCommitsRepository;
 	private final AssigneeDetailsRepository assigneeDetailsRepository;
 	private final ScmMergeRequestsRepository scmMergeRequestsRepository;
+    private final ScmUserRepository scmUserRepository;
 
 	@Override
 	public List<ScmCommits> getCommitDetails(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
@@ -81,7 +84,7 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	}
 
 	@Override
-	public List<Assignee> getScmUsers(ObjectId projectBasicConfigId) {
+	public List<Assignee> getJiraAssigneeForScmUsers(ObjectId projectBasicConfigId) {
 		if (projectBasicConfigId == null) {
 			throw new IllegalArgumentException("projectBasicConfigId cannot be null");
 		}
@@ -97,7 +100,14 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 		return List.copyOf(assigneeDetails.getAssignee());
 	}
 
-	/**
+	@Override
+	public List<User> getScmUser(ObjectId projectBasicConfigId) {
+		BasicDBList userFilter = buildProcessorItemFilter(projectBasicConfigId);
+
+		return scmUserRepository.findScmUserList(userFilter);
+	}
+
+    /**
 	 * Builds a MongoDB filter for processor items based on SCM tools configured for
 	 * the project.
 	 *
