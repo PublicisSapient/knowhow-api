@@ -21,10 +21,19 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
+import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
+import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import org.apache.commons.lang.SerializationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.HttpMessageNotWritableException;
@@ -61,6 +70,9 @@ public class BitBucketServiceR {
 	@Autowired
 	private KpiHelperService kpiHelperService;
 
+    @Autowired
+    private ScmKpiHelperService scmKpiHelperService;
+
 	@Autowired
 	private FilterHelperService filterHelperService;
 
@@ -71,6 +83,17 @@ public class BitBucketServiceR {
 	private UserAuthorizedProjectsService authorizedProjectsService;
 
 	private boolean referFromProjectCache = true;
+    private List<ScmCommits> scmCommitsList = new ArrayList<>();
+    private List<ScmMergeRequests> scmMergeRequestList = new ArrayList<>();
+    private List<Assignee> assigneeList = new ArrayList<>();
+
+    private static final ThreadLocal<List<ScmCommits>> THREAD_LOCAL_COMMITS =
+            ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<List<ScmMergeRequests>> THREAD_LOCAL_MERGE_REQUESTS =
+            ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<List<Assignee>> THREAD_LOCAL_ASSIGNEES =
+            ThreadLocal.withInitial(ArrayList::new);
+
 
 	@SuppressWarnings("unchecked")
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
@@ -109,17 +132,16 @@ public class BitBucketServiceR {
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);
 				kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
 				kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
-				List<ParallelBitBucketServices> listOfTask = new ArrayList<>();
-				for (KpiElement kpiEle : kpiRequest.getKpiList()) {
+                responseList = executeParallelKpiProcessing(kpiRequest, filteredNode, filteredAccountDataList.get(0));
 
-					listOfTask.add(new ParallelBitBucketServices(kpiRequest, responseList, kpiEle, filteredNode));
-				}
-
-				ForkJoinTask.invokeAll(listOfTask);
-				List<KpiElement> missingKpis = origRequestedKpis.stream().filter(
-						reqKpi -> responseList.stream().noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
-						.collect(Collectors.toList());
-				responseList.addAll(missingKpis);
+                List<KpiElement> finalResponseList = responseList;
+                List<KpiElement> missingKpis = origRequestedKpis.stream()
+                        .filter(reqKpi -> finalResponseList.stream()
+                                .noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
+                        .toList();
+                List<KpiElement> mutableResponseList = new ArrayList<>(responseList);
+                mutableResponseList.addAll(missingKpis);
+                responseList = mutableResponseList;
 				setIntoApplicationCache(kpiRequest, responseList, groupId, projectKeyCache);
 			} else {
 				responseList.addAll(origRequestedKpis);
@@ -129,7 +151,9 @@ public class BitBucketServiceR {
 			log.error("[BITBUCKET][{}]. Error while KPI calculation for data {} {}", kpiRequest.getRequestTrackerId(),
 					kpiRequest.getKpiList(), e);
 			throw new HttpMessageNotWritableException(e.getMessage(), e);
-		}
+		} finally {
+            cleanupThreadLocalData();
+        }
 
 		return responseList;
 	}
@@ -148,6 +172,149 @@ public class BitBucketServiceR {
 	private String[] getProjectKeyCache(KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
 		return authorizedProjectsService.getProjectKey(filteredAccountDataList, kpiRequest);
 	}
+
+    private void loadDataIntoThreadLocal(AccountHierarchyData accountData, KpiRequest kpiRequest) {
+        try {
+            CompletableFuture<List<ScmCommits>> commitsFuture = CompletableFuture.supplyAsync(() ->
+                    scmKpiHelperService.getCommitDetails(
+                            accountData.getBasicProjectConfigId(),
+                            DeveloperKpiHelper.getStartAndEndDate(kpiRequest)));
+
+            CompletableFuture<List<ScmMergeRequests>> mergeRequestsFuture = CompletableFuture.supplyAsync(() ->
+                    scmKpiHelperService.getMergeRequests(
+                            accountData.getBasicProjectConfigId(),
+                            DeveloperKpiHelper.getStartAndEndDate(kpiRequest)));
+
+            CompletableFuture<List<Assignee>> assigneesFuture = CompletableFuture.supplyAsync(() ->
+                    scmKpiHelperService.getJiraAssigneeForScmUsers(accountData.getBasicProjectConfigId()));
+
+            CompletableFuture.allOf(commitsFuture, mergeRequestsFuture, assigneesFuture).join();
+
+            scmCommitsList = commitsFuture.get();
+            log.info("Setting data in ThreadLocal on thread: {}", Thread.currentThread().getId());
+            scmMergeRequestList = mergeRequestsFuture.get();
+            assigneeList = assigneesFuture.get();
+
+            log.info("[BITBUCKET][{}]. Data loaded into ThreadLocal - Commits: {}, MergeRequests: {}, Assignees: {}",
+                    kpiRequest.getRequestTrackerId(),
+                    scmCommitsList.size(),
+                    scmMergeRequestList.size(),
+                    assigneeList.size());
+
+        } catch (ExecutionException | InterruptedException e) {
+            log.error("[BITBUCKET][{}]. Error loading data into ThreadLocal: {}",
+                    kpiRequest.getRequestTrackerId(), e.getMessage(), e);
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /**
+     * Enhanced parallel execution with custom ForkJoinPool
+     */
+	private List<KpiElement> executeParallelKpiProcessing(KpiRequest kpiRequest, Node filteredNode,
+			AccountHierarchyData accountHierarchyData) {
+		ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+		try {
+			loadDataIntoThreadLocal(accountHierarchyData, kpiRequest);
+
+			// Create futures for each KPI element
+			List<CompletableFuture<KpiElement>> futures = kpiRequest.getKpiList().stream()
+					.map(kpiEle -> CompletableFuture.supplyAsync(() -> {
+						try {
+							// Set ThreadLocal data for each thread
+							THREAD_LOCAL_COMMITS.set(new ArrayList<>(scmCommitsList));
+							THREAD_LOCAL_MERGE_REQUESTS.set(new ArrayList<>(scmMergeRequestList));
+							THREAD_LOCAL_ASSIGNEES.set(new ArrayList<>(assigneeList));
+
+							return calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, filteredNode);
+						} catch (Exception e) {
+							log.error("[BITBUCKET][{}]. Error processing KPI {}: {}", kpiRequest.getRequestTrackerId(),
+									kpiEle.getKpiId(), e.getMessage(), e);
+							kpiEle.setResponseCode(CommonConstant.KPI_FAILED);
+							return kpiEle;
+						} finally {
+							// Clean up ThreadLocal for this specific thread
+							cleanupCurrentThreadLocal();
+						}
+					}, executorService)).toList();
+
+			// Convert futures to KpiElement list by joining all futures
+			return futures.stream().map(CompletableFuture::join).toList();
+
+		} finally {
+			// Proper executor shutdown with timeout
+			shutdownExecutorService(executorService);
+		}
+	}
+
+    /**
+     * Clean up ThreadLocal for current thread only
+     */
+    private void cleanupCurrentThreadLocal() {
+        try {
+            THREAD_LOCAL_COMMITS.remove();
+            THREAD_LOCAL_MERGE_REQUESTS.remove();
+            THREAD_LOCAL_ASSIGNEES.remove();
+            log.debug("ThreadLocal data cleaned up for thread: {}", Thread.currentThread().getId());
+        } catch (Exception e) {
+            log.warn("Error cleaning up ThreadLocal data for thread {}: {}",
+                    Thread.currentThread().getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Properly shutdown executor service with timeout handling
+     */
+    private void shutdownExecutorService(ExecutorService executorService) {
+        try {
+            executorService.shutdown();
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                log.warn("ExecutorService did not terminate gracefully, forcing shutdown");
+                executorService.shutdownNow();
+                if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                    log.error("ExecutorService did not terminate after forced shutdown");
+                }
+            }
+        } catch (InterruptedException e) {
+            log.error("Thread interrupted during executor shutdown", e);
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * Clean up ThreadLocal variables to prevent memory leaks
+     */
+    private void cleanupThreadLocalData() {
+        try {
+            THREAD_LOCAL_COMMITS.remove();
+            THREAD_LOCAL_MERGE_REQUESTS.remove();
+            THREAD_LOCAL_ASSIGNEES.remove();
+            log.info("ThreadLocal data cleaned up successfully");
+        } catch (Exception e) {
+            log.warn("Error cleaning up ThreadLocal data: {}", e.getMessage());
+        }
+    }
+
+
+    /**
+     * Static methods to access ThreadLocal data from other classes
+     */
+    public static List<ScmCommits> getThreadLocalCommits() {
+        return new ArrayList<>(THREAD_LOCAL_COMMITS.get());
+    }
+
+    public static List<ScmMergeRequests> getThreadLocalMergeRequests() {
+        log.info("Getting data from ThreadLocal on thread: {}", Thread.currentThread().getId());
+        return new ArrayList<>(THREAD_LOCAL_MERGE_REQUESTS.get());
+    }
+
+    public static List<Assignee> getThreadLocalAssignees() {
+        return new ArrayList<>(THREAD_LOCAL_ASSIGNEES.get());
+    }
 
 	/**
 	 * Cache response.
@@ -168,39 +335,6 @@ public class BitBucketServiceR {
 					kpiRequest.getSprintIncluded());
 		}
 	}
-
-	public class ParallelBitBucketServices extends RecursiveAction {
-
-		private final KpiRequest kpiRequest;
-		private final transient List<KpiElement> responseList;
-		private final transient KpiElement kpiEle;
-		private final Node filteredNode;
-
-		/**
-		 * @param kpiRequest
-		 *          kpi request
-		 * @param responseList
-		 *          response list
-		 * @param kpiEle
-		 *          kpi element
-		 * @param filteredNode
-		 *          filtered project node
-		 */
-		public ParallelBitBucketServices(KpiRequest kpiRequest, List<KpiElement> responseList, KpiElement kpiEle,
-				Node filteredNode) {
-			super();
-			this.kpiRequest = kpiRequest;
-			this.responseList = responseList;
-			this.kpiEle = kpiEle;
-			this.filteredNode = filteredNode;
-		}
-
-		/** {@inheritDoc} */
-		@SuppressWarnings("PMD.AvoidCatchingGenericException")
-		@Override
-		public void compute() {
-			responseList.add(calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, filteredNode));
-		}
 
 		/**
 		 * This method call by multiple thread, take object of specific KPI and call
@@ -243,7 +377,6 @@ public class BitBucketServiceR {
 			}
 			return kpiElement;
 		}
-	}
 
 	/**
      * This method is called when the request for kpi is done from exposed API

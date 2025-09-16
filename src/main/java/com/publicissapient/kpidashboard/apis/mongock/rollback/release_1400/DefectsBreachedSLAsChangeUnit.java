@@ -124,10 +124,10 @@ public class DefectsBreachedSLAsChangeUnit {
 						.append(PLACEHOLDER_TEXT, "Select values to be excluded").append(FIELD_TYPE, "multiselect")
 						.append(SECTION, "Defects Mapping").append(FIELD_DISPLAY_ORDER, 1).append(SECTION_ORDER, 2)
 						.append(TOOLTIP, new Document().append(DEFINITION,
-								"Priority values of defects that can be excluded from Defect Density calculation"))
+								"Priority values of defects that can be excluded from Defects Breached SLAs calculation"))
 						.append(OPTIONS,
-								List.of(new Document().append(LABEL, "p2").append(VALUE, "p2"),
-										new Document().append(LABEL, "p1").append(VALUE, "p1"),
+								List.of(new Document().append(LABEL, "p1").append(VALUE, "p1"),
+										new Document().append(LABEL, "p2").append(VALUE, "p2"),
 										new Document().append(LABEL, "p3").append(VALUE, "p3"),
 										new Document().append(LABEL, "p4").append(VALUE, "p4"),
 										new Document().append(LABEL, "p5").append(VALUE, "p5"))));
@@ -138,7 +138,7 @@ public class DefectsBreachedSLAsChangeUnit {
 				.append(PLACEHOLDER_TEXT, " Root cause values to be included").append(FIELD_TYPE, CHIPS)
 				.append(SECTION, "Defects Mapping").append(FIELD_DISPLAY_ORDER, 2).append(SECTION_ORDER, 2)
 				.append(TOOLTIP, new Document().append(DEFINITION,
-						"Root cause reasons for defects to be included In Defect Density calculation.")));
+						"Root cause reasons for defects to be included in Defects Breached SLAs calculation.")));
 
 		// Status to identify rejected defects
 		fieldMappingStructureDocuments.add(new Document().append(FIELD_NAME, "excludedDefectRejectionStatusesKPI195")
@@ -152,7 +152,7 @@ public class DefectsBreachedSLAsChangeUnit {
 				.append(FIELD_LABEL, "Resolution type to be excluded").append(FIELD_TYPE, CHIPS)
 				.append(SECTION, WORKFLOW_STATUS_MAPPING).append(FIELD_DISPLAY_ORDER, 2).append(SECTION_ORDER, 3)
 				.append(TOOLTIP, new Document().append(DEFINITION,
-						"Resolution types for defects that can be excluded from Defect Density calculation.")));
+						"Resolution types for defects that can be excluded from Defects Breached SLAs calculation.")));
 
 		// Status Consider for Issue Closure
 		fieldMappingStructureDocuments.add(new Document().append(FIELD_NAME, "includedDefectClosureStatusesKPI195")
