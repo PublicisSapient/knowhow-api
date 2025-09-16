@@ -205,30 +205,24 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 
 		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(commits, tool);
 
-		List<ScmCommits> nonMergeCommits = commitsForBranch.stream()
-				.filter(commit -> Boolean.FALSE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
-
 		List<ScmCommits> mergeCommits = commitsForBranch.stream()
 				.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
 
-		long totalCommits = nonMergeCommits.size();
+		long totalCommits = commitsForBranch.size();
 		long totalMergeRequests = mergeCommits.size();
 
 		setDataCount(projectName, dateLabel, overallKpiGroup, totalCommits, totalMergeRequests, kpiTrendDataByGroup);
 
-		Map<String, List<ScmCommits>> userWiseNonMergeCommits = DeveloperKpiHelper.groupCommitsByUser(nonMergeCommits);
+		Map<String, List<ScmCommits>> userWiseAllCommits = DeveloperKpiHelper.groupCommitsByUser(commitsForBranch);
 		Map<String, List<ScmCommits>> userWiseMergeCommits = DeveloperKpiHelper.groupCommitsByUser(mergeCommits);
 
-		Set<String> allUsers = new HashSet<>();
-		allUsers.addAll(userWiseNonMergeCommits.keySet());
-		allUsers.addAll(userWiseMergeCommits.keySet());
+		Set<String> allUsers = userWiseAllCommits.keySet();
 
 		allUsers.forEach(userEmail -> {
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			List<ScmCommits> userNonMergeCommits = userWiseNonMergeCommits.getOrDefault(userEmail,
-					Collections.emptyList());
+			List<ScmCommits> userCommits = userWiseAllCommits.getOrDefault(userEmail, Collections.emptyList());
 			List<ScmCommits> userMergeCommits = userWiseMergeCommits.getOrDefault(userEmail, Collections.emptyList());
-			long commitCount = userNonMergeCommits.size();
+			long commitCount = userCommits.size();
 			long mrCount = userMergeCommits.size();
 			String userKpiGroup = branchName + "#" + developerName;
 			setDataCount(projectName, dateLabel, userKpiGroup, commitCount, mrCount, kpiTrendDataByGroup);
