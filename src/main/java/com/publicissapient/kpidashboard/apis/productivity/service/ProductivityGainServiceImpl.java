@@ -189,14 +189,17 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 					log.error("Processing Bitbucket KPI Requests failed {}", e.getMessage());
 				}
 			});
-			case JIRA_ITERATION -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
-				try {
-					kpiElementList
-							.addAll(cloneKpiElementsFromProcessorResponse(jiraIterationServiceR.process(kpiRequest)));
-				} catch (EntityNotFoundException e) {
-					log.error("Processing Jira iteration KPI Requests failed {}", e.getMessage());
-				}
-			});
+			/*
+				The implementation below will be temporarily commented
+			 */
+//			case JIRA_ITERATION -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
+//				try {
+//					kpiElementList
+//							.addAll(cloneKpiElementsFromProcessorResponse(jiraIterationServiceR.process(kpiRequest)));
+//				} catch (EntityNotFoundException e) {
+//					log.error("Processing Jira iteration KPI Requests failed {}", e.getMessage());
+//				}
+//			});
 			}
 		}
 		return kpiElementList;
