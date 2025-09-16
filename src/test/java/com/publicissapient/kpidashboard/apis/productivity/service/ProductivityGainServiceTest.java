@@ -266,11 +266,14 @@ class ProductivityGainServiceTest {
 					.map(this::getKpiElementResponseBasedOnKpiElementFromKpiRequest).toList();
 		});
 
-		when(jiraIterationServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
-			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
-			return invocationArgument.getKpiList().stream()
-					.map(this::getKpiElementResponseBasedOnKpiElementFromKpiRequest).toList();
-		});
+		/*
+			The implementation below will be temporarily commented
+		 */
+//		when(jiraIterationServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
+//			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
+//			return invocationArgument.getKpiList().stream()
+//					.map(this::getKpiElementResponseBasedOnKpiElementFromKpiRequest).toList();
+//		});
 
 		when(bitBucketServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
 			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
