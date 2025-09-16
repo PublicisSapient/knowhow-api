@@ -29,6 +29,7 @@
     "nodeName" : "Test Project",
     "nodeDisplayName" : "Test Project",
     "hierarchyLevelId" : "project",
-    "parentId" : "hierarchyLevelThree_unique_001"
+    "parentId" : "hierarchyLevelThree_unique_001",
+    "externalId" : "ext_hierarchyLevelThree_unique_001"
   }
 ]
