@@ -170,10 +170,10 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_DISPLAY_ORDER, 1)
                 .append(SECTION_ORDER, 2)
                 .append(TOOLTIP, new Document()
-                        .append(DEFINITION, "Priority values of defects that can be excluded from Defect Density calculation"))
+                        .append(DEFINITION, "Priority values of defects that can be excluded from Defects Breached SLAs calculation"))
                 .append(OPTIONS, List.of(
-                        new Document().append(LABEL, "p2").append(VALUE, "p2"),
                         new Document().append(LABEL, "p1").append(VALUE, "p1"),
+                        new Document().append(LABEL, "p2").append(VALUE, "p2"),
                         new Document().append(LABEL, "p3").append(VALUE, "p3"),
                         new Document().append(LABEL, "p4").append(VALUE, "p4"),
                         new Document().append(LABEL, "p5").append(VALUE, "p5")
@@ -190,7 +190,7 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_DISPLAY_ORDER, 2)
                 .append(SECTION_ORDER, 2)
                 .append(TOOLTIP, new Document()
-                        .append(DEFINITION, "Root cause reasons for defects to be included In Defect Density calculation."))
+                        .append(DEFINITION, "Root cause reasons for defects to be included in Defects Breached SLAs calculation."))
         );
 
         // Status to identify rejected defects
@@ -215,7 +215,7 @@ public class DefectsBreachedSLAsChangeUnit {
                 .append(FIELD_DISPLAY_ORDER, 2)
                 .append(SECTION_ORDER, 3)
                 .append(TOOLTIP, new Document()
-                        .append(DEFINITION, "Resolution types for defects that can be excluded from Defect Density calculation."))
+                        .append(DEFINITION, "Resolution types for defects that can be excluded from Defects Breached SLAs calculation."))
         );
 
         // Status Consider for Issue Closure

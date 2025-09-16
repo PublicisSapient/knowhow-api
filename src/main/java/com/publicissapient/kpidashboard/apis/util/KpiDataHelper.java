@@ -333,8 +333,8 @@ public final class KpiDataHelper {
 			startDate = month.atDay(1).atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
 			endDate = month.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
 		} else {
-			startDate = date;
-			endDate = date;
+            startDate = date.toLocalDate().atStartOfDay();
+            endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
 		}
 		dateRange.setStartDate(startDate.toLocalDate());
 		dateRange.setEndDate(endDate.toLocalDate());
