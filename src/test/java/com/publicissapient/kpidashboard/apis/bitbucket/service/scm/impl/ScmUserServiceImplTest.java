@@ -32,7 +32,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -118,7 +120,7 @@ public class ScmUserServiceImplTest {
         user2.setUsername("user2");
 
         List<User> scmUsers = Arrays.asList(userWithEmail, user2);
-        List<String> expectedIdentifiers = Arrays.asList("user1@example.com", "user2@example.com");
+        Set<String> expectedIdentifiers = new HashSet<>(Arrays.asList("user1@example.com", "user2@example.com"));
         JsonNode expectedResult = realObjectMapper.valueToTree(expectedIdentifiers);
 
         when(customApiConfig.isRepoToolEnabled()).thenReturn(false);
@@ -138,7 +140,7 @@ public class ScmUserServiceImplTest {
     @Test
     public void testGetScmUsersRepoDisabledName() {
         List<User> scmUsers = Arrays.asList(userWithUsername, userWithoutEmail);
-        List<String> expectedIdentifiers = Arrays.asList("user1", "user2");
+        Set<String> expectedIdentifiers = new HashSet<>(Arrays.asList("user1", "user2"));
         JsonNode expectedResult = realObjectMapper.valueToTree(expectedIdentifiers);
 
         when(customApiConfig.isRepoToolEnabled()).thenReturn(false);
@@ -157,7 +159,7 @@ public class ScmUserServiceImplTest {
     @Test
     public void testGetScmUsersRepoDisabledEmpty() {
         List<User> emptyScmUsers = Collections.emptyList();
-        List<String> expectedIdentifiers = Collections.emptyList();
+        Set<String> expectedIdentifiers = Collections.emptySet();
         JsonNode expectedResult = realObjectMapper.valueToTree(expectedIdentifiers);
 
         when(customApiConfig.isRepoToolEnabled()).thenReturn(false);

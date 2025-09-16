@@ -28,6 +28,8 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -44,8 +46,9 @@ public class ScmUserServiceImpl implements ScmUserService {
 			return repoToolsConfigService.getProjectRepoToolMembers(projectConfigId);
 		} else {
 			List<User> scmUsers = scmKpiHelperService.getScmUser(new ObjectId(projectConfigId));
-			List<String> userIdentifiers = scmUsers.stream()
-					.map(user -> user.getEmail() != null ? user.getEmail() : user.getUsername()).toList();
+			Set<String> userIdentifiers = scmUsers.stream()
+					.map(user -> user.getEmail() != null ? user.getEmail() : user.getUsername())
+					.collect(Collectors.toSet());
 			return objectMapper.valueToTree(userIdentifiers);
 		}
 	}
