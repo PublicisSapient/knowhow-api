@@ -25,8 +25,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductivityGainDTO {
-    private CategorizedProductivityGain categorizedProductivityGain;
+public class KPITrendDTO {
+    private double trendValue;
 
-    private KPITrendsDTO kpiTrends;
+    private String kpiName;
+    private String kpiCategory;
 }
