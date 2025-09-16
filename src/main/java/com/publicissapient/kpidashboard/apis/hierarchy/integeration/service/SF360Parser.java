@@ -19,30 +19,24 @@
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.service;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.publicissapient.kpidashboard.apis.errors.HierarchyParsingException;
 import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
-import org.modelmapper.ModelMapper;
-
-import java.util.List;
-import java.util.Map;
 
 public class SF360Parser implements HierarchyDetailParser {
 
-    @Override
-    public HierarchyDetails convertToHierachyDetail(String jsonResponse) {
-        ObjectMapper objectMapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        try (JsonParser parser = objectMapper.createParser(jsonResponse)) {
-            JsonNode rootNode = objectMapper.readTree(parser);
-            JsonNode hierarchyDetailsNode = rootNode.path("data").get(0).path("hierarchyDetails");
-            return objectMapper.treeToValue(hierarchyDetailsNode, HierarchyDetails.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse hierarchy details due to " + e.getMessage(), e);
-        }
-    }
+	@Override
+	public HierarchyDetails convertToHierachyDetail(String jsonResponse) {
+		ObjectMapper objectMapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+		try (JsonParser parser = objectMapper.createParser(jsonResponse)) {
+			JsonNode rootNode = objectMapper.readTree(parser);
+			JsonNode hierarchyDetailsNode = rootNode.path("data").get(0).path("hierarchyDetails");
+			return objectMapper.treeToValue(hierarchyDetailsNode, HierarchyDetails.class);
+		} catch (Exception e) {
+			throw new HierarchyParsingException("Failed to parse hierarchy details", e);
+		}
+	}
 
 }

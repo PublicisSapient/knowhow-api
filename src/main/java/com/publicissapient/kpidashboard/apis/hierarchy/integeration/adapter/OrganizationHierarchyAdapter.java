@@ -18,12 +18,16 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.adapter;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
-
 import java.util.List;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
+
+/*
+ *	author@aksshriv1
+ */
 public interface OrganizationHierarchyAdapter {
-    Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes);
+	Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails,
+			List<OrganizationHierarchy> allDbNodes);
 }

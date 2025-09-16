@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +43,10 @@ import com.publicissapient.kpidashboard.common.model.application.OrganizationHie
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
 import lombok.extern.slf4j.Slf4j;
+
+/*
+ *	author@aksshriv1
+ */
 
 @Slf4j
 @Component
@@ -77,9 +82,7 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 	}
 
 	private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> getHierachyLevelTillProject() {
-		List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> topHierarchyLevels = hierarchyLevelService
-				.getTopHierarchyLevels();
-		return topHierarchyLevels;
+		return hierarchyLevelService.getTopHierarchyLevels();
 	}
 
 	public void ensureHierarchyExists(List<HierarchyNode> nodes, Set<OrganizationHierarchy> transformedList,
@@ -96,45 +99,6 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 		}
 	}
 
-	/*
-	 * private List<OrganizationHierarchy> processHierarchyNode(HierarchyNode node,
-	 * List<String> centralHierarchyLevels, List<OrganizationHierarchy> allDbNodes)
-	 * { List<OrganizationHierarchy> fullNode = new ArrayList<>();
-	 * 
-	 * Map<String, OrganizationHierarchy> createdNodes = new HashMap<>();
-	 * Map<String, String> idMappings = getNodeIdMappings(node); // Extracts all IDs
-	 * 
-	 * for (String chsLevel : centralHierarchyLevels) { String parentLevel =
-	 * getParentLevel(chsLevel);
-	 *//*
-	    * String parentId = parentLevel == null ? null :
-	    * createdNodes.getOrDefault(parentLevel, null) != null ?
-	    * createdNodes.get(parentLevel).getNodeId() : null;
-	    *//*
-		   * 
-		   * 
-		   * String parentId = null; if (parentLevel != null) { if
-		   * (createdNodes.containsKey(parentLevel)) { parentId =
-		   * createdNodes.get(parentLevel).getNodeId(); // Newly created in this run }
-		   * else { // Look in DB for parent String parentExternalId =
-		   * idMappings.get(parentLevel); OrganizationHierarchy existingParent =
-		   * findByExternalId(allDbNodes, parentExternalId, parentLevel); if
-		   * (existingParent != null) { parentId = existingParent.getNodeId(); } } }
-		   * 
-		   * 
-		   * // If it's not "bu" and parent is null, skip hierarchy if
-		   * (!"bu".equals(chsLevel) && parentId == null) { log.warn("Skipping " +
-		   * chsLevel + " as parent is missing for node: " + node); return
-		   * Collections.emptyList(); }
-		   * 
-		   * OrganizationHierarchy newNode = createOrUpdateNode(idMappings.get(chsLevel),
-		   * getNodeName(node, chsLevel), chsLevel, parentId);
-		   * 
-		   * createdNodes.put(chsLevel, newNode); fullNode.add(newNode); }
-		   * 
-		   * return fullNode; }
-		   */
-
 	private List<OrganizationHierarchy> processHierarchyNode(HierarchyNode node, List<String> centralHierarchyLevels,
 			List<OrganizationHierarchy> allDbNodes) {
 
@@ -147,23 +111,7 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 
 			// Step 1: Determine parentId
 			String parentId = null;
-			if (parentLevel != null) {
-				if (createdNodes.containsKey(parentLevel)) {
-					// Parent was created in current iteration
-					parentId = createdNodes.get(parentLevel).getNodeId();
-				} else {
-					// Parent might already exist in DB
-					String parentExternalId = idMappings.get(parentLevel);
-					if (parentExternalId != null) {
-						OrganizationHierarchy existingParent = allDbNodes.stream()
-								.filter(dbNode -> parentExternalId.equalsIgnoreCase(dbNode.getExternalId())).findFirst()
-								.orElse(null);
-						if (existingParent != null) {
-							parentId = existingParent.getNodeId();
-						}
-					}
-				}
-			}
+			parentId = getParentId(allDbNodes, parentLevel, createdNodes, parentId, idMappings);
 
 			// Step 2: Skip if not BU and parent is still missing
 			if (!"bu".equals(chsLevel) && parentId == null) {
@@ -174,12 +122,7 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 			// Step 3: Check if node already exists in DB by externalId
 			String externalId = idMappings.get(chsLevel);
 			OrganizationHierarchy existingNode = null;
-			if (externalId != null) {
-				existingNode = allDbNodes.stream()
-						.filter(dbNode -> chsLevel.equalsIgnoreCase(dbNode.getHierarchyLevelId())
-								&& externalId.equalsIgnoreCase(dbNode.getExternalId()))
-						.findFirst().orElse(null);
-			}
+			existingNode = getExistingNode(allDbNodes, chsLevel, externalId, existingNode);
 
 			OrganizationHierarchy newNode;
 			if (existingNode != null) {
@@ -198,6 +141,38 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 		}
 
 		return fullNode;
+	}
+
+	@Nullable
+	private static OrganizationHierarchy getExistingNode(List<OrganizationHierarchy> allDbNodes, String chsLevel,
+			String externalId, OrganizationHierarchy existingNode) {
+		if (externalId != null) {
+			existingNode = allDbNodes.stream().filter(dbNode -> chsLevel.equalsIgnoreCase(dbNode.getHierarchyLevelId())
+					&& externalId.equalsIgnoreCase(dbNode.getExternalId())).findFirst().orElse(null);
+		}
+		return existingNode;
+	}
+
+	private static String getParentId(List<OrganizationHierarchy> allDbNodes, String parentLevel,
+			Map<String, OrganizationHierarchy> createdNodes, String parentId, Map<String, String> idMappings) {
+		if (parentLevel != null) {
+			if (createdNodes.containsKey(parentLevel)) {
+				// Parent was created in current iteration
+				parentId = createdNodes.get(parentLevel).getNodeId();
+			} else {
+				// Parent might already exist in DB
+				String parentExternalId = idMappings.get(parentLevel);
+				if (parentExternalId != null) {
+					OrganizationHierarchy existingParent = allDbNodes.stream()
+							.filter(dbNode -> parentExternalId.equalsIgnoreCase(dbNode.getExternalId())).findFirst()
+							.orElse(null);
+					if (existingParent != null) {
+						parentId = existingParent.getNodeId();
+					}
+				}
+			}
+		}
+		return parentId;
 	}
 
 	private Map<String, String> getNodeIdMappings(HierarchyNode node) {
@@ -276,7 +251,7 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 				return dataMap.get(key); // Return value of "Project"
 			}
 		}
-		throw new RuntimeException("Hierarchy Missing");
+		throw new IllegalStateException("Hierarchy Missing");
 	}
 
 }

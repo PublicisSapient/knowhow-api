@@ -18,10 +18,11 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
 
 @Data
 public class HierarchyDetails {
