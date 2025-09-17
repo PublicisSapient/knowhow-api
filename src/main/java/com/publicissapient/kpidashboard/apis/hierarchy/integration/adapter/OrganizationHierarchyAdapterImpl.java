@@ -16,7 +16,7 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.hierarchy.integeration.adapter;
+package com.publicissapient.kpidashboard.apis.hierarchy.integration.adapter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,15 +33,15 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyLevel;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyNode;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyLevel;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyNode;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -50,10 +50,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAdapter {
 	private final Map<String, OrganizationHierarchy> hierarchyMap = new HashMap<>();
-	@Autowired
-	private HierarchyLevelService hierarchyLevelService;
+	private final HierarchyLevelService hierarchyLevelService;
 
 	/*
 	 * add logic of converting input datalist to Organization Hierarchy

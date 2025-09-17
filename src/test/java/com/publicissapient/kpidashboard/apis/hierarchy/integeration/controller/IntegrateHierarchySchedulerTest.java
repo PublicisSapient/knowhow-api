@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.controller.IntegrateHierarchyScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,8 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.helper.ReaderRetryHelper;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.IntegerationService;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.helper.ReaderRetryHelper;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.IntegerationService;
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 
 @RunWith(MockitoJUnitRunner.class)

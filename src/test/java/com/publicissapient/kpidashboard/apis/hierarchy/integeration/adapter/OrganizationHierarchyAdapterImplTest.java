@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.adapter.OrganizationHierarchyAdapterImpl;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,9 +40,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyLevel;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyNode;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyLevel;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyNode;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 

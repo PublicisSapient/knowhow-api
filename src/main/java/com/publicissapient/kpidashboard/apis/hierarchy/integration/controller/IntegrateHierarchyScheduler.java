@@ -13,7 +13,7 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.hierarchy.integeration.controller;
+package com.publicissapient.kpidashboard.apis.hierarchy.integration.controller;
 
 import java.util.List;
 import java.util.Set;
@@ -29,21 +29,23 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.helper.ReaderRetryHelper;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.HierarchyDetailParser;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.IntegerationService;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.service.SF360Parser;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.helper.ReaderRetryHelper;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.HierarchyDetailParser;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.IntegerationService;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.SF360Parser;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
 /**
  * @author aksshriv1
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class IntegrateHierarchyScheduler {
 
 	private final IntegerationService integerationService;
@@ -51,16 +53,6 @@ public class IntegrateHierarchyScheduler {
 	private final ReaderRetryHelper retryHelper;
 	private final CustomApiConfig customApiConfig;
 	private final OrganizationHierarchyRepository organizationHierarchyRepository;
-
-	public IntegrateHierarchyScheduler(IntegerationService integerationService, RestTemplate restTemplate,
-			ReaderRetryHelper retryHelper, CustomApiConfig customApiConfig,
-			OrganizationHierarchyRepository organizationHierarchyRepository) {
-		this.integerationService = integerationService;
-		this.restTemplate = restTemplate;
-		this.retryHelper = retryHelper;
-		this.customApiConfig = customApiConfig;
-		this.organizationHierarchyRepository = organizationHierarchyRepository;
-	}
 
 	@Scheduled(cron = "${hierarchySync.cron}")
 	public void callApi() {

@@ -13,7 +13,7 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.hierarchy.integeration.service;
+package com.publicissapient.kpidashboard.apis.hierarchy.integration.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,17 +25,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.adapter.OrganizationHierarchyAdapter;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.adapter.OrganizationHierarchyAdapter;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -44,17 +44,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class IntegrationServiceImpl implements IntegerationService {
 
 	public static final String PORT = "port";
 	public static final String PROJECT = "project";
 	public static final String SYSTEM = "SYSTEM";
-	@Autowired
-	private OrganizationHierarchyAdapter organizationHierarchyAdapter;
-	@Autowired
-	private ProjectBasicConfigRepository projectConfigRepository;
-	@Autowired
-	private OrganizationHierarchyService organizationHierarchyService;
+
+	private final OrganizationHierarchyAdapter organizationHierarchyAdapter;
+	private final ProjectBasicConfigRepository projectConfigRepository;
+	private final OrganizationHierarchyService organizationHierarchyService;
 
 	@Override
 	public void syncOrganizationHierarchy(Set<OrganizationHierarchy> externalList,
