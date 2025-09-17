@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  ******************************************************************************/
-package com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto;
+package com.publicissapient.kpidashboard.apis.hierarchy.integration.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

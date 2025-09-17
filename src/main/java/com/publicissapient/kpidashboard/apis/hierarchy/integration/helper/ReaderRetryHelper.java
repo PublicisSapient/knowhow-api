@@ -13,7 +13,7 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.hierarchy.integeration.helper;
+package com.publicissapient.kpidashboard.apis.hierarchy.integration.helper;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.Retryable;

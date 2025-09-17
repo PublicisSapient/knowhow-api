@@ -3,11 +3,12 @@ package com.publicissapient.kpidashboard.apis.hierarchy.integeration.service;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.SF360Parser;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.publicissapient.kpidashboard.apis.errors.HierarchyParsingException;
-import com.publicissapient.kpidashboard.apis.hierarchy.integeration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
 
 public class SF360ParserTest {
 
