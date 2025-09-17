@@ -578,15 +578,24 @@
                 <include>**/*.yml</include>
                 <include>**/*.yaml</include>
               </includes>
+              <prettier>
+                <configFile>${project.basedir}/.prettierrc</configFile>
+              </prettier>
             </format>
             <format>
               <includes>
                 <include>**/*.xml</include>
               </includes>
               <excludes>
+                <exclude>eclipse-formatter-config.xml</exclude>
                 <exclude>pom.xml</exclude>
                 <exclude>**/pom.xml</exclude>
+                <exclude>**/.idea/**</exclude>
               </excludes>
+              <indent>
+                <spaces>true</spaces>
+                <spacesPerTab>2</spacesPerTab>
+              </indent>
             </format>
           </formats>
         </configuration>
