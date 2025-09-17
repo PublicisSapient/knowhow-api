@@ -43,7 +43,6 @@ public class TestExecutionTimeKpi {
                 .append("kpiName", "Test Execution Time")
                 .append("isDeleted", false)
                 .append("defaultOrder", 1)
-                .append("kpiCategory", "Release")
                 .append("kpiSubCategory", "Quality")
                 .append("kpiSource", "Zypher")
                 .append("combinedKpiSource", "Zephyr/Zypher/JiraTest")
@@ -68,7 +67,7 @@ public class TestExecutionTimeKpi {
 
         // Insert document in kpi_category_mapping
         Document kpiCategoryMappingDoc = new Document(KPI_ID, KPI_196)
-                .append("categoryId", "categoryTwo")
+                .append("categoryId", "quality")
                 .append("kpiOrder", 4)
                 .append("kanban", false);
 
