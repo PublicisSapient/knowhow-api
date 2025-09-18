@@ -601,15 +601,15 @@
             </format>
           </formats>
         </configuration>
-       <!-- <executions>
-          <execution>
-            <id>spotless-apply</id>
-            <goals>
-              <goal>apply</goal>
-            </goals>
-            <phase>validate</phase>
-          </execution>
-        </executions>-->
+        <executions>
+        <!--   <execution>
+             <id>spotless-apply</id>
+             <goals>
+               <goal>apply</goal>
+             </goals>
+             <phase>validate</phase>
+           </execution>-->
+         </executions>
       </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
