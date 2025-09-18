@@ -601,7 +601,7 @@
             </format>
           </formats>
         </configuration>
-        <executions>
+       <!-- <executions>
           <execution>
             <id>spotless-apply</id>
             <goals>
@@ -609,7 +609,7 @@
             </goals>
             <phase>validate</phase>
           </execution>
-        </executions>
+        </executions>-->
       </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
