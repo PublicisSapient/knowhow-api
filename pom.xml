@@ -608,7 +608,7 @@
               </execution>
             </executions>
           </plugin>
-          <plugin>
+          <!--<plugin>
             <groupId>com.diffplug.spotless</groupId>
             <artifactId>spotless-maven-plugin</artifactId>
             <version>2.42.0</version>
@@ -670,15 +670,15 @@
               </formats>
             </configuration>
             <executions>
-              <!--   <execution>
+              &lt;!&ndash;   <execution>
                    <id>spotless-apply</id>
                    <goals>
                      <goal>apply</goal>
                    </goals>
                    <phase>validate</phase>
-                 </execution>-->
+                 </execution>&ndash;&gt;
             </executions>
-          </plugin>
+          </plugin>-->
         </plugins>
       </build>
     </profile>
