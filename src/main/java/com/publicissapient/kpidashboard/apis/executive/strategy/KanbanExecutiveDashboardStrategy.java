@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.mapper.ExecutiveDashboardMapper;
 import com.publicissapient.kpidashboard.apis.executive.service.KanbanKpiMaturity;
@@ -62,9 +63,9 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 	public KanbanExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService,
 			CacheService cacheService, UserBoardConfigService userBoardConfigService,
 			KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository,
-			ConfigHelperService configHelperService) {
+			ConfigHelperService configHelperService, CustomApiConfig customApiConfig) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, kanbanKpiMaturity,
-				kpiCategoryRepository, configHelperService);
+				kpiCategoryRepository, configHelperService, customApiConfig);
 	}
 
 	@Override
