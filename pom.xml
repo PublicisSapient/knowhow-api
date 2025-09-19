@@ -639,15 +639,6 @@
             </format>
           </formats>
         </configuration>
-        <!-- <executions>
-             <execution>
-                <id>spotless-apply</id>
-                <goals>
-                  <goal>apply</goal>
-                </goals>
-                <phase>validate</phase>
-              </execution>
-         </executions>-->
       </plugin>
     </plugins>
   </build>
