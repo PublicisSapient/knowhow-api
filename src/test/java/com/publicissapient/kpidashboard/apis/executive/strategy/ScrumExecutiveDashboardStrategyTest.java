@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -81,13 +82,18 @@ public class ScrumExecutiveDashboardStrategyTest {
 	@Mock
 	private Executor scrumExecutiveTaskExecutor;
 
+	@Mock
+	private CustomApiConfig customApiConfig;
+
 	@InjectMocks
 	private ScrumExecutiveDashboardStrategy scrumStrategy;
 
 	@Before
-	public void setup() {
+	public void setUp() {
 		ReflectionTestUtils.setField(scrumStrategy, "scrumExecutiveTaskExecutor", Executors.newSingleThreadExecutor());
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(createUserBoard());
+		when(customApiConfig.getExecutiveTimeoutMinutes()).thenReturn(1);
+		when(customApiConfig.getExecutiveTimeoutMinutes()).thenReturn(1);
 	}
 
 	@Test
