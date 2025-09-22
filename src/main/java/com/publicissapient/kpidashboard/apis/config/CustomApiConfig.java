@@ -373,6 +373,9 @@ public class CustomApiConfig { // NOPMD
 	@Value("${is.repo.tool.enabled:false}")
 	private boolean isRepoToolEnabled;
 
+    @Value("${executive.dashboard.timeout.minutes:3}")
+    private int executiveTimeoutMinutes;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}
