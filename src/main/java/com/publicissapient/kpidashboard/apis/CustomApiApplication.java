@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
@@ -68,6 +69,7 @@ import io.mongock.runner.springboot.EnableMongock;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableCaching
 @EnableMongock
+@EnableScheduling
 @EnableMongoRepositories(basePackages = {"com.publicissapient.**.repository"})
 @ComponentScan(basePackages = {"com.publicissapient.kpidashboard", "com.knowhow.retro.aigatewayclient", "com.knowhow.retro.notifications"})
 public class CustomApiApplication extends SpringBootServletInitializer {

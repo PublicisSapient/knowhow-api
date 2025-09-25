@@ -47,6 +47,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardDataDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
@@ -77,14 +78,17 @@ public class BaseExecutiveDashboardStrategyTest {
 	private KpiCategoryRepository kpiCategoryRepository;
 	@Mock
 	private ConfigHelperService configHelperService;
+	@Mock
+	private CustomApiConfig customApiConfig;
 
 	private DummyStrategy testStrategy;
 
 	@Before
-	public void setup() {
+	public void setUp() {
 		MockitoAnnotations.openMocks(this);
 		testStrategy = new DummyStrategy(projectEfficiencyService, cacheService, userBoardConfigService,
-				toolKpiMaturity, kpiCategoryRepository, configHelperService);
+				toolKpiMaturity, kpiCategoryRepository, configHelperService, customApiConfig);
+		when(customApiConfig.getExecutiveTimeoutMinutes()).thenReturn(1); // or 3, as needed
 	}
 
 	private static class DummyStrategy extends BaseExecutiveDashboardStrategy {
@@ -93,9 +97,9 @@ public class BaseExecutiveDashboardStrategyTest {
 
 		public DummyStrategy(ProjectEfficiencyService projectEfficiencyService, CacheService cacheService,
 				UserBoardConfigService userBoardConfigService, ToolKpiMaturity toolKpiMaturity,
-				KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
+				KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService, CustomApiConfig customApiConfig) {
 			super("dummy", cacheService, projectEfficiencyService, userBoardConfigService, toolKpiMaturity,
-					kpiCategoryRepository, configHelperService);
+					kpiCategoryRepository, configHelperService, customApiConfig);
 		}
 
 		@Override
@@ -135,7 +139,7 @@ public class BaseExecutiveDashboardStrategyTest {
 		// Reduce timeout for testing purposes by creating a new instance with a faster
 		// timeout
 		DummyStrategy fastTimeoutStrategy = new DummyStrategy(projectEfficiencyService, cacheService,
-				userBoardConfigService, toolKpiMaturity, kpiCategoryRepository, configHelperService) {
+				userBoardConfigService, toolKpiMaturity, kpiCategoryRepository, configHelperService, customApiConfig) {
 			@Override
 			public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
 				// Override with a much shorter timeout for the test
@@ -258,7 +262,7 @@ public class BaseExecutiveDashboardStrategyTest {
 	public void testGetExecutiveDashboard_ExecutionException() {
 		// Test handling of ExecutionException
 		testStrategy = new DummyStrategy(projectEfficiencyService, cacheService, userBoardConfigService,
-				toolKpiMaturity, kpiCategoryRepository, configHelperService) {
+				toolKpiMaturity, kpiCategoryRepository, configHelperService, customApiConfig) {
 			@Override
 			public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
 				throw new ExecutiveDataException("Test exception",

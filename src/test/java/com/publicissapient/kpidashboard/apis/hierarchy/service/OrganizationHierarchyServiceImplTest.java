@@ -82,6 +82,7 @@ public class OrganizationHierarchyServiceImplTest {
 		orgHierarchy.setNodeDisplayName("Test Project");
 		orgHierarchy.setHierarchyLevelId("project");
 		orgHierarchy.setParentId("hierarchyLevelThree_unique_001");
+		orgHierarchy.setExternalId("ext_hierarchyLevelThree_unique_001");
 
 		when(configHelperService.loadAllOrganizationHierarchy()).thenReturn(organizationHierarchyList);
 

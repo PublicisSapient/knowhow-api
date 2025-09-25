@@ -408,30 +408,38 @@ public class TestExecutionTimeKanbanServiceImpl  extends ZephyrKPIService<Double
         if (CollectionUtils.isNotEmpty(testCases)) {
             int totalCount = testCases.size();
 
-            // Compute per-test average execution time (if multiple executions exist)
-            double avgExecTimeSec = testCases.stream().mapToDouble(tc -> {
+            // Compute per-test average execution time in **minutes**
+            long avgExecTimeMin = Math.round(
+                    testCases.stream().mapToDouble(tc -> {
                         if (CollectionUtils.isEmpty(tc.getExecutions())) {
                             return 0.0;
                         }
-                        double sum = tc.getExecutions().stream().filter(exec -> exec.getExecutionTime() != null)
-                                .mapToDouble(TestCaseExecutionData::getExecutionTime).sum();
-                        long count = tc.getExecutions().stream().filter(exec -> exec.getExecutionTime() != null).count();
+                        double sum = tc.getExecutions().stream()
+                                .filter(exec -> exec.getExecutionTime() != null)
+                                .mapToDouble(TestCaseExecutionData::getExecutionTime)
+                                .sum();
+
+                        long count = tc.getExecutions().stream()
+                                .filter(exec -> exec.getExecutionTime() != null)
+                                .count();
+
                         return count > 0 ? (sum / count) : 0.0;
-                    }).average() // across all test cases in the category
-                    .orElse(0.0) / 1000.0; // convert ms -> seconds
+                    }).average().orElse(0.0) / 1000.0 / 60.0 // ms → sec → min
+            );
 
             // Put results into hover map
             Map<String, Object> categoryData = new HashMap<>();
             categoryData.put(COUNT, totalCount);
-            categoryData.put(AVGEXECUTIONTIME, avgExecTimeSec);
+            categoryData.put(AVGEXECUTIONTIME, avgExecTimeMin); // in minutes
 
             hoverMap.put(category, categoryData);
         } else {
             Map<String, Object> categoryData = new HashMap<>();
             categoryData.put(COUNT, 0);
-            categoryData.put(AVGEXECUTIONTIME, 0.0);
+            categoryData.put(AVGEXECUTIONTIME, 0L); // 0 minutes
             hoverMap.put(category, categoryData);
         }
     }
+
 
 }
