@@ -25,7 +25,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
-@ChangeUnit(id = "test_execution_time_kpi", order = "14004", author = "rendk", systemVersion = "14.0.0")
+//@ChangeUnit(id = "test_execution_time_kpi", order = "14004", author = "rendk", systemVersion = "14.1.0")
 public class TestExecutionTimeKpi {
 
     public static final String KPI_ID = "kpiId";
