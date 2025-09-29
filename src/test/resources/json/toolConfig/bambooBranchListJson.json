@@ -1,0 +1,30 @@
+{
+  "expand": "branches",
+  "link": {
+    "href": "/bamboo/rest/api/latest/plan/COOP-CC/branch",
+    "rel": "self"
+  },
+  "branches": {
+    "size": 212,
+    "expand": "branch",
+    "start-index": 0,
+    "max-result": 212,
+    "branch": [
+      {
+        "description": "",
+        "shortName": "feature-ACTR-8087-navigate-education-topics-using-sidebar",
+        "shortKey": "CC232",
+        "enabled": true,
+        "link": {
+          "href": "/bamboo/rest/api/latest/plan/COOP-CC232",
+          "rel": "self"
+        },
+        "workflowType": "manual",
+        "divergent": false,
+        "awaitingSpecsExecution": false,
+        "key": "COOP-CC232",
+        "name": "CooperTire - CooperTireGSRSonar - feature-ACTR-8087-navigate-education-topics-using-sidebar"
+      }
+    ]
+  }
+}
