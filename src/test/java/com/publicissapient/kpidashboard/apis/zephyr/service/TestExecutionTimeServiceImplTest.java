@@ -89,7 +89,7 @@ public class TestExecutionTimeServiceImplTest {
 	@Before
 	public void setup() {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
-		kpiRequest = kpiRequestFactory.findKpiRequest("kpi196");
+		kpiRequest = kpiRequestFactory.findKpiRequest("kpi194");
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 		kpiWiseAggregation.put("defectInjectionRate", "average");
