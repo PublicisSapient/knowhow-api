@@ -1,0 +1,45 @@
+{
+  "expand": "plans",
+  "link": {
+    "href": "/bamboo/rest/api/latest/plan",
+    "rel": "self"
+  },
+  "plans": {
+    "size": 862,
+    "expand": "plan",
+    "start-index": 0,
+    "max-result": 862,
+    "plan": [
+      {
+        "shortName": "Automatic-bamboo-build -trigger",
+        "shortKey": "AT",
+        "type": "chain",
+        "enabled": true,
+        "link": {
+          "href": "/bamboo/rest/api/latest/plan/REL-AT",
+          "rel": "self"
+        },
+        "key": "REL-AT",
+        "name": "12th oct - Automatic-bamboo-build -trigger",
+        "planKey": {
+          "key": "REL-AT"
+        }
+      },
+      {
+        "shortName": "IS optimization",
+        "shortKey": "IO",
+        "type": "chain",
+        "enabled": false,
+        "link": {
+          "href": "/bamboo/rest/api/latest/plan/REL-IO",
+          "rel": "self"
+        },
+        "key": "REL-IO",
+        "name": "12th oct - IS optimization",
+        "planKey": {
+          "key": "REL-IO"
+        }
+      }
+    ]
+  }
+}
