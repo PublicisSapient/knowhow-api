@@ -37,6 +37,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -78,6 +79,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	protected final ToolKpiMaturity toolKpiMaturity;
 	protected final KpiCategoryRepository kpiCategoryRepository;
 	protected final ConfigHelperService configHelperService;
+    protected final CustomApiConfig customApiConfig;
 
 	protected abstract Executor getExecutor();
 
@@ -90,13 +92,13 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		ExecutorService overallExecutor = Executors.newSingleThreadExecutor();
 		Future<ExecutiveDashboardResponseDTO> future = overallExecutor.submit(() -> fetchDashboardData(request));
 		try {
-			log.info(">>> About to call future.get()");
-			ExecutiveDashboardResponseDTO dto = future.get(1, TimeUnit.MINUTES);
+			log.info(">>> About to call future.get() with timeout: {} minutes", customApiConfig.getExecutiveTimeoutMinutes());
+			ExecutiveDashboardResponseDTO dto = future.get(customApiConfig.getExecutiveTimeoutMinutes(), TimeUnit.MINUTES);
 			log.info(">>> Future completed, returning DTO = {}", dto);
-			return future.get(1, TimeUnit.MINUTES);
+			return dto;
 		} catch (TimeoutException e) {
 			future.cancel(true);
-			throw new ExecutiveDataException("Service taking longer than expected, try again later",
+			throw new ExecutiveDataException("Service taking longer than expected (>" + customApiConfig.getExecutiveTimeoutMinutes() + " min), try again later",
 					HttpStatus.REQUEST_TIMEOUT, e);
 		} catch (ExecutionException e) {
 			throw new ExecutiveDataException("Strategy " + strategyType + " failed", e.getCause());
@@ -287,8 +289,8 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 						return Map.<String, List<KpiElement>>of();
 					}
 				}, getExecutor())
-						// Enforce 1-minute timeout per tool
-						.orTimeout(1, TimeUnit.MINUTES).exceptionally(ex -> {
+						// Enforce timeout per tool
+						.orTimeout(customApiConfig.getExecutiveTimeoutMinutes(), TimeUnit.MINUTES).exceptionally(ex -> {
 							log.error("Tool computation timed out for project {} tool {}: {}", projectNodeId,
 									entry.getKey(), ex.getMessage());
 							return Map.of();

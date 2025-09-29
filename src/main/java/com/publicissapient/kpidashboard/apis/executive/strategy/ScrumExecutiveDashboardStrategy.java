@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,9 +60,10 @@ public class ScrumExecutiveDashboardStrategy extends BaseExecutiveDashboardStrat
 
 	public ScrumExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService, CacheService cacheService,
 			UserBoardConfigService userBoardConfigService, ScrumKpiMaturity scrumKpiMaturity,
-			KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService) {
+			KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService,
+			CustomApiConfig customApiConfig) {
 		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, scrumKpiMaturity,
-				kpiCategoryRepository, configHelperService);
+				kpiCategoryRepository, configHelperService, customApiConfig);
 	}
 
 	@Override
