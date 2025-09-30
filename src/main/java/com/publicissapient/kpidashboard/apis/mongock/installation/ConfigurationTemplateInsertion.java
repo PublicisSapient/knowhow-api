@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@ChangeUnit(id = "configuration_template", order = "13103", author = "girpatha", systemVersion = "13.1.0")
+@ChangeUnit(id = "configuration_template", order = "13103", author = "girpatha")
 public class ConfigurationTemplateInsertion {
 
     private final MongoTemplate mongoTemplate;
