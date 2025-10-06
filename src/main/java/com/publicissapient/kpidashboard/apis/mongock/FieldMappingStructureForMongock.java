@@ -78,5 +78,6 @@ public class FieldMappingStructureForMongock {
 		String operator;
 		String maxValue;
 		String minValue;
+        Object structuredValue;
 	}
 }
