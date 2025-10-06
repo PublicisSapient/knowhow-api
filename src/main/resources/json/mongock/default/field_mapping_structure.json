@@ -4712,7 +4712,7 @@
     "fieldCategory": "fields",
     "section": "Custom Fields Mapping",
     "sectionOrder": 1,
-    "mandatory": false,
+    "mandatory": true,
     "tooltip": {
       "definition": "The agreed-upon time limit within which a defect must be resolved, as defined by service-level agreements (SLAs)"
     },
@@ -4855,5 +4855,20 @@
     "mandatory": false,
     "readOnly": null,
     "nodeSpecific": false
+  },
+  {
+    "fieldName" : "jiraDefectCountIssueTypeKPI194",
+    "fieldLabel" : "Issue types with defect linkages",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "section" : "Issue Types Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "All issue types that can have valid defect linkages"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 2,
+    "mandatory" : true,
+    "nodeSpecific" : false
   }
 ]
