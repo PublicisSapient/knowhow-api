@@ -18,9 +18,21 @@ package com.publicissapient.kpidashboard.apis.usermanagement.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
+import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
+import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
+import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
+import com.publicissapient.kpidashboard.common.service.HierarchyLevelServiceImpl;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
@@ -43,6 +55,8 @@ import org.thymeleaf.util.StringUtils;
 public class UserServiceImpl implements UserService {
 
     private final UserInfoService userInfoService;
+
+    private final HierarchyLevelServiceImpl hierarchyLevelService;
     private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
     private static final String DOMAIN_NAME = "@publicisgroupe.net";
     @Override
@@ -69,7 +83,54 @@ public class UserServiceImpl implements UserService {
             userInfo.setAuthType(AuthType.SAML);
             userInfo.setAuthorities(new ArrayList<>());
             userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
-            userInfo.setProjectsAccess(Collections.emptyList());
+
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
+
+            String role = authentication.getAuthorities()
+                    .stream()
+                    .findFirst()
+                    .map(GrantedAuthority::getAuthority)
+                    .orElse("UNKNOWN");
+
+            if(role.equals("ROLE_SUPERADMIN") || role.equals("UNKNOWN"))
+                userInfo.setProjectsAccess(Collections.emptyList());
+            else{
+
+                UserInfo fullUserDoc = userInfoService.getUserInfo(authentication.getName());
+                List<ProjectsAccess> mappedProjects = fullUserDoc.getProjectsAccess().stream()
+                        .map(projectsAccess ->
+                        {
+                            ProjectsAccess copy = new ProjectsAccess();
+                            copy.setRole(Constant.ROLE_VIEWER);
+
+                            List<AccessNode> nodes = projectsAccess.getAccessNodes()
+                                    .stream()
+                                    .map(node -> {
+                                        AccessNode newNode = new AccessNode();
+                                        newNode.setAccessLevel(nextAccessLevel(node.getAccessLevel()));
+
+                                        List<AccessItem> items = node.getAccessItems()
+                                                .stream()
+                                                .map(item -> {
+                                                    AccessItem newItem = new AccessItem();
+                                                    newItem.setItemId(item.getItemId());
+                                                    newItem.setItemName(item.getItemName()); // assign Viewer
+                                                    return newItem;
+                                                })
+                                                .collect(Collectors.toList());
+
+                                        newNode.setAccessItems(items);
+                                        return newNode;
+                                    })
+                                    .collect(Collectors.toList());
+
+                            copy.setAccessNodes(nodes);
+                            return copy;
+                        }).collect(Collectors.toList());
+
+                userInfo.setProjectsAccess(mappedProjects);
+            }
             
             log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
             savedUserInfo = userInfoService.save(userInfo);
@@ -82,5 +143,19 @@ public class UserServiceImpl implements UserService {
         
         // Return service response with appropriate message
         return new ServiceResponse(true, responseMessage, responseDTO);
+    }
+
+    private String nextAccessLevel(String currentLevel) {
+        List<HierarchyLevel> hierarchyLevels = hierarchyLevelService.getTopHierarchyLevels();
+        int nextIndex = IntStream.range(0, hierarchyLevels.size())
+                .filter(i -> hierarchyLevels.get(i).getHierarchyLevelId().equalsIgnoreCase(currentLevel))
+                .findFirst()
+                .orElse(-1);
+
+        if (nextIndex == -1 || nextIndex >= hierarchyLevels.size() - 1) {
+            return Constant.PROJECT.toLowerCase();
+        }
+
+        return hierarchyLevels.get(nextIndex + 1).getHierarchyLevelId();
     }
 }
