@@ -337,7 +337,9 @@ public enum FieldMappingEnum {
 
 	KPI997("Open Ticket Aging By Priority", KPISource.JIRAKANBAN.name(),
 			Arrays.asList("jiraLiveStatusKPI997", "ticketCountIssueTypeKPI997", "jiraTicketClosedStatusKPI997",
-					"jiraTicketRejectedStatusKPI997", "thresholdValueKPI997"));
+					"jiraTicketRejectedStatusKPI997", "thresholdValueKPI997")),
+	KPI194("Defect Severity Index (Scrum)", KPISource.JIRA.name(), Arrays.asList("jiraDefectSeverityKPI194",
+			"jiraDefectCountIssueTypeKPI194", "jiraIssueTypeNamesKPI194", "resolutionTypeForRejectionKPI194","jiraDefectRejectionStatusKPI194","thresholdValueKPI194","jiraDefectSeverityByCustomFieldKPI194"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

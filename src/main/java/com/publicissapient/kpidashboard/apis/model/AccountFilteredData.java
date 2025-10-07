@@ -53,6 +53,7 @@ public class AccountFilteredData {
 	private String releaseStartDate;
 	private String releaseState;
 	private ObjectId basicProjectConfigId;
+	private boolean onHold;
 
 	@Override
 	public boolean equals(Object obj) {
