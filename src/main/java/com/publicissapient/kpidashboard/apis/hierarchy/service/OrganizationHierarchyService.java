@@ -35,4 +35,6 @@ public interface OrganizationHierarchyService {
 	void clearCache();
 
 	ServiceResponse updateName(String name, String nodeId);
+
+	void saveAll(List<OrganizationHierarchy> organizationHierarchyList );
 }

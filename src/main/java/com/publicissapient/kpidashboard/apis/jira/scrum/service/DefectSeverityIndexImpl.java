@@ -18,6 +18,23 @@
 
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -48,25 +65,8 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of Defect Count By Severity KPI service.
@@ -87,7 +87,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
+public class DefectSeverityIndexImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	/** Constant used for suppressing unchecked cast warnings */
 	public static final String UNCHECKED = "unchecked";
@@ -195,6 +195,11 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		return kpiElement;
+	}
+
+	@Override
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+		return 0.0;
 	}
 
 	/**
@@ -806,8 +811,8 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	 * @return Calculated KPI value
 	 */
 	@Override
-	public Long calculateKpiValue(List<Long> valueList, String kpiName) {
-		return calculateKpiValueForLong(valueList, kpiName);
+	public Double calculateKpiValue(List<Double> valueList, String kpiName) {
+		return calculateKpiValueForDouble(valueList, kpiName);
 	}
 
 	/**
@@ -843,22 +848,6 @@ public class DefectSeverityIndexImpl extends JiraKPIService<Long, List<Object>, 
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(fieldMapping.getThresholdValueKPI194(),
 				KPICode.DEFECT_SEVERITY_INDEX.getKpiId());
-	}
-
-	/**
-	 * Calculates KPI metrics from the provided data.
-	 *
-	 * This method processes the raw data to calculate the actual KPI metrics. For
-	 * Defect Count by Severity, it returns the object map as is since the actual
-	 * calculation is done in other methods.
-	 *
-	 * @param objectMap
-	 *            Map containing the data needed for calculation
-	 * @return Map with calculated KPI metrics
-	 */
-	@Override
-	public Long calculateKPIMetrics(Map<String, Object> objectMap) {
-		return 0L;
 	}
 
 	/**

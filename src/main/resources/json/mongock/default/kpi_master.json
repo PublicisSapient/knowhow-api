@@ -5160,7 +5160,7 @@
     "upperThresholdBG": "red",
     "lowerThresholdBG": "white",
     "xAxisLabel": "Sprints",
-    "yAxisLabel": "Count",
+    "yAxisLabel": "Value",
     "showTrend": true,
     "isPositiveTrend": false,
     "lineLegend": null,
@@ -5205,5 +5205,68 @@
     "isRepoToolKpi": null,
     "yaxisOrder": null,
     "combinedKpiSource": "Jira/Azure/Rally"
+  },
+  {
+    "kpiId": "kpi195",
+    "kpiName": "Defects Breached SLAs",
+    "isDeleted": "False",
+    "defaultOrder": 28,
+    "kpiCategory": null,
+    "kpiSubCategory": null,
+    "kpiInAggregatedFeed": null,
+    "kpiOnDashboard": null,
+    "kpiBaseLine": null,
+    "kpiUnit": "%",
+    "chartType": "stacked-bar-chart",
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "xAxisLabel": "Sprints",
+    "yAxisLabel": "% defects that breached SLA",
+    "showTrend": true,
+    "isPositiveTrend": false,
+    "lineLegend": null,
+    "barLegend": null,
+    "boxType": null,
+    "calculateMaturity": false,
+    "hideOverallFilter": false,
+    "videoLink": null,
+    "isTrendUpOnValIncrease": null,
+    "kpiSource": "Jira",
+    "maxValue": 100,
+    "thresholdValue": 20,
+    "kanban": false,
+    "groupId": 26,
+    "kpiInfo": {
+      "definition": "Defects Breached SLAs (%) refers to the percentage of defects within a system or service that fail to meet the agreed-upon Service Level Agreement (SLA) timeframes.",
+      "formula": [
+        {
+          "lhs": "Defects Breached SLA (%)",
+          "operator": "division",
+          "operands": ["Number of Resolved Defects that breached SLA", "Total Resolved Defects"]
+        }
+      ],
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/270794755/Defects+Breached+SLAs"
+          }
+        }
+      ],
+      "_class": "com.publicissapient.kpidashboard.common.model.application.KpiInfo"
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "average",
+    "aggregationCircleCriteria": null,
+    "isTrendCalculative": false,
+    "trendCalculation": null,
+    "isAdditionalFilterSupport": true,
+    "maturityRange": null,
+    "kpiWidth": null,
+    "maturityLevel": null,
+    "isRepoToolKpi": null,
+    "yaxisOrder": null,
+    "combinedKpiSource": "Jira"
   }
 ]

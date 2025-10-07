@@ -171,9 +171,18 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 		JsonNode jsonArray = ((ObjectNode) responseObject).get("project_recommendations");
 		jsonArray.forEach(jsonElement -> {
 			GenericKpiRecommendation genericRecommendationItem = new GenericKpiRecommendation();
-			genericRecommendationItem.setRecommendationDetails(String.valueOf(jsonElement.get("recommendation")));
-			genericRecommendationItem.setRecommendationType(String.valueOf(jsonElement.get("severity")));
+			genericRecommendationItem.setObservation(String.valueOf(jsonElement.get("observation").asText()));
+			genericRecommendationItem.setRecommendationDetails(String.valueOf(jsonElement.get("recommendation").asText()));
+			genericRecommendationItem.setKpiName(String.valueOf(jsonElement.get("kpi").asText()));
+			genericRecommendationItem.setObservation(String.valueOf(jsonElement.get("observation").asText()));
+			genericRecommendationItem.setRecommendationType(String.valueOf(jsonElement.get("severity").asText()));
+			List<String> correlatedKpis = new ArrayList<>();
+			for (JsonNode correlatedKpi : jsonElement.withArray("correlated_kpis")) {
+				correlatedKpis.add(correlatedKpi.asText());
+			}
+			genericRecommendationItem.setCorrelatedKpis(correlatedKpis);
 			genericRecommendations.add(genericRecommendationItem);
+
 		});
 		recommendation.setRecommendations(genericRecommendations);
 

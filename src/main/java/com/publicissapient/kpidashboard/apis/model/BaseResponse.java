@@ -18,47 +18,14 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /** The Base response. */
+@Setter
+@Getter
 public class BaseResponse {
+    private String message;
 
-	private String message;
-	private Boolean success;
-
-	/**
-	 * Gets message.
-	 *
-	 * @return the message
-	 */
-	public String getMessage() {
-		return message;
-	}
-
-	/**
-	 * Sets message.
-	 *
-	 * @param message
-	 *          the message
-	 */
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	/**
-	 * Gets success.
-	 *
-	 * @return the success
-	 */
-	public Boolean getSuccess() {
-		return success;
-	}
-
-	/**
-	 * Sets success.
-	 *
-	 * @param success
-	 *          the success
-	 */
-	public void setSuccess(Boolean success) {
-		this.success = success;
-	}
+    private Boolean success;
 }

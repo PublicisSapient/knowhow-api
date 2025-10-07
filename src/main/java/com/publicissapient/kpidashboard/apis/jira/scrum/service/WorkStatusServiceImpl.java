@@ -22,8 +22,15 @@ import static com.publicissapient.kpidashboard.apis.util.KpiDataHelper.sprintWis
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,14 +47,28 @@ import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.CalculatePCDHelper;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
-import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.apis.model.CategoryData;
+import com.publicissapient.kpidashboard.apis.model.Filter;
+import com.publicissapient.kpidashboard.apis.model.FilterGroup;
+import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
+import com.publicissapient.kpidashboard.apis.model.KpiData;
+import com.publicissapient.kpidashboard.apis.model.KpiDataCategory;
+import com.publicissapient.kpidashboard.apis.model.KpiDataGroup;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
-import com.publicissapient.kpidashboard.common.model.jira.*;
+import com.publicissapient.kpidashboard.common.model.jira.IterationPotentialDelay;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -202,6 +223,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				}
 			});
 
+			kpiElement.setSprintId(sprintLeafNode.getSprintFilter().getId());
 			kpiElement.setSprint(sprintLeafNode.getName());
 			kpiElement.setExcelColumnInfo(KPIExcelColumn.WORK_STATUS.getKpiExcelColumnInfo());
 			kpiElement.setIssueData(issueData);
@@ -307,7 +329,6 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		CategoryData categoryData = new CategoryData();
 		categoryData.setCategoryKey("Category");
 		categoryData.setCategoryKey2("category2");
-
 		List<KpiDataCategory> categoryGroup = new ArrayList<>();
 		categoryGroup.add(createKpiDataCategory(PLANNED, 1));
 		categoryGroup.add(createKpiDataCategory(DEV_STATUS, 2));
@@ -390,11 +411,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
 				category.add(DEV_STATUS);
 				category2.get(DEV_STATUS).add(PLANNED_COMPLETION);
-				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
-					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-					populateDelay(delay, category2, DEV_STATUS);
-				}
+				delay = runDelayLogicForPositive(jiraIssueData,category2);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
 		} else {
@@ -403,11 +420,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
 				category.add(DEV_STATUS);
 				category2.get(DEV_STATUS).add(PLANNED_COMPLETION);
-				if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-					int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
-					delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-					populateDelay(delay, category2, DEV_STATUS);
-				}
+				delay = runDelayLogicForPositive(jiraIssueData,category2);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
 		}
@@ -416,12 +429,29 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			category2.get(DEV_STATUS).add(ACTUAL_COMPLETION);
 			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
 					.isAfter(LocalDate.now().minusDays(1)) && !jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
-				int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
-				delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
+				delay = runDelayLogic(jiraIssueData);
 			}
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 		}
 		data.getCategoryWiseDelay().put(DEV_STATUS, delay);
+	}
+
+	int runDelayLogicForPositive(Map<String, Object> jiraIssueData, Map<String, List<String>> category2) {
+		int delay = 0;
+		if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH) &&
+			jiraIssueData.get(ISSUE_DELAY) instanceof Integer jiraIssueDataDelay &&
+			jiraIssueDataDelay >= 0) {
+
+			int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
+			delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
+			populateDelay(delay, category2, DEV_STATUS);
+		}
+		return delay;
+	}
+
+	int runDelayLogic(Map<String, Object> jiraIssueData) {
+		int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
+		return KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
 	}
 
 	/**
@@ -451,7 +481,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				populateDelay(delay, category2, PLANNED);
+				populateDelayPositiveForPlanned(delay, category2);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -461,7 +491,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
-				populateDelay(delay, category2, PLANNED);
+				populateDelayPositiveForPlanned(delay, category2);
 				data.getCategoryWiseDelay().put(PLANNED, delay);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 			}
@@ -477,6 +507,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, true);
 		}
 		return category2;
+	}
+
+	private static void populateDelayPositiveForPlanned(int delay, Map<String, List<String>> category2) {
+		if(delay>=0)
+			populateDelay(delay, category2, PLANNED);
 	}
 	private static void populateDelay(int delay, Map<String, List<String>> category2, String categoryKey) {
 		if (delay != 0) {

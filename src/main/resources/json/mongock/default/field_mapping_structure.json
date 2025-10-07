@@ -4633,20 +4633,6 @@
     "nodeSpecific": false
   },
   {
-    "fieldName": "jiraIssueTypeNamesKPI194",
-    "fieldLabel": "Issue types to be included",
-    "placeHolderText": "Issue types to be included",
-    "fieldDisplayOrder": 1,
-    "fieldType": "chips",
-    "fieldCategory": "Issue_Type",
-    "section": "WorkFlow Status Mapping",
-    "sectionOrder": 1,
-    "tooltip": {
-      "definition": "All issue types used by your Jira project"
-    },
-    "mandatory": true
-  },
-  {
     "fieldName": "resolutionTypeForRejectionKPI194",
     "fieldLabel": "Resolution type to be excluded",
     "fieldType": "chips",
@@ -4717,5 +4703,172 @@
     "mandatory": false,
     "readOnly": null,
     "nodeSpecific": false
+  },
+  {
+    "fieldName": "includedSeveritySlasKPI195",
+    "fieldLabel": "Defect SLA",
+    "fieldDisplayOrder": 1,
+    "fieldType": "multiselect-dropdown",
+    "fieldCategory": "fields",
+    "section": "Custom Fields Mapping",
+    "sectionOrder": 1,
+    "mandatory": true,
+    "tooltip": {
+      "definition": "The agreed-upon time limit within which a defect must be resolved, as defined by service-level agreements (SLAs)"
+    },
+    "options": [
+      {
+        "label": "s1",
+        "structuredValue": {
+          "severity": "s1",
+          "sla": 24,
+          "timeUnit": "Hours"
+        }
+      },
+      {
+        "label": "s2",
+        "structuredValue": {
+          "severity": "s2",
+          "sla": 48,
+          "timeUnit": "Hours"
+        }
+      },
+      {
+        "label": "s3",
+        "structuredValue": {
+          "severity": "s3",
+          "sla": 5,
+          "timeUnit": "Days"
+        }
+      },
+      {
+        "label": "s4",
+        "structuredValue": {
+          "severity": "s4",
+          "sla": 10,
+          "timeUnit": "Days"
+        }
+      }
+    ]
+  },
+  {
+    "fieldName": "excludedDefectPrioritiesKPI195",
+    "fieldLabel": "Priority to be excluded",
+    "placeHolderText": "Select values to be excluded",
+    "fieldType": "multiselect",
+    "section": "Defects Mapping",
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 3,
+    "tooltip": {
+      "definition": "Priority values of defects that can be excluded from Defects Breached SLAs calculation"
+    },
+    "options": [
+      {
+        "label": "p1",
+        "value": "p1"
+      },
+      {
+        "label": "p2",
+        "value": "p2"
+      },
+      {
+        "label": "p3",
+        "value": "p3"
+      },
+      {
+        "label": "p4",
+        "value": "p4"
+      },
+      {
+        "label": "p5",
+        "value": "p5"
+      }
+    ]
+  },
+  {
+    "fieldName": "includedDefectRootCausesKPI195",
+    "fieldLabel": "Root cause values to be included",
+    "placeHolderText": " Root cause values to be included",
+    "fieldType": "chips",
+    "section": "Defects Mapping",
+    "fieldDisplayOrder": 2,
+    "sectionOrder": 3,
+    "tooltip": {
+      "definition": "Root cause reasons for defects to be included in Defects Breached SLAs calculation."
+    }
+  },
+  {
+    "fieldName": "excludedDefectRejectionStatusesKPI195",
+    "fieldLabel": "Status to identify rejected defects",
+    "fieldType": "text",
+    "fieldCategory": "workflow",
+    "section": "WorkFlow Status Mapping",
+    "fieldDisplayOrder": 2,
+    "sectionOrder": 4,
+    "tooltip": {
+      "definition": "All workflow statuses used to reject defects."
+    }
+  },
+  {
+    "fieldName": "excludedDefectResolutionTypesKPI195",
+    "fieldLabel": "Resolution type to be excluded",
+    "fieldType": "chips",
+    "section": "WorkFlow Status Mapping",
+    "fieldDisplayOrder": 6,
+    "sectionOrder": 4,
+    "tooltip": {
+      "definition": "Resolution types for defects that can be excluded from Defects Breached SLAs calculation."
+    }
+  },
+  {
+    "fieldName": "includedDefectClosureStatusesKPI195",
+    "fieldLabel": "Status Consider for Issue Closure",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "section": "WorkFlow Status Mapping",
+    "sectionOrder": 4,
+    "tooltip": {
+      "definition": "Status considered for defect closure (Mention completed status of all types of defects)"
+    },
+    "mandatory": true
+  },
+  {
+    "fieldName": "thresholdValueKPI195",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "fieldCategory": null,
+    "toggleLabel": null,
+    "section": "Project Level Threshold",
+    "processorCommon": false,
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown",
+      "_class": "com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip"
+    },
+    "options": null,
+    "filterGroup": null,
+    "nestedFields": null,
+    "placeHolderText": null,
+    "fieldDisplayOrder": 1,
+    "toggleLabelLeft": null,
+    "toggleLabelRight": null,
+    "sectionOrder": 6,
+    "mandatory": false,
+    "readOnly": null,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName" : "jiraDefectCountIssueTypeKPI194",
+    "fieldLabel" : "Issue types with defect linkages",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "section" : "Issue Types Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "All issue types that can have valid defect linkages"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 2,
+    "mandatory" : true,
+    "nodeSpecific" : false
   }
 ]

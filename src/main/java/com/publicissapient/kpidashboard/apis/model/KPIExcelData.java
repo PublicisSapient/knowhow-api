@@ -61,7 +61,7 @@ public class KPIExcelData {
 	@JsonProperty("Issue Type")
 	private String issueType;
 
-	@JsonProperty("Resolution Time(In Days)")
+	@JsonProperty("Resolution Time")
 	private String resolutionTime;
 
 	@JsonProperty("Story ID")
@@ -87,7 +87,6 @@ public class KPIExcelData {
 
 	@JsonProperty("DOD to Live")
 	private String dodToLive;
-
 
 	@JsonProperty("DOR Date")
 	private String dorDate;
@@ -151,6 +150,18 @@ public class KPIExcelData {
 
 	@JsonProperty("Automated")
 	private String automated;
+
+	@JsonProperty("Manual")
+	private String manual;
+
+	@JsonProperty("Test Case Type")
+	private String testCaseType;
+
+	@JsonProperty("Test Case Status")
+	private String testCaseStatus;
+
+	@JsonProperty("Execution Time")
+	private String executionTime;
 
 	@JsonProperty("Project")
 	private String project;
@@ -530,4 +541,9 @@ public class KPIExcelData {
 	@JsonProperty("Defect Severity")
 	private String defectSeverity;
 
+	@JsonProperty("Defect SLA")
+	private String defectSLA;
+
+	@JsonProperty("SLA Breached (Y / N)")
+	private String slaBreached;
 }

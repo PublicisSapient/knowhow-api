@@ -632,6 +632,68 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populateTestExecutionTimeExcelData(String sprintProject,
+														  List<TestCaseDetails> allTestList,
+														  List<TestCaseDetails> automatedList,
+														  List<TestCaseDetails> manualList,
+														  List<KPIExcelData> kpiExcelData,
+														  String kpiId,
+														  String date
+														  ) {
+
+
+		if (CollectionUtils.isNotEmpty(allTestList)) {
+			// Build lookup lists for automated & manual cases
+			List<String> automatedIds = automatedList.stream()
+					.map(TestCaseDetails::getNumber)
+					.collect(Collectors.toList());
+
+			List<String> manualIds = manualList.stream()
+					.map(TestCaseDetails::getNumber)
+					.collect(Collectors.toList());
+
+			allTestList.forEach(testIssue -> {
+				// Derive TestCaseType
+				String testCaseType;
+				if (automatedIds.contains(testIssue.getNumber())) {
+					testCaseType = "Automated";
+				} else if (manualIds.contains(testIssue.getNumber())) {
+					testCaseType = "Manual";
+				} else {
+					testCaseType = Constant.EMPTY_STRING; // fallback
+				}
+
+				// ✅ Calculate average execution time in seconds
+				double avgExecutionTimeSec = 0.0;
+				if (CollectionUtils.isNotEmpty(testIssue.getExecutions())) {
+					avgExecutionTimeSec = testIssue.getExecutions().stream()
+							.mapToLong(execution -> execution.getExecutionTime()) // executionTime in ms
+							.average()
+							.orElse(0.0) / 1000.0; // convert ms → sec
+				}
+
+				// Populate Excel Data
+				KPIExcelData excelData = new KPIExcelData();
+				if (kpiId.equalsIgnoreCase(KPICode.TEST_EXECUTION_TIME.getKpiId())) {
+					excelData.setSprintName(sprintProject);
+				} else {
+					excelData.setProject(sprintProject);
+					excelData.setDayWeekMonth(date);
+				}
+				excelData.setSprintName(sprintProject);
+				excelData.setTestCaseId(testIssue.getNumber());
+				excelData.setTestCaseType(testCaseType);
+				excelData.setTestCaseStatus(testIssue.getTestCaseStatus());
+				excelData.setExecutionTime(String.valueOf(avgExecutionTimeSec));
+
+				kpiExcelData.add(excelData);
+			});
+		}
+	}
+
+
+
+
 	private static String checkEmptyName(Object object) {
 		String description = "";
 		if (object instanceof JiraIssue) {
@@ -1197,7 +1259,7 @@ public class KPIExcelUtility {
 			repoToolValidationDataList.forEach(repoToolValidationData -> {
 				KPIExcelData excelData = new KPIExcelData();
 				excelData.setProject(repoToolValidationData.getProjectName());
-				excelData.setRepo(repoToolValidationData.getProjectName());
+				excelData.setRepo(repoToolValidationData.getRepoUrl());
 				excelData.setBranch(repoToolValidationData.getBranchName());
 				excelData.setAuthor(repoToolValidationData.getDeveloperName());
 				excelData.setDaysWeeks(repoToolValidationData.getDate());

@@ -3560,6 +3560,61 @@
         "isDefault" : true
       }
     ]
+  },
+  {
+    "basicProjectConfigId": null,
+    "kpiId": "kpi195",
+    "kpiColumnDetails": [{
+      "columnName": "Sprint Name",
+      "order": 0,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Defect ID",
+      "order": 1,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Story ID",
+      "order": 2,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Defect Priority",
+      "order": 3,
+      "isShown": true,
+      "isDefault": false
+    },{
+      "columnName": "Defect Severity",
+      "order": 4,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Defect Status",
+      "order": 5,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Time Spent (in hours)",
+      "order": 6,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Resolution Time",
+      "order": 7,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "Defect SLA",
+      "order": 8,
+      "isShown": true,
+      "isDefault": false
+    }, {
+      "columnName": "SLA Breached (Y / N)",
+      "order": 9,
+      "isShown": true,
+      "isDefault": false
+    }]
   }
 ]
 

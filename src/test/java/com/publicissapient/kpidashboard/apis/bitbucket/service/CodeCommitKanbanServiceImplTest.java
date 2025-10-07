@@ -120,7 +120,7 @@ public class CodeCommitKanbanServiceImplTest {
 		String[] ids = {"5"};
 		kpiRequest.setIds(ids);
 		Map<String, List<String>> selectedMap = kpiRequest.getSelectedMap();
-		selectedMap.put(CommonConstant.date, Arrays.asList("DAYS"));
+		selectedMap.put(CommonConstant.DATE, Arrays.asList("DAYS"));
 		kpiRequest.setSelectedMap(selectedMap);
 
 		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory

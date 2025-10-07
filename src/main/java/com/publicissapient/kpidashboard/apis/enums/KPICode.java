@@ -116,6 +116,10 @@ public enum KPICode {
 	SPRINT_WASTAGE("kpi69", KPISource.JIRA.name()),
 	/** Test execution kpi code. */
 	TEST_EXECUTION_AND_PASS_PERCENTAGE("kpi70", KPISource.ZEPHYR.name()),
+	/** Test execution Time kpi code. */
+	TEST_EXECUTION_TIME("kpi196",KPISource.ZEPHYR.name()),
+	/** Test execution Time Kanban kpi code. */
+	TEST_EXECUTION_TIME_KANBAN("kpi197",KPISource.ZEPHYR.name()),
 	/** Test execution kanban kpi code. */
 	TEST_EXECUTION_KANBAN("kpi71", KPISource.ZEPHYRKANBAN.name()),
 	/** Sprint commitment reliability */
@@ -301,7 +305,12 @@ public enum KPICode {
 			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name()),
 
 	/** Defect severity index kpi */
-	DEFECT_SEVERITY_INDEX("kpi194", KPISource.JIRA.name());
+	DEFECT_SEVERITY_INDEX("kpi194", KPISource.JIRA.name()),
+
+	/**
+	 * Defects Breached SLAs (Service Level Agreements)
+	 */
+	DEFECTS_BREACHED_SLAS("kpi195", KPISource.JIRA.name());
 
 	// @formatter:on
 

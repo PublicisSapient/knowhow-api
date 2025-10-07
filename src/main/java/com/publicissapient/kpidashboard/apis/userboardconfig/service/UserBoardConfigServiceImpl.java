@@ -33,6 +33,7 @@ import java.util.function.ObjIntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.owasp.encoder.Encode;
@@ -74,7 +75,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 
 	private static final String ITERATION = "Iteration";
 	private static final String DEFAULT_BOARD_NAME = "My KnowHOW";
-	private boolean handleDeveloperKpi = false;
+	private boolean handleDeveloperKpi = true;
 	@Autowired
 	private UserBoardConfigRepository userBoardConfigRepository;
 	@Autowired
@@ -91,6 +92,8 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	private CacheService cacheService;
 	@Autowired
 	private UserBoardConfigMapper userBoardConfigMapper;
+    @Autowired
+    private CustomApiConfig customApiConfig;
 
 	/**
 	 * Retrieves or prepares the user board configuration based on
@@ -119,8 +122,11 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		defaultUserBoardConfigDTO.setBasicProjectConfigId(configLevel == ConfigLevel.PROJECT ? basicProjectConfigId : null);
 		defaultUserBoardConfigDTO.setUsername(configLevel == ConfigLevel.USER ? loggedInUser : null);
 
-		handleDeveloperKpi = configHelperService.getProjectConfig(basicProjectConfigId) != null &&
-				configHelperService.getProjectConfig(basicProjectConfigId).isDeveloperKpiEnabled();
+//        TODO: need to remove this condition after testing
+        if(customApiConfig.isRepoToolEnabled()) {
+            handleDeveloperKpi = configHelperService.getProjectConfig(basicProjectConfigId) != null &&
+                    configHelperService.getProjectConfig(basicProjectConfigId).isDeveloperKpiEnabled();
+        }
 
 		if (null == existingUserBoardConfigDTO) {
 			setUserBoardConfigBasedOnCategoryForFreshUser(defaultUserBoardConfigDTO, kpiCategoryList, kpiMasterMap);
@@ -332,12 +338,20 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 				.collect(Collectors.toMap(Filters::getBoardId, Function.identity()));
 
 		// Helper method to set filters for a list of boards
-		ObjIntConsumer<List<BoardDTO>> setFiltersForBoards = (boards, offset) -> boards.forEach(boardDTO -> boardDTO
-				.setFilters(copyFiltersWithoutId(filtersMap.getOrDefault(boardDTO.getBoardId() - offset, filtersMap.get(1)))));
+		ObjIntConsumer<List<BoardDTO>> setFiltersForBoards = (boards, offset) -> boards.forEach(boardDTO -> {
+			if (boardDTO.getBoardId() == 0) {
+				boardDTO.setFilters(copyFiltersWithoutId(filtersMap.get(0)));
+			} else {
+				boardDTO.setFilters(copyFiltersWithoutId(
+						filtersMap.getOrDefault(boardDTO.getBoardId() - offset, filtersMap.get(1))));
+			}
+
+		});
 
 		// Set filters for each type of board
 		setFiltersForBoards.accept(scrumBoards, 0);
-		setFiltersForBoards.accept(kanbanBoards, scrumBoards.size());
+//        TODO: update boardconfig and filter mapping logic
+		setFiltersForBoards.accept(kanbanBoards, scrumBoards.size()-1);
 		setFiltersForBoards.accept(otherBoards, 0);
 	}
 
@@ -480,20 +494,31 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	 * @param defaultBoardList
 	 *          defaultBoardList
 	 * @param boardName
-	 *          boardName
+	 *          boardNamen
 	 */
 	private void setDefaultBoardInfoFromKpiMaster(int boardId, boolean kanban, List<String> kpiCategory,
 			List<BoardDTO> defaultBoardList, String boardName) {
-		BoardDTO defaultBoard = new BoardDTO();
-		defaultBoard.setBoardId(boardId);
-		defaultBoard.setBoardName(boardName);
-		defaultBoard.setBoardSlug("my-knowhow");
 		List<BoardKpisDTO> boardKpisList = new ArrayList<>();
 		kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(kanban, kpiCategory).stream()
 				.sorted(Comparator.comparing(KpiMaster::getDefaultOrder))
 				.forEach(kpiMaster -> setKpiUserBoardDefaultFromKpiMaster(boardKpisList, kpiMaster));
+		BoardDTO executive= setExecutiveDashboard(boardKpisList);
+		defaultBoardList.add(executive);
+		BoardDTO defaultBoard = new BoardDTO();
+		defaultBoard.setBoardId(boardId);
+		defaultBoard.setBoardName(boardName);
+		defaultBoard.setBoardSlug("my-knowhow");
 		defaultBoard.setKpis(boardKpisList);
 		defaultBoardList.add(defaultBoard);
+	}
+
+	private BoardDTO setExecutiveDashboard(List<BoardKpisDTO> boardKpisList) {
+		BoardDTO executiveDashBoard = new BoardDTO();
+		executiveDashBoard.setBoardId(0);
+		executiveDashBoard.setBoardName("Home");
+		executiveDashBoard.setBoardSlug("home");
+		executiveDashBoard.setKpis(boardKpisList.stream().limit(1).collect(Collectors.toList()));
+		return executiveDashBoard;
 	}
 
 	/**
