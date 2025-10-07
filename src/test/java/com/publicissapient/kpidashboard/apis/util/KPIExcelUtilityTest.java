@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -88,6 +89,12 @@ public class KPIExcelUtilityTest {
 	@Before
 	public void setup() {
 		deploymentFrequencyInfo = Mockito.mock(DeploymentFrequencyInfo.class);
+		
+		// Setup CustomApiConfig mocks for priority methods
+		when(customApiConfig.getpriorityP1()).thenReturn("P1");
+		when(customApiConfig.getpriorityP2()).thenReturn("P2");
+		when(customApiConfig.getpriorityP3()).thenReturn("P3");
+		when(customApiConfig.getpriorityP4()).thenReturn("P4");
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssues = jiraIssueDataFactory.getJiraIssues();
 		testCaseDetailsList = TestCaseDetailsDataFactory.newInstance().getTestCaseDetailsList();
@@ -1198,5 +1205,402 @@ public class KPIExcelUtilityTest {
 
 		// Verify the results
 		assertEquals(0, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateDirExcelData_ValidData() {
+		// Setup test data
+		List<String> storyIds = Arrays.asList("STORY-001", "STORY-002");
+		List<JiraIssue> defects = new ArrayList<>();
+		JiraIssue defect1 = createTestJiraIssue("DEF-001", "Bug", "P1");
+		defects.add(defect1);
+		
+		Map<String, JiraIssue> issueData = new HashMap<>();
+		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
+		issueData.put("STORY-001", story1);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setEstimationCriteria("Story Point");
+		fieldMapping.setStoryPointToHourMapping(8.0);
+		
+		Node node = createTestNode();
+		
+		// Call the method
+		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		
+		// Verify results
+		assertNotNull(kpiExcelData);
+		assertEquals(2, kpiExcelData.size());
+		assertEquals("Sprint 1", kpiExcelData.get(0).getSprintName());
+	}
+
+	@Test
+	public void testPopulateDirExcelData_EmptyStoryIds() {
+		// Setup test data with empty story IDs
+		List<String> storyIds = new ArrayList<>();
+		List<JiraIssue> defects = new ArrayList<>();
+		Map<String, JiraIssue> issueData = new HashMap<>();
+		FieldMapping fieldMapping = new FieldMapping();
+		Node node = createTestNode();
+		
+		// Call the method
+		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		
+		// Verify results - should not add any data
+		assertEquals(0, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateDefectDensityExcelData_ValidData() {
+		// Setup test data
+		List<String> storyIds = Arrays.asList("STORY-001", "STORY-002");
+		List<JiraIssue> defects = new ArrayList<>();
+		JiraIssue defect1 = createTestJiraIssue("DEF-001", "Bug", "P1");
+		defects.add(defect1);
+		
+		Map<String, JiraIssue> issueData = new HashMap<>();
+		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
+		issueData.put("STORY-001", story1);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setEstimationCriteria("Story Point");
+		
+		Node node = createTestNode();
+		
+		// Call the method
+		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		
+		// Verify results
+		assertNotNull(kpiExcelData);
+		assertEquals(2, kpiExcelData.size());
+		assertEquals("Sprint 1", kpiExcelData.get(0).getSprintName());
+	}
+
+	@Test
+	public void testPopulateDefectDensityExcelData_EmptyStoryIds() {
+		// Setup test data with empty story IDs
+		List<String> storyIds = new ArrayList<>();
+		List<JiraIssue> defects = new ArrayList<>();
+		Map<String, JiraIssue> issueData = new HashMap<>();
+		FieldMapping fieldMapping = new FieldMapping();
+		Node node = createTestNode();
+		
+		// Call the method
+		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		
+		// Verify results - should not add any data
+		assertEquals(0, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateReleasePlanExcelData_ValidData() {
+		// Setup test data
+		List<JiraIssue> jiraIssues = new ArrayList<>();
+		JiraIssue issue1 = createTestJiraIssue("STORY-001", "Story", "P1");
+		issue1.setStoryPoints(5.0);
+		issue1.setStatus("In Progress");
+		issue1.setAssigneeId("user1");
+		issue1.setAssigneeName("John Doe");
+		issue1.setDueDate("2023-12-31");
+		jiraIssues.add(issue1);
+		
+		JiraIssue issue2 = createTestJiraIssue("STORY-002", "Story", "P2");
+		issue2.setAggregateTimeOriginalEstimateMinutes(480); // 8 hours
+		issue2.setStatus("Done");
+		jiraIssues.add(issue2);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setEstimationCriteria("Story Point");
+		fieldMapping.setStoryPointToHourMapping(8.0);
+		
+		// Call the method
+		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
+		
+		// Verify results
+		assertNotNull(kpiExcelData);
+		assertEquals(2, kpiExcelData.size());
+		
+		// Verify first issue
+		KPIExcelData excelData1 = kpiExcelData.get(0);
+		assertEquals("Test Story 001", excelData1.getIssueDesc());
+		assertEquals("In Progress", excelData1.getIssueStatus());
+		assertEquals("Story", excelData1.getIssueType());
+		assertEquals("P1", excelData1.getPriority());
+		assertEquals("5.0", excelData1.getStoryPoint());
+		
+		// Verify second issue
+		KPIExcelData excelData2 = kpiExcelData.get(1);
+		assertEquals("Test Story 002", excelData2.getIssueDesc());
+		assertEquals("Done", excelData2.getIssueStatus());
+	}
+
+	@Test
+	public void testPopulateReleasePlanExcelData_EmptyJiraIssues() {
+		// Setup test data with empty issues
+		List<JiraIssue> jiraIssues = new ArrayList<>();
+		FieldMapping fieldMapping = new FieldMapping();
+		
+		// Call the method
+		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
+		
+		// Verify results - should not add any data
+		assertEquals(0, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateReleasePlanExcelData_NullJiraIssues() {
+		// Setup test data with null issues
+		List<JiraIssue> jiraIssues = null;
+		FieldMapping fieldMapping = new FieldMapping();
+		
+		// Call the method
+		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
+		
+		// Verify results - should not add any data
+		assertEquals(0, kpiExcelData.size());
+	}
+
+	// Helper methods for test data creation
+	private JiraIssue createTestJiraIssue(String number, String typeName, String priority) {
+		JiraIssue issue = new JiraIssue();
+		issue.setNumber(number);
+		issue.setTypeName(typeName);
+		issue.setPriority(priority);
+		String[] parts = number.split("-");
+		String suffix = parts.length > 1 ? parts[1] : "001";
+		issue.setName("Test " + typeName + " " + suffix);
+		issue.setUrl("https://test.jira.com/browse/" + number);
+		issue.setStatus("Open");
+		issue.setTimeSpentInMinutes(120); // 2 hours
+		issue.setStoryPoints(5.0); // Set story points to avoid NullPointerException
+		issue.setRootCauseList(Arrays.asList("Code Issue", "Design Issue"));
+		issue.setLabels(Arrays.asList("bug", "critical"));
+		
+		// Set additional filters for squad testing
+		AdditionalFilter additionalFilter = new AdditionalFilter();
+		AdditionalFilterValue filterValue = new AdditionalFilterValue();
+		filterValue.setValue("Squad A");
+		additionalFilter.setFilterValues(Arrays.asList(filterValue));
+		issue.setAdditionalFilters(Arrays.asList(additionalFilter));
+		
+		// Set defectStoryID to avoid NullPointerException
+		Set<String> defectStoryIds = new HashSet<>();
+		defectStoryIds.add("STORY-001");
+		issue.setDefectStoryID(defectStoryIds);
+		
+		return issue;
+	}
+
+	private Node createTestNode() {
+		Node node = new Node();
+		SprintFilter sprintFilter = new SprintFilter("sprint1", "Sprint 1", "2023-01-01", "2023-01-15");
+		node.setSprintFilter(sprintFilter);
+		return node;
+	}
+
+	@Test
+	public void testPopulateDefectWithReopenInfoExcelData_ValidData() {
+		// Setup test data
+		String sprint = "Sprint 1";
+		List<JiraIssue> storyList = new ArrayList<>();
+		JiraIssue story = createTestJiraIssue("STORY-001", "Story", "P2");
+		storyList.add(story);
+		
+		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>> reopenedDefectInfoMap = new HashMap<>();
+		List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo> transitionInfoList = new ArrayList<>();
+		
+		// Create DefectTransitionInfo mock
+		com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo defectTransitionInfo = 
+				Mockito.mock(com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo.class);
+		JiraIssue defectIssue = createTestJiraIssue("DEF-001", "Bug", "P1");
+		
+		when(defectTransitionInfo.getDefectJiraIssue()).thenReturn(defectIssue);
+		when(defectTransitionInfo.getReopenDate()).thenReturn(new DateTime("2023-01-15T10:00:00.000Z"));
+		when(defectTransitionInfo.getClosedDate()).thenReturn(new DateTime("2023-01-20T15:00:00.000Z"));
+		when(defectTransitionInfo.getReopenDuration()).thenReturn(120.0);
+		
+		transitionInfoList.add(defectTransitionInfo);
+		reopenedDefectInfoMap.put("DEF-001", transitionInfoList);
+		
+		// Call the method
+		KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
+		
+		// Verify results
+		assertNotNull(kpiExcelData);
+		assertEquals(1, kpiExcelData.size());
+		
+		KPIExcelData excelData = kpiExcelData.get(0);
+		assertEquals("Sprint 1", excelData.getSprintName());
+		assertEquals("Test Bug 001", excelData.getDefectDesc());
+		assertNotNull(excelData.getDefectId());
+		assertEquals("120.0Hrs", excelData.getDurationToReopen());
+	}
+
+	@Test
+	public void testPopulateDefectWithReopenInfoExcelData_EmptyMap() {
+		// Setup test data with empty map
+		String sprint = "Sprint 1";
+		List<JiraIssue> storyList = new ArrayList<>();
+		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>> reopenedDefectInfoMap = new HashMap<>();
+		
+		// Call the method
+		KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
+		
+		// Verify results - should not add any data
+		assertEquals(0, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateDefectWithReopenInfoExcelData_NullMap() {
+		// Setup test data with null map
+		String sprint = "Sprint 1";
+		List<JiraIssue> storyList = new ArrayList<>();
+		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>> reopenedDefectInfoMap = null;
+		
+		// Call the method
+		KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
+		
+		// Verify results - should not add any data
+		assertEquals(0, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateReleasePlanExcelData_WithTimeBasedEstimation() {
+		// Setup test data with time-based estimation
+		List<JiraIssue> jiraIssues = new ArrayList<>();
+		JiraIssue issue1 = createTestJiraIssue("STORY-001", "Story", "P1");
+		issue1.setAggregateTimeOriginalEstimateMinutes(480); // 8 hours
+		issue1.setStatus("In Progress");
+		jiraIssues.add(issue1);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setEstimationCriteria("Hours"); // Not Story Point
+		fieldMapping.setStoryPointToHourMapping(8.0);
+		
+		// Call the method
+		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
+		
+		// Verify results
+		assertNotNull(kpiExcelData);
+		assertEquals(1, kpiExcelData.size());
+		
+		KPIExcelData excelData = kpiExcelData.get(0);
+		assertEquals("Test Story 001", excelData.getIssueDesc());
+		assertEquals("In Progress", excelData.getIssueStatus());
+		// Should contain time-based story point calculation
+		assertNotNull(excelData.getStoryPoint());
+		assertTrue(excelData.getStoryPoint().contains("hrs"));
+	}
+
+	@Test
+	public void testPopulateReleasePlanExcelData_WithNullEstimationCriteria() {
+		// Setup test data with null estimation criteria
+		List<JiraIssue> jiraIssues = new ArrayList<>();
+		JiraIssue issue1 = createTestJiraIssue("STORY-001", "Story", "P1");
+		issue1.setStoryPoints(5.0);
+		issue1.setAggregateTimeOriginalEstimateMinutes(null);
+		jiraIssues.add(issue1);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setEstimationCriteria(null);
+		fieldMapping.setStoryPointToHourMapping(8.0);
+		
+		// Call the method
+		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
+		
+		// Verify results
+		assertNotNull(kpiExcelData);
+		assertEquals(1, kpiExcelData.size());
+		
+		KPIExcelData excelData = kpiExcelData.get(0);
+		assertEquals("Test Story 001", excelData.getIssueDesc());
+		// Story point should be null when estimation criteria is null and no time estimate
+		assertNull(excelData.getStoryPoint());
+	}
+
+	@Test
+	public void testCreateTestJiraIssue_WithAdditionalFilters() {
+		// Test the helper method to ensure it creates proper test data
+		JiraIssue issue = createTestJiraIssue("TEST-001", "Bug", "P1");
+		
+		// Verify basic properties
+		assertEquals("TEST-001", issue.getNumber());
+		assertEquals("Bug", issue.getTypeName());
+		assertEquals("P1", issue.getPriority());
+		assertEquals("Test Bug 001", issue.getName());
+		assertEquals("https://test.jira.com/browse/TEST-001", issue.getUrl());
+		assertEquals("Open", issue.getStatus());
+		assertEquals(Integer.valueOf(120), issue.getTimeSpentInMinutes());
+		
+		// Verify additional filters
+		assertNotNull(issue.getAdditionalFilters());
+		assertEquals(1, issue.getAdditionalFilters().size());
+		assertEquals("Squad A", issue.getAdditionalFilters().get(0).getFilterValues().get(0).getValue());
+		
+		// Verify root cause and labels
+		assertNotNull(issue.getRootCauseList());
+		assertEquals(2, issue.getRootCauseList().size());
+		assertTrue(issue.getRootCauseList().contains("Code Issue"));
+		assertTrue(issue.getRootCauseList().contains("Design Issue"));
+		
+		assertNotNull(issue.getLabels());
+		assertEquals(2, issue.getLabels().size());
+		assertTrue(issue.getLabels().contains("bug"));
+		assertTrue(issue.getLabels().contains("critical"));
+	}
+
+	@Test
+	public void testCreateTestNode_Properties() {
+		// Test the helper method to ensure it creates proper test data
+		Node node = createTestNode();
+		
+		// Verify node properties
+		assertNotNull(node);
+		assertNotNull(node.getSprintFilter());
+		assertEquals("Sprint 1", node.getSprintFilter().getName());
+	}
+
+	@Test
+	public void testPopulateDirExcelData_WithNullDefects() {
+		// Setup test data with empty defects
+		List<String> storyIds = Arrays.asList("STORY-001");
+		List<JiraIssue> defects = new ArrayList<>();
+		
+		Map<String, JiraIssue> issueData = new HashMap<>();
+		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
+		issueData.put("STORY-001", story1);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		Node node = createTestNode();
+		
+		// Call the method
+		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		
+		// Verify results - should handle null defects gracefully
+		assertNotNull(kpiExcelData);
+		// The method should still process stories even with null defects
+		assertEquals(1, kpiExcelData.size());
+	}
+
+	@Test
+	public void testPopulateDefectDensityExcelData_WithNullDefects() {
+		// Setup test data with empty defects
+		List<String> storyIds = Arrays.asList("STORY-001");
+		List<JiraIssue> defects = new ArrayList<>();
+		
+		Map<String, JiraIssue> issueData = new HashMap<>();
+		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
+		issueData.put("STORY-001", story1);
+		
+		FieldMapping fieldMapping = new FieldMapping();
+		Node node = createTestNode();
+		
+		// Call the method
+		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		
+		// Verify results - should handle null defects gracefully
+		assertNotNull(kpiExcelData);
+		// The method should still process stories even with null defects
+		assertEquals(1, kpiExcelData.size());
 	}
 }

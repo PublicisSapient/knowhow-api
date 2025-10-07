@@ -370,6 +370,36 @@ public class KPIExcelUtility {
 	}
 
 	/**
+	 * to get direct related values of a jira issue like severity from total
+	 * list
+	 *
+	 * @param sprint
+	 * @param jiraIssues
+	 * @param kpiExcelData
+	 * @param storyList
+	 */
+	public static void populateDefectSeverityRelatedExcelData(String sprint, List<JiraIssue> jiraIssues,
+													  List<KPIExcelData> kpiExcelData, CustomApiConfig customApiConfig, List<JiraIssue> storyList) {
+		if (CollectionUtils.isNotEmpty(jiraIssues)) {
+			jiraIssues.stream().forEach(jiraIssue -> {
+				KPIExcelData excelData = new KPIExcelData();
+				excelData.setSprintName(sprint);
+				excelData.setDefectDesc(checkEmptyName(jiraIssue));
+				setSquads(excelData, jiraIssue);
+				Map<String, String> defectIdDetails = new HashMap<>();
+				defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
+				excelData.setDefectId(defectIdDetails);
+				excelData.setDefectSeverity(setSeverity(customApiConfig, jiraIssue));
+				excelData.setRootCause(jiraIssue.getRootCauseList());
+				excelData.setDefectStatus(jiraIssue.getStatus());
+				Integer totalTimeSpentInMinutes = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
+				setStoryExcelData(storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+				kpiExcelData.add(excelData);
+			});
+		}
+	}
+
+	/**
 	 * Use to set priority of issue
 	 *
 	 * @param customApiConfig
@@ -412,7 +442,16 @@ public class KPIExcelUtility {
 		return issuePriority;
 	}
 
-	private static String getIssuePriority(JiraIssue jiraIssue, List<String> priorities, String priority) {
+	private static String setSeverity(CustomApiConfig customApiConfig, JiraIssue jiraIssue) {
+		String issueSeverity = " ";
+		if (StringUtils.isNotEmpty(jiraIssue.getSeverity())) {
+			issueSeverity = jiraIssue.getSeverity();
+		}
+		return issueSeverity;
+	}
+
+	private static String getIssuePriority
+			(JiraIssue jiraIssue, List<String> priorities, String priority) {
 		if (priorities.contains(jiraIssue.getPriority())) {
 			return jiraIssue.getPriority();
 		} else {
