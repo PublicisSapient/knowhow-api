@@ -14,7 +14,7 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.analytics.aiusage.service;
+package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.service;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,8 +28,8 @@ import javax.ws.rs.InternalServerErrorException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.analytics.aiusage.dto.AiUsageAnalyticsDTO;
-import com.publicissapient.kpidashboard.apis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsDTO;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
@@ -74,6 +74,8 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 					.map(accountFilteredData -> accountFilteredData.getBasicProjectConfigId().toString())
 					.collect(Collectors.toSet());
 		}
+
+
 
 		return AiUsageAnalyticsDTO.builder()
 				.build();

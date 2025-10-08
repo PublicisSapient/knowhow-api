@@ -14,16 +14,13 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.analytics.aiusage.dto;
+package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
-import lombok.Builder;
+import java.util.Set;
+
 import lombok.Data;
 
 @Data
-@Builder
-public class AiUsageAnalyticsSummaryDTO {
-    private int averageEfficiencyGainPerAiUsageType;
-    private int averageEfficiencyGainPerProject;
-    private int usageTypesNumber;
-    private int projectsNumber;
+public class AiUsageAnalyticsRequestDTO {
+    private Set<String> projectBasicConfigIds;
 }
