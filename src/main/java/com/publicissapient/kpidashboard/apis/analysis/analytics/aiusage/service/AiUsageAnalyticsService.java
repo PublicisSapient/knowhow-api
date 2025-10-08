@@ -14,15 +14,11 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.analytics.aiusage.dto;
+package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.service;
 
-import lombok.Builder;
-import lombok.Data;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
-@Data
-@Builder
-public class AiUsageAnalyticsDTO {
-    private AiUsageAnalyticsSummaryDTO summary;
-
-    private ProjectAiUsageAnalyticsDTO analytics;
+public interface AiUsageAnalyticsService {
+	ServiceResponse computeAiUsageAnalyticsData(AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO);
 }

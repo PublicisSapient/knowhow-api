@@ -14,7 +14,7 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.analytics.aiusage.dto;
+package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
 import lombok.Builder;
 import lombok.Data;

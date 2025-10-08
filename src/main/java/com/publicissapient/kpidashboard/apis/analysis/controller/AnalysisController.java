@@ -14,27 +14,27 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.analytics.controller;
+package com.publicissapient.kpidashboard.apis.analysis.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.publicissapient.kpidashboard.apis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
-import com.publicissapient.kpidashboard.apis.analytics.aiusage.service.AiUsageAnalyticsService;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.service.AiUsageAnalyticsService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/analytics")
+@RequestMapping("/analysis")
 @RequiredArgsConstructor
-public class AnalyticsController {
+public class AnalysisController {
 
     private final AiUsageAnalyticsService aiUsageAnalyticsService;
 
-    @PostMapping("/ai-usage/query")
+    @PostMapping("/analytics/ai-usage/query")
     public ServiceResponse computeAiUsageAnalyticsData(
             @RequestBody AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO
     ) {
