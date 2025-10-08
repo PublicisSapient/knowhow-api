@@ -102,7 +102,7 @@ public class UserServiceImpl implements UserService {
                         .map(projectsAccess ->
                         {
                             ProjectsAccess copy = new ProjectsAccess();
-                            copy.setRole(Constant.ROLE_VIEWER);
+                            copy.setRole(Constant.ROLE_GUEST);
 
                             List<AccessNode> nodes = projectsAccess.getAccessNodes()
                                     .stream()

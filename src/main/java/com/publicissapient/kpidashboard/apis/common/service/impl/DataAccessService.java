@@ -16,13 +16,15 @@ public class DataAccessService {
         this.policies = policies;
     }
 
-    public List<UserInfo> getMembersForUser(String role,String user) {
-        DataAccessPolicy policy = policies.get(role);
+    public List<UserInfo> getMembersForUser(List<String> providedRole,String user) {
 
-        if (policy == null) {
-            throw new IllegalArgumentException("No policy defined for role: " + user);
+        for (String role : policies.keySet()) {
+            if (providedRole.contains(role)) {
+                DataAccessPolicy policy = policies.get(role);
+                return policy.getAccessibleMembers(user);
+            }
         }
+        throw new IllegalArgumentException("No policy defined for role: " + user);
 
-        return policy.getAccessibleMembers(user);
     }
 }

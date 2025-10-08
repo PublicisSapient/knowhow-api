@@ -164,14 +164,12 @@ public class UserInfoServiceImpl implements UserInfoService {
 		org.springframework.security.core.Authentication authentication =
 				SecurityContextHolder.getContext().getAuthentication();
 
-		String role = authentication.getAuthorities()
+		List<String> roles = authentication.getAuthorities()
 				.stream()
-				.findFirst()
 				.map(GrantedAuthority::getAuthority)
-				.orElse("UNKNOWN");
+				.collect(Collectors.toList());
 
-		List<UserInfo> userInfoList = dataAccessService.getMembersForUser(role,authentication.getName());
-		//List<UserInfo> userInfoList = dataAccessService.getMembersForUser("ROLE_PROJECT_ADMIN","gursingh0101");
+		List<UserInfo> userInfoList = dataAccessService.getMembersForUser(roles,authentication.getName());
 		List<String> userNames = userInfoList.stream().map(UserInfo::getUsername).toList();
 
 		List<Authentication> authentications = authenticationRepository.findByUsernameIn(userNames);

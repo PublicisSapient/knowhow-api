@@ -24,6 +24,7 @@ public class AdminDataAccessPolicy implements DataAccessPolicy {
 
         List<String> accessibleItemIds = fullUserDoc.getProjectsAccess()
                 .stream()
+                .filter(p -> p.getRole().equals("ROLE_PROJECT_ADMIN"))
                 .flatMap(p -> p.getAccessNodes().stream())
                 .flatMap(n -> n.getAccessItems().stream())
                 .map(AccessItem::getItemId)
