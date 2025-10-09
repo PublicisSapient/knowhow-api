@@ -16,12 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@Builder
-public class ProjectAiUsageAnalyticsDTO {
+@AllArgsConstructor
+public class ProjectAiUsageMetrics {
+
     private int issueCount;
 
     private double efficiencyGain;

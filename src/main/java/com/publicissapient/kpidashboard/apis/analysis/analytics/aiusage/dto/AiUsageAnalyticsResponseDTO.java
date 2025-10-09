@@ -18,11 +18,13 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
 import java.util.List;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class AiUsageAnalyticsDTO {
-    private String aiUsageType;
+@Builder
+public class AiUsageAnalyticsResponseDTO {
+    private AiUsageAnalyticsSummaryDTO summary;
 
-    private List<ProjectAiUsageMetrics> projects;
+    private List<AiUsageAnalyticsDTO> analytics;
 }

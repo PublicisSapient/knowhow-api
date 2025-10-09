@@ -16,6 +16,8 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,12 +34,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AnalysisController {
 
-    private final AiUsageAnalyticsService aiUsageAnalyticsService;
+	private final AiUsageAnalyticsService aiUsageAnalyticsService;
 
-    @PostMapping("/analytics/ai-usage/query")
-    public ServiceResponse computeAiUsageAnalyticsData(
-            @RequestBody AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO
-    ) {
-        return aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO);
-    }
+	@PostMapping("/analytics/ai-usage/query")
+	public ServiceResponse computeAiUsageAnalyticsData(
+			@RequestBody @Valid AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
+		return aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO);
+	}
 }
