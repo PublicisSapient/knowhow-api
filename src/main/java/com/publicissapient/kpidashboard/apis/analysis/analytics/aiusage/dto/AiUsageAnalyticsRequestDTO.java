@@ -18,9 +18,17 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
 import java.util.Set;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
 import lombok.Data;
 
 @Data
 public class AiUsageAnalyticsRequestDTO {
+
+    @Min(value = 1, message = "The number of sprints taken into account must be at least 1")
+    @NotNull(message = "The 'numberOfSprintsToInclude' cannot be null")
+    private Integer numberOfSprintsToInclude;
+
     private Set<String> projectBasicConfigIds;
 }
