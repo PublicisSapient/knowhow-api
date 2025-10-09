@@ -1,6 +1,7 @@
 package com.publicissapient.kpidashboard.apis.common.policy.impl;
 
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
@@ -9,10 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component("ROLE_PROJECT_ADMIN")
-public class AdminDataAccessPolicy implements DataAccessPolicy {
+@Component(Constant.ROLE_PROJECT_ADMIN)
+public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
     @Autowired
     private UserInfoRepository userInfoRepository;
     @Override

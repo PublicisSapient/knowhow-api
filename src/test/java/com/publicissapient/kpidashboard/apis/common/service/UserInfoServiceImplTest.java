@@ -24,9 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,14 +35,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.common.service.impl.DataAccessService;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -79,6 +82,8 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReoposit
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserInfoServiceImplTest {
@@ -99,6 +104,10 @@ public class UserInfoServiceImplTest {
 	private UserInfoRepository userInfoRepository;
 	@InjectMocks
 	private UserInfoServiceImpl service;
+
+	@Mock
+	private DataAccessService dataAccessService;
+
 	@Mock
 	private AuthProperties authProperties;
 	@Mock
@@ -120,8 +129,16 @@ public class UserInfoServiceImplTest {
 	@Mock
 	private OrganizationHierarchyService organizationHierarchyService;
 
-	@Before
-	public void setUp() {
+	@Mock
+	private SecurityContext securityContext;
+
+	@Mock
+	private org.springframework.security.core.Authentication authentication;
+
+	@BeforeEach
+	void setUp(){
+		authentication = Mockito.mock(org.springframework.security.core.Authentication.class);
+		securityContext = Mockito.mock(SecurityContext.class);
 	}
 
 	@Test
@@ -251,18 +268,45 @@ public class UserInfoServiceImplTest {
 
 	@Test
 	public void getAllUserInfoNoData() {
+		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+		SecurityContextHolder.setContext(securityContext);
+		List<GrantedAuthority> authorities = List.of(
+				(GrantedAuthority) () -> Constant.ROLE_SUPERADMIN
+		);
+
+		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
+		List<String> roles = authorities
+				.stream()
+				.map(GrantedAuthority::getAuthority)
+				.collect(Collectors.toList());
+		List<UserInfo> userInfoList = new ArrayList<>();
+		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(((ArrayList<UserInfo>) result.getData()).size(), 0);
 	}
 
 	@Test
 	public void getAllUserInfoWithData() {
+
+		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+		SecurityContextHolder.setContext(securityContext);
+		List<GrantedAuthority> authorities = List.of(
+				(GrantedAuthority) () -> Constant.ROLE_SUPERADMIN
+		);
+
+		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
+		List<String> roles = authorities
+				.stream()
+				.map(GrantedAuthority::getAuthority)
+				.collect(Collectors.toList());
+
 		UserInfo testUser = new UserInfo();
 		testUser.setUsername("UnitTest");
 		testUser.setAuthorities(Arrays.asList("ROLE_SUPERADMIN"));
 		ArrayList<UserInfo> userInfoList = new ArrayList<UserInfo>();
 		userInfoList.add(testUser);
-		when(userInfoRepository.findAll()).thenReturn(userInfoList);
+		//when(userInfoRepository.findAll()).thenReturn(userInfoList);
+		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(((ArrayList<UserInfo>) result.getData()).size(), 1);
 	}

@@ -16,10 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.service.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -87,15 +84,15 @@ public class UserServiceImpl implements UserService {
             Authentication authentication =
                     SecurityContextHolder.getContext().getAuthentication();
 
-            String role = authentication.getAuthorities()
+            List<String> roles = authentication.getAuthorities()
                     .stream()
-                    .findFirst()
                     .map(GrantedAuthority::getAuthority)
-                    .orElse("UNKNOWN");
+                    .collect(Collectors.toList());
 
-            if(role.equals("ROLE_SUPERADMIN") || role.equals("UNKNOWN"))
+
+            if(roles.contains(Constant.ROLE_SUPERADMIN))
                 userInfo.setProjectsAccess(Collections.emptyList());
-            else{
+            else if(roles.contains(Constant.ROLE_PROJECT_ADMIN)){
 
                 UserInfo fullUserDoc = userInfoService.getUserInfo(authentication.getName());
                 List<ProjectsAccess> mappedProjects = fullUserDoc.getProjectsAccess().stream()
@@ -145,7 +142,7 @@ public class UserServiceImpl implements UserService {
         return new ServiceResponse(true, responseMessage, responseDTO);
     }
 
-    private String nextAccessLevel(String currentLevel) {
+    public String nextAccessLevel(String currentLevel) {
         List<HierarchyLevel> hierarchyLevels = hierarchyLevelService.getTopHierarchyLevels();
         int nextIndex = IntStream.range(0, hierarchyLevels.size())
                 .filter(i -> hierarchyLevels.get(i).getHierarchyLevelId().equalsIgnoreCase(currentLevel))

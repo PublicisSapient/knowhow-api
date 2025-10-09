@@ -76,7 +76,6 @@ public class UserInfoController {
 	 * @return the user info
 	 */
 	@GetMapping
-	@PreAuthorize("hasPermission(null, 'GET_USER_INFO') or hasPermission(null, 'GRANT_ACCESS')")
 	public ResponseEntity<ServiceResponse> getAll() {
 		log.info("Fetching all user info data");
 		return ResponseEntity.status(HttpStatus.OK).body(this.userInfoService.getAllUserInfo());
