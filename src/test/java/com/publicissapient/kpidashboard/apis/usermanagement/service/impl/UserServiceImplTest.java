@@ -96,7 +96,6 @@ class UserServiceImplTest {
         UserInfo projectAdminUserInfo = new UserInfo();
         projectAdminUserInfo.setUsername("ProjectAdmin");
         projectAdminUserInfo.setProjectsAccess(List.of(access));
-        UserServiceImpl spyService = Mockito.spy(userService);
         Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
         when(userInfoService.getUserInfo(authentication.getName())).thenReturn(projectAdminUserInfo);
 

@@ -18,39 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.common.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.publicissapient.kpidashboard.apis.common.service.impl.DataAccessService;
-import com.publicissapient.kpidashboard.apis.constant.Constant;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
@@ -63,30 +30,39 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
 import com.publicissapient.kpidashboard.apis.auth.token.CookieUtil;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.DataAccessService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
-import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccessDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
-import com.publicissapient.kpidashboard.common.model.rbac.UserDetailsResponseDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserTokenData;
+import com.publicissapient.kpidashboard.common.model.rbac.*;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoCustomRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
-
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 @RunWith(MockitoJUnitRunner.class)
-public class UserInfoServiceImplTest {
+class UserInfoServiceImplTest {
 
 	private static final String ROLE_VIEWER = "ROLE_VIEWER";
 	private static final String ROLE_SUPERADMIN = "ROLE_SUPERADMIN";
@@ -126,8 +102,6 @@ public class UserInfoServiceImplTest {
 	private CookieUtil cookieUtil;
 	@Mock
 	private Cookie cookie;
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
 
 	@Mock
 	private SecurityContext securityContext;
@@ -146,8 +120,8 @@ public class UserInfoServiceImplTest {
 		UserInfo user = new UserInfo();
 		user.setUsername("user");
 		user.setAuthType(AuthType.STANDARD);
-		user.setAuthorities(Lists.newArrayList("ROLE_VIEWER"));
-		SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_VIEWER");
+		user.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
+		SimpleGrantedAuthority authority = new SimpleGrantedAuthority(Constant.ROLE_VIEWER);
 		when(userInfoRepository.findByUsername("user")).thenReturn(user);
 		Collection<GrantedAuthority> authorities = service.getAuthorities("user");
 		assertTrue(authorities.contains(authority));
@@ -167,7 +141,7 @@ public class UserInfoServiceImplTest {
 		String username = "user";
 		AuthType authType = AuthType.STANDARD;
 		List<UserInfo> users = Lists.newArrayList(new UserInfo(), new UserInfo());
-		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList("ROLE_SUPERADMIN"))).thenReturn(users);
+		when(userInfoRepository.findByAuthoritiesIn(List.of(Constant.ROLE_SUPERADMIN))).thenReturn(users);
 		when(userInfoRepository.findByUsernameAndAuthType(username, authType)).thenReturn(null);
 
 		service.demoteFromAdmin(username, authType);
@@ -186,7 +160,7 @@ public class UserInfoServiceImplTest {
 		auth.add("ROLE_VIEWER");
 		user.setAuthorities(auth);
 		List<UserInfo> users = Lists.newArrayList(new UserInfo(), new UserInfo());
-		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList("ROLE_SUPERADMIN"))).thenReturn(users);
+		when(userInfoRepository.findByAuthoritiesIn(List.of(Constant.ROLE_SUPERADMIN))).thenReturn(users);
 		when(userInfoRepository.findByUsernameAndAuthType(username, authType)).thenReturn(user);
 		when(userInfoRepository.save(isA(UserInfo.class))).thenReturn(user);
 
@@ -278,11 +252,11 @@ public class UserInfoServiceImplTest {
 		List<String> roles = authorities
 				.stream()
 				.map(GrantedAuthority::getAuthority)
-				.collect(Collectors.toList());
+				.toList();
 		List<UserInfo> userInfoList = new ArrayList<>();
 		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
 		ServiceResponse result = service.getAllUserInfo();
-		assertEquals(((ArrayList<UserInfo>) result.getData()).size(), 0);
+		assertEquals(0, ((ArrayList<UserInfo>) result.getData()).size());
 	}
 
 	@Test
@@ -298,17 +272,16 @@ public class UserInfoServiceImplTest {
 		List<String> roles = authorities
 				.stream()
 				.map(GrantedAuthority::getAuthority)
-				.collect(Collectors.toList());
+				.toList();
 
 		UserInfo testUser = new UserInfo();
 		testUser.setUsername("UnitTest");
-		testUser.setAuthorities(Arrays.asList("ROLE_SUPERADMIN"));
+		testUser.setAuthorities(List.of(Constant.ROLE_SUPERADMIN));
 		ArrayList<UserInfo> userInfoList = new ArrayList<UserInfo>();
 		userInfoList.add(testUser);
-		//when(userInfoRepository.findAll()).thenReturn(userInfoList);
 		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
 		ServiceResponse result = service.getAllUserInfo();
-		assertEquals(((ArrayList<UserInfo>) result.getData()).size(), 1);
+		assertEquals(1, ((ArrayList<UserInfo>) result.getData()).size());
 	}
 
 	@Test
@@ -438,9 +411,9 @@ public class UserInfoServiceImplTest {
 		user.setAuthorities(Lists.newArrayList("ROLE_SUPERADMIN"));
 		user.setEmailAddress("email");
 
-		Authentication authentication = new Authentication();
-		authentication.setUsername("dummyUser");
-		authentication.setEmail("emailId");
+		Authentication authentication1 = new Authentication();
+		authentication1.setUsername("dummyUser");
+		authentication1.setEmail("emailId");
 
 		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
 

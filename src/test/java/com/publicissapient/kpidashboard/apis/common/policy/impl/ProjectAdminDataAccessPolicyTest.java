@@ -17,7 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-public class ProjectAdminDataAccessPolicyTest {
+class ProjectAdminDataAccessPolicyTest {
     @InjectMocks
     private ProjectAdminDataAccessPolicy policy;
 
@@ -31,28 +31,7 @@ public class ProjectAdminDataAccessPolicyTest {
         userName ="tempName";
     }
 
-  /*  @Test
-    void shouldReturnAllUsers() {
-
-        String userName ="tempName";
-        UserInfo fullUserDoc = null;
-        when(userRepository.findByUsername(userName)).thenReturn(fullUserDoc);
-        // given
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUsername("user1");
-        List<UserInfo> allUsers = List.of(userInfo, new UserInfo());
-        when(userRepository.findAll()).thenReturn(allUsers);
-
-        // when
-        List<UserInfo> result = policy.getAccessibleMembers(Constant.ROLE_SUPERADMIN);
-
-        // then
-        assertEquals(2, result.size());
-        assertEquals("user1", result.get(0).getUsername());
-        verify(userRepository, times(1)).findAll();
-    }*/
-
-    @Test
+     @Test
     void shouldReturnEmptyListIfNoUsers() {
         // given
         when(userRepository.findByUsername(userName)).thenReturn(null);
@@ -124,7 +103,7 @@ public class ProjectAdminDataAccessPolicyTest {
         when(userRepository.findByUsername(userName)).thenReturn(userInfo);
         List<UserInfo> userInfoList = new ArrayList<>();
         userInfoList.add(userInfo);
-        List<String> items = accessNode.getAccessItems().stream().map(AccessItem::getItemId).toList();;
+        List<String> items = accessNode.getAccessItems().stream().map(AccessItem::getItemId).toList();
         when(userRepository.findUsersByItemIds(items)).thenReturn(userInfoList);
 
         // when

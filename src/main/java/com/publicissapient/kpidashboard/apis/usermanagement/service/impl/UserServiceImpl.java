@@ -87,8 +87,7 @@ public class UserServiceImpl implements UserService {
             List<String> roles = authentication.getAuthorities()
                     .stream()
                     .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-
+                    .toList();
 
             if(roles.contains(Constant.ROLE_SUPERADMIN))
                 userInfo.setProjectsAccess(Collections.emptyList());
@@ -115,16 +114,16 @@ public class UserServiceImpl implements UserService {
                                                     newItem.setItemName(item.getItemName()); // assign Viewer
                                                     return newItem;
                                                 })
-                                                .collect(Collectors.toList());
+                                                .toList();
 
                                         newNode.setAccessItems(items);
                                         return newNode;
                                     })
-                                    .collect(Collectors.toList());
+                                    .toList();
 
                             copy.setAccessNodes(nodes);
                             return copy;
-                        }).collect(Collectors.toList());
+                        }).toList();
 
                 userInfo.setProjectsAccess(mappedProjects);
             }
