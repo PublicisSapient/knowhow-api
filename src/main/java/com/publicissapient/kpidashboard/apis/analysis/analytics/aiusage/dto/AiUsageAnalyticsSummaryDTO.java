@@ -16,9 +16,15 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AiUsageAnalyticsSummaryDTO {
     private int averageEfficiencyGainPerAiUsageType;
     private int averageEfficiencyGainPerProject;

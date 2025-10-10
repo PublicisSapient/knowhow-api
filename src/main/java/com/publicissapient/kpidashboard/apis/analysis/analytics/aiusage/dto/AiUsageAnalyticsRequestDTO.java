@@ -18,6 +18,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto;
 
 import java.util.Set;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -27,6 +28,7 @@ import lombok.Data;
 public class AiUsageAnalyticsRequestDTO {
 
     @Min(value = 1, message = "The number of sprints taken into account must be at least 1")
+    @Max(value = 20, message = "The number of sprints taken into account must not be greater than 20")
     @NotNull(message = "The 'numberOfSprintsToInclude' cannot be null")
     private Integer numberOfSprintsToInclude;
 
