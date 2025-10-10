@@ -15,7 +15,7 @@
  * limitations under the License.
  *
  ******************************************************************************/
-package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1400;
+package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1410;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -24,12 +24,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.util.Arrays;
+
 @Slf4j
-//@ChangeUnit(id = "r_test_execution_time_kpi", order = "014004", author = "rendk", systemVersion = "14.1.0")
+@ChangeUnit(id = "r_test_execution_time_kpi", order = "014101", author = "rendk", systemVersion = "14.1.0")
 public class TestExecutionTimeKpi {
 
     public static final String KPI_ID = "kpiId";
     public static final String KPI_196 = "kpi196";
+    public static final String COLUMN_NAME = "columnName";
+    public static final String ORDER = "order";
+    public static final String IS_DEFAULT = "isDefault";
+    public static final String IS_SHOWN = "isShown";
 
     private final MongoTemplate mongoTemplate;
 
@@ -75,6 +81,18 @@ public class TestExecutionTimeKpi {
                 .append("kanban", false);
 
         mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDoc);
+
+        Document kpiColumnConfigDoc = new Document("basicProjectConfigId", null)
+                .append(KPI_ID, KPI_196)
+                .append("kpiColumnDetails", Arrays.asList(
+                        new Document(COLUMN_NAME, "Sprint Name").append(ORDER, 1).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Test Case ID").append(ORDER, 2).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Test case Type").append(ORDER, 3).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Test Case Status").append(ORDER, 4).append(IS_SHOWN, true).append(IS_DEFAULT, true),
+                        new Document(COLUMN_NAME, "Execution Time").append(ORDER, 5).append(IS_SHOWN, true).append(IS_DEFAULT, true)
+                ));
+
+        mongoTemplate.getCollection("kpi_column_configs").insertOne(kpiColumnConfigDoc);
         log.info("Rollback executed: Inserted Test Execution Time KPI (kpi196) into kpi_category_mapping");
     }
 
@@ -83,6 +101,7 @@ public class TestExecutionTimeKpi {
         // Delete the KPI
         mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_196));
         mongoTemplate.getCollection("kpi_category_mapping").deleteOne(new Document(KPI_ID, KPI_196));
+        mongoTemplate.getCollection("kpi_column_configs").deleteOne(new Document(KPI_ID, KPI_196));
         log.info("Execution executed: Deleted Test Execution Time KPI (kpi196) from kpi_master and kpi_category_mapping");
     }
 }
