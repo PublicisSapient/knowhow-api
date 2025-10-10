@@ -18,9 +18,10 @@ public class DataAccessService {
 
     public List<UserInfo> getMembersForUser(List<String> providedRole,String user) {
 
-        for (String role : policies.keySet()) {
+        for (Map.Entry<String, DataAccessPolicy> entry : policies.entrySet()) {
+            String role = entry.getKey();
             if (providedRole.contains(role)) {
-                DataAccessPolicy policy = policies.get(role);
+                DataAccessPolicy policy = entry.getValue();
                 return policy.getAccessibleMembers(user);
             }
         }
