@@ -83,17 +83,7 @@ class UserServiceImplTest {
         List<GrantedAuthority> authorities = List.of(
                 (GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN
         );
-
-        AccessItem accessItem = new AccessItem();
-        accessItem.setItemId("tempItemId1");
-        AccessItem accessItem2 = new AccessItem();
-        accessItem2.setItemId("tempItemId2");
-        AccessNode accessNode = new AccessNode();
-        accessNode.setAccessLevel("project");
-        accessNode.setAccessItems(List.of(accessItem,accessItem2));
-        ProjectsAccess access = new ProjectsAccess();
-        access.setRole(Constant.ROLE_PROJECT_ADMIN);
-        access.setAccessNodes(List.of(accessNode));
+        ProjectsAccess access = getProjectAccess("project");
 
         UserInfo projectAdminUserInfo = new UserInfo();
         projectAdminUserInfo.setUsername("ProjectAdmin");
@@ -123,6 +113,58 @@ class UserServiceImplTest {
     }
 
     @Test
+    void testSaveUserInfo_NewUserForOtherUser() {
+        String username = "testUser";
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
+        List<GrantedAuthority> authorities = List.of(
+                (GrantedAuthority) () -> Constant.ROLE_GUEST
+        );
+
+        ProjectsAccess access = getProjectAccess("project");
+
+        UserInfo projectAdminUserInfo = new UserInfo();
+        projectAdminUserInfo.setUsername("ProjectAdmin");
+        projectAdminUserInfo.setProjectsAccess(List.of(access));
+        Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
+
+        UserInfo savedUserInfo = new UserInfo();
+        savedUserInfo.setUsername(username);
+        savedUserInfo.setAuthType(AuthType.SAML);
+        savedUserInfo.setAuthorities(new ArrayList<>());
+        savedUserInfo.setEmailAddress("");
+        savedUserInfo.setProjectsAccess(Collections.emptyList());
+
+        when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
+
+        // Act
+        ServiceResponse result = userService.saveUserInfo(username);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(true, result.getSuccess());
+        assertEquals("User information saved successfully", result.getMessage());
+        UserResponseDTO responseDTO = (UserResponseDTO) result.getData();
+        assertEquals(username, responseDTO.getUsername());
+        verify(userInfoService).save(any(UserInfo.class));
+    }
+
+    ProjectsAccess getProjectAccess(String accessLevel){
+        AccessItem accessItem = new AccessItem();
+        accessItem.setItemId("tempItemId1");
+        AccessItem accessItem2 = new AccessItem();
+        accessItem2.setItemId("tempItemId2");
+        AccessNode accessNode = new AccessNode();
+        accessNode.setAccessLevel(accessLevel);
+        accessNode.setAccessItems(List.of(accessItem,accessItem2));
+        ProjectsAccess access = new ProjectsAccess();
+        access.setRole(Constant.ROLE_PROJECT_ADMIN);
+        access.setAccessNodes(List.of(accessNode));
+        return access;
+    }
+
+    @Test
     void testSaveUserInfo_NewUserForProjectAdmin1() {
         String username = "testUser";
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -131,17 +173,48 @@ class UserServiceImplTest {
         List<GrantedAuthority> authorities = List.of(
                 (GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN
         );
+        ProjectsAccess access = getProjectAccess("acc");
 
-        AccessItem accessItem = new AccessItem();
-        accessItem.setItemId("tempItemId1");
-        AccessItem accessItem2 = new AccessItem();
-        accessItem2.setItemId("tempItemId2");
-        AccessNode accessNode = new AccessNode();
-        accessNode.setAccessLevel("acc");
-        accessNode.setAccessItems(List.of(accessItem,accessItem2));
-        ProjectsAccess access = new ProjectsAccess();
-        access.setRole(Constant.ROLE_PROJECT_ADMIN);
-        access.setAccessNodes(List.of(accessNode));
+        UserInfo projectAdminUserInfo = new UserInfo();
+        projectAdminUserInfo.setUsername("ProjectAdmin");
+        projectAdminUserInfo.setProjectsAccess(List.of(access));
+        Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
+        when(userInfoService.getUserInfo(authentication.getName())).thenReturn(projectAdminUserInfo);
+        mockHierarchyLevels = createMockHierarchyLevels();
+        when(hierarchyLevelService.getTopHierarchyLevels()).thenReturn(mockHierarchyLevels);
+
+        UserInfo savedUserInfo = new UserInfo();
+        savedUserInfo.setUsername(username);
+        savedUserInfo.setAuthType(AuthType.SAML);
+        savedUserInfo.setAuthorities(new ArrayList<>());
+        savedUserInfo.setEmailAddress("");
+        savedUserInfo.setProjectsAccess(Collections.emptyList());
+
+        when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
+
+        // Act
+        ServiceResponse result = userService.saveUserInfo(username);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(true, result.getSuccess());
+        assertEquals("User information saved successfully", result.getMessage());
+        UserResponseDTO responseDTO = (UserResponseDTO) result.getData();
+        assertEquals(username, responseDTO.getUsername());
+        verify(userInfoService).save(any(UserInfo.class));
+    }
+
+    @Test
+    void testSaveUserInfo_NewUserForProjectAdminForAccess() {
+        String username = "testUser";
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
+        List<GrantedAuthority> authorities = List.of(
+                (GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN
+        );
+
+        ProjectsAccess access = getProjectAccess("port");
 
         UserInfo projectAdminUserInfo = new UserInfo();
         projectAdminUserInfo.setUsername("ProjectAdmin");
