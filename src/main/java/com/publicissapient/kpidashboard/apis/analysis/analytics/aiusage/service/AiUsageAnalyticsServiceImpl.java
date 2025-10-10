@@ -56,9 +56,8 @@ import io.micrometer.common.util.StringUtils;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -81,8 +80,7 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
-	@Getter
-	@Setter
+	@Data
 	@AllArgsConstructor
 	private static class ProjectDTO {
 		private String name;
@@ -118,9 +116,9 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 				projectDTOList, aiUsageAnalyticsRequestDTO);
 
 		if (MapUtils.isEmpty(basicProjectConfigIdAsStringJiraIssuesMap)) {
-			log.error("Could not create the project basic config id and associated Jira issues map for request {}",
-					aiUsageAnalyticsRequestDTO);
-			throw new InternalServerErrorException(COMPUTING_AI_ANALYTICS_FAILED_ERROR_MESSAGE);
+			log.warn("No Jira Issues could be found for project basic config ids present in the AI usage analytics "
+					+ "request {}", aiUsageAnalyticsRequestDTO);
+			return AiUsageAnalyticsResponseDTO.builder().build();
 		}
 
 		return constructAiUsageAnalyticsResponseDTO(projectDTOList, basicProjectConfigIdAsStringJiraIssuesMap);
@@ -151,6 +149,9 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 
 	private Set<String> getJiraIssueNumbersForProject(ObjectId projectBasicConfigId,
 			List<SprintDetails> projectSprintDetails) {
+		if (CollectionUtils.isEmpty(projectSprintDetails)) {
+			return Collections.emptySet();
+		}
 		Set<String> projectJiraIssueNumbers;
 		FieldMapping projectFieldMapping = configHelperService.getFieldMappingMap().get(projectBasicConfigId);
 		List<String> includedStatusesToIdentifyCompletedIssuesKPI198 = projectFieldMapping
@@ -184,7 +185,7 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 
 	private List<AccountFilteredData> getHierarchyDataCurrentUserHasAccessTo(int level, String label) {
 		if (StringUtils.isEmpty(label)) {
-			return Collections.emptyList();
+			throw new IllegalArgumentException("The 'label' parameter is mandatory");
 		}
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
@@ -201,32 +202,38 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 			List<ProjectDTO> projectDTOList, Map<String, List<JiraIssue>> basicProjectConfigIdAsStringJiraIssuesMap) {
 		Map<String, Map<String, ProjectAiUsageMetrics>> aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap = new HashMap<>();
 		for (ProjectDTO projectDTO : projectDTOList) {
-			basicProjectConfigIdAsStringJiraIssuesMap.get(projectDTO.getProjectBasicConfigId().toString())
-					.forEach(jiraIssue -> {
-						if (StringUtils.isNotEmpty(jiraIssue.getAiUsageType())) {
-							aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
-									.computeIfAbsent(jiraIssue.getAiUsageType(), value -> new HashMap<>());
-							Map<String, ProjectAiUsageMetrics> basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap = aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
-									.get(jiraIssue.getAiUsageType());
-							String projectBasicConfigIdAsString = projectDTO.getProjectBasicConfigId().toString();
-							if (basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
-									.containsKey(projectBasicConfigIdAsString)) {
-								ProjectAiUsageMetrics projectAiUsageMetrics = basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
-										.get(projectBasicConfigIdAsString);
-								projectAiUsageMetrics.setIssueCount(projectAiUsageMetrics.getIssueCount() + 1);
-								projectAiUsageMetrics.setEfficiencyGain(
-										(double) Math.round((projectAiUsageMetrics.getEfficiencyGain()
-												+ (jiraIssue.getAiEfficiencyGain() / TWO_DECIMAL_ROUNDING_COEFFICIENT))
-												* PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER);
-							} else {
-								basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap.put(
-										projectBasicConfigIdAsString,
-										new ProjectAiUsageMetrics(1,
-												jiraIssue.getAiEfficiencyGain() / TWO_DECIMAL_ROUNDING_COEFFICIENT,
-												projectDTO.getName()));
+			if (basicProjectConfigIdAsStringJiraIssuesMap
+					.containsKey(projectDTO.getProjectBasicConfigId().toString())) {
+				basicProjectConfigIdAsStringJiraIssuesMap.get(projectDTO.getProjectBasicConfigId().toString())
+						.forEach(jiraIssue -> {
+							if (StringUtils.isNotEmpty(jiraIssue.getAiUsageType())) {
+								aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
+										.computeIfAbsent(jiraIssue.getAiUsageType(), value -> new HashMap<>());
+								Map<String, ProjectAiUsageMetrics> basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap = aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
+										.get(jiraIssue.getAiUsageType());
+								String projectBasicConfigIdAsString = projectDTO.getProjectBasicConfigId().toString();
+								if (basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
+										.containsKey(projectBasicConfigIdAsString)) {
+									ProjectAiUsageMetrics projectAiUsageMetrics = basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
+											.get(projectBasicConfigIdAsString);
+									projectAiUsageMetrics.setIssueCount(projectAiUsageMetrics.getIssueCount() + 1);
+									projectAiUsageMetrics.setEfficiencyGain((double) Math.round((projectAiUsageMetrics
+											.getEfficiencyGain()
+											+ (jiraIssue.getAiEfficiencyGain() / TWO_DECIMAL_ROUNDING_COEFFICIENT))
+											* PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER);
+								} else {
+									basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap.put(
+											projectBasicConfigIdAsString,
+											new ProjectAiUsageMetrics(1,
+													jiraIssue.getAiEfficiencyGain() / TWO_DECIMAL_ROUNDING_COEFFICIENT,
+													projectDTO.getName()));
+								}
 							}
-						}
-					});
+						});
+			} else {
+				log.warn("No AI usage analytics data could be found for project with basicProjectConfigID {}",
+						projectDTO.getProjectBasicConfigId());
+			}
 		}
 		return aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap;
 	}
@@ -246,8 +253,11 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 		aiUsageAnalyticsSummaryDTO.setProjectsNumber(projectsNumber);
 
 		double totalEfficiencyGain = aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap.values()
-				.stream().flatMap(val -> val.values().stream()).mapToDouble(ProjectAiUsageMetrics::getEfficiencyGain)
-				.sum();
+				.stream()
+				.flatMap(
+						basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap -> basicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap
+								.values().stream())
+				.mapToDouble(ProjectAiUsageMetrics::getEfficiencyGain).sum();
 
 		aiUsageAnalyticsSummaryDTO
 				.setAverageEfficiencyGainPerAiUsageType((int) Math.round(totalEfficiencyGain / aiUsageTypesNumber));
