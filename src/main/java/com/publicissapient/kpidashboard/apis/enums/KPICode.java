@@ -310,7 +310,14 @@ public enum KPICode {
 	/**
 	 * Defects Breached SLAs (Service Level Agreements)
 	 */
-	DEFECTS_BREACHED_SLAS("kpi195", KPISource.JIRA.name());
+	DEFECTS_BREACHED_SLAS("kpi195", KPISource.JIRA.name()),
+
+	/**
+	 * AI Usage Analytics. This is a dummy KPI created only for enabling the interaction with the field mapping
+	 * endpoints required for setting the project configurations based on which some Jira fields will be extracted
+	 * and used in a display.
+	 */
+	AI_USAGE_ANALYTICS("kpi198", KPISource.JIRA.name());
 
 	// @formatter:on
 
