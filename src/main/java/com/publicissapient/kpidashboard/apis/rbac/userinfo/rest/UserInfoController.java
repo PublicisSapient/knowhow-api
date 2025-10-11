@@ -76,7 +76,6 @@ public class UserInfoController {
 	 * @return the user info
 	 */
 	@GetMapping
-	@PreAuthorize("hasPermission(null, 'GET_USER_INFO')")
 	public ResponseEntity<ServiceResponse> getAll() {
 		log.info("Fetching all user info data");
 		return ResponseEntity.status(HttpStatus.OK).body(this.userInfoService.getAllUserInfo());
@@ -89,7 +88,7 @@ public class UserInfoController {
 	 *          object containing the updated user info data
 	 * @return responseEntity of userInfo with data, message, and status
 	 */
-	@PreAuthorize("hasPermission(null, 'UPDATE_USER_INFO')")
+	@PreAuthorize("hasPermission(null, 'UPDATE_USER_INFO') or hasPermission(null, 'GRANT_ACCESS')")
 	@PostMapping("/updateUserRole")
 	public ResponseEntity<ServiceResponse> updateUserRole(@Valid @RequestBody UserInfoDTO userInfoDto) {
 		ModelMapper modelMapper = new ModelMapper();

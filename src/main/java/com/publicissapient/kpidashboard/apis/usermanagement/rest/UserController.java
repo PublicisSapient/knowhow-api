@@ -55,7 +55,7 @@ public class UserController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class)) }),
             @ApiResponse(responseCode = "400", description = "Bad request. Username is required"),
             @ApiResponse(responseCode = "500", description = "Unexpected server error occurred") })
-    @PreAuthorize("hasPermission(null, 'ADD_USER')")
+    @PreAuthorize("hasPermission(null, 'ADD_USER') or hasPermission(null, 'GRANT_ACCESS')")
     public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         return userService.saveUserInfo(userRequestDTO.getUsername());
     }
