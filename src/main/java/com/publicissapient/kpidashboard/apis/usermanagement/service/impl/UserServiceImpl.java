@@ -93,8 +93,8 @@ public class UserServiceImpl implements UserService {
                 userInfo.setProjectsAccess(Collections.emptyList());
             else if(roles.contains(Constant.ROLE_PROJECT_ADMIN)){
 
-                UserInfo fullUserDoc = userInfoService.getUserInfo(authentication.getName());
-                List<ProjectsAccess> mappedProjects = fullUserDoc.getProjectsAccess().stream()
+                UserInfo currentUserDoc = userInfoService.getUserInfo(authentication.getName());
+                List<ProjectsAccess> mappedProjects = currentUserDoc.getProjectsAccess().stream()
                         .map(projectsAccess ->
                         {
                             ProjectsAccess copy = new ProjectsAccess();
@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
                                     .stream()
                                     .map(node -> {
                                         AccessNode newNode = new AccessNode();
-                                        newNode.setAccessLevel(nextAccessLevel(node.getAccessLevel()));
+                                        newNode.setAccessLevel(getNextHierarchyLevel(node.getAccessLevel()));
 
                                         List<AccessItem> items = node.getAccessItems()
                                                 .stream()
@@ -141,7 +141,12 @@ public class UserServiceImpl implements UserService {
         return new ServiceResponse(true, responseMessage, responseDTO);
     }
 
-    public String nextAccessLevel(String currentLevel) {
+    /*
+    * This method will return the next access level of the Logged in person
+    * and that next access level will be assigned to new user.
+    * in case of logged-in user is having Project access, Project access will be returned.
+    * */
+    public String getNextHierarchyLevel(String currentLevel) {
         List<HierarchyLevel> hierarchyLevels = hierarchyLevelService.getTopHierarchyLevels();
         int nextIndex = IntStream.range(0, hierarchyLevels.size())
                 .filter(i -> hierarchyLevels.get(i).getHierarchyLevelId().equalsIgnoreCase(currentLevel))
