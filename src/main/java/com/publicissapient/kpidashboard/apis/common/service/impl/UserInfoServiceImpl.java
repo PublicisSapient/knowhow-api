@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.auth.AuthenticationUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
@@ -86,6 +87,7 @@ import com.publicissapient.kpidashboard.common.model.rbac.UserTokenData;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoCustomRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -134,6 +136,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Autowired
 	private OrganizationHierarchyService organizationHierarchyService;
 
+	@Autowired
+	private DataAccessService dataAccessService;
+
+
 	final ModelMapper modelMapper = new ModelMapper();
 
 	@Override
@@ -156,7 +162,15 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public Collection<UserInfoDTO> getUsers() {
-		List<UserInfo> userInfoList = userInfoRepository.findAll();
+		org.springframework.security.core.Authentication authentication =
+				AuthenticationUtil.getAuthentication();
+
+		List<String> roles = authentication.getAuthorities()
+				.stream()
+				.map(GrantedAuthority::getAuthority)
+				.collect(Collectors.toList());
+
+		List<UserInfo> userInfoList = dataAccessService.getMembersForUser(roles,authentication.getName());
 		List<String> userNames = userInfoList.stream().map(UserInfo::getUsername).toList();
 
 		List<Authentication> authentications = authenticationRepository.findByUsernameIn(userNames);
