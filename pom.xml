@@ -642,9 +642,9 @@
         <executions>
           <execution>
             <id>spotless-apply</id>
-            <goals>
+           <!-- <goals>
               <goal>apply</goal>
-            </goals>
+            </goals>-->
             <phase>validate</phase>
           </execution>
         </executions>
