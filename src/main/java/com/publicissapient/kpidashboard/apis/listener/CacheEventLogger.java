@@ -12,8 +12,11 @@ public class CacheEventLogger implements CacheEventListener<Object, Object> {
 	@Override
 	public void onEvent(CacheEvent<? extends Object, ? extends Object> cacheEvent) {
 		int abbreviateLength = 50;
-		log.info("Cache event {} with key {}. Old value = {}, New value = {}", cacheEvent.getType(),
-				abbreviate(cacheEvent.getKey(), abbreviateLength), abbreviate(cacheEvent.getOldValue(), abbreviateLength),
+		log.info(
+				"Cache event {} with key {}. Old value = {}, New value = {}",
+				cacheEvent.getType(),
+				abbreviate(cacheEvent.getKey(), abbreviateLength),
+				abbreviate(cacheEvent.getOldValue(), abbreviateLength),
 				abbreviate(cacheEvent.getNewValue(), abbreviateLength));
 	}
 

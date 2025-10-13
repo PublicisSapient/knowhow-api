@@ -37,12 +37,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MergeRequestDataFactory {
-	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA = "/json/non-JiraProcessors/merge_requests.json";
+	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA =
+			"/json/non-JiraProcessors/merge_requests.json";
 	private List<MergeRequests> mergeRequestDataFactory;
 	private ObjectMapper mapper;
 
-	private MergeRequestDataFactory() {
-	}
+	private MergeRequestDataFactory() {}
 
 	public static MergeRequestDataFactory newInstance(String filePath) {
 
@@ -62,9 +62,10 @@ public class MergeRequestDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_PROCESSOR_ITEMS_DATA : filePath;
 
-			mergeRequestDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<MergeRequests>>() {
-					});
+			mergeRequestDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<MergeRequests>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

@@ -43,19 +43,29 @@ public class AuditHierarchyRollBack {
 
 	@Execution
 	public void execution() {
-		mongoTemplate.getCollection("organization_hierarchy").updateMany(new Document(), // Apply to all documents
-				new Document("$unset",
-						new Document(MODIFIED_DATE, "").append("createdBy", "").append("updatedBy", "")));
-
+		mongoTemplate
+				.getCollection("organization_hierarchy")
+				.updateMany(
+						new Document(), // Apply to all documents
+						new Document(
+								"$unset",
+								new Document(MODIFIED_DATE, "").append("createdBy", "").append("updatedBy", "")));
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		Date currentDate = Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC));
-		mongoTemplate.getCollection("organization_hierarchy").updateMany(
-				new Document(MODIFIED_DATE, new Document("$exists", false)), // Only update if "modifiedDate" is missing
-				new Document("$set", new Document("createdBy", SystemUser.SYSTEM).append("updatedBy", SystemUser.SYSTEM)
-						.append(MODIFIED_DATE, currentDate)) // Manually set "modifiedDate"
-		);
+		mongoTemplate
+				.getCollection("organization_hierarchy")
+				.updateMany(
+						new Document(
+								MODIFIED_DATE,
+								new Document("$exists", false)), // Only update if "modifiedDate" is missing
+						new Document(
+								"$set",
+								new Document("createdBy", SystemUser.SYSTEM)
+										.append("updatedBy", SystemUser.SYSTEM)
+										.append(MODIFIED_DATE, currentDate)) // Manually set "modifiedDate"
+						);
 	}
 }

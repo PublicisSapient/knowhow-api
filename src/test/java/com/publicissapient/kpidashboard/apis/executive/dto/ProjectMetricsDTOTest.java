@@ -31,8 +31,13 @@ public class ProjectMetricsDTOTest {
 
 	@Test
 	public void testBuilder() {
-		ProjectMetricsDTO metrics = ProjectMetricsDTO.builder().id("proj123").name("Sample Project").completion("75%")
-				.health("Healthy").build();
+		ProjectMetricsDTO metrics =
+				ProjectMetricsDTO.builder()
+						.id("proj123")
+						.name("Sample Project")
+						.completion("75%")
+						.health("Healthy")
+						.build();
 
 		assertNotNull(metrics);
 		assertEquals("proj123", metrics.getId());
@@ -52,7 +57,8 @@ public class ProjectMetricsDTOTest {
 
 	@Test
 	public void testAllArgsConstructor() {
-		ProjectMetricsDTO metrics = new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
+		ProjectMetricsDTO metrics =
+				new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
 
 		assertNotNull(metrics);
 		assertEquals("proj123", metrics.getId());
@@ -63,8 +69,10 @@ public class ProjectMetricsDTOTest {
 
 	@Test
 	public void testEqualsAndHashCode() {
-		ProjectMetricsDTO metrics1 = new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
-		ProjectMetricsDTO metrics2 = new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
+		ProjectMetricsDTO metrics1 =
+				new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
+		ProjectMetricsDTO metrics2 =
+				new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
 
 		assertEquals(metrics1, metrics2);
 		assertEquals(metrics1.hashCode(), metrics2.hashCode());
@@ -72,8 +80,10 @@ public class ProjectMetricsDTOTest {
 
 	@Test
 	public void testNotEquals() {
-		ProjectMetricsDTO metrics1 = new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
-		ProjectMetricsDTO metrics2 = new ProjectMetricsDTO("proj124", "Another Project", "50%", "At Risk", null);
+		ProjectMetricsDTO metrics1 =
+				new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
+		ProjectMetricsDTO metrics2 =
+				new ProjectMetricsDTO("proj124", "Another Project", "50%", "At Risk", null);
 
 		assertNotEquals(metrics1, metrics2);
 		assertNotEquals(metrics1.hashCode(), metrics2.hashCode());
@@ -81,8 +91,10 @@ public class ProjectMetricsDTOTest {
 
 	@Test
 	public void testToString() {
-		ProjectMetricsDTO metrics = new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
-		String expected = "ProjectMetricsDTO(id=proj123, name=Sample Project, completion=75%, health=Healthy, boardMaturity=null)";
+		ProjectMetricsDTO metrics =
+				new ProjectMetricsDTO("proj123", "Sample Project", "75%", "Healthy", null);
+		String expected =
+				"ProjectMetricsDTO(id=proj123, name=Sample Project, completion=75%, health=Healthy, boardMaturity=null)";
 		assertEquals(expected, metrics.toString());
 	}
 }

@@ -19,10 +19,9 @@ package com.publicissapient.kpidashboard.apis.errors;
 import java.io.Serial;
 
 public class ApiClientException extends RuntimeException {
-    @Serial
-    private static final long serialVersionUID = -5941158835969906294L;
+	@Serial private static final long serialVersionUID = -5941158835969906294L;
 
-    public ApiClientException(String message) {
-        super(message);
-    }
+	public ApiClientException(String message) {
+		super(message);
+	}
 }

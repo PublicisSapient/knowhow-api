@@ -13,7 +13,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author pawkandp
  */
-@ChangeUnit(id = "refactor_global_config_unused_fields", order = "9303", author = "pawkandp", systemVersion = "9.3.0")
+@ChangeUnit(
+		id = "refactor_global_config_unused_fields",
+		order = "9303",
+		author = "pawkandp",
+		systemVersion = "9.3.0")
 public class RefactorGlobalConfigUnusedFields {
 	private final MongoTemplate mongoTemplate;
 
@@ -44,7 +48,8 @@ public class RefactorGlobalConfigUnusedFields {
 	}
 
 	private void rollbackAuthTypeStatus() {
-		Bson set = Updates.set("authTypeStatus", new Document("standardLogin", true).append("adLogin", true));
+		Bson set =
+				Updates.set("authTypeStatus", new Document("standardLogin", true).append("adLogin", true));
 		mongoTemplate.getCollection(GLOBAL_CONFIG).updateMany(new Document(), set);
 	}
 

@@ -24,6 +24,6 @@ import lombok.Data;
 @Data
 @Builder
 public class KPITrendsDTO {
-    private List<KPITrendDTO> positive;
-    private List<KPITrendDTO> negative;
+	private List<KPITrendDTO> positive;
+	private List<KPITrendDTO> negative;
 }

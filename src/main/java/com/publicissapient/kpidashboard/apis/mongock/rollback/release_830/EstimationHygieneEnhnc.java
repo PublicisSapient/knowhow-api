@@ -36,7 +36,8 @@ public class EstimationHygieneEnhnc {
 
 	public static final String FIELD_LABEL = "fieldLabel";
 	public static final String ISSUE_TYPE_TO_BE_INCLUDED = "Issue type to be included";
-	public static final String ISSUE_TYPES_TO_CONSIDER_COMPLETED_STATUS = "Issue types to consider ‘Completed status’";
+	public static final String ISSUE_TYPES_TO_CONSIDER_COMPLETED_STATUS =
+			"Issue types to consider ‘Completed status’";
 	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
 	private final MongoTemplate mongoTemplate;
 
@@ -50,9 +51,11 @@ public class EstimationHygieneEnhnc {
 	}
 
 	public void rollbackFieldMappingStructure() {
-		MongoCollection<Document> fieldMappingCollection = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
+		MongoCollection<Document> fieldMappingCollection =
+				mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
 
-		fieldMappingCollection.updateMany(new Document(FIELD_LABEL, ISSUE_TYPES_TO_CONSIDER_COMPLETED_STATUS),
+		fieldMappingCollection.updateMany(
+				new Document(FIELD_LABEL, ISSUE_TYPES_TO_CONSIDER_COMPLETED_STATUS),
 				new Document("$set", new Document(FIELD_LABEL, ISSUE_TYPE_TO_BE_INCLUDED)));
 	}
 

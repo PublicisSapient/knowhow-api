@@ -64,14 +64,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AccessRequestsController {
 
 	/** Instantiates the AccessRequestsHelperService */
-	@Autowired
-	private AccessRequestsHelperService accessRequestsHelperService;
+	@Autowired private AccessRequestsHelperService accessRequestsHelperService;
 
-	@Autowired
-	private ProjectAccessManager projectAccessManager;
+	@Autowired private ProjectAccessManager projectAccessManager;
 
-	@Autowired
-	private AuthProperties authProperties;
+	@Autowired private AuthProperties authProperties;
 
 	/**
 	 * Gets all access requests data.
@@ -82,7 +79,8 @@ public class AccessRequestsController {
 	@PreAuthorize("hasPermission(null, 'GET_ACCESS_REQUESTS')")
 	public ResponseEntity<ServiceResponse> getAllAccessRequests() {
 		log.info("Getting all requests");
-		return ResponseEntity.status(HttpStatus.OK).body(accessRequestsHelperService.getAllAccessRequests());
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(accessRequestsHelperService.getAllAccessRequests());
 	}
 
 	/**
@@ -95,7 +93,8 @@ public class AccessRequestsController {
 	@PreAuthorize("hasPermission(null,'GET_ACCESS_REQUEST')")
 	public ResponseEntity<ServiceResponse> getAccessRequestById(@PathVariable("id") String id) {
 		log.info("Getting request@{}", id);
-		return ResponseEntity.status(HttpStatus.OK).body(accessRequestsHelperService.getAccessRequestById(id));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(accessRequestsHelperService.getAccessRequestById(id));
 	}
 
 	/**
@@ -106,9 +105,11 @@ public class AccessRequestsController {
 	 */
 	@GetMapping(value = "/user/{username}")
 	@PreAuthorize("hasPermission(#username,'GET_ACCESS_REQUESTS_OF_USER')")
-	public ResponseEntity<ServiceResponse> getAccessRequestByUsername(@PathVariable("username") String username) {
+	public ResponseEntity<ServiceResponse> getAccessRequestByUsername(
+			@PathVariable("username") String username) {
 		log.info("Getting all requests under user {}", username);
-		return ResponseEntity.status(HttpStatus.OK).body(accessRequestsHelperService.getAccessRequestByUsername(username));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(accessRequestsHelperService.getAccessRequestByUsername(username));
 	}
 
 	/**
@@ -119,54 +120,63 @@ public class AccessRequestsController {
 	 */
 	@GetMapping(value = "/status/{status}")
 	@PreAuthorize("hasPermission(#status,'ACCESS_REQUEST_STATUS')")
-	public ResponseEntity<ServiceResponse> getAccessRequestByStatus(@PathVariable("status") String status) {
+	public ResponseEntity<ServiceResponse> getAccessRequestByStatus(
+			@PathVariable("status") String status) {
 		log.info("Getting all requests with current status {}", status);
-		return ResponseEntity.status(HttpStatus.OK).body(accessRequestsHelperService.getAccessRequestByStatus(status));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(accessRequestsHelperService.getAccessRequestByStatus(status));
 	}
 
 	/**
 	 * Modify an access request data by id
 	 *
-	 * @param id
-	 *          access request id
-	 * @param accessRequestDecision
-	 *          decision data
+	 * @param id access request id
+	 * @param accessRequestDecision decision data
 	 * @return updated access request
 	 */
 	@PutMapping(value = "/{id}")
 	@PreAuthorize("hasPermission(null , 'GRANT_ACCESS')")
-	public ResponseEntity<ServiceResponse> modifyAccessRequestById(@PathVariable("id") String id,
+	public ResponseEntity<ServiceResponse> modifyAccessRequestById(
+			@PathVariable("id") String id,
 			@Valid @RequestBody AccessRequestDecision accessRequestDecision) {
 
 		ServiceResponse[] serviceResponse = new ServiceResponse[1];
 
-		if (Constant.ACCESS_REQUEST_STATUS_APPROVED.equalsIgnoreCase(accessRequestDecision.getStatus())) {
+		if (Constant.ACCESS_REQUEST_STATUS_APPROVED.equalsIgnoreCase(
+				accessRequestDecision.getStatus())) {
 			log.info("Approve access {}", id);
 
-			projectAccessManager.grantAccess(id, accessRequestDecision, new GrantAccessListener() {
-				@Override
-				public void onSuccess(UserInfo userInfo) {
-					serviceResponse[0] = new ServiceResponse(true, "Granted", null);
-				}
+			projectAccessManager.grantAccess(
+					id,
+					accessRequestDecision,
+					new GrantAccessListener() {
+						@Override
+						public void onSuccess(UserInfo userInfo) {
+							serviceResponse[0] = new ServiceResponse(true, "Granted", null);
+						}
 
-				@Override
-				public void onFailure(AccessRequest accessRequest, String message) {
-					serviceResponse[0] = new ServiceResponse(false, message, null);
-				}
-			});
-		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(accessRequestDecision.getStatus())) {
+						@Override
+						public void onFailure(AccessRequest accessRequest, String message) {
+							serviceResponse[0] = new ServiceResponse(false, message, null);
+						}
+					});
+		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(
+				accessRequestDecision.getStatus())) {
 			log.info("Reject access {}", id);
-			projectAccessManager.rejectAccessRequest(id, accessRequestDecision.getMessage(), new RejectAccessListener() {
-				@Override
-				public void onSuccess(AccessRequest accessRequest) {
-					serviceResponse[0] = new ServiceResponse(true, "Rejected Successfully", null);
-				}
+			projectAccessManager.rejectAccessRequest(
+					id,
+					accessRequestDecision.getMessage(),
+					new RejectAccessListener() {
+						@Override
+						public void onSuccess(AccessRequest accessRequest) {
+							serviceResponse[0] = new ServiceResponse(true, "Rejected Successfully", null);
+						}
 
-				@Override
-				public void onFailure(AccessRequest accessRequest, String message) {
-					serviceResponse[0] = new ServiceResponse(false, message, null);
-				}
-			});
+						@Override
+						public void onFailure(AccessRequest accessRequest, String message) {
+							serviceResponse[0] = new ServiceResponse(false, message, null);
+						}
+					});
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(serviceResponse[0]);
@@ -180,27 +190,31 @@ public class AccessRequestsController {
 	 */
 	@PostMapping()
 	@PreAuthorize("hasPermission(#accessRequestsDataDTO,'RAISE_ACCESS_REQUEST')")
-	public ResponseEntity<ServiceResponse> createAccessRequests(@Valid @RequestBody AccessRequestDTO accessRequestDTO) {
+	public ResponseEntity<ServiceResponse> createAccessRequests(
+			@Valid @RequestBody AccessRequestDTO accessRequestDTO) {
 		ModelMapper modelMapper = new ModelMapper();
 		AccessRequest accessRequestsData = modelMapper.map(accessRequestDTO, AccessRequest.class);
 		log.info("creating new request");
 		final ServiceResponse[] serviceResponse = {null};
-		projectAccessManager.createAccessRequest(accessRequestsData, new AccessRequestListener() {
+		projectAccessManager.createAccessRequest(
+				accessRequestsData,
+				new AccessRequestListener() {
 
-			@Override
-			public void onSuccess(AccessRequest accessRequest) {
-				String msg = accessRequest.getStatus().equals(Constant.ACCESS_REQUEST_STATUS_APPROVED)
-						? "Request has been auto-approved. Please login again to start using KnowHOW."
-						: "Request submitted.";
-				serviceResponse[0] = new ServiceResponse(true, msg, accessRequest);
-			}
+					@Override
+					public void onSuccess(AccessRequest accessRequest) {
+						String msg =
+								accessRequest.getStatus().equals(Constant.ACCESS_REQUEST_STATUS_APPROVED)
+										? "Request has been auto-approved. Please login again to start using KnowHOW."
+										: "Request submitted.";
+						serviceResponse[0] = new ServiceResponse(true, msg, accessRequest);
+					}
 
-			@Override
-			public void onFailure(String message) {
+					@Override
+					public void onFailure(String message) {
 
-				serviceResponse[0] = new ServiceResponse(false, message, null);
-			}
-		});
+						serviceResponse[0] = new ServiceResponse(false, message, null);
+					}
+				});
 
 		return ResponseEntity.status(HttpStatus.OK).body(serviceResponse[0]);
 	}
@@ -208,8 +222,7 @@ public class AccessRequestsController {
 	/**
 	 * Gets access request data at id.
 	 *
-	 * @param id
-	 *          id
+	 * @param id id
 	 * @return responseEntity with data,message and status
 	 */
 	@DeleteMapping("/{id}")
@@ -224,7 +237,9 @@ public class AccessRequestsController {
 			response = new ServiceResponse(true, "Sucessfully deleted.", id);
 
 		} else {
-			response = new ServiceResponse(false, "Either id is wrong or you are not authorized to delete.", null);
+			response =
+					new ServiceResponse(
+							false, "Either id is wrong or you are not authorized to delete.", null);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
@@ -232,13 +247,16 @@ public class AccessRequestsController {
 	/**
 	 * Gets access requests count data with a pending status.
 	 *
-	 * @param status
-	 *          status
+	 * @param status status
 	 * @return responseEntity with data,message and status
 	 */
-	@RequestMapping(value = "/{status}/notification", method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> getNotificationByStatus(@PathVariable("status") String status,
-			HttpServletRequest request) {
+	@RequestMapping(
+			value = "/{status}/notification",
+			method = RequestMethod.GET,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> getNotificationByStatus(
+			@PathVariable("status") String status, HttpServletRequest request) {
 		log.info("Getting requests count with current status {}", status);
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(accessRequestsHelperService.getNotificationByStatus(status, false));
@@ -247,14 +265,18 @@ public class AccessRequestsController {
 	/**
 	 * Gets access requests count data with a pending status.
 	 *
-	 * @param status
-	 *          status
+	 * @param status status
 	 * @return responseEntity with data,message and status
 	 */
-	@RequestMapping(value = "/{status}/notification/central", method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> getNotificationByStatusForCentral(@PathVariable("status") String status,
-			HttpServletRequest request) {
+	@RequestMapping(
+			value = "/{status}/notification/central",
+			method = RequestMethod.GET,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> getNotificationByStatusForCentral(
+			@PathVariable("status") String status, HttpServletRequest request) {
 		log.info("Getting requests count with current status {}", status);
-		return ResponseEntity.status(HttpStatus.OK).body(accessRequestsHelperService.getNotificationByStatus(status, true));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(accessRequestsHelperService.getNotificationByStatus(status, true));
 	}
 }

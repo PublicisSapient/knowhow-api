@@ -38,10 +38,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * This class serves as the model for storing credential used for login and
- * Signup.
- */
+/** This class serves as the model for storing credential used for login and Signup. */
 @Data
 @Builder
 @Getter
@@ -74,12 +71,9 @@ public class Authentication extends BasicModel {
 	/**
 	 * Instantiates a new Authentication.
 	 *
-	 * @param username
-	 *          the username
-	 * @param password
-	 *          the password
-	 * @param email
-	 *          the email
+	 * @param username the username
+	 * @param password the password
+	 * @param email the email
 	 */
 	public Authentication(String username, String password, String email) {
 		super();
@@ -91,8 +85,7 @@ public class Authentication extends BasicModel {
 	/**
 	 * Hash string.
 	 *
-	 * @param password
-	 *          the password
+	 * @param password the password
 	 * @return the string
 	 */
 	public static String hash(String password) {
@@ -105,8 +98,7 @@ public class Authentication extends BasicModel {
 	/**
 	 * Sets password.
 	 *
-	 * @param password
-	 *          the password
+	 * @param password the password
 	 */
 	public void setPassword(String password) {
 		this.password = hash(password);
@@ -128,8 +120,7 @@ public class Authentication extends BasicModel {
 	/**
 	 * Check password boolean.
 	 *
-	 * @param password
-	 *          the password
+	 * @param password the password
 	 * @return the boolean
 	 */
 	public boolean checkPassword(String password) {
@@ -138,6 +129,12 @@ public class Authentication extends BasicModel {
 
 	@Override
 	public String toString() {
-		return "Authentication [username=" + username + ", password=" + password + ", approved=" + approved + " ]";
+		return "Authentication [username="
+				+ username
+				+ ", password="
+				+ password
+				+ ", approved="
+				+ approved
+				+ " ]";
 	}
 }

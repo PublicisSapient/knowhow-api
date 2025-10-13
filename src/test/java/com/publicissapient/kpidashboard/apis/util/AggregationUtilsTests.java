@@ -208,7 +208,8 @@ public class AggregationUtilsTests {
 	@Test
 	public void testPercentileLongEmptyList() {
 		List<Long> measure = new ArrayList<>();
-		assertNull("Null returned as no input is passed", AggregationUtils.percentilesLong(measure, 90d));
+		assertNull(
+				"Null returned as no input is passed", AggregationUtils.percentilesLong(measure, 90d));
 	}
 
 	@Test

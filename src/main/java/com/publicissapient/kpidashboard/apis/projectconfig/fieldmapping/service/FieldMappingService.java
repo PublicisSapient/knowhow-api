@@ -38,13 +38,13 @@ public interface FieldMappingService {
 
 	FieldMapping getFieldMappingByBasicconfigId(String projectBasicConfigId);
 
-	FieldMapping addFieldMapping(String projectToolConfigId, FieldMapping fieldMapping, ObjectId basicProjectConfigId);
+	FieldMapping addFieldMapping(
+			String projectToolConfigId, FieldMapping fieldMapping, ObjectId basicProjectConfigId);
 
 	/**
 	 * Gets ProjectBasicConfig object by its id.
 	 *
-	 * @param basicProjectConfigId
-	 *          basicProjectConfigId
+	 * @param basicProjectConfigId basicProjectConfigId
 	 * @return ProjectBasicConfig
 	 */
 	ProjectBasicConfig getBasicProjectConfigById(ObjectId basicProjectConfigId);
@@ -52,8 +52,7 @@ public interface FieldMappingService {
 	/**
 	 * Delete by basic project config id
 	 *
-	 * @param basicProjectConfigId
-	 *          id
+	 * @param basicProjectConfigId id
 	 */
 	void deleteByBasicProjectConfigId(ObjectId basicProjectConfigId);
 
@@ -65,23 +64,23 @@ public interface FieldMappingService {
 	 * @throws NoSuchFieldException
 	 * @throws IllegalAccessException
 	 */
-	List<FieldMappingResponse> getKpiSpecificFieldsAndHistory(KPICode kpi, ProjectToolConfig projectToolConfigId,
-			FieldMappingMeta requestData) throws NoSuchFieldException, IllegalAccessException;
+	List<FieldMappingResponse> getKpiSpecificFieldsAndHistory(
+			KPICode kpi, ProjectToolConfig projectToolConfigId, FieldMappingMeta requestData)
+			throws NoSuchFieldException, IllegalAccessException;
 
-	void updateSpecificFieldsAndHistory(KPICode kpi, ProjectToolConfig projectToolConfigId,
-			FieldMappingMeta fieldMappingMeta) throws NoSuchFieldException, IllegalAccessException;
+	void updateSpecificFieldsAndHistory(
+			KPICode kpi, ProjectToolConfig projectToolConfigId, FieldMappingMeta fieldMappingMeta)
+			throws NoSuchFieldException, IllegalAccessException;
 
 	/**
-	 * @param fieldMappingResponseList
-	 *          fieldMappingResponseList
-	 * @param fieldMapping
-	 *          fieldMapping
+	 * @param fieldMappingResponseList fieldMappingResponseList
+	 * @param fieldMapping fieldMapping
 	 * @return boolean
-	 * @throws IllegalAccessException
-	 *           IllegalAccessException
+	 * @throws IllegalAccessException IllegalAccessException
 	 */
-	boolean convertToFieldMappingAndCheckIsFieldPresent(List<FieldMappingResponse> fieldMappingResponseList,
-			FieldMapping fieldMapping) throws IllegalAccessException;
+	boolean convertToFieldMappingAndCheckIsFieldPresent(
+			List<FieldMappingResponse> fieldMappingResponseList, FieldMapping fieldMapping)
+			throws IllegalAccessException;
 
 	void saveFieldMapping(FieldMapping fieldMapping);
 }

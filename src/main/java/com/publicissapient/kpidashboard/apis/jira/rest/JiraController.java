@@ -21,7 +21,6 @@ package com.publicissapient.kpidashboard.apis.jira.rest;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.List;
-
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -56,8 +55,7 @@ import com.publicissapient.kpidashboard.common.model.application.dto.AssigneeRes
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This controller class handles Jira KPIs request. It handles all KPIs of Scrum
- * and Kanban.
+ * This controller class handles Jira KPIs request. It handles all KPIs of Scrum and Kanban.
  *
  * @author tauakram
  */
@@ -65,20 +63,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 public class JiraController {
 
-	@Autowired
-	private JiraServiceR jiraService;
+	@Autowired private JiraServiceR jiraService;
 
-	@Autowired
-	private JiraServiceKanbanR jiraServiceKanban;
+	@Autowired private JiraServiceKanbanR jiraServiceKanban;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private JiraToolConfigServiceImpl jiraToolConfigService;
+	@Autowired private JiraToolConfigServiceImpl jiraToolConfigService;
 
-	@Autowired
-	private NonTrendServiceFactory serviceFactory;
+	@Autowired private NonTrendServiceFactory serviceFactory;
 
 	public static final String JIRASCRUMKPIREQ = "JiraScrumKpiRequest";
 	public static final String KPILIST = "kpiList";
@@ -90,17 +83,21 @@ public class JiraController {
 	 * @return List of KPIs with trend and aggregated data.
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/jira/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			value = "/jira/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
-	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 
 		MDC.put(JIRASCRUMKPIREQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request {}", kpiRequest);
 
 		long jiraRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraRequestStartTime", String.valueOf(jiraRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -108,7 +105,8 @@ public class JiraController {
 		}
 
 		List<KpiElement> responseList = jiraService.process(kpiRequest);
-		MDC.put("TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
+		MDC.put(
+				"TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 
 		log.info("");
 		MDC.clear();
@@ -126,15 +124,19 @@ public class JiraController {
 	 * @return List of KPIs with trend and aggregated data.
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/jirakanban/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			value = "/jirakanban/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
-	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 		MDC.put(JIRASCRUMKPIREQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira Kanban KPI request {}", kpiRequest);
 		long jiraKanbanRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraKanbanRequestStartTime", String.valueOf(jiraKanbanRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -142,7 +144,9 @@ public class JiraController {
 		}
 
 		List<KpiElement> responseList = jiraServiceKanban.process(kpiRequest);
-		MDC.put("TotalJiraKanbanRequestTime", String.valueOf(System.currentTimeMillis() - jiraKanbanRequestStartTime));
+		MDC.put(
+				"TotalJiraKanbanRequestTime",
+				String.valueOf(System.currentTimeMillis() - jiraKanbanRequestStartTime));
 
 		log.info("");
 		MDC.clear();
@@ -155,41 +159,50 @@ public class JiraController {
 	}
 
 	@PostMapping(value = "/jira/board", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getJiraBoardDetailsList(@RequestBody BoardRequestDTO boardRequestDTO) {
+	public ResponseEntity<ServiceResponse> getJiraBoardDetailsList(
+			@RequestBody BoardRequestDTO boardRequestDTO) {
 		return jiraToolConfigService.getJiraBoardDetailsList(boardRequestDTO);
 	}
 
 	@GetMapping(value = "/jira/assignees/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ServiceResponse getJiraAssigneesList(@PathVariable("id") String projectConfigId) {
 		ServiceResponse response;
-		AssigneeResponseDTO assigneeResponseDTO = jiraToolConfigService.getProjectAssigneeDetails(projectConfigId);
+		AssigneeResponseDTO assigneeResponseDTO =
+				jiraToolConfigService.getProjectAssigneeDetails(projectConfigId);
 		if (assigneeResponseDTO != null) {
-			response = new ServiceResponse(true, "Successfully fetched assignee list", assigneeResponseDTO);
+			response =
+					new ServiceResponse(true, "Successfully fetched assignee list", assigneeResponseDTO);
 		} else {
-			response = new ServiceResponse(false, "Error while fetching Assignee List", assigneeResponseDTO);
+			response =
+					new ServiceResponse(false, "Error while fetching Assignee List", assigneeResponseDTO);
 		}
 		return response;
 	}
 
-	@RequestMapping(value = "/jira/nonTrend/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	@RequestMapping(
+			value = "/jira/nonTrend/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 
 		MDC.put(JIRASCRUMKPIREQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request for iteration{}", kpiRequest);
 
 		long jiraRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraRequestStartTime", String.valueOf(jiraRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
 			throw new MissingServletRequestParameterException(KPILIST, "List");
 		}
-		JiraNonTrendKPIServiceR jiraNonTrendKPIServiceR = serviceFactory
-				.getService(kpiRequest.getKpiList().get(0).getKpiCategory());
+		JiraNonTrendKPIServiceR jiraNonTrendKPIServiceR =
+				serviceFactory.getService(kpiRequest.getKpiList().get(0).getKpiCategory());
 		List<KpiElement> responseList = jiraNonTrendKPIServiceR.process(kpiRequest);
-		MDC.put("TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
+		MDC.put(
+				"TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 
 		MDC.clear();
 		if (responseList.isEmpty()) {

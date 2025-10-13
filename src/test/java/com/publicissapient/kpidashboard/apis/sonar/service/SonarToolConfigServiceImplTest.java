@@ -64,8 +64,10 @@ import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
 @RunWith(MockitoJUnitRunner.class)
 public class SonarToolConfigServiceImplTest {
 
-	private static final String RESOURCE_PROJECT_ENDPOINT = "/api/components/search?qualifiers=TRK&p=1&ps=300";
-	private static final String RESOURCE_CLOUD_PROJECT_ENDPOINT = "/api/components/search?qualifiers=TRK&organization=racv-ict&p=1&ps=300";
+	private static final String RESOURCE_PROJECT_ENDPOINT =
+			"/api/components/search?qualifiers=TRK&p=1&ps=300";
+	private static final String RESOURCE_CLOUD_PROJECT_ENDPOINT =
+			"/api/components/search?qualifiers=TRK&organization=racv-ict&p=1&ps=300";
 	private static final String RESOURCE_BRANCH_ENDPOINT = "/api/project_branches/list?project=%s";
 	private static final String SONAR_URL = "https://abc.com/sonar";
 	private static final String SONAR_CLOUD_URL = "https://abc.com";
@@ -73,18 +75,12 @@ public class SonarToolConfigServiceImplTest {
 	private static final String USER_NAME = "test";
 	private static final String PROJECT_KEY = "SURVEY_APP_API";
 	private static final String ORG_KEY = "racv-ict";
-	@InjectMocks
-	private SonarToolConfigServiceImpl sonarToolConfigService;
-	@Mock
-	private ConnectionService connectionService;
-	@Mock
-	private ConnectionRepository connectionRepository;
-	@Mock
-	private AesEncryptionService aesEncryptionService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private RestTemplate restTemplate;
+	@InjectMocks private SonarToolConfigServiceImpl sonarToolConfigService;
+	@Mock private ConnectionService connectionService;
+	@Mock private ConnectionRepository connectionRepository;
+	@Mock private AesEncryptionService aesEncryptionService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private RestTemplate restTemplate;
 	private String connectionId;
 	private Optional<Connection> testConnectionOpt;
 	private Connection connection;
@@ -105,8 +101,13 @@ public class SonarToolConfigServiceImplTest {
 		connection.setId(new ObjectId("5fc4d61f80b6350f048a93e5"));
 		connection.setBaseUrl(SONAR_URL);
 		connection.setUsername(USER_NAME);
-		List<String> projectKeys = Arrays.asList("ENGINEERING.KPIDASHBOARD.PROCESSORS", "ENGINEERING.KPIDASHBOARD.UI",
-				"ENGINEERING.KPIDASHBOARD.CUSTOMAPI", "SURVEY_APP_UI", "SURVEY_APP_API");
+		List<String> projectKeys =
+				Arrays.asList(
+						"ENGINEERING.KPIDASHBOARD.PROCESSORS",
+						"ENGINEERING.KPIDASHBOARD.UI",
+						"ENGINEERING.KPIDASHBOARD.CUSTOMAPI",
+						"SURVEY_APP_UI",
+						"SURVEY_APP_API");
 		responseProjectList.addAll(projectKeys);
 		List<String> cloudProjectKeys = Arrays.asList("racv.storybook", "com.aem.racv:racv");
 		cloudResponseProjectList.addAll(cloudProjectKeys);
@@ -118,9 +119,13 @@ public class SonarToolConfigServiceImplTest {
 	public void testGetSonarProjectListSuccess() throws Exception {
 		String projectJson = getJSONDataResponse("sonarV8Dot9Projects.json");
 		String projectsUrl = SONAR_URL + RESOURCE_PROJECT_ENDPOINT;
-		Mockito.doReturn(new ResponseEntity<>(projectJson, HttpStatus.OK)).when(restTemplate).exchange(
-				Mockito.eq(projectsUrl), Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class),
-				Mockito.eq(String.class));
+		Mockito.doReturn(new ResponseEntity<>(projectJson, HttpStatus.OK))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(projectsUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
 		List<String> projectList = sonarToolConfigService.getSonarProjectKeyList(connection, "");
 		Assert.assertEquals(projectList.size(), responseProjectList.size());
 	}
@@ -128,16 +133,23 @@ public class SonarToolConfigServiceImplTest {
 	@Test
 	public void testGetSonarProjectListSuccess_Cloud() throws Exception {
 		String projectJson = getJSONDataResponse("sonarCloudResponse.json");
-		String projectsUrl = String
-				.format(new StringBuilder(SONAR_CLOUD_URL).append(RESOURCE_CLOUD_PROJECT_ENDPOINT).toString(), ORG_KEY);
+		String projectsUrl =
+				String.format(
+						new StringBuilder(SONAR_CLOUD_URL).append(RESOURCE_CLOUD_PROJECT_ENDPOINT).toString(),
+						ORG_KEY);
 		connection.setBaseUrl(SONAR_CLOUD_URL);
 		connection.setUsername(null);
 		connection.setPassword(null);
 		connection.setCloudEnv(true);
-		Mockito.doReturn(new ResponseEntity<>(projectJson, HttpStatus.OK)).when(restTemplate).exchange(
-				Mockito.eq(projectsUrl), Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class),
-				Mockito.eq(String.class));
-		when(aesEncryptionService.decrypt(connection.getAccessToken(), customApiConfig.getAesEncryptionKey()))
+		Mockito.doReturn(new ResponseEntity<>(projectJson, HttpStatus.OK))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(projectsUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
+		when(aesEncryptionService.decrypt(
+						connection.getAccessToken(), customApiConfig.getAesEncryptionKey()))
 				.thenReturn("decryptTestKey");
 		List<String> projectList = sonarToolConfigService.getSonarProjectKeyList(connection, ORG_KEY);
 		Assert.assertEquals(projectList.size(), cloudResponseProjectList.size());
@@ -147,8 +159,13 @@ public class SonarToolConfigServiceImplTest {
 	public void testProjectsExceptionOrNull() throws Exception {
 		String projectsUrl = SONAR_URL + RESOURCE_PROJECT_ENDPOINT;
 
-		Mockito.doThrow(new RestClientException(EXCEPTION)).when(restTemplate).exchange(Mockito.eq(projectsUrl),
-				Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class), Mockito.eq(String.class));
+		Mockito.doThrow(new RestClientException(EXCEPTION))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(projectsUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
 
 		try {
 			List<String> projectList = sonarToolConfigService.getSonarProjectKeyList(connection, "");
@@ -161,26 +178,39 @@ public class SonarToolConfigServiceImplTest {
 	@Test
 	public void testGetSonarBranchListSuccess() throws Exception {
 		String branchJson = getJSONDataResponse("sonarV8Dot9Branches.json");
-		String branchUrl = String.format(new StringBuilder(SONAR_URL).append(RESOURCE_BRANCH_ENDPOINT).toString(),
-				PROJECT_KEY);
-		Mockito.doReturn(new ResponseEntity<>(branchJson, HttpStatus.OK)).when(restTemplate).exchange(Mockito.eq(branchUrl),
-				Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class), Mockito.eq(String.class));
+		String branchUrl =
+				String.format(
+						new StringBuilder(SONAR_URL).append(RESOURCE_BRANCH_ENDPOINT).toString(), PROJECT_KEY);
+		Mockito.doReturn(new ResponseEntity<>(branchJson, HttpStatus.OK))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(branchUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
-		ServiceResponse response = sonarToolConfigService.getSonarProjectBranchList(connectionId, versionAbove,
-				PROJECT_KEY);
+		ServiceResponse response =
+				sonarToolConfigService.getSonarProjectBranchList(connectionId, versionAbove, PROJECT_KEY);
 		Assert.assertTrue(((List<String>) response.getData()).size() > 0);
 	}
 
 	@Test
 	public void testBranchesExceptionOrNull() throws Exception {
-		String branchUrl = String.format(new StringBuilder(SONAR_URL).append(RESOURCE_BRANCH_ENDPOINT).toString(),
-				PROJECT_KEY);
+		String branchUrl =
+				String.format(
+						new StringBuilder(SONAR_URL).append(RESOURCE_BRANCH_ENDPOINT).toString(), PROJECT_KEY);
 
-		Mockito.doThrow(new RestClientException(EXCEPTION)).when(restTemplate).exchange(Mockito.eq(branchUrl),
-				Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class), Mockito.eq(String.class));
+		Mockito.doThrow(new RestClientException(EXCEPTION))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(branchUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
 
 		try {
-			List<String> branchList = sonarToolConfigService.getSonarProjectBranchList(connection, PROJECT_KEY);
+			List<String> branchList =
+					sonarToolConfigService.getSonarProjectBranchList(connection, PROJECT_KEY);
 			Assert.assertEquals(branchList.size(), new ArrayList<>().size());
 		} catch (RestClientException exception) {
 			Assert.assertEquals(EXCEPTION, exception.getMessage());
@@ -191,9 +221,13 @@ public class SonarToolConfigServiceImplTest {
 	public void getSonarProjectKeyListTest1() throws IOException {
 		String projectJson = getJSONDataResponse("sonarV8Dot9Projects.json");
 		String projectsUrl = SONAR_URL + RESOURCE_PROJECT_ENDPOINT;
-		Mockito.doReturn(new ResponseEntity<>(projectJson, HttpStatus.OK)).when(restTemplate).exchange(
-				Mockito.eq(projectsUrl), Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class),
-				Mockito.eq(String.class));
+		Mockito.doReturn(new ResponseEntity<>(projectJson, HttpStatus.OK))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(projectsUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
 		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
 		assertEquals(optConnection, testConnectionOpt);
@@ -204,7 +238,8 @@ public class SonarToolConfigServiceImplTest {
 	@Test
 	public void getSonarProjectKeyListTestException() {
 		String projectsUrl = SONAR_URL + RESOURCE_PROJECT_ENDPOINT;
-		when(restTemplate.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class)))
+		when(restTemplate.exchange(
+						anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class)))
 				.thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
 		sonarToolConfigService.getSonarProjectKeyList(connectionId, "");
@@ -213,15 +248,22 @@ public class SonarToolConfigServiceImplTest {
 	@Test
 	public void getSonarProjectBranchList() throws IOException {
 		String branchJson = getJSONDataResponse("sonarV8Dot9Branches.json");
-		String branchUrl = String.format(new StringBuilder(SONAR_URL).append(RESOURCE_BRANCH_ENDPOINT).toString(),
-				PROJECT_KEY);
-		Mockito.doReturn(new ResponseEntity<>(branchJson, HttpStatus.OK)).when(restTemplate).exchange(Mockito.eq(branchUrl),
-				Mockito.eq(HttpMethod.GET), ArgumentMatchers.any(HttpEntity.class), Mockito.eq(String.class));
+		String branchUrl =
+				String.format(
+						new StringBuilder(SONAR_URL).append(RESOURCE_BRANCH_ENDPOINT).toString(), PROJECT_KEY);
+		Mockito.doReturn(new ResponseEntity<>(branchJson, HttpStatus.OK))
+				.when(restTemplate)
+				.exchange(
+						Mockito.eq(branchUrl),
+						Mockito.eq(HttpMethod.GET),
+						ArgumentMatchers.any(HttpEntity.class),
+						Mockito.eq(String.class));
 
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
 		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
 		assertEquals(optConnection, testConnectionOpt);
-		List<String> branchList = sonarToolConfigService.getSonarProjectBranchList(connection, PROJECT_KEY);
+		List<String> branchList =
+				sonarToolConfigService.getSonarProjectBranchList(connection, PROJECT_KEY);
 		Assert.assertEquals(branchList.size(), responseBranchList.size());
 	}
 
@@ -244,8 +286,8 @@ public class SonarToolConfigServiceImplTest {
 		Assert.assertEquals("Version List Successfully Fetched", result.getMessage());
 	}
 
-	private SonarVersionResponseDTO prepareSonarVersionList(String type, boolean branchSupport,
-			List<String> versionList) {
+	private SonarVersionResponseDTO prepareSonarVersionList(
+			String type, boolean branchSupport, List<String> versionList) {
 		SonarVersionResponseDTO sonarVersionList = new SonarVersionResponseDTO();
 		sonarVersionList.setType(type);
 		sonarVersionList.setBranchSupport(branchSupport);

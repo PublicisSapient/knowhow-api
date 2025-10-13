@@ -35,8 +35,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PushBuildDeployDTO {
-	@Valid
-	Set<PushBuild> builds;
-	@Valid
-	Set<PushDeploy> deployments;
+	@Valid Set<PushBuild> builds;
+	@Valid Set<PushDeploy> deployments;
 }

@@ -87,22 +87,14 @@ public class DCServiceImplTest {
 	String P2 = "p2, critical, p2-critical, 2";
 	String P3 = "p3, p3-major, major, 3";
 	String P4 = "p4, p4-minor, minor, 4, p5-trivial, 5,trivial";
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	DCServiceImpl dcServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks DCServiceImpl dcServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiConfig;
 	private List<SprintWiseStory> sprintWiseStoryList = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -112,10 +104,8 @@ public class DCServiceImplTest {
 	private Map<String, List<DataCount>> trendValueMap = new LinkedHashMap<>();
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private CommonService commonService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private CommonService commonService;
 
 	@Before
 	public void setup() {
@@ -131,13 +121,14 @@ public class DCServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -146,8 +137,8 @@ public class DCServiceImplTest {
 
 		kpiWiseAggregation.put("cost_Of_Delay", "sum");
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -156,7 +147,8 @@ public class DCServiceImplTest {
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		totalBugList = jiraIssueDataFactory.getBugs();
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		sprintWiseStoryList = sprintWiseStoryDataFactory.getSprintWiseStories();
 
 		// set aggregation criteria kpi wise
@@ -174,23 +166,27 @@ public class DCServiceImplTest {
 	@Test
 	public void testGetDC() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put("defectCountByPriority", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
+		maturityRangeMap.put(
+				"defectCountByPriority", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		maturityRangeMap.put("defectPriorityWeight", Arrays.asList("10", "7", "5", "3"));
 
 		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("On");
 
-		when(jiraIssueRepository.findIssuesGroupBySprint(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(jiraIssueRepository.findIssuesGroupBySprint(
+						Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(sprintWiseStoryList);
 
 		when(jiraIssueRepository.findIssuesByType(Mockito.any())).thenReturn(totalBugList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dcServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(P1);
@@ -199,29 +195,32 @@ public class DCServiceImplTest {
 		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 
 		try {
-			KpiElement kpiElement = dcServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					dcServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
-			((List<DataCount>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String priority = dc.getData();
-				switch (priority) {
-					case "High" :
-						assertThat("DC Value :", dc.getCount(), equalTo(1));
-						break;
-					case "Low" :
-						assertThat("DC Value :", dc.getCount(), equalTo(1));
-						break;
-					case "Medium" :
-						assertThat("DC Value :", dc.getCount(), equalTo(1));
-						break;
-					case "Critical" :
-						assertThat("DC Value :", dc.getCount(), equalTo(1));
-						break;
+			((List<DataCount>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String priority = dc.getData();
+								switch (priority) {
+									case "High":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
+									case "Low":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
+									case "Medium":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
+									case "Critical":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
 
-					default :
-						break;
-				}
-			});
+									default:
+										break;
+								}
+							});
 
 		} catch (ApplicationException enfe) {
 
@@ -236,8 +235,9 @@ public class DCServiceImplTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -245,18 +245,24 @@ public class DCServiceImplTest {
 
 		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("on");
 
-		when(jiraIssueRepository.findIssuesGroupBySprint(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(jiraIssueRepository.findIssuesGroupBySprint(
+						Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(sprintWiseStoryList);
 
 		when(jiraIssueRepository.findIssuesByType(Mockito.any())).thenReturn(totalBugList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
-		Map<String, Object> defectDataListMap = dcServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
-		assertThat("Total Defects value :", ((List<JiraIssue>) defectDataListMap.get(TOTAL_DEFECT_DATA)).size(),
+		Map<String, Object> defectDataListMap =
+				dcServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Total Defects value :",
+				((List<JiraIssue>) defectDataListMap.get(TOTAL_DEFECT_DATA)).size(),
 				equalTo(20));
-		assertThat("Total Story :", ((List<JiraIssue>) defectDataListMap.get(SPRINT_WISE_STORY_DATA)).size(), equalTo(5));
+		assertThat(
+				"Total Story :",
+				((List<JiraIssue>) defectDataListMap.get(SPRINT_WISE_STORY_DATA)).size(),
+				equalTo(5));
 	}
 
 	@Test
@@ -279,7 +285,8 @@ public class DCServiceImplTest {
 		trendValueMap.put("Critical", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);

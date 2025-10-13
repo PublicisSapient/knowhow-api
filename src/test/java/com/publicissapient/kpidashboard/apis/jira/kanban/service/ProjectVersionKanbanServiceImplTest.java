@@ -46,23 +46,18 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectRel
 @RunWith(MockitoJUnitRunner.class)
 public class ProjectVersionKanbanServiceImplTest {
 
-	@InjectMocks
-	private ProjectVersionKanbanServiceImpl projectVersionKanbanService;
+	@InjectMocks private ProjectVersionKanbanServiceImpl projectVersionKanbanService;
 
-	@Mock
-	private ProjectReleaseRepo projectReleaseRepo;
+	@Mock private ProjectReleaseRepo projectReleaseRepo;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
 	private KpiRequest kpiRequest;
 	private List<ProjectRelease> releaseList;
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList;
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 
@@ -70,7 +65,8 @@ public class ProjectVersionKanbanServiceImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi74");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("MONTHS");
@@ -82,36 +78,45 @@ public class ProjectVersionKanbanServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		ProjectReleaseDataFactory projectReleaseDataFactory = ProjectReleaseDataFactory.newInstance();
 		releaseList = projectReleaseDataFactory.findByBasicProjectConfigId("6335368249794a18e8a4479f");
-		Mockito.when(cacheService.getFromApplicationCache(Mockito.anyString())).thenReturn("Excel-trackerid");
+		Mockito.when(cacheService.getFromApplicationCache(Mockito.anyString()))
+				.thenReturn("Excel-trackerid");
 		when(customApiConfig.getJiraXaxisMonthCount()).thenReturn(5);
 	}
 
 	@Test
 	public void testGetQualifierType() {
-		assertTrue(projectVersionKanbanService.getQualifierType().equals(KPICode.PROJECT_RELEASES_KANBAN.name()));
+		assertTrue(
+				projectVersionKanbanService
+						.getQualifierType()
+						.equals(KPICode.PROJECT_RELEASES_KANBAN.name()));
 	}
 
 	@Test
 	public void testGetKpiData() throws ApplicationException {
 		Mockito.when(projectReleaseRepo.findByConfigIdIn(any())).thenReturn(releaseList);
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 4);
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 4);
 
-		KpiElement ele = projectVersionKanbanService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail);
+		KpiElement ele =
+				projectVersionKanbanService.getKpiData(
+						kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 		assertTrue(((List<DataCount>) ele.getTrendValueList()).size() == 1);
 	}
 
@@ -120,6 +125,8 @@ public class ProjectVersionKanbanServiceImplTest {
 		List<Node> leafNodeList = new ArrayList<>();
 		Mockito.when(projectReleaseRepo.findByConfigIdIn(any())).thenReturn(null);
 		assertNull(
-				projectVersionKanbanService.fetchKPIDataFromDb(leafNodeList, null, null, null).get("projectReleaseDetail"));
+				projectVersionKanbanService
+						.fetchKPIDataFromDb(leafNodeList, null, null, null)
+						.get("projectReleaseDetail"));
 	}
 }

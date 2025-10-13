@@ -54,8 +54,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add buid job.
 	 *
-	 * @param buildJob
-	 *          the build job
+	 * @param buildJob the build job
 	 */
 	public void addBuidJob(String buildJob) {
 		buildJobList.add(buildJob);
@@ -64,8 +63,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add Pipeline Name.
 	 *
-	 * @param pipeLineName
-	 *          the pipeLineName
+	 * @param pipeLineName the pipeLineName
 	 */
 	public void addPipeLineNames(String pipeLineName) {
 		pipeLineNameList.add(pipeLineName);
@@ -74,8 +72,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add buid url.
 	 *
-	 * @param buildUrl
-	 *          the build url
+	 * @param buildUrl the build url
 	 */
 	public void addBuildUrl(String buildUrl) {
 		buildUrlList.add(buildUrl);
@@ -84,8 +81,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add buidbuild start time.
 	 *
-	 * @param startTime
-	 *          the start time
+	 * @param startTime the start time
 	 */
 	public void addBuildStartTime(String startTime) {
 		buildStartTimeList.add(startTime);
@@ -94,8 +90,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Addbuild end time.
 	 *
-	 * @param endTime
-	 *          the end time
+	 * @param endTime the end time
 	 */
 	public void addBuildEndTime(String endTime) {
 		buildEndTimeList.add(endTime);
@@ -104,8 +99,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add duration.
 	 *
-	 * @param duration
-	 *          the duration
+	 * @param duration the duration
 	 */
 	public void addDuration(String duration) {
 		durationList.add(duration);
@@ -114,8 +108,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add build status.
 	 *
-	 * @param buildStatus
-	 *          the build status
+	 * @param buildStatus the build status
 	 */
 	public void addBuildStatus(String buildStatus) {
 		buildStatusList.add(buildStatus);
@@ -124,8 +117,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Add started by.
 	 *
-	 * @param startedBy
-	 *          the started by
+	 * @param startedBy the started by
 	 */
 	public void addStartedBy(String startedBy) {
 		startedByList.add(startedBy);
@@ -143,8 +135,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets build job list.
 	 *
-	 * @param buildJobList
-	 *          the build job list
+	 * @param buildJobList the build job list
 	 */
 	public void setBuildJobList(List<String> buildJobList) {
 		this.buildJobList = buildJobList;
@@ -162,8 +153,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets build url list.
 	 *
-	 * @param buildUrlList
-	 *          the build url list
+	 * @param buildUrlList the build url list
 	 */
 	public void setBuildUrlList(List<String> buildUrlList) {
 		this.buildUrlList = buildUrlList;
@@ -181,8 +171,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets build start time list.
 	 *
-	 * @param buildStartTimeList
-	 *          the build start time list
+	 * @param buildStartTimeList the build start time list
 	 */
 	public void setBuildStartTimeList(List<String> buildStartTimeList) {
 		this.buildStartTimeList = buildStartTimeList;
@@ -200,8 +189,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets build end time list.
 	 *
-	 * @param buildEndTimeList
-	 *          the build end time list
+	 * @param buildEndTimeList the build end time list
 	 */
 	public void setBuildEndTimeList(List<String> buildEndTimeList) {
 		this.buildEndTimeList = buildEndTimeList;
@@ -219,8 +207,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets duration list.
 	 *
-	 * @param durationList
-	 *          the duration list
+	 * @param durationList the duration list
 	 */
 	public void setDurationList(List<String> durationList) {
 		this.durationList = durationList;
@@ -238,8 +225,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets build status list.
 	 *
-	 * @param buildStatusList
-	 *          the build status list
+	 * @param buildStatusList the build status list
 	 */
 	public void setBuildStatusList(List<String> buildStatusList) {
 		this.buildStatusList = buildStatusList;
@@ -257,8 +243,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * Sets started by list.
 	 *
-	 * @param startedByList
-	 *          the started by list
+	 * @param startedByList the started by list
 	 */
 	public void setStartedByList(List<String> startedByList) {
 		this.startedByList = startedByList;
@@ -274,8 +259,7 @@ public class CodeBuildTimeInfo {
 	/**
 	 * set week list
 	 *
-	 * @param weeksList
-	 *          weeksList
+	 * @param weeksList weeksList
 	 */
 	public void setWeeksList(List<String> weeksList) {
 		this.weeksList = weeksList;

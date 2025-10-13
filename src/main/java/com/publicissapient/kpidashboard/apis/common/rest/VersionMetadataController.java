@@ -42,15 +42,17 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 public class VersionMetadataController {
 
-	@Autowired
-	private VersionMetadataService versionMetadataService;
+	@Autowired private VersionMetadataService versionMetadataService;
 
 	/**
 	 * Gets version details.
 	 *
 	 * @return the version details
 	 */
-	@RequestMapping(value = "/getversionmetadata", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			value = "/getversionmetadata",
+			method = GET,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<VersionDetails> getVersionDetails() {
 		log.debug("VersionMetadataController::getVersionDetails start");
 		VersionDetails versionDetails = versionMetadataService.getVersionMetadata();

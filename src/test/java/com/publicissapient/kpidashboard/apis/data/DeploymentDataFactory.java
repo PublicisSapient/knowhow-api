@@ -39,8 +39,7 @@ public class DeploymentDataFactory {
 	private List<Deployment> deploymentList;
 	private ObjectMapper mapper;
 
-	private DeploymentDataFactory() {
-	}
+	private DeploymentDataFactory() {}
 
 	public static DeploymentDataFactory newInstance(String filePath) {
 
@@ -60,9 +59,10 @@ public class DeploymentDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_BUILD_DATA : filePath;
 
-			deploymentList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<Deployment>>() {
-					});
+			deploymentList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<Deployment>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

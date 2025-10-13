@@ -78,28 +78,20 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	Map<String, List<Tool>> toolGroup = new HashMap<>();
 	List<Tool> toolList = new ArrayList<>();
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	RepoToolsConfigServiceImpl repoToolsConfigService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private AssigneeDetailsRepository assigneeDetailsRepository;
-	@InjectMocks
-	RepoToolCodeCommitKanbanServiceImpl codeCommitServiceImpl;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private AssigneeDetailsRepository assigneeDetailsRepository;
+	@InjectMocks RepoToolCodeCommitKanbanServiceImpl codeCommitServiceImpl;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private List<String> filterCategory = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private KpiRequest kpiRequest;
 
@@ -118,11 +110,13 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 		String[] ids = {"5"};
 		kpiRequest.setIds(ids);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		RepoToolsKpiRequestDataFactory repoToolsKpiRequestDataFactory = RepoToolsKpiRequestDataFactory.newInstance();
+		RepoToolsKpiRequestDataFactory repoToolsKpiRequestDataFactory =
+				RepoToolsKpiRequestDataFactory.newInstance();
 		repoToolKpiMetricResponseList = repoToolsKpiRequestDataFactory.getRepoToolsKpiRequest();
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -130,13 +124,15 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -150,10 +146,16 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 		assigneeDetails.setBasicProjectConfigId("634fdf4ec859a424263dc035");
 		assigneeDetails.setSource("Jira");
 		Set<Assignee> assigneeSet = new HashSet<>();
-		assigneeSet.add(new Assignee("aks", "Akshat Shrivastava",
-				new HashSet<>(Arrays.asList("akshat.shrivastav@publicissapient.com"))));
-		assigneeSet
-				.add(new Assignee("llid", "Hiren", new HashSet<>(Arrays.asList("99163630+hirbabar@users.noreply.github.com"))));
+		assigneeSet.add(
+				new Assignee(
+						"aks",
+						"Akshat Shrivastava",
+						new HashSet<>(Arrays.asList("akshat.shrivastav@publicissapient.com"))));
+		assigneeSet.add(
+				new Assignee(
+						"llid",
+						"Hiren",
+						new HashSet<>(Arrays.asList("99163630+hirbabar@users.noreply.github.com"))));
 		assigneeDetails.setAssignee(assigneeSet);
 		when(assigneeDetailsRepository.findByBasicProjectConfigId(any())).thenReturn(assigneeDetails);
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap())).thenReturn(toolList);
@@ -205,7 +207,12 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 		toolMap.put(new ObjectId("6335368249794a18e8a4479f"), toolGroup);
 	}
 
-	private Tool createTool(String url, String branch, String toolType, String username, String password,
+	private Tool createTool(
+			String url,
+			String branch,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> processorItemList) {
 		Tool tool = new Tool();
 		tool.setUrl(url);
@@ -219,33 +226,41 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 	public void testCodeCommit_final() throws ApplicationException {
 
 		setup();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(kpiHelperService.getRepoToolsKpiMetricResponse(any(), any(), any(), any(), any(), any()))
 				.thenReturn(repoToolKpiMetricResponseList);
 		String kpiRequestTrackerId = "Excel-Bitbucket-5be544de025de212549176a9";
 		when(codeCommitServiceImpl.getRequestTrackerIdKanban()).thenReturn(kpiRequestTrackerId);
-		KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
-		((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(data -> {
-			String projectName = data.getFilter1();
-			switch (projectName) {
-				case "Overall" :
-					assertThat("Overall Commit Details:", data.getValue().size(), equalTo(2));
-					break;
+		KpiElement kpiElement =
+				codeCommitServiceImpl.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+		((List<DataCountGroup>) kpiElement.getTrendValueList())
+				.forEach(
+						data -> {
+							String projectName = data.getFilter1();
+							switch (projectName) {
+								case "Overall":
+									assertThat("Overall Commit Details:", data.getValue().size(), equalTo(2));
+									break;
 
-				case "BRANCH1->PR_10304" :
-					assertThat("Branch1 Commit Details:", data.getValue().size(), equalTo(2));
-					break;
-			}
-		});
+								case "BRANCH1->PR_10304":
+									assertThat("Branch1 Commit Details:", data.getValue().size(), equalTo(2));
+									break;
+							}
+						});
 	}
 
 	@Test
 	public void getQualifierType() {
-		assertThat(KPICode.REPO_TOOL_NUMBER_OF_CHECK_INS.name(), equalTo(codeCommitServiceImpl.getQualifierType()));
+		assertThat(
+				KPICode.REPO_TOOL_NUMBER_OF_CHECK_INS.name(),
+				equalTo(codeCommitServiceImpl.getQualifierType()));
 	}
 
 	@Test

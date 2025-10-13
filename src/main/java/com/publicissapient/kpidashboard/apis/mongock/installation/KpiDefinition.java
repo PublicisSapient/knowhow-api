@@ -63,10 +63,13 @@ public class KpiDefinition {
 		this.mongoTemplate = mongoTemplate;
 
 		KpiDefinationDataFactory kpiDefinationDataFactory = KpiDefinationDataFactory.newInstance();
-		KpiColumnConfigDataFactory kpiColumnConfigDataFactory = KpiColumnConfigDataFactory.newInstance();
-		KpiCategoryMappingDataFactory kpiCategoryMappingDataFactory = KpiCategoryMappingDataFactory.newInstance();
+		KpiColumnConfigDataFactory kpiColumnConfigDataFactory =
+				KpiColumnConfigDataFactory.newInstance();
+		KpiCategoryMappingDataFactory kpiCategoryMappingDataFactory =
+				KpiCategoryMappingDataFactory.newInstance();
 		KpiCategoryDataFactory kpiCategoryDataFactory = KpiCategoryDataFactory.newInstance();
-		FieldMappingStructureDataFactory fieldMappingStructureDataFactory = FieldMappingStructureDataFactory.newInstance();
+		FieldMappingStructureDataFactory fieldMappingStructureDataFactory =
+				FieldMappingStructureDataFactory.newInstance();
 
 		kpiList = kpiDefinationDataFactory.getKpiList();
 		kpiColumnConfigs = kpiColumnConfigDataFactory.getKpiColumnConfigs();
@@ -79,9 +82,11 @@ public class KpiDefinition {
 	public boolean changeSet() {
 		MongockUtil.saveListToDB(kpiList, KPI_MASTER_COLLECTION, mongoTemplate);
 		MongockUtil.saveListToDB(kpiColumnConfigs, KPI_COLUMN_CONFIGS_COLLECTION, mongoTemplate);
-		MongockUtil.saveListToDB(kpiCategoryMappingList, KPI_CATEGORY_MAPPING_COLLECTION, mongoTemplate);
+		MongockUtil.saveListToDB(
+				kpiCategoryMappingList, KPI_CATEGORY_MAPPING_COLLECTION, mongoTemplate);
 		MongockUtil.saveListToDB(kpiCategoryList, KPI_CATEGORY_COLLECTION, mongoTemplate);
-		MongockUtil.saveListToDB(fieldMappingStructureList, FIELD_MAPPING_STRUCTURE_COLLECTION, mongoTemplate);
+		MongockUtil.saveListToDB(
+				fieldMappingStructureList, FIELD_MAPPING_STRUCTURE_COLLECTION, mongoTemplate);
 		return true;
 	}
 

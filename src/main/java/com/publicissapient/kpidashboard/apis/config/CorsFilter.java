@@ -44,11 +44,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CorsFilter extends OncePerRequestFilter {
 
-	@Autowired
-	private CustomApiConfig apiSettings;
+	@Autowired private CustomApiConfig apiSettings;
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	protected void doFilterInternal(
+			HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		// Added code to handle the CORS security
 		if (isValidCORSRequest(request)) {
@@ -98,8 +98,8 @@ public class CorsFilter extends OncePerRequestFilter {
 	 * @return
 	 * @throws MalformedURLException
 	 */
-	private Boolean validateOriginWithWhitelist(List<String> originWhiteList, Boolean theResult, String origin)
-			throws MalformedURLException {
+	private Boolean validateOriginWithWhitelist(
+			List<String> originWhiteList, Boolean theResult, String origin) throws MalformedURLException {
 		Boolean result = theResult;
 		String originHost = new URL(origin).getHost();
 		log.debug("value of orignHost : {}", originHost);
@@ -120,19 +120,25 @@ public class CorsFilter extends OncePerRequestFilter {
 	 */
 	private void setCORSHeaders(HttpServletRequest request, HttpServletResponse response) {
 		// moved the header keys and values to CORSConstants.java
-		String orign = CommonUtils
-				.handleCrossScriptingTaintedValue(request.getHeader(CORSConstants.HEADER_VALUE_ACCESS_CONTROL_ORIGIN));
+		String orign =
+				CommonUtils.handleCrossScriptingTaintedValue(
+						request.getHeader(CORSConstants.HEADER_VALUE_ACCESS_CONTROL_ORIGIN));
 		response.setHeader(CORSConstants.HEADER_NAME_ACCESS_CONTROL_ALLOW_ORIGIN, orign);
-		response.setHeader(CORSConstants.HEADER_NAME_ACCESS_CONTROL_ALLOW_METHODS,
+		response.setHeader(
+				CORSConstants.HEADER_NAME_ACCESS_CONTROL_ALLOW_METHODS,
 				CORSConstants.HEADER_VALUE_ALLOWED_METHODS);
-		response.setHeader(CORSConstants.HEADER_NAME_ACCESS_CONTROL_MAX_AGE, CORSConstants.HEADER_VALUE_MAX_AGE);
-		response.setHeader(CORSConstants.HEADER_NAME_ACCESS_CONTROL_ALLOW_HEADERS,
+		response.setHeader(
+				CORSConstants.HEADER_NAME_ACCESS_CONTROL_MAX_AGE, CORSConstants.HEADER_VALUE_MAX_AGE);
+		response.setHeader(
+				CORSConstants.HEADER_NAME_ACCESS_CONTROL_ALLOW_HEADERS,
 				CORSConstants.HEADER_VALUE_ALLOWED_HEADERS);
-		response.addHeader(CORSConstants.HEADER_NAME_ACCESS_CONTROL_EXPOSE_HEADERS,
+		response.addHeader(
+				CORSConstants.HEADER_NAME_ACCESS_CONTROL_EXPOSE_HEADERS,
 				CORSConstants.HEADER_VALUE_EXPOSE_HEADERS);
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 		// Set HSTS header - MAX age is for 10 years
-		response.setHeader(CORSConstants.STRICT_TRANSPORT_SECURITY,
+		response.setHeader(
+				CORSConstants.STRICT_TRANSPORT_SECURITY,
 				"max-age=" + apiSettings.getMaxAgeInSeconds() + "; includeSubDomains");
 		ExecutionLogContext executionLogContext = new ExecutionLogContext();
 		executionLogContext.setRequestId(request.getHeader(CORSConstants.REQUEST_ID));

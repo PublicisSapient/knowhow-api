@@ -60,39 +60,40 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JenkinsServiceR {
 
-	@Autowired
-	private FilterHelperService filterHelperService;
+	@Autowired private FilterHelperService filterHelperService;
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Autowired private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	private boolean referFromProjectCache = true;
 
 	@SuppressWarnings({"unchecked"})
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
 
-		log.info("[JENKINS][{}]. Processing KPI calculation for data {}", kpiRequest.getRequestTrackerId(),
+		log.info(
+				"[JENKINS][{}]. Processing KPI calculation for data {}",
+				kpiRequest.getRequestTrackerId(),
 				kpiRequest.getKpiList());
-		List<KpiElement> origRequestedKpis = kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
+		List<KpiElement> origRequestedKpis =
+				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
 		String[] projectKeyCache = null;
 		try {
 
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-			String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(), false);
+			String groupName =
+					filterHelperService.getHierarachyLevelId(
+							kpiRequest.getLevel(), kpiRequest.getLabel(), false);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
 			}
-			List<AccountHierarchyData> filteredAccountDataList = filterHelperService.getFilteredBuilds(kpiRequest, groupName);
+			List<AccountHierarchyData> filteredAccountDataList =
+					filterHelperService.getFilteredBuilds(kpiRequest, groupName);
 			if (!CollectionUtils.isEmpty(filteredAccountDataList)) {
 				projectKeyCache = getProjectKeyCache(kpiRequest, filteredAccountDataList);
 
@@ -102,33 +103,51 @@ public class JenkinsServiceR {
 				}
 
 				List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
-				if (CollectionUtils.isNotEmpty(cachedData))
-					return cachedData;
+				if (CollectionUtils.isNotEmpty(cachedData)) return cachedData;
 
-				TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-						filteredAccountDataList, null, filterHelperService.getFirstHierarachyLevel(), filterHelperService
-								.getHierarchyIdLevelMap(false).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, 0));
+				TreeAggregatorDetail treeAggregatorDetail =
+						KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+								kpiRequest,
+								filteredAccountDataList,
+								null,
+								filterHelperService.getFirstHierarachyLevel(),
+								filterHelperService
+										.getHierarchyIdLevelMap(false)
+										.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, 0));
 				updateTreeAggregatorDetail(kpiRequest, treeAggregatorDetail);
-				ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+				ExecutorService executorService =
+						Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 				List<CompletableFuture<Void>> futures = new ArrayList<>();
 				for (KpiElement kpiElement : kpiRequest.getKpiList()) {
-					CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-						try {
-							responseList.add(calculateAllKPIAggregatedMetrics(kpiRequest, kpiElement, treeAggregatorDetail));
-						} catch (Exception e) {
-							log.error("Error while KPI calculation for data {}", kpiRequest.getKpiList(), e);
-						}
-					}, executorService);
+					CompletableFuture<Void> future =
+							CompletableFuture.runAsync(
+									() -> {
+										try {
+											responseList.add(
+													calculateAllKPIAggregatedMetrics(
+															kpiRequest, kpiElement, treeAggregatorDetail));
+										} catch (Exception e) {
+											log.error(
+													"Error while KPI calculation for data {}", kpiRequest.getKpiList(), e);
+										}
+									},
+									executorService);
 					futures.add(future);
 				}
-				CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+				CompletableFuture<Void> allFutures =
+						CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 				allFutures.join(); // Wait for all tasks to complete
 				executorService.shutdown();
 
-				List<KpiElement> missingKpis = origRequestedKpis.stream().filter(
-						reqKpi -> responseList.stream().noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
-						.collect(Collectors.toList());
+				List<KpiElement> missingKpis =
+						origRequestedKpis.stream()
+								.filter(
+										reqKpi ->
+												responseList.stream()
+														.noneMatch(
+																responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
+								.collect(Collectors.toList());
 				responseList.addAll(missingKpis);
 				setIntoApplicationCache(kpiRequest, responseList, groupId, projectKeyCache);
 			} else {
@@ -136,23 +155,33 @@ public class JenkinsServiceR {
 			}
 
 		} catch (Exception e) {
-			log.error("[JIRA][{}]. Error while KPI calculation for data {} {}", kpiRequest.getRequestTrackerId(),
-					kpiRequest.getKpiList(), e);
+			log.error(
+					"[JIRA][{}]. Error while KPI calculation for data {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					e);
 			throw new HttpMessageNotWritableException(e.getMessage(), e);
 		}
 
 		return responseList;
 	}
 
-	private List<KpiElement> getCachedData(KpiRequest kpiRequest, Integer groupId, String[] projectKeyCache) {
+	private List<KpiElement> getCachedData(
+			KpiRequest kpiRequest, Integer groupId, String[] projectKeyCache) {
 		Object cachedData = null;
 		if (!customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId)) {
-			cachedData = cacheService.getFromApplicationCache(projectKeyCache, KPISource.JENKINS.name(), groupId,
-					kpiRequest.getSprintIncluded());
+			cachedData =
+					cacheService.getFromApplicationCache(
+							projectKeyCache, KPISource.JENKINS.name(), groupId, kpiRequest.getSprintIncluded());
 		}
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				null != cachedData) {
-			log.info("[JENKINS][{}]. Fetching value from cache for {}", kpiRequest.getRequestTrackerId(),
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+				&& null != cachedData) {
+			log.info(
+					"[JENKINS][{}]. Fetching value from cache for {}",
+					kpiRequest.getRequestTrackerId(),
 					kpiRequest.getIds());
 			return (List<KpiElement>) cachedData;
 		}
@@ -160,17 +189,16 @@ public class JenkinsServiceR {
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param filteredAccountDataList
-	 *          filteredAccountDataList
+	 * @param kpiRequest kpiRequest
+	 * @param filteredAccountDataList filteredAccountDataList
 	 * @return List<AccountHierarchyData> list of hierarchy
 	 */
-	private List<AccountHierarchyData> getAuthorizedFilteredList(KpiRequest kpiRequest,
-			List<AccountHierarchyData> filteredAccountDataList) {
+	private List<AccountHierarchyData> getAuthorizedFilteredList(
+			KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
 
 		kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-		if (Boolean.TRUE.equals(referFromProjectCache) && !authorizedProjectsService.ifSuperAdminUser()) {
+		if (Boolean.TRUE.equals(referFromProjectCache)
+				&& !authorizedProjectsService.ifSuperAdminUser()) {
 			filteredAccountDataList = authorizedProjectsService.filterProjects(filteredAccountDataList);
 		}
 
@@ -178,16 +206,17 @@ public class JenkinsServiceR {
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param filteredAccountDataList
-	 *          filteredAccountDataList
+	 * @param kpiRequest kpiRequest
+	 * @param filteredAccountDataList filteredAccountDataList
 	 * @return array of string
 	 */
-	private String[] getProjectKeyCache(KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
+	private String[] getProjectKeyCache(
+			KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
 		String[] projectKeyCache;
-		if (Boolean.TRUE.equals(referFromProjectCache) && !authorizedProjectsService.ifSuperAdminUser()) {
-			projectKeyCache = authorizedProjectsService.getProjectKey(filteredAccountDataList, kpiRequest);
+		if (Boolean.TRUE.equals(referFromProjectCache)
+				&& !authorizedProjectsService.ifSuperAdminUser()) {
+			projectKeyCache =
+					authorizedProjectsService.getProjectKey(filteredAccountDataList, kpiRequest);
 		} else {
 			projectKeyCache = kpiRequest.getIds();
 		}
@@ -195,16 +224,13 @@ public class JenkinsServiceR {
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param treeAggregatorDetail
-	 *          treeAggregatorDetail
+	 * @param kpiRequest kpiRequest
+	 * @param kpiElement kpiElement
+	 * @param treeAggregatorDetail treeAggregatorDetail
 	 * @return KpiElement kpiElement
 	 */
-	private KpiElement calculateAllKPIAggregatedMetrics(KpiRequest kpiRequest, KpiElement kpiElement,
-			TreeAggregatorDetail treeAggregatorDetail) {
+	private KpiElement calculateAllKPIAggregatedMetrics(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail) {
 
 		JenkinsKPIService<?, ?, ?> jenkinsKPIService = null;
 		KPICode kpi = KPICode.getKPI(kpiElement.getKpiId());
@@ -212,21 +238,29 @@ public class JenkinsServiceR {
 			jenkinsKPIService = JenkinsKPIServiceFactory.getJenkinsKPIService(kpi.name());
 			long startTime = System.currentTimeMillis();
 
-			TreeAggregatorDetail treeAggregatorDetailClone = (TreeAggregatorDetail) SerializationUtils
-					.clone(treeAggregatorDetail);
-			List<Node> projectNodes = treeAggregatorDetailClone.getMapOfListOfProjectNodes()
-					.get(CommonConstant.PROJECT.toLowerCase());
+			TreeAggregatorDetail treeAggregatorDetailClone =
+					(TreeAggregatorDetail) SerializationUtils.clone(treeAggregatorDetail);
+			List<Node> projectNodes =
+					treeAggregatorDetailClone
+							.getMapOfListOfProjectNodes()
+							.get(CommonConstant.PROJECT.toLowerCase());
 
-			if (!projectNodes.isEmpty() &&
-					(projectNodes.size() > 1 || kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
-				kpiElement = jenkinsKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
+			if (!projectNodes.isEmpty()
+					&& (projectNodes.size() > 1
+							|| kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
+				kpiElement =
+						jenkinsKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
 				kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 				if (projectNodes.size() == 1) {
 					kpiHelperService.isMandatoryFieldSet(kpi, kpiElement, projectNodes.get(0));
 				}
 			}
 			long processTime = System.currentTimeMillis() - startTime;
-			log.info("[JENKINS-{}-TIME][{}]. KPI took {} ms", kpi.name(), kpiRequest.getRequestTrackerId(), processTime);
+			log.info(
+					"[JENKINS-{}-TIME][{}]. KPI took {} ms",
+					kpi.name(),
+					kpiRequest.getRequestTrackerId(),
+					processTime);
 		} catch (ApplicationException exception) {
 			kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
 			log.error("Kpi not found", exception);
@@ -239,58 +273,74 @@ public class JenkinsServiceR {
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param responseList
-	 *          responseList
-	 * @param groupId
-	 *          groupId
-	 * @param projectKeyCache
-	 *          projectKeyCache
+	 * @param kpiRequest kpiRequest
+	 * @param responseList responseList
+	 * @param groupId groupId
+	 * @param projectKeyCache projectKeyCache
 	 */
-	private void setIntoApplicationCache(KpiRequest kpiRequest, List<KpiElement> responseList, Integer groupId,
+	private void setIntoApplicationCache(
+			KpiRequest kpiRequest,
+			List<KpiElement> responseList,
+			Integer groupId,
 			String[] projectKeyCache) {
-		Integer projectLevel = filterHelperService.getHierarchyIdLevelMap(false)
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		Integer projectLevel =
+				filterHelperService
+						.getHierarchyIdLevelMap(false)
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
 				&& projectLevel >= kpiRequest.getLevel()
 				&& !customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId)) {
 
-			cacheService.setIntoApplicationCache(projectKeyCache, responseList, KPISource.JENKINS.name(), groupId,
+			cacheService.setIntoApplicationCache(
+					projectKeyCache,
+					responseList,
+					KPISource.JENKINS.name(),
+					groupId,
 					kpiRequest.getSprintIncluded());
 		}
 	}
 
 	/**
-	 * updates the TreeAggregatorDetail object based on the KpiRequest. If the
-	 * selectedMap in the KpiRequest does not contain the HIERARCHY_LEVEL_ID_SPRINT,
-	 * filter out the sprint by sprintCountForKpiCalculation property
+	 * updates the TreeAggregatorDetail object based on the KpiRequest. If the selectedMap in the
+	 * KpiRequest does not contain the HIERARCHY_LEVEL_ID_SPRINT, filter out the sprint by
+	 * sprintCountForKpiCalculation property
 	 *
-	 * @param kpiRequest
-	 *          KpiRequest object containing the selectedMap.
-	 * @param treeAggregatorDetail
-	 *          The TreeAggregatorDetail object to be updated.
+	 * @param kpiRequest KpiRequest object containing the selectedMap.
+	 * @param treeAggregatorDetail The TreeAggregatorDetail object to be updated.
 	 */
-	private void updateTreeAggregatorDetail(KpiRequest kpiRequest, TreeAggregatorDetail treeAggregatorDetail) {
+	private void updateTreeAggregatorDetail(
+			KpiRequest kpiRequest, TreeAggregatorDetail treeAggregatorDetail) {
 		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap())
-				&& org.apache.commons.collections4.CollectionUtils
-						.isEmpty(kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))
+				&& org.apache.commons.collections4.CollectionUtils.isEmpty(
+						kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))
 				&& MapUtils.isNotEmpty(treeAggregatorDetail.getMapOfListOfLeafNodes())) {
 			List<Node> sprintList = new ArrayList<>();
 			if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))) {
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT).stream()
-						.collect(Collectors.groupingBy(Node::getParentId)).forEach((proj, sprints) -> {
-							if (sprints.size() > customApiConfig.getSprintCountForKpiCalculation()) {
-								sprintList.addAll(new ArrayList<>(
-										sprints.subList(0, customApiConfig.getSprintCountForKpiCalculation())));
-							} else {
-								sprintList.addAll(sprints);
-							}
-						});
-				treeAggregatorDetail.getMapOfListOfLeafNodes().put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT,
-						sprintList);
+					treeAggregatorDetail
+							.getMapOfListOfLeafNodes()
+							.get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))) {
+				treeAggregatorDetail
+						.getMapOfListOfLeafNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
+						.stream()
+						.collect(Collectors.groupingBy(Node::getParentId))
+						.forEach(
+								(proj, sprints) -> {
+									if (sprints.size() > customApiConfig.getSprintCountForKpiCalculation()) {
+										sprintList.addAll(
+												new ArrayList<>(
+														sprints.subList(0, customApiConfig.getSprintCountForKpiCalculation())));
+									} else {
+										sprintList.addAll(sprints);
+									}
+								});
+				treeAggregatorDetail
+						.getMapOfListOfLeafNodes()
+						.put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, sprintList);
 			}
 		}
 	}
@@ -298,13 +348,13 @@ public class JenkinsServiceR {
 	/**
 	 * This method is called when the request for kpi is done from exposed API
 	 *
-	 * @param kpiRequest Jenkins KPI request true if flow for precalculated, false for direct
-	 *                   flow.
+	 * @param kpiRequest Jenkins KPI request true if flow for precalculated, false for direct flow.
 	 * @param withCache
 	 * @return List of KPI data
 	 * @throws EntityNotFoundException EntityNotFoundException
 	 */
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache) throws EntityNotFoundException {
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache)
+			throws EntityNotFoundException {
 		referFromProjectCache = withCache;
 		List<KpiElement> kpiElementList = process(kpiRequest);
 		referFromProjectCache = true;

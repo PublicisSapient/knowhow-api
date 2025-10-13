@@ -38,12 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountHierarchiesDataFactory {
 
-	private static final String FILE_PATH_ACCOUNT_HIERARCHIES = "/json/default/account_hierarchy.json";
+	private static final String FILE_PATH_ACCOUNT_HIERARCHIES =
+			"/json/default/account_hierarchy.json";
 	private List<AccountHierarchy> accountHierarchies;
 	private ObjectMapper mapper;
 
-	private AccountHierarchiesDataFactory() {
-	}
+	private AccountHierarchiesDataFactory() {}
 
 	public static AccountHierarchiesDataFactory newInstance(String filePath) {
 
@@ -63,9 +63,10 @@ public class AccountHierarchiesDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ACCOUNT_HIERARCHIES : filePath;
 
-			accountHierarchies = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<AccountHierarchy>>() {
-					});
+			accountHierarchies =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<AccountHierarchy>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}
@@ -88,7 +89,11 @@ public class AccountHierarchiesDataFactory {
 	public List<AccountHierarchy> findByBasicProjectConfigId(String basicProjectConfigId) {
 		return accountHierarchies.stream()
 				.filter(
-						accountHierarchy -> accountHierarchy.getBasicProjectConfigId().toHexString().equals(basicProjectConfigId))
+						accountHierarchy ->
+								accountHierarchy
+										.getBasicProjectConfigId()
+										.toHexString()
+										.equals(basicProjectConfigId))
 				.collect(Collectors.toList());
 	}
 }

@@ -16,7 +16,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author aksshriv1
  */
-@ChangeUnit(id = "release_defectAssignee", order = "9401", author = "aksshriv1", systemVersion = "9.4.0")
+@ChangeUnit(
+		id = "release_defectAssignee",
+		order = "9401",
+		author = "aksshriv1",
+		systemVersion = "9.4.0")
 public class ReleaseDefectAssigneeEnh {
 
 	private final MongoTemplate mongoTemplate;
@@ -34,10 +38,17 @@ public class ReleaseDefectAssigneeEnh {
 
 	public void addFieldToFieldMappingStructure() {
 
-		Document thresholdValueMapping = new Document(FIELD_NAME, "jiraDodKPI143").append("fieldLabel", "DOD Status")
-				.append("fieldType", "chips").append("fieldCategory", "workflow").append("section", "WorkFlow Status Mapping")
-				.append("tooltip", new Document(DEFINITION,
-						"Status/es that identify that an issue is completed based on Definition of Done (DoD)."));
+		Document thresholdValueMapping =
+				new Document(FIELD_NAME, "jiraDodKPI143")
+						.append("fieldLabel", "DOD Status")
+						.append("fieldType", "chips")
+						.append("fieldCategory", "workflow")
+						.append("section", "WorkFlow Status Mapping")
+						.append(
+								"tooltip",
+								new Document(
+										DEFINITION,
+										"Status/es that identify that an issue is completed based on Definition of Done (DoD)."));
 
 		mongoTemplate.getCollection("field_mapping_structure").insertOne(thresholdValueMapping);
 	}
@@ -48,7 +59,9 @@ public class ReleaseDefectAssigneeEnh {
 	}
 
 	public void deleteFieldMappingStructure() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
-		fieldMappingStructure.deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList("jiraDodKPI143"))));
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
+		fieldMappingStructure.deleteMany(
+				new Document(FIELD_NAME, new Document("$in", Arrays.asList("jiraDodKPI143"))));
 	}
 }

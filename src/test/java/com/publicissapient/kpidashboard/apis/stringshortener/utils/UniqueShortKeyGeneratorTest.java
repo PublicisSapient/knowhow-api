@@ -47,8 +47,10 @@ public class UniqueShortKeyGeneratorTest {
 
 	@Test
 	public void testGenerateShortKeyWithNullInput() {
-		assertThrows(IllegalArgumentException.class, () -> {
-			UniqueShortKeyGenerator.generateShortKey(null);
-		});
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> {
+					UniqueShortKeyGenerator.generateShortKey(null);
+				});
 	}
 }

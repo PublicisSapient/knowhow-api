@@ -48,8 +48,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This controller class managed all forgot password and reset new password rest
- * requests
+ * This controller class managed all forgot password and reset new password rest requests
  *
  * @author vijmishr1
  */
@@ -58,39 +57,41 @@ import lombok.extern.slf4j.Slf4j;
 public class ForgotPasswordController {
 
 	/** Relative path of reset password of UI */
-	private static final String UI_RESET_PATH = "/authentication/resetPassword?resetToken="; // NOSONAR
+	private static final String UI_RESET_PATH =
+			"/authentication/resetPassword?resetToken="; // NOSONAR
 
 	/** Relative path of accountType of UI */
-	private static final String UI_ACCOUNT_PATH = "/authentication/accountType?resetTokenStatus="; // NOSONAR
+	private static final String UI_ACCOUNT_PATH =
+			"/authentication/accountType?resetTokenStatus="; // NOSONAR
 
-	@Autowired
-	private ForgotPasswordService forgotPasswordService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private ForgotPasswordService forgotPasswordService;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
 	 * Creates token for an user account.
 	 *
-	 * <p>
-	 * processForgotPassword creates a token for an user account by validating email
-	 * id from <tt>ForgotPasswordRequest</tt> object. Sends an email to the user
-	 * account if the mail id is valid
+	 * <p>processForgotPassword creates a token for an user account by validating email id from
+	 * <tt>ForgotPasswordRequest</tt> object. Sends an email to the user account if the mail id is
+	 * valid
 	 *
 	 * @param httpServletRequest
 	 * @param request
-	 * @return ServiceResponse with <tt>success</tt> message and
-	 *         <tt>authentication</tt> object if email is sent successfully.
-	 *         <tt>logError</tt> message and <tt>null</tt> incase of
-	 *         <tt>UnknownHostException</tt> occurred.
+	 * @return ServiceResponse with <tt>success</tt> message and <tt>authentication</tt> object if
+	 *     email is sent successfully. <tt>logError</tt> message and <tt>null</tt> incase of
+	 *     <tt>UnknownHostException</tt> occurred.
 	 */
-	@PostMapping(value = "/forgotPassword", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> processForgotPassword(@RequestBody ForgotPasswordRequest request,
-			HttpServletRequest httpServletRequest) {
+	@PostMapping(
+			value = "/forgotPassword",
+			consumes = APPLICATION_JSON_VALUE,
+			produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> processForgotPassword(
+			@RequestBody ForgotPasswordRequest request, HttpServletRequest httpServletRequest) {
 		boolean isSuccess = false;
 		log.info("ForgotPasswordController: requested mail {}", request.getEmail());
 		Authentication authentication = null;
 		try {
-			String serverPath = httpServletRequest.getScheme() + getApiHost() + httpServletRequest.getContextPath();
+			String serverPath =
+					httpServletRequest.getScheme() + getApiHost() + httpServletRequest.getContextPath();
 			authentication = forgotPasswordService.processForgotPassword(request.getEmail(), serverPath);
 			if (null != authentication) {
 				isSuccess = true;
@@ -109,21 +110,25 @@ public class ForgotPasswordController {
 	/**
 	 * Validates token generated for reset password.
 	 *
-	 * <p>
-	 * validateToken method forwards the request to ForgotPasswordService to
-	 * validate 128-bit UUID token
+	 * <p>validateToken method forwards the request to ForgotPasswordService to validate 128-bit UUID
+	 * token
 	 *
 	 * @param httpServletRequest
 	 * @param token
 	 * @return RedirectView with <tt>UI_RESET_PATH</tt> if the token valid and
-	 *         <tt>UI_ACCOUNT_PATH</tt> incase of invalid token.
+	 *     <tt>UI_ACCOUNT_PATH</tt> incase of invalid token.
 	 * @throws UnknownHostException
 	 */
-	@RequestMapping(value = "/validateEmailToken", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public RedirectView validateToken(HttpServletRequest httpServletRequest, @RequestParam("token") UUID token)
+	@RequestMapping(
+			value = "/validateEmailToken",
+			method = GET,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	public RedirectView validateToken(
+			HttpServletRequest httpServletRequest, @RequestParam("token") UUID token)
 			throws UnknownHostException {
 		log.info("ForgotPasswordController: requested token for validate {}", token);
-		ResetPasswordTokenStatusEnum tokenStatus = forgotPasswordService.validateEmailToken(token.toString());
+		ResetPasswordTokenStatusEnum tokenStatus =
+				forgotPasswordService.validateEmailToken(token.toString());
 		String serverPath = httpServletRequest.getScheme() + getUIHost();
 		if (tokenStatus != null && tokenStatus.equals(ResetPasswordTokenStatusEnum.VALID)) {
 			return new RedirectView(serverPath + UI_RESET_PATH + token);
@@ -135,17 +140,19 @@ public class ForgotPasswordController {
 	/**
 	 * Resets the password after validating the token
 	 *
-	 * <p>
-	 * resetPassword method accepts ResetPasswordRequest object as param and
-	 * forwards the request to ForgotPasswordService to validate the request.
+	 * <p>resetPassword method accepts ResetPasswordRequest object as param and forwards the request
+	 * to ForgotPasswordService to validate the request.
 	 *
 	 * @param updatedPasswordRequest
-	 * @return ServiceResponse with <tt>sucess</tt> if the request is valid and
-	 *         incase of a invalid request appends the logError message with
-	 *         response code <tt>-14</tt>
+	 * @return ServiceResponse with <tt>sucess</tt> if the request is valid and incase of a invalid
+	 *     request appends the logError message with response code <tt>-14</tt>
 	 */
-	@RequestMapping(value = "/resetPassword", method = POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> resetPassword(@RequestBody ResetPasswordRequest updatedPasswordRequest) {
+	@RequestMapping(
+			value = "/resetPassword",
+			method = POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> resetPassword(
+			@RequestBody ResetPasswordRequest updatedPasswordRequest) {
 		boolean isSuccess = false;
 		Authentication authentication = null;
 		try {
@@ -168,7 +175,10 @@ public class ForgotPasswordController {
 
 		StringBuilder urlPath = new StringBuilder();
 		if (StringUtils.isNotEmpty(customApiConfig.getUiHost())) {
-			urlPath.append(':').append(File.separator + File.separator).append(customApiConfig.getUiHost().trim());
+			urlPath
+					.append(':')
+					.append(File.separator + File.separator)
+					.append(customApiConfig.getUiHost().trim());
 			// append port if local setup
 			if (StringUtils.isNotEmpty(customApiConfig.getServerPort())) {
 				urlPath.append(':').append(customApiConfig.getServerPort());

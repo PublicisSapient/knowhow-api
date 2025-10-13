@@ -73,24 +73,17 @@ public class TestExecutionKanbanServiceImplTest {
 	private static final String TEST_EXECUTION_DETAIL = "testExecutionDetail";
 	private static final String TESTCASEKEY = "testCaseData";
 	private static final String AUTOMATEDTESTCASEKEY = "automatedTestCaseData";
-	@InjectMocks
-	TestExecutionKanbanServiceImpl testExecutionKanbanService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	KanbanTestExecutionRepository kanbanTestExecutionRepository;
-	@Mock
-	FilterHelperService flterHelperService;
+	@InjectMocks TestExecutionKanbanServiceImpl testExecutionKanbanService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock CacheService cacheService;
+	@Mock KanbanTestExecutionRepository kanbanTestExecutionRepository;
+	@Mock FilterHelperService flterHelperService;
 	private List<KanbanTestExecution> testExecutionList = new ArrayList<>();
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyDataKanban> accountHierarchyDataList = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 
@@ -109,34 +102,41 @@ public class TestExecutionKanbanServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		kpiWiseAggregation.put("testExecutionPercentage", "average");
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataList =
+				accountHierarchyFilterDataFactory.getAccountHierarchyKanbanDataList();
 		testExecutionList = KanbanTestExecutionDataFactory.newInstance().getKanbanTestExecutionList();
 	}
 
 	@Test
 	public void getQualifierType() {
-		Assert.assertEquals(KPICode.TEST_EXECUTION_KANBAN.name(), testExecutionKanbanService.getQualifierType());
+		Assert.assertEquals(
+				KPICode.TEST_EXECUTION_KANBAN.name(), testExecutionKanbanService.getQualifierType());
 	}
 
 	@Test
 	public void getKpiData() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataList, "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataList, "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 		Map<String, AdditionalFilterCategory> additionalFilterCategoryList = new HashMap<>();
 		AdditionalFilterCategory additionalFilterCategory = new AdditionalFilterCategory();
 		additionalFilterCategory.setLevel(1);
@@ -146,7 +146,8 @@ public class TestExecutionKanbanServiceImplTest {
 
 		kpiWiseAggregation.put("testExecutionKanbanPercentage", "average");
 		String kpiRequestTrackerId = "EXCEL-Zephyr-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		when(kanbanTestExecutionRepository.findTestExecutionDetailByFilters(any(), any(), any(), any()))
@@ -154,9 +155,13 @@ public class TestExecutionKanbanServiceImplTest {
 
 		try {
 			fetchKPIDataFromDb();
-			KpiElement kpiElement = testExecutionKanbanService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Test Exceution Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
+			KpiElement kpiElement =
+					testExecutionKanbanService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Test Exceution Value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(0));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -167,7 +172,8 @@ public class TestExecutionKanbanServiceImplTest {
 		Map<String, Object> filterComponentIdWiseDefectMap = new HashMap<>();
 		filterComponentIdWiseDefectMap.put(AUTOMATEDTESTCASEKEY, null);
 		filterComponentIdWiseDefectMap.put(TESTCASEKEY, null);
-		Double automatedValue = testExecutionKanbanService.calculateKPIMetrics(filterComponentIdWiseDefectMap);
+		Double automatedValue =
+				testExecutionKanbanService.calculateKPIMetrics(filterComponentIdWiseDefectMap);
 		assertThat("Automated Percentage value :", automatedValue, equalTo(null));
 	}
 
@@ -175,23 +181,31 @@ public class TestExecutionKanbanServiceImplTest {
 	public void fetchKPIDataFromDb() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataList, "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataList, "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 		when(kanbanTestExecutionRepository.findTestExecutionDetailByFilters(any(), any(), any(), any()))
 				.thenReturn(testExecutionList);
-		Map<String, Object> resultMap = testExecutionKanbanService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
-		assertThat("Total Result Count :", ((List<KanbanTestExecution>) (resultMap.get(TEST_EXECUTION_DETAIL))).size(),
+		Map<String, Object> resultMap =
+				testExecutionKanbanService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
+		assertThat(
+				"Total Result Count :",
+				((List<KanbanTestExecution>) (resultMap.get(TEST_EXECUTION_DETAIL))).size(),
 				equalTo(3));
 	}
 
 	@Test
 	public void calculateKpiValueTest() {
-		Double kpiValue = testExecutionKanbanService.calculateKpiValue(Arrays.asList(1.0, 2.0), "kpi70");
+		Double kpiValue =
+				testExecutionKanbanService.calculateKpiValue(Arrays.asList(1.0, 2.0), "kpi70");
 		assertThat("Kpi value  :", kpiValue, equalTo(0.0));
 	}
 }

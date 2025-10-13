@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import com.publicissapient.kpidashboard.apis.auth.model.SystemUser;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -52,6 +51,7 @@ import org.springframework.web.client.RestTemplate;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.PendingApprovalException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.SystemUser;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.token.CookieUtil;
 import com.publicissapient.kpidashboard.apis.errors.APIKeyInvalidException;
@@ -65,8 +65,7 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepositor
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class provides method to perform CRUD and validation operations on user
- * authentication data.
+ * This class provides method to perform CRUD and validation operations on user authentication data.
  *
  * @author prijain3
  */
@@ -80,8 +79,11 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 	private final CookieUtil cookieUtil;
 
 	@Autowired
-	public DefaultAuthenticationServiceImpl(AuthenticationRepository authenticationRepository,
-			AuthProperties authProperties, UserInfoRepository userInfoRepository, CookieUtil cookieUtil) {
+	public DefaultAuthenticationServiceImpl(
+			AuthenticationRepository authenticationRepository,
+			AuthProperties authProperties,
+			UserInfoRepository userInfoRepository,
+			CookieUtil cookieUtil) {
 		this.authenticationRepository = authenticationRepository;
 		this.authProperties = authProperties;
 		this.userInfoRepository = userInfoRepository;
@@ -107,14 +109,16 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 	/** {@inheritDoc} */
 	@Override
-	public org.springframework.security.core.Authentication create(String username, String password, String email) {
+	public org.springframework.security.core.Authentication create(
+			String username, String password, String email) {
 		Authentication authentication = new Authentication(username, password, email);
 		if (authenticationRepository.count() == 0) {
 			authentication.setApproved(true);
 		}
 		authentication = authenticationRepository.save(authentication);
-		UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(authentication.getUsername(),
-				authentication.getPassword(), new ArrayList<>());
+		UsernamePasswordAuthenticationToken token =
+				new UsernamePasswordAuthenticationToken(
+						authentication.getUsername(), authentication.getPassword(), new ArrayList<>());
 		token.setDetails(AuthType.STANDARD);
 		return token;
 	}
@@ -195,12 +199,14 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 	/** {@inheritDoc} */
 	@Override
-	public org.springframework.security.core.Authentication authenticate(String username, String password) {
+	public org.springframework.security.core.Authentication authenticate(
+			String username, String password) {
 		Authentication authentication = authenticationRepository.findByUsername(username);
 		DateTime now = DateTime.now(DateTimeZone.UTC);
 
 		if (!Pattern.matches(CommonConstant.USERNAME_PATTERN, username) || authentication == null) {
-			throw new BadCredentialsException("Login Failed: The username or password entered is incorrect");
+			throw new BadCredentialsException(
+					"Login Failed: The username or password entered is incorrect");
 		}
 
 		if (checkForResetFailAttempts(authentication, now)) {
@@ -210,44 +216,48 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 		}
 
 		if (!authentication.isApproved()) {
-			throw new PendingApprovalException("Login Failed: Your access request is pending for approval");
+			throw new PendingApprovalException(
+					"Login Failed: Your access request is pending for approval");
 		}
 
 		if (authentication.checkPassword(password)) {
-			return new UsernamePasswordAuthenticationToken(authentication.getUsername(), authentication.getPassword(),
-					new ArrayList<>());
+			return new UsernamePasswordAuthenticationToken(
+					authentication.getUsername(), authentication.getPassword(), new ArrayList<>());
 		}
 		// commented code to fix the security issues
 		// throw new BadCredentialsException("Login Failed: Invalid credentials
 		// for user
-		throw new BadCredentialsException("Login Failed: The username or password entered is incorrect");
+		throw new BadCredentialsException(
+				"Login Failed: The username or password entered is incorrect");
 	}
 
 	/**
 	 * Checks if user is locked
 	 *
-	 * @param authentication
-	 *          the Authentication
+	 * @param authentication the Authentication
 	 * @return true if user is locked
 	 */
 	private boolean checkForLockedUser(Authentication authentication) {
 
-		return authentication != null && authentication.getLoginAttemptCount() != null &&
-				authentication.getLoginAttemptCount().equals(authProperties.getAccountLockedThreshold());
+		return authentication != null
+				&& authentication.getLoginAttemptCount() != null
+				&& authentication.getLoginAttemptCount().equals(authProperties.getAccountLockedThreshold());
 	}
 
 	/**
 	 * Checks if need to reset fail attempts.
 	 *
-	 * @param authentication
-	 *          Authentication
-	 * @param now
-	 *          current date time
+	 * @param authentication Authentication
+	 * @param now current date time
 	 * @return true or false
 	 */
 	private boolean checkForResetFailAttempts(Authentication authentication, DateTime now) {
-		return authentication != null && null != authentication.getLastUnsuccessfulLoginTime() &&
-				now.isAfter(authentication.getLastUnsuccessfulLoginTime().plusMinutes(authProperties.getAccountLockedPeriod()));
+		return authentication != null
+				&& null != authentication.getLastUnsuccessfulLoginTime()
+				&& now.isAfter(
+						authentication
+								.getLastUnsuccessfulLoginTime()
+								.plusMinutes(authProperties.getAccountLockedPeriod()));
 	}
 
 	/** {@inheritDoc} */
@@ -281,15 +291,17 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 	/** {@inheritDoc} */
 	@Override
-	public org.springframework.security.core.Authentication changePassword(String email, String password) {
+	public org.springframework.security.core.Authentication changePassword(
+			String email, String password) {
 		UsernamePasswordAuthenticationToken token = null;
 		List<Authentication> authenticateList = authenticationRepository.findByEmail(email);
 		if (CollectionUtils.isNotEmpty(authenticateList)) {
 			Authentication auth = authenticateList.get(0);
 			auth.setPassword(password);
 			Authentication authentication = authenticationRepository.save(auth);
-			token = new UsernamePasswordAuthenticationToken(authentication.getUsername(), authentication.getPassword(),
-					new ArrayList<>());
+			token =
+					new UsernamePasswordAuthenticationToken(
+							authentication.getUsername(), authentication.getPassword(), new ArrayList<>());
 			token.setDetails(AuthType.STANDARD);
 		}
 		return token;
@@ -319,9 +331,11 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public String getLoggedInUser() {
-		org.springframework.security.core.Authentication authentication = SecurityContextHolder.getContext()
-				.getAuthentication();
-		if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+		org.springframework.security.core.Authentication authentication =
+				SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null
+				&& authentication.isAuthenticated()
+				&& !authentication.getName().equals("anonymousUser")) {
 			return authentication.getPrincipal().toString();
 		}
 		// If running via Cron, return a default system user
@@ -348,29 +362,36 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 	public List<UserAccessApprovalResponseDTO> getAuthenticationByApproved(boolean approved) {
 		List<UserAccessApprovalResponseDTO> userAccessApprovalResponseDTOList = new ArrayList<>();
 		List<Authentication> nonApprovedUserList = authenticationRepository.findByApproved(approved);
-		nonApprovedUserList.stream().filter(Objects::nonNull).forEach(userInfoDTO -> {
-			UserAccessApprovalResponseDTO userAccessApprovalResponseDTO = new UserAccessApprovalResponseDTO();
-			userAccessApprovalResponseDTO.setUsername(userInfoDTO.getUsername());
-			userAccessApprovalResponseDTO.setEmail(userInfoDTO.getEmail());
-			userAccessApprovalResponseDTO.setApproved(userInfoDTO.isApproved());
-			List<String> whitelistDomain = authProperties.getWhiteListDomainForEmail();
-			if (CollectionUtils.isNotEmpty(whitelistDomain) &&
-					whitelistDomain.stream().anyMatch(domain -> userInfoDTO.getEmail().contains(domain))) {
-				userAccessApprovalResponseDTO.setWhitelistDomainEmail(true);
-			} else {
-				userAccessApprovalResponseDTO.setWhitelistDomainEmail(false);
-			}
-			userAccessApprovalResponseDTOList.add(userAccessApprovalResponseDTO);
-		});
+		nonApprovedUserList.stream()
+				.filter(Objects::nonNull)
+				.forEach(
+						userInfoDTO -> {
+							UserAccessApprovalResponseDTO userAccessApprovalResponseDTO =
+									new UserAccessApprovalResponseDTO();
+							userAccessApprovalResponseDTO.setUsername(userInfoDTO.getUsername());
+							userAccessApprovalResponseDTO.setEmail(userInfoDTO.getEmail());
+							userAccessApprovalResponseDTO.setApproved(userInfoDTO.isApproved());
+							List<String> whitelistDomain = authProperties.getWhiteListDomainForEmail();
+							if (CollectionUtils.isNotEmpty(whitelistDomain)
+									&& whitelistDomain.stream()
+											.anyMatch(domain -> userInfoDTO.getEmail().contains(domain))) {
+								userAccessApprovalResponseDTO.setWhitelistDomainEmail(true);
+							} else {
+								userAccessApprovalResponseDTO.setWhitelistDomainEmail(false);
+							}
+							userAccessApprovalResponseDTOList.add(userAccessApprovalResponseDTO);
+						});
 		return userAccessApprovalResponseDTOList;
 	}
 
 	@Override
-	public ResponseEntity<ServiceResponse> changePasswordForCentralAuth(ChangePasswordRequest request) {
+	public ResponseEntity<ServiceResponse> changePasswordForCentralAuth(
+			ChangePasswordRequest request) {
 		String apiKey = authProperties.getResourceAPIKey();
 		HttpHeaders headers = cookieUtil.getHeadersForApiKey(apiKey, true);
-		String changePasswordUrl = CommonUtils.getAPIEndPointURL(authProperties.getCentralAuthBaseURL(),
-				authProperties.getChangePasswordEndPoint(), "");
+		String changePasswordUrl =
+				CommonUtils.getAPIEndPointURL(
+						authProperties.getCentralAuthBaseURL(), authProperties.getChangePasswordEndPoint(), "");
 		HttpEntity<?> entity = new HttpEntity<>(request, headers);
 
 		RestTemplate restTemplate = new RestTemplate();
@@ -386,13 +407,15 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 				return ResponseEntity.ok(serviceResponse);
 			} else {
 				log.error(ERROR_MESSAGE_CONSUMING_REST_API + response.getStatusCode().value());
-				throw new APIKeyInvalidException(ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL);
+				throw new APIKeyInvalidException(
+						ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL);
 			}
 		} catch (JSONException e) {
 			throw new AuthenticationServiceException("Unable to parse response.", e);
 		} catch (HttpClientErrorException e) {
 			log.error(ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL, e.getMessage());
-			throw new APIKeyInvalidException(ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL);
+			throw new APIKeyInvalidException(
+					ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL);
 		} catch (RuntimeException e) {
 			log.error(ERROR_WHILE_CONSUMING_REST_SERVICE_IN_USER_INFO_SERVICE_IMPL, e);
 			throw new AuthenticationServiceException("Unable to parse response.", e);

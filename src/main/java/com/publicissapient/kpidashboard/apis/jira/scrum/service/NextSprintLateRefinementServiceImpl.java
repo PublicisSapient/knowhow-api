@@ -18,8 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,9 +27,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.publicissapient.kpidashboard.apis.model.*;
-import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,16 +38,16 @@ import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationServiceR;
-import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
+import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
-import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,14 +56,10 @@ import lombok.extern.slf4j.Slf4j;
 public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService {
 	private static final String INCLUDED_ISSUES = "included issues";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private SprintRepository sprintRepository;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private JiraIterationServiceR jiraIterationServiceR;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private SprintRepository sprintRepository;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIterationServiceR jiraIterationServiceR;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node sprintNode)
@@ -83,42 +74,55 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 			// to modify sprintdetails on the basis of configuration for the project
 			if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI188())) {
 				log.info("Future Late Refinement -> Requested sprint : {}", leafNode.getName());
 				SprintDetails activeSprint = getSprintDetailsFromBaseClass();
 				// Future Sprint
 				ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
-				List<SprintDetails> futureSprintList = sprintRepository
-						.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(basicProjectConfigId,
-								SprintDetails.SPRINT_STATE_FUTURE);
+				List<SprintDetails> futureSprintList =
+						sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
+								basicProjectConfigId, SprintDetails.SPRINT_STATE_FUTURE);
 
 				// Find the next sprint
-				SprintDetails sprintDetails = futureSprintList.stream()
-						.filter(sprint -> sprint.getStartDate() != null
-								&& DateUtil.stringToLocalDateTime(sprint.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC).isAfter(
-								DateUtil.stringToLocalDateTime(activeSprint.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)))
-						.findFirst().orElse(null);
+				SprintDetails sprintDetails =
+						futureSprintList.stream()
+								.filter(
+										sprint ->
+												sprint.getStartDate() != null
+														&& DateUtil.stringToLocalDateTime(
+																		sprint.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+																.isAfter(
+																		DateUtil.stringToLocalDateTime(
+																				activeSprint.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)))
+								.findFirst()
+								.orElse(null);
 
 				if (sprintDetails == null) {
 					return new HashMap<>();
 				}
 
-				Set<String> totalIssues = jiraIssueRepository.findBySprintID(sprintDetails.getSprintID()).stream()
-						.filter(a -> getTypeNames(fieldMapping).contains(a.getTypeName().toLowerCase())).map(JiraIssue::getNumber).collect(Collectors.toSet());
+				Set<String> totalIssues =
+						jiraIssueRepository.findBySprintID(sprintDetails.getSprintID()).stream()
+								.filter(a -> getTypeNames(fieldMapping).contains(a.getTypeName().toLowerCase()))
+								.map(JiraIssue::getNumber)
+								.collect(Collectors.toSet());
 				Map<String, Object> mapOfFilter = new HashMap<>();
 				jiraIterationServiceR.createAdditionalFilterMap(kpiRequest, mapOfFilter);
 				Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 				uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfFilter);
 
-				List<JiraIssue> totalJiraIssueList = jiraIssueRepository
-						.findIssueByNumberWithAdditionalFilter(totalIssues, uniqueProjectMap);
+				List<JiraIssue> totalJiraIssueList =
+						jiraIssueRepository.findIssueByNumberWithAdditionalFilter(
+								totalIssues, uniqueProjectMap);
 				if (CollectionUtils.isNotEmpty(totalJiraIssueList)) {
 					resultListMap.put(INCLUDED_ISSUES, new ArrayList<>(totalJiraIssueList));
 				}
@@ -130,22 +134,24 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 
 	private static Set<String> getTypeNames(FieldMapping fieldMapping) {
 		return fieldMapping.getJiraIssueTypeNamesKPI188().stream()
-				.flatMap(name -> "Defect".equalsIgnoreCase(name)
-						? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
-						: Stream.of(name.trim().toLowerCase()))
+				.flatMap(
+						name ->
+								"Defect".equalsIgnoreCase(name)
+										? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
+										: Stream.of(name.trim().toLowerCase()))
 				.collect(Collectors.toSet());
 	}
 
 	/**
-	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at
-	 * sprint level.
+	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at sprint level.
 	 *
 	 * @param latestSprint
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Node latestSprint, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Node latestSprint, KpiElement kpiElement, KpiRequest kpiRequest) {
 		Object basicProjectConfigId = latestSprint.getProjectFilter().getBasicProjectConfigId();
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
@@ -154,7 +160,8 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 		Double unRefinedStories = 0.0;
 		if (CollectionUtils.isNotEmpty(totalIssues)) {
 
-			Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(totalIssues);
+			Map<String, IssueKpiModalValue> issueKpiModalObject =
+					KpiDataHelper.createMapOfIssueModal(totalIssues);
 			for (JiraIssue issue : totalIssues) {
 				KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
 				IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
@@ -164,7 +171,6 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 				} else {
 					data.setUnRefined("N");
 				}
-
 			}
 			kpiElement.setSprint(latestSprint.getName());
 			kpiElement.setModalHeads(KPIExcelColumn.NEXT_SPRINT_LATE_REFINEMENT.getColumns());
@@ -209,5 +215,4 @@ public class NextSprintLateRefinementServiceImpl extends JiraIterationKPIService
 	private Double calculateUnrefined(Double unRefined, Double total) {
 		return roundingOff((unRefined * 100) / total);
 	}
-
 }

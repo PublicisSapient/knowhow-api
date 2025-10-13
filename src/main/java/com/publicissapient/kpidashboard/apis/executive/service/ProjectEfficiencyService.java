@@ -36,10 +36,7 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Service for calculating project efficiency based on board maturities and
- * weightages.
- */
+/** Service for calculating project efficiency based on board maturities and weightages. */
 @Service
 @Slf4j
 public class ProjectEfficiencyService {
@@ -58,11 +55,9 @@ public class ProjectEfficiencyService {
 	}
 
 	/**
-	 * Calculates the project efficiency score based on board maturities and
-	 * weightages
-	 * 
-	 * @param boardMaturities
-	 *            Map of board names to their maturity scores (1-5)
+	 * Calculates the project efficiency score based on board maturities and weightages
+	 *
+	 * @param boardMaturities Map of board names to their maturity scores (1-5)
 	 * @return Map containing efficiency score and health status
 	 */
 	public Map<String, Object> calculateProjectEfficiency(Map<String, String> boardMaturities) {
@@ -102,7 +97,8 @@ public class ProjectEfficiencyService {
 		// Prepare result
 		Map<String, Object> result = new HashMap<>();
 		result.put("score", Math.round(efficiencyScore * 10.0) / 10.0); // Round to 1 decimal place
-		result.put("percentage", Math.round(efficiencyPercentage * 10.0) / 10.0); // Round to 1 decimal place
+		result.put(
+				"percentage", Math.round(efficiencyPercentage * 10.0) / 10.0); // Round to 1 decimal place
 		result.put("healthStatus", healthStatus);
 		result.put("weightages", weightages);
 
@@ -121,10 +117,10 @@ public class ProjectEfficiencyService {
 
 	/**
 	 * Parses the weightage configuration from properties
-	 * 
+	 *
 	 * @return Map of category to weightage
 	 */
-    protected Map<String, Integer> parseWeightageConfig() {
+	protected Map<String, Integer> parseWeightageConfig() {
 		Map<String, Integer> weightages = new HashMap<>();
 
 		if (StringUtils.isBlank(efficiencyWeightageConfig)) {
@@ -169,12 +165,10 @@ public class ProjectEfficiencyService {
 		return equalWeightages;
 	}
 
-	/**
-	 * Normalizes weightages to ensure they sum to 100
-	 */
-    protected void normalizeWeightages(Map<String, Integer> weightages) {
+	/** Normalizes weightages to ensure they sum to 100 */
+	protected void normalizeWeightages(Map<String, Integer> weightages) {
 		if (weightages.isEmpty()) {
-			weightages.putAll( calculateEqualWeightages(DEFAULT_CATEGORIES));
+			weightages.putAll(calculateEqualWeightages(DEFAULT_CATEGORIES));
 			return;
 		}
 
@@ -194,31 +188,29 @@ public class ProjectEfficiencyService {
 		}
 	}
 
-	/**
-	 * Retrieves additional categories from the database
-	 */
-    protected Set<String> getCategoriesFromDatabase() {
+	/** Retrieves additional categories from the database */
+	protected Set<String> getCategoriesFromDatabase() {
 		try {
-			return kpiCategoryRepository.findAll().stream().map(KpiCategory::getCategoryName).filter(Objects::nonNull)
-					.map(String::toUpperCase).collect(Collectors.toSet());
+			return kpiCategoryRepository.findAll().stream()
+					.map(KpiCategory::getCategoryName)
+					.filter(Objects::nonNull)
+					.map(String::toUpperCase)
+					.collect(Collectors.toSet());
 		} catch (Exception e) {
 			log.error("Error fetching categories from database", e);
 			return Collections.emptySet();
 		}
 	}
 
-	/**
-	 * Finds the best matching board maturity for a given category
-	 */
-    protected int findBestMatchingBoardMaturity(String category, Map<String, String> boardMaturities) {
+	/** Finds the best matching board maturity for a given category */
+	protected int findBestMatchingBoardMaturity(
+			String category, Map<String, String> boardMaturities) {
 		// Try exact match first
 		for (Map.Entry<String, String> entry : boardMaturities.entrySet()) {
 			if (entry.getKey().equalsIgnoreCase(category) && !entry.getValue().equalsIgnoreCase("NA"))
-				    return (int)Math.ceil(Double.parseDouble(entry.getValue()));
-
+				return (int) Math.ceil(Double.parseDouble(entry.getValue()));
 		}
 
 		return 0; // No match found
 	}
-
 }

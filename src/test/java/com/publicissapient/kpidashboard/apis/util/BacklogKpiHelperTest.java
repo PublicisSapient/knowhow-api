@@ -6,14 +6,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-
-import com.publicissapient.kpidashboard.apis.constant.Constant;
-import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
-import com.publicissapient.kpidashboard.common.model.application.CycleTime;
-import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
-import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
-import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,228 +13,254 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
+import com.publicissapient.kpidashboard.common.model.application.CycleTime;
+import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
+
 @RunWith(MockitoJUnitRunner.class)
 public class BacklogKpiHelperTest {
 
-    private Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeWiseJiraIssuesMap;
-    List<String> xAxisRange;
-    private Map<Long, String> monthRangeMap;
-    @Mock
-    private CustomApiConfig customApiConfig;
-    private Map<String, Map<String, Object>> uniqueProjectMap;
-    List<JiraIssueCustomHistory> projectHistories;
-    String startDate;
-    String endDate;
+	private Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeWiseJiraIssuesMap;
+	List<String> xAxisRange;
+	private Map<Long, String> monthRangeMap;
+	@Mock private CustomApiConfig customApiConfig;
+	private Map<String, Map<String, Object>> uniqueProjectMap;
+	List<JiraIssueCustomHistory> projectHistories;
+	String startDate;
+	String endDate;
 
-    @Before
-    public void setUp() {
-        rangeWiseJiraIssuesMap = new HashMap<>();
-        xAxisRange = List.of("< 1 Week","< 2 Weeks","< 1 Months","< 3 Months","< 6 Months");
-        monthRangeMap = new HashMap<>();
-        startDate = "2023-01-01";
-        endDate = "2023-12-31";
-        JiraIssueHistoryDataFactory issueHistoryFactory = JiraIssueHistoryDataFactory.newInstance();
-        projectHistories = issueHistoryFactory.getJiraIssueCustomHistory();
-        uniqueProjectMap= new HashMap<>();
+	@Before
+	public void setUp() {
+		rangeWiseJiraIssuesMap = new HashMap<>();
+		xAxisRange = List.of("< 1 Week", "< 2 Weeks", "< 1 Months", "< 3 Months", "< 6 Months");
+		monthRangeMap = new HashMap<>();
+		startDate = "2023-01-01";
+		endDate = "2023-12-31";
+		JiraIssueHistoryDataFactory issueHistoryFactory = JiraIssueHistoryDataFactory.newInstance();
+		projectHistories = issueHistoryFactory.getJiraIssueCustomHistory();
+		uniqueProjectMap = new HashMap<>();
 
-        Map<String, Object> filters = new HashMap<>();
-        filters.put("storyType", Collections.singletonList(Pattern.compile("Bug")));
-        filters.put(BacklogKpiHelper.STATUS_UPDATION_LOG_STORY_CHANGED_TO, Collections.singletonList(Pattern.compile("Done")));
-        uniqueProjectMap.put("6335363749794a18e8a4479b", filters);
+		Map<String, Object> filters = new HashMap<>();
+		filters.put("storyType", Collections.singletonList(Pattern.compile("Bug")));
+		filters.put(
+				BacklogKpiHelper.STATUS_UPDATION_LOG_STORY_CHANGED_TO,
+				Collections.singletonList(Pattern.compile("Done")));
+		uniqueProjectMap.put("6335363749794a18e8a4479b", filters);
+	}
 
-    }
+	@Test
+	public void testInitializeRangeMapForProjects() {
+		BacklogKpiHelper.initializeRangeMapForProjects(
+				rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
-    @Test
-    public void testInitializeRangeMapForProjects() {
-        BacklogKpiHelper.initializeRangeMapForProjects(rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
+		assertEquals(5, rangeWiseJiraIssuesMap.size());
+		assertEquals(5, monthRangeMap.size());
+	}
 
-        assertEquals(5, rangeWiseJiraIssuesMap.size());
-        assertEquals(5, monthRangeMap.size());
-    }
+	@Test
+	public void testSetRangeWiseJiraIssuesMap() {
+		JiraIssueCustomHistory issueCustomHistory = new JiraIssueCustomHistory();
+		issueCustomHistory.setStoryType("Bug");
+		LocalDateTime closedDate = LocalDateTime.now().minusDays(10);
 
-    @Test
-    public void testSetRangeWiseJiraIssuesMap() {
-        JiraIssueCustomHistory issueCustomHistory = new JiraIssueCustomHistory();
-        issueCustomHistory.setStoryType("Bug");
-        LocalDateTime closedDate = LocalDateTime.now().minusDays(10);
+		boolean result =
+				BacklogKpiHelper.setRangeWiseJiraIssuesMap(
+						rangeWiseJiraIssuesMap, issueCustomHistory, closedDate, monthRangeMap);
 
-        boolean result = BacklogKpiHelper.setRangeWiseJiraIssuesMap(rangeWiseJiraIssuesMap, issueCustomHistory, closedDate, monthRangeMap);
+		assertFalse(result);
+		assertTrue(rangeWiseJiraIssuesMap.isEmpty());
+	}
 
-        assertFalse(result);
-        assertTrue(rangeWiseJiraIssuesMap.isEmpty());
-    }
+	@Test
+	public void testSetLiveTime() {
+		CycleTimeValidationData cycleTimeValidationData = new CycleTimeValidationData();
+		CycleTime cycleTime = new CycleTime();
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		DateTime updatedOn = DateTime.now();
+		List<String> liveStatus = Arrays.asList("done", "live");
 
+		statusUpdateLog.setChangedTo("live");
+		statusUpdateLog.setUpdatedOn(LocalDateTime.now());
+		BacklogKpiHelper.setLiveTime(
+				cycleTimeValidationData, cycleTime, statusUpdateLog, updatedOn, liveStatus);
 
-    @Test
-    public void testSetLiveTime() {
-        CycleTimeValidationData cycleTimeValidationData = new CycleTimeValidationData();
-        CycleTime cycleTime = new CycleTime();
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        DateTime updatedOn = DateTime.now();
-        List<String> liveStatus = Arrays.asList("done", "live");
+		assertNotNull(cycleTime.getLiveTime());
+		assertEquals(updatedOn, cycleTime.getLiveTime());
+	}
 
-        statusUpdateLog.setChangedTo("live");
-        statusUpdateLog.setUpdatedOn(LocalDateTime.now());
-        BacklogKpiHelper.setLiveTime(cycleTimeValidationData, cycleTime, statusUpdateLog, updatedOn, liveStatus);
+	@Test
+	public void testSetReadyTime() {
+		CycleTimeValidationData cycleTimeValidationData = new CycleTimeValidationData();
+		CycleTime cycleTime = new CycleTime();
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		DateTime updatedOn = DateTime.now();
+		List<String> dorStatus = Arrays.asList("ready", "in progress");
 
-        assertNotNull(cycleTime.getLiveTime());
-        assertEquals(updatedOn, cycleTime.getLiveTime());
-    }
+		statusUpdateLog.setChangedTo("ready");
+		statusUpdateLog.setUpdatedOn(LocalDateTime.now());
+		BacklogKpiHelper.setReadyTime(
+				cycleTimeValidationData, cycleTime, statusUpdateLog, updatedOn, dorStatus);
 
-    @Test
-    public void testSetReadyTime() {
-        CycleTimeValidationData cycleTimeValidationData = new CycleTimeValidationData();
-        CycleTime cycleTime = new CycleTime();
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        DateTime updatedOn = DateTime.now();
-        List<String> dorStatus = Arrays.asList("ready", "in progress");
+		assertNotNull(cycleTime.getReadyTime());
+		assertEquals(updatedOn, cycleTime.getReadyTime());
+	}
 
-        statusUpdateLog.setChangedTo("ready");
-        statusUpdateLog.setUpdatedOn(LocalDateTime.now());
-        BacklogKpiHelper.setReadyTime(cycleTimeValidationData, cycleTime, statusUpdateLog, updatedOn, dorStatus);
+	@Test
+	public void testSetDODTime() {
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		DateTime updatedOn = new DateTime();
+		List<String> dodStatus = Arrays.asList("done", "closed");
+		String storyFirstStatus = "open";
+		Map<String, DateTime> dodStatusDateMap = new HashMap<>();
 
-        assertNotNull(cycleTime.getReadyTime());
-        assertEquals(updatedOn, cycleTime.getReadyTime());
-    }
+		statusUpdateLog.setChangedTo("done");
+		BacklogKpiHelper.setDODTime(
+				statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
 
-    @Test
-    public void testSetDODTime() {
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        DateTime updatedOn = new DateTime();
-        List<String> dodStatus = Arrays.asList("done", "closed");
-        String storyFirstStatus = "open";
-        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+		assertTrue(dodStatusDateMap.containsKey("done"));
+		assertEquals(updatedOn, dodStatusDateMap.get("done"));
+	}
 
-        statusUpdateLog.setChangedTo("done");
-        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+	@Test
+	public void testSetValueInCycleTime() {
+		DateTime startTime = new DateTime().minusDays(5);
+		DateTime endTime = new DateTime();
+		CycleTimeValidationData cycleTimeValidationData = new CycleTimeValidationData();
+		Set<String> issueTypes = new HashSet<>();
 
-        assertTrue(dodStatusDateMap.containsKey("done"));
-        assertEquals(updatedOn, dodStatusDateMap.get("done"));
-    }
+		String result =
+				BacklogKpiHelper.setValueInCycleTime(
+						startTime, endTime, "LEAD TIME", cycleTimeValidationData, issueTypes);
 
-    @Test
-    public void testSetValueInCycleTime() {
-        DateTime startTime = new DateTime().minusDays(5);
-        DateTime endTime = new DateTime();
-        CycleTimeValidationData cycleTimeValidationData = new CycleTimeValidationData();
-        Set<String> issueTypes = new HashSet<>();
+		assertNotEquals(Constant.NOT_AVAILABLE, result);
+		assertTrue(cycleTimeValidationData.getLeadTime() > 0);
+	}
 
-        String result = BacklogKpiHelper.setValueInCycleTime(startTime, endTime, "LEAD TIME", cycleTimeValidationData, issueTypes);
+	@Test
+	public void testFilterProjectHistories_Positive() {
+		List<JiraIssueCustomHistory> filteredHistories =
+				BacklogKpiHelper.filterProjectHistories(
+						projectHistories, uniqueProjectMap, startDate, endDate);
 
-        assertNotEquals(Constant.NOT_AVAILABLE, result);
-        assertTrue(cycleTimeValidationData.getLeadTime() > 0);
-    }
+		assertEquals(0, filteredHistories.size());
+	}
 
-    @Test
-    public void testFilterProjectHistories_Positive() {
-        List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
-                projectHistories, uniqueProjectMap, startDate, endDate);
+	@Test
+	public void testFilterProjectHistories_Negative_NoMatch() {
+		uniqueProjectMap
+				.get("6335363749794a18e8a4479b")
+				.put("storyType", Collections.singletonList(Pattern.compile("Feature")));
 
-        assertEquals(0, filteredHistories.size());
-    }
+		List<JiraIssueCustomHistory> filteredHistories =
+				BacklogKpiHelper.filterProjectHistories(
+						projectHistories, uniqueProjectMap, startDate, endDate);
 
-    @Test
-    public void testFilterProjectHistories_Negative_NoMatch() {
-        uniqueProjectMap.get("6335363749794a18e8a4479b").put("storyType", Collections.singletonList(Pattern.compile("Feature")));
+		assertEquals(0, filteredHistories.size());
+	}
 
-        List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
-                projectHistories, uniqueProjectMap, startDate, endDate);
+	@Test
+	public void testFilterProjectHistories_Negative_EmptyHistory() {
+		List<JiraIssueCustomHistory> filteredHistories =
+				BacklogKpiHelper.filterProjectHistories(
+						new ArrayList<>(), uniqueProjectMap, startDate, endDate);
 
-        assertEquals(0, filteredHistories.size());
-    }
+		assertEquals(0, filteredHistories.size());
+	}
 
-    @Test
-    public void testFilterProjectHistories_Negative_EmptyHistory() {
-        List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
-                new ArrayList<>(), uniqueProjectMap, startDate, endDate);
+	@Test
+	public void testFilterProjectHistories_Negative_NoFilters() {
+		uniqueProjectMap.clear();
 
-        assertEquals(0, filteredHistories.size());
-    }
+		List<JiraIssueCustomHistory> filteredHistories =
+				BacklogKpiHelper.filterProjectHistories(
+						projectHistories, uniqueProjectMap, startDate, endDate);
 
-    @Test
-    public void testFilterProjectHistories_Negative_NoFilters() {
-        uniqueProjectMap.clear();
+		assertEquals(0, filteredHistories.size());
+	}
 
-        List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
-                projectHistories, uniqueProjectMap, startDate, endDate);
+	@Test
+	public void testFilterProjectHistories_Positive_NoMatch() {
+		uniqueProjectMap
+				.get("6335363749794a18e8a4479b")
+				.put("storyType", Collections.singletonList(Pattern.compile("Bug")));
 
-        assertEquals(0, filteredHistories.size());
-    }
+		List<JiraIssueCustomHistory> filteredHistories =
+				BacklogKpiHelper.filterProjectHistories(
+						projectHistories, uniqueProjectMap, startDate, endDate);
 
-    @Test
-    public void testFilterProjectHistories_Positive_NoMatch() {
-        uniqueProjectMap.get("6335363749794a18e8a4479b").put("storyType", Collections.singletonList(Pattern.compile("Bug")));
+		assertEquals(0, filteredHistories.size());
+	}
 
-        List<JiraIssueCustomHistory> filteredHistories = BacklogKpiHelper.filterProjectHistories(
-                projectHistories, uniqueProjectMap, startDate, endDate);
+	@Test
+	public void testSetDODTime_Positive() {
+		List<String> dodStatus = Arrays.asList("done", "closed");
+		String storyFirstStatus = "open";
 
-        assertEquals(0, filteredHistories.size());
-    }
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		statusUpdateLog.setChangedFrom("done");
+		statusUpdateLog.setChangedTo("open");
+		DateTime updatedOn = new DateTime();
+		Map<String, DateTime> dodStatusDateMap = new HashMap<>();
 
-    @Test
-    public void testSetDODTime_Positive() {
-        List<String> dodStatus = Arrays.asList("done", "closed");
-        String storyFirstStatus = "open";
+		BacklogKpiHelper.setDODTime(
+				statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
 
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        statusUpdateLog.setChangedFrom("done");
-        statusUpdateLog.setChangedTo("open");
-        DateTime updatedOn = new DateTime();
-        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+		assertTrue(dodStatusDateMap.isEmpty());
+	}
 
-        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+	@Test
+	public void testSetDODTime_Negative_NoChangeFromDOD() {
+		// Scenario: Status does not change from a DOD status
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		statusUpdateLog.setChangedFrom("in progress");
+		statusUpdateLog.setChangedTo("open");
+		DateTime updatedOn = new DateTime();
+		List<String> dodStatus = Arrays.asList("done", "closed");
+		String storyFirstStatus = "open";
+		Map<String, DateTime> dodStatusDateMap = new HashMap<>();
 
-        assertTrue(dodStatusDateMap.isEmpty());
-    }
+		BacklogKpiHelper.setDODTime(
+				statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
 
-    @Test
-    public void testSetDODTime_Negative_NoChangeFromDOD() {
-        // Scenario: Status does not change from a DOD status
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        statusUpdateLog.setChangedFrom("in progress");
-        statusUpdateLog.setChangedTo("open");
-        DateTime updatedOn = new DateTime();
-        List<String> dodStatus = Arrays.asList("done", "closed");
-        String storyFirstStatus = "open";
-        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+		assertTrue(dodStatusDateMap.isEmpty());
+	}
 
-        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+	@Test
+	public void testSetDODTime_Positive_ChangeToDOD() {
+		// Scenario: Status changes to a DOD status
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		statusUpdateLog.setChangedTo("done");
+		DateTime updatedOn = new DateTime();
+		Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+		List<String> dodStatus = Arrays.asList("done", "closed");
+		String storyFirstStatus = "open";
+		BacklogKpiHelper.setDODTime(
+				statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
 
-        assertTrue(dodStatusDateMap.isEmpty());
-    }
+		assertTrue(dodStatusDateMap.containsKey("done"));
+		assertEquals(updatedOn, dodStatusDateMap.get("done"));
+	}
 
-    @Test
-    public void testSetDODTime_Positive_ChangeToDOD() {
-        // Scenario: Status changes to a DOD status
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        statusUpdateLog.setChangedTo("done");
-        DateTime updatedOn = new DateTime();
-        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
-        List<String> dodStatus = Arrays.asList("done", "closed");
-        String storyFirstStatus = "open";
-        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
+	@Test
+	public void testSetDODTime_Positive_ClearOnReopen() {
+		// Scenario: Reopen scenario where DOD status is cleared
+		JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
+		statusUpdateLog.setChangedFrom("done");
+		statusUpdateLog.setChangedTo("open");
+		DateTime updatedOn = new DateTime();
+		List<String> dodStatus = Arrays.asList("done", "closed");
+		String storyFirstStatus = "open";
 
-        assertTrue(dodStatusDateMap.containsKey("done"));
-        assertEquals(updatedOn, dodStatusDateMap.get("done"));
-    }
+		Map<String, DateTime> dodStatusDateMap = new HashMap<>();
+		dodStatusDateMap.put("done", updatedOn.minusDays(1)); // Pre-existing DOD entry
 
-    @Test
-    public void testSetDODTime_Positive_ClearOnReopen() {
-        // Scenario: Reopen scenario where DOD status is cleared
-        JiraHistoryChangeLog statusUpdateLog = new JiraHistoryChangeLog();
-        statusUpdateLog.setChangedFrom("done");
-        statusUpdateLog.setChangedTo("open");
-        DateTime updatedOn = new DateTime();
-        List<String> dodStatus = Arrays.asList("done", "closed");
-        String storyFirstStatus = "open";
+		BacklogKpiHelper.setDODTime(
+				statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
 
-        Map<String, DateTime> dodStatusDateMap = new HashMap<>();
-        dodStatusDateMap.put("done", updatedOn.minusDays(1)); // Pre-existing DOD entry
-
-        BacklogKpiHelper.setDODTime(statusUpdateLog, updatedOn, dodStatus, storyFirstStatus, dodStatusDateMap);
-
-        assertTrue(dodStatusDateMap.isEmpty());
-    }
+		assertTrue(dodStatusDateMap.isEmpty());
+	}
 }
-
-

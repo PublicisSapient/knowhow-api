@@ -82,22 +82,14 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	private static final String PROJECTS_ACCESS = "projectsAccess";
 	private static final Object USER_AUTHORITIES = "authorities";
 	public static final String EXCEPTION_MSG = "No implementation is found for SSO";
-	@Autowired
-	AuthenticationService authenticationService;
-	@Autowired
-	UserInfoService userInfoService;
-	@Autowired
-	CustomApiConfig customApiConfig;
-	@Autowired
-	private AuthProperties tokenAuthProperties;
-	@Autowired
-	private UserTokenReopository userTokenReopository;
-	@Autowired
-	private ProjectAccessManager projectAccessManager;
-	@Autowired
-	private CookieUtil cookieUtil;
-	@Autowired
-	private UsersSessionService usersSessionService;
+	@Autowired AuthenticationService authenticationService;
+	@Autowired UserInfoService userInfoService;
+	@Autowired CustomApiConfig customApiConfig;
+	@Autowired private AuthProperties tokenAuthProperties;
+	@Autowired private UserTokenReopository userTokenReopository;
+	@Autowired private ProjectAccessManager projectAccessManager;
+	@Autowired private CookieUtil cookieUtil;
+	@Autowired private UsersSessionService usersSessionService;
 
 	@Override
 	public void addAuthentication(HttpServletResponse response, Authentication authentication) {
@@ -115,22 +107,31 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	}
 
 	public String createJwtToken(Authentication authentication) {
-		return Jwts.builder().setSubject(authentication.getName()).claim(DETAILS_CLAIM, authentication.getDetails())
+		return Jwts.builder()
+				.setSubject(authentication.getName())
+				.claim(DETAILS_CLAIM, authentication.getDetails())
 				.claim(ROLES_CLAIM, getRoles(authentication.getAuthorities()))
-				.setExpiration(new Date(System.currentTimeMillis() + tokenAuthProperties.getExpirationTime()))
-				.signWith(SignatureAlgorithm.HS512, tokenAuthProperties.getSecret()).compact();
+				.setExpiration(
+						new Date(System.currentTimeMillis() + tokenAuthProperties.getExpirationTime()))
+				.signWith(SignatureAlgorithm.HS512, tokenAuthProperties.getSecret())
+				.compact();
 	}
 
 	@Override
 	public boolean isJWTTokenExpired(String jwtToken) {
-		Claims decodedJWT = Jwts.parser().setSigningKey(tokenAuthProperties.getSecret()).parseClaimsJws(jwtToken).getBody();
+		Claims decodedJWT =
+				Jwts.parser()
+						.setSigningKey(tokenAuthProperties.getSecret())
+						.parseClaimsJws(jwtToken)
+						.getBody();
 		Date expiresAt = decodedJWT.getExpiration();
 		return new Date().after(expiresAt);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Authentication getAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse response) {
+	public Authentication getAuthentication(
+			HttpServletRequest httpServletRequest, HttpServletResponse response) {
 
 		if (customApiConfig.isSsoLogin()) {
 			throw new NoSSOImplementationFoundException(EXCEPTION_MSG);
@@ -160,7 +161,8 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	}
 
 	@Override
-	public Authentication validateAuthentication(HttpServletRequest request, HttpServletResponse response) {
+	public Authentication validateAuthentication(
+			HttpServletRequest request, HttpServletResponse response) {
 
 		if (customApiConfig.isSsoLogin()) {
 			throw new NoSSOImplementationFoundException(EXCEPTION_MSG);
@@ -181,20 +183,29 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 
 	private Authentication createAuthentication(String token, HttpServletResponse response) {
 		try {
-			Claims claims = Jwts.parser().setSigningKey(tokenAuthProperties.getSecret()).parseClaimsJws(token).getBody();
+			Claims claims =
+					Jwts.parser()
+							.setSigningKey(tokenAuthProperties.getSecret())
+							.parseClaimsJws(token)
+							.getBody();
 			String username = claims.getSubject();
-			Collection<? extends GrantedAuthority> authorities = getAuthorities(claims.get(ROLES_CLAIM, Collection.class));
-			PreAuthenticatedAuthenticationToken authentication = new PreAuthenticatedAuthenticationToken(username, null,
-					authorities);
+			Collection<? extends GrantedAuthority> authorities =
+					getAuthorities(claims.get(ROLES_CLAIM, Collection.class));
+			PreAuthenticatedAuthenticationToken authentication =
+					new PreAuthenticatedAuthenticationToken(username, null, authorities);
 			authentication.setDetails(claims.get(DETAILS_CLAIM));
-			Date tokenCreationDate = new Date(claims.getExpiration().getTime() - tokenAuthProperties.getExpirationTime());
+			Date tokenCreationDate =
+					new Date(claims.getExpiration().getTime() - tokenAuthProperties.getExpirationTime());
 			Date tokenExpiration = claims.getExpiration();
 			boolean isJWTTokenExpired = new Date().after(tokenExpiration);
 			LocalDateTime lastLogout = usersSessionService.getLastLogoutTimeOfUser(username);
-			ZonedDateTime tokenCreationZonedDateTime = tokenCreationDate.toInstant().atZone(ZoneId.systemDefault());
-			ZonedDateTime lastLogoutZonedDateTime = lastLogout != null ? lastLogout.atZone(ZoneId.systemDefault()) : null;
-			boolean isJWTTokenValid = lastLogoutZonedDateTime == null ||
-					tokenCreationZonedDateTime.isAfter(lastLogoutZonedDateTime);
+			ZonedDateTime tokenCreationZonedDateTime =
+					tokenCreationDate.toInstant().atZone(ZoneId.systemDefault());
+			ZonedDateTime lastLogoutZonedDateTime =
+					lastLogout != null ? lastLogout.atZone(ZoneId.systemDefault()) : null;
+			boolean isJWTTokenValid =
+					lastLogoutZonedDateTime == null
+							|| tokenCreationZonedDateTime.isAfter(lastLogoutZonedDateTime);
 			if (isJWTTokenExpired || !isJWTTokenValid) {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 				return null;
@@ -212,22 +223,33 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 		if (CollectionUtils.isEmpty(userTokenDataList)) {
 			return null;
 		}
-		List<UserTokenData> dataList = userTokenDataList.stream().filter(data -> data.getExpiryDate() != null)
-				.collect(Collectors.toList());
-		DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(DateUtil.TIME_FORMAT).optionalStart()
-				.appendPattern(".").appendFraction(ChronoField.MICRO_OF_SECOND, 1, 9, false).optionalEnd().toFormatter();
-		return dataList.stream().max(Comparator.comparing(data -> LocalDateTime.parse(data.getExpiryDate(), formatter)))
+		List<UserTokenData> dataList =
+				userTokenDataList.stream()
+						.filter(data -> data.getExpiryDate() != null)
+						.collect(Collectors.toList());
+		DateTimeFormatter formatter =
+				new DateTimeFormatterBuilder()
+						.appendPattern(DateUtil.TIME_FORMAT)
+						.optionalStart()
+						.appendPattern(".")
+						.appendFraction(ChronoField.MICRO_OF_SECOND, 1, 9, false)
+						.optionalEnd()
+						.toFormatter();
+		return dataList.stream()
+				.max(Comparator.comparing(data -> LocalDateTime.parse(data.getExpiryDate(), formatter)))
 				.orElse(null);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Set<String> getUserProjects() {
-		List<RoleWiseProjects> projectAccessesWithRole = projectAccessManager
-				.getProjectAccessesWithRole(authenticationService.getLoggedInUser());
+		List<RoleWiseProjects> projectAccessesWithRole =
+				projectAccessManager.getProjectAccessesWithRole(authenticationService.getLoggedInUser());
 		if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
-			return projectAccessesWithRole.stream().flatMap(roleWiseProjects -> roleWiseProjects.getProjects().stream())
-					.map(ProjectsForAccessRequest::getProjectId).collect(Collectors.toSet());
+			return projectAccessesWithRole.stream()
+					.flatMap(roleWiseProjects -> roleWiseProjects.getProjects().stream())
+					.map(ProjectsForAccessRequest::getProjectId)
+					.collect(Collectors.toSet());
 		}
 		return new HashSet<>();
 	}
@@ -276,23 +298,31 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	}
 
 	@Override
-	public JSONObject getOrSaveUserByToken(HttpServletRequest request, Authentication authentication) {
+	public JSONObject getOrSaveUserByToken(
+			HttpServletRequest request, Authentication authentication) {
 		UserInfo userInfo = new UserInfo();
 		if (cookieUtil.getAuthCookie(request) != null) {
-			String userName = request.getHeader(USER_NAME) != null ? request.getHeader(USER_NAME) : authentication.getName();
+			String userName =
+					request.getHeader(USER_NAME) != null
+							? request.getHeader(USER_NAME)
+							: authentication.getName();
 			List<UserTokenData> userTokenDataList = userTokenReopository.findAllByUserName(userName);
 			UserTokenData userTokenData = getLatestUser(userTokenDataList);
 			if (userTokenData != null) {
 				updateExpiryDate(userTokenData.getUserName(), LocalDateTime.now().toString());
 			} else {
 				userTokenReopository.deleteAllByUserName(userName);
-				userTokenData = new UserTokenData(userName, cookieUtil.getAuthCookie(request).getValue(),
-						LocalDateTime.now().toString());
+				userTokenData =
+						new UserTokenData(
+								userName,
+								cookieUtil.getAuthCookie(request).getValue(),
+								LocalDateTime.now().toString());
 				userTokenReopository.save(userTokenData);
 			}
 			List<String> authorities = new ArrayList<>(getRoles(authentication.getAuthorities()));
 			AuthType authType = AuthType.valueOf(authentication.getDetails().toString());
-			userInfo = userInfoService.getOrSaveUserInfo(userTokenData.getUserName(), authType, authorities);
+			userInfo =
+					userInfoService.getOrSaveUserInfo(userTokenData.getUserName(), authType, authorities);
 		}
 		return createAuthDetailsJson(userInfo);
 	}
@@ -304,8 +334,8 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 			json.put(USER_NAME, userInfo.getUsername());
 			json.put(USER_EMAIL, userInfo.getEmailAddress());
 			json.put(USER_AUTHORITIES, userInfo.getAuthorities());
-			List<RoleWiseProjects> projectAccessesWithRole = projectAccessManager
-					.getProjectAccessesWithRole(userInfo.getUsername());
+			List<RoleWiseProjects> projectAccessesWithRole =
+					projectAccessManager.getProjectAccessesWithRole(userInfo.getUsername());
 			json.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			return json;
 		}
@@ -314,7 +344,11 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 
 	@Override
 	public String getUserNameFromToken(String jwtToken) {
-		Claims claims = Jwts.parser().setSigningKey(tokenAuthProperties.getSecret()).parseClaimsJws(jwtToken).getBody();
+		Claims claims =
+				Jwts.parser()
+						.setSigningKey(tokenAuthProperties.getSecret())
+						.parseClaimsJws(jwtToken)
+						.getBody();
 		return claims.getSubject();
 	}
 }

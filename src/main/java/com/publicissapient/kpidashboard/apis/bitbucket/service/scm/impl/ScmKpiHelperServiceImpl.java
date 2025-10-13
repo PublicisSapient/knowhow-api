@@ -22,8 +22,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.common.model.scm.User;
-import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -39,9 +37,11 @@ import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.jira.AssigneeDetails;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import com.publicissapient.kpidashboard.common.model.scm.User;
 import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.AllArgsConstructor;
@@ -57,10 +57,11 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	private final ScmCommitsRepository scmCommitsRepository;
 	private final AssigneeDetailsRepository assigneeDetailsRepository;
 	private final ScmMergeRequestsRepository scmMergeRequestsRepository;
-    private final ScmUserRepository scmUserRepository;
+	private final ScmUserRepository scmUserRepository;
 
 	@Override
-	public List<ScmCommits> getCommitDetails(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
+	public List<ScmCommits> getCommitDetails(
+			ObjectId projectBasicConfigId, CustomDateRange dateRange) {
 		validateInputs(projectBasicConfigId, dateRange);
 
 		BasicDBList commitFilter = buildProcessorItemFilter(projectBasicConfigId);
@@ -72,7 +73,8 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	}
 
 	@Override
-	public List<ScmMergeRequests> getMergeRequests(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
+	public List<ScmMergeRequests> getMergeRequests(
+			ObjectId projectBasicConfigId, CustomDateRange dateRange) {
 		validateInputs(projectBasicConfigId, dateRange);
 
 		BasicDBList mergeFilter = buildProcessorItemFilter(projectBasicConfigId);
@@ -89,8 +91,8 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 			throw new IllegalArgumentException("projectBasicConfigId cannot be null");
 		}
 
-		AssigneeDetails assigneeDetails = assigneeDetailsRepository
-				.findByBasicProjectConfigId(projectBasicConfigId.toString());
+		AssigneeDetails assigneeDetails =
+				assigneeDetailsRepository.findByBasicProjectConfigId(projectBasicConfigId.toString());
 
 		if (assigneeDetails == null || assigneeDetails.getAssignee() == null) {
 			log.debug("No assignee details found for project: {}", projectBasicConfigId);
@@ -107,12 +109,10 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 		return scmUserRepository.findScmUserList(userFilter);
 	}
 
-    /**
-	 * Builds a MongoDB filter for processor items based on SCM tools configured for
-	 * the project.
+	/**
+	 * Builds a MongoDB filter for processor items based on SCM tools configured for the project.
 	 *
-	 * @param projectBasicConfigId
-	 *            Project configuration ID
+	 * @param projectBasicConfigId Project configuration ID
 	 * @return BasicDBList filter for processor items
 	 */
 	private BasicDBList buildProcessorItemFilter(ObjectId projectBasicConfigId) {
@@ -139,8 +139,7 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	/**
 	 * Converts the given LocalDateTime to epoch milliseconds in UTC.
 	 *
-	 * @param dateTime
-	 *            the LocalDateTime to convert
+	 * @param dateTime the LocalDateTime to convert
 	 * @return the epoch milliseconds representation in UTC
 	 */
 	private long convertToEpochMillis(LocalDateTime dateTime) {
@@ -150,13 +149,11 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	/**
 	 * Validates the input parameters.
 	 *
-	 * @param projectBasicConfigId
-	 *            the project configuration ID to validate; must not be null
-	 * @param dateRange
-	 *            the custom date range to validate; must not be null and must have
-	 *            valid start and end dates
-	 * @throws IllegalArgumentException
-	 *             if any input is null or if the start date is after the end date
+	 * @param projectBasicConfigId the project configuration ID to validate; must not be null
+	 * @param dateRange the custom date range to validate; must not be null and must have valid start
+	 *     and end dates
+	 * @throws IllegalArgumentException if any input is null or if the start date is after the end
+	 *     date
 	 */
 	private void validateInputs(ObjectId projectBasicConfigId, CustomDateRange dateRange) {
 		if (projectBasicConfigId == null) {

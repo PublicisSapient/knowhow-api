@@ -40,8 +40,7 @@ public class SprintWiseStoryDataFactory {
 	private List<SprintWiseStory> sprintWiseStories;
 	private ObjectMapper mapper;
 
-	private SprintWiseStoryDataFactory() {
-	}
+	private SprintWiseStoryDataFactory() {}
 
 	public static SprintWiseStoryDataFactory newInstance(String filePath) {
 
@@ -61,9 +60,10 @@ public class SprintWiseStoryDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH : filePath;
 
-			sprintWiseStories = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<SprintWiseStory>>() {
-					});
+			sprintWiseStories =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<SprintWiseStory>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading sprint wise data from file = " + filePath, e);
 		}

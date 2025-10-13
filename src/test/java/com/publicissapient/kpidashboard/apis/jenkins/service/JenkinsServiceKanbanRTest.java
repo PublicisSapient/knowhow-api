@@ -75,20 +75,13 @@ public class JenkinsServiceKanbanRTest {
 	private static String GROUP_PROJECT = "project";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	private JenkinsServiceKanbanR jenkinsServiceKanbanR;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CodeBuildTimeKanbanServiceImpl codeBuildTimeKanbanServiceImpl;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks private JenkinsServiceKanbanR jenkinsServiceKanbanR;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CacheService cacheService;
+	@Mock private CodeBuildTimeKanbanServiceImpl codeBuildTimeKanbanServiceImpl;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -102,8 +95,7 @@ public class JenkinsServiceKanbanRTest {
 	private Set<String> projects;
 	private KpiElement buildKpiElement;
 	private Map<String, JenkinsKPIService<?, ?, ?>> jenkinsServiceCache = new HashMap<>();
-	@Mock
-	private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
+	@Mock private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
 	private KpiRequest kpiRequest;
 
 	@Before
@@ -111,22 +103,24 @@ public class JenkinsServiceKanbanRTest {
 		MockitoAnnotations.openMocks(this);
 		List<JenkinsKPIService<?, ?, ?>> mockServices = Arrays.asList(codeBuildTimeKanbanServiceImpl);
 		jenkinsKPIServiceFactory = JenkinsKPIServiceFactory.builder().services(mockServices).build();
-		when(codeBuildTimeKanbanServiceImpl.getQualifierType()).thenReturn(KPICode.CODE_BUILD_TIME_KANBAN.name());
+		when(codeBuildTimeKanbanServiceImpl.getQualifierType())
+				.thenReturn(KPICode.CODE_BUILD_TIME_KANBAN.name());
 		jenkinsServiceCache.put(KPICode.CODE_BUILD_TIME_KANBAN.name(), codeBuildTimeKanbanServiceImpl);
 		jenkinsKPIServiceFactory.initMyServiceCache();
 
 		kpiRequest = createKpiRequest(4, "Jenkins");
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
 		projectConfig.setId(new ObjectId("6335368249794a18e8a4479f"));
 		projectConfig.setProjectName("Kanban Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
@@ -136,15 +130,18 @@ public class JenkinsServiceKanbanRTest {
 		when(filterHelperService.getHierarachyLevelId(4, "project", true)).thenReturn("project");
 		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyDataKanbanList))
 				.thenReturn(accountHierarchyDataKanbanList);
-		when(filterHelperService.getFilteredBuildsKanban(any(), anyString())).thenReturn(accountHierarchyDataKanbanList);
+		when(filterHelperService.getFilteredBuildsKanban(any(), anyString()))
+				.thenReturn(accountHierarchyDataKanbanList);
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(anyBoolean())).thenReturn(map);
 
-		buildKpiElement = setKpiElement(KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(), "CODE_BUILD_TIME_KANBAN");
+		buildKpiElement =
+				setKpiElement(KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(), "CODE_BUILD_TIME_KANBAN");
 		doReturn(buildKpiElement).when(codeBuildTimeKanbanServiceImpl).getKpiData(any(), any(), any());
 	}
 
@@ -230,11 +227,16 @@ public class JenkinsServiceKanbanRTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(), KPICode.CODE_BUILD_TIME_KANBAN.name(),
-				"Productivity", "mins", source);
+		addKpiElement(
+				kpiList,
+				KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(),
+				KPICode.CODE_BUILD_TIME_KANBAN.name(),
+				"Productivity",
+				"mins",
+				source);
 		kpiRequest.setLevel(level);
 		kpiRequest.setLabel("project");
-		kpiRequest.setIds(new String[]{"Kanban Project_6335368249794a18e8a4479f"});
+		kpiRequest.setIds(new String[] {"Kanban Project_6335368249794a18e8a4479f"});
 		kpiRequest.setKpiList(kpiList);
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put("Project", Arrays.asList("Kanban Project_6335368249794a18e8a4479f"));
@@ -243,7 +245,12 @@ public class JenkinsServiceKanbanRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);
@@ -266,6 +273,5 @@ public class JenkinsServiceKanbanRTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 }

@@ -27,13 +27,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
@@ -69,9 +67,8 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class handle all Release JIRA based KPI request and call each KPIs
- * service in thread. It is responsible for cache of KPI data at different
- * level.
+ * This class handle all Release JIRA based KPI request and call each KPIs service in thread. It is
+ * responsible for cache of KPI data at different level.
  *
  * @author purgupta2
  */
@@ -79,27 +76,23 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 
-	private final ThreadLocal<List<JiraIssue>> threadLocalJiraIssues = ThreadLocal.withInitial(ArrayList::new);
-	private final ThreadLocal<List<JiraIssueCustomHistory>> threadLocalHistory = ThreadLocal.withInitial(ArrayList::new);
-	private final ThreadLocal<List<JiraIssue>> threadReleaseIssues = ThreadLocal.withInitial(ArrayList::new);
-	private final ThreadLocal<Set<JiraIssue>> threadSubtaskDefects = ThreadLocal.withInitial(HashSet::new);
+	private final ThreadLocal<List<JiraIssue>> threadLocalJiraIssues =
+			ThreadLocal.withInitial(ArrayList::new);
+	private final ThreadLocal<List<JiraIssueCustomHistory>> threadLocalHistory =
+			ThreadLocal.withInitial(ArrayList::new);
+	private final ThreadLocal<List<JiraIssue>> threadReleaseIssues =
+			ThreadLocal.withInitial(ArrayList::new);
+	private final ThreadLocal<Set<JiraIssue>> threadSubtaskDefects =
+			ThreadLocal.withInitial(HashSet::new);
 	JiraIssueReleaseStatus jiraIssueReleaseStatus = new JiraIssueReleaseStatus();
-	@Autowired
-	private KpiHelperService kpiHelperService;
-	@Autowired
-	private FilterHelperService filterHelperService;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
-	@Autowired
-	ProjectReleaseRepo projectReleaseRepo;
+	@Autowired private KpiHelperService kpiHelperService;
+	@Autowired private FilterHelperService filterHelperService;
+	@Autowired private CacheService cacheService;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
+	@Autowired ProjectReleaseRepo projectReleaseRepo;
 	private List<JiraIssue> jiraIssueList;
 	private List<JiraIssue> jiraIssueReleaseList;
 	private Set<JiraIssue> subtaskDefectReleaseList;
@@ -108,55 +101,62 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 	private boolean referFromProjectCache = true;
 
 	/**
-	 * This method process scrum jira based release kpis request, cache data and
-	 * call service in multiple thread.
+	 * This method process scrum jira based release kpis request, cache data and call service in
+	 * multiple thread.
 	 *
-	 * @param kpiRequest
-	 *          JIRA KPI request true if flow for precalculated, false for direct
-	 *          flow.
+	 * @param kpiRequest JIRA KPI request true if flow for precalculated, false for direct flow.
 	 * @return List of KPI data
-	 * @throws EntityNotFoundException
-	 *           EntityNotFoundException
+	 * @throws EntityNotFoundException EntityNotFoundException
 	 */
 	@SuppressWarnings({"PMD.AvoidCatchingGenericException", "unchecked"})
 	@Override
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
 
 		log.info("Processing KPI calculation for data {}", kpiRequest.getKpiList());
-		List<KpiElement> origRequestedKpis = kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
+		List<KpiElement> origRequestedKpis =
+				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
 		String[] projectKeyCache = null;
 		try {
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-			String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(), false);
+			String groupName =
+					filterHelperService.getHierarachyLevelId(
+							kpiRequest.getLevel(), kpiRequest.getLabel(), false);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
 			} else {
 				log.error("label name for selected hierarchy not found");
 			}
-			List<AccountHierarchyData> filteredAccountDataList = getFilteredAccountHierarchyData(kpiRequest);
+			List<AccountHierarchyData> filteredAccountDataList =
+					getFilteredAccountHierarchyData(kpiRequest);
 
 			if (!CollectionUtils.isEmpty(filteredAccountDataList)) {
-				projectKeyCache = kpiHelperService.getProjectKeyCache(kpiRequest, filteredAccountDataList,
-						referFromProjectCache);
+				projectKeyCache =
+						kpiHelperService.getProjectKeyCache(
+								kpiRequest, filteredAccountDataList, referFromProjectCache);
 
-				filteredAccountDataList = kpiHelperService.getAuthorizedFilteredList(kpiRequest, filteredAccountDataList,
-						referFromProjectCache);
+				filteredAccountDataList =
+						kpiHelperService.getAuthorizedFilteredList(
+								kpiRequest, filteredAccountDataList, referFromProjectCache);
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				Object cachedData = cacheService.getFromApplicationCache(projectKeyCache, KPISource.JIRA.name(), groupId,
-						kpiRequest.getSprintIncluded());
-				if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-						null != cachedData) {
+				Object cachedData =
+						cacheService.getFromApplicationCache(
+								projectKeyCache, KPISource.JIRA.name(), groupId, kpiRequest.getSprintIncluded());
+				if (!kpiRequest
+								.getRequestTrackerId()
+								.toLowerCase()
+								.contains(KPISource.EXCEL.name().toLowerCase())
+						&& null != cachedData) {
 					log.info("Fetching value from cache for {}", Arrays.toString(kpiRequest.getIds()));
 					return (List<KpiElement>) cachedData;
 				}
 
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);
 
-				if (!CollectionUtils.isEmpty(origRequestedKpis) &&
-						StringUtils.isNotEmpty(origRequestedKpis.get(0).getKpiCategory())) {
+				if (!CollectionUtils.isEmpty(origRequestedKpis)
+						&& StringUtils.isNotEmpty(origRequestedKpis.get(0).getKpiCategory())) {
 					updateJiraIssueList(filteredAccountDataList, filteredNode);
 				}
 				// set filter value to show on trend line. If subprojects are
@@ -165,18 +165,23 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 				// projects
 				kpiRequest.setFilterToShowOnTrend(groupName);
 
-				ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+				ExecutorService executorService =
+						Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 				List<CompletableFuture<Void>> futures = new ArrayList<>();
 
 				for (KpiElement kpiEle : kpiRequest.getKpiList()) {
-					CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-						threadLocalJiraIssues.set(jiraIssueList);
-						threadLocalHistory.set(jiraIssueCustomHistoryList);
-						threadReleaseIssues.set(jiraIssueReleaseList);
-						threadSubtaskDefects.set(subtaskDefectReleaseList);
-						responseList.add(calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, filteredNode));
-					}, executorService);
+					CompletableFuture<Void> future =
+							CompletableFuture.runAsync(
+									() -> {
+										threadLocalJiraIssues.set(jiraIssueList);
+										threadLocalHistory.set(jiraIssueCustomHistoryList);
+										threadReleaseIssues.set(jiraIssueReleaseList);
+										threadSubtaskDefects.set(subtaskDefectReleaseList);
+										responseList.add(
+												calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, filteredNode));
+									},
+									executorService);
 					futures.add(future);
 				}
 
@@ -186,12 +191,18 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 				allOf.join(); // Wait for all tasks to complete
 
 				executorService.shutdown();
-				List<KpiElement> missingKpis = origRequestedKpis.stream().filter(
-						reqKpi -> responseList.stream().noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
-						.toList();
+				List<KpiElement> missingKpis =
+						origRequestedKpis.stream()
+								.filter(
+										reqKpi ->
+												responseList.stream()
+														.noneMatch(
+																responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
+								.toList();
 				responseList.addAll(missingKpis);
 
-				kpiHelperService.setIntoApplicationCache(kpiRequest, responseList, groupId, projectKeyCache);
+				kpiHelperService.setIntoApplicationCache(
+						kpiRequest, responseList, groupId, projectKeyCache);
 			} else {
 				responseList.addAll(origRequestedKpis);
 			}
@@ -210,16 +221,21 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 	}
 
 	private List<AccountHierarchyData> getFilteredAccountHierarchyData(KpiRequest kpiRequest) {
-		List<AccountHierarchyData> accountDataListAll = (List<AccountHierarchyData>) cacheService
-				.cacheAccountHierarchyData();
+		List<AccountHierarchyData> accountDataListAll =
+				(List<AccountHierarchyData>) cacheService.cacheAccountHierarchyData();
 
-		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap()) &&
-				CollectionUtils.isNotEmpty(kpiRequest.getSelectedMap().get(CommonConstant.RELEASE.toLowerCase()))) {
-			String targetNodeId = kpiRequest.getSelectedMap().get(CommonConstant.RELEASE.toLowerCase()).get(0);
+		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap())
+				&& CollectionUtils.isNotEmpty(
+						kpiRequest.getSelectedMap().get(CommonConstant.RELEASE.toLowerCase()))) {
+			String targetNodeId =
+					kpiRequest.getSelectedMap().get(CommonConstant.RELEASE.toLowerCase()).get(0);
 
-			Optional<AccountHierarchyData> optionalData = accountDataListAll.stream()
-					.filter(accountHierarchyData -> accountHierarchyData.getLeafNodeId().equalsIgnoreCase(targetNodeId))
-					.findFirst();
+			Optional<AccountHierarchyData> optionalData =
+					accountDataListAll.stream()
+							.filter(
+									accountHierarchyData ->
+											accountHierarchyData.getLeafNodeId().equalsIgnoreCase(targetNodeId))
+							.findFirst();
 
 			return optionalData.map(List::of).orElse(List.of());
 		} else {
@@ -227,31 +243,42 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 		}
 	}
 
-	private Node getFilteredNodes(KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
+	private Node getFilteredNodes(
+			KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
 		Node filteredNode = filteredAccountDataList.get(0).getNode().get(kpiRequest.getLevel() - 1);
 		Node parentNode = filteredAccountDataList.get(0).getNode().get(kpiRequest.getLevel() - 2);
 		filteredNode.setParent(parentNode);
 
-		filteredNode.setProjectFilter(new ProjectFilter(filteredNode.getParent().getId(),
-				filteredNode.getParent().getName(), filteredNode.getProjectHierarchy().getBasicProjectConfigId()));
-		filteredNode.setReleaseFilter(new ReleaseFilter(filteredNode.getId(), filteredNode.getName(),
-				filteredNode.getProjectHierarchy().getBeginDate(), filteredNode.getProjectHierarchy().getEndDate()));
+		filteredNode.setProjectFilter(
+				new ProjectFilter(
+						filteredNode.getParent().getId(),
+						filteredNode.getParent().getName(),
+						filteredNode.getProjectHierarchy().getBasicProjectConfigId()));
+		filteredNode.setReleaseFilter(
+				new ReleaseFilter(
+						filteredNode.getId(),
+						filteredNode.getName(),
+						filteredNode.getProjectHierarchy().getBeginDate(),
+						filteredNode.getProjectHierarchy().getEndDate()));
 
 		return filteredNode;
 	}
 
-	private void updateJiraIssueList(List<AccountHierarchyData> filteredAccountDataList, Node filteredNode) {
+	private void updateJiraIssueList(
+			List<AccountHierarchyData> filteredAccountDataList, Node filteredNode) {
 		releaseList = getReleaseList(filteredNode);
-		fetchJiraIssues(filteredAccountDataList.get(0).getBasicProjectConfigId().toString(), releaseList);
-		fetchJiraIssuesCustomHistory(filteredAccountDataList.get(0).getBasicProjectConfigId().toString(), releaseList);
-		fetchJiraIssueReleaseForProject(filteredAccountDataList.get(0).getBasicProjectConfigId().toString());
+		fetchJiraIssues(
+				filteredAccountDataList.get(0).getBasicProjectConfigId().toString(), releaseList);
+		fetchJiraIssuesCustomHistory(
+				filteredAccountDataList.get(0).getBasicProjectConfigId().toString(), releaseList);
+		fetchJiraIssueReleaseForProject(
+				filteredAccountDataList.get(0).getBasicProjectConfigId().toString());
 	}
 
 	/**
 	 * creating release List on the basis of releaseId
 	 *
-	 * @param filteredNode
-	 *          filteredNode
+	 * @param filteredNode filteredNode
 	 * @return release names
 	 */
 	private List<String> getReleaseList(Node filteredNode) {
@@ -262,11 +289,18 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 	}
 
 	public void fetchJiraIssues(String basicProjectConfigId, List<String> releaseList) {
-		jiraIssueReleaseList = jiraIssueRepository
-				.findByBasicProjectConfigIdAndReleaseVersionsReleaseNameIn(basicProjectConfigId, releaseList);
-		Set<String> storyIDs = jiraIssueReleaseList.stream()
-				.filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase(NormalizedJira.DEFECT_TYPE.getValue()))
-				.map(JiraIssue::getNumber).collect(Collectors.toSet());
+		jiraIssueReleaseList =
+				jiraIssueRepository.findByBasicProjectConfigIdAndReleaseVersionsReleaseNameIn(
+						basicProjectConfigId, releaseList);
+		Set<String> storyIDs =
+				jiraIssueReleaseList.stream()
+						.filter(
+								jiraIssue ->
+										!jiraIssue
+												.getTypeName()
+												.equalsIgnoreCase(NormalizedJira.DEFECT_TYPE.getValue()))
+						.map(JiraIssue::getNumber)
+						.collect(Collectors.toSet());
 		subtaskDefectReleaseList = fetchSubTaskDefectsRelease(basicProjectConfigId, storyIDs);
 	}
 
@@ -275,30 +309,32 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 	}
 
 	public void fetchJiraIssuesCustomHistory(String basicProjectConfigId, List<String> releaseList) {
-		jiraIssueCustomHistoryList = jiraIssueCustomHistoryRepository.findByFilterAndFromReleaseMap(
-				Collections.singletonList(basicProjectConfigId), CommonUtils.convertToPatternListForSubString(releaseList));
+		jiraIssueCustomHistoryList =
+				jiraIssueCustomHistoryRepository.findByFilterAndFromReleaseMap(
+						Collections.singletonList(basicProjectConfigId),
+						CommonUtils.convertToPatternListForSubString(releaseList));
 	}
 
 	public void fetchJiraIssueReleaseForProject(String basicProjectConfigId) {
-		jiraIssueReleaseStatus = jiraIssueReleaseStatusRepository.findByBasicProjectConfigId(basicProjectConfigId);
+		jiraIssueReleaseStatus =
+				jiraIssueReleaseStatusRepository.findByBasicProjectConfigId(basicProjectConfigId);
 	}
 
 	/**
 	 * This method is used to fetch subtask defects which are not tagged to release
 	 *
-	 * @param projectConfigId
-	 *          projectConfigId
-	 * @param storyIDs
-	 *          storyIDs
+	 * @param projectConfigId projectConfigId
+	 * @param storyIDs storyIDs
 	 * @return return
 	 */
 	private Set<JiraIssue> fetchSubTaskDefectsRelease(String projectConfigId, Set<String> storyIDs) {
 		ObjectId basicProjectConfigId = new ObjectId(projectConfigId);
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-		if (CollectionUtils.isNotEmpty(storyIDs) && fieldMapping != null &&
-				CollectionUtils.isNotEmpty(fieldMapping.getJiraSubTaskDefectType())) {
-			return jiraIssueRepository.findByBasicProjectConfigIdAndDefectStoryIDInAndOriginalTypeIn(projectConfigId,
-					storyIDs, fieldMapping.getJiraSubTaskDefectType());
+		if (CollectionUtils.isNotEmpty(storyIDs)
+				&& fieldMapping != null
+				&& CollectionUtils.isNotEmpty(fieldMapping.getJiraSubTaskDefectType())) {
+			return jiraIssueRepository.findByBasicProjectConfigIdAndDefectStoryIDInAndOriginalTypeIn(
+					projectConfigId, storyIDs, fieldMapping.getJiraSubTaskDefectType());
 		}
 		return new HashSet<>();
 	}
@@ -312,10 +348,8 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 	}
 
 	/**
-	 * @param fieldMapping
-	 *          fieldMapping
-	 * @param releaseNames
-	 *          releaseNames
+	 * @param fieldMapping fieldMapping
+	 * @param releaseNames releaseNames
 	 * @return JiraIssueList
 	 */
 	public List<JiraIssue> getJiraIssuesList(FieldMapping fieldMapping, List<String> releaseNames) {
@@ -332,37 +366,38 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 	}
 
 	/**
-	 * This method call by multiple thread, take object of specific KPI and call
-	 * method of these KPIs
+	 * This method call by multiple thread, take object of specific KPI and call method of these KPIs
 	 *
-	 * @param kpiRequest
-	 *          JIRA KPI request
-	 * @param kpiElement
-	 *          kpiElement object
-	 * @param filteredAccountNode
-	 *          filtered node object
+	 * @param kpiRequest JIRA KPI request
+	 * @param kpiElement kpiElement object
+	 * @param filteredAccountNode filtered node object
 	 * @return kpielement
 	 */
-	private KpiElement calculateAllKPIAggregatedMetrics(KpiRequest kpiRequest, KpiElement kpiElement,
-			Node filteredAccountNode) {
+	private KpiElement calculateAllKPIAggregatedMetrics(
+			KpiRequest kpiRequest, KpiElement kpiElement, Node filteredAccountNode) {
 		try {
 
 			KPICode kpi = KPICode.getKPI(kpiElement.getKpiId());
 
-			JiraReleaseKPIService jiraKPIService = (JiraReleaseKPIService) JiraNonTrendKPIServiceFactory
-					.getJiraKPIService(kpi.name());
+			JiraReleaseKPIService jiraKPIService =
+					(JiraReleaseKPIService) JiraNonTrendKPIServiceFactory.getJiraKPIService(kpi.name());
 			long startTime = System.currentTimeMillis();
 			if (KPICode.THROUGHPUT.equals(kpi)) {
 				log.info("No need to fetch Throughput KPI data");
 			} else {
 				Node nodeDataClone = (Node) SerializationUtils.clone(filteredAccountNode);
-				if (Objects.nonNull(nodeDataClone) && kpiHelperService.isToolConfigured(kpi, kpiElement, nodeDataClone)) {
+				if (Objects.nonNull(nodeDataClone)
+						&& kpiHelperService.isToolConfigured(kpi, kpiElement, nodeDataClone)) {
 					kpiElement = jiraKPIService.getKpiData(kpiRequest, kpiElement, nodeDataClone);
 					kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 					kpiHelperService.isMandatoryFieldSet(kpi, kpiElement, nodeDataClone);
 				}
 				long processTime = System.currentTimeMillis() - startTime;
-				log.info("[JIRA-{}-TIME][{}]. KPI took {} ms", kpi.name(), kpiRequest.getRequestTrackerId(), processTime);
+				log.info(
+						"[JIRA-{}-TIME][{}]. KPI took {} ms",
+						kpi.name(),
+						kpiRequest.getRequestTrackerId(),
+						processTime);
 			}
 		} catch (ApplicationException exception) {
 			kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
@@ -375,7 +410,8 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 		return kpiElement;
 	}
 
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest) throws EntityNotFoundException {
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest)
+			throws EntityNotFoundException {
 		referFromProjectCache = false;
 		List<KpiElement> kpiElementList = process(kpiRequest);
 		referFromProjectCache = true;

@@ -45,20 +45,25 @@ public class ReleaseWiseConfiguration {
 	@Execution
 	public void execution() {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("field_mapping");
-		collection.find(new Document("startDateCountKPI150", new Document("$exists", true))).forEach(document -> {
-			// Get the integer value from the document
-			Integer integerValue = document.getInteger("startDateCountKPI150");
+		collection
+				.find(new Document("startDateCountKPI150", new Document("$exists", true)))
+				.forEach(
+						document -> {
+							// Get the integer value from the document
+							Integer integerValue = document.getInteger("startDateCountKPI150");
 
-			// Create a Map to hold the integer value
-			Map<String, Integer> mapValue = new HashMap<>();
-			mapValue.put("", integerValue);
+							// Create a Map to hold the integer value
+							Map<String, Integer> mapValue = new HashMap<>();
+							mapValue.put("", integerValue);
 
-			// Save the updated document back to the collection
-			collection.updateOne(new Document("_id", document.getObjectId("_id")),
-					new Document("$set", new Document("startDateCountKPI150", mapValue)));
-		});
+							// Save the updated document back to the collection
+							collection.updateOne(
+									new Document("_id", document.getObjectId("_id")),
+									new Document("$set", new Document("startDateCountKPI150", mapValue)));
+						});
 
-		MongoCollection<Document> mappingStructure = mongoTemplate.getCollection("field_mapping_structure");
+		MongoCollection<Document> mappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
 
 		// Define the filter to match documents with fieldName "startDateCountKPI150"
 		Document filter = new Document("fieldName", "startDateCountKPI150");

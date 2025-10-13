@@ -46,11 +46,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
-import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
-import com.publicissapient.kpidashboard.common.service.NotificationService;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -65,6 +60,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.data.ConnectionsDataFactory;
@@ -77,10 +74,13 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectBasicCon
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfig;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
 import com.publicissapient.kpidashboard.common.model.connection.ConnectionDTO;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectToolConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.connection.ConnectionRepository;
+import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
+import com.publicissapient.kpidashboard.common.service.NotificationService;
 
 /**
  * @author dilipKr
@@ -99,40 +99,25 @@ public class ConnectionServiceImplTest {
 	List<ProjectBasicConfig> projectBasicConfigList = new ArrayList<>();
 	String testId;
 	String testConnectionName;
-	@InjectMocks
-	private ConnectionServiceImpl connectionServiceImpl;
-	@Mock
-	private ConnectionRepository connectionRepository;
-	@Mock
-	private ProjectToolConfigRepository toolRepositroy;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	private Authentication authentication;
-	@Mock
-	private SecurityContext securityContext;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private AesEncryptionService aesEncryptionService;
-	@Mock
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
-	@Mock
-	private AuthenticationService authenticationService;
-	@Mock
-	private RepoToolsProviderRepository repoToolsProviderRepository;
+	@InjectMocks private ConnectionServiceImpl connectionServiceImpl;
+	@Mock private ConnectionRepository connectionRepository;
+	@Mock private ProjectToolConfigRepository toolRepositroy;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private Authentication authentication;
+	@Mock private SecurityContext securityContext;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private AesEncryptionService aesEncryptionService;
+	@Mock private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Mock private AuthenticationService authenticationService;
+	@Mock private RepoToolsProviderRepository repoToolsProviderRepository;
 
-	@Mock
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Mock private RepoToolsConfigServiceImpl repoToolsConfigService;
 
-	@Mock
-	private UserInfoRepository userInfoRepository;
+	@Mock private UserInfoRepository userInfoRepository;
 
-	@Mock
-	private AuthenticationRepository authenticationRepository;
+	@Mock private AuthenticationRepository authenticationRepository;
 
-	@Mock
-	private NotificationService notificationService;
+	@Mock private NotificationService notificationService;
 
 	private Connection connection;
 	private final ObjectId connectionId = new ObjectId();
@@ -190,7 +175,6 @@ public class ConnectionServiceImplTest {
 		connection.setCreatedBy("user123");
 		connection.setNotificationCount(0);
 		connection.setBrokenConnection(false);
-
 	}
 
 	/** method includes post processes for test cases */
@@ -209,11 +193,12 @@ public class ConnectionServiceImplTest {
 	@Test
 	public void testgetAllConnection() {
 		List<Connection> connections = connectionsDataFactory.getConnections();
-		connections.forEach(connection -> {
-			connection.setCreatedBy("test@gmail.com");
-			connection.setUsername("test");
-			connection.setUpdatedBy("test@gmail.com");
-		});
+		connections.forEach(
+				connection -> {
+					connection.setCreatedBy("test@gmail.com");
+					connection.setUsername("test");
+					connection.setUpdatedBy("test@gmail.com");
+				});
 
 		when(connectionRepository.findAllWithoutSecret()).thenReturn(connections);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
@@ -306,21 +291,25 @@ public class ConnectionServiceImplTest {
 		connection.setPassword("Password");
 		connection.setPat("Pat Key");
 		connection.setPrivateKey("Private Key");
-		when(connectionRepository.findById(new ObjectId("5fdc809fb55d53cc1692543c"))).thenReturn(Optional.of(connection));
+		when(connectionRepository.findById(new ObjectId("5fdc809fb55d53cc1692543c")))
+				.thenReturn(Optional.of(connection));
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
 		RepoToolsProvider provider = new RepoToolsProvider();
 		provider.setTestApiUrl("https://www.test.com");
-		ServiceResponse response = connectionServiceImpl.updateConnection("5fdc809fb55d53cc1692543c", connection);
+		ServiceResponse response =
+				connectionServiceImpl.updateConnection("5fdc809fb55d53cc1692543c", connection);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
-		assertEquals(((ConnectionDTO) response.getData()).getConnectionName(), connection.getConnectionName());
+		assertEquals(
+				((ConnectionDTO) response.getData()).getConnectionName(), connection.getConnectionName());
 	}
 
 	@Test
 	public void testSaveConnectionDetailsZephyrCloud() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/zephyr_conn_input.json");
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/zephyr_conn_input.json");
 
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.ZEPHYR);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.ZEPHYR);
 		List<Connection> connList = new ArrayList<>();
 		List<String> connUsers = new ArrayList<>();
 		connUsers.add("test");
@@ -344,10 +333,11 @@ public class ConnectionServiceImplTest {
 
 	@Test
 	public void testSaveConnectionDetailsJira() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/jira_connections_input.json");
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/jira_connections_input.json");
 
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.JIRA);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.JIRA);
 		List<Connection> connList = new ArrayList<>();
 		List<String> connUsers = new ArrayList<>();
 		connUsers.add("test");
@@ -370,10 +360,11 @@ public class ConnectionServiceImplTest {
 
 	@Test
 	public void testSaveConnectionDetailsJiraBearerToken() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/jira_connections_input.json");
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/jira_connections_input.json");
 
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.JIRA);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.JIRA);
 		List<Connection> connList = new ArrayList<>();
 		List<String> connUsers = new ArrayList<>();
 		connUsers.add("test");
@@ -398,10 +389,11 @@ public class ConnectionServiceImplTest {
 
 	@Test
 	public void testSaveConnectionDetailsJiraBearerToken_NoAuth() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/jira_connections_input.json");
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/jira_connections_input.json");
 
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.JIRA);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.JIRA);
 		List<Connection> connList = new ArrayList<>();
 		List<String> connUsers = new ArrayList<>();
 		connUsers.add("test");
@@ -425,10 +417,11 @@ public class ConnectionServiceImplTest {
 
 	@Test
 	public void testSaveConnectionDetailsZephyrServer() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/zephyr_server_conn_input.json");
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/zephyr_server_conn_input.json");
 
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.ZEPHYR);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.ZEPHYR);
 		Connection connectionInput = connectionsByType.get(0);
 		connectionInput.setBaseUrl("https://test.abc.com/jira");
 		connectionInput.setUsername("test");
@@ -529,8 +522,10 @@ public class ConnectionServiceImplTest {
 	}
 
 	private List<ProjectToolConfig> findByConnectionId(ObjectId id) {
-		List<ProjectToolConfig> first = createMockTools().stream().filter(conn -> conn.getConnectionId().equals(id))
-				.collect(Collectors.toList());
+		List<ProjectToolConfig> first =
+				createMockTools().stream()
+						.filter(conn -> conn.getConnectionId().equals(id))
+						.collect(Collectors.toList());
 		return first;
 	}
 
@@ -583,10 +578,11 @@ public class ConnectionServiceImplTest {
 
 	@Test
 	public void testSaveConnectionDetailsSonarCloud() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/sonar_conn_input.json");
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/sonar_conn_input.json");
 
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.SONAR);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.SONAR);
 		List<Connection> connList = new ArrayList<>();
 		List<String> connUsers = new ArrayList<>();
 		connUsers.add("test User");
@@ -636,9 +632,10 @@ public class ConnectionServiceImplTest {
 
 	@Test
 	public void saveGitHubConnection() {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory
-				.newInstance("/json/connections/github_connections_input.json");
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.GITHUB);
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance("/json/connections/github_connections_input.json");
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.GITHUB);
 		List<Connection> connList = new ArrayList<>();
 		List<String> connUsers = new ArrayList<>();
 		connUsers.add("test");
@@ -664,44 +661,52 @@ public class ConnectionServiceImplTest {
 	@Test
 	public void updateGitHubConnection_ConnectionNotPresent() {
 
-		Connection connectionInput = createGitHubConnectionInput("/json/connections/github_input_for_update.json");
+		Connection connectionInput =
+				createGitHubConnectionInput("/json/connections/github_input_for_update.json");
 
 		when(connectionRepository.findById(any(ObjectId.class))).thenReturn(Optional.empty());
 
-		ServiceResponse serviceResponse = connectionServiceImpl.updateConnection(connectionInput.getId().toHexString(),
-				connectionInput);
+		ServiceResponse serviceResponse =
+				connectionServiceImpl.updateConnection(
+						connectionInput.getId().toHexString(), connectionInput);
 		assertFalse(serviceResponse.getSuccess());
 	}
 
 	@Test
 	public void updateGitHubConnection_ConnectionWithSameName() {
 
-		Connection connectionInput = createGitHubConnectionInput("/json/connections/github_input_for_update.json");
+		Connection connectionInput =
+				createGitHubConnectionInput("/json/connections/github_input_for_update.json");
 		Connection existingConnection = getExistingGitHubConnection();
 		Connection otherConnection = getExistingGitHubConnection();
 		otherConnection.setId(new ObjectId("61d6ec31caa15d6d9cdc0727"));
 
-		when(connectionRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(existingConnection));
+		when(connectionRepository.findById(any(ObjectId.class)))
+				.thenReturn(Optional.of(existingConnection));
 		when(connectionRepository.findByConnectionName(anyString())).thenReturn(otherConnection);
 
-		ServiceResponse serviceResponse = connectionServiceImpl.updateConnection(connectionInput.getId().toHexString(),
-				connectionInput);
+		ServiceResponse serviceResponse =
+				connectionServiceImpl.updateConnection(
+						connectionInput.getId().toHexString(), connectionInput);
 		assertFalse(serviceResponse.getSuccess());
 	}
 
 	@Test
 	public void updateGitHubConnection_ConnectionByUnAuthorizedUser() {
 
-		Connection connectionInput = createGitHubConnectionInput("/json/connections/github_input_for_update.json");
+		Connection connectionInput =
+				createGitHubConnectionInput("/json/connections/github_input_for_update.json");
 		Connection existingConnection = getExistingGitHubConnection();
 
-		when(connectionRepository.findById(any(ObjectId.class))).thenReturn(Optional.of(existingConnection));
+		when(connectionRepository.findById(any(ObjectId.class)))
+				.thenReturn(Optional.of(existingConnection));
 		when(connectionRepository.findByConnectionName(anyString())).thenReturn(existingConnection);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
 		when(authenticationService.getLoggedInUser()).thenReturn("anotherUser");
 
-		ServiceResponse serviceResponse = connectionServiceImpl.updateConnection(connectionInput.getId().toHexString(),
-				connectionInput);
+		ServiceResponse serviceResponse =
+				connectionServiceImpl.updateConnection(
+						connectionInput.getId().toHexString(), connectionInput);
 		assertFalse(serviceResponse.getSuccess());
 	}
 
@@ -741,7 +746,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c1);
 		connList.add(c2);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
-		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean())).thenReturn(connList);
+		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
+				.thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(1));
 		assertFalse(serviceResponse.getSuccess());
 	}
@@ -770,7 +776,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c2);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
-		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean())).thenReturn(connList);
+		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
+				.thenReturn(connList);
 		when(aesEncryptionService.decrypt(anyString(), anyString())).thenReturn("pat");
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(1));
 		assertTrue(serviceResponse.getSuccess());
@@ -800,7 +807,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c2);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
-		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean())).thenReturn(connList);
+		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
+				.thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(1));
 		assertTrue(serviceResponse.getSuccess());
 	}
@@ -829,7 +837,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c2);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		// when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
-		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean())).thenReturn(connList);
+		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
+				.thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(1));
 		assertFalse(serviceResponse.getSuccess());
 	}
@@ -858,7 +867,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c2);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		// when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
-		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean())).thenReturn(connList);
+		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
+				.thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(1));
 		assertFalse(serviceResponse.getSuccess());
 	}
@@ -879,7 +889,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c2);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		// when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(0));
-		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean())).thenReturn(connList);
+		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
+				.thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(0));
 		assertFalse(serviceResponse.getSuccess());
 	}
@@ -893,8 +904,10 @@ public class ConnectionServiceImplTest {
 	}
 
 	private Connection createAndGetOneGitHubConnection(String jsonFilePath) {
-		ConnectionsDataFactory connectionsDataFactory = ConnectionsDataFactory.newInstance(jsonFilePath);
-		List<Connection> connectionsByType = connectionsDataFactory.findConnectionsByType(ProcessorConstants.GITHUB);
+		ConnectionsDataFactory connectionsDataFactory =
+				ConnectionsDataFactory.newInstance(jsonFilePath);
+		List<Connection> connectionsByType =
+				connectionsDataFactory.findConnectionsByType(ProcessorConstants.GITHUB);
 		return connectionsByType.get(0);
 	}
 
@@ -918,7 +931,8 @@ public class ConnectionServiceImplTest {
 
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn("5");
 		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
-		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection");
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject())
+				.thenReturn("Action Required: Restore Your {{toolName}} Connection");
 		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Broken_Connection", "template-key"));
 		when(customApiConfig.isNotificationSwitch()).thenReturn(true);
 
@@ -926,7 +940,7 @@ public class ConnectionServiceImplTest {
 		userInfo.setEmailAddress("user@example.com");
 		userInfo.setDisplayName("User");
 		Map<String, Boolean> alertNotifications = new HashMap<>();
-		alertNotifications.put("errorAlertNotification",true);
+		alertNotifications.put("errorAlertNotification", true);
 		userInfo.setNotificationEmail(alertNotifications);
 
 		Authentication auth = new Authentication();
@@ -941,17 +955,16 @@ public class ConnectionServiceImplTest {
 		assertEquals("Error!", connection.getConnectionErrorMsg());
 		assertNotNull(connection.getNotifiedOn());
 		assertEquals(1, connection.getNotificationCount());
-		verify(notificationService).sendNotificationEvent(
-				eq(List.of("auth@example.com")),
-				anyMap(),
-				eq("Action Required: Restore Your {{toolName}} Connection"),
-				eq(true),
-				eq("template-key")
-		);
+		verify(notificationService)
+				.sendNotificationEvent(
+						eq(List.of("auth@example.com")),
+						anyMap(),
+						eq("Action Required: Restore Your {{toolName}} Connection"),
+						eq(true),
+						eq("template-key"));
 	}
 
-	public @Test
-	void shouldNotNotifyWhenNotificationCountExceedsMax() {
+	public @Test void shouldNotNotifyWhenNotificationCountExceedsMax() {
 		connection.setNotificationCount(5);
 		connection.setType("Jenkins");
 		connection.setNotifiedOn(LocalDateTime.now().minusDays(1).toString());
@@ -961,7 +974,8 @@ public class ConnectionServiceImplTest {
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
+		verify(notificationService, never())
+				.sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -975,7 +989,8 @@ public class ConnectionServiceImplTest {
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
+		verify(notificationService, never())
+				.sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
 	}
 
 	@Test
@@ -986,18 +1001,20 @@ public class ConnectionServiceImplTest {
 		when(connectionRepository.findById(connectionId)).thenReturn(Optional.of(connection));
 		when(customApiConfig.getBrokenConnectionMaximumEmailNotificationCount()).thenReturn("5");
 		when(customApiConfig.getBrokenConnectionEmailNotificationFrequency()).thenReturn("1");
-		when(customApiConfig.getBrokenConnectionEmailNotificationSubject()).thenReturn("Action Required: Restore Your {{toolName}} Connection"); // subject is blank
+		when(customApiConfig.getBrokenConnectionEmailNotificationSubject())
+				.thenReturn("Action Required: Restore Your {{toolName}} Connection"); // subject is blank
 
 		UserInfo userInfo = new UserInfo();
 		userInfo.setEmailAddress("user@example.com");
 		Map<String, Boolean> alertNotifications = new HashMap<>();
-		alertNotifications.put("errorAlertNotification",false);
+		alertNotifications.put("errorAlertNotification", false);
 		userInfo.setNotificationEmail(alertNotifications);
 		when(userInfoRepository.findByUsername("user123")).thenReturn(userInfo);
 		when(authenticationRepository.findByUsername("user123")).thenReturn(null);
 
 		connectionServiceImpl.updateBreakingConnection(connection, "Some error");
 
-		verify(notificationService, never()).sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
+		verify(notificationService, never())
+				.sendNotificationEvent(any(), any(), any(), anyBoolean(), any());
 	}
 }

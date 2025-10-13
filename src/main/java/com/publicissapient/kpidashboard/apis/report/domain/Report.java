@@ -36,17 +36,13 @@ public class Report extends BasicModel {
 
 	private String name;
 
-	@CreatedBy
-	private String createdBy;
+	@CreatedBy private String createdBy;
 
-	@LastModifiedBy
-	private String updatedBy;
+	@LastModifiedBy private String updatedBy;
 
-	@CreatedDate
-	private LocalDateTime createdAt;
+	@CreatedDate private LocalDateTime createdAt;
 
-	@LastModifiedDate
-	private LocalDateTime updatedAt;
+	@LastModifiedDate private LocalDateTime updatedAt;
 
 	private List<KPI> kpis;
 }

@@ -43,8 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class RepoToolsClient {
 
-	@Autowired
-	private RestTemplate restTemplate;
+	@Autowired private RestTemplate restTemplate;
 	private static final String X_API_KEY = "X-Api-Key";
 	private HttpHeaders httpHeaders;
 
@@ -63,19 +62,22 @@ public class RepoToolsClient {
 		log.info("enroll project request {} {}", repoToolsUrl, payload);
 		URI url = URI.create(repoToolsUrl);
 		HttpEntity<String> entity = new HttpEntity<>(payload, httpHeaders);
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+		ResponseEntity<String> response =
+				restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 		log.debug(response.getBody());
 		return response.getStatusCode().value();
 	}
 
-	public void updateConnection(RepoToolConnModel repoToolConnectionDetails, String connectionUpdateURL, String apiKey) {
+	public void updateConnection(
+			RepoToolConnModel repoToolConnectionDetails, String connectionUpdateURL, String apiKey) {
 		setHttpHeaders(apiKey);
 		Gson gson = new Gson();
 		String payload = gson.toJson(repoToolConnectionDetails);
 		log.info("updating connection request for {} ", repoToolConnectionDetails);
 		URI url = URI.create(connectionUpdateURL);
 		HttpEntity<String> entity = new HttpEntity<>(payload, httpHeaders);
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+		ResponseEntity<String> response =
+				restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 		log.debug(response.getBody());
 	}
 
@@ -92,7 +94,8 @@ public class RepoToolsClient {
 		String triggerScanUrl = String.format(repoToolsUrl, projectKey);
 		log.info("trigger project scan request {} {}", triggerScanUrl);
 		HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-		ResponseEntity<String> response = restTemplate.exchange(triggerScanUrl, HttpMethod.GET, entity, String.class);
+		ResponseEntity<String> response =
+				restTemplate.exchange(triggerScanUrl, HttpMethod.GET, entity, String.class);
 		return response.getStatusCode().value();
 	}
 
@@ -104,15 +107,16 @@ public class RepoToolsClient {
 	 * @param repoToolKpiRequestBody
 	 * @return kpi data
 	 */
-	public RepoToolKpiBulkMetricResponse kpiMetricCall(String repoToolsUrl, String apiKey,
-			RepoToolKpiRequestBody repoToolKpiRequestBody) {
+	public RepoToolKpiBulkMetricResponse kpiMetricCall(
+			String repoToolsUrl, String apiKey, RepoToolKpiRequestBody repoToolKpiRequestBody) {
 		setHttpHeaders(apiKey);
 		Gson gson = new Gson();
 		String payload = gson.toJson(repoToolKpiRequestBody);
 		log.info("kpi request payload for {} {}", repoToolsUrl, payload);
 		HttpEntity<String> entity = new HttpEntity<>(payload, httpHeaders);
-		ResponseEntity<RepoToolKpiBulkMetricResponse> response = restTemplate.exchange(URI.create(repoToolsUrl),
-				HttpMethod.POST, entity, RepoToolKpiBulkMetricResponse.class);
+		ResponseEntity<RepoToolKpiBulkMetricResponse> response =
+				restTemplate.exchange(
+						URI.create(repoToolsUrl), HttpMethod.POST, entity, RepoToolKpiBulkMetricResponse.class);
 		return response.getBody();
 	}
 
@@ -127,8 +131,8 @@ public class RepoToolsClient {
 		setHttpHeaders(apiKey);
 		HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
 		log.info("delete project request {}", repoToolsUrl);
-		ResponseEntity<JsonNode> response = restTemplate.exchange(URI.create(repoToolsUrl), HttpMethod.DELETE, entity,
-				JsonNode.class);
+		ResponseEntity<JsonNode> response =
+				restTemplate.exchange(URI.create(repoToolsUrl), HttpMethod.DELETE, entity, JsonNode.class);
 		return response.getStatusCode().value();
 	}
 
@@ -144,17 +148,16 @@ public class RepoToolsClient {
 		log.info("delete project request {}", deleteRepoUrl);
 		URI url = URI.create(deleteRepoUrl);
 		HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+		ResponseEntity<String> response =
+				restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
 		return response.getStatusCode().value();
 	}
 
 	/**
 	 * fetch repotool project member's email
 	 *
-	 * @param membersUrl
-	 *          url to fetch members
-	 * @param apiKey
-	 *          api key for url
+	 * @param membersUrl url to fetch members
+	 * @param apiKey api key for url
 	 * @return list of email
 	 */
 	public JsonNode fetchProjectRepoToolMembers(String membersUrl, String apiKey) {
@@ -162,7 +165,8 @@ public class RepoToolsClient {
 		log.info("get repoTool project members {}", membersUrl);
 		URI url = URI.create(membersUrl);
 		HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
-		ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, entity, JsonNode.class);
+		ResponseEntity<JsonNode> response =
+				restTemplate.exchange(url, HttpMethod.GET, entity, JsonNode.class);
 		return response.getBody();
 	}
 

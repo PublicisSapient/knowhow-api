@@ -59,14 +59,10 @@ public class AutoApproveAccessServiceImplTest {
 	List<AutoApproveAccessConfig> listAutoApproveAccessConfig = new ArrayList<>();
 	Optional<AutoApproveAccessConfig> oAutoApproveAccessConfig;
 	private AutoApproveAccessConfigDTO autoApproveAccessConfigDTO;
-	@InjectMocks
-	private AutoApproveAccessServiceImpl autoApproveAccessServiceImpl;
-	@Mock
-	private AutoApproveAccessService autoApproveAccessService;
-	@Mock
-	private AutoApproveAccessConfigRepository autoAccessRepository;
-	@Mock
-	private RolesRepository rolesRepository;
+	@InjectMocks private AutoApproveAccessServiceImpl autoApproveAccessServiceImpl;
+	@Mock private AutoApproveAccessService autoApproveAccessService;
+	@Mock private AutoApproveAccessConfigRepository autoAccessRepository;
+	@Mock private RolesRepository rolesRepository;
 	private String testId;
 
 	@Before
@@ -115,8 +111,8 @@ public class AutoApproveAccessServiceImplTest {
 	public void modifyAutoApprovConfigById() throws Exception {
 		RoleData roledata = new RoleData();
 		when(rolesRepository.findByRoleName(ArgumentMatchers.anyString())).thenReturn(roledata);
-		AutoApproveAccessConfig response = autoApproveAccessServiceImpl.modifyAutoApprovConfigById(testId,
-				autoApproveAccessConfig);
+		AutoApproveAccessConfig response =
+				autoApproveAccessServiceImpl.modifyAutoApprovConfigById(testId, autoApproveAccessConfig);
 		assertThat("status: ", response.getEnableAutoApprove(), equalTo("true"));
 	}
 

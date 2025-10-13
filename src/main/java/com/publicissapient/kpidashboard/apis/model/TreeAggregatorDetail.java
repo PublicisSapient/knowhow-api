@@ -40,22 +40,20 @@ public class TreeAggregatorDetail implements Serializable {
 	private Map<String, List<Node>> mapOfListOfProjectNodes;
 
 	/** Instantiates a new Tree aggregator detail. */
-	public TreeAggregatorDetail() {
-	}
+	public TreeAggregatorDetail() {}
 
 	/**
 	 * Instantiates a new Tree aggregator detail.
 	 *
-	 * @param node
-	 *          the node
-	 * @param mapOfListOfLeafNodes
-	 *          the map of list of leaf nodes
-	 * @param mapTmp
-	 *          the map tmp
-	 * @param mapOfListOfProjectNodes
-	 *          the map of list of project nodes
+	 * @param node the node
+	 * @param mapOfListOfLeafNodes the map of list of leaf nodes
+	 * @param mapTmp the map tmp
+	 * @param mapOfListOfProjectNodes the map of list of project nodes
 	 */
-	public TreeAggregatorDetail(Node node, Map<String, List<Node>> mapOfListOfLeafNodes, Map<String, Node> mapTmp,
+	public TreeAggregatorDetail(
+			Node node,
+			Map<String, List<Node>> mapOfListOfLeafNodes,
+			Map<String, Node> mapTmp,
 			Map<String, List<Node>> mapOfListOfProjectNodes) {
 		this.root = node;
 		this.mapOfListOfLeafNodes = mapOfListOfLeafNodes;
@@ -75,8 +73,7 @@ public class TreeAggregatorDetail implements Serializable {
 	/**
 	 * Sets root.
 	 *
-	 * @param root
-	 *          the root
+	 * @param root the root
 	 */
 	public void setRoot(Node root) {
 		this.root = root;
@@ -94,8 +91,7 @@ public class TreeAggregatorDetail implements Serializable {
 	/**
 	 * Sets map of list of leaf nodes.
 	 *
-	 * @param mapOfListOfLeafNodes
-	 *          the map of list of leaf nodes
+	 * @param mapOfListOfLeafNodes the map of list of leaf nodes
 	 */
 	public void setMapOfListOfLeafNodes(Map<String, List<Node>> mapOfListOfLeafNodes) {
 		this.mapOfListOfLeafNodes = mapOfListOfLeafNodes;
@@ -113,8 +109,7 @@ public class TreeAggregatorDetail implements Serializable {
 	/**
 	 * Sets map tmp.
 	 *
-	 * @param mapTmp
-	 *          the map tmp
+	 * @param mapTmp the map tmp
 	 */
 	public void setMapTmp(Map<String, Node> mapTmp) {
 		this.mapTmp = mapTmp;
@@ -132,8 +127,7 @@ public class TreeAggregatorDetail implements Serializable {
 	/**
 	 * Sets map of list of tower nodes.
 	 *
-	 * @param mapOfListOfProjectNodes
-	 *          the map of list of tower nodes
+	 * @param mapOfListOfProjectNodes the map of list of tower nodes
 	 */
 	public void setMapOfListOfProjectNodes(Map<String, List<Node>> mapOfListOfProjectNodes) {
 		this.mapOfListOfProjectNodes = mapOfListOfProjectNodes;

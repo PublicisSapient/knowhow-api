@@ -75,46 +75,34 @@ import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AccountHierarchyServiceImplTest {
-	@Mock
-	TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	GlobalConfigRepository globalConfigRepository;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	private AccountHierarchyRepository accountHierarchyRepository;
-	@Mock
-	private CacheService cacheService;
-	@InjectMocks
-	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
-	@Mock
-	private SprintRepository sprintRepository;
+	@Mock TokenAuthenticationService tokenAuthenticationService;
+	@Mock UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock GlobalConfigRepository globalConfigRepository;
+	@Mock ConfigHelperService configHelperService;
+	@Mock private AccountHierarchyRepository accountHierarchyRepository;
+	@Mock private CacheService cacheService;
+	@InjectMocks private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	@Mock private SprintRepository sprintRepository;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
 	private List<AccountHierarchy> ahdList = new ArrayList<>();
 	private Set<String> userAccessProjects = new HashSet<>();
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList;
 
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
-	@Mock
-	private ProjectHierarchyService projectHierarchyService;
+	@Mock private ProjectHierarchyService projectHierarchyService;
 
-	@Mock
-	private ProjectBasicConfigService projectBasicConfigService;
+	@Mock private ProjectBasicConfigService projectBasicConfigService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void setup() {
-		AccountHierarchiesDataFactory ahdFactoryProjectLabel = AccountHierarchiesDataFactory.newInstance();
+		AccountHierarchiesDataFactory ahdFactoryProjectLabel =
+				AccountHierarchiesDataFactory.newInstance();
 		ahdList = ahdFactoryProjectLabel.getAccountHierarchies();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
@@ -122,31 +110,45 @@ public class AccountHierarchyServiceImplTest {
 		List<SprintDetails> sprintDetails = sprintDetailsDataFactory.getSprintDetails();
 		// when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(sprintDetails);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		when(cacheService.cacheAccountHierarchyData()).thenReturn(accountHierarchyDataList);
 
-		ProjectBasicConfigDataFactory projectBasicConfigDataFactory = ProjectBasicConfigDataFactory
-				.newInstance("/json/basicConfig/project_basic_config_request.json");
-		ProjectBasicConfig projectBasicConfig = projectBasicConfigDataFactory.getProjectBasicConfigs().get(1);
+		ProjectBasicConfigDataFactory projectBasicConfigDataFactory =
+				ProjectBasicConfigDataFactory.newInstance(
+						"/json/basicConfig/project_basic_config_request.json");
+		ProjectBasicConfig projectBasicConfig =
+				projectBasicConfigDataFactory.getProjectBasicConfigs().get(1);
 		projectBasicConfig.setIsKanban(false);
 
 		List<HierarchyValue> hierarchyList = new ArrayList<>();
 		hierarchyList.add(
-				new HierarchyValue(new HierarchyLevel(1, "bu", "BU", ""), "hierarchyLevelOne_unique_001", "Sample One Value"));
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(2, "ver", "Vertical", ""), "hierarchyLevelTwo_unique_001",
-				"Sample Two Value"));
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(3, "acc", "Account", ""), "hierarchyLevelThree_unique_001",
-				"Sample Three Value"));
+				new HierarchyValue(
+						new HierarchyLevel(1, "bu", "BU", ""),
+						"hierarchyLevelOne_unique_001",
+						"Sample One Value"));
+		hierarchyList.add(
+				new HierarchyValue(
+						new HierarchyLevel(2, "ver", "Vertical", ""),
+						"hierarchyLevelTwo_unique_001",
+						"Sample Two Value"));
+		hierarchyList.add(
+				new HierarchyValue(
+						new HierarchyLevel(3, "acc", "Account", ""),
+						"hierarchyLevelThree_unique_001",
+						"Sample Three Value"));
 		projectBasicConfig.setHierarchy(hierarchyList);
 
 		when(projectBasicConfigService.getAllProjectsBasicConfigs(anyBoolean()))
 				.thenReturn(Arrays.asList(projectBasicConfig));
 
-		OrganizationHierarchyDataFactory organizationHierarchyDataFactory = OrganizationHierarchyDataFactory.newInstance();
-		ProjectHierarchyDataFactory projectHierarchyDataFactory = ProjectHierarchyDataFactory.newInstance();
-		List<OrganizationHierarchy> organizationHierarchies = organizationHierarchyDataFactory.getOrganizationHierarchies();
+		OrganizationHierarchyDataFactory organizationHierarchyDataFactory =
+				OrganizationHierarchyDataFactory.newInstance();
+		ProjectHierarchyDataFactory projectHierarchyDataFactory =
+				ProjectHierarchyDataFactory.newInstance();
+		List<OrganizationHierarchy> organizationHierarchies =
+				organizationHierarchyDataFactory.getOrganizationHierarchies();
 		when(organizationHierarchyService.findAll()).thenReturn(organizationHierarchies);
 		when(projectHierarchyService.findAllByBasicProjectConfigIds(anyList()))
 				.thenReturn(projectHierarchyDataFactory.getProjectHierarchies());
@@ -200,12 +202,14 @@ public class AccountHierarchyServiceImplTest {
 		when(customApiConfig.getSprintCountForFilters()).thenReturn(15);
 
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
-		List<AccountHierarchyData> accountHierarchies = accountHierarchyServiceImpl.createHierarchyData();
+		List<AccountHierarchyData> accountHierarchies =
+				accountHierarchyServiceImpl.createHierarchyData();
 
 		Assert.assertEquals(3, accountHierarchies.size());
 	}

@@ -39,11 +39,9 @@ import com.publicissapient.kpidashboard.apis.stringshortener.repository.StringSh
 @RunWith(MockitoJUnitRunner.class)
 public class StringShortenerServiceTest {
 
-	@Mock
-	private StringShortenerRepository stringShortenerRepository;
+	@Mock private StringShortenerRepository stringShortenerRepository;
 
-	@InjectMocks
-	private StringShortenerService stringShortenerService;
+	@InjectMocks private StringShortenerService stringShortenerService;
 
 	private StringShortenerDTO stringShortenerDTO;
 	private StringShortener stringShortener;
@@ -63,9 +61,12 @@ public class StringShortenerServiceTest {
 
 	@Test
 	public void testCreateShortString_NullInput() {
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-			stringShortenerService.createShortString(null);
-		});
+		IllegalArgumentException exception =
+				assertThrows(
+						IllegalArgumentException.class,
+						() -> {
+							stringShortenerService.createShortString(null);
+						});
 		assertEquals("Please provide a valid stringShortenerDTO", exception.getMessage());
 	}
 

@@ -36,9 +36,9 @@ import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServ
 @Service
 public class FilterServiceFactory {
 
-	private static final Map<String, AccountHierarchyService<?, ?>> FILTER_SERVICE_CACHE = new HashMap<>();
-	@Autowired
-	private List<AccountHierarchyService<?, ?>> services;
+	private static final Map<String, AccountHierarchyService<?, ?>> FILTER_SERVICE_CACHE =
+			new HashMap<>();
+	@Autowired private List<AccountHierarchyService<?, ?>> services;
 
 	/**
 	 * @param type
@@ -49,7 +49,8 @@ public class FilterServiceFactory {
 	public static AccountHierarchyService getFilterService(String type) throws ApplicationException {
 		AccountHierarchyService<?, ?> service = FILTER_SERVICE_CACHE.get(type);
 		if (service == null) {
-			throw new ApplicationException(FilterServiceFactory.class, "Filter Service Factory not initalized");
+			throw new ApplicationException(
+					FilterServiceFactory.class, "Filter Service Factory not initalized");
 		}
 		return service;
 	}

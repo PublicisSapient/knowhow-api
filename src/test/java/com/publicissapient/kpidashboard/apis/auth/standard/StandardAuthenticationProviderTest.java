@@ -36,11 +36,9 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 @RunWith(MockitoJUnitRunner.class)
 public class StandardAuthenticationProviderTest {
 
-	@Mock
-	private AuthenticationService service;
+	@Mock private AuthenticationService service;
 
-	@InjectMocks
-	private StandardAuthenticationProvider provider;
+	@InjectMocks private StandardAuthenticationProvider provider;
 
 	@Test
 	public void shouldAuthenticate() {

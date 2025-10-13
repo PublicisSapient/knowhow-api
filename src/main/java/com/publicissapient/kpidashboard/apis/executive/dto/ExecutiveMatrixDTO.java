@@ -17,27 +17,21 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.executive.dto;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 /**
- * DTO representing the matrix data structure for the executive dashboard.
- * Contains a list of project metrics rows and column definitions.
+ * DTO representing the matrix data structure for the executive dashboard. Contains a list of
+ * project metrics rows and column definitions.
  */
 @Data
 @Builder
 public class ExecutiveMatrixDTO {
-    /**
-     * List of project metrics rows.
-     * Each row contains metrics for a specific project.
-     */
-    private List<ProjectMetricsDTO> rows;
-    
-    /**
-     * List of column definitions.
-     * Defines the structure and display properties of each column.
-     */
-    private List<ColumnDefinitionDTO> columns;
+	/** List of project metrics rows. Each row contains metrics for a specific project. */
+	private List<ProjectMetricsDTO> rows;
+
+	/** List of column definitions. Defines the structure and display properties of each column. */
+	private List<ColumnDefinitionDTO> columns;
 }

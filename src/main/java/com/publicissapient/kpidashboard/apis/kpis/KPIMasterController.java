@@ -41,8 +41,7 @@ public class KPIMasterController {
 	/**
 	 * Instantiates a new Kpi master controller.
 	 *
-	 * @param kPIHelperService
-	 *          the k pi helper service
+	 * @param kPIHelperService the k pi helper service
 	 */
 	@Autowired
 	public KPIMasterController(KpiHelperService kPIHelperService) {
@@ -54,7 +53,9 @@ public class KPIMasterController {
 	 *
 	 * @return the master response
 	 */
-	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			method = RequestMethod.GET,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public MasterResponse fetchMasterData() {
 		return kPIHelperService.fetchKpiMasterList();
 	}

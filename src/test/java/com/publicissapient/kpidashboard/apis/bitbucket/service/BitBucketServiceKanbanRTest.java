@@ -71,20 +71,13 @@ public class BitBucketServiceKanbanRTest {
 	private static String GROUP_PROJECT = "PROJECT";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	private BitBucketServiceKanbanR bitbucketServiceKanbanR;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CodeCommitKanbanServiceImpl codeCommitKanbanServiceImpl;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks private BitBucketServiceKanbanR bitbucketServiceKanbanR;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CacheService cacheService;
+	@Mock private CodeCommitKanbanServiceImpl codeCommitKanbanServiceImpl;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -95,17 +88,17 @@ public class BitBucketServiceKanbanRTest {
 	private Set<String> projects;
 	private KpiElement commitKpiElement;
 	private Map<String, BitBucketKPIService<?, ?, ?>> bitbucketServiceCache = new HashMap<>();
-	@Mock
-	private BitBucketKPIServiceFactory bitbucketKPIServiceFactory;
+	@Mock private BitBucketKPIServiceFactory bitbucketKPIServiceFactory;
 
 	@Before
 	public void setup() throws EntityNotFoundException {
 		KpiRequest kpiRequestBitBucket = createKpiRequest(2, "Bitbucket");
 
 		// bitbucketKPIServiceFactory.initMyServiceCache();
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
 		projectConfig.setId(new ObjectId("6335368249794a18e8a4479f"));
@@ -115,15 +108,16 @@ public class BitBucketServiceKanbanRTest {
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		List<HierarchyLevel> hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(anyBoolean())).thenReturn(map);
 		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyDataKanbanList))
 				.thenReturn(accountHierarchyDataKanbanList);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		commitKpiElement = setKpiElement(KPICode.NUMBER_OF_CHECK_INS.getKpiId(), "Code Commit Time");
@@ -141,8 +135,7 @@ public class BitBucketServiceKanbanRTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testProcess() throws Exception {
@@ -154,16 +147,24 @@ public class BitBucketServiceKanbanRTest {
 				.thenReturn(projectKey);
 		List<KpiElement> resultList = null;
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+				mockStatic(BitBucketKPIServiceFactory.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
 			when(mockService.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
 			resultList = bitbucketServiceKanbanR.process(kpiRequest);
-			mockedStatic
-					.verify(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+			mockedStatic.verify(
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
-		assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
+		assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
 	}
 
 	@Test
@@ -176,16 +177,24 @@ public class BitBucketServiceKanbanRTest {
 				.thenReturn(projectKey);
 		List<KpiElement> resultList = null;
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+				mockStatic(BitBucketKPIServiceFactory.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
 			when(mockService.getKpiData(any(), any(), any())).thenThrow(NullPointerException.class);
 			resultList = bitbucketServiceKanbanR.process(kpiRequest);
-			mockedStatic
-					.verify(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+			mockedStatic.verify(
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
-		assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+		assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 	}
 
 	@Test
@@ -198,16 +207,24 @@ public class BitBucketServiceKanbanRTest {
 				.thenReturn(projectKey);
 		List<KpiElement> resultList = null;
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+				mockStatic(BitBucketKPIServiceFactory.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
 			when(mockService.getKpiData(any(), any(), any())).thenThrow(ApplicationException.class);
 			resultList = bitbucketServiceKanbanR.process(kpiRequest);
-			mockedStatic
-					.verify(() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+			mockedStatic.verify(
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
-		assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+		assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 	}
 
 	@Test
@@ -223,10 +240,15 @@ public class BitBucketServiceKanbanRTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.NUMBER_OF_CHECK_INS.getKpiId(), KPICode.NUMBER_OF_CHECK_INS.name(), "Productivity",
-				"", source);
+		addKpiElement(
+				kpiList,
+				KPICode.NUMBER_OF_CHECK_INS.getKpiId(),
+				KPICode.NUMBER_OF_CHECK_INS.name(),
+				"Productivity",
+				"",
+				source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"5"});
+		kpiRequest.setIds(new String[] {"5"});
 		kpiRequest.setKpiList(kpiList);
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put("date", Arrays.asList("DATE"));
@@ -237,7 +259,12 @@ public class BitBucketServiceKanbanRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);

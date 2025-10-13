@@ -45,8 +45,13 @@ public class ExecutiveDashboardRequestDTOTest {
 
 	@Test
 	public void testBuilder() {
-		ExecutiveDashboardRequestDTO request = ExecutiveDashboardRequestDTO.builder().level(1).label("account")
-				.date("Weeks").duration(4).build();
+		ExecutiveDashboardRequestDTO request =
+				ExecutiveDashboardRequestDTO.builder()
+						.level(1)
+						.label("account")
+						.date("Weeks")
+						.duration(4)
+						.build();
 
 		assertNotNull(request);
 		assertEquals("account", request.getLabel());
@@ -64,7 +69,8 @@ public class ExecutiveDashboardRequestDTOTest {
 
 	@Test
 	public void testAllArgsConstructor() {
-		ExecutiveDashboardRequestDTO request = new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
+		ExecutiveDashboardRequestDTO request =
+				new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
 
 		assertNotNull(request);
 		assertEquals("account", request.getLabel());
@@ -73,15 +79,18 @@ public class ExecutiveDashboardRequestDTOTest {
 
 	@Test
 	public void testValidation_ValidRequest() {
-		ExecutiveDashboardRequestDTO request = new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
+		ExecutiveDashboardRequestDTO request =
+				new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
 		var violations = validator.validate(request);
 		assertTrue(violations.isEmpty());
 	}
 
 	@Test
 	public void testEqualsAndHashCode() {
-		ExecutiveDashboardRequestDTO request1 = new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
-		ExecutiveDashboardRequestDTO request2 = new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
+		ExecutiveDashboardRequestDTO request1 =
+				new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
+		ExecutiveDashboardRequestDTO request2 =
+				new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
 
 		assertEquals(request1, request2);
 		assertEquals(request1.hashCode(), request2.hashCode());
@@ -89,8 +98,10 @@ public class ExecutiveDashboardRequestDTOTest {
 
 	@Test
 	public void testNotEquals() {
-		ExecutiveDashboardRequestDTO request1 = new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
-		ExecutiveDashboardRequestDTO request2 = new ExecutiveDashboardRequestDTO(2, "project", "Months", 3, null);
+		ExecutiveDashboardRequestDTO request1 =
+				new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, null);
+		ExecutiveDashboardRequestDTO request2 =
+				new ExecutiveDashboardRequestDTO(2, "project", "Months", 3, null);
 
 		assertNotEquals(request1, request2);
 		assertNotEquals(request1.hashCode(), request2.hashCode());
@@ -98,8 +109,10 @@ public class ExecutiveDashboardRequestDTOTest {
 
 	@Test
 	public void testToString() {
-		ExecutiveDashboardRequestDTO request = new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, "abc");
-		String expected = "ExecutiveDashboardRequestDTO(level=1, label=account, date=Weeks, duration=4, parentId=abc)";
+		ExecutiveDashboardRequestDTO request =
+				new ExecutiveDashboardRequestDTO(1, "account", "Weeks", 4, "abc");
+		String expected =
+				"ExecutiveDashboardRequestDTO(level=1, label=account, date=Weeks, duration=4, parentId=abc)";
 		assertEquals(expected, request.toString());
 	}
 }

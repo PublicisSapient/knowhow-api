@@ -31,7 +31,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "r_update_sprint_velocity_maturity", order = "012201", author = "kunkambl", systemVersion = "12.2.0")
+@ChangeUnit(
+		id = "r_update_sprint_velocity_maturity",
+		order = "012201",
+		author = "kunkambl",
+		systemVersion = "12.2.0")
 public class SprintVelocityMaturityUpdate {
 	private MongoTemplate mongoTemplate;
 
