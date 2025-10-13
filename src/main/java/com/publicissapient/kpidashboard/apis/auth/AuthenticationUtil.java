@@ -63,7 +63,7 @@ public final class AuthenticationUtil {
 		return null;
 	}
 
-	private static Authentication getAuthentication() {
+	public static Authentication getAuthentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 }

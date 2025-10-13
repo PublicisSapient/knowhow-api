@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.auth.AuthenticationUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
@@ -162,7 +163,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public Collection<UserInfoDTO> getUsers() {
 		org.springframework.security.core.Authentication authentication =
-				SecurityContextHolder.getContext().getAuthentication();
+				AuthenticationUtil.getAuthentication();
 
 		List<String> roles = authentication.getAuthorities()
 				.stream()
