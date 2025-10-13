@@ -78,24 +78,17 @@ import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRe
 @RunWith(MockitoJUnitRunner.class)
 public class JiraToolConfigServiceImplTest {
 
-	private static final String RESOURCE_JIRA_BOARD_ENDPOINT = "https://test.server.com/jira/rest/agile/1.0/board?projectKeyOrId=testProjectKey&startAt=0&type=scrum";
+	private static final String RESOURCE_JIRA_BOARD_ENDPOINT =
+			"https://test.server.com/jira/rest/agile/1.0/board?projectKeyOrId=testProjectKey&startAt=0&type=scrum";
 	final ObjectMapper mapper = new ObjectMapper();
-	@Mock
-	private RestTemplate restTemplate;
-	@Mock
-	private RestAPIUtils restAPIUtils;
-	@Mock
-	private ConnectionService connectionService;
-	@Mock
-	private ConnectionRepository connectionRepository;
-	@Mock
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
-	@Mock
-	private ProjectToolConfigRepository projectToolConfigRepository;
-	@InjectMocks
-	private JiraToolConfigServiceImpl jiraToolConfigService;
-	@Mock
-	private AssigneeDetailsRepository assigneeDetailsRepository;
+	@Mock private RestTemplate restTemplate;
+	@Mock private RestAPIUtils restAPIUtils;
+	@Mock private ConnectionService connectionService;
+	@Mock private ConnectionRepository connectionRepository;
+	@Mock private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Mock private ProjectToolConfigRepository projectToolConfigRepository;
+	@InjectMocks private JiraToolConfigServiceImpl jiraToolConfigService;
+	@Mock private AssigneeDetailsRepository assigneeDetailsRepository;
 	private Optional<Connection> testConnectionOpt;
 	private Optional<ProjectBasicConfig> basicConfig;
 	private ProjectBasicConfig projectBasicConfig;
@@ -106,8 +99,7 @@ public class JiraToolConfigServiceImplTest {
 	private ProjectToolConfig projectTool;
 	private BoardRequestDTO boardRequestDTO;
 	private String basicConfigId;
-	@Mock
-	private ProjectAccessUtil projectAccessUtil;
+	@Mock private ProjectAccessUtil projectAccessUtil;
 
 	@Before
 	public void setup() {
@@ -214,7 +206,8 @@ public class JiraToolConfigServiceImplTest {
 		assigneeSet.add(new Assignee("llid", "displayName", new HashSet<>(Arrays.asList(""))));
 		assigneeDetails.setAssignee(assigneeSet);
 		when(assigneeDetailsRepository.findByBasicProjectConfigId(any())).thenReturn(assigneeDetails);
-		AssigneeResponseDTO assigneeResponseDTO = jiraToolConfigService.getProjectAssigneeDetails(basicConfigId);
+		AssigneeResponseDTO assigneeResponseDTO =
+				jiraToolConfigService.getProjectAssigneeDetails(basicConfigId);
 		assertEquals(2, assigneeResponseDTO.getAssigneeDetailsList().size());
 	}
 

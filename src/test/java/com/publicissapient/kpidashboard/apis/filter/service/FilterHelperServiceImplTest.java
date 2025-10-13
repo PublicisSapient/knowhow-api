@@ -30,9 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
-import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
-import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +51,7 @@ import com.publicissapient.kpidashboard.apis.data.AdditionalFilterCategoryFactor
 import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyDataKanban;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -61,6 +59,7 @@ import com.publicissapient.kpidashboard.common.model.application.AccountHierarch
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterCategory;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.KanbanAccountHierarchy;
+import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.dto.HierarchyValueDTO;
 import com.publicissapient.kpidashboard.common.model.application.dto.ProjectBasicConfigDTO;
 import com.publicissapient.kpidashboard.common.repository.application.AccountHierarchyRepository;
@@ -69,6 +68,7 @@ import com.publicissapient.kpidashboard.common.repository.application.HierarchyL
 import com.publicissapient.kpidashboard.common.repository.application.KanbanAccountHierarchyRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelSuggestionsServiceImpl;
+import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 
 /**
  * @author tauakram
@@ -77,30 +77,18 @@ import com.publicissapient.kpidashboard.common.service.HierarchyLevelSuggestions
 public class FilterHelperServiceImplTest {
 
 	Gson gson = new Gson();
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private AccountHierarchyRepository accountHierarchyRepository;
-	@Mock
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepo;
-	@Mock
-	private HierarchyLevelSuggestionsServiceImpl hierarchyLevelSuggestionsService;
-	@InjectMocks
-	private FilterHelperService filterHelperService;
-	@Mock
-	private FilterHelperService filterHelperServiceMock;
-	@Mock
-	private HierarchyLevelService hierarchyLevelService;
-	@Mock
-	private HierarchyLevelRepository hierarchyLevelRepository;
-	@Mock
-	private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
-	@Mock
-	private ProjectHierarchyService projectHierarchyService;
+	@Mock private CacheService cacheService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private AccountHierarchyRepository accountHierarchyRepository;
+	@Mock private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepo;
+	@Mock private HierarchyLevelSuggestionsServiceImpl hierarchyLevelSuggestionsService;
+	@InjectMocks private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperServiceMock;
+	@Mock private HierarchyLevelService hierarchyLevelService;
+	@Mock private HierarchyLevelRepository hierarchyLevelRepository;
+	@Mock private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private ProjectHierarchyService projectHierarchyService;
 	private List<AccountHierarchy> ahdList;
 	private List<HierarchyLevel> hierarchyLevels;
 	private List<HierarchyLevel> hierarchyLevels2;
@@ -110,7 +98,8 @@ public class FilterHelperServiceImplTest {
 
 	@Before
 	public void setup() {
-		AccountHierarchiesDataFactory ahdFactoryProjectLabel = AccountHierarchiesDataFactory.newInstance();
+		AccountHierarchiesDataFactory ahdFactoryProjectLabel =
+				AccountHierarchiesDataFactory.newInstance();
 		ahdList = ahdFactoryProjectLabel.getAccountHierarchies();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
@@ -147,7 +136,8 @@ public class FilterHelperServiceImplTest {
 		projectConfigKanban.setHierarchy(valueDTOList2);
 	}
 
-	private HierarchyValueDTO setHierrachyValue(int level, String levelId, String levelName, String value) {
+	private HierarchyValueDTO setHierrachyValue(
+			int level, String levelId, String levelName, String value) {
 		HierarchyLevel hierarchyLevelDTO = new HierarchyLevel();
 		hierarchyLevelDTO.setLevel(level);
 		hierarchyLevelDTO.setHierarchyLevelId(levelId);
@@ -160,25 +150,28 @@ public class FilterHelperServiceImplTest {
 
 	@Test
 	public void getFilteredBuilds() {
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
-		List<AccountHierarchyData> accountHierarchyDataList = accountHierarchyFilterDataFactory
-				.getAccountHierarchyDataList();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
+		List<AccountHierarchyData> accountHierarchyDataList =
+				accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		when(cacheService.cacheAccountHierarchyData()).thenReturn(accountHierarchyDataList);
 		filterHelperService.getFilteredBuilds(kpiRequest, "sprint");
 	}
 
 	@Test
 	public void getFilteredBuildsKanban() {
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory
-				.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 		when(cacheService.cacheAccountHierarchyKanbanData()).thenReturn(accountHierarchyKanbanDataList);
 
 		try {
 			filterHelperService.getFilteredBuildsKanban(
-					KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json").findKpiRequest("kpi55"), "sqd");
+					KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json")
+							.findKpiRequest("kpi55"),
+					"sqd");
 		} catch (EntityNotFoundException e) {
 			Assert.assertTrue(Boolean.TRUE);
 		}
@@ -195,10 +188,13 @@ public class FilterHelperServiceImplTest {
 
 	@Test
 	public void filterCreationTest2() {
-		AccountHierarchiesKanbanDataFactory ahdFactoryProjectLabel = AccountHierarchiesKanbanDataFactory.newInstance();
-		List<KanbanAccountHierarchy> accountHierarchies = ahdFactoryProjectLabel.getAccountHierarchies();
+		AccountHierarchiesKanbanDataFactory ahdFactoryProjectLabel =
+				AccountHierarchiesKanbanDataFactory.newInstance();
+		List<KanbanAccountHierarchy> accountHierarchies =
+				ahdFactoryProjectLabel.getAccountHierarchies();
 		when(kanbanAccountHierarchyRepo.findAll()).thenReturn(accountHierarchies);
-		when(hierarchyLevelService.getFullHierarchyLevels(projectConfigKanban.isKanban())).thenReturn(hierarchyLevels);
+		when(hierarchyLevelService.getFullHierarchyLevels(projectConfigKanban.isKanban()))
+				.thenReturn(hierarchyLevels);
 		filterHelperService.filterCreation(projectConfigKanban);
 		assertThat(kanbanAccountHierarchyRepo.findAll().size(), equalTo(4));
 	}
@@ -226,17 +222,24 @@ public class FilterHelperServiceImplTest {
 
 	@Test
 	public void cleanFilterData_Kanban() {
-		AccountHierarchiesKanbanDataFactory ahdFactoryProjectLabel = AccountHierarchiesKanbanDataFactory.newInstance();
-		List<KanbanAccountHierarchy> accountHierarchiesProjetLabel = ahdFactoryProjectLabel.getAccountHierarchies();
+		AccountHierarchiesKanbanDataFactory ahdFactoryProjectLabel =
+				AccountHierarchiesKanbanDataFactory.newInstance();
+		List<KanbanAccountHierarchy> accountHierarchiesProjetLabel =
+				ahdFactoryProjectLabel.getAccountHierarchies();
 
-		when(kanbanAccountHierarchyRepo.findByLabelNameAndBasicProjectConfigId(Mockito.anyString(),
-				Mockito.any(ObjectId.class)))
-				.thenReturn(accountHierarchiesProjetLabel.stream().filter(f -> f.getLabelName().equalsIgnoreCase("project"))
-						.collect(Collectors.toList()));
+		when(kanbanAccountHierarchyRepo.findByLabelNameAndBasicProjectConfigId(
+						Mockito.anyString(), Mockito.any(ObjectId.class)))
+				.thenReturn(
+						accountHierarchiesProjetLabel.stream()
+								.filter(f -> f.getLabelName().equalsIgnoreCase("project"))
+								.collect(Collectors.toList()));
 
-		when(kanbanAccountHierarchyRepo.findByLabelNameAndPath(Mockito.anyString(), Mockito.anyString()))
+		when(kanbanAccountHierarchyRepo.findByLabelNameAndPath(
+						Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(accountHierarchiesProjetLabel);
-		doNothing().when(kanbanAccountHierarchyRepo).deleteByNodeIdAndPath(Mockito.anyString(), Mockito.anyString());
+		doNothing()
+				.when(kanbanAccountHierarchyRepo)
+				.deleteByNodeIdAndPath(Mockito.anyString(), Mockito.anyString());
 		doNothing().when(kanbanAccountHierarchyRepo).deleteByPathEndsWith(Mockito.anyString());
 
 		filterHelperService.cleanFilterData(projectConfigKanban);
@@ -245,34 +248,47 @@ public class FilterHelperServiceImplTest {
 	@Test
 	public void deleteAccountHierarchiesOfProject_Scrum() {
 		ObjectId projectBasicConfigId = new ObjectId("60b9f2ff5ce907343c3804ba");
-		ProjectBasicConfig projectBasicConfig= new ProjectBasicConfig();
+		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(projectBasicConfigId);
 		projectBasicConfig.setIsKanban(false);
-		when(hierarchyLevelService.getFullHierarchyLevels(projectConfigScrum.isKanban())).thenReturn(hierarchyLevels2);
-		when(accountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(Mockito.anyString(),
-				Mockito.any(ObjectId.class))).thenReturn(
-						ahdList.stream().filter(f -> f.getLabelName().equalsIgnoreCase("project")).collect(Collectors.toList()));
+		when(hierarchyLevelService.getFullHierarchyLevels(projectConfigScrum.isKanban()))
+				.thenReturn(hierarchyLevels2);
+		when(accountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(
+						Mockito.anyString(), Mockito.any(ObjectId.class)))
+				.thenReturn(
+						ahdList.stream()
+								.filter(f -> f.getLabelName().equalsIgnoreCase("project"))
+								.collect(Collectors.toList()));
 		when(cacheService.getFullHierarchyLevelMap())
-				.thenReturn(hierarchyLevels2.stream().collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x)));
+				.thenReturn(
+						hierarchyLevels2.stream()
+								.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x)));
 		filterHelperService.deleteAccountHierarchiesOfProject(projectBasicConfig);
 	}
 
 	@Test
 	public void deleteAccountHierarchiesOfProject_Kanban() {
 		ObjectId projectBasicConfigId = new ObjectId("63330b7068b5d05cf59c4386");
-		ProjectBasicConfig projectBasicConfig= new ProjectBasicConfig();
+		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(projectBasicConfigId);
 		projectBasicConfig.setIsKanban(true);
-		AccountHierarchiesKanbanDataFactory ahdFactoryProjectLabel = AccountHierarchiesKanbanDataFactory.newInstance();
-		List<KanbanAccountHierarchy> accountHierarchies = ahdFactoryProjectLabel.getAccountHierarchies();
-		when(hierarchyLevelService.getFullHierarchyLevels(projectConfigKanban.isKanban())).thenReturn(hierarchyLevels2);
+		AccountHierarchiesKanbanDataFactory ahdFactoryProjectLabel =
+				AccountHierarchiesKanbanDataFactory.newInstance();
+		List<KanbanAccountHierarchy> accountHierarchies =
+				ahdFactoryProjectLabel.getAccountHierarchies();
+		when(hierarchyLevelService.getFullHierarchyLevels(projectConfigKanban.isKanban()))
+				.thenReturn(hierarchyLevels2);
 
 		when(cacheService.getFullKanbanHierarchyLevelMap())
-				.thenReturn(hierarchyLevels.stream().collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x)));
-		when(kanbanAccountHierarchyRepo.findByLabelNameAndBasicProjectConfigId(Mockito.anyString(),
-				Mockito.any(ObjectId.class)))
-				.thenReturn(accountHierarchies.stream().filter(f -> f.getLabelName().equalsIgnoreCase("project"))
-						.collect(Collectors.toList()));
+				.thenReturn(
+						hierarchyLevels.stream()
+								.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x)));
+		when(kanbanAccountHierarchyRepo.findByLabelNameAndBasicProjectConfigId(
+						Mockito.anyString(), Mockito.any(ObjectId.class)))
+				.thenReturn(
+						accountHierarchies.stream()
+								.filter(f -> f.getLabelName().equalsIgnoreCase("project"))
+								.collect(Collectors.toList()));
 		filterHelperService.deleteAccountHierarchiesOfProject(projectBasicConfig);
 	}
 
@@ -295,21 +311,26 @@ public class FilterHelperServiceImplTest {
 	@Test
 	public void getHierarchyIdLevelMap() {
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels2.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels2.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(cacheService.getFullHierarchyLevelMap()).thenReturn(hierarchyMap);
-		Assert.assertEquals(filterHelperService.getHierarchyIdLevelMap(projectConfigScrum.isKanban()), map);
+		Assert.assertEquals(
+				filterHelperService.getHierarchyIdLevelMap(projectConfigScrum.isKanban()), map);
 	}
 
 	@Test
 	public void getAdditionalFilterHierarchyLevel() {
-		AdditionalFilterCategoryFactory additionalFilterCategoryFactory = AdditionalFilterCategoryFactory.newInstance();
-		List<AdditionalFilterCategory> additionalFilterCategoryList = additionalFilterCategoryFactory
-				.getAdditionalFilterCategoryList();
-		Map<String, AdditionalFilterCategory> additonalFilterMap = additionalFilterCategoryList.stream()
-				.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
+		AdditionalFilterCategoryFactory additionalFilterCategoryFactory =
+				AdditionalFilterCategoryFactory.newInstance();
+		List<AdditionalFilterCategory> additionalFilterCategoryList =
+				additionalFilterCategoryFactory.getAdditionalFilterCategoryList();
+		Map<String, AdditionalFilterCategory> additonalFilterMap =
+				additionalFilterCategoryList.stream()
+						.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
 		when(cacheService.getAdditionalFilterHierarchyLevel()).thenReturn(additonalFilterMap);
-		Assert.assertEquals(filterHelperService.getAdditionalFilterHierarchyLevel(), additonalFilterMap);
+		Assert.assertEquals(
+				filterHelperService.getAdditionalFilterHierarchyLevel(), additonalFilterMap);
 	}
 }

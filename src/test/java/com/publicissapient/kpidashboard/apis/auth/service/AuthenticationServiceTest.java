@@ -51,17 +51,13 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepositor
 @ExtendWith(SpringExtension.class)
 public class AuthenticationServiceTest {
 
-	@Mock
-	AuthenticationRepository authRepo;
+	@Mock AuthenticationRepository authRepo;
 	Authentication authentication = new Authentication();
 
-	@Mock
-	AuthProperties authProperties;
+	@Mock AuthProperties authProperties;
 
-	@Mock
-	UserInfoRepository userInfoRepository;
-	@InjectMocks
-	DefaultAuthenticationServiceImpl authService;
+	@Mock UserInfoRepository userInfoRepository;
+	@InjectMocks DefaultAuthenticationServiceImpl authService;
 
 	@BeforeEach
 	public void setUp() {
@@ -202,7 +198,8 @@ public class AuthenticationServiceTest {
 
 	@Test
 	public void authenticateForAccountLockException() {
-		String lockedExceptionMsg = "Account Locked: Invalid Login Limit Reached " + authentication.getUsername();
+		String lockedExceptionMsg =
+				"Account Locked: Invalid Login Limit Reached " + authentication.getUsername();
 		authentication.setLoginAttemptCount(1);
 		when(authRepo.findByUsername("Test")).thenReturn(authentication);
 		when(authProperties.getAccountLockedThreshold()).thenReturn(1);
@@ -272,7 +269,8 @@ public class AuthenticationServiceTest {
 		authenticationList.add(authentication);
 		when(authRepo.findByEmail("ps@test.com")).thenReturn(authenticationList);
 		when(authRepo.save(any(Authentication.class))).thenReturn(authentication);
-		Assertions.assertNotNull(authService.changePassword("ps@test.com", "oldpassword").getCredentials());
+		Assertions.assertNotNull(
+				authService.changePassword("ps@test.com", "oldpassword").getCredentials());
 	}
 
 	@Test
@@ -300,8 +298,8 @@ public class AuthenticationServiceTest {
 
 	@Test
 	public void getUsernameTest() {
-		org.springframework.security.core.Authentication authentication1 = new UsernamePasswordAuthenticationToken("test",
-				"TestP");
+		org.springframework.security.core.Authentication authentication1 =
+				new UsernamePasswordAuthenticationToken("test", "TestP");
 		Assertions.assertFalse(authService.getUsername(authentication1).isEmpty());
 	}
 
@@ -313,7 +311,8 @@ public class AuthenticationServiceTest {
 		authenticationList.add(user1);
 		authenticationList.add(user2);
 		when(authRepo.findByApproved(false)).thenReturn(authenticationList);
-		when(authProperties.getWhiteListDomainForEmail()).thenReturn(new ArrayList<>(List.of("example.com")));
+		when(authProperties.getWhiteListDomainForEmail())
+				.thenReturn(new ArrayList<>(List.of("example.com")));
 		Assertions.assertNotNull(authService.getAuthenticationByApproved(false));
 	}
 }

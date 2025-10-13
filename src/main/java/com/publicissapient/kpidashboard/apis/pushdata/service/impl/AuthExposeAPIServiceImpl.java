@@ -49,19 +49,14 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthExposeAPIServiceImpl implements AuthExposeAPIService {
 	private static final String TOKEN_KEY = "Api-Key";
 	final ModelMapper modelMapper = new ModelMapper();
-	@Autowired
-	private ExposeApiTokenRepository exposeApiTokenRepository;
-	@Autowired
-	private ProjectAccessManager projectAccessManager;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private PushDataTraceLogService pushDataTraceLogService;
+	@Autowired private ExposeApiTokenRepository exposeApiTokenRepository;
+	@Autowired private ProjectAccessManager projectAccessManager;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private PushDataTraceLogService pushDataTraceLogService;
 
 	/**
-	 * user can only one generate token per project and user wise. if same user
-	 * request again generate token for same project then previously generated token
-	 * will be updated
+	 * user can only one generate token per project and user wise. if same user request again generate
+	 * token for same project then previously generated token will be updated
 	 *
 	 * @param exposeAPITokenRequestDTO
 	 * @return
@@ -69,30 +64,40 @@ public class AuthExposeAPIServiceImpl implements AuthExposeAPIService {
 	@Override
 	public ServiceResponse generateAndSaveToken(ExposeAPITokenRequestDTO exposeAPITokenRequestDTO) {
 		ExposeAPITokenResponseDTO exposeAPITokenResponseDTO = new ExposeAPITokenResponseDTO();
-		ExposeApiToken exposeApiTokenExist = exposeApiTokenRepository.findByUserNameAndBasicProjectConfigId(
-				exposeAPITokenRequestDTO.getUserName(), new ObjectId(exposeAPITokenRequestDTO.getBasicProjectConfigId()));
+		ExposeApiToken exposeApiTokenExist =
+				exposeApiTokenRepository.findByUserNameAndBasicProjectConfigId(
+						exposeAPITokenRequestDTO.getUserName(),
+						new ObjectId(exposeAPITokenRequestDTO.getBasicProjectConfigId()));
 		String apiAccessToken = "";
 		try {
 			apiAccessToken = Encryption.getStringKey();
 			if (Objects.nonNull(exposeApiTokenExist)) {
 				exposeApiTokenExist.setApiToken(apiAccessToken);
-				exposeApiTokenExist.setExpiryDate(LocalDate.now().plusDays(customApiConfig.getExposeAPITokenExpiryDays()));
+				exposeApiTokenExist.setExpiryDate(
+						LocalDate.now().plusDays(customApiConfig.getExposeAPITokenExpiryDays()));
 				exposeApiTokenExist.setUpdatedAt(LocalDate.now());
 				exposeApiTokenRepository.save(exposeApiTokenExist);
-				exposeAPITokenResponseDTO = modelMapper.map(exposeApiTokenExist, ExposeAPITokenResponseDTO.class);
-				return new ServiceResponse(true, "API token Is updated , All previously generated tokens will expiry",
+				exposeAPITokenResponseDTO =
+						modelMapper.map(exposeApiTokenExist, ExposeAPITokenResponseDTO.class);
+				return new ServiceResponse(
+						true,
+						"API token Is updated , All previously generated tokens will expiry",
 						exposeAPITokenResponseDTO);
 			} else {
 				ExposeApiToken exposeApiTokenNew = new ExposeApiToken();
 				exposeApiTokenNew.setUserName(exposeAPITokenRequestDTO.getUserName());
-				exposeApiTokenNew.setExpiryDate(LocalDate.now().plusDays(customApiConfig.getExposeAPITokenExpiryDays()));
+				exposeApiTokenNew.setExpiryDate(
+						LocalDate.now().plusDays(customApiConfig.getExposeAPITokenExpiryDays()));
 				exposeApiTokenNew.setCreatedAt(LocalDate.now());
-				exposeApiTokenNew.setBasicProjectConfigId(new ObjectId(exposeAPITokenRequestDTO.getBasicProjectConfigId()));
+				exposeApiTokenNew.setBasicProjectConfigId(
+						new ObjectId(exposeAPITokenRequestDTO.getBasicProjectConfigId()));
 				exposeApiTokenNew.setProjectName(exposeAPITokenRequestDTO.getProjectName());
 				exposeApiTokenNew.setApiToken(apiAccessToken);
 				exposeApiTokenRepository.save(exposeApiTokenNew);
-				exposeAPITokenResponseDTO = modelMapper.map(exposeApiTokenNew, ExposeAPITokenResponseDTO.class);
-				return new ServiceResponse(true, "API token is generated Successfully", exposeAPITokenResponseDTO);
+				exposeAPITokenResponseDTO =
+						modelMapper.map(exposeApiTokenNew, ExposeAPITokenResponseDTO.class);
+				return new ServiceResponse(
+						true, "API token is generated Successfully", exposeAPITokenResponseDTO);
 			}
 		} catch (EncryptionException e) {
 			return new ServiceResponse(false, "Error while Creating token", null);
@@ -112,31 +117,34 @@ public class AuthExposeAPIServiceImpl implements AuthExposeAPIService {
 		instance.setRequestTime(LocalDateTime.now().toString());
 		ExposeApiToken exposeApiToken = exposeApiTokenRepository.findByApiToken(token);
 		if (exposeApiToken == null) {
-			pushDataTraceLogService.setExceptionTraceLog("Generate Token Push Data via KnowHow tool configuration screen",
+			pushDataTraceLogService.setExceptionTraceLog(
+					"Generate Token Push Data via KnowHow tool configuration screen",
 					HttpStatus.UNAUTHORIZED);
 		} else {
 			checkProjectAccessPermission(exposeApiToken, instance);
 			checkExpiryToken(exposeApiToken);
-			exposeApiToken
-					.setExpiryDate(exposeApiToken.getExpiryDate().plusDays(customApiConfig.getExposeAPITokenExpiryDays()));
+			exposeApiToken.setExpiryDate(
+					exposeApiToken.getExpiryDate().plusDays(customApiConfig.getExposeAPITokenExpiryDays()));
 			exposeApiToken.setUpdatedAt(LocalDate.now());
 		}
 		return exposeApiToken;
 	}
 
-	private void checkProjectAccessPermission(ExposeApiToken exposeApiToken, PushDataTraceLog traceLog) {
+	private void checkProjectAccessPermission(
+			ExposeApiToken exposeApiToken, PushDataTraceLog traceLog) {
 		traceLog.setProjectName(exposeApiToken.getProjectName());
 		traceLog.setBasicProjectConfigId(exposeApiToken.getBasicProjectConfigId());
 		traceLog.setUserName(exposeApiToken.getUserName());
-		if (!projectAccessManager.hasProjectEditPermission(exposeApiToken.getBasicProjectConfigId(),
-				exposeApiToken.getUserName())) {
+		if (!projectAccessManager.hasProjectEditPermission(
+				exposeApiToken.getBasicProjectConfigId(), exposeApiToken.getUserName())) {
 			pushDataTraceLogService.setExceptionTraceLog("Permission Denied", HttpStatus.UNAUTHORIZED);
 		}
 	}
 
 	private void checkExpiryToken(ExposeApiToken exposeApiToken) {
 		if (exposeApiToken.getExpiryDate().isBefore(LocalDate.now())) {
-			pushDataTraceLogService.setExceptionTraceLog("Token Expired, Please Generate New Token", HttpStatus.UNAUTHORIZED);
+			pushDataTraceLogService.setExceptionTraceLog(
+					"Token Expired, Please Generate New Token", HttpStatus.UNAUTHORIZED);
 		}
 	}
 }

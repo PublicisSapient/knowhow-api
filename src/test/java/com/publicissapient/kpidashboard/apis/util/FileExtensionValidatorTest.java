@@ -32,32 +32,38 @@ import org.springframework.mock.web.MockMultipartFile;
 @RunWith(MockitoJUnitRunner.class)
 public class FileExtensionValidatorTest {
 
-	@InjectMocks
-	private FileExtensionValidator fileExtensionValidator;
+	@InjectMocks private FileExtensionValidator fileExtensionValidator;
 
 	@Test
 	public void testValidFile() {
-		MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test".getBytes());
+		MockMultipartFile file =
+				new MockMultipartFile("file", "test.jpg", "image/jpeg", "test".getBytes());
 		fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class));
 	}
 
 	@Test
 	public void testInvalidFileExtension() {
-		MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test".getBytes());
-		assertFalse(fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class)));
+		MockMultipartFile file =
+				new MockMultipartFile("file", "test.txt", "text/plain", "test".getBytes());
+		assertFalse(
+				fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class)));
 	}
 
 	@Test
 	public void testInvalidFileFormat() {
-		MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "invalid-content".getBytes());
-		assertFalse(fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class)));
+		MockMultipartFile file =
+				new MockMultipartFile("file", "test.jpg", "image/jpeg", "invalid-content".getBytes());
+		assertFalse(
+				fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class)));
 	}
 
 	@Test
 	public void testInvalidFileSize() {
 		// Adjust MAX_FILE_SIZE to a lower value for testing
 		// FileExtensionValidator.MAX_FILE_SIZE = 10L;
-		MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test".getBytes());
-		assertFalse(fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class)));
+		MockMultipartFile file =
+				new MockMultipartFile("file", "test.jpg", "image/jpeg", "test".getBytes());
+		assertFalse(
+				fileExtensionValidator.isValid(file, Mockito.mock(ConstraintValidatorContext.class)));
 	}
 }

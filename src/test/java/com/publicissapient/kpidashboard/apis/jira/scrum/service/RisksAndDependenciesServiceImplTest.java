@@ -66,18 +66,13 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RisksAndDependenciesServiceImplTest {
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ConfigHelperService configHelperService;
 
-	@InjectMocks
-	private RisksAndDependenciesServiceImpl risksAndDependenciesServiceImpl;
+	@InjectMocks private RisksAndDependenciesServiceImpl risksAndDependenciesServiceImpl;
 
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private JiraIterationServiceR jiraService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
@@ -92,24 +87,35 @@ public class RisksAndDependenciesServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi176");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
 
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
-		JiraIssue jiraIssuee1 = storyList.stream()
-				.filter(jiraIssue -> !jiraIssue.getNumber().equalsIgnoreCase("TEST-17908")).findFirst().get();
+		JiraIssue jiraIssuee1 =
+				storyList.stream()
+						.filter(jiraIssue -> !jiraIssue.getNumber().equalsIgnoreCase("TEST-17908"))
+						.findFirst()
+						.get();
 		jiraIssuee1.setTypeName("Risk");
 		jiraIssuee1.setNumber("TEST-179081");
-		JiraIssue jiraIssuee2 = storyList.stream()
-				.filter(jiraIssue -> !jiraIssue.getNumber().equalsIgnoreCase("TEST-17918")).findFirst().get();
+		JiraIssue jiraIssuee2 =
+				storyList.stream()
+						.filter(jiraIssue -> !jiraIssue.getNumber().equalsIgnoreCase("TEST-17918"))
+						.findFirst()
+						.get();
 		jiraIssuee2.setTypeName("Dependency");
 		jiraIssuee2.setNumber("TEST-179082");
 	}
@@ -122,8 +128,8 @@ public class RisksAndDependenciesServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -131,18 +137,23 @@ public class RisksAndDependenciesServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(risksAndDependenciesServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = risksAndDependenciesServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					risksAndDependenciesServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {
@@ -152,7 +163,8 @@ public class RisksAndDependenciesServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat(risksAndDependenciesServiceImpl.getQualifierType(), equalTo("RISKS_AND_DEPENDENCIES"));
+		assertThat(
+				risksAndDependenciesServiceImpl.getQualifierType(), equalTo("RISKS_AND_DEPENDENCIES"));
 	}
 
 	@After

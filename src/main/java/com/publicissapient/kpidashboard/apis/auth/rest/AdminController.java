@@ -47,8 +47,7 @@ import com.publicissapient.kpidashboard.common.util.EncryptionException;
 public class AdminController {
 
 	private final ApiTokenService apiTokenService;
-	@Autowired
-	private UserInfoService userInfoService;
+	@Autowired private UserInfoService userInfoService;
 
 	/**
 	 * Class Constructor specifying UserInfoService and ApiTokenService
@@ -66,13 +65,20 @@ public class AdminController {
 	 * @param apiTokenRequest
 	 * @return api access token
 	 */
-	@RequestMapping(value = "/createToken", method = RequestMethod.POST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	@RequestMapping(
+			value = "/createToken",
+			method = RequestMethod.POST,
+			consumes = APPLICATION_JSON_VALUE,
+			produces = APPLICATION_JSON_VALUE)
 	// NOSONAR
 	public ResponseEntity<String> createToken(@Valid @RequestBody ApiTokenRequest apiTokenRequest) {
 		try {
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(apiTokenService.getApiToken(apiTokenRequest.getApiUser(), apiTokenRequest.getExpirationDt()));
-		} catch (EncryptionException | com.publicissapient.kpidashboard.common.exceptions.ApplicationException e) {
+					.body(
+							apiTokenService.getApiToken(
+									apiTokenRequest.getApiUser(), apiTokenRequest.getExpirationDt()));
+		} catch (EncryptionException
+				| com.publicissapient.kpidashboard.common.exceptions.ApplicationException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
 		}
 	}

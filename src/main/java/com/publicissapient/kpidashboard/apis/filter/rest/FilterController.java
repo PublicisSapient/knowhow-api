@@ -17,8 +17,7 @@ import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 @RestController
 public class FilterController {
 
-	@Autowired
-	private HierarchyLevelService hierarchyLevelService;
+	@Autowired private HierarchyLevelService hierarchyLevelService;
 
 	@GetMapping("/filters")
 	public ResponseEntity<ServiceResponse> getFilters() {

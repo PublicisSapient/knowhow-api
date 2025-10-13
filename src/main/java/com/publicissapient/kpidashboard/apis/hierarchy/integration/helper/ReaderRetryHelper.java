@@ -32,7 +32,8 @@ public class ReaderRetryHelper {
 
 	@Retryable
 	public <T> T executeWithRetry(RetryableOperation<T> operation) throws Exception {
-		RetryTemplate retryTemplate = new RetryTemplate(); // Creating a new RetryTemplate for each retry
+		RetryTemplate retryTemplate =
+				new RetryTemplate(); // Creating a new RetryTemplate for each retry
 
 		// Configure the retry policy (maximum of 3 retry attempts)
 		SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
@@ -44,10 +45,11 @@ public class ReaderRetryHelper {
 		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
 		backOffPolicy.setBackOffPeriod(TIME_INTERVAL_BETWEEN_RETRY);
 		retryTemplate.setBackOffPolicy(backOffPolicy);
-		return retryTemplate.execute(context -> {
-			log.info("Attempt #{}", context.getRetryCount() + 1);
-			return operation.execute();
-		});
+		return retryTemplate.execute(
+				context -> {
+					log.info("Attempt #{}", context.getRetryCount() + 1);
+					return operation.execute();
+				});
 	}
 
 	@FunctionalInterface

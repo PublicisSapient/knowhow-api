@@ -26,7 +26,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author prijain3
  */
-@ChangeUnit(id = "update_filters_board_id", order = "12101", author = "prijain3", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "update_filters_board_id",
+		order = "12101",
+		author = "prijain3",
+		systemVersion = "12.1.0")
 public class UpdateFilters {
 
 	private static final String BOARD_ID = "boardId";
@@ -46,14 +50,15 @@ public class UpdateFilters {
 	/**
 	 * Moving dora to scrum, kanban thus changing the boardId
 	 *
-	 * @param oldBoardId
-	 *          older board id
-	 * @param newBoardId
-	 *          new board id
+	 * @param oldBoardId older board id
+	 * @param newBoardId new board id
 	 */
 	private void updateFilterBoardId(int oldBoardId, int newBoardId) {
-		mongoTemplate.getCollection("filters").updateMany(new Document(BOARD_ID, oldBoardId),
-				new Document("$set", new Document(BOARD_ID, newBoardId)));
+		mongoTemplate
+				.getCollection("filters")
+				.updateMany(
+						new Document(BOARD_ID, oldBoardId),
+						new Document("$set", new Document(BOARD_ID, newBoardId)));
 	}
 
 	@RollbackExecution

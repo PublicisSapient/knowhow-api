@@ -22,11 +22,9 @@ import jakarta.validation.constraints.NotEmpty;
 
 public class ResetPasswordRequest {
 
-	@NotEmpty
-	private String password;
+	@NotEmpty private String password;
 
-	@NotEmpty
-	private String resetToken;
+	@NotEmpty private String resetToken;
 
 	/**
 	 * @return password

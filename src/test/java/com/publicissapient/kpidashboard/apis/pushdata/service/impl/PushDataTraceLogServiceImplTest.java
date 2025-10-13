@@ -44,10 +44,8 @@ import com.publicissapient.kpidashboard.apis.pushdata.util.PushDataException;
 public class PushDataTraceLogServiceImplTest {
 
 	List<PushDataTraceLog> pushBuildDeploy;
-	@InjectMocks
-	private PushDataTraceLogServiceImpl pushDataTraceLogService;
-	@Mock
-	private PushDataTraceLogRepository pushDataTraceLogRepository;
+	@InjectMocks private PushDataTraceLogServiceImpl pushDataTraceLogService;
+	@Mock private PushDataTraceLogRepository pushDataTraceLogRepository;
 
 	@Before
 	public void setup() {
@@ -79,16 +77,20 @@ public class PushDataTraceLogServiceImplTest {
 
 	@Test
 	public void setTraceLog() {
-		Assert.assertThrows(PushDataException.class, () -> {
-			pushDataTraceLogService.setExceptionTraceLog("", HttpStatus.BAD_REQUEST);
-			pushDataTraceLogService.setExceptionTraceLog("", new PushDataResponse());
-		});
+		Assert.assertThrows(
+				PushDataException.class,
+				() -> {
+					pushDataTraceLogService.setExceptionTraceLog("", HttpStatus.BAD_REQUEST);
+					pushDataTraceLogService.setExceptionTraceLog("", new PushDataResponse());
+				});
 	}
 
 	@Test
 	public void setTraceLogPushData() {
-		Assert.assertThrows(PushDataException.class, () -> {
-			pushDataTraceLogService.setExceptionTraceLog("", new PushDataResponse());
-		});
+		Assert.assertThrows(
+				PushDataException.class,
+				() -> {
+					pushDataTraceLogService.setExceptionTraceLog("", new PushDataResponse());
+				});
 	}
 }

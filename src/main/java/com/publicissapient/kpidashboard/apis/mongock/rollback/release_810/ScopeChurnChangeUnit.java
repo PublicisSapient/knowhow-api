@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author eswbogol
  */
-@ChangeUnit(id = "r_scope_churn_filters", order = "08106", author = "eswbogol", systemVersion = "8.1.0")
+@ChangeUnit(
+		id = "r_scope_churn_filters",
+		order = "08106",
+		author = "eswbogol",
+		systemVersion = "8.1.0")
 public class ScopeChurnChangeUnit {
 
 	private final MongoTemplate mongoTemplate;
@@ -43,9 +47,11 @@ public class ScopeChurnChangeUnit {
 	}
 
 	public void scopeChurnFilter() {
-		mongoTemplate.getCollection("kpi_master").updateOne(
-				new Document("kpiId", new Document("$in", Collections.singletonList("kpi164"))),
-				new Document("$unset", new Document("kpiFilter", "")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", new Document("$in", Collections.singletonList("kpi164"))),
+						new Document("$unset", new Document("kpiFilter", "")));
 	}
 
 	@RollbackExecution

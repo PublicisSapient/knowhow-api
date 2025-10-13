@@ -37,12 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AdditionalFilterCategoryFactory {
 
-	private static final String FILE_PATH_FILTER_CATEGORIES = "/json/default/additional_filter_category.json";
+	private static final String FILE_PATH_FILTER_CATEGORIES =
+			"/json/default/additional_filter_category.json";
 	private List<AdditionalFilterCategory> additionalFilterCategoryList;
 	private ObjectMapper mapper;
 
-	private AdditionalFilterCategoryFactory() {
-	}
+	private AdditionalFilterCategoryFactory() {}
 
 	public static AdditionalFilterCategoryFactory newInstance(String filePath) {
 
@@ -62,9 +62,10 @@ public class AdditionalFilterCategoryFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_FILTER_CATEGORIES : filePath;
 
-			additionalFilterCategoryList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<AdditionalFilterCategory>>() {
-					});
+			additionalFilterCategoryList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<AdditionalFilterCategory>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

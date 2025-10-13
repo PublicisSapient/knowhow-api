@@ -59,20 +59,15 @@ import com.publicissapient.kpidashboard.common.repository.connection.ConnectionR
 @RunWith(MockitoJUnitRunner.class)
 public class BambooServiceImplTest {
 
-	@Mock
-	private RestAPIUtils restAPIUtils;
+	@Mock private RestAPIUtils restAPIUtils;
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@Mock
-	private ConnectionRepository connectionRepository;
+	@Mock private ConnectionRepository connectionRepository;
 
-	@InjectMocks
-	private BambooToolConfigServiceImpl bambooToolConfigService;
+	@InjectMocks private BambooToolConfigServiceImpl bambooToolConfigService;
 
-	@Mock
-	private ConnectionService connectionService;
+	@Mock private ConnectionService connectionService;
 	private Optional<Connection> testConnectionOpt;
 	private Connection connection;
 	private String connectionId;

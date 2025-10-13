@@ -36,24 +36,23 @@ import lombok.Builder;
 @Service
 public class JenkinsKPIServiceFactory {
 
-	private static final Map<String, JenkinsKPIService<?, ?, ?>> JENKINS_SERVICE_CACHE = new HashMap<>();
-	@Autowired
-	private List<JenkinsKPIService<?, ?, ?>> services;
+	private static final Map<String, JenkinsKPIService<?, ?, ?>> JENKINS_SERVICE_CACHE =
+			new HashMap<>();
+	@Autowired private List<JenkinsKPIService<?, ?, ?>> services;
 
 	/**
 	 * Gets jenkins kpi service.
 	 *
-	 * @param type
-	 *          the type
+	 * @param type the type
 	 * @return the jenkins kpi service
-	 * @throws ApplicationException
-	 *           the application exception
+	 * @throws ApplicationException the application exception
 	 */
 	@SuppressWarnings("rawtypes")
 	public static JenkinsKPIService getJenkinsKPIService(String type) throws ApplicationException {
 		JenkinsKPIService<?, ?, ?> service = JENKINS_SERVICE_CACHE.get(type);
 		if (service == null) {
-			throw new ApplicationException(JenkinsKPIServiceFactory.class, "Jenkins KPI Service Factory not initalized");
+			throw new ApplicationException(
+					JenkinsKPIServiceFactory.class, "Jenkins KPI Service Factory not initalized");
 		}
 		return service;
 	}

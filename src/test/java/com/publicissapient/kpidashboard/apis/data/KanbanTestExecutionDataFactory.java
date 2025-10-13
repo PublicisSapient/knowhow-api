@@ -36,12 +36,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class KanbanTestExecutionDataFactory {
-	private static final String FILE_PATH_TEST_CASE_DETAILS = "/json/default/kanban_test_execution.json";
+	private static final String FILE_PATH_TEST_CASE_DETAILS =
+			"/json/default/kanban_test_execution.json";
 	private List<KanbanTestExecution> kanbanTestExecutionList;
 	private ObjectMapper mapper = null;
 
-	private KanbanTestExecutionDataFactory() {
-	}
+	private KanbanTestExecutionDataFactory() {}
 
 	public static KanbanTestExecutionDataFactory newInstance(String filePath) {
 		KanbanTestExecutionDataFactory factory = new KanbanTestExecutionDataFactory();
@@ -57,9 +57,10 @@ public class KanbanTestExecutionDataFactory {
 	private void init(String filePath) {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_TEST_CASE_DETAILS : filePath;
-			kanbanTestExecutionList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KanbanTestExecution>>() {
-					});
+			kanbanTestExecutionList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KanbanTestExecution>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

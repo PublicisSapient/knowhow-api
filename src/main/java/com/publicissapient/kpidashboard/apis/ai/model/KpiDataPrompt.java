@@ -18,6 +18,7 @@ package com.publicissapient.kpidashboard.apis.ai.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.Data;
 
 @Data
@@ -34,8 +35,20 @@ public class KpiDataPrompt {
 		try {
 			return OBJECT_MAPPER.writeValueAsString(this);
 		} catch (JsonProcessingException e) {
-			return "KpiDataPrompt(" + "data='" + data + '\'' + ", sProjectName='" + sProjectName + '\''
-					+ ", sSprintName='" + sSprintName + '\'' + ", date='" + date + '\'' + ')';
+			return "KpiDataPrompt("
+					+ "data='"
+					+ data
+					+ '\''
+					+ ", sProjectName='"
+					+ sProjectName
+					+ '\''
+					+ ", sSprintName='"
+					+ sSprintName
+					+ '\''
+					+ ", date='"
+					+ date
+					+ '\''
+					+ ')';
 		}
 	}
 }

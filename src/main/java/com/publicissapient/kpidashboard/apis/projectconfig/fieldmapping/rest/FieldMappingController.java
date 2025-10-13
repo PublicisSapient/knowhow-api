@@ -63,46 +63,52 @@ import lombok.extern.slf4j.Slf4j;
 public class FieldMappingController {
 
 	private static final String UPDATE_PROJECT = "UPDATE_PROJECT";
-	@Autowired
-	private FieldMappingService fieldMappingService;
+	@Autowired private FieldMappingService fieldMappingService;
 
-	@Autowired
-	private ContextAwarePolicyEnforcement policy;
+	@Autowired private ContextAwarePolicyEnforcement policy;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	/*
 	 * save import functionality
 	 */
-	@RequestMapping(value = "/tools/{projectToolConfigId}/fieldMapping", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> addFieldMapping(@PathVariable String projectToolConfigId,
-			@RequestBody FieldMappingMeta fieldMappingMeta) {
+	@RequestMapping(
+			value = "/tools/{projectToolConfigId}/fieldMapping",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> addFieldMapping(
+			@PathVariable String projectToolConfigId, @RequestBody FieldMappingMeta fieldMappingMeta) {
 
 		projectToolConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectToolConfigId);
 
-		Optional<ProjectToolConfig> projectToolConfigOptional = getProjectToolConfig(projectToolConfigId);
+		Optional<ProjectToolConfig> projectToolConfigOptional =
+				getProjectToolConfig(projectToolConfigId);
 
 		if (projectToolConfigOptional.isPresent()) {
 			// checking the permission to update the fieldmapping
 			ProjectToolConfig projectToolConfig = projectToolConfigOptional.get();
-			ProjectBasicConfig projectBasicConfig = fieldMappingService
-					.getBasicProjectConfigById(projectToolConfig.getBasicProjectConfigId());
+			ProjectBasicConfig projectBasicConfig =
+					fieldMappingService.getBasicProjectConfigById(
+							projectToolConfig.getBasicProjectConfigId());
 			policy.checkPermission(projectBasicConfig, UPDATE_PROJECT);
 
 			ServiceResponse response;
 			try {
 				FieldMapping fieldMapping = new FieldMapping();
-				boolean allfieldFound = fieldMappingService
-						.convertToFieldMappingAndCheckIsFieldPresent(fieldMappingMeta.getFieldMappingRequests(), fieldMapping);
-				fieldMappingService.addFieldMapping(projectToolConfigId, fieldMapping,
-						projectToolConfig.getBasicProjectConfigId());
+				boolean allfieldFound =
+						fieldMappingService.convertToFieldMappingAndCheckIsFieldPresent(
+								fieldMappingMeta.getFieldMappingRequests(), fieldMapping);
+				fieldMappingService.addFieldMapping(
+						projectToolConfigId, fieldMapping, projectToolConfig.getBasicProjectConfigId());
 				if (!allfieldFound) {
 					response = new ServiceResponse(true, "field mappings added successfully", null);
 				} else {
-					response = new ServiceResponse(false,
-							"field mappings added successfully but some fields are missing, please verify your imported fields",
-							null);
+					response =
+							new ServiceResponse(
+									false,
+									"field mappings added successfully but some fields are missing, please verify your imported fields",
+									null);
 				}
 			} catch (Exception ex) {
 				response = new ServiceResponse(false, "failed to add field mappings", null);
@@ -110,24 +116,30 @@ public class FieldMappingController {
 
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false, "No Tool Configuration Found", ""));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ServiceResponse(false, "No Tool Configuration Found", ""));
 	}
 
 	/*
 	 * export fieldmapping
 	 */
-	@RequestMapping(value = "/tools/{projectToolConfigId}/fieldMapping", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			value = "/tools/{projectToolConfigId}/fieldMapping",
+			method = RequestMethod.GET,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> getFieldMapping(@PathVariable String projectToolConfigId) {
 
 		FieldMappingDTO result = null;
 		projectToolConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectToolConfigId);
-		Optional<ProjectToolConfig> projectToolConfigOptional = getProjectToolConfig(projectToolConfigId);
+		Optional<ProjectToolConfig> projectToolConfigOptional =
+				getProjectToolConfig(projectToolConfigId);
 
 		if (projectToolConfigOptional.isPresent()) {
 			// checking the permission to get the fieldmapping
 			ProjectToolConfig projectToolConfig = projectToolConfigOptional.get();
-			ProjectBasicConfig projectBasicConfig = fieldMappingService
-					.getBasicProjectConfigById(projectToolConfig.getBasicProjectConfigId());
+			ProjectBasicConfig projectBasicConfig =
+					fieldMappingService.getBasicProjectConfigById(
+							projectToolConfig.getBasicProjectConfigId());
 			policy.checkPermission(projectBasicConfig, UPDATE_PROJECT);
 			FieldMapping resultFieldMapping = fieldMappingService.getFieldMapping(projectBasicConfig);
 
@@ -139,7 +151,8 @@ public class FieldMappingController {
 		log.info("getFieldMapping result : {}", result);
 		ServiceResponse response;
 		if (result == null) {
-			response = new ServiceResponse(false, "no field mapping found for " + projectToolConfigId, null);
+			response =
+					new ServiceResponse(false, "no field mapping found for " + projectToolConfigId, null);
 		} else {
 			response = new ServiceResponse(true, "field mappings", result);
 		}
@@ -150,11 +163,17 @@ public class FieldMappingController {
 	/*
 	 * save kpiwise fieldmapping
 	 */
-	@RequestMapping(value = "/tools/fieldMapping/{projectToolConfigId}/{kpiId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> getFieldMapping(@PathVariable String projectToolConfigId,
-			@PathVariable String kpiId, @RequestBody FieldMappingMeta requestData) {
+	@RequestMapping(
+			value = "/tools/fieldMapping/{projectToolConfigId}/{kpiId}",
+			method = RequestMethod.POST,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> getFieldMapping(
+			@PathVariable String projectToolConfigId,
+			@PathVariable String kpiId,
+			@RequestBody FieldMappingMeta requestData) {
 		projectToolConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectToolConfigId);
-		Optional<ProjectToolConfig> projectToolConfigOptional = getProjectToolConfig(projectToolConfigId);
+		Optional<ProjectToolConfig> projectToolConfigOptional =
+				getProjectToolConfig(projectToolConfigId);
 
 		ServiceResponse response = null;
 		if (projectToolConfigOptional.isPresent()) {
@@ -163,8 +182,9 @@ public class FieldMappingController {
 			List<FieldMappingResponse> kpiSpecificFieldsAndHistory = new ArrayList<>();
 			if (!Objects.equals(kpi.getKpiId(), KPICode.INVALID.getKpiId())) {
 				try {
-					kpiSpecificFieldsAndHistory = fieldMappingService.getKpiSpecificFieldsAndHistory(kpi, projectToolConfig,
-							requestData);
+					kpiSpecificFieldsAndHistory =
+							fieldMappingService.getKpiSpecificFieldsAndHistory(
+									kpi, projectToolConfig, requestData);
 				} catch (NoSuchFieldException | IllegalAccessException e) {
 					log.error("Field/ Class not found in FieldMapping collection");
 				}
@@ -172,14 +192,14 @@ public class FieldMappingController {
 			log.info("getFieldMapping result : {}", kpiSpecificFieldsAndHistory);
 
 			if (CollectionUtils.isEmpty(kpiSpecificFieldsAndHistory)) {
-				response = new ServiceResponse(false, "no field mapping found for " + projectToolConfigId, null);
-			}
-			else {
-				FieldMappingMeta fieldMappingMeta = new FieldMappingMeta(kpiSpecificFieldsAndHistory,
-						projectToolConfig.getMetadataTemplateCode());
+				response =
+						new ServiceResponse(false, "no field mapping found for " + projectToolConfigId, null);
+			} else {
+				FieldMappingMeta fieldMappingMeta =
+						new FieldMappingMeta(
+								kpiSpecificFieldsAndHistory, projectToolConfig.getMetadataTemplateCode());
 				response = new ServiceResponse(true, "field mappings", fieldMappingMeta);
 			}
-
 		}
 
 		return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -188,32 +208,43 @@ public class FieldMappingController {
 	/*
 	 * get kpiwise fieldmapping
 	 */
-	@RequestMapping(value = "/tools/saveMapping/{projectToolConfigId}/{kpiId}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> saveKpiWiseSpecificFieldmAPPING(@PathVariable String projectToolConfigId,
-			@PathVariable String kpiId, @RequestBody FieldMappingMeta fieldMappingMeta)
+	@RequestMapping(
+			value = "/tools/saveMapping/{projectToolConfigId}/{kpiId}",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> saveKpiWiseSpecificFieldmAPPING(
+			@PathVariable String projectToolConfigId,
+			@PathVariable String kpiId,
+			@RequestBody FieldMappingMeta fieldMappingMeta)
 			throws NoSuchFieldException, IllegalAccessException {
 
 		projectToolConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectToolConfigId);
 
-		Optional<ProjectToolConfig> projectToolConfigOptional = getProjectToolConfig(projectToolConfigId);
+		Optional<ProjectToolConfig> projectToolConfigOptional =
+				getProjectToolConfig(projectToolConfigId);
 
 		if (projectToolConfigOptional.isPresent()) {
 			// checking the permission to update the fieldmapping
 
 			ProjectToolConfig projectToolConfig = projectToolConfigOptional.get();
-			ProjectBasicConfig projectBasicConfig = fieldMappingService
-					.getBasicProjectConfigById(projectToolConfig.getBasicProjectConfigId());
+			ProjectBasicConfig projectBasicConfig =
+					fieldMappingService.getBasicProjectConfigById(
+							projectToolConfig.getBasicProjectConfigId());
 			policy.checkPermission(projectBasicConfig, "UPDATE_PROJECT");
 
 			// validating kpicode
 			KPICode kpi = KPICode.getKPI(kpiId);
 			if (!Objects.equals(kpi.getKpiId(), KPICode.INVALID.getKpiId())) {
-				fieldMappingService.updateSpecificFieldsAndHistory(kpi, projectToolConfig, fieldMappingMeta);
+				fieldMappingService.updateSpecificFieldsAndHistory(
+						kpi, projectToolConfig, fieldMappingMeta);
 				ServiceResponse response;
 				if (checkTool(projectToolConfig) && checkCustomTemplateCode(projectToolConfig)) {
 					response = new ServiceResponse(true, "changes are made in customize mappings", false);
 				} else {
-					response = new ServiceResponse(true, "mappings are not same as already maintained mapping", true);
+					response =
+							new ServiceResponse(
+									true, "mappings are not same as already maintained mapping", true);
 				}
 				return ResponseEntity.status(HttpStatus.OK).body(response);
 			}
@@ -225,19 +256,26 @@ public class FieldMappingController {
 	}
 
 	private boolean checkTool(ProjectToolConfig projectToolConfig) {
-		return (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA) ||
-				projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.AZURE) || projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.RALLY));
+		return (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA)
+				|| projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.AZURE)
+				|| projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.RALLY));
 	}
 
 	private boolean checkCustomTemplateCode(ProjectToolConfig projectToolConfig) {
-		return projectToolConfig.getMetadataTemplateCode().equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_SCRUM) ||
-				projectToolConfig.getMetadataTemplateCode().equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_KANBAN);
+		return projectToolConfig
+						.getMetadataTemplateCode()
+						.equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_SCRUM)
+				|| projectToolConfig
+						.getMetadataTemplateCode()
+						.equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_KANBAN);
 	}
 
 	private Optional<ProjectToolConfig> getProjectToolConfig(String projectToolConfigId) {
-		List<ProjectToolConfig> projectToolConfigs = (List<ProjectToolConfig>) configHelperService
-				.loadAllProjectToolConfig();
+		List<ProjectToolConfig> projectToolConfigs =
+				(List<ProjectToolConfig>) configHelperService.loadAllProjectToolConfig();
 		String finalProjectToolConfigId = projectToolConfigId;
-		return projectToolConfigs.stream().filter(t -> t.getId().toString().equals(finalProjectToolConfigId)).findFirst();
+		return projectToolConfigs.stream()
+				.filter(t -> t.getId().toString().equals(finalProjectToolConfigId))
+				.findFirst();
 	}
 }

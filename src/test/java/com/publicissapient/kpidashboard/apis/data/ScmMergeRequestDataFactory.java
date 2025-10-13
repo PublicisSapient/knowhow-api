@@ -21,7 +21,6 @@ package com.publicissapient.kpidashboard.apis.data;
 import java.io.IOException;
 import java.util.List;
 
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -31,6 +30,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,13 +38,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ScmMergeRequestDataFactory {
-	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA = "/json/non-JiraProcessors/scm_merge_requests.json";
-	@Getter
-    private List<ScmMergeRequests> mergeRequestDataFactory;
+	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA =
+			"/json/non-JiraProcessors/scm_merge_requests.json";
+	@Getter private List<ScmMergeRequests> mergeRequestDataFactory;
 	private ObjectMapper mapper;
 
-	private ScmMergeRequestDataFactory() {
-	}
+	private ScmMergeRequestDataFactory() {}
 
 	public static ScmMergeRequestDataFactory newInstance(String filePath) {
 
@@ -64,9 +63,10 @@ public class ScmMergeRequestDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_PROCESSOR_ITEMS_DATA : filePath;
 
-			mergeRequestDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<ScmMergeRequests>>() {
-					});
+			mergeRequestDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<ScmMergeRequests>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading scm merge request from file = " + filePath, e);
 		}
@@ -81,5 +81,4 @@ public class ScmMergeRequestDataFactory {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		}
 	}
-
 }

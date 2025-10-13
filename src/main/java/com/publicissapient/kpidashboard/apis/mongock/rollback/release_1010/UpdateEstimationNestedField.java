@@ -35,7 +35,11 @@ import lombok.extern.slf4j.Slf4j;
  * @author shi6
  */
 @Slf4j
-@ChangeUnit(id = "r_update_estimation_nested_field", order = "010103", author = "shi6", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "r_update_estimation_nested_field",
+		order = "010103",
+		author = "shi6",
+		systemVersion = "10.1.0")
 public class UpdateEstimationNestedField {
 
 	private static final String FIELD_NAME = "fieldName";
@@ -62,13 +66,17 @@ public class UpdateEstimationNestedField {
 				if ("storyPointToHourMapping".equals(nestedField.getString(FIELD_NAME))) {
 					nestedField.put("fieldLabel", "Story Point to Hour Conversion");
 					nestedField.put("filterGroup", List.of("Story Point"));
-					nestedField.put("tooltip",
-							new Document("definition", "Estimation technique used by teams for e.g. story points, Hours etc."));
+					nestedField.put(
+							"tooltip",
+							new Document(
+									"definition",
+									"Estimation technique used by teams for e.g. story points, Hours etc."));
 				}
 			}
 
 			// Update the document with the modified nested fields
-			collection.updateOne(Filters.eq(FIELD_NAME, ESTIMATION_CRITERIA), Updates.set(NESTED_FIELD, nestedFields));
+			collection.updateOne(
+					Filters.eq(FIELD_NAME, ESTIMATION_CRITERIA), Updates.set(NESTED_FIELD, nestedFields));
 		}
 
 		return true;
@@ -89,13 +97,17 @@ public class UpdateEstimationNestedField {
 				if ("storyPointToHourMapping".equals(nestedField.getString(FIELD_NAME))) {
 					nestedField.put("fieldLabel", "Hour to Story Point");
 					nestedField.put("filterGroup", Arrays.asList("Story Point", "Actual Estimation"));
-					nestedField.put("tooltip", new Document("definition",
-							" Estimation technique used by teams. Eg., enter 8 if 1 Story Point is equivalent to 8hrs of effort spent per day"));
+					nestedField.put(
+							"tooltip",
+							new Document(
+									"definition",
+									" Estimation technique used by teams. Eg., enter 8 if 1 Story Point is equivalent to 8hrs of effort spent per day"));
 				}
 			}
 
 			// Update the document with the modified nested fields
-			collection.updateOne(Filters.eq(FIELD_NAME, ESTIMATION_CRITERIA), Updates.set(NESTED_FIELD, nestedFields));
+			collection.updateOne(
+					Filters.eq(FIELD_NAME, ESTIMATION_CRITERIA), Updates.set(NESTED_FIELD, nestedFields));
 		}
 	}
 }

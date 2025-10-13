@@ -43,9 +43,10 @@ public class AuthenticationFixture {
 	private static final String DETAILS_CLAIM = "details";
 
 	public static void createAuthentication(String username) {
-		Collection<GrantedAuthority> authorities = Sets.newHashSet(new SimpleGrantedAuthority("ROLE_ADMIN"));
-		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, "password",
-				authorities);
+		Collection<GrantedAuthority> authorities =
+				Sets.newHashSet(new SimpleGrantedAuthority("ROLE_ADMIN"));
+		UsernamePasswordAuthenticationToken auth =
+				new UsernamePasswordAuthenticationToken(username, "password", authorities);
 		auth.setDetails(AuthType.STANDARD.name());
 		SecurityContext context = new SecurityContextImpl();
 		context.setAuthentication(auth);
@@ -60,8 +61,12 @@ public class AuthenticationFixture {
 	public static String getJwtToken(String username, String secret, long expirationTime) {
 		Authentication authentication = getAuthentication(username);
 		List<String> authorities = Arrays.asList("ROLE_VIEWER", "ROLE_SUPERADMIN");
-		return Jwts.builder().setSubject(authentication.getName()).claim(DETAILS_CLAIM, authentication.getDetails())
-				.claim(ROLES_CLAIM, authorities).setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-				.signWith(SignatureAlgorithm.HS512, secret).compact();
+		return Jwts.builder()
+				.setSubject(authentication.getName())
+				.claim(DETAILS_CLAIM, authentication.getDetails())
+				.claim(ROLES_CLAIM, authorities)
+				.setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+				.signWith(SignatureAlgorithm.HS512, secret)
+				.compact();
 	}
 }

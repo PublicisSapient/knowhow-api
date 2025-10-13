@@ -61,8 +61,7 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 	private static final String TOTAL_DEFECT = "Total Defects";
 	private static final String OPEN_DEFECT = "Open Defects";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -82,7 +81,8 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
-	private void releaseWiseLeafNodeValue(Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void releaseWiseLeafNodeValue(
+			Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
 		if (latestRelease != null) {
@@ -91,23 +91,33 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 			List<IterationKpiValue> filterDataList = new ArrayList<>();
 			if (CollectionUtils.isNotEmpty(totalDefects)) {
 				Object basicProjectConfigId = latestRelease.getProjectFilter().getBasicProjectConfigId();
-				FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+				FieldMapping fieldMapping =
+						configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
 				Set<String> jiraDodKPI144LowerCase = new HashSet<>();
 				if (fieldMapping.getJiraDodKPI143() != null) {
-					jiraDodKPI144LowerCase = fieldMapping.getJiraDodKPI143().stream().map(String::toLowerCase)
-							.collect(Collectors.toSet());
+					jiraDodKPI144LowerCase =
+							fieldMapping.getJiraDodKPI143().stream()
+									.map(String::toLowerCase)
+									.collect(Collectors.toSet());
 				}
 
 				Set<String> finalJiraDodKPI144LowerCase = jiraDodKPI144LowerCase;
-				List<JiraIssue> openDefects = totalDefects.stream()
-						.filter(
-								jiraIssue -> StringUtils.isNotEmpty(jiraIssue.getStatus()) && !finalJiraDodKPI144LowerCase.isEmpty() &&
-										!finalJiraDodKPI144LowerCase.contains(jiraIssue.getStatus().toLowerCase()))
-						.collect(Collectors.toList());
+				List<JiraIssue> openDefects =
+						totalDefects.stream()
+								.filter(
+										jiraIssue ->
+												StringUtils.isNotEmpty(jiraIssue.getStatus())
+														&& !finalJiraDodKPI144LowerCase.isEmpty()
+														&& !finalJiraDodKPI144LowerCase.contains(
+																jiraIssue.getStatus().toLowerCase()))
+								.collect(Collectors.toList());
 
-				Map<String, Map<String, List<JiraIssue>>> assigneeWiseList = getAssigneeWiseList(totalDefects, openDefects);
-				log.info("ReleaseDefectCountByAssigneeServiceImpl -> assigneeWiseList ->  : {}", assigneeWiseList);
+				Map<String, Map<String, List<JiraIssue>>> assigneeWiseList =
+						getAssigneeWiseList(totalDefects, openDefects);
+				log.info(
+						"ReleaseDefectCountByAssigneeServiceImpl -> assigneeWiseList ->  : {}",
+						assigneeWiseList);
 				List<IterationKpiValue> sortedFilterDataList = new ArrayList<>();
 				List<DataCount> dataCountListForAllAssignee = new ArrayList<>();
 				for (Map.Entry<String, Map<String, List<JiraIssue>>> entry : assigneeWiseList.entrySet()) {
@@ -128,7 +138,8 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 					middleOverallData.setValue(dataCountList);
 					middleTrendValueListForAssignee.add(middleOverallData);
 
-					IterationKpiValue filterData = new IterationKpiValue(entry.getKey(), middleTrendValueListForAssignee);
+					IterationKpiValue filterData =
+							new IterationKpiValue(entry.getKey(), middleTrendValueListForAssignee);
 					filterDataList.add(filterData);
 				}
 
@@ -142,28 +153,37 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 					kpiElement.setModalHeads(KPIExcelColumn.DEFECT_COUNT_BY_ASSIGNEE_RELEASE.getColumns());
 					kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_COUNT_BY_ASSIGNEE_RELEASE.getColumns());
 					kpiElement.setExcelData(excelData);
-					sortedFilterDataList.add(filterDataList.stream()
-							.filter(iterationKpiValue -> iterationKpiValue.getFilter1().equalsIgnoreCase(OPEN_DEFECT)).findFirst()
-							.orElse(new IterationKpiValue()));
-					filterDataList.removeIf(iterationKpiValue -> iterationKpiValue.getFilter1().equalsIgnoreCase(OPEN_DEFECT));
+					sortedFilterDataList.add(
+							filterDataList.stream()
+									.filter(
+											iterationKpiValue ->
+													iterationKpiValue.getFilter1().equalsIgnoreCase(OPEN_DEFECT))
+									.findFirst()
+									.orElse(new IterationKpiValue()));
+					filterDataList.removeIf(
+							iterationKpiValue -> iterationKpiValue.getFilter1().equalsIgnoreCase(OPEN_DEFECT));
 					sortListByKey(filterDataList);
 					sortedFilterDataList.addAll(filterDataList);
 					kpiElement.setTrendValueList(sortedFilterDataList);
-					log.info("ReleaseDefectCountByAssigneeServiceImpl -> request id : {} total jira Issues : {}",
-							requestTrackerId, filterDataList.get(0));
+					log.info(
+							"ReleaseDefectCountByAssigneeServiceImpl -> request id : {} total jira Issues : {}",
+							requestTrackerId,
+							filterDataList.get(0));
 				}
 			}
 		}
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Defect count by Assignee Release -> Requested sprint : {}", leafNode.getName());
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
 			if (null != fieldMapping) {
 				List<JiraIssue> releaseDefects = getFilteredReleaseJiraIssuesFromBaseClass(fieldMapping);
@@ -180,20 +200,23 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 	 * @param openIssues
 	 * @return
 	 */
-	private Map<String, Map<String, List<JiraIssue>>> getAssigneeWiseList(List<JiraIssue> defectJiraIssueList,
-			List<JiraIssue> openIssues) {
+	private Map<String, Map<String, List<JiraIssue>>> getAssigneeWiseList(
+			List<JiraIssue> defectJiraIssueList, List<JiraIssue> openIssues) {
 		Map<String, Map<String, List<JiraIssue>>> scopeWiseDefectsMap = new HashMap<>();
-		Collector<JiraIssue, ?, Map<String, List<JiraIssue>>> groupingByAssignee = Collectors
-				.groupingBy(JiraIssue::getAssigneeName);
-		Predicate<JiraIssue> hasNonEmptyRootCauseList = jiraIssue -> {
-			if (StringUtils.isEmpty(jiraIssue.getAssigneeName())) {
-				jiraIssue.setAssigneeName("-");
-			}
-			return true;
-		};
-		scopeWiseDefectsMap.put(TOTAL_DEFECT,
+		Collector<JiraIssue, ?, Map<String, List<JiraIssue>>> groupingByAssignee =
+				Collectors.groupingBy(JiraIssue::getAssigneeName);
+		Predicate<JiraIssue> hasNonEmptyRootCauseList =
+				jiraIssue -> {
+					if (StringUtils.isEmpty(jiraIssue.getAssigneeName())) {
+						jiraIssue.setAssigneeName("-");
+					}
+					return true;
+				};
+		scopeWiseDefectsMap.put(
+				TOTAL_DEFECT,
 				defectJiraIssueList.stream().filter(hasNonEmptyRootCauseList).collect(groupingByAssignee));
-		scopeWiseDefectsMap.put(OPEN_DEFECT,
+		scopeWiseDefectsMap.put(
+				OPEN_DEFECT,
 				openIssues.stream().filter(hasNonEmptyRootCauseList).collect(groupingByAssignee));
 		return scopeWiseDefectsMap;
 	}
@@ -205,8 +228,8 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 	 * @param assigneeCountMap
 	 * @return
 	 */
-	private static void getAssigneeWiseCount(Map<String, List<JiraIssue>> assigneeData,
-			Map<String, Integer> assigneeCountMap) {
+	private static void getAssigneeWiseCount(
+			Map<String, List<JiraIssue>> assigneeData, Map<String, Integer> assigneeCountMap) {
 		for (Map.Entry<String, List<JiraIssue>> assigneeEntry : assigneeData.entrySet()) {
 			String assignee = assigneeEntry.getKey();
 			List<JiraIssue> issues = assigneeEntry.getValue();
@@ -220,12 +243,14 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 	 * @param dataCountListForAllAssignees
 	 * @param overallAssigneeCountMapAggregate
 	 */
-	private static void overallAssigneeCountMap(List<DataCount> dataCountListForAllAssignees,
+	private static void overallAssigneeCountMap(
+			List<DataCount> dataCountListForAllAssignees,
 			Map<String, Integer> overallAssigneeCountMapAggregate) {
 		for (DataCount dataCount : dataCountListForAllAssignees) {
 			Map<String, Integer> statusCountMap = (Map<String, Integer>) dataCount.getValue();
-			statusCountMap.forEach((assignee, assigneeCountValue) -> overallAssigneeCountMapAggregate.merge(assignee,
-					assigneeCountValue, Integer::sum));
+			statusCountMap.forEach(
+					(assignee, assigneeCountValue) ->
+							overallAssigneeCountMapAggregate.merge(assignee, assigneeCountValue, Integer::sum));
 		}
 	}
 
@@ -237,10 +262,13 @@ public class ReleaseDefectCountByAssigneeServiceImpl extends JiraReleaseKPIServi
 	 * @param jiraIssueList
 	 * @param fieldMapping
 	 */
-	private void populateExcelDataObject(String requestTrackerId, List<KPIExcelData> excelData,
-			List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				CollectionUtils.isNotEmpty(jiraIssueList)) {
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<KPIExcelData> excelData,
+			List<JiraIssue> jiraIssueList,
+			FieldMapping fieldMapping) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+				&& CollectionUtils.isNotEmpty(jiraIssueList)) {
 			KPIExcelUtility.populateReleaseDefectRelatedExcelData(jiraIssueList, excelData, fieldMapping);
 		}
 	}

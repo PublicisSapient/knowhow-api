@@ -17,25 +17,27 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
-import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
-import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
-import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
-import io.micrometer.core.instrument.Measurement;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Statistic;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.actuate.health.Status;
-import org.springframework.boot.actuate.metrics.MetricsEndpoint;
-import org.springframework.stereotype.Service;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.metrics.MetricsEndpoint;
+import org.springframework.stereotype.Service;
+
+import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
+import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
+
+import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Statistic;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -65,14 +67,21 @@ public class MetricsServiceImpl implements MetricsService {
 
 			double max = extractMetricValue(metricDescriptor, Statistic.MAX.name()).orElse(0.0);
 			double count = extractMetricValue(metricDescriptor, Statistic.COUNT.name()).orElse(0.0);
-			double totalTime = extractMetricValue(metricDescriptor, Statistic.TOTAL_TIME.name()).orElse(0.0);
+			double totalTime =
+					extractMetricValue(metricDescriptor, Statistic.TOTAL_TIME.name()).orElse(0.0);
 
 			double errorRate = calculateErrorRate(apiPath);
 			boolean isHealthy = isErrorRateBelowThreshold(errorRate);
 
-			return ApiDetailDto.builder().name(apiPath).status(isHealthy ? STATUS_UP : STATUS_DOWN).max(max)
-					.count((int) count).totalTime(totalTime).errorRate(errorRate)
-					.errorThreshold(dashboardConfig.getMaxApiErrorThreshold()).build();
+			return ApiDetailDto.builder()
+					.name(apiPath)
+					.status(isHealthy ? STATUS_UP : STATUS_DOWN)
+					.max(max)
+					.count((int) count)
+					.totalTime(totalTime)
+					.errorRate(errorRate)
+					.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
+					.build();
 
 		} catch (Exception e) {
 			log.error("Error retrieving metrics for API {}: {}", apiPath, e.getMessage(), e);
@@ -102,9 +111,12 @@ public class MetricsServiceImpl implements MetricsService {
 		return metricsEndpoint.metric(METRIC_NAME, Collections.singletonList(URI_TAG + ":" + apiPath));
 	}
 
-	private Optional<Double> extractMetricValue(MetricsEndpoint.MetricDescriptor metricDescriptor, String statistic) {
-		return metricDescriptor.getMeasurements().stream().filter(m -> statistic.equals(m.getStatistic().name()))
-				.findFirst().map(MetricsEndpoint.Sample::getValue);
+	private Optional<Double> extractMetricValue(
+			MetricsEndpoint.MetricDescriptor metricDescriptor, String statistic) {
+		return metricDescriptor.getMeasurements().stream()
+				.filter(m -> statistic.equals(m.getStatistic().name()))
+				.findFirst()
+				.map(MetricsEndpoint.Sample::getValue);
 	}
 
 	private double calculateErrorRate(String apiPath) {
@@ -112,10 +124,15 @@ public class MetricsServiceImpl implements MetricsService {
 
 		Collection<Meter> meters = getMetersForUri(apiPath);
 		double totalRequests = meters.stream().mapToDouble(this::getMeterCount).sum();
-		double errors = meters.stream().filter(meter -> {
-			String status = meter.getId().getTag("status");
-			return status != null && status.startsWith(STATUS_5XX);
-		}).mapToDouble(this::getMeterCount).sum();
+		double errors =
+				meters.stream()
+						.filter(
+								meter -> {
+									String status = meter.getId().getTag("status");
+									return status != null && status.startsWith(STATUS_5XX);
+								})
+						.mapToDouble(this::getMeterCount)
+						.sum();
 
 		if (totalRequests == 0.0) {
 			log.debug("No requests found for API {}. Returning error rate 0.0", apiPath);
@@ -123,7 +140,12 @@ public class MetricsServiceImpl implements MetricsService {
 		}
 
 		double errorRate = (errors * 100.0) / totalRequests;
-		log.debug("API {}: totalRequests={}, errorCount={}, errorRate={}", apiPath, totalRequests, errors, errorRate);
+		log.debug(
+				"API {}: totalRequests={}, errorCount={}, errorRate={}",
+				apiPath,
+				totalRequests,
+				errors,
+				errorRate);
 		return errorRate;
 	}
 
@@ -134,7 +156,8 @@ public class MetricsServiceImpl implements MetricsService {
 	private double getMeterCount(Meter meter) {
 		return StreamSupport.stream(meter.measure().spliterator(), false)
 				.filter(m -> Statistic.COUNT.name().equalsIgnoreCase(m.getStatistic().name()))
-				.mapToDouble(Measurement::getValue).sum();
+				.mapToDouble(Measurement::getValue)
+				.sum();
 	}
 
 	private boolean isErrorRateBelowThreshold(double errorRate) {
@@ -142,8 +165,14 @@ public class MetricsServiceImpl implements MetricsService {
 	}
 
 	private ApiDetailDto buildDefaultApiDetail(String apiPath, String status) {
-		return ApiDetailDto.builder().name(apiPath).status(status).max(0).count(0).totalTime(0).errorRate(0)
-				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold()).build();
+		return ApiDetailDto.builder()
+				.name(apiPath)
+				.status(status)
+				.max(0)
+				.count(0)
+				.totalTime(0)
+				.errorRate(0)
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
+				.build();
 	}
-
 }

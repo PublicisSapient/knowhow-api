@@ -12,8 +12,7 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 @Service
 public class SprintDetailsServiceImpl implements SprintDetailsService {
 
-	@Autowired
-	private SprintRepository sprintRepository;
+	@Autowired private SprintRepository sprintRepository;
 
 	@Override
 	public List<SprintDetails> getSprintDetails(String basicProjectConfigId) {

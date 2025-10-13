@@ -33,11 +33,9 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.DeleteProject
 @Service
 public class DeleteProjectTraceLogServiceImpl implements DeleteProjectTraceLogService {
 
-	@Autowired
-	private DeleteProjectTraceLogRepository deleteProjectTraceLogRepository;
+	@Autowired private DeleteProjectTraceLogRepository deleteProjectTraceLogRepository;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
 	@Override
 	public void save(ProjectBasicConfig projectBasicConfig) {
@@ -47,7 +45,8 @@ public class DeleteProjectTraceLogServiceImpl implements DeleteProjectTraceLogSe
 		deleteProjectTraceLogRepository.save(traceLog);
 	}
 
-	private DeleteProjectTraceLog createTraceLog(ProjectBasicConfig projectBasicConfig, String username) {
+	private DeleteProjectTraceLog createTraceLog(
+			ProjectBasicConfig projectBasicConfig, String username) {
 		DeleteProjectTraceLog traceLog = new DeleteProjectTraceLog();
 		traceLog.setDeletedBy(username);
 		traceLog.setProjectBasicConfig(projectBasicConfig);

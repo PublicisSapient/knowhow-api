@@ -55,20 +55,15 @@ public class JenkinsControllerRTest {
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private JenkinsServiceR jenkinsService;
+	@Mock private JenkinsServiceR jenkinsService;
 
-	@Mock
-	private JenkinsServiceKanbanR jenkinsServiceKanban;
+	@Mock private JenkinsServiceKanbanR jenkinsServiceKanban;
 
-	@InjectMocks
-	private JenkinsController jenkinsController;
+	@InjectMocks private JenkinsController jenkinsController;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private JenkinsToolConfigServiceImpl jenkinsToolConfigService;
+	@Mock private JenkinsToolConfigServiceImpl jenkinsToolConfigService;
 
 	@BeforeEach
 	public void before() {
@@ -82,12 +77,26 @@ public class JenkinsControllerRTest {
 
 	@Test
 	public void getJenkinsKPIMetricReturnsValue() throws Exception {
-		String request = "{\n" + "  \"kpiList\": [\n" + "    {\n" + "      \"id\": \"5b753628d42937acd035b7ef\",\n" +
-				"      \"kpiId\": \"kpi8\",\n" + "      \"kpiName\": \"Code Build Time\",\n" +
-				"      \"isDeleted\": \"False\",\n" + "      \"kpiCategory\": \"Productivity\",\n" +
-				"      \"kpiUnit\": \"min\",\n" + "      \"kpiSource\": \"Jenkins\",\n" + "      \"maxValue\": \"\",\n" +
-				"      \"chartType\": \"gaugeChart\"\n" + "    }\n" + "  ],\n" + "  \"ids\": [\n" + "    \"GMA_GMA\"\n" +
-				"  ],\n" + "  \"level\": 1\n" + "}";
+		String request =
+				"{\n"
+						+ "  \"kpiList\": [\n"
+						+ "    {\n"
+						+ "      \"id\": \"5b753628d42937acd035b7ef\",\n"
+						+ "      \"kpiId\": \"kpi8\",\n"
+						+ "      \"kpiName\": \"Code Build Time\",\n"
+						+ "      \"isDeleted\": \"False\",\n"
+						+ "      \"kpiCategory\": \"Productivity\",\n"
+						+ "      \"kpiUnit\": \"min\",\n"
+						+ "      \"kpiSource\": \"Jenkins\",\n"
+						+ "      \"maxValue\": \"\",\n"
+						+ "      \"chartType\": \"gaugeChart\"\n"
+						+ "    }\n"
+						+ "  ],\n"
+						+ "  \"ids\": [\n"
+						+ "    \"GMA_GMA\"\n"
+						+ "  ],\n"
+						+ "  \"level\": 1\n"
+						+ "}";
 
 		List<KpiElement> kpiElementList = new ArrayList<KpiElement>();
 		KpiElement kpiElement = new KpiElement();
@@ -96,28 +105,52 @@ public class JenkinsControllerRTest {
 		kpiElement.setKpiSource("Jenkins");
 		kpiElementList.add(kpiElement);
 		when(jenkinsService.process(Mockito.any())).thenReturn(kpiElementList);
-		mockMvc.perform(post("/jenkins/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/jenkins/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
 	@Test
 	public void getJenkinsKPIMetricThrowException() throws Exception {
 
-		String request = "{\n" + "  \"level\": 3,\n" + "  \"ids\": [\n" + "    \"OPRO Sprint 71_12138_10304_PR\",\n" +
-				"    \"OPRO Sprint 72_12139_10304_PR\"\n" + "  ],\n" + "  \"kpiList\": []\n" + "}";
+		String request =
+				"{\n"
+						+ "  \"level\": 3,\n"
+						+ "  \"ids\": [\n"
+						+ "    \"OPRO Sprint 71_12138_10304_PR\",\n"
+						+ "    \"OPRO Sprint 72_12139_10304_PR\"\n"
+						+ "  ],\n"
+						+ "  \"kpiList\": []\n"
+						+ "}";
 
-		mockMvc.perform(post("/jenkins/kpi").contentType(MediaType.APPLICATION_JSON).content(request)).andDo(print())
+		mockMvc
+				.perform(post("/jenkins/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+				.andDo(print())
 				.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	public void getJenkinsKanbanAggregatedMetricsReturnsValue() throws Exception {
-		String request = "{\n" + "  \"kpiList\": [\n" + "    {\n" + "      \"id\": \"5b753628d42937acd035b7ef\",\n" +
-				"      \"kpiId\": \"kpi8\",\n" + "      \"kpiName\": \"Code Build Time\",\n" +
-				"      \"isDeleted\": \"False\",\n" + "      \"kpiCategory\": \"Productivity\",\n" +
-				"      \"kpiUnit\": \"min\",\n" + "      \"kpiSource\": \"Jenkins\",\n" + "      \"maxValue\": \"\",\n" +
-				"      \"chartType\": \"gaugeChart\"\n" + "    }\n" + "  ],\n" + "  \"ids\": [\n" + "    \"GMA_GMA\"\n" +
-				"  ],\n" + "  \"level\": 1\n" + "}";
+		String request =
+				"{\n"
+						+ "  \"kpiList\": [\n"
+						+ "    {\n"
+						+ "      \"id\": \"5b753628d42937acd035b7ef\",\n"
+						+ "      \"kpiId\": \"kpi8\",\n"
+						+ "      \"kpiName\": \"Code Build Time\",\n"
+						+ "      \"isDeleted\": \"False\",\n"
+						+ "      \"kpiCategory\": \"Productivity\",\n"
+						+ "      \"kpiUnit\": \"min\",\n"
+						+ "      \"kpiSource\": \"Jenkins\",\n"
+						+ "      \"maxValue\": \"\",\n"
+						+ "      \"chartType\": \"gaugeChart\"\n"
+						+ "    }\n"
+						+ "  ],\n"
+						+ "  \"ids\": [\n"
+						+ "    \"GMA_GMA\"\n"
+						+ "  ],\n"
+						+ "  \"level\": 1\n"
+						+ "}";
 
 		List<KpiElement> kpiElementList = new ArrayList<KpiElement>();
 		KpiElement kpiElement = new KpiElement();
@@ -127,17 +160,29 @@ public class JenkinsControllerRTest {
 		kpiElement.setKpiId(KPICode.CODE_BUILD_TIME_KANBAN.getKpiId());
 		kpiElementList.add(kpiElement);
 		when(jenkinsServiceKanban.process(Mockito.any())).thenReturn(kpiElementList);
-		mockMvc.perform(post("/jenkinskanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(
+						post("/jenkinskanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
 	@Test
 	public void getJenkinsKanbanKPIMetricReturns400() throws Exception {
 
-		String request = "{\n" + "  \"level\": 3,\n" + "  \"ids\": [\n" + "    \"OPRO Sprint 71_12138_10304_PR\",\n" +
-				"    \"OPRO Sprint 72_12139_10304_PR\"\n" + "  ],\n" + "  \"kpiList\": []\n" + "}";
+		String request =
+				"{\n"
+						+ "  \"level\": 3,\n"
+						+ "  \"ids\": [\n"
+						+ "    \"OPRO Sprint 71_12138_10304_PR\",\n"
+						+ "    \"OPRO Sprint 72_12139_10304_PR\"\n"
+						+ "  ],\n"
+						+ "  \"kpiList\": []\n"
+						+ "}";
 
-		mockMvc.perform(post("/jenkinskanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request)).andDo(print())
+		mockMvc
+				.perform(
+						post("/jenkinskanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+				.andDo(print())
 				.andExpect(status().isBadRequest());
 	}
 
@@ -149,7 +194,9 @@ public class JenkinsControllerRTest {
 		when(jenkinsToolConfigService.getJenkinsJobNameList(connectionId)).thenReturn(jobUrlList);
 
 		// Act & Assert
-		mockMvc.perform(get("/jenkins/jobName/{connectionId}", connectionId)).andExpect(status().isOk())
+		mockMvc
+				.perform(get("/jenkins/jobName/{connectionId}", connectionId))
+				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success").value(true))
 				.andExpect(jsonPath("$.message").value("Fetched Jobs Successfully"))
 				.andExpect(jsonPath("$.data", hasSize(jobUrlList.size())));
@@ -158,10 +205,14 @@ public class JenkinsControllerRTest {
 	@Test
 	public void testGetJenkinsJobsWhenNoJobsFound() throws Exception {
 		String connectionId = "yourConnectionId";
-		when(jenkinsToolConfigService.getJenkinsJobNameList(connectionId)).thenReturn(Collections.emptyList());
+		when(jenkinsToolConfigService.getJenkinsJobNameList(connectionId))
+				.thenReturn(Collections.emptyList());
 
-		mockMvc.perform(get("/jenkins/jobName/{connectionId}", connectionId)).andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.success").value(false)).andExpect(jsonPath("$.message").value("No Jobs details found"))
+		mockMvc
+				.perform(get("/jenkins/jobName/{connectionId}", connectionId))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.success").value(false))
+				.andExpect(jsonPath("$.message").value("No Jobs details found"))
 				.andExpect(jsonPath("$.data").doesNotExist());
 	}
 }

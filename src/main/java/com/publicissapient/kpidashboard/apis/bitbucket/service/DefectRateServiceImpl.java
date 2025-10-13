@@ -70,21 +70,18 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class DefectRateServiceImpl
+		extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE = "assignee";
 	public static final String MR_COUNT = "No of PRs";
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private AssigneeDetailsRepository assigneeDetailsRepository;
+	@Autowired private AssigneeDetailsRepository assigneeDetailsRepository;
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -94,15 +91,11 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * create data count
 	 *
-	 * @param kpiRequest
-	 *          kpi request
-	 * @param kpiElement
-	 *          kpi element
-	 * @param projectNode
-	 *          project node
+	 * @param kpiRequest kpi request
+	 * @param kpiElement kpi element
+	 * @param projectNode project node
 	 * @return kpi element
-	 * @throws ApplicationException
-	 *           application exception
+	 * @throws ApplicationException application exception
 	 */
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -111,52 +104,55 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 		mapTmp.put(projectNode.getId(), projectNode);
 		projectWiseLeafNodeValue(kpiElement, mapTmp, projectNode, kpiRequest);
 		String sanitizedRequestId = kpiRequest.getRequestTrackerId().replaceAll("[^a-zA-Z0-9-_]", "");
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", sanitizedRequestId, projectNode);
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				sanitizedRequestId,
+				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.DEFECT_RATE);
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.DEFECT_RATE);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEFECT_RATE);
 
 		Map<String, Map<String, List<DataCount>>> statusTypeProjectWiseDc = new LinkedHashMap<>();
-		trendValuesMap.forEach((statusType, dataCounts) -> {
-			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
-					.collect(Collectors.groupingBy(DataCount::getData));
-			statusTypeProjectWiseDc.put(statusType, projectWiseDc);
-		});
+		trendValuesMap.forEach(
+				(statusType, dataCounts) -> {
+					Map<String, List<DataCount>> projectWiseDc =
+							dataCounts.stream().collect(Collectors.groupingBy(DataCount::getData));
+					statusTypeProjectWiseDc.put(statusType, projectWiseDc);
+				});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		statusTypeProjectWiseDc.forEach((issueType, projectWiseDc) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDc.entrySet().forEach(trend -> dataList.addAll(trend.getValue()));
-			// split for filters
-			String[] issueFilter = issueType.split("#");
-			dataCountGroup.setFilter1(issueFilter[0]);
-			dataCountGroup.setFilter2(issueFilter[1]);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		statusTypeProjectWiseDc.forEach(
+				(issueType, projectWiseDc) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDc.entrySet().forEach(trend -> dataList.addAll(trend.getValue()));
+					// split for filters
+					String[] issueFilter = issueType.split("#");
+					dataCountGroup.setFilter1(issueFilter[0]);
+					dataCountGroup.setFilter2(issueFilter[1]);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 		kpiElement.setTrendValueList(dataCountGroups);
 		return kpiElement;
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *          kpi element
-	 * @param mapTmp
-	 *          node map
-	 * @param projectLeafNode
-	 *          leaf node of project
-	 * @param kpiRequest
-	 *          kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void projectWiseLeafNodeValue(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
@@ -169,65 +165,94 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 		// gets the tool configuration
 		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
 		ProjectFilter projectFilter = projectLeafNode.getProjectFilter();
-		ObjectId projectBasicConfigId = projectFilter == null ? null : projectFilter.getBasicProjectConfigId();
-		Map<String, List<Tool>> toolListMap = toolMap == null ? null : toolMap.get(projectBasicConfigId);
+		ObjectId projectBasicConfigId =
+				projectFilter == null ? null : projectFilter.getBasicProjectConfigId();
+		Map<String, List<Tool>> toolListMap =
+				toolMap == null ? null : toolMap.get(projectBasicConfigId);
 
-		List<RepoToolKpiMetricResponse> repoToolKpiMetricResponseList = kpiHelperService.getRepoToolsKpiMetricResponse(
-				localEndDate, kpiHelperService.getScmToolJobs(toolListMap, projectLeafNode), projectLeafNode, duration,
-				dataPoints, customApiConfig.getDefectRateUrl());
+		List<RepoToolKpiMetricResponse> repoToolKpiMetricResponseList =
+				kpiHelperService.getRepoToolsKpiMetricResponse(
+						localEndDate,
+						kpiHelperService.getScmToolJobs(toolListMap, projectLeafNode),
+						projectLeafNode,
+						duration,
+						dataPoints,
+						customApiConfig.getDefectRateUrl());
 
 		if (CollectionUtils.isEmpty(repoToolKpiMetricResponseList)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No kpi data found for this project {}", projectLeafNode);
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No kpi data found for this project {}", projectLeafNode);
 			return;
 		}
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		List<Tool> reposList = kpiHelperService.populateSCMToolsRepoList(toolListMap);
 		if (CollectionUtils.isEmpty(reposList)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No Jobs found for this project {}", projectLeafNode.getProjectFilter());
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No Jobs found for this project {}",
+					projectLeafNode.getProjectFilter());
 			return;
 		}
 
 		String projectName = projectLeafNode.getProjectFilter().getName();
 		Map<String, List<DataCount>> aggDataMap = new HashMap<>();
-		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
+		Map<String, Object> resultmap =
+				fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
 		Set<Assignee> assignees = (Set<Assignee>) resultmap.get(ASSIGNEE);
-		Set<String> overAllUsers = repoToolKpiMetricResponseList.stream().flatMap(value -> value.getUsers().stream())
-				.map(RepoToolUserDetails::getEmail).collect(Collectors.toSet());
+		Set<String> overAllUsers =
+				repoToolKpiMetricResponseList.stream()
+						.flatMap(value -> value.getUsers().stream())
+						.map(RepoToolUserDetails::getEmail)
+						.collect(Collectors.toSet());
 		LocalDate currentDate = LocalDate.now();
 		List<RepoToolValidationData> repoToolValidationDataList = new ArrayList<>();
 		for (int i = 0; i < dataPoints; i++) {
 
 			LocalDate finalCurrentDate = currentDate;
-			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateForDataFiltering(finalCurrentDate, duration);
+			CustomDateRange weekRange =
+					KpiDataHelper.getStartAndEndDateForDataFiltering(finalCurrentDate, duration);
 			String date = KpiHelperService.getDateRange(weekRange, duration);
 
-			Optional<RepoToolKpiMetricResponse> repoToolKpiMetricResponse = repoToolKpiMetricResponseList.stream()
-					.filter(value -> value.getDateLabel().equals(weekRange.getStartDate().toString())).findFirst();
+			Optional<RepoToolKpiMetricResponse> repoToolKpiMetricResponse =
+					repoToolKpiMetricResponseList.stream()
+							.filter(value -> value.getDateLabel().equals(weekRange.getStartDate().toString()))
+							.findFirst();
 
-			reposList.forEach(repo -> {
-				if (!CollectionUtils.isEmpty(repo.getProcessorItemList()) &&
-						repo.getProcessorItemList().get(0).getId() != null) {
-					List<RepoToolUserDetails> repoToolUserDetailsList = new ArrayList<>();
-					String branchName = getBranchSubFilter(repo, projectName);
-					double defectRate = 0;
-					int mrCount = 0;
-					String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-					if (repoToolKpiMetricResponse.isPresent()) {
-						Optional<Branches> matchingBranch = repoToolKpiMetricResponse.get().getRepositories().stream()
-								.filter(repository -> repository.getName().equals(repo.getRepositoryName()))
-								.flatMap(repository -> repository.getBranches().stream())
-								.filter(branch -> branch.getName().equals(repo.getBranch())).findFirst();
+			reposList.forEach(
+					repo -> {
+						if (!CollectionUtils.isEmpty(repo.getProcessorItemList())
+								&& repo.getProcessorItemList().get(0).getId() != null) {
+							List<RepoToolUserDetails> repoToolUserDetailsList = new ArrayList<>();
+							String branchName = getBranchSubFilter(repo, projectName);
+							double defectRate = 0;
+							int mrCount = 0;
+							String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
+							if (repoToolKpiMetricResponse.isPresent()) {
+								Optional<Branches> matchingBranch =
+										repoToolKpiMetricResponse.get().getRepositories().stream()
+												.filter(repository -> repository.getName().equals(repo.getRepositoryName()))
+												.flatMap(repository -> repository.getBranches().stream())
+												.filter(branch -> branch.getName().equals(repo.getBranch()))
+												.findFirst();
 
-						mrCount = matchingBranch.map(Branches::getBranchMergeRequestsNumber).orElse(0);
-						defectRate = matchingBranch.map(Branches::getBranchMergeRequestPercentage).orElse(0.0d);
-						repoToolUserDetailsList = matchingBranch.map(Branches::getUsers).orElse(new ArrayList<>());
-					}
-					repoToolValidationDataList.addAll(
-							setUserDataCounts(overAllUsers, repoToolUserDetailsList, assignees, repo, projectName, date, aggDataMap));
-					setDataCount(projectName, date, overallKpiGroup, mrCount, defectRate, aggDataMap);
-				}
-			});
+								mrCount = matchingBranch.map(Branches::getBranchMergeRequestsNumber).orElse(0);
+								defectRate =
+										matchingBranch.map(Branches::getBranchMergeRequestPercentage).orElse(0.0d);
+								repoToolUserDetailsList =
+										matchingBranch.map(Branches::getUsers).orElse(new ArrayList<>());
+							}
+							repoToolValidationDataList.addAll(
+									setUserDataCounts(
+											overAllUsers,
+											repoToolUserDetailsList,
+											assignees,
+											repo,
+											projectName,
+											date,
+											aggDataMap));
+							setDataCount(projectName, date, overallKpiGroup, mrCount, defectRate, aggDataMap);
+						}
+					});
 
 			currentDate = KpiHelperService.getNextRangeDate(duration, currentDate);
 		}
@@ -241,22 +266,20 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * fetch data from db
 	 *
-	 * @param leafNodeList
-	 *          leaf node list
-	 * @param startDate
-	 *          start date
-	 * @param endDate
-	 *          end date
-	 * @param kpiRequest
-	 *          kpi request
+	 * @param leafNodeList leaf node list
+	 * @param startDate start date
+	 * @param endDate end date
+	 * @param kpiRequest kpi request
 	 * @return map of data
 	 */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		AssigneeDetails assigneeDetails = assigneeDetailsRepository
-				.findByBasicProjectConfigId(leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
-		Set<Assignee> assignees = assigneeDetails != null ? assigneeDetails.getAssignee() : new HashSet<>();
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
+		AssigneeDetails assigneeDetails =
+				assigneeDetailsRepository.findByBasicProjectConfigId(
+						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
+		Set<Assignee> assignees =
+				assigneeDetails != null ? assigneeDetails.getAssignee() : new HashSet<>();
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put(ASSIGNEE, assignees);
 		return resultMap;
@@ -265,80 +288,96 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * set data count for user filter
 	 *
-	 * @param overAllUsers
-	 *          list of user emails from repotool
-	 * @param repoToolUserDetailsList
-	 *          list of repo tool user data
-	 * @param assignees
-	 *          assignee data
-	 * @param repo
-	 *          repo tool item
-	 * @param projectName
-	 *          project name
-	 * @param date
-	 *          date
-	 * @param dateUserWiseAverage
-	 *          total data map
+	 * @param overAllUsers list of user emails from repotool
+	 * @param repoToolUserDetailsList list of repo tool user data
+	 * @param assignees assignee data
+	 * @param repo repo tool item
+	 * @param projectName project name
+	 * @param date date
+	 * @param dateUserWiseAverage total data map
 	 * @return repotool validation data
 	 */
-	private List<RepoToolValidationData> setUserDataCounts(Set<String> overAllUsers,
-			List<RepoToolUserDetails> repoToolUserDetailsList, Set<Assignee> assignees, Tool repo, String projectName,
-			String date, Map<String, List<DataCount>> dateUserWiseAverage) {
+	private List<RepoToolValidationData> setUserDataCounts(
+			Set<String> overAllUsers,
+			List<RepoToolUserDetails> repoToolUserDetailsList,
+			Set<Assignee> assignees,
+			Tool repo,
+			String projectName,
+			String date,
+			Map<String, List<DataCount>> dateUserWiseAverage) {
 		List<RepoToolValidationData> repoToolValidationDataList = new ArrayList<>();
-		overAllUsers.forEach(userEmail -> {
-			Optional<RepoToolUserDetails> repoToolUserDetails = repoToolUserDetailsList.stream()
-					.filter(user -> userEmail.equalsIgnoreCase(user.getEmail())).findFirst();
-			Optional<Assignee> assignee = assignees.stream()
-					.filter(assign -> CollectionUtils.isNotEmpty(assign.getEmail()) && assign.getEmail().contains(userEmail))
-					.findFirst();
-			String developerName = assignee.isPresent() ? assignee.get().getAssigneeName() : userEmail;
-			int defectMrs = repoToolUserDetails.map(RepoToolUserDetails::getMergeRequestsNumber).orElse(0);
-			double defectRate = repoToolUserDetails.map(RepoToolUserDetails::getMemberDefectMergeRequestPercentage)
-					.orElse(0.0d);
-			String branchName = getBranchSubFilter(repo, projectName);
-			String userKpiGroup = branchName + "#" + developerName;
-			if (repoToolUserDetails.isPresent()) {
-				RepoToolValidationData repoToolValidationData = new RepoToolValidationData();
-				repoToolValidationData.setProjectName(projectName);
-				repoToolValidationData.setBranchName(repo.getBranch());
-				repoToolValidationData.setRepoUrl(repo.getRepositoryName());
-				repoToolValidationData.setDeveloperName(developerName);
-				repoToolValidationData.setDate(date);
-				repoToolValidationData.setDefectRate(defectRate);
-				repoToolValidationData.setKpiPRs(defectMrs);
-				repoToolValidationData.setMrCount(repoToolUserDetails.map(RepoToolUserDetails::getMrCount).orElse(0L));
-				repoToolValidationDataList.add(repoToolValidationData);
-			}
+		overAllUsers.forEach(
+				userEmail -> {
+					Optional<RepoToolUserDetails> repoToolUserDetails =
+							repoToolUserDetailsList.stream()
+									.filter(user -> userEmail.equalsIgnoreCase(user.getEmail()))
+									.findFirst();
+					Optional<Assignee> assignee =
+							assignees.stream()
+									.filter(
+											assign ->
+													CollectionUtils.isNotEmpty(assign.getEmail())
+															&& assign.getEmail().contains(userEmail))
+									.findFirst();
+					String developerName =
+							assignee.isPresent() ? assignee.get().getAssigneeName() : userEmail;
+					int defectMrs =
+							repoToolUserDetails.map(RepoToolUserDetails::getMergeRequestsNumber).orElse(0);
+					double defectRate =
+							repoToolUserDetails
+									.map(RepoToolUserDetails::getMemberDefectMergeRequestPercentage)
+									.orElse(0.0d);
+					String branchName = getBranchSubFilter(repo, projectName);
+					String userKpiGroup = branchName + "#" + developerName;
+					if (repoToolUserDetails.isPresent()) {
+						RepoToolValidationData repoToolValidationData = new RepoToolValidationData();
+						repoToolValidationData.setProjectName(projectName);
+						repoToolValidationData.setBranchName(repo.getBranch());
+						repoToolValidationData.setRepoUrl(repo.getRepositoryName());
+						repoToolValidationData.setDeveloperName(developerName);
+						repoToolValidationData.setDate(date);
+						repoToolValidationData.setDefectRate(defectRate);
+						repoToolValidationData.setKpiPRs(defectMrs);
+						repoToolValidationData.setMrCount(
+								repoToolUserDetails.map(RepoToolUserDetails::getMrCount).orElse(0L));
+						repoToolValidationDataList.add(repoToolValidationData);
+					}
 
-			setDataCount(projectName, date, userKpiGroup, defectMrs, defectRate, dateUserWiseAverage);
-		});
+					setDataCount(projectName, date, userKpiGroup, defectMrs, defectRate, dateUserWiseAverage);
+				});
 		return repoToolValidationDataList;
 	}
 
 	/**
 	 * set individual data count
 	 *
-	 * @param projectName
-	 *          project name
-	 * @param week
-	 *          date
-	 * @param kpiGroup
-	 *          combined filter
-	 * @param value
-	 *          value
-	 * @param dataCountMap
-	 *          data count map by filter
+	 * @param projectName project name
+	 * @param week date
+	 * @param kpiGroup combined filter
+	 * @param value value
+	 * @param dataCountMap data count map by filter
 	 */
-	private void setDataCount(String projectName, String week, String kpiGroup, int mrCount, double value,
+	private void setDataCount(
+			String projectName,
+			String week,
+			String kpiGroup,
+			int mrCount,
+			double value,
 			Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.get(kpiGroup);
-		Optional<DataCount> optionalDataCount = dataCounts != null
-				? dataCounts.stream().filter(dataCount1 -> dataCount1.getDate().equals(week)).findFirst()
-				: Optional.empty();
+		Optional<DataCount> optionalDataCount =
+				dataCounts != null
+						? dataCounts.stream()
+								.filter(dataCount1 -> dataCount1.getDate().equals(week))
+								.findFirst()
+						: Optional.empty();
 		if (optionalDataCount.isPresent()) {
 			DataCount updatedDataCount = optionalDataCount.get();
-			updatedDataCount.getHoverValue().put(MR_COUNT,
-					((Number) updatedDataCount.getHoverValue().get(MR_COUNT)).longValue() + mrCount);
+			updatedDataCount
+					.getHoverValue()
+					.put(
+							MR_COUNT,
+							((Number) updatedDataCount.getHoverValue().get(MR_COUNT)).longValue() + mrCount);
 			updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
 			dataCounts.set(dataCounts.indexOf(optionalDataCount.get()), updatedDataCount);
 		} else {
@@ -358,14 +397,13 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * populate excel data
 	 *
-	 * @param requestTrackerId
-	 *          request tracker id
-	 * @param repoToolUserDetails
-	 *          repo tool validation data
-	 * @param validationDataMap
-	 *          excel data map
+	 * @param requestTrackerId request tracker id
+	 * @param repoToolUserDetails repo tool validation data
+	 * @param validationDataMap excel data map
 	 */
-	private void populateExcelDataObject(String requestTrackerId, List<RepoToolValidationData> repoToolUserDetails,
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<RepoToolValidationData> repoToolUserDetails,
 			List<KPIExcelData> validationDataMap) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateDefectRate(repoToolUserDetails, validationDataMap);
@@ -384,6 +422,7 @@ public class DefectRateServiceImpl extends BitBucketKPIService<Double, List<Obje
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI186(), KPICode.DEFECT_RATE.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI186(), KPICode.DEFECT_RATE.getKpiId());
 	}
 }

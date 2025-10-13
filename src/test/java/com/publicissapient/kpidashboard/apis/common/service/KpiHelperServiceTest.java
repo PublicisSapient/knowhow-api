@@ -99,24 +99,17 @@ public class KpiHelperServiceTest {
 	private List<AccountHierarchyData> ahdList = new ArrayList<>();
 	private List<AccountHierarchyDataKanban> ahdKanbanList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
 
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Mock
-	private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
+	@Mock private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
 
-	@Mock
-	private KanbanCapacityRepository kanbanCapacityRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private KanbanCapacityRepository kanbanCapacityRepository;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private CapacityKpiDataRepository capacityKpiDataRepository;
-	@InjectMocks
-	private KpiHelperService kpiHelperService;
+	@Mock private CapacityKpiDataRepository capacityKpiDataRepository;
+	@InjectMocks private KpiHelperService kpiHelperService;
 
 	private List<SprintDetails> sprintDetailsList = new ArrayList<>();
 
@@ -134,27 +127,20 @@ public class KpiHelperServiceTest {
 
 	private KpiRequestFactory kanbanKpiRequestFactory;
 
-	@Mock
-	private FieldMappingStructure fieldMappingStructure = new FieldMappingStructure();
+	@Mock private FieldMappingStructure fieldMappingStructure = new FieldMappingStructure();
 
 	private List<FieldMappingStructure> fieldMappingStructureList = new ArrayList<>();
 
-	@Mock
-	private FilterHelperService flterHelperService;
+	@Mock private FilterHelperService flterHelperService;
 
-	@Mock
-	private SprintRepository sprintRepository;
+	@Mock private SprintRepository sprintRepository;
 
-	@Mock
-	private KPIVideoLinkRepository kpiVideoLinkRepository;
+	@Mock private KPIVideoLinkRepository kpiVideoLinkRepository;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private CacheService cacheService;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	Map<String, List<String>> priority = new HashMap<>();
 
@@ -178,7 +164,8 @@ public class KpiHelperServiceTest {
 		AccountHierarchyFilterDataFactory factory = AccountHierarchyFilterDataFactory.newInstance();
 		ahdList = factory.getAccountHierarchyDataList();
 
-		AccountHierarchyKanbanFilterDataFactory kanbanFactory = AccountHierarchyKanbanFilterDataFactory.newInstance();
+		AccountHierarchyKanbanFilterDataFactory kanbanFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
 		ahdKanbanList = kanbanFactory.getAccountHierarchyKanbanDataList();
 
 		kpiRequestFactory = KpiRequestFactory.newInstance();
@@ -192,13 +179,13 @@ public class KpiHelperServiceTest {
 		projectConfigMap.put(projectConfig.getBasicProjectConfigId(), stringListMap);
 		when(configHelperService.getProjectToolConfigMap()).thenReturn(projectConfigMap);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		FieldMappingDataFactory fieldMappingDataFactoryKanban = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactoryKanban =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMappingKanban = fieldMappingDataFactoryKanban.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMappingKanban.getBasicProjectConfigId(), fieldMappingKanban);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
@@ -217,40 +204,45 @@ public class KpiHelperServiceTest {
 
 		issueList = jiraIssueDataFactory.getJiraIssues();
 
-		CapacityKpiDataDataFactory capacityKpiDataDataFactory = CapacityKpiDataDataFactory.newInstance();
+		CapacityKpiDataDataFactory capacityKpiDataDataFactory =
+				CapacityKpiDataDataFactory.newInstance();
 		capacityKpiDataList = capacityKpiDataDataFactory.getCapacityKpiDataList();
 		fieldMappingStructureList.add(fieldMappingStructure);
 
 		priority.put("P1", Arrays.asList("p1"));
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/account_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/account_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testFetchDIRDataFromDb() throws ApplicationException {
-		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
-		when(jiraIssueRepository.findIssuesGroupBySprint(any(), any(), any(), any())).thenReturn(sprintWiseStoryList);
+		KpiRequest kpiRequest =
+				kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
+		when(jiraIssueRepository.findIssuesGroupBySprint(any(), any(), any(), any()))
+				.thenReturn(sprintWiseStoryList);
 
-		when(jiraIssueCustomHistoryRepository.findFeatureCustomHistoryStoryProjectWise(any(), any(), any()))
+		when(jiraIssueCustomHistoryRepository.findFeatureCustomHistoryStoryProjectWise(
+						any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
 		when(jiraIssueRepository.findIssuesByType(any())).thenReturn(bugList);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, ahdList,
-				new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, ahdList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
 		when(customApiConfig.getPriority()).thenReturn(priority);
 		List<String> sprintList = List.of("sprint1", "sprint2");
 		ObjectId basicProjectConfigId = new ObjectId("6335363749794a18e8a4479b");
-		Map<String, Object> resultMap = kpiHelperService.fetchDIRDataFromDb(basicProjectConfigId, kpiRequest,
-				sprintList);
+		Map<String, Object> resultMap =
+				kpiHelperService.fetchDIRDataFromDb(basicProjectConfigId, kpiRequest, sprintList);
 		assertEquals(3, resultMap.size());
 	}
 
@@ -258,17 +250,21 @@ public class KpiHelperServiceTest {
 	public void testFetchQADDFromDb() throws ApplicationException {
 
 		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_DENSITY.getKpiId());
-		when(jiraIssueRepository.findIssuesGroupBySprint(any(), any(), any(), any())).thenReturn(sprintWiseStoryList);
-		when(jiraIssueCustomHistoryRepository.findFeatureCustomHistoryStoryProjectWise(any(), any(), any()))
+		when(jiraIssueRepository.findIssuesGroupBySprint(any(), any(), any(), any()))
+				.thenReturn(sprintWiseStoryList);
+		when(jiraIssueCustomHistoryRepository.findFeatureCustomHistoryStoryProjectWise(
+						any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
 		when(jiraIssueRepository.findIssuesBySprintAndType(any(), any())).thenReturn(bugList);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, ahdList,
-				new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, ahdList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getPriority()).thenReturn(priority);
 		List<String> sprintList = List.of("sprint1", "sprint2");
 		ObjectId basicProjectConfigId = new ObjectId("6335363749794a18e8a4479b");
-		Map<String, Object> resultMap = kpiHelperService.fetchQADDFromDb(basicProjectConfigId, kpiRequest, sprintList);
+		Map<String, Object> resultMap =
+				kpiHelperService.fetchQADDFromDb(basicProjectConfigId, kpiRequest, sprintList);
 		assertEquals(3, resultMap.size());
 	}
 
@@ -276,24 +272,28 @@ public class KpiHelperServiceTest {
 	public void testFetchSprintVelocityDataFromDb() throws ApplicationException {
 
 		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.SPRINT_VELOCITY.getKpiId());
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, ahdList,
-				new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, ahdList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
-		Map<String, Object> resultMap = kpiHelperService.fetchSprintVelocityDataFromDb(kpiRequest, new ArrayList<>(),
-				sprintDetailsList);
+		Map<String, Object> resultMap =
+				kpiHelperService.fetchSprintVelocityDataFromDb(
+						kpiRequest, new ArrayList<>(), sprintDetailsList);
 		assertEquals(2, resultMap.size());
 	}
 
 	@Test
 	public void testFetchSprintCapacityDataFromDb() throws ApplicationException {
 
-		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.SPRINT_CAPACITY_UTILIZATION.getKpiId());
+		KpiRequest kpiRequest =
+				kpiRequestFactory.findKpiRequest(KPICode.SPRINT_CAPACITY_UTILIZATION.getKpiId());
 		when(sprintRepository.findBySprintIDIn(any())).thenReturn(sprintDetailsList);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, ahdList,
-				new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, ahdList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
@@ -308,48 +308,59 @@ public class KpiHelperServiceTest {
 
 		when(capacityKpiDataRepository.findByFilters(any(), any())).thenReturn(capacityKpiDataList);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, ahdList,
-				new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, ahdList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
-		List<CapacityKpiData> resultList = kpiHelperService.fetchCapacityDataFromDB(kpiRequest, leafNodeList);
+		List<CapacityKpiData> resultList =
+				kpiHelperService.fetchCapacityDataFromDB(kpiRequest, leafNodeList);
 		assertEquals(4, resultList.size());
 	}
 
 	@Test
 	public void testFetchTicketVelocityDataFromDb() throws ApplicationException {
 
-		KpiRequest kpiRequest = kanbanKpiRequestFactory.findKpiRequest(KPICode.TICKET_VELOCITY.getKpiId());
+		KpiRequest kpiRequest =
+				kanbanKpiRequestFactory.findKpiRequest(KPICode.TICKET_VELOCITY.getKpiId());
 
-		KanbanIssueCustomHistoryDataFactory issueHistoryFactory = KanbanIssueCustomHistoryDataFactory.newInstance();
-		List<KanbanIssueCustomHistory> issueHistory = issueHistoryFactory.getKanbanIssueCustomHistoryDataList();
-		when(kanbanJiraIssueHistoryRepository.findIssuesByStatusAndDate(any(), any(), any(), any(), any()))
+		KanbanIssueCustomHistoryDataFactory issueHistoryFactory =
+				KanbanIssueCustomHistoryDataFactory.newInstance();
+		List<KanbanIssueCustomHistory> issueHistory =
+				issueHistoryFactory.getKanbanIssueCustomHistoryDataList();
+		when(kanbanJiraIssueHistoryRepository.findIssuesByStatusAndDate(
+						any(), any(), any(), any(), any()))
 				.thenReturn(issueHistory);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), ahdKanbanList, "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), ahdKanbanList, "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
-		Map<String, Object> resultMap = kpiHelperService.fetchTicketVelocityDataFromDb(leafNodeList, "", "");
+		Map<String, Object> resultMap =
+				kpiHelperService.fetchTicketVelocityDataFromDb(leafNodeList, "", "");
 		assertEquals(2, resultMap.size());
 	}
 
 	@Test
 	public void testFetchTeamCapacityDataFromDb() throws ApplicationException {
 
-		KpiRequest kpiRequest = kanbanKpiRequestFactory.findKpiRequest(KPICode.TEAM_CAPACITY.getKpiId());
+		KpiRequest kpiRequest =
+				kanbanKpiRequestFactory.findKpiRequest(KPICode.TEAM_CAPACITY.getKpiId());
 
-		when(kanbanCapacityRepository.findIssuesByType(any(), any(), any())).thenReturn(new ArrayList<>());
+		when(kanbanCapacityRepository.findIssuesByType(any(), any(), any()))
+				.thenReturn(new ArrayList<>());
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), ahdKanbanList, "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), ahdKanbanList, "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
-		Map<String, Object> resultMap = kpiHelperService.fetchTeamCapacityDataFromDb(leafNodeList, "", "", kpiRequest,
-				"");
+		Map<String, Object> resultMap =
+				kpiHelperService.fetchTeamCapacityDataFromDb(leafNodeList, "", "", kpiRequest, "");
 		assertEquals(2, resultMap.size());
 	}
 
@@ -368,7 +379,8 @@ public class KpiHelperServiceTest {
 		statusChangeLogs.add(jiraHistoryChangeLog2);
 		JiraIssueCustomHistory jiraIssueCustomHistory = new JiraIssueCustomHistory();
 		jiraIssueCustomHistory.setStatusUpdationLog(statusChangeLogs);
-		double result = kpiHelperService.processStoryData(jiraIssueCustomHistory, "fromStatus", "fromStatus");
+		double result =
+				kpiHelperService.processStoryData(jiraIssueCustomHistory, "fromStatus", "fromStatus");
 		assertEquals(0.0, result, 0);
 	}
 
@@ -383,7 +395,8 @@ public class KpiHelperServiceTest {
 		JiraIssueCustomHistory jiraIssueCustomHistory = new JiraIssueCustomHistory();
 		jiraIssueCustomHistory.setStatusUpdationLog(statusChangeLogs);
 		jiraIssueCustomHistory.setCreatedDate(DateTime.now());
-		double result = kpiHelperService.processStoryData(jiraIssueCustomHistory, "fromStatus", "fromStatus");
+		double result =
+				kpiHelperService.processStoryData(jiraIssueCustomHistory, "fromStatus", "fromStatus");
 		assertEquals(0.0, result, 0);
 	}
 
@@ -406,7 +419,8 @@ public class KpiHelperServiceTest {
 	@Test
 	public void testKpiResolution() {
 
-		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.CREATED_VS_RESOLVED_DEFECTS.getKpiId());
+		KpiRequest kpiRequest =
+				kpiRequestFactory.findKpiRequest(KPICode.CREATED_VS_RESOLVED_DEFECTS.getKpiId());
 		KpiMaster kpiMaster = new KpiMaster();
 		kpiMaster.setKpiId("kpi126");
 		kpiMaster.setKpiName("abc");
@@ -440,8 +454,8 @@ public class KpiHelperServiceTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), projectTool);
 
 		when(cacheService.cacheProjectToolConfigMapData()).thenReturn(toolMap);
-		kpiHelperService.updateKPISource(new ObjectId("6335363749794a18e8a4479b"),
-				new ObjectId("6335363749794a18e8a4479c"));
+		kpiHelperService.updateKPISource(
+				new ObjectId("6335363749794a18e8a4479b"), new ObjectId("6335363749794a18e8a4479c"));
 	}
 
 	@Test
@@ -457,8 +471,8 @@ public class KpiHelperServiceTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), projectTool);
 
 		when(cacheService.cacheProjectToolConfigMapData()).thenReturn(null);
-		kpiHelperService.updateKPISource(new ObjectId("6335363749794a18e8a4479b"),
-				new ObjectId("6335363749794a18e8a4479c"));
+		kpiHelperService.updateKPISource(
+				new ObjectId("6335363749794a18e8a4479b"), new ObjectId("6335363749794a18e8a4479c"));
 	}
 
 	@Test
@@ -474,17 +488,19 @@ public class KpiHelperServiceTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), projectTool);
 
 		when(cacheService.cacheProjectToolConfigMapData()).thenReturn(null);
-		kpiHelperService.updateKPISource(new ObjectId("6335363749794a18e8a4479c"),
-				new ObjectId("6335363749794a18e8a4479c"));
+		kpiHelperService.updateKPISource(
+				new ObjectId("6335363749794a18e8a4479c"), new ObjectId("6335363749794a18e8a4479c"));
 	}
 
 	@Test
 	public void testFetchJiraCustomHistoryDataFromDbForKanban() throws ApplicationException {
 
-		KpiRequest kpiRequest = kanbanKpiRequestFactory.findKpiRequest(KPICode.TEAM_CAPACITY.getKpiId());
+		KpiRequest kpiRequest =
+				kanbanKpiRequestFactory.findKpiRequest(KPICode.TEAM_CAPACITY.getKpiId());
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), ahdKanbanList, "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), ahdKanbanList, "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, true);
 		Map<ObjectId, Map<String, Object>> projectMap = new HashMap<>();
@@ -493,73 +509,85 @@ public class KpiHelperServiceTest {
 		fieldMappingMap.put("LiveStatus", "Live");
 		fieldMappingMap.put("RejectedStatus", Arrays.asList("Dropped"));
 		fieldMappingMap.put("RCA_Count_IssueType", Arrays.asList("Defect"));
-		leafNodeList
-				.forEach(node -> projectMap.put(node.getProjectFilter().getBasicProjectConfigId(), fieldMappingMap));
-		Map<String, Object> resultMap = kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(leafNodeList, "", "",
-				kpiRequest, "rca", projectMap);
+		leafNodeList.forEach(
+				node -> projectMap.put(node.getProjectFilter().getBasicProjectConfigId(), fieldMappingMap));
+		Map<String, Object> resultMap =
+				kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(
+						leafNodeList, "", "", kpiRequest, "rca", projectMap);
 		assertEquals(5, resultMap.size());
 	}
 
 	@Test
 	public void testComputeProjectWiseJiraHistoryByStatusAndDate() {
 
-		KanbanIssueCustomHistoryDataFactory issueHistoryFactory = KanbanIssueCustomHistoryDataFactory.newInstance();
-		List<KanbanIssueCustomHistory> issueHistory = issueHistoryFactory.getKanbanIssueCustomHistoryDataList();
+		KanbanIssueCustomHistoryDataFactory issueHistoryFactory =
+				KanbanIssueCustomHistoryDataFactory.newInstance();
+		List<KanbanIssueCustomHistory> issueHistory =
+				issueHistoryFactory.getKanbanIssueCustomHistoryDataList();
 		Map<String, List<KanbanIssueCustomHistory>> projectWiseNonClosedTickets = new HashMap<>();
-		issueHistory.forEach(issue -> projectWiseNonClosedTickets.put(issue.getBasicProjectConfigId(), issueHistory));
+		issueHistory.forEach(
+				issue -> projectWiseNonClosedTickets.put(issue.getBasicProjectConfigId(), issueHistory));
 		Map<String, Object> historyDataResultMap = new HashMap<>();
 		Map<String, String> projectWiseOpenStatus = new HashMap<>();
 		projectWiseNonClosedTickets.keySet().forEach(key -> projectWiseOpenStatus.put(key, "Open"));
 		historyDataResultMap.put("projectWiseOpenStatus", projectWiseOpenStatus);
 
-		Map<String, Map<String, Map<String, Set<String>>>> result = kpiHelperService
-				.computeProjectWiseJiraHistoryByStatusAndDate(projectWiseNonClosedTickets, "2022-07-01",
-						historyDataResultMap);
+		Map<String, Map<String, Map<String, Set<String>>>> result =
+				kpiHelperService.computeProjectWiseJiraHistoryByStatusAndDate(
+						projectWiseNonClosedTickets, "2022-07-01", historyDataResultMap);
 		assertNotNull(result);
 	}
 
 	@Test
 	public void testComputeProjectWiseJiraHistoryByFieldAndDate() {
 
-		KanbanIssueCustomHistoryDataFactory issueHistoryFactory = KanbanIssueCustomHistoryDataFactory.newInstance();
-		List<KanbanIssueCustomHistory> issueHistory = issueHistoryFactory.getKanbanIssueCustomHistoryDataList();
+		KanbanIssueCustomHistoryDataFactory issueHistoryFactory =
+				KanbanIssueCustomHistoryDataFactory.newInstance();
+		List<KanbanIssueCustomHistory> issueHistory =
+				issueHistoryFactory.getKanbanIssueCustomHistoryDataList();
 		Map<String, List<KanbanIssueCustomHistory>> projectWiseNonClosedTickets = new HashMap<>();
-		issueHistory.forEach(issue -> projectWiseNonClosedTickets.put(issue.getBasicProjectConfigId(), issueHistory));
+		issueHistory.forEach(
+				issue -> projectWiseNonClosedTickets.put(issue.getBasicProjectConfigId(), issueHistory));
 		Map<String, Object> historyDataResultMap = new HashMap<>();
 		Map<String, String> projectWiseOpenStatus = new HashMap<>();
 		projectWiseNonClosedTickets.keySet().forEach(key -> projectWiseOpenStatus.put(key, "Open"));
 		historyDataResultMap.put("projectWiseOpenStatus", projectWiseOpenStatus);
 
 		Map<String, List<String>> projectWiseClosedStatus = new HashMap<>();
-		projectWiseNonClosedTickets.keySet()
+		projectWiseNonClosedTickets
+				.keySet()
 				.forEach(key -> projectWiseClosedStatus.put(key, Arrays.asList("Closed", "Dropped")));
 		historyDataResultMap.put("projectWiseClosedStoryStatus", projectWiseClosedStatus);
 
-		Map<String, Map<String, Map<String, Set<String>>>> result = kpiHelperService
-				.computeProjectWiseJiraHistoryByFieldAndDate(projectWiseNonClosedTickets, "2022-07-01",
-						historyDataResultMap, "rca");
+		Map<String, Map<String, Map<String, Set<String>>>> result =
+				kpiHelperService.computeProjectWiseJiraHistoryByFieldAndDate(
+						projectWiseNonClosedTickets, "2022-07-01", historyDataResultMap, "rca");
 		assertNotNull(result);
 	}
 
 	@Test
 	public void getProjectKeyCache() {
-		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
+		KpiRequest kpiRequest =
+				kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
 		kpiHelperService.getProjectKeyCache(kpiRequest, accountHierarchyDataList, true);
 	}
 
 	@Test
 	public void getProjectKeyCache2() {
-		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
+		KpiRequest kpiRequest =
+				kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
 		String[] projectKey = new String[0];
-		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest)).thenReturn(projectKey);
+		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
+				.thenReturn(projectKey);
 		kpiHelperService.getProjectKeyCache(kpiRequest, accountHierarchyDataList, true);
 	}
 
 	@Test
 	public void getAuthorizedFilteredList() {
-		KpiRequest kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
+		KpiRequest kpiRequest =
+				kpiRequestFactory.findKpiRequest(KPICode.DEFECT_INJECTION_RATE.getKpiId());
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
 		when(authorizedProjectsService.filterProjects(any())).thenReturn(accountHierarchyDataList);
 		kpiHelperService.getAuthorizedFilteredList(kpiRequest, accountHierarchyDataList, true);
@@ -578,9 +606,14 @@ public class KpiHelperServiceTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.ITERATION_BURNUP.getKpiId(), KPICode.ITERATION_BURNUP.name(), "Iteration", "");
+		addKpiElement(
+				kpiList,
+				KPICode.ITERATION_BURNUP.getKpiId(),
+				KPICode.ITERATION_BURNUP.name(),
+				"Iteration",
+				"");
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[] { "38296_Scrum Project_6335363749794a18e8a4479b" });
+		kpiRequest.setIds(new String[] {"38296_Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		kpiRequest.setLabel("sprint");
@@ -591,8 +624,8 @@ public class KpiHelperServiceTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category,
-			String kpiUnit) {
+	private void addKpiElement(
+			List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);
 		kpiElement.setKpiName(kpiName);
@@ -609,8 +642,9 @@ public class KpiHelperServiceTest {
 	public void getScmToolJobsReturnsAllTools() {
 		setToolMap();
 		Node node = new Node();
-		List<Tool> result = kpiHelperService.getScmToolJobs(toolMap.get(new ObjectId("6335363749794a18e8a4479b")),
-				node);
+		List<Tool> result =
+				kpiHelperService.getScmToolJobs(
+						toolMap.get(new ObjectId("6335363749794a18e8a4479b")), node);
 		assertEquals(1, result.size());
 	}
 
@@ -625,8 +659,9 @@ public class KpiHelperServiceTest {
 	@Test
 	public void populateSCMToolsRepoListReturnsAllTools() {
 		setToolMap();
-		List<Tool> result = kpiHelperService
-				.populateSCMToolsRepoList(toolMap.get(new ObjectId("6335363749794a18e8a4479b")));
+		List<Tool> result =
+				kpiHelperService.populateSCMToolsRepoList(
+						toolMap.get(new ObjectId("6335363749794a18e8a4479b")));
 		assertEquals(1, result.size());
 	}
 
@@ -649,8 +684,9 @@ public class KpiHelperServiceTest {
 		when(fieldMapping.isUploadDataKPI16()).thenReturn(true);
 
 		KpiElement kpiElement = new KpiElement();
-		assertTrue(kpiHelperService.isRequiredTestToolConfigured(KPICode.INSPRINT_AUTOMATION_COVERAGE, kpiElement,
-				projectId));
+		assertTrue(
+				kpiHelperService.isRequiredTestToolConfigured(
+						KPICode.INSPRINT_AUTOMATION_COVERAGE, kpiElement, projectId));
 	}
 
 	@Test
@@ -665,8 +701,9 @@ public class KpiHelperServiceTest {
 		when(fieldMapping.isUploadDataKPI42()).thenReturn(true);
 
 		KpiElement kpiElement = new KpiElement();
-		assertTrue(kpiHelperService.isRequiredTestToolConfigured(KPICode.REGRESSION_AUTOMATION_COVERAGE, kpiElement,
-				projectId));
+		assertTrue(
+				kpiHelperService.isRequiredTestToolConfigured(
+						KPICode.REGRESSION_AUTOMATION_COVERAGE, kpiElement, projectId));
 	}
 
 	@Test
@@ -693,8 +730,9 @@ public class KpiHelperServiceTest {
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(configHelperService.getFieldMappingMap()).thenReturn(Map.of(projectId, fieldMapping));
 		KpiElement kpiElement = new KpiElement();
-		assertTrue(kpiHelperService.isRequiredTestToolConfigured(KPICode.KANBAN_REGRESSION_PASS_PERCENTAGE, kpiElement,
-				projectId));
+		assertTrue(
+				kpiHelperService.isRequiredTestToolConfigured(
+						KPICode.KANBAN_REGRESSION_PASS_PERCENTAGE, kpiElement, projectId));
 	}
 
 	@Test
@@ -706,8 +744,9 @@ public class KpiHelperServiceTest {
 		projectConfigMap.put(projectId, stringListMap);
 		when(configHelperService.getProjectToolConfigMap()).thenReturn(projectConfigMap);
 		KpiElement kpiElement = new KpiElement();
-		assertTrue(kpiHelperService.isRequiredTestToolConfigured(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE, kpiElement,
-				projectId));
+		assertTrue(
+				kpiHelperService.isRequiredTestToolConfigured(
+						KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE, kpiElement, projectId));
 	}
 
 	@Test
@@ -721,8 +760,9 @@ public class KpiHelperServiceTest {
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(configHelperService.getFieldMappingMap()).thenReturn(Map.of(projectId, fieldMapping));
 		KpiElement kpiElement = new KpiElement();
-		assertTrue(kpiHelperService.isRequiredTestToolConfigured(KPICode.INSPRINT_AUTOMATION_COVERAGE, kpiElement,
-				projectId));
+		assertTrue(
+				kpiHelperService.isRequiredTestToolConfigured(
+						KPICode.INSPRINT_AUTOMATION_COVERAGE, kpiElement, projectId));
 	}
 
 	private void setToolMap() {

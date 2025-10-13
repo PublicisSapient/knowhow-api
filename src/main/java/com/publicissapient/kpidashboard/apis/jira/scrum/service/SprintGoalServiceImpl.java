@@ -50,7 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SprintGoalServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class SprintGoalServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String SPRINT_DETAILS = "sprintDetails";
 
@@ -58,28 +59,36 @@ public class SprintGoalServiceImpl extends JiraKPIService<Double, List<Object>, 
 	private final ConfigHelperService configHelperService;
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
-			TreeAggregatorDetail treeAggregatorDetail) throws ApplicationException {
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+			throws ApplicationException {
 		Node root = treeAggregatorDetail.getRoot();
 
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			Filters filters = Filters.getFilter(k);
-			if (Filters.SPRINT == filters) {
-				sprintWiseLeafNodeValue(v, kpiElement, kpiRequest);
-			}
-		});
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							Filters filters = Filters.getFilter(k);
+							if (Filters.SPRINT == filters) {
+								sprintWiseLeafNodeValue(v, kpiElement, kpiRequest);
+							}
+						});
 
-		log.debug("[SPRINT-GOAL-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[SPRINT-GOAL-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		return kpiElement;
 	}
 
 	@SuppressWarnings("unchecked")
-	private void sprintWiseLeafNodeValue(List<Node> sprintLeafNodeList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void sprintWiseLeafNodeValue(
+			List<Node> sprintLeafNodeList, KpiElement kpiElement, KpiRequest kpiRequest) {
 
-		sprintLeafNodeList.sort((n1, n2) -> n2.getSprintFilter().getStartDate()
-				.compareTo(n1.getSprintFilter().getStartDate()));
+		sprintLeafNodeList.sort(
+				(n1, n2) ->
+						n2.getSprintFilter().getStartDate().compareTo(n1.getSprintFilter().getStartDate()));
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(sprintLeafNodeList, null, null, kpiRequest);
 
@@ -89,25 +98,30 @@ public class SprintGoalServiceImpl extends JiraKPIService<Double, List<Object>, 
 			return;
 		}
 
-		final Map<ObjectId, List<SprintDetails>> projectWiseSprints = sprintDetails.stream()
-				.collect(Collectors.groupingBy(SprintDetails::getBasicProjectConfigId));
+		final Map<ObjectId, List<SprintDetails>> projectWiseSprints =
+				sprintDetails.stream()
+						.collect(Collectors.groupingBy(SprintDetails::getBasicProjectConfigId));
 
 		Map<String, ProjectSprintDetails> projectSprintDetailsMap = new HashMap<>();
 
 		for (Node node : sprintLeafNodeList) {
 			String projectId = node.getProjectFilter().getBasicProjectConfigId().toString();
 
-			ProjectSprintDetails projectSprintDetails = projectSprintDetailsMap.computeIfAbsent(projectId, id -> {
-				ProjectSprintDetails details = new ProjectSprintDetails();
-				details.setName(node.getProjectFilter().getName());
-				details.setProjectId(id);
+			ProjectSprintDetails projectSprintDetails =
+					projectSprintDetailsMap.computeIfAbsent(
+							projectId,
+							id -> {
+								ProjectSprintDetails details = new ProjectSprintDetails();
+								details.setName(node.getProjectFilter().getName());
+								details.setProjectId(id);
 
-				ProjectBasicConfig config = configHelperService.getProjectConfig(id);
-				ProjectBasicConfigDTO dto = new ModelMapper().map(config, ProjectBasicConfigDTO.class);
-				details.setHierarchy(dto.getHierarchy());
+								ProjectBasicConfig config = configHelperService.getProjectConfig(id);
+								ProjectBasicConfigDTO dto =
+										new ModelMapper().map(config, ProjectBasicConfigDTO.class);
+								details.setHierarchy(dto.getHierarchy());
 
-				return details;
-			});
+								return details;
+							});
 
 			if (projectSprintDetails.getSprintGoals() == null) {
 				projectSprintDetails.setSprintGoals(new HashSet<>());
@@ -115,32 +129,38 @@ public class SprintGoalServiceImpl extends JiraKPIService<Double, List<Object>, 
 
 			List<SprintDetails> sprints = projectWiseSprints.get(new ObjectId(projectId));
 			if (sprints != null) {
-				Set<ProjectSprintDetails.SprintDTO> sortedSprints = sprints.stream()
-						.sorted((s1, s2) -> s2.getStartDate().compareTo(s1.getStartDate()))
-						.map(sprint -> {
-							ProjectSprintDetails.SprintDTO sprintDetail = new ProjectSprintDetails.SprintDTO();
-							sprintDetail.setName(sprint.getSprintName());
-							sprintDetail.setSprintId(sprint.getSprintID());
-							sprintDetail.setGoal(sprint.getGoal());
-							return sprintDetail;
-						})
-						.collect(Collectors.toCollection(LinkedHashSet::new));
+				Set<ProjectSprintDetails.SprintDTO> sortedSprints =
+						sprints.stream()
+								.sorted((s1, s2) -> s2.getStartDate().compareTo(s1.getStartDate()))
+								.map(
+										sprint -> {
+											ProjectSprintDetails.SprintDTO sprintDetail =
+													new ProjectSprintDetails.SprintDTO();
+											sprintDetail.setName(sprint.getSprintName());
+											sprintDetail.setSprintId(sprint.getSprintID());
+											sprintDetail.setGoal(sprint.getGoal());
+											return sprintDetail;
+										})
+								.collect(Collectors.toCollection(LinkedHashSet::new));
 
 				projectSprintDetails.setSprintGoals(sortedSprints);
 			}
 		}
-		kpiElement.setTrendValueList(projectSprintDetailsMap.values().stream()
-				.sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName())).collect(Collectors.toList()));
+		kpiElement.setTrendValueList(
+				projectSprintDetailsMap.values().stream()
+						.sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName()))
+						.collect(Collectors.toList()));
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		List<String> sprintList = new ArrayList<>();
 		Map<String, Object> resultListMap = new HashMap<>();
 		leafNodeList.forEach(leaf -> sprintList.add(leaf.getSprintFilter().getId()));
-		List<SprintDetails> sprintDetails = sprintRepository.findBySprintIDInWithFieldsSorted(sprintList);
+		List<SprintDetails> sprintDetails =
+				sprintRepository.findBySprintIDInWithFieldsSorted(sprintList);
 		resultListMap.put(SPRINT_DETAILS, sprintDetails);
 		return resultListMap;
 	}
@@ -154,5 +174,4 @@ public class SprintGoalServiceImpl extends JiraKPIService<Double, List<Object>, 
 	public String getQualifierType() {
 		return KPICode.SPRINT_GOALS.name();
 	}
-
 }
