@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.aiusage.rest;
 
 import com.publicissapient.kpidashboard.apis.aiusage.dto.LatestAIUsageResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
-import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
 import com.publicissapient.kpidashboard.apis.aiusage.service.SharedDataService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class AIUsageController implements AIUsageAPI {
 
-    private final AIUsageService aiUsageService;
     private final SharedDataService sharedDataService;
 
     @Override
