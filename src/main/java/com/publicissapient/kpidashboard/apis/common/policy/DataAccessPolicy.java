@@ -20,6 +20,9 @@ import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 import java.util.List;
 
+/**
+ * @author gursinh49
+ */
 public interface DataAccessPolicy {
     List<UserInfo> getAccessibleMembers(String userName);
 }
