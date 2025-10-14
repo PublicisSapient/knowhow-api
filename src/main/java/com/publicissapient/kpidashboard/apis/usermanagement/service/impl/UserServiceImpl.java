@@ -16,22 +16,31 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.service.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Objects;
-
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
+import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
+import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
+import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
+import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-
+import com.publicissapient.kpidashboard.common.service.HierarchyLevelServiceImpl;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
  * Implementation of UserService for handling user operations
@@ -43,6 +52,8 @@ import org.thymeleaf.util.StringUtils;
 public class UserServiceImpl implements UserService {
 
     private final UserInfoService userInfoService;
+
+    private final HierarchyLevelServiceImpl hierarchyLevelService;
     private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
     private static final String DOMAIN_NAME = "@publicisgroupe.net";
     @Override
@@ -69,7 +80,53 @@ public class UserServiceImpl implements UserService {
             userInfo.setAuthType(AuthType.SAML);
             userInfo.setAuthorities(new ArrayList<>());
             userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
-            userInfo.setProjectsAccess(Collections.emptyList());
+
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
+
+            List<String> roles = authentication.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+
+            if(roles.contains(Constant.ROLE_SUPERADMIN))
+                userInfo.setProjectsAccess(Collections.emptyList());
+            else if(roles.contains(Constant.ROLE_PROJECT_ADMIN)){
+
+                UserInfo currentUserDoc = userInfoService.getUserInfo(authentication.getName());
+                List<ProjectsAccess> mappedProjects = currentUserDoc.getProjectsAccess().stream()
+                        .map(projectsAccess ->
+                        {
+                            ProjectsAccess copy = new ProjectsAccess();
+                            copy.setRole(Constant.ROLE_GUEST);
+
+                            List<AccessNode> nodes = projectsAccess.getAccessNodes()
+                                    .stream()
+                                    .map(node -> {
+                                        AccessNode newNode = new AccessNode();
+                                        newNode.setAccessLevel(getNextHierarchyLevel(node.getAccessLevel()));
+
+                                        List<AccessItem> items = node.getAccessItems()
+                                                .stream()
+                                                .map(item -> {
+                                                    AccessItem newItem = new AccessItem();
+                                                    newItem.setItemId(item.getItemId());
+                                                    newItem.setItemName(item.getItemName()); // assign Viewer
+                                                    return newItem;
+                                                })
+                                                .toList();
+
+                                        newNode.setAccessItems(items);
+                                        return newNode;
+                                    })
+                                    .toList();
+
+                            copy.setAccessNodes(nodes);
+                            return copy;
+                        }).toList();
+
+                userInfo.setProjectsAccess(mappedProjects);
+            }
             
             log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
             savedUserInfo = userInfoService.save(userInfo);
@@ -82,5 +139,24 @@ public class UserServiceImpl implements UserService {
         
         // Return service response with appropriate message
         return new ServiceResponse(true, responseMessage, responseDTO);
+    }
+
+    /*
+    * This method will return the next access level of the Logged in person
+    * and that next access level will be assigned to new user.
+    * in case of logged-in user is having Project access, Project access will be returned.
+    * */
+    public String getNextHierarchyLevel(String currentLevel) {
+        List<HierarchyLevel> hierarchyLevels = hierarchyLevelService.getTopHierarchyLevels();
+        int nextIndex = IntStream.range(0, hierarchyLevels.size())
+                .filter(i -> hierarchyLevels.get(i).getHierarchyLevelId().equalsIgnoreCase(currentLevel))
+                .findFirst()
+                .orElse(-1);
+
+        if (nextIndex == -1 || nextIndex >= hierarchyLevels.size() - 1) {
+            return Constant.PROJECT.toLowerCase();
+        }
+
+        return hierarchyLevels.get(nextIndex + 1).getHierarchyLevelId();
     }
 }
