@@ -39,8 +39,7 @@ public class FiltersDataFactory {
 	private List<Filters> filtersList;
 	private ObjectMapper mapper;
 
-	private FiltersDataFactory() {
-	}
+	private FiltersDataFactory() {}
 
 	public static FiltersDataFactory newInstance(String filePath) {
 
@@ -60,9 +59,10 @@ public class FiltersDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
-			filtersList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<Filters>>() {
-					});
+			filtersList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<Filters>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading from file = " + filePath, e);
 		}

@@ -33,19 +33,14 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 /**
  * Common Abstract class for all jenkins services.
  *
- * @param <R>
- *          the type parameter
- * @param <S>
- *          the type parameter
- * @param <T>
- *          the type parameter
+ * @param <R> the type parameter
+ * @param <S> the type parameter
+ * @param <T> the type parameter
  */
 public abstract class JenkinsKPIService<R, S, T> extends ToolsKPIService<R, S>
-		implements
-			ApplicationKPIService<R, S, T> {
+		implements ApplicationKPIService<R, S, T> {
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
 	/**
 	 * Gets qualifier type.
@@ -55,38 +50,37 @@ public abstract class JenkinsKPIService<R, S, T> extends ToolsKPIService<R, S>
 	public abstract String getQualifierType();
 
 	/**
-	 * Returns API Request tracker Id to be used for logging/debugging and using it
-	 * for maintaining any sort of cache.
+	 * Returns API Request tracker Id to be used for logging/debugging and using it for maintaining
+	 * any sort of cache.
 	 *
 	 * @return request tracker id
 	 */
 	protected String getRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name());
+		return cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name());
 	}
 
 	/**
-	 * Returns API Request tracker Id to be used for logging/debugging and using it
-	 * for maintaining any sort of cache.
+	 * Returns API Request tracker Id to be used for logging/debugging and using it for maintaining
+	 * any sort of cache.
 	 *
 	 * @return kanban request tracker id
 	 */
 	protected String getKanbanRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINSKANBAN.name());
+		return cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINSKANBAN.name());
 	}
 
 	/**
 	 * Calculates the number of commits per day.
 	 *
-	 * @param kpiRequest
-	 *          the kpi request
-	 * @param kpiElement
-	 *          the kpi element
-	 * @param treeAggregatorDetail
-	 *          the tree aggregator detail
+	 * @param kpiRequest the kpi request
+	 * @param kpiElement the kpi element
+	 * @param treeAggregatorDetail the tree aggregator detail
 	 * @return kpi data
-	 * @throws ApplicationException
-	 *           the application exception
+	 * @throws ApplicationException the application exception
 	 */
-	public abstract KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
-			TreeAggregatorDetail treeAggregatorDetail) throws ApplicationException;
+	public abstract KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+			throws ApplicationException;
 }

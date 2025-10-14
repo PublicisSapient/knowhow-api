@@ -28,25 +28,25 @@ import lombok.Data;
 @Configuration
 @ConfigurationProperties(prefix = "productivity")
 public class ProductivityGainConfig {
-    public static final String CATEGORY_SPEED = "speed";
-    public static final String CATEGORY_QUALITY = "quality";
-    public static final String CATEGORY_EFFICIENCY = "efficiency";
-    public static final String CATEGORY_PRODUCTIVITY = "productivity";
+	public static final String CATEGORY_SPEED = "speed";
+	public static final String CATEGORY_QUALITY = "quality";
+	public static final String CATEGORY_EFFICIENCY = "efficiency";
+	public static final String CATEGORY_PRODUCTIVITY = "productivity";
 
-    @Data
-    public static class DataPoints {
-        private int count;
-    }
+	@Data
+	public static class DataPoints {
+		private int count;
+	}
 
-    private Map<String, Double> weights;
+	private Map<String, Double> weights;
 
-    private DataPoints dataPoints = new DataPoints();
+	private DataPoints dataPoints = new DataPoints();
 
-    public Double getWeightForCategory(String category) {
-        return this.weights.get(category);
-    }
+	public Double getWeightForCategory(String category) {
+		return this.weights.get(category);
+	}
 
-    public Set<String> getAllCategories() {
-        return weights.keySet();
-    }
+	public Set<String> getAllCategories() {
+		return weights.keySet();
+	}
 }

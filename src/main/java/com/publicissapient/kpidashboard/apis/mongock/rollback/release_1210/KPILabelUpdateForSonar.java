@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author aksshriv1
  */
-@ChangeUnit(id = "r_sonar_xaxis_label", order = "012103", author = "aksshriv1", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "r_sonar_xaxis_label",
+		order = "012103",
+		author = "aksshriv1",
+		systemVersion = "12.1.0")
 public class KPILabelUpdateForSonar {
 
 	private final MongoTemplate mongoTemplate;

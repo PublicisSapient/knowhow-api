@@ -18,15 +18,14 @@ package com.publicissapient.kpidashboard.apis.ai.rest;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.ai.service.search.kpi.SearchKPIService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +39,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.apis.ai.dto.request.sprint.goals.SummarizeSprintGoalsRequestDTO;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.sprint.goals.SummarizeSprintGoalsResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.service.search.kpi.SearchKPIService;
 import com.publicissapient.kpidashboard.apis.ai.service.sprint.goals.SprintGoalsService;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,14 +49,11 @@ class AiControllerTest {
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	@Mock
-	private SprintGoalsService sprintGoalsService;
+	@Mock private SprintGoalsService sprintGoalsService;
 
-	@Mock
-	private SearchKPIService searchKPIService;
+	@Mock private SearchKPIService searchKPIService;
 
-	@InjectMocks
-	private AiController aiController;
+	@InjectMocks private AiController aiController;
 
 	@BeforeEach
 	public void setUp() {
@@ -67,38 +64,47 @@ class AiControllerTest {
 	void testSummarizeSprintGoalsSuccess() throws Exception {
 		when(sprintGoalsService.summarizeSprintGoals(any(SummarizeSprintGoalsRequestDTO.class)))
 				.thenReturn(new SummarizeSprintGoalsResponseDTO("Summary of goals"));
-		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
+		SummarizeSprintGoalsRequestDTO requestDTO =
+				new SummarizeSprintGoalsRequestDTO(List.of("Goal 1", "Goal 2"));
 
-		mockMvc.perform(post("/ai/sprint-goals/summary").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isOk())
-				.andExpect(content().json("""
+		mockMvc
+				.perform(
+						post("/ai/sprint-goals/summary")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(objectMapper.writeValueAsString(requestDTO)))
+				.andExpect(status().isOk())
+				.andExpect(
+						content().json("""
 						{
-						  "summary": "Summary of goals"
+							"summary": "Summary of goals"
 						}
 						"""));
 	}
 
 	@Test
 	void testSummarizeSprintGoalsValidationError() throws Exception {
-		SummarizeSprintGoalsRequestDTO requestDTO = new SummarizeSprintGoalsRequestDTO(Collections.emptyList());
+		SummarizeSprintGoalsRequestDTO requestDTO =
+				new SummarizeSprintGoalsRequestDTO(Collections.emptyList());
 
-		mockMvc.perform(post("/ai/sprint-goals/summary").contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(requestDTO))).andExpect(status().isBadRequest());
+		mockMvc
+				.perform(
+						post("/ai/sprint-goals/summary")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(objectMapper.writeValueAsString(requestDTO)))
+				.andExpect(status().isBadRequest());
 	}
-
 
 	@Test
 	void testSearchKpisNegative() throws Exception {
-		mockMvc.perform(get("/ai/kpisearch")
-						.accept(MediaType.APPLICATION_JSON))
+		mockMvc
+				.perform(get("/ai/kpisearch").accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	void testSearchKpisPositive() throws Exception {
-		mockMvc.perform(get("/ai/kpisearch")
-						.param("query", "kpiName")
-						.accept(MediaType.APPLICATION_JSON))
+		mockMvc
+				.perform(get("/ai/kpisearch").param("query", "kpiName").accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk());
 	}
 }

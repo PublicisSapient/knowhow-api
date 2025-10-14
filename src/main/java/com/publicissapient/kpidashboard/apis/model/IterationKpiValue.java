@@ -62,7 +62,11 @@ public class IterationKpiValue implements Serializable {
 		this.value = value;
 	}
 
-	public IterationKpiValue(String filter1, String filter2, List<IterationKpiData> data, List<String> metaDataColumns,
+	public IterationKpiValue(
+			String filter1,
+			String filter2,
+			List<IterationKpiData> data,
+			List<String> metaDataColumns,
 			Map<String, String> markerInfo) {
 		this.filter1 = filter1;
 		this.filter2 = filter2;

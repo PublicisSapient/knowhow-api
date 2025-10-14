@@ -31,14 +31,12 @@ public class MasterResponse {
 	private List<KpiMaster> kpiList;
 
 	/** Instantiates a new Master response. */
-	public MasterResponse() {
-	}
+	public MasterResponse() {}
 
 	/**
 	 * Instantiates a new Master response.
 	 *
-	 * @param kpiList
-	 *          the kpi list
+	 * @param kpiList the kpi list
 	 */
 	public MasterResponse(List<KpiMaster> kpiList) {
 		this.kpiList = kpiList;
@@ -56,8 +54,7 @@ public class MasterResponse {
 	/**
 	 * Sets kpi list.
 	 *
-	 * @param kpiList
-	 *          the kpi list
+	 * @param kpiList the kpi list
 	 */
 	public void setKpiList(List<KpiMaster> kpiList) {
 		this.kpiList = kpiList;

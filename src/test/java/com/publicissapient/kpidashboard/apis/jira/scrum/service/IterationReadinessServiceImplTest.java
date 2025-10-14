@@ -59,14 +59,10 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 @RunWith(MockitoJUnitRunner.class)
 public class IterationReadinessServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	JiraBacklogServiceR jiraService;
-	@InjectMocks
-	IterationReadinessServiceImpl iterationReadinessService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock JiraBacklogServiceR jiraService;
+	@InjectMocks IterationReadinessServiceImpl iterationReadinessService;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private final Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
@@ -80,16 +76,20 @@ public class IterationReadinessServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi161");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		issueList = JiraIssueDataFactory.newInstance().getJiraIssues();
 
 		sprintDetailsList = SprintDetailsDataFactory.newInstance().getSprintDetails();
-		sprintList = sprintDetailsList.stream().map(SprintDetails::getSprintName).distinct().collect(Collectors.toList());
+		sprintList =
+				sprintDetailsList.stream()
+						.map(SprintDetails::getSprintName)
+						.distinct()
+						.collect(Collectors.toList());
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping.setJiraStatusForInProgressKPI161(Arrays.asList("In Progress", "In Analysis"));
 		fieldMapping.setJiraStatusForRefinedKPI161(Arrays.asList("Closed", "Live"));
@@ -99,51 +99,60 @@ public class IterationReadinessServiceImplTest {
 
 	@Test
 	public void getQualifierType() {
-		assertThat(iterationReadinessService.getQualifierType(), equalTo(KPICode.ITERATION_READINESS_KPI.name()));
+		assertThat(
+				iterationReadinessService.getQualifierType(),
+				equalTo(KPICode.ITERATION_READINESS_KPI.name()));
 	}
 
 	@Test
 	public void testFetchKPIDataFromDb_NullData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(issueList);
 		when(jiraService.getFutureSprintsList()).thenReturn(new ArrayList<>());
-		Map<String, Object> sprintDataListMap = iterationReadinessService.fetchKPIDataFromDb(leafNodeList.get(0), null,
-				null, kpiRequest);
+		Map<String, Object> sprintDataListMap =
+				iterationReadinessService.fetchKPIDataFromDb(leafNodeList.get(0), null, null, kpiRequest);
 		assertNotNull(sprintDataListMap);
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(issueList);
 		when(jiraService.getFutureSprintsList()).thenReturn(sprintList);
-		Map<String, Object> sprintDataListMap = iterationReadinessService.fetchKPIDataFromDb(leafNodeList.get(0), null,
-				null, kpiRequest);
+		Map<String, Object> sprintDataListMap =
+				iterationReadinessService.fetchKPIDataFromDb(leafNodeList.get(0), null, null, kpiRequest);
 		assertNotNull(sprintDataListMap);
 	}
 
 	@Test
 	public void testGetKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(issueList);
 		when(jiraService.getFutureSprintsList()).thenReturn(sprintList);
 		try {
-			KpiElement kpiElement = iterationReadinessService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					iterationReadinessService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertNotNull(kpiElement.getTrendValueList());
 
 		} catch (ApplicationException enfe) {

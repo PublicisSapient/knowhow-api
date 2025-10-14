@@ -21,21 +21,16 @@ import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardRequestDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 
-/**
- * Service interface for executive dashboard operations.
- */
+/** Service interface for executive dashboard operations. */
 public interface ExecutiveService {
 
 	/**
 	 * Retrieves scrum metrics for the executive dashboard.
 	 *
-	 * @param request
-	 *            The executive dashboard request DTO containing filter criteria
+	 * @param request The executive dashboard request DTO containing filter criteria
 	 * @return Executive dashboard response with scrum metrics
-	 * @throws ExecutiveDataException
-	 *             if there is an error processing the request
-	 * @throws IllegalArgumentException
-	 *             if the request parameters are invalid
+	 * @throws ExecutiveDataException if there is an error processing the request
+	 * @throws IllegalArgumentException if the request parameters are invalid
 	 */
 	ExecutiveDashboardResponseDTO getExecutiveDashboardScrum(ExecutiveDashboardRequestDTO request)
 			throws ExecutiveDataException, IllegalArgumentException;
@@ -43,13 +38,10 @@ public interface ExecutiveService {
 	/**
 	 * Retrieves kanban metrics for the executive dashboard.
 	 *
-	 * @param request
-	 *            The executive dashboard request DTO containing filter criteria
+	 * @param request The executive dashboard request DTO containing filter criteria
 	 * @return Executive dashboard response with kanban metrics
-	 * @throws ExecutiveDataException
-	 *             if there is an error processing the request
-	 * @throws IllegalArgumentException
-	 *             if the request parameters are invalid
+	 * @throws ExecutiveDataException if there is an error processing the request
+	 * @throws IllegalArgumentException if the request parameters are invalid
 	 */
 	ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(ExecutiveDashboardRequestDTO request)
 			throws ExecutiveDataException, IllegalArgumentException;

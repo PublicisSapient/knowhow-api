@@ -58,19 +58,13 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class IssueHygieneServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
-	@InjectMocks
-	private IssueHygieneServiceImpl issueHygieneServiceImpl;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
+	@InjectMocks private IssueHygieneServiceImpl issueHygieneServiceImpl;
 
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private JiraIterationServiceR jiraService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
@@ -85,16 +79,20 @@ public class IssueHygieneServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi119");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
 
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 	}
@@ -107,8 +105,8 @@ public class IssueHygieneServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping.setIssueStatusExcluMissingWorkKPI124(List.of("Closed"));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
@@ -117,18 +115,23 @@ public class IssueHygieneServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(issueHygieneServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = issueHygieneServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					issueHygieneServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {

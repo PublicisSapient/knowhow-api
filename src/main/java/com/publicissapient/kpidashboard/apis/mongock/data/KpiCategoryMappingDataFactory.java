@@ -38,12 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("java:S1075")
 public class KpiCategoryMappingDataFactory {
 
-	private static final String FILE_PATH_KPI_LIST = "/json/mongock/default/kpi_category_mapping.json";
+	private static final String FILE_PATH_KPI_LIST =
+			"/json/mongock/default/kpi_category_mapping.json";
 	private List<KpiCategoryMapping> kpiCategoryMappingList;
 	private ObjectMapper mapper;
 
-	private KpiCategoryMappingDataFactory() {
-	}
+	private KpiCategoryMappingDataFactory() {}
 
 	public static KpiCategoryMappingDataFactory newInstance(String filePath) {
 
@@ -63,9 +63,10 @@ public class KpiCategoryMappingDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
-			kpiCategoryMappingList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KpiCategoryMapping>>() {
-					});
+			kpiCategoryMappingList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KpiCategoryMapping>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

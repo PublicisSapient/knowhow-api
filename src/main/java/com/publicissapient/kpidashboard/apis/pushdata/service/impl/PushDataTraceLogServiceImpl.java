@@ -41,8 +41,7 @@ import com.publicissapient.kpidashboard.apis.pushdata.util.PushDataException;
 @Service
 public class PushDataTraceLogServiceImpl implements PushDataTraceLogService {
 
-	@Autowired
-	private PushDataTraceLogRepository pushDataTraceLogRepository;
+	@Autowired private PushDataTraceLogRepository pushDataTraceLogRepository;
 
 	@Override
 	public void save(PushDataTraceLog pushDataTraceLog) {
@@ -52,15 +51,20 @@ public class PushDataTraceLogServiceImpl implements PushDataTraceLogService {
 
 	@Override
 	public List<PushDataTraceLogDTO> getByProjectConfigId(ObjectId basicProjectConfigId) {
-		List<PushDataTraceLog> byBasicProjectConfigId = pushDataTraceLogRepository
-				.findByBasicProjectConfigId(basicProjectConfigId);
+		List<PushDataTraceLog> byBasicProjectConfigId =
+				pushDataTraceLogRepository.findByBasicProjectConfigId(basicProjectConfigId);
 		List<PushDataTraceLogDTO> pushDataTraceLogDTO = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(byBasicProjectConfigId)) {
-			byBasicProjectConfigId = byBasicProjectConfigId.stream()
-					.sorted(Comparator.comparing(PushDataTraceLog::getRequestTime).reversed()).collect(Collectors.toList());
+			byBasicProjectConfigId =
+					byBasicProjectConfigId.stream()
+							.sorted(Comparator.comparing(PushDataTraceLog::getRequestTime).reversed())
+							.collect(Collectors.toList());
 			ModelMapper modelMapper = new ModelMapper();
-			byBasicProjectConfigId.stream().forEach(
-					pushDataTraceLog -> pushDataTraceLogDTO.add(modelMapper.map(pushDataTraceLog, PushDataTraceLogDTO.class)));
+			byBasicProjectConfigId.stream()
+					.forEach(
+							pushDataTraceLog ->
+									pushDataTraceLogDTO.add(
+											modelMapper.map(pushDataTraceLog, PushDataTraceLogDTO.class)));
 			return pushDataTraceLogDTO;
 		}
 		return Collections.emptyList();

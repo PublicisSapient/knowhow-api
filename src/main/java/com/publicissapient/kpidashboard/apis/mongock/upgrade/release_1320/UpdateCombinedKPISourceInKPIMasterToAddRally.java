@@ -15,17 +15,23 @@
  */
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1320;
 
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
 import com.mongodb.client.MongoCollection;
+
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-import org.bson.Document;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
  * @author girpatha
  */
-@ChangeUnit(id = "update_combinedKpiSource_in_kpi_master_to_add_rally", order = "13210", author = "girpatha", systemVersion = "13.2.0")
+@ChangeUnit(
+		id = "update_combinedKpiSource_in_kpi_master_to_add_rally",
+		order = "13210",
+		author = "girpatha",
+		systemVersion = "13.2.0")
 public class UpdateCombinedKPISourceInKPIMasterToAddRally {
 
 	private final MongoTemplate mongoTemplate;
@@ -43,7 +49,9 @@ public class UpdateCombinedKPISourceInKPIMasterToAddRally {
 		updateDocument(kpiMaster, EXISTING_KPI_SOURCE, UPDATED_KPI_SOURCE);
 	}
 
-	private void updateDocument(MongoCollection<Document> kpiCategoryMapping, String existingKPISource,
+	private void updateDocument(
+			MongoCollection<Document> kpiCategoryMapping,
+			String existingKPISource,
 			String updatedKPISource) {
 		// Create the filter
 		Document filter = new Document("combinedKpiSource", existingKPISource);

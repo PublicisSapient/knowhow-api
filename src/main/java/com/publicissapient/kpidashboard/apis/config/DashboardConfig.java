@@ -17,6 +17,13 @@
 
 package com.publicissapient.kpidashboard.apis.config;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.annotation.Validated;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -25,16 +32,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.annotation.Validated;
-
-import java.util.List;
-import java.util.Map;
 
 /**
- * Configuration class for managing dashboard health settings.
- * This class is used to load and validate dashboard-related properties from the application configuration.
+ * Configuration class for managing dashboard health settings. This class is used to load and
+ * validate dashboard-related properties from the application configuration.
  */
 @Data
 @Slf4j
@@ -64,6 +65,12 @@ public class DashboardConfig {
 	@Data
 	public static class Board {
 		@NotEmpty(message = "Each board must define at least one API endpoint")
-		private List<@NotEmpty(message = "API path must not be empty") @Pattern(regexp = "^/.*[^/]$", message = "API path must start with '/' and not end with '/'") String> apis;
+		private List<
+						@NotEmpty(message = "API path must not be empty")
+						@Pattern(
+								regexp = "^/.*[^/]$",
+								message = "API path must start with '/' and not end with '/'")
+						String>
+				apis;
 	}
 }

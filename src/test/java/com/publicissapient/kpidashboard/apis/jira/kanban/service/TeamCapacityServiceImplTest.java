@@ -64,15 +64,11 @@ public class TeamCapacityServiceImplTest {
 	private static final String TICKET_LIST = "tickets";
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
 	List<KanbanCapacity> capacityList = new ArrayList<>();
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
 
-	@Mock
-	FilterHelperService filterHelperService;
+	@Mock FilterHelperService filterHelperService;
 
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
@@ -81,22 +77,22 @@ public class TeamCapacityServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	private KpiRequest kpiRequest;
 
-	@InjectMocks
-	private TeamCapacityServiceImpl teamCapacityServiceImpl;
+	@InjectMocks private TeamCapacityServiceImpl teamCapacityServiceImpl;
 
-	@Mock
-	private KanbanCapacityRepository kanbanCapacityRepository;
+	@Mock private KanbanCapacityRepository kanbanCapacityRepository;
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi58");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		KanbanCapacityDataFactory kanbanCapacityDataFactory = KanbanCapacityDataFactory.newInstance();
 		capacityList = kanbanCapacityDataFactory.getKanbanCapacityDataList();
@@ -112,9 +108,10 @@ public class TeamCapacityServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 	}
 
@@ -126,24 +123,32 @@ public class TeamCapacityServiceImplTest {
 	@Test
 	public void testGetTeamCapacity() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(teamCapacityServiceImpl.getKanbanRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(TICKET_LIST, capacityList);
 		resultListMap.put(SUBGROUPCATEGORY, "date");
-		when(kpiHelperService.fetchTeamCapacityDataFromDb(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
-				Mockito.eq(TICKET_LIST))).thenReturn(resultListMap);
+		when(kpiHelperService.fetchTeamCapacityDataFromDb(
+						Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(TICKET_LIST)))
+				.thenReturn(resultListMap);
 		try {
-			KpiElement kpiElement = teamCapacityServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Trend Value List Size is :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					teamCapacityServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Trend Value List Size is :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(1));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}

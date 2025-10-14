@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -73,15 +72,14 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 import com.publicissapient.kpidashboard.common.model.jira.KanbanIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.KanbanJiraIssue;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
+import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KPIExcelUtilityTest {
 
-	@InjectMocks
-	KPIExcelUtility excelUtility;
+	@InjectMocks KPIExcelUtility excelUtility;
 	private List<KPIExcelData> kpiExcelData;
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock CustomApiConfig customApiConfig;
 	private List<JiraIssue> jiraIssues;
 	private List<TestCaseDetails> testCaseDetailsList;
 	List<JiraIssue> storyList = new ArrayList<>();
@@ -90,7 +88,7 @@ public class KPIExcelUtilityTest {
 	@Before
 	public void setup() {
 		deploymentFrequencyInfo = Mockito.mock(DeploymentFrequencyInfo.class);
-		
+
 		// Setup CustomApiConfig mocks for priority methods
 		when(customApiConfig.getpriorityP1()).thenReturn("P1");
 		when(customApiConfig.getpriorityP2()).thenReturn("P2");
@@ -99,8 +97,10 @@ public class KPIExcelUtilityTest {
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssues = jiraIssueDataFactory.getJiraIssues();
 		testCaseDetailsList = TestCaseDetailsDataFactory.newInstance().getTestCaseDetailsList();
-		storyList = jiraIssues.stream().filter(issue -> issue.getTypeName().equalsIgnoreCase("Story"))
-				.collect(Collectors.toList());
+		storyList =
+				jiraIssues.stream()
+						.filter(issue -> issue.getTypeName().equalsIgnoreCase("Story"))
+						.collect(Collectors.toList());
 		kpiExcelData = new ArrayList<>();
 	}
 
@@ -110,9 +110,12 @@ public class KPIExcelUtilityTest {
 		List<String> storyIds = Arrays.asList("STORY1", "STORY2");
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 
-		Map<String, JiraIssue> issueData = jiraIssues.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
-		List<JiraIssue> defects = jiraIssues.stream().filter(i -> i.getTypeName().equalsIgnoreCase("Bug"))
-				.collect(Collectors.toList());
+		Map<String, JiraIssue> issueData =
+				jiraIssues.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		List<JiraIssue> defects =
+				jiraIssues.stream()
+						.filter(i -> i.getTypeName().equalsIgnoreCase("Bug"))
+						.collect(Collectors.toList());
 
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.STORY_POINT);
@@ -122,16 +125,29 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Act
 		Node node = new Node();
-		node.setSprintFilter(new SprintFilter("sprint-id", "TEST| KnowHOW|PI_10|Opensource_Scrum Project",
-				LocalDateTime.now().toString(), LocalDateTime.now().toString()));
+		node.setSprintFilter(
+				new SprintFilter(
+						"sprint-id",
+						"TEST| KnowHOW|PI_10|Opensource_Scrum Project",
+						LocalDateTime.now().toString(),
+						LocalDateTime.now().toString()));
 
-		excelUtility.populateFTPRExcelData(storyIds, jiraIssues, kpiExcelData, issueData, defects, customApiConfig,
-				fieldMapping, node);
+		excelUtility.populateFTPRExcelData(
+				storyIds,
+				jiraIssues,
+				kpiExcelData,
+				issueData,
+				defects,
+				customApiConfig,
+				fieldMapping,
+				node);
 
 		// Assert
 		assertEquals(2, kpiExcelData.size());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
 	}
 
 	@Test
@@ -146,15 +162,19 @@ public class KPIExcelUtilityTest {
 		String leadTimeConfigRepoTool = CommonConstant.REPO;
 
 		// Act
-		excelUtility.populateLeadTimeForChangeExcelData(projectName, leadTimeMapTimeWise, kpiExcelData,
-				leadTimeConfigRepoTool);
+		excelUtility.populateLeadTimeForChangeExcelData(
+				projectName, leadTimeMapTimeWise, kpiExcelData, leadTimeConfigRepoTool);
 
 		// Assert
 		assertEquals(2, kpiExcelData.size());
 	}
 
-	public static void populatePickupTimeExcelData(String projectName, List<Map<String, Double>> repoWiseMRList,
-			List<String> repoList, List<String> branchList, List<KPIExcelData> kpiExcelData) {
+	public static void populatePickupTimeExcelData(
+			String projectName,
+			List<Map<String, Double>> repoWiseMRList,
+			List<String> repoList,
+			List<String> branchList,
+			List<KPIExcelData> kpiExcelData) {
 
 		if (CollectionUtils.isNotEmpty(repoWiseMRList)) {
 			for (int i = 0; i < repoWiseMRList.size(); i++) {
@@ -235,8 +255,10 @@ public class KPIExcelUtilityTest {
 		// Arrange
 		CodeBuildTimeInfo codeBuildTimeInfo = new CodeBuildTimeInfo();
 		codeBuildTimeInfo.setBuildJobList(Arrays.asList("Job1", "Job2"));
-		codeBuildTimeInfo.setBuildStartTimeList(Arrays.asList("2022-01-01T10:00:00", "2022-01-02T11:00:00"));
-		codeBuildTimeInfo.setBuildEndTimeList(Arrays.asList("2022-01-01T11:00:00", "2022-01-02T12:00:00"));
+		codeBuildTimeInfo.setBuildStartTimeList(
+				Arrays.asList("2022-01-01T10:00:00", "2022-01-02T11:00:00"));
+		codeBuildTimeInfo.setBuildEndTimeList(
+				Arrays.asList("2022-01-01T11:00:00", "2022-01-02T12:00:00"));
 		codeBuildTimeInfo.setDurationList(Arrays.asList("1 hour", "1 hour"));
 		codeBuildTimeInfo.setBuildUrlList(Arrays.asList("url1", "url2"));
 		codeBuildTimeInfo.setBuildStatusList(Arrays.asList("SUCCESS", "FAILURE"));
@@ -265,11 +287,13 @@ public class KPIExcelUtilityTest {
 		map.put("Type2", Arrays.asList(jiraIssues.get(1)));
 		weekAndTypeMap.put("Week2", map);
 
-		Map<String, LocalDateTime> jiraDateMap = jiraIssues.stream()
-				.collect(Collectors.toMap(JiraIssue::getNumber, x -> LocalDateTime.now()));
+		Map<String, LocalDateTime> jiraDateMap =
+				jiraIssues.stream()
+						.collect(Collectors.toMap(JiraIssue::getNumber, x -> LocalDateTime.now()));
 
 		// Act
-		excelUtility.populateRefinementRejectionExcelData(excelDataList, jiraIssues, weekAndTypeMap, jiraDateMap);
+		excelUtility.populateRefinementRejectionExcelData(
+				excelDataList, jiraIssues, weekAndTypeMap, jiraDateMap);
 
 		// Assert
 		assertEquals(48, excelDataList.size());
@@ -282,29 +306,32 @@ public class KPIExcelUtilityTest {
 		set.add("A");
 		set.add("B");
 
-		jiraIssues.forEach(jira -> {
-			AdditionalFilterConfig additionalFilterConfig = new AdditionalFilterConfig();
-			additionalFilterConfig.setFilterId("sqd");
-			additionalFilterConfig.setValues(set);
-			List<AdditionalFilterConfig> additionalFilterConfigList = new ArrayList<>();
-			additionalFilterConfigList.add(additionalFilterConfig);
+		jiraIssues.forEach(
+				jira -> {
+					AdditionalFilterConfig additionalFilterConfig = new AdditionalFilterConfig();
+					additionalFilterConfig.setFilterId("sqd");
+					additionalFilterConfig.setValues(set);
+					List<AdditionalFilterConfig> additionalFilterConfigList = new ArrayList<>();
+					additionalFilterConfigList.add(additionalFilterConfig);
 
-			List<AdditionalFilterValue> additionalFilterValueList = new ArrayList<>();
-			AdditionalFilterValue additionalFilterValue = new AdditionalFilterValue();
-			additionalFilterValue.setValue("abc");
-			additionalFilterValue.setValueId("abc12");
-			additionalFilterValueList.add(additionalFilterValue);
+					List<AdditionalFilterValue> additionalFilterValueList = new ArrayList<>();
+					AdditionalFilterValue additionalFilterValue = new AdditionalFilterValue();
+					additionalFilterValue.setValue("abc");
+					additionalFilterValue.setValueId("abc12");
+					additionalFilterValueList.add(additionalFilterValue);
 
-			List<AdditionalFilter> additionalFilterConfigsList = new ArrayList<>();
-			AdditionalFilter additionalFilter = new AdditionalFilter();
-			additionalFilter.setFilterId("sqd");
-			additionalFilter.setFilterValues(additionalFilterValueList);
-			additionalFilterConfigsList.add(additionalFilter);
+					List<AdditionalFilter> additionalFilterConfigsList = new ArrayList<>();
+					AdditionalFilter additionalFilter = new AdditionalFilter();
+					additionalFilter.setFilterId("sqd");
+					additionalFilter.setFilterValues(additionalFilterValueList);
+					additionalFilterConfigsList.add(additionalFilter);
 
-			jira.setAdditionalFilters(additionalFilterConfigsList);
-		});
-		Map<String, JiraIssue> bug = jiraIssues.stream().filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
-				.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+					jira.setAdditionalFilters(additionalFilterConfigsList);
+				});
+		Map<String, JiraIssue> bug =
+				jiraIssues.stream()
+						.filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
+						.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 		String kpiId = KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId();
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -312,8 +339,8 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Call the method to populate data
-		KPIExcelUtility.populateDefectRelatedExcelData("abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig,
-				storyList);
+		KPIExcelUtility.populateDefectRelatedExcelData(
+				"abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig, storyList);
 
 		// Assert the result based on your logic
 		assertEquals(20, kpiExcelData.size());
@@ -328,8 +355,10 @@ public class KPIExcelUtilityTest {
 	@Test
 	public void testPopulateDefectRelatedExcelData_DSR() {
 		// Mock input parameters
-		Map<String, JiraIssue> bug = jiraIssues.stream().filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
-				.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> bug =
+				jiraIssues.stream()
+						.filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
+						.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 		String kpiId = KPICode.DEFECT_SEEPAGE_RATE.getKpiId();
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -337,8 +366,8 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Call the method to populate data
-		KPIExcelUtility.populateDefectRelatedExcelData("abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig,
-				storyList);
+		KPIExcelUtility.populateDefectRelatedExcelData(
+				"abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig, storyList);
 
 		// Assert the result based on your logic
 		assertEquals(20, kpiExcelData.size());
@@ -353,8 +382,10 @@ public class KPIExcelUtilityTest {
 	@Test
 	public void testPopulateDefectRelatedExcelData_DRR() {
 		// Mock input parameters
-		Map<String, JiraIssue> bug = jiraIssues.stream().filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
-				.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> bug =
+				jiraIssues.stream()
+						.filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
+						.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 		String kpiId = KPICode.DEFECT_REJECTION_RATE.getKpiId();
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -362,8 +393,8 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Call the method to populate data
-		KPIExcelUtility.populateDefectRelatedExcelData("abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig,
-				storyList);
+		KPIExcelUtility.populateDefectRelatedExcelData(
+				"abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig, storyList);
 
 		// Assert the result based on your logic
 		assertEquals(20, kpiExcelData.size());
@@ -378,8 +409,10 @@ public class KPIExcelUtilityTest {
 	@Test
 	public void testPopulateDefectRelatedExcelData_Negative() {
 		// Mock input parameters
-		Map<String, JiraIssue> bug = jiraIssues.stream().filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
-				.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> bug =
+				jiraIssues.stream()
+						.filter(issue -> issue.getTypeName().equalsIgnoreCase("Bug"))
+						.collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 		String kpiId = KPICode.CYCLE_TIME.getKpiId();
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -387,8 +420,8 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Call the method to populate data
-		KPIExcelUtility.populateDefectRelatedExcelData("abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig,
-				storyList);
+		KPIExcelUtility.populateDefectRelatedExcelData(
+				"abc", bug, jiraIssues, kpiExcelData, kpiId, customApiConfig, storyList);
 
 		// Assert the result based on your logic
 		assertEquals(20, kpiExcelData.size());
@@ -433,8 +466,8 @@ public class KPIExcelUtilityTest {
 		linkedStories.add(linkedStory);
 
 		// Call the method to populate data
-		KPIExcelUtility.populateInSprintAutomationExcelData(sprint, allTestList, automatedList, linkedStories,
-				kpiExcelData);
+		KPIExcelUtility.populateInSprintAutomationExcelData(
+				sprint, allTestList, automatedList, linkedStories, kpiExcelData);
 
 		// Assert the result based on your logic
 		assertEquals(2, kpiExcelData.size());
@@ -471,8 +504,8 @@ public class KPIExcelUtilityTest {
 		List<KPIExcelData> excelDataList = new ArrayList<>();
 
 		// Call the method to be tested
-		KPIExcelUtility.populateOpenVsClosedExcelData("2022-01-01", "ProjectX", openIssues, closedIssues, excelDataList,
-				"KPI_ID");
+		KPIExcelUtility.populateOpenVsClosedExcelData(
+				"2022-01-01", "ProjectX", openIssues, closedIssues, excelDataList, "KPI_ID");
 
 		// Verify the results
 		assertEquals(2, excelDataList.size());
@@ -503,23 +536,33 @@ public class KPIExcelUtilityTest {
 		jiraHistoryFieldAndDateWiseIssueMap.put("FieldA", internalMap);
 
 		Set<String> fieldValues = new HashSet<>(Arrays.asList("FieldA"));
-		Set<KanbanIssueCustomHistory> kanbanJiraIssues = new HashSet<>(
-				Arrays.asList(createKanbanIssue("Issue1", "FieldA", "2022-01-01"),
-						createKanbanIssue("Issue2", "FieldB", "2022-01-01"), createKanbanIssue("Issue3", "FieldA", "2022-01-02")));
+		Set<KanbanIssueCustomHistory> kanbanJiraIssues =
+				new HashSet<>(
+						Arrays.asList(
+								createKanbanIssue("Issue1", "FieldA", "2022-01-01"),
+								createKanbanIssue("Issue2", "FieldB", "2022-01-01"),
+								createKanbanIssue("Issue3", "FieldA", "2022-01-02")));
 		List<KPIExcelData> excelDataList = new ArrayList<>();
 
 		// Create a mock of YourClass and use it to call the method
 		// when(KPIExcelUtility.checkEmptyURL(any(KanbanJiraIssue.class))).thenReturn("MockedURL");
 
 		// Call the method to be tested
-		KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(projectName, jiraHistoryFieldAndDateWiseIssueMap,
-				fieldValues, kanbanJiraIssues, excelDataList, date, kpiId);
+		KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(
+				projectName,
+				jiraHistoryFieldAndDateWiseIssueMap,
+				fieldValues,
+				kanbanJiraIssues,
+				excelDataList,
+				date,
+				kpiId);
 
 		// Verify the results
 		assertEquals(2, excelDataList.size());
 	}
 
-	private KanbanIssueCustomHistory createKanbanIssue(String storyId, String field, String createdDate) {
+	private KanbanIssueCustomHistory createKanbanIssue(
+			String storyId, String field, String createdDate) {
 		KanbanIssueCustomHistory issue = new KanbanIssueCustomHistory();
 		issue.setStoryID(storyId);
 		issue.setCreatedDate(createdDate);
@@ -554,7 +597,8 @@ public class KPIExcelUtilityTest {
 	}
 
 	@Test
-	public void populateReleaseDefectRelatedExcelData_WhenEstimationCriteriaIsNotStoryPoint_PopulatesExcelDataList() {
+	public void
+			populateReleaseDefectRelatedExcelData_WhenEstimationCriteriaIsNotStoryPoint_PopulatesExcelDataList() {
 		// Arrange
 		List<KPIExcelData> excelDataList = new ArrayList<>();
 		FieldMapping fieldMapping = mock(FieldMapping.class);
@@ -600,8 +644,8 @@ public class KPIExcelUtilityTest {
 		when(modalObjectMap.get(jiraIssues.get(0).getNumber())).thenReturn(jiraIssueModalObject);
 
 		// Act
-		KPIExcelUtility.populateIterationKPI(overAllModalValues, modalValues, jiraIssues.get(0), fieldMapping,
-				modalObjectMap);
+		KPIExcelUtility.populateIterationKPI(
+				overAllModalValues, modalValues, jiraIssues.get(0), fieldMapping, modalObjectMap);
 		assertNotNull(modalValues);
 		assertEquals(2, modalValues.size());
 		assertNotNull(overAllModalValues);
@@ -626,8 +670,8 @@ public class KPIExcelUtilityTest {
 		jiraIssues.get(0).setSprintName("");
 
 		// Act
-		KPIExcelUtility.populateIterationKPI(overAllModalValues, modalValues, jiraIssues.get(0), fieldMapping,
-				modalObjectMap);
+		KPIExcelUtility.populateIterationKPI(
+				overAllModalValues, modalValues, jiraIssues.get(0), fieldMapping, modalObjectMap);
 		assertNotNull(modalValues);
 		assertEquals(2, modalValues.size());
 		assertNotNull(overAllModalValues);
@@ -648,13 +692,14 @@ public class KPIExcelUtilityTest {
 		jiraIssues.get(0).setOriginalEstimateMinutes(480);
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.ACTUAL_ESTIMATION);
-		when(fieldMapping.getAdditionalFilterConfig()).thenReturn(List.of(new AdditionalFilterConfig()));
+		when(fieldMapping.getAdditionalFilterConfig())
+				.thenReturn(List.of(new AdditionalFilterConfig()));
 		Map modalObjectMap = mock(Map.class);
 		when(modalObjectMap.get(jiraIssues.get(0).getNumber())).thenReturn(jiraIssueModalObject);
 
 		// Act
-		KPIExcelUtility.populateIterationKPI(overAllModalValues, modalValues, jiraIssues.get(0), fieldMapping,
-				modalObjectMap);
+		KPIExcelUtility.populateIterationKPI(
+				overAllModalValues, modalValues, jiraIssues.get(0), fieldMapping, modalObjectMap);
 		assertNotNull(modalValues);
 		assertEquals(2, modalValues.size());
 		assertNotNull(overAllModalValues);
@@ -694,7 +739,8 @@ public class KPIExcelUtilityTest {
 		List<String> storyIds = Arrays.asList("STORY1", "STORY2");
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 
-		Map<String, JiraIssue> issueData = defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> issueData =
+				defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.STORY_POINT);
@@ -704,16 +750,22 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Act
 		Node node = new Node();
-		node.setSprintFilter(new SprintFilter("sprint-id", "TEST| KnowHOW|PI_10|Opensource_Scrum Project",
-				LocalDateTime.now().toString(), LocalDateTime.now().toString()));
+		node.setSprintFilter(
+				new SprintFilter(
+						"sprint-id",
+						"TEST| KnowHOW|PI_10|Opensource_Scrum Project",
+						LocalDateTime.now().toString(),
+						LocalDateTime.now().toString()));
 
-		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig,
-				node);
+		KPIExcelUtility.populateDirExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
 
 		// Assert
 		assertEquals(3, kpiExcelData.size());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
 	}
 
 	@Test
@@ -732,7 +784,8 @@ public class KPIExcelUtilityTest {
 		List<String> storyIds = Arrays.asList("STORY1", "STORY2");
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 
-		Map<String, JiraIssue> issueData = defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> issueData =
+				defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.STORY_POINT);
@@ -742,16 +795,22 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Act
 		Node node = new Node();
-		node.setSprintFilter(new SprintFilter("sprint-id", "TEST| KnowHOW|PI_10|Opensource_Scrum Project",
-				LocalDateTime.now().toString(), LocalDateTime.now().toString()));
+		node.setSprintFilter(
+				new SprintFilter(
+						"sprint-id",
+						"TEST| KnowHOW|PI_10|Opensource_Scrum Project",
+						LocalDateTime.now().toString(),
+						LocalDateTime.now().toString()));
 
-		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping,
-				customApiConfig, node);
+		KPIExcelUtility.populateDefectDensityExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
 
 		// Assert
 		assertEquals(3, kpiExcelData.size());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
 	}
 
 	@Test
@@ -772,7 +831,8 @@ public class KPIExcelUtilityTest {
 		List<String> storyIds = Arrays.asList("STORY1", "STORY2");
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 
-		Map<String, JiraIssue> issueData = defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> issueData =
+				defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.ACTUAL_ESTIMATION);
@@ -782,16 +842,22 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Act
 		Node node = new Node();
-		node.setSprintFilter(new SprintFilter("sprint-id", "TEST| KnowHOW|PI_10|Opensource_Scrum Project",
-				LocalDateTime.now().toString(), LocalDateTime.now().toString()));
+		node.setSprintFilter(
+				new SprintFilter(
+						"sprint-id",
+						"TEST| KnowHOW|PI_10|Opensource_Scrum Project",
+						LocalDateTime.now().toString(),
+						LocalDateTime.now().toString()));
 
-		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping,
-				customApiConfig, node);
+		KPIExcelUtility.populateDefectDensityExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
 
 		// Assert
 		assertEquals(4, kpiExcelData.size());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
 	}
 
 	@Test
@@ -811,7 +877,8 @@ public class KPIExcelUtilityTest {
 		List<String> storyIds = Arrays.asList("STORY1", "STORY2");
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
 
-		Map<String, JiraIssue> issueData = defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> issueData =
+				defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.STORY_POINT);
@@ -821,15 +888,28 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Act
 		Node node = new Node();
-		node.setSprintFilter(new SprintFilter("sprint-id", "TEST| KnowHOW|PI_10|Opensource_Scrum Project",
-				LocalDateTime.now().toString(), LocalDateTime.now().toString()));
+		node.setSprintFilter(
+				new SprintFilter(
+						"sprint-id",
+						"TEST| KnowHOW|PI_10|Opensource_Scrum Project",
+						LocalDateTime.now().toString(),
+						LocalDateTime.now().toString()));
 
-		excelUtility.populateFTPRExcelData(storyIds, jiraIssues, kpiExcelData, issueData, defects, customApiConfig,
-				fieldMapping, node);
+		excelUtility.populateFTPRExcelData(
+				storyIds,
+				jiraIssues,
+				kpiExcelData,
+				issueData,
+				defects,
+				customApiConfig,
+				fieldMapping,
+				node);
 		// Assert
 		assertEquals(3, kpiExcelData.size());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
-		assertEquals("TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(0).getSprintName());
+		assertEquals(
+				"TEST| KnowHOW|PI_10|Opensource_Scrum Project", kpiExcelData.get(1).getSprintName());
 	}
 
 	@Test
@@ -852,8 +932,8 @@ public class KPIExcelUtilityTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 
 		// Act
-		KPIExcelUtility.populateDefectSeepageRateExcelData(sprint, totalBugList, dsrValidationDataList, kpiExcelData,
-				customApiConfig, storyList);
+		KPIExcelUtility.populateDefectSeepageRateExcelData(
+				sprint, totalBugList, dsrValidationDataList, kpiExcelData, customApiConfig, storyList);
 		// Assert
 		assertEquals(1, kpiExcelData.size());
 		assertEquals("Sprint1", kpiExcelData.get(0).getSprintName());
@@ -880,13 +960,15 @@ public class KPIExcelUtilityTest {
 		priority.add("Low");
 		pr.put("p4-minor", priority);
 		customApiConfig.setPriority(pr);
-		Map<String, JiraIssue> issueData = defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> issueData =
+				defects.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
 		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		// Act
-		KPIExcelUtility.populateDefectRelatedExcelData(sprint, defects, kpiExcelData, customApiConfig, storyList);
+		KPIExcelUtility.populateDefectRelatedExcelData(
+				sprint, defects, kpiExcelData, customApiConfig, storyList);
 
 		// Assert
 		assertEquals(1, kpiExcelData.size());
@@ -912,8 +994,8 @@ public class KPIExcelUtilityTest {
 		when(fieldMapping.getEstimationCriteria()).thenReturn(CommonConstant.ACTUAL_ESTIMATION);
 
 		// Act
-		KPIExcelUtility.populateDefectRCAandStatusRelatedExcelData(sprint, jiraIssue, createDuringIteration, kpiExcelData,
-				fieldMapping);
+		KPIExcelUtility.populateDefectRCAandStatusRelatedExcelData(
+				sprint, jiraIssue, createDuringIteration, kpiExcelData, fieldMapping);
 
 		// Assert
 		assertEquals(1, kpiExcelData.size());
@@ -940,10 +1022,11 @@ public class KPIExcelUtilityTest {
 		// Arrange
 		String sprint = "Sprint1";
 		List<KPIExcelData> kpiExcelData = new ArrayList<>();
-		Map<String, JiraIssue> issueData = jiraIssue.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
+		Map<String, JiraIssue> issueData =
+				jiraIssue.stream().collect(Collectors.toMap(JiraIssue::getNumber, x -> x));
 		// Act
-		KPIExcelUtility.populateCreatedVsResolvedExcelData(sprint, issueData, createdConditionStories, map, kpiExcelData,
-				customApiConfig, storyList);
+		KPIExcelUtility.populateCreatedVsResolvedExcelData(
+				sprint, issueData, createdConditionStories, map, kpiExcelData, customApiConfig, storyList);
 		// Assert
 		assertEquals(1, kpiExcelData.size());
 		assertEquals("Sprint1", kpiExcelData.get(0).getSprintName());
@@ -970,7 +1053,8 @@ public class KPIExcelUtilityTest {
 		jiraHistoryChangeLog.setUpdatedOn(LocalDateTime.now());
 		statusUpdationLog.add(jiraHistoryChangeLog);
 		issueCustomHistory.setStatusUpdationLog(statusUpdationLog);
-		KPIExcelUtility.populateBackLogData(overAllmodalValues, modalValues, jiraIssue, issueCustomHistory, status);
+		KPIExcelUtility.populateBackLogData(
+				overAllmodalValues, modalValues, jiraIssue, issueCustomHistory, status);
 		Assert.assertNotNull(modalValues);
 		Assert.assertNotNull(overAllmodalValues);
 	}
@@ -1105,8 +1189,13 @@ public class KPIExcelUtilityTest {
 		Map<String, LocalDateTime> completeDateIssueMap = new HashMap<>();
 		Map<String, LocalDateTime> devCompleteDateIssueMap = new HashMap<>();
 
-		excelUtility.populateReleaseBurnUpExcelData(jiraIssues, issueWiseReleaseTagDateMap, completeDateIssueMap,
-				devCompleteDateIssueMap, kpiExcelData, fieldMapping);
+		excelUtility.populateReleaseBurnUpExcelData(
+				jiraIssues,
+				issueWiseReleaseTagDateMap,
+				completeDateIssueMap,
+				devCompleteDateIssueMap,
+				kpiExcelData,
+				fieldMapping);
 
 		// Assert
 		assertEquals(48, kpiExcelData.size());
@@ -1125,8 +1214,13 @@ public class KPIExcelUtilityTest {
 		Map<String, LocalDateTime> completeDateIssueMap = new HashMap<>();
 		Map<String, LocalDateTime> devCompleteDateIssueMap = new HashMap<>();
 
-		excelUtility.populateReleaseBurnUpExcelData(jiraIssues, issueWiseReleaseTagDateMap, completeDateIssueMap,
-				devCompleteDateIssueMap, kpiExcelData, fieldMapping);
+		excelUtility.populateReleaseBurnUpExcelData(
+				jiraIssues,
+				issueWiseReleaseTagDateMap,
+				completeDateIssueMap,
+				devCompleteDateIssueMap,
+				kpiExcelData,
+				fieldMapping);
 
 		// Assert
 		assertEquals(48, kpiExcelData.size());
@@ -1148,8 +1242,8 @@ public class KPIExcelUtilityTest {
 		when(deploymentFrequencyInfo.getDeploymentDateList()).thenReturn(deploymentDateList);
 
 		// Call the method
-		KPIExcelUtility.populateDeploymentFrequencyExcelData(projectName, deploymentFrequencyInfo, kpiExcelData,
-				deploymentMapPipelineNameWise);
+		KPIExcelUtility.populateDeploymentFrequencyExcelData(
+				projectName, deploymentFrequencyInfo, kpiExcelData, deploymentMapPipelineNameWise);
 
 		// Verify the results
 		assertEquals(2, kpiExcelData.size());
@@ -1178,8 +1272,8 @@ public class KPIExcelUtilityTest {
 		when(deploymentFrequencyInfo.getDeploymentDateList()).thenReturn(deploymentDateList);
 
 		// Call the method
-		KPIExcelUtility.populateDeploymentFrequencyExcelData(projectName, deploymentFrequencyInfo, kpiExcelData,
-				deploymentMapPipelineNameWise);
+		KPIExcelUtility.populateDeploymentFrequencyExcelData(
+				projectName, deploymentFrequencyInfo, kpiExcelData, deploymentMapPipelineNameWise);
 
 		// Verify the results
 		assertEquals(2, kpiExcelData.size());
@@ -1201,8 +1295,8 @@ public class KPIExcelUtilityTest {
 		String projectName = "projectName";
 		Map<String, String> deploymentMapPipelineNameWise = new HashMap<>();
 		// Call the method
-		KPIExcelUtility.populateDeploymentFrequencyExcelData(projectName, deploymentFrequencyInfo, kpiExcelData,
-				deploymentMapPipelineNameWise);
+		KPIExcelUtility.populateDeploymentFrequencyExcelData(
+				projectName, deploymentFrequencyInfo, kpiExcelData, deploymentMapPipelineNameWise);
 
 		// Verify the results
 		assertEquals(0, kpiExcelData.size());
@@ -1215,20 +1309,21 @@ public class KPIExcelUtilityTest {
 		List<JiraIssue> defects = new ArrayList<>();
 		JiraIssue defect1 = createTestJiraIssue("DEF-001", "Bug", "P1");
 		defects.add(defect1);
-		
+
 		Map<String, JiraIssue> issueData = new HashMap<>();
 		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
 		issueData.put("STORY-001", story1);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setEstimationCriteria("Story Point");
 		fieldMapping.setStoryPointToHourMapping(8.0);
-		
+
 		Node node = createTestNode();
-		
+
 		// Call the method
-		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
-		
+		KPIExcelUtility.populateDirExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+
 		// Verify results
 		assertNotNull(kpiExcelData);
 		assertEquals(2, kpiExcelData.size());
@@ -1243,10 +1338,11 @@ public class KPIExcelUtilityTest {
 		Map<String, JiraIssue> issueData = new HashMap<>();
 		FieldMapping fieldMapping = new FieldMapping();
 		Node node = createTestNode();
-		
+
 		// Call the method
-		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
-		
+		KPIExcelUtility.populateDirExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
 	}
@@ -1258,19 +1354,20 @@ public class KPIExcelUtilityTest {
 		List<JiraIssue> defects = new ArrayList<>();
 		JiraIssue defect1 = createTestJiraIssue("DEF-001", "Bug", "P1");
 		defects.add(defect1);
-		
+
 		Map<String, JiraIssue> issueData = new HashMap<>();
 		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
 		issueData.put("STORY-001", story1);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setEstimationCriteria("Story Point");
-		
+
 		Node node = createTestNode();
-		
+
 		// Call the method
-		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
-		
+		KPIExcelUtility.populateDefectDensityExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+
 		// Verify results
 		assertNotNull(kpiExcelData);
 		assertEquals(2, kpiExcelData.size());
@@ -1285,10 +1382,11 @@ public class KPIExcelUtilityTest {
 		Map<String, JiraIssue> issueData = new HashMap<>();
 		FieldMapping fieldMapping = new FieldMapping();
 		Node node = createTestNode();
-		
+
 		// Call the method
-		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
-		
+		KPIExcelUtility.populateDefectDensityExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
 	}
@@ -1304,23 +1402,23 @@ public class KPIExcelUtilityTest {
 		issue1.setAssigneeName("John Doe");
 		issue1.setDueDate("2023-12-31");
 		jiraIssues.add(issue1);
-		
+
 		JiraIssue issue2 = createTestJiraIssue("STORY-002", "Story", "P2");
 		issue2.setAggregateTimeOriginalEstimateMinutes(480); // 8 hours
 		issue2.setStatus("Done");
 		jiraIssues.add(issue2);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setEstimationCriteria("Story Point");
 		fieldMapping.setStoryPointToHourMapping(8.0);
-		
+
 		// Call the method
 		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
-		
+
 		// Verify results
 		assertNotNull(kpiExcelData);
 		assertEquals(2, kpiExcelData.size());
-		
+
 		// Verify first issue
 		KPIExcelData excelData1 = kpiExcelData.get(0);
 		assertEquals("Test Story 001", excelData1.getIssueDesc());
@@ -1328,7 +1426,7 @@ public class KPIExcelUtilityTest {
 		assertEquals("Story", excelData1.getIssueType());
 		assertEquals("P1", excelData1.getPriority());
 		assertEquals("5.0", excelData1.getStoryPoint());
-		
+
 		// Verify second issue
 		KPIExcelData excelData2 = kpiExcelData.get(1);
 		assertEquals("Test Story 002", excelData2.getIssueDesc());
@@ -1340,10 +1438,10 @@ public class KPIExcelUtilityTest {
 		// Setup test data with empty issues
 		List<JiraIssue> jiraIssues = new ArrayList<>();
 		FieldMapping fieldMapping = new FieldMapping();
-		
+
 		// Call the method
 		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
-		
+
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
 	}
@@ -1353,10 +1451,10 @@ public class KPIExcelUtilityTest {
 		// Setup test data with null issues
 		List<JiraIssue> jiraIssues = null;
 		FieldMapping fieldMapping = new FieldMapping();
-		
+
 		// Call the method
 		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
-		
+
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
 	}
@@ -1376,19 +1474,19 @@ public class KPIExcelUtilityTest {
 		issue.setStoryPoints(5.0); // Set story points to avoid NullPointerException
 		issue.setRootCauseList(Arrays.asList("Code Issue", "Design Issue"));
 		issue.setLabels(Arrays.asList("bug", "critical"));
-		
+
 		// Set additional filters for squad testing
 		AdditionalFilter additionalFilter = new AdditionalFilter();
 		AdditionalFilterValue filterValue = new AdditionalFilterValue();
 		filterValue.setValue("Squad A");
 		additionalFilter.setFilterValues(Arrays.asList(filterValue));
 		issue.setAdditionalFilters(Arrays.asList(additionalFilter));
-		
+
 		// Set defectStoryID to avoid NullPointerException
 		Set<String> defectStoryIds = new HashSet<>();
 		defectStoryIds.add("STORY-001");
 		issue.setDefectStoryID(defectStoryIds);
-		
+
 		return issue;
 	}
 
@@ -1406,30 +1504,33 @@ public class KPIExcelUtilityTest {
 		List<JiraIssue> storyList = new ArrayList<>();
 		JiraIssue story = createTestJiraIssue("STORY-001", "Story", "P2");
 		storyList.add(story);
-		
-		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>> reopenedDefectInfoMap = new HashMap<>();
-		List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo> transitionInfoList = new ArrayList<>();
-		
+
+		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>>
+				reopenedDefectInfoMap = new HashMap<>();
+		List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo> transitionInfoList =
+				new ArrayList<>();
+
 		// Create DefectTransitionInfo mock
-		com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo defectTransitionInfo = 
+		com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo defectTransitionInfo =
 				Mockito.mock(com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo.class);
 		JiraIssue defectIssue = createTestJiraIssue("DEF-001", "Bug", "P1");
-		
+
 		when(defectTransitionInfo.getDefectJiraIssue()).thenReturn(defectIssue);
 		when(defectTransitionInfo.getReopenDate()).thenReturn(new DateTime("2023-01-15T10:00:00.000Z"));
 		when(defectTransitionInfo.getClosedDate()).thenReturn(new DateTime("2023-01-20T15:00:00.000Z"));
 		when(defectTransitionInfo.getReopenDuration()).thenReturn(120.0);
-		
+
 		transitionInfoList.add(defectTransitionInfo);
 		reopenedDefectInfoMap.put("DEF-001", transitionInfoList);
-		
+
 		// Call the method
-		KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
-		
+		KPIExcelUtility.populateDefectWithReopenInfoExcelData(
+				sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
+
 		// Verify results
 		assertNotNull(kpiExcelData);
 		assertEquals(1, kpiExcelData.size());
-		
+
 		KPIExcelData excelData = kpiExcelData.get(0);
 		assertEquals("Sprint 1", excelData.getSprintName());
 		assertEquals("Test Bug 001", excelData.getDefectDesc());
@@ -1442,11 +1543,13 @@ public class KPIExcelUtilityTest {
 		// Setup test data with empty map
 		String sprint = "Sprint 1";
 		List<JiraIssue> storyList = new ArrayList<>();
-		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>> reopenedDefectInfoMap = new HashMap<>();
-		
+		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>>
+				reopenedDefectInfoMap = new HashMap<>();
+
 		// Call the method
-		KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
-		
+		KPIExcelUtility.populateDefectWithReopenInfoExcelData(
+				sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
+
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
 	}
@@ -1456,11 +1559,13 @@ public class KPIExcelUtilityTest {
 		// Setup test data with null map
 		String sprint = "Sprint 1";
 		List<JiraIssue> storyList = new ArrayList<>();
-		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>> reopenedDefectInfoMap = null;
-		
+		Map<String, List<com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo>>
+				reopenedDefectInfoMap = null;
+
 		// Call the method
-		KPIExcelUtility.populateDefectWithReopenInfoExcelData(sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
-		
+		KPIExcelUtility.populateDefectWithReopenInfoExcelData(
+				sprint, kpiExcelData, customApiConfig, storyList, reopenedDefectInfoMap);
+
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
 	}
@@ -1473,18 +1578,18 @@ public class KPIExcelUtilityTest {
 		issue1.setAggregateTimeOriginalEstimateMinutes(480); // 8 hours
 		issue1.setStatus("In Progress");
 		jiraIssues.add(issue1);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setEstimationCriteria("Hours"); // Not Story Point
 		fieldMapping.setStoryPointToHourMapping(8.0);
-		
+
 		// Call the method
 		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
-		
+
 		// Verify results
 		assertNotNull(kpiExcelData);
 		assertEquals(1, kpiExcelData.size());
-		
+
 		KPIExcelData excelData = kpiExcelData.get(0);
 		assertEquals("Test Story 001", excelData.getIssueDesc());
 		assertEquals("In Progress", excelData.getIssueStatus());
@@ -1501,21 +1606,22 @@ public class KPIExcelUtilityTest {
 		issue1.setStoryPoints(5.0);
 		issue1.setAggregateTimeOriginalEstimateMinutes(null);
 		jiraIssues.add(issue1);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setEstimationCriteria(null);
 		fieldMapping.setStoryPointToHourMapping(8.0);
-		
+
 		// Call the method
 		KPIExcelUtility.populateReleasePlanExcelData(jiraIssues, kpiExcelData, fieldMapping);
-		
+
 		// Verify results
 		assertNotNull(kpiExcelData);
 		assertEquals(1, kpiExcelData.size());
-		
+
 		KPIExcelData excelData = kpiExcelData.get(0);
 		assertEquals("Test Story 001", excelData.getIssueDesc());
-		// Story point should be null when estimation criteria is null and no time estimate
+		// Story point should be null when estimation criteria is null and no time
+		// estimate
 		assertNull(excelData.getStoryPoint());
 	}
 
@@ -1523,7 +1629,7 @@ public class KPIExcelUtilityTest {
 	public void testCreateTestJiraIssue_WithAdditionalFilters() {
 		// Test the helper method to ensure it creates proper test data
 		JiraIssue issue = createTestJiraIssue("TEST-001", "Bug", "P1");
-		
+
 		// Verify basic properties
 		assertEquals("TEST-001", issue.getNumber());
 		assertEquals("Bug", issue.getTypeName());
@@ -1532,18 +1638,19 @@ public class KPIExcelUtilityTest {
 		assertEquals("https://test.jira.com/browse/TEST-001", issue.getUrl());
 		assertEquals("Open", issue.getStatus());
 		assertEquals(Integer.valueOf(120), issue.getTimeSpentInMinutes());
-		
+
 		// Verify additional filters
 		assertNotNull(issue.getAdditionalFilters());
 		assertEquals(1, issue.getAdditionalFilters().size());
-		assertEquals("Squad A", issue.getAdditionalFilters().get(0).getFilterValues().get(0).getValue());
-		
+		assertEquals(
+				"Squad A", issue.getAdditionalFilters().get(0).getFilterValues().get(0).getValue());
+
 		// Verify root cause and labels
 		assertNotNull(issue.getRootCauseList());
 		assertEquals(2, issue.getRootCauseList().size());
 		assertTrue(issue.getRootCauseList().contains("Code Issue"));
 		assertTrue(issue.getRootCauseList().contains("Design Issue"));
-		
+
 		assertNotNull(issue.getLabels());
 		assertEquals(2, issue.getLabels().size());
 		assertTrue(issue.getLabels().contains("bug"));
@@ -1554,7 +1661,7 @@ public class KPIExcelUtilityTest {
 	public void testCreateTestNode_Properties() {
 		// Test the helper method to ensure it creates proper test data
 		Node node = createTestNode();
-		
+
 		// Verify node properties
 		assertNotNull(node);
 		assertNotNull(node.getSprintFilter());
@@ -1566,17 +1673,18 @@ public class KPIExcelUtilityTest {
 		// Setup test data with empty defects
 		List<String> storyIds = Arrays.asList("STORY-001");
 		List<JiraIssue> defects = new ArrayList<>();
-		
+
 		Map<String, JiraIssue> issueData = new HashMap<>();
 		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
 		issueData.put("STORY-001", story1);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		Node node = createTestNode();
-		
+
 		// Call the method
-		KPIExcelUtility.populateDirExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
-		
+		KPIExcelUtility.populateDirExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+
 		// Verify results - should handle null defects gracefully
 		assertNotNull(kpiExcelData);
 		// The method should still process stories even with null defects
@@ -1588,17 +1696,18 @@ public class KPIExcelUtilityTest {
 		// Setup test data with empty defects
 		List<String> storyIds = Arrays.asList("STORY-001");
 		List<JiraIssue> defects = new ArrayList<>();
-		
+
 		Map<String, JiraIssue> issueData = new HashMap<>();
 		JiraIssue story1 = createTestJiraIssue("STORY-001", "Story", "P2");
 		issueData.put("STORY-001", story1);
-		
+
 		FieldMapping fieldMapping = new FieldMapping();
 		Node node = createTestNode();
-		
+
 		// Call the method
-		KPIExcelUtility.populateDefectDensityExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
-		
+		KPIExcelUtility.populateDefectDensityExcelData(
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+
 		// Verify results - should handle null defects gracefully
 		assertNotNull(kpiExcelData);
 		// The method should still process stories even with null defects
@@ -1642,22 +1751,32 @@ public class KPIExcelUtilityTest {
 		manualTests.add(tcManual);
 
 		KPIExcelUtility.populateTestExecutionTimeExcelData(
-				sprint, allTests, automatedTests, manualTests, kpiExcelDataLocal, KPICode.TEST_EXECUTION_TIME.getKpiId(), "");
+				sprint,
+				allTests,
+				automatedTests,
+				manualTests,
+				kpiExcelDataLocal,
+				KPICode.TEST_EXECUTION_TIME.getKpiId(),
+				"");
 
 		assertEquals(2, kpiExcelDataLocal.size());
 
-		KPIExcelData rowTC1 = kpiExcelDataLocal.stream()
-				.filter(r -> "TC-1".equals(r.getTestCaseId()))
-				.findFirst().orElseThrow(AssertionError::new);
+		KPIExcelData rowTC1 =
+				kpiExcelDataLocal.stream()
+						.filter(r -> "TC-1".equals(r.getTestCaseId()))
+						.findFirst()
+						.orElseThrow(AssertionError::new);
 
 		assertEquals("Sprint-1", rowTC1.getSprintName());
 		assertEquals("Automated", rowTC1.getTestCaseType());
 		assertEquals("Pass", rowTC1.getTestCaseStatus());
 		assertEquals("3.0", rowTC1.getExecutionTime()); // (2000+4000)/2 ms => 3.0 sec
 
-		KPIExcelData rowTC2 = kpiExcelDataLocal.stream()
-				.filter(r -> "TC-2".equals(r.getTestCaseId()))
-				.findFirst().orElseThrow(AssertionError::new);
+		KPIExcelData rowTC2 =
+				kpiExcelDataLocal.stream()
+						.filter(r -> "TC-2".equals(r.getTestCaseId()))
+						.findFirst()
+						.orElseThrow(AssertionError::new);
 
 		assertEquals("Sprint-1", rowTC2.getSprintName());
 		assertEquals("Manual", rowTC2.getTestCaseType());
@@ -1686,14 +1805,20 @@ public class KPIExcelUtilityTest {
 		allTests.add(tcOther);
 
 		KPIExcelUtility.populateTestExecutionTimeExcelData(
-				sprint, allTests, automatedTests, manualTests, kpiExcelDataLocal, KPICode.TEST_EXECUTION_TIME.getKpiId(), "");
+				sprint,
+				allTests,
+				automatedTests,
+				manualTests,
+				kpiExcelDataLocal,
+				KPICode.TEST_EXECUTION_TIME.getKpiId(),
+				"");
 
 		assertEquals(1, kpiExcelDataLocal.size());
 		KPIExcelData row = kpiExcelDataLocal.get(0);
 		assertEquals("TC-3", row.getTestCaseId());
-		assertEquals("", row.getTestCaseType());         // not in either list
+		assertEquals("", row.getTestCaseType()); // not in either list
 		assertEquals("Blocked", row.getTestCaseStatus());
-		assertEquals("1.5", row.getExecutionTime());     // 1500 ms => 1.5 sec
+		assertEquals("1.5", row.getExecutionTime()); // 1500 ms => 1.5 sec
 	}
 
 	@Test
@@ -1702,15 +1827,13 @@ public class KPIExcelUtilityTest {
 
 		KPIExcelUtility.populateTestExecutionTimeExcelData(
 				"Sprint-Empty",
-				new ArrayList<>(),   // allTestList
-				new ArrayList<>(),   // automatedList
-				new ArrayList<>(),   // manualList
+				new ArrayList<>(), // allTestList
+				new ArrayList<>(), // automatedList
+				new ArrayList<>(), // manualList
 				kpiExcelDataLocal,
 				KPICode.TEST_EXECUTION_TIME.getKpiId(),
-				""
-		);
+				"");
 
 		assertTrue(kpiExcelDataLocal.isEmpty());
 	}
-
 }

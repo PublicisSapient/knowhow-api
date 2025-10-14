@@ -75,22 +75,14 @@ public class ZephyrServiceKanbanTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	private ZephyrServiceKanban zephyrService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	private RegressionPercentageKanbanServiceImpl regressionPercentageKanbanServiceImpl;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks private ZephyrServiceKanban zephyrService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CacheService cacheService;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private RegressionPercentageKanbanServiceImpl regressionPercentageKanbanServiceImpl;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -104,8 +96,7 @@ public class ZephyrServiceKanbanTest {
 	private Set<String> projects;
 	private ZephyrKPIServiceFactory zephyrKPIServiceFactory;
 
-	@Mock
-	private TestService service;
+	@Mock private TestService service;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
@@ -120,23 +111,26 @@ public class ZephyrServiceKanbanTest {
 		doReturn(new KpiElement()).when(service).getKpiData(any(), any(), any());
 		zephyrKPIServiceFactory.initMyServiceCache();
 
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi63");
 		createKpiRequest("SONAR", 3, kpiRequest);
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		Map<String, Integer> map = new HashMap<>();
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(map);
-		exampleStringList = new String[]{"exampleElement", "exampleElement"};
+		exampleStringList = new String[] {"exampleElement", "exampleElement"};
 	}
 
 	@Test
@@ -238,7 +232,7 @@ public class ZephyrServiceKanbanTest {
 		List<KpiElement> kpiList = new ArrayList<>();
 		addKpiElement(kpiList, TESTZEPHYR, TESTZEPHYR, "TechDebt", "", source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"Scrum Project_6335363749794a18e8a4479b"});
+		kpiRequest.setIds(new String[] {"Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		Map<String, List<String>> selectedMap = new HashMap<>();
@@ -247,7 +241,12 @@ public class ZephyrServiceKanbanTest {
 		kpiRequest.setSelectedMap(selectedMap);
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);

@@ -69,22 +69,14 @@ import com.publicissapient.kpidashboard.common.repository.excel.CapacityKpiDataR
 @RunWith(MockitoJUnitRunner.class)
 public class CapacityServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CapacityKpiDataRepository capacityKpiDataRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
-	@Mock
-	private JiraIterationServiceR jiraService;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@InjectMocks
-	private CapacityServiceImpl capacityServiceImpl;
+	@Mock CacheService cacheService;
+	@Mock private CapacityKpiDataRepository capacityKpiDataRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
+	@Mock private JiraIterationServiceR jiraService;
+	@Mock private FilterHelperService filterHelperService;
+	@InjectMocks private CapacityServiceImpl capacityServiceImpl;
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private KpiRequest kpiRequest;
@@ -96,8 +88,9 @@ public class CapacityServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi121");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
@@ -112,8 +105,8 @@ public class CapacityServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -121,23 +114,29 @@ public class CapacityServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		CapacityKpiData capacityKpiData = new CapacityKpiData();
 		capacityKpiData.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
 		capacityKpiData.setCapacityPerSprint(12.0);
 
-		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any())).thenReturn(capacityKpiData);
+		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any()))
+				.thenReturn(capacityKpiData);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(capacityServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(capacityServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = capacityServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					capacityServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull((DataCount) kpiElement.getTrendValueList());
 
 		} catch (ApplicationException enfe) {
@@ -148,18 +147,21 @@ public class CapacityServiceImplTest {
 	@Test
 	public void testGetKpiDataProjectAdditionalFilter() throws ApplicationException {
 		KpiRequest kpiRequest = this.kpiRequest;
-		AdditionalFilterCategoryFactory additionalFilterCategoryFactory = AdditionalFilterCategoryFactory.newInstance();
-		List<AdditionalFilterCategory> additionalFilterCategoryList = additionalFilterCategoryFactory
-				.getAdditionalFilterCategoryList();
-		Map<String, AdditionalFilterCategory> additonalFilterMap = additionalFilterCategoryList.stream()
-				.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
+		AdditionalFilterCategoryFactory additionalFilterCategoryFactory =
+				AdditionalFilterCategoryFactory.newInstance();
+		List<AdditionalFilterCategory> additionalFilterCategoryList =
+				additionalFilterCategoryFactory.getAdditionalFilterCategoryList();
+		Map<String, AdditionalFilterCategory> additonalFilterMap =
+				additionalFilterCategoryList.stream()
+						.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
 		when(filterHelperService.getAdditionalFilterHierarchyLevel()).thenReturn(additonalFilterMap);
 
 		Map<String, List<String>> selectedMap = kpiRequest.getSelectedMap();
 		selectedMap.put("sqd", Arrays.asList("JAVA"));
 		kpiRequest.setSelectedMap(selectedMap);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		CapacityKpiData capacityKpiData = new CapacityKpiData();
 		capacityKpiData.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
@@ -172,17 +174,22 @@ public class CapacityServiceImplTest {
 		additionalFilterCapacityList.add(additionalFilterCapacity);
 		capacityKpiData.setAdditionalFilterCapacityList(additionalFilterCapacityList);
 
-		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any())).thenReturn(capacityKpiData);
+		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any()))
+				.thenReturn(capacityKpiData);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(capacityServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(capacityServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
 		try {
-			KpiElement kpiElement = capacityServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					capacityServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull((DataCount) kpiElement.getTrendValueList());
 
 		} catch (ApplicationException enfe) {

@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author purgupta2
  */
-@ChangeUnit(id = "r_change_iteration_kpis_groupId", order = "010208", author = "purgupta2", systemVersion = "10.2.0")
+@ChangeUnit(
+		id = "r_change_iteration_kpis_groupId",
+		order = "010208",
+		author = "purgupta2",
+		systemVersion = "10.2.0")
 public class ChangeIterationKPIsGroupId {
 	private final MongoTemplate mongoTemplate;
 
@@ -40,8 +44,11 @@ public class ChangeIterationKPIsGroupId {
 
 	@Execution
 	public void execution() {
-		updateGroupId(Arrays.asList("kpi119", "kpi132", "kp136", "kpi140", "kpi123", "kpi122", "kpi134", "kpi131", "kpi75",
-				"kpi124", "kpi135", "kpi176", "kpi125"), 8);
+		updateGroupId(
+				Arrays.asList(
+						"kpi119", "kpi132", "kp136", "kpi140", "kpi123", "kpi122", "kpi134", "kpi131", "kpi75",
+						"kpi124", "kpi135", "kpi176", "kpi125"),
+				8);
 	}
 
 	private void updateIterationKPIsGroupId() {
@@ -52,8 +59,11 @@ public class ChangeIterationKPIsGroupId {
 	}
 
 	private void updateGroupId(List<String> kpiIds, int groupId) {
-		mongoTemplate.getCollection("kpi_master").updateMany(new Document("kpiId", new Document("$in", kpiIds)),
-				new Document("$set", new Document("groupId", groupId)));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateMany(
+						new Document("kpiId", new Document("$in", kpiIds)),
+						new Document("$set", new Document("groupId", groupId)));
 	}
 
 	@RollbackExecution

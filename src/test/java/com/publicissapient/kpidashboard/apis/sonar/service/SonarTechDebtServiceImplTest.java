@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +54,7 @@ import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.data.SonarHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -66,6 +65,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.generic.ProcessorItem;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.sonar.SonarHistory;
 import com.publicissapient.kpidashboard.common.repository.sonar.SonarHistoryRepository;
 
@@ -80,20 +80,13 @@ public class SonarTechDebtServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	SonarTechDebtServiceImpl stdServiceImpl;
-	@Mock
-	SonarHistoryRepository sonarHistoryRepository;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private SprintDetailsServiceImpl sprintDetailsService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks SonarTechDebtServiceImpl stdServiceImpl;
+	@Mock SonarHistoryRepository sonarHistoryRepository;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private SprintDetailsServiceImpl sprintDetailsService;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
@@ -112,11 +105,12 @@ public class SonarTechDebtServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
 				.thenReturn(kpiRequestTrackerId);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		SonarHistoryDataFactory sonarHistoryDataFactory = SonarHistoryDataFactory.newInstance();
@@ -131,20 +125,23 @@ public class SonarTechDebtServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfigs -> {
-			projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
-		});
+		projectConfigList.forEach(
+				projectConfigs -> {
+					projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		List<DataCount> dataCountList = new ArrayList<>();
@@ -166,7 +163,8 @@ public class SonarTechDebtServiceImplTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setCompleteDate("2025-04-01T13:44:44.421Z");
 		sprintDetails.setSprintID("40345_Scrum Project_6335363749794a18e8a4479b");
-		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(Arrays.asList(sprintDetails));
+		when(sprintDetailsService.getSprintDetailsByIds(anyList()))
+				.thenReturn(Arrays.asList(sprintDetails));
 	}
 
 	private void setToolMap() {
@@ -195,7 +193,12 @@ public class SonarTechDebtServiceImplTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), toolGroup);
 	}
 
-	private Tool createTool(String key, String url, String toolType, String username, String password,
+	private Tool createTool(
+			String key,
+			String url,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> processorItems) {
 		Tool tool = new Tool();
 		// tool.setKey(key);
@@ -224,28 +227,34 @@ public class SonarTechDebtServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testGetTechDebt() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.SONAR_TECH_DEBT.name(), "average");
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Tech Debt :", ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getData(), equalTo(4l));
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Tech Debt :",
+					((List<DataCount>) kpiElement.getTrendValueList()).get(0).getData(),
+					equalTo(4l));
 		} catch (Exception enfec) {
 
 		}
@@ -260,21 +269,26 @@ public class SonarTechDebtServiceImplTest {
 	public void testGetTechDebt2() throws Exception {
 
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put("sonar", "sum");
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long techDebt = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long techDebt =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", techDebt, equalTo(4l));
 		} catch (Exception enfe) {
 
@@ -289,20 +303,25 @@ public class SonarTechDebtServiceImplTest {
 	@Test
 	public void testGetTechDebt3() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.SONAR_TECH_DEBT.name(), "median");
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long techDebt = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long techDebt =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", techDebt, equalTo(4l));
 		} catch (Exception exception) {
 
@@ -317,21 +336,26 @@ public class SonarTechDebtServiceImplTest {
 	@Test
 	public void testGetTechDebt4() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.SONAR_TECH_DEBT.name(), "percentile");
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long techDebt = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long techDebt =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", techDebt, equalTo(4l));
 		} catch (Exception enfe) {
 
@@ -341,21 +365,26 @@ public class SonarTechDebtServiceImplTest {
 	@Test
 	public void testGetTechDebtSpeedyPercentileNull() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.SONAR_TECH_DEBT.name(), "percentile");
 
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long techDebt = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long techDebt =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", techDebt, equalTo(4l));
 		} catch (Exception enfe) {
 
@@ -365,21 +394,26 @@ public class SonarTechDebtServiceImplTest {
 	@Test
 	public void testGetTechDebtOther() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.SONAR_TECH_DEBT.name(), "other");
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long techDebt = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long techDebt =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", techDebt, equalTo(4l));
 		} catch (Exception exception) {
 
@@ -389,22 +423,27 @@ public class SonarTechDebtServiceImplTest {
 	@Test
 	public void testGetTechDebt5() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
+		maturityRangeMap.put(
+				KPICode.SONAR_TECH_DEBT.name(), Arrays.asList("-80", "80-60", "60-40", "40-20", "20-"));
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		kpiRequest.setLabel("PORT");
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.SONAR_TECH_DEBT.name(), "average");
 
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long techDebt = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long techDebt =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertNull(techDebt);
 		} catch (Exception enfe) {
 

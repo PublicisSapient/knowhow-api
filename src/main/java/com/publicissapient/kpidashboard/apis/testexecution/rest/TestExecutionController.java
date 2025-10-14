@@ -47,26 +47,29 @@ import com.publicissapient.kpidashboard.common.model.testexecution.TestExecution
 public class TestExecutionController {
 
 	private static final String TEST_EXECUTION_STATUS = "SAVE_UPDATE_TEST_EXECUTION";
-	@Autowired
-	TestExecutionService testExecutionService;
-	@Autowired
-	private ContextAwarePolicyEnforcement policy;
+	@Autowired TestExecutionService testExecutionService;
+	@Autowired private ContextAwarePolicyEnforcement policy;
 
 	/**
 	 * This api saves test_execution data.
 	 *
-	 * @param testExecution
-	 *          data to be saved
+	 * @param testExecution data to be saved
 	 * @return service response entity
 	 */
-	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> addTestExecutionData(@RequestBody TestExecutionData testExecution) {
-		ServiceResponse response = new ServiceResponse(false, "Failed to add  Test Execution Data", null);
+	@RequestMapping(
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> addTestExecutionData(
+			@RequestBody TestExecutionData testExecution) {
+		ServiceResponse response =
+				new ServiceResponse(false, "Failed to add  Test Execution Data", null);
 		try {
 			policy.checkPermission(testExecution, TEST_EXECUTION_STATUS);
 			testExecution = testExecutionService.processTestExecutionData(testExecution);
 			if (null != testExecution) {
-				response = new ServiceResponse(true, "Successfully added Test Execution Data", testExecution);
+				response =
+						new ServiceResponse(true, "Successfully added Test Execution Data", testExecution);
 			}
 		} catch (AccessDeniedException ade) {
 			response = new ServiceResponse(false, "Unauthorized", null);
@@ -75,10 +78,12 @@ public class TestExecutionController {
 	}
 
 	@GetMapping("/{basicProjectConfigId}")
-	public ResponseEntity<ServiceResponse> getTestExecutions(@PathVariable String basicProjectConfigId) {
+	public ResponseEntity<ServiceResponse> getTestExecutions(
+			@PathVariable String basicProjectConfigId) {
 		ServiceResponse response = null;
 
-		List<TestExecutionData> testExecutions = testExecutionService.getTestExecutions(basicProjectConfigId);
+		List<TestExecutionData> testExecutions =
+				testExecutionService.getTestExecutions(basicProjectConfigId);
 		if (CollectionUtils.isNotEmpty(testExecutions)) {
 			response = new ServiceResponse(true, "Test Execution Data", testExecutions);
 		} else {

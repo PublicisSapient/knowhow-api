@@ -35,11 +35,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ExposeAPITokenRequestDTO {
 
-	@NotNull
-	private String basicProjectConfigId;
+	@NotNull private String basicProjectConfigId;
 
 	private String projectName;
 
-	@NotNull
-	private String userName;
+	@NotNull private String userName;
 }

@@ -41,8 +41,7 @@ public class KanbanCapacityDataFactory {
 	private List<KanbanCapacity> kanbanCapacity;
 	private ObjectMapper mapper = null;
 
-	private KanbanCapacityDataFactory() {
-	}
+	private KanbanCapacityDataFactory() {}
 
 	public static KanbanCapacityDataFactory newInstance() {
 		return newInstance(null);
@@ -61,9 +60,10 @@ public class KanbanCapacityDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH : filePath;
 
-			kanbanCapacity = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KanbanCapacity>>() {
-					});
+			kanbanCapacity =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KanbanCapacity>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

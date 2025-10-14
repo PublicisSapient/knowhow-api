@@ -38,12 +38,9 @@ import com.publicissapient.kpidashboard.apis.model.VersionDetails;
 @RunWith(MockitoJUnitRunner.class)
 public class VersionMetadataServiceTest {
 
-	@Mock
-	RestTemplate restTemplate;
-	@InjectMocks
-	private VersionMetadataServiceImpl versionMetadataServiceImpl;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock RestTemplate restTemplate;
+	@InjectMocks private VersionMetadataServiceImpl versionMetadataServiceImpl;
+	@Mock private CustomApiConfig customApiConfig;
 	private File resourcePath;
 
 	@Before
@@ -63,7 +60,8 @@ public class VersionMetadataServiceTest {
 
 	private File getVersionMetaDataFile() {
 		String absolutePath = new File("").getAbsolutePath();
-		String resource = absolutePath + "//src//main//resources//test//" + File.separator + "version.txt";
+		String resource =
+				absolutePath + "//src//main//resources//test//" + File.separator + "version.txt";
 		return new File(resource);
 	}
 }

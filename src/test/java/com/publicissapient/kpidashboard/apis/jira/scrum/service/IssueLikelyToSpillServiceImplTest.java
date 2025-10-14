@@ -59,20 +59,14 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class IssueLikelyToSpillServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
 
-	@InjectMocks
-	private IssueLikelyToSpillServiceImpl issueLikelyToSpillServiceImpl;
+	@InjectMocks private IssueLikelyToSpillServiceImpl issueLikelyToSpillServiceImpl;
 
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private JiraIterationServiceR jiraService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
@@ -87,15 +81,20 @@ public class IssueLikelyToSpillServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi119");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 	}
@@ -108,8 +107,8 @@ public class IssueLikelyToSpillServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -117,22 +116,28 @@ public class IssueLikelyToSpillServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProject_closedSprint() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		fieldMappingMap.forEach((projectId, mapping) -> mapping.setEstimationCriteria(CommonConstant.ACTUAL_ESTIMATION));
+		fieldMappingMap.forEach(
+				(projectId, mapping) -> mapping.setEstimationCriteria(CommonConstant.ACTUAL_ESTIMATION));
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(issueLikelyToSpillServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = issueLikelyToSpillServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					issueLikelyToSpillServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {
@@ -142,21 +147,26 @@ public class IssueLikelyToSpillServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProject_activeSprint() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		sprintDetails.setState("ACTIVE");
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(issueLikelyToSpillServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = issueLikelyToSpillServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					issueLikelyToSpillServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {

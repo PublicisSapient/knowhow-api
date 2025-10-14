@@ -41,8 +41,7 @@ public class KpiDefinationDataFactory {
 	private List<KpiMaster> kpiList;
 	private ObjectMapper mapper;
 
-	private KpiDefinationDataFactory() {
-	}
+	private KpiDefinationDataFactory() {}
 
 	public static KpiDefinationDataFactory newInstance(String filePath) {
 
@@ -62,9 +61,10 @@ public class KpiDefinationDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
-			kpiList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KpiMaster>>() {
-					});
+			kpiList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KpiMaster>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}
@@ -85,6 +85,8 @@ public class KpiDefinationDataFactory {
 	}
 
 	public List<KpiMaster> getSpecificKpis(List<String> kpis) {
-		return kpiList.stream().filter(master -> kpis.contains(master.getKpiId())).collect(Collectors.toList());
+		return kpiList.stream()
+				.filter(master -> kpis.contains(master.getKpiId()))
+				.collect(Collectors.toList());
 	}
 }

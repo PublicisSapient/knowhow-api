@@ -35,6 +35,7 @@ import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_TEAMC
 import static com.publicissapient.kpidashboard.apis.constant.Constant.TOOL_ZEPHYR;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -74,8 +75,8 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepositor
 import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
 import com.publicissapient.kpidashboard.common.service.NotificationService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+
 import lombok.extern.slf4j.Slf4j;
-import java.time.format.DateTimeParseException;
 
 /**
  * This class provides various methods related to operations on Connections
@@ -88,49 +89,38 @@ import java.time.format.DateTimeParseException;
 public class ConnectionServiceImpl implements ConnectionService {
 
 	private static final String CONNECTION_EMPTY_MSG = "Connection name cannot be empty";
-	private static final String ERROR_MSG = "A connection with same details already exists. Connection name is ";
+	private static final String ERROR_MSG =
+			"A connection with same details already exists. Connection name is ";
 	private static final String NOTIFICATION_KEY = "Broken_Connection";
-	@Autowired
-	private AesEncryptionService aesEncryptionService;
+	@Autowired private AesEncryptionService aesEncryptionService;
 
-	@Autowired
-	private ConnectionRepository connectionRepository;
+	@Autowired private ConnectionRepository connectionRepository;
 
-	@Autowired
-	private ProjectToolConfigRepository toolRepository;
+	@Autowired private ProjectToolConfigRepository toolRepository;
 
-	@Autowired
-	UserInfoRepository userInfoRepository;
+	@Autowired UserInfoRepository userInfoRepository;
 
-	@Autowired
-	AuthenticationRepository authenticationRepository;
+	@Autowired AuthenticationRepository authenticationRepository;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Autowired private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@Autowired
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Autowired private ProjectBasicConfigRepository projectBasicConfigRepository;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
-	@Autowired
-	private NotificationService notificationService;
+	@Autowired private NotificationService notificationService;
 
-	@Autowired
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Autowired private RepoToolsConfigServiceImpl repoToolsConfigService;
 
-	@Autowired
-	private RestAPIUtils restAPIUtils;
+	@Autowired private RestAPIUtils restAPIUtils;
 
 	/**
 	 * Fetch all connection data.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getAllConnection() {
@@ -150,7 +140,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		connectionData.stream()
 				.filter(
-						e -> !e.isSharedConnection() && !e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
+						e ->
+								!e.isSharedConnection()
+										&& !e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
 				.forEach(nonAuthConnection::add);
 
 		if (CollectionUtils.isNotEmpty(nonAuthConnection)) {
@@ -164,20 +156,22 @@ public class ConnectionServiceImpl implements ConnectionService {
 	/**
 	 * Mask user info from connection details
 	 *
-	 * @param connectionData
-	 *          list of connections
+	 * @param connectionData list of connections
 	 */
 	public void maskConnectionDetails(List<Connection> connectionData) {
-		connectionData.forEach(original -> {
-			original.setCreatedBy(maskStrings(original.getCreatedBy()));
-			original.setUsername(maskStrings(original.getUsername()));
-			original.setUpdatedBy(maskStrings(original.getUpdatedBy()));
-			if (CollectionUtils.isNotEmpty(original.getConnectionUsers())) {
-				List<String> connectionUsers = new ArrayList<>();
-				original.getConnectionUsers().forEach(connectionUser -> connectionUsers.add(maskStrings(connectionUser)));
-				original.setConnectionUsers(connectionUsers);
-			}
-		});
+		connectionData.forEach(
+				original -> {
+					original.setCreatedBy(maskStrings(original.getCreatedBy()));
+					original.setUsername(maskStrings(original.getUsername()));
+					original.setUpdatedBy(maskStrings(original.getUpdatedBy()));
+					if (CollectionUtils.isNotEmpty(original.getConnectionUsers())) {
+						List<String> connectionUsers = new ArrayList<>();
+						original
+								.getConnectionUsers()
+								.forEach(connectionUser -> connectionUsers.add(maskStrings(connectionUser)));
+						original.setConnectionUsers(connectionUsers);
+					}
+				});
 	}
 
 	private String maskStrings(String username) {
@@ -198,11 +192,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	/**
-	 * if length is more than 2 and less than 8, mask the last 3 characters if lenth
-	 * is more than 8 mask the last 3 character and the 4th character
+	 * if length is more than 2 and less than 8, mask the last 3 characters if lenth is more than 8
+	 * mask the last 3 character and the 4th character
 	 *
-	 * @param userInput
-	 *          inputString
+	 * @param userInput inputString
 	 * @return maskedString
 	 */
 	private String maskingLogic(String userInput) {
@@ -230,20 +223,22 @@ public class ConnectionServiceImpl implements ConnectionService {
 	/**
 	 * Fetch a connection by type.
 	 *
-	 * @param type
-	 *          type
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param type type
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getConnectionByType(String type) {
 		if (null == type) {
 			return new ServiceResponse(false, "No type in this collection", type);
 		}
-		List<Connection> typeList = connectionRepository.findAllWithoutSecret().stream()
-				.filter(
-						connection -> StringUtils.isNotEmpty(connection.getType()) && connection.getType().equalsIgnoreCase(type))
-				.collect(Collectors.toList());
+		List<Connection> typeList =
+				connectionRepository.findAllWithoutSecret().stream()
+						.filter(
+								connection ->
+										StringUtils.isNotEmpty(connection.getType())
+												&& connection.getType().equalsIgnoreCase(type))
+						.collect(Collectors.toList());
 
 		if (CollectionUtils.isEmpty(typeList)) {
 			log.info("connection Db returned null");
@@ -259,7 +254,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 		List<Connection> nonAuthConnection = new ArrayList<>();
 		typeList.stream()
 				.filter(
-						e -> !e.isSharedConnection() && !e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
+						e ->
+								!e.isSharedConnection()
+										&& !e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
 				.forEach(nonAuthConnection::add);
 
 		if (CollectionUtils.isNotEmpty(nonAuthConnection)) {
@@ -274,10 +271,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	/**
 	 * Create and save a connection in the database.
 	 *
-	 * @param conn
-	 *          as connection
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param conn as connection
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse saveConnectionDetails(Connection conn) {
@@ -292,11 +288,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 		String api = "save";
 
 		if (connName == null) {
-			List<Connection> publicConnections = connectionRepository.findByTypeAndSharedConnection(conn.getType(), true);
+			List<Connection> publicConnections =
+					connectionRepository.findByTypeAndSharedConnection(conn.getType(), true);
 
-			List<Connection> privateConnections = connectionRepository.findByTypeAndSharedConnection(conn.getType(), false)
-					.stream().filter(e -> e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
-					.collect(Collectors.toList());
+			List<Connection> privateConnections =
+					connectionRepository.findByTypeAndSharedConnection(conn.getType(), false).stream()
+							.filter(e -> e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
+							.collect(Collectors.toList());
 
 			Connection existingPublicConn = findConnectionWithSameDetails(conn, publicConnections, api);
 			Connection existingPrivateConn = findConnectionWithSameDetails(conn, privateConnections, api);
@@ -306,7 +304,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 			}
 
 			if (null != existingPrivateConn) {
-				return new ServiceResponse(false, ERROR_MSG + existingPrivateConn.getConnectionName(), null);
+				return new ServiceResponse(
+						false, ERROR_MSG + existingPrivateConn.getConnectionName(), null);
 			} else {
 
 				List<String> connectionUser = new ArrayList<>();
@@ -327,7 +326,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 			}
 		}
 
-		return new ServiceResponse(false, "Connection already exists with same name. Please choose a different name", null);
+		return new ServiceResponse(
+				false, "Connection already exists with same name. Please choose a different name", null);
 	}
 
 	/*
@@ -340,7 +340,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *
 	 */
 
-	private Connection findConnectionWithSameDetails(Connection inputConn, List<Connection> connList, String api) {
+	private Connection findConnectionWithSameDetails(
+			Connection inputConn, List<Connection> connList, String api) {
 		Connection existingConn = null;
 		for (Connection currConn : connList) {
 			existingConn = connByType(inputConn, currConn, api);
@@ -362,36 +363,40 @@ public class ConnectionServiceImpl implements ConnectionService {
 	private Connection connByType(Connection inputConn, Connection currConn, String api) {
 		Connection existingConnection = null;
 		switch (inputConn.getType()) {
-			case TOOL_SONAR :
+			case TOOL_SONAR:
 				existingConnection = checkConnDetailsSonar(inputConn, currConn, api);
 				break;
-			case TOOL_BAMBOO :
-			case REPO_TOOLS :
-			case TOOL_TEAMCITY :
-			case TOOL_ARGOCD :
-				if (checkConnDetails(inputConn, currConn))
-					existingConnection = currConn;
+			case TOOL_BAMBOO:
+			case REPO_TOOLS:
+			case TOOL_TEAMCITY:
+			case TOOL_ARGOCD:
+				if (checkConnDetails(inputConn, currConn)) existingConnection = currConn;
 				break;
-			case TOOL_GITHUB :
-			case TOOL_GITLAB :
+			case TOOL_GITHUB:
+			case TOOL_GITLAB:
 				boolean commonConnection = checkConnDetails(inputConn, currConn);
 				checkVaultConnection(inputConn, currConn, existingConnection, commonConnection);
 				break;
-			case TOOL_AZURE :
-			case TOOL_AZUREPIPELINE :
-			case TOOL_AZUREREPO :
-				checkVaultConnection(inputConn, currConn, existingConnection,
+			case TOOL_AZURE:
+			case TOOL_AZUREPIPELINE:
+			case TOOL_AZUREREPO:
+				checkVaultConnection(
+						inputConn,
+						currConn,
+						existingConnection,
 						inputConn.getBaseUrl().equals(currConn.getBaseUrl()));
 				break;
-			case TOOL_JIRA :
-			case TOOL_BITBUCKET :
-				if (checkConnDetails(inputConn, currConn) && inputConn.getApiEndPoint().equals(currConn.getApiEndPoint()))
+			case TOOL_JIRA:
+			case TOOL_BITBUCKET:
+				if (checkConnDetails(inputConn, currConn)
+						&& inputConn.getApiEndPoint().equals(currConn.getApiEndPoint()))
 					existingConnection = currConn;
 				break;
-			case TOOL_JENKINS :
-				checkVaultConnection(inputConn, currConn, existingConnection, checkConnDetails(inputConn, currConn));
+			case TOOL_JENKINS:
+				checkVaultConnection(
+						inputConn, currConn, existingConnection, checkConnDetails(inputConn, currConn));
 				break;
-			case TOOL_ZEPHYR :
+			case TOOL_ZEPHYR:
 				existingConnection = checkConnDetailsZephyr(inputConn, currConn, api);
 				break;
 			case TOOL_RALLY:
@@ -399,7 +404,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 					existingConnection = currConn;
 				}
 				break;
-			default :
+			default:
 				existingConnection = new Connection();
 				break;
 		}
@@ -408,26 +413,24 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 	private boolean checkConnDetails(Connection inputConn, Connection currConn) {
 		boolean b = false;
-		if (!inputConn.isOffline() && inputConn.getUsername().equals(currConn.getUsername()) &&
-				inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
-			b = true;
+		if (!inputConn.isOffline()
+				&& inputConn.getUsername().equals(currConn.getUsername())
+				&& inputConn.getBaseUrl().equals(currConn.getBaseUrl())) b = true;
 		return b;
 	}
 
 	private boolean checkConnDetailsForRally(Connection inputConn, Connection currConn) {
 		boolean b = false;
-		if (inputConn.getBaseUrl().equals(currConn.getBaseUrl()))
-			b = true;
+		if (inputConn.getBaseUrl().equals(currConn.getBaseUrl())) b = true;
 		return b;
 	}
 
 	/**
 	 * Modify/Update a connection by id.
 	 *
-	 * @param connection
-	 *          as connection.
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found.
+	 * @param connection as connection.
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found.
 	 */
 	@Override
 	public ServiceResponse updateConnection(String id, Connection connection) {
@@ -451,19 +454,29 @@ public class ConnectionServiceImpl implements ConnectionService {
 			return new ServiceResponse(false, "No connectionId found to update", null);
 		}
 		Connection existingConnection = existingConnOpt.get();
-		Connection connectionWithSameName = connectionRepository.findByConnectionName(connection.getConnectionName());
-		if (connectionWithSameName != null && !existingConnection.getId().equals(connectionWithSameName.getId())) {
-			return new ServiceResponse(false,
-					connection.getConnectionName() + " is already exists. Please try again with different name", null);
+		Connection connectionWithSameName =
+				connectionRepository.findByConnectionName(connection.getConnectionName());
+		if (connectionWithSameName != null
+				&& !existingConnection.getId().equals(connectionWithSameName.getId())) {
+			return new ServiceResponse(
+					false,
+					connection.getConnectionName()
+							+ " is already exists. Please try again with different name",
+					null);
 		}
 
-		if (!authorizedProjectsService.ifSuperAdminUser() &&
-				!existingConnection.getCreatedBy().equals(authenticationService.getLoggedInUser())) {
-			return new ServiceResponse(false, existingConnection.getConnectionName() +
-					" connection can't be updated as created by user " + existingConnection.getCreatedBy(), null);
+		if (!authorizedProjectsService.ifSuperAdminUser()
+				&& !existingConnection.getCreatedBy().equals(authenticationService.getLoggedInUser())) {
+			return new ServiceResponse(
+					false,
+					existingConnection.getConnectionName()
+							+ " connection can't be updated as created by user "
+							+ existingConnection.getCreatedBy(),
+					null);
 		}
 
-		List<Connection> filteredConn = getFilteredConnection(username, connection, existingConnection.getId());
+		List<Connection> filteredConn =
+				getFilteredConnection(username, connection, existingConnection.getId());
 		Connection existingOtherConn = findConnectionWithSameDetails(connection, filteredConn, api);
 
 		if (null != existingOtherConn && !existingOtherConn.getId().toHexString().equals(id)) {
@@ -480,48 +493,59 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (CollectionUtils.isNotEmpty(existingConnection.getConnectionUsers())) {
 			connectionDTO.setConnectionUsers(existingConnection.getConnectionUsers());
 		}
-		return new ServiceResponse(true, "modified connection " + existingConnection.getConnectionName(), connectionDTO);
+		return new ServiceResponse(
+				true, "modified connection " + existingConnection.getConnectionName(), connectionDTO);
 	}
 
 	private Connection checkConnDetailsZephyr(Connection inputConn, Connection currConn, String api) {
 		Connection existingConnection = null;
 		if (inputConn.isCloudEnv()) {
-			boolean sameURLCheck = api.equals("save") && inputConn.getBaseUrl().equals(currConn.getBaseUrl());
-			existingConnection = checkVaultConnection(inputConn, currConn, existingConnection, sameURLCheck);
+			boolean sameURLCheck =
+					api.equals("save") && inputConn.getBaseUrl().equals(currConn.getBaseUrl());
+			existingConnection =
+					checkVaultConnection(inputConn, currConn, existingConnection, sameURLCheck);
 		} else {
-			if (checkConnDetails(inputConn, currConn) && inputConn.getApiEndPoint().equals(currConn.getApiEndPoint())) {
+			if (checkConnDetails(inputConn, currConn)
+					&& inputConn.getApiEndPoint().equals(currConn.getApiEndPoint())) {
 				existingConnection = currConn;
 			}
 		}
 		return existingConnection;
 	}
 
-	private Connection checkVaultConnection(Connection inputConn, Connection currConn, Connection existingConnection,
+	private Connection checkVaultConnection(
+			Connection inputConn,
+			Connection currConn,
+			Connection existingConnection,
 			boolean sameUrlcheck) {
 		if (!inputConn.isVault()) {
 			boolean accessTokenSimilarity;
 			try {
 				switch (inputConn.getType()) {
-					case TOOL_SONAR :
-					case TOOL_ZEPHYR :
-					case TOOL_GITLAB :
+					case TOOL_SONAR:
+					case TOOL_ZEPHYR:
+					case TOOL_GITLAB:
 						String accessToken = inputConn.getAccessToken();
-						String accessTokenExists = aesEncryptionService.decrypt(currConn.getAccessToken(),
-								customApiConfig.getAesEncryptionKey());
+						String accessTokenExists =
+								aesEncryptionService.decrypt(
+										currConn.getAccessToken(), customApiConfig.getAesEncryptionKey());
 						accessTokenSimilarity = accessToken.equals(accessTokenExists);
 						break;
-					case TOOL_AZUREREPO :
+					case TOOL_AZUREREPO:
 						String pat = inputConn.getPat();
-						String patExists = aesEncryptionService.decrypt(currConn.getPat(), customApiConfig.getAesEncryptionKey());
+						String patExists =
+								aesEncryptionService.decrypt(
+										currConn.getPat(), customApiConfig.getAesEncryptionKey());
 						accessTokenSimilarity = pat.equals(patExists);
 						break;
-					case TOOL_JENKINS :
+					case TOOL_JENKINS:
 						String apiKey = inputConn.getApiKey();
-						String apiKeyExists = aesEncryptionService.decrypt(currConn.getApiKey(),
-								customApiConfig.getAesEncryptionKey());
+						String apiKeyExists =
+								aesEncryptionService.decrypt(
+										currConn.getApiKey(), customApiConfig.getAesEncryptionKey());
 						accessTokenSimilarity = apiKey.equals(apiKeyExists);
 						break;
-					default :
+					default:
 						accessTokenSimilarity = false;
 						break;
 				}
@@ -548,11 +572,15 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 *
 	 */
 
-	private List<Connection> getFilteredConnection(String username, Connection inputConn, ObjectId objId) {
+	private List<Connection> getFilteredConnection(
+			String username, Connection inputConn, ObjectId objId) {
 		List<Connection> connection = connectionRepository.findByType(inputConn.getType());
 
 		return connection.stream()
-				.filter(e -> e.isSharedConnection() || e.getConnectionUsers().contains(username) && !e.getId().equals(objId))
+				.filter(
+						e ->
+								e.isSharedConnection()
+										|| e.getConnectionUsers().contains(username) && !e.getId().equals(objId))
 				.collect(Collectors.toList());
 	}
 
@@ -592,7 +620,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		existingConnection.setOfflineFilePath(connection.getOfflineFilePath());
 		existingConnection.setCloudEnv(connection.isCloudEnv());
 		existingConnection.setVault(connection.isVault());
-		existingConnection.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
+		existingConnection.setUpdatedAt(
+				DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
 		existingConnection.setSharedConnection(connection.isSharedConnection());
 		existingConnection.setAccessTokenEnabled(connection.isAccessTokenEnabled());
 		existingConnection.setUpdatedBy(authenticationService.getLoggedInUser());
@@ -614,8 +643,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (conn != null) {
 			if (conn.getType().equalsIgnoreCase(REPO_TOOLS)) {
 				int httpStatus = repoToolsConfigService.updateRepoToolConnection(conn);
-				if (httpStatus == HttpStatus.OK.value())
-					connectionRepository.save(conn);
+				if (httpStatus == HttpStatus.OK.value()) connectionRepository.save(conn);
 			} else {
 				connectionRepository.save(conn);
 			}
@@ -625,8 +653,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	/**
 	 * Checks if @param Connection has non empty connectionName
 	 *
-	 * @param conn
-	 *          for details.
+	 * @param conn for details.
 	 * @return Boolean
 	 */
 	private boolean isDataValid(Connection conn) {
@@ -639,8 +666,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private String encryptStringForDb(String rasEncryptedStringFromClient) {
-		String encryptedString = aesEncryptionService.encrypt(rasEncryptedStringFromClient,
-				customApiConfig.getAesEncryptionKey());
+		String encryptedString =
+				aesEncryptionService.encrypt(
+						rasEncryptedStringFromClient, customApiConfig.getAesEncryptionKey());
 		return encryptedString == null ? "" : encryptedString;
 	}
 
@@ -681,7 +709,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 	}
 
 	private String encryptStringForDbZephyr(String plainTextAccessToken) {
-		String encryptedString = aesEncryptionService.encrypt(plainTextAccessToken, customApiConfig.getAesEncryptionKey());
+		String encryptedString =
+				aesEncryptionService.encrypt(plainTextAccessToken, customApiConfig.getAesEncryptionKey());
 		return encryptedString == null ? "" : encryptedString;
 	}
 
@@ -702,8 +731,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 	private Connection checkConnDetailsSonar(Connection inputConn, Connection currConn, String api) {
 		Connection existingConnection = null;
 		if (inputConn.isCloudEnv() || (!inputConn.isCloudEnv() && inputConn.isAccessTokenEnabled())) {
-			boolean sameURLCheck = api.equals("save") && inputConn.getBaseUrl().equals(currConn.getBaseUrl());
-			existingConnection = checkVaultConnection(inputConn, currConn, existingConnection, sameURLCheck);
+			boolean sameURLCheck =
+					api.equals("save") && inputConn.getBaseUrl().equals(currConn.getBaseUrl());
+			existingConnection =
+					checkVaultConnection(inputConn, currConn, existingConnection, sameURLCheck);
 		} else {
 			if (checkConnDetails(inputConn, currConn)) {
 				existingConnection = currConn;
@@ -716,47 +747,47 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		String typeName = conn.getType();
 		switch (typeName) {
-			case ProcessorConstants.JIRA :
+			case ProcessorConstants.JIRA:
 				setEncryptedPasswordFieldForDb(conn);
 				if (conn.isBearerToken()) {
 					setEncryptedPatOAuthTokenForDb(conn);
 				}
 				break;
-			case ProcessorConstants.BAMBOO :
-			case ProcessorConstants.TEAMCITY :
-			case ProcessorConstants.BITBUCKET :
+			case ProcessorConstants.BAMBOO:
+			case ProcessorConstants.TEAMCITY:
+			case ProcessorConstants.BITBUCKET:
 				setEncryptedPasswordFieldForDb(conn);
 				break;
-			case ProcessorConstants.GITLAB :
-			case ProcessorConstants.GITHUB :
-			case ProcessorConstants.ARGOCD :
+			case ProcessorConstants.GITLAB:
+			case ProcessorConstants.GITHUB:
+			case ProcessorConstants.ARGOCD:
 				setEncryptedAccessTokenForDb(conn);
 				break;
-			case ProcessorConstants.JENKINS :
-			case ProcessorConstants.NEWREILC :
+			case ProcessorConstants.JENKINS:
+			case ProcessorConstants.NEWREILC:
 				setEncryptedApiKeyForDb(conn);
 				break;
 
-			case ProcessorConstants.AZURE :
-			case ProcessorConstants.AZUREPIPELINE :
-			case ProcessorConstants.AZUREREPO :
+			case ProcessorConstants.AZURE:
+			case ProcessorConstants.AZUREPIPELINE:
+			case ProcessorConstants.AZUREREPO:
 				setEncryptedPatField(conn);
 				break;
-			case ProcessorConstants.SONAR :
+			case ProcessorConstants.SONAR:
 				if (conn.isCloudEnv() || (!conn.isCloudEnv() && conn.isAccessTokenEnabled())) {
 					setEncryptedAccessTokenForDb(conn);
 				} else {
 					setEncryptedPasswordFieldForDb(conn);
 				}
 				break;
-			case ProcessorConstants.ZEPHYR :
+			case ProcessorConstants.ZEPHYR:
 				if (conn.isCloudEnv()) {
 					setEncryptedAccessTokenForDbZephyr(conn);
 				} else {
 					setEncryptedPasswordFieldForDb(conn);
 				}
 				break;
-			default :
+			default:
 				log.error("Unknown type = {}", typeName);
 				break;
 		}
@@ -766,39 +797,39 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		String typeName = connectionDTO.getType();
 		switch (typeName) {
-			case ProcessorConstants.JIRA :
+			case ProcessorConstants.JIRA:
 				connectionDTO.setPassword("");
 				connectionDTO.setPatOAuthToken("");
 				break;
-			case ProcessorConstants.BAMBOO :
-			case ProcessorConstants.TEAMCITY :
-			case ProcessorConstants.BITBUCKET :
-			case ProcessorConstants.ARGOCD :
+			case ProcessorConstants.BAMBOO:
+			case ProcessorConstants.TEAMCITY:
+			case ProcessorConstants.BITBUCKET:
+			case ProcessorConstants.ARGOCD:
 				connectionDTO.setPassword("");
 				break;
-			case ProcessorConstants.GITLAB :
-			case ProcessorConstants.GITHUB :
+			case ProcessorConstants.GITLAB:
+			case ProcessorConstants.GITHUB:
 				connectionDTO.setAccessToken("");
 				break;
-			case ProcessorConstants.JENKINS :
-			case ProcessorConstants.NEWREILC :
+			case ProcessorConstants.JENKINS:
+			case ProcessorConstants.NEWREILC:
 				connectionDTO.setApiKey("");
 				break;
 
-			case ProcessorConstants.AZURE :
-			case ProcessorConstants.AZUREPIPELINE :
-			case ProcessorConstants.AZUREREPO :
+			case ProcessorConstants.AZURE:
+			case ProcessorConstants.AZUREPIPELINE:
+			case ProcessorConstants.AZUREREPO:
 				connectionDTO.setPat("");
 				break;
-			case ProcessorConstants.ZEPHYR :
-			case ProcessorConstants.SONAR :
+			case ProcessorConstants.ZEPHYR:
+			case ProcessorConstants.SONAR:
 				if (connectionDTO.isCloudEnv()) {
 					connectionDTO.setAccessToken("");
 				} else {
 					connectionDTO.setPassword("");
 				}
 				break;
-			default :
+			default:
 				log.error("Unknown type = {}", typeName);
 				break;
 		}
@@ -807,10 +838,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 	/**
 	 * delete a connection by id.
 	 *
-	 * @param id
-	 *          deleted the connection data present at id.
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param id deleted the connection data present at id.
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse deleteConnection(String id) {
@@ -824,22 +854,30 @@ public class ConnectionServiceImpl implements ConnectionService {
 			return new ServiceResponse(false, "No connectionId found to delete", null);
 		}
 		Connection existingConnection = exisConnectionOpt.get();
-		if (!authorizedProjectsService.ifSuperAdminUser() &&
-				!existingConnection.getCreatedBy().equals(authenticationService.getLoggedInUser())) {
-			return new ServiceResponse(false, existingConnection.getConnectionName() +
-					" connection can't be Deleted as created by user " + existingConnection.getCreatedBy(), null);
+		if (!authorizedProjectsService.ifSuperAdminUser()
+				&& !existingConnection.getCreatedBy().equals(authenticationService.getLoggedInUser())) {
+			return new ServiceResponse(
+					false,
+					existingConnection.getConnectionName()
+							+ " connection can't be Deleted as created by user "
+							+ existingConnection.getCreatedBy(),
+					null);
 		}
 
 		List<ProjectToolConfig> projectToolConfig = toolRepository.findByConnectionId(new ObjectId(id));
 
 		if (CollectionUtils.isNotEmpty(projectToolConfig)) {
-			return new ServiceResponse(false,
-					"cannot delete connection, " + existingConnection.getConnectionName() + " is already in use",
+			return new ServiceResponse(
+					false,
+					"cannot delete connection, "
+							+ existingConnection.getConnectionName()
+							+ " is already in use",
 					getProjectName(projectToolConfig));
 		} else {
 			connectionRepository.deleteById(new ObjectId(id));
 		}
-		return new ServiceResponse(true, "deleted connection " + existingConnection.getConnectionName(), null);
+		return new ServiceResponse(
+				true, "deleted connection " + existingConnection.getConnectionName(), null);
 	}
 
 	/**
@@ -852,7 +890,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		Set<ObjectId> basicProjectConfigIds = new HashSet<>();
 		List<String> projectInUseList = new ArrayList<>();
 		projectToolConfig.forEach(e -> basicProjectConfigIds.add(e.getBasicProjectConfigId()));
-		projectBasicConfigRepository.findByIdIn(basicProjectConfigIds)
+		projectBasicConfigRepository
+				.findByIdIn(basicProjectConfigIds)
 				.forEach(e -> projectInUseList.add(e.getProjectName()));
 		return projectInUseList;
 	}
@@ -866,16 +905,18 @@ public class ConnectionServiceImpl implements ConnectionService {
 	@Override
 	public void updateBreakingConnection(Connection connection, String conErrorMsg) {
 		if (connection == null) return;
-		log.info("updating breaking connection for connection: {}",connection.getConnectionName());
-		connectionRepository.findById(connection.getId())
-							.ifPresent(existingConnection -> {
-								if (StringUtils.isEmpty(conErrorMsg)) {
-									resetConnectionState(existingConnection);
-								} else {
-									handleBrokenConnection(existingConnection, conErrorMsg);
-								}
-								connectionRepository.save(existingConnection);
-							});
+		log.info("updating breaking connection for connection: {}", connection.getConnectionName());
+		connectionRepository
+				.findById(connection.getId())
+				.ifPresent(
+						existingConnection -> {
+							if (StringUtils.isEmpty(conErrorMsg)) {
+								resetConnectionState(existingConnection);
+							} else {
+								handleBrokenConnection(existingConnection, conErrorMsg);
+							}
+							connectionRepository.save(existingConnection);
+						});
 	}
 
 	private void resetConnectionState(Connection connection) {
@@ -906,22 +947,26 @@ public class ConnectionServiceImpl implements ConnectionService {
 			log.warn("Invalid max notification count: {}", value);
 		}
 
-		int frequencyDays = Integer.parseInt(customApiConfig.getBrokenConnectionEmailNotificationFrequency());
+		int frequencyDays =
+				Integer.parseInt(customApiConfig.getBrokenConnectionEmailNotificationFrequency());
 		if (maxCount <= 0) return false;
 
 		int count = connection.getNotificationCount();
-		log.info("NotificationCount:{}",count);
+		log.info("NotificationCount:{}", count);
 		if (count >= maxCount) return false;
 
-		String notifiedOn = Optional.of(connection)
-									.map(Connection::getNotifiedOn).orElse("");
+		String notifiedOn = Optional.of(connection).map(Connection::getNotifiedOn).orElse("");
 		if (StringUtils.isBlank(notifiedOn)) return true;
 
 		try {
 			LocalDateTime lastNotified = LocalDateTime.parse(DateUtil.localDateTimeToUTC(notifiedOn));
 			return DateUtil.getTodayTime().isAfter(lastNotified.plusDays(frequencyDays));
 		} catch (DateTimeParseException e) {
-			log.warn("Invalid notifiedOn timestamp for connection ID {}: {}", connection.getId(), notifiedOn, e);
+			log.warn(
+					"Invalid notifiedOn timestamp for connection ID {}: {}",
+					connection.getId(),
+					notifiedOn,
+					e);
 			return false;
 		}
 	}
@@ -933,7 +978,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 			return;
 		}
 
-		Authentication authentication = authenticationRepository.findByUsername(connection.getCreatedBy());
+		Authentication authentication =
+				authenticationRepository.findByUsername(connection.getCreatedBy());
 		String email = authentication == null ? userInfo.getEmailAddress() : authentication.getEmail();
 		boolean notifyUserOnError = Boolean.TRUE.equals(isErrorAlertNotificationEnabled(userInfo));
 
@@ -942,31 +988,41 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		String fixUrl = customApiConfig.getUiHost() + customApiConfig.getBrokenConnectionFixUrl();
 
-		if (notifyUserOnError && StringUtils.isNotBlank(email) && StringUtils.isNotBlank(notificationSubject)) {
-			Map<String, String> customData = createCustomData(
-					userInfo.getDisplayName(),
-					connection.getType(),
-					fixUrl,
-					customApiConfig.getBrokenConnectionHelpUrl()
-			);
+		if (notifyUserOnError
+				&& StringUtils.isNotBlank(email)
+				&& StringUtils.isNotBlank(notificationSubject)) {
+			Map<String, String> customData =
+					createCustomData(
+							userInfo.getDisplayName(),
+							connection.getType(),
+							fixUrl,
+							customApiConfig.getBrokenConnectionHelpUrl());
 
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 
 			log.info("Sending broken connection notification to user: {}", email);
-			notificationService.sendNotificationEvent(Collections.singletonList(email), customData, notificationSubject,
-					customApiConfig.isNotificationSwitch(), templateKey);
+			notificationService.sendNotificationEvent(
+					Collections.singletonList(email),
+					customData,
+					notificationSubject,
+					customApiConfig.isNotificationSwitch(),
+					templateKey);
 		} else {
-			log.info("Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
-					email, notifyUserOnError, StringUtils.isBlank(notificationSubject));
+			log.info(
+					"Notification not sent. Conditions failed — email: {}, notifyUserOnError: {}, subject blank: {}",
+					email,
+					notifyUserOnError,
+					StringUtils.isBlank(notificationSubject));
 		}
 	}
 
 	private Boolean isErrorAlertNotificationEnabled(UserInfo userInfo) {
 		return userInfo.getNotificationEmail() != null
-			   && Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
+				&& Boolean.TRUE.equals(userInfo.getNotificationEmail().get("errorAlertNotification"));
 	}
 
-	private Map<String, String> createCustomData(String userName, String toolName, String connectionFixUrl, String helpUrl) {
+	private Map<String, String> createCustomData(
+			String userName, String toolName, String connectionFixUrl, String helpUrl) {
 		Map<String, String> customData = new HashMap<>();
 		customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userName);
 		customData.put(NotificationCustomDataEnum.TOOL_NAME.getValue(), toolName);
@@ -974,12 +1030,12 @@ public class ConnectionServiceImpl implements ConnectionService {
 		customData.put(NotificationCustomDataEnum.HELP_URL.getValue(), helpUrl);
 		return customData;
 	}
+
 	/**
-	 * @param connection
-	 *          connection
+	 * @param connection connection
 	 */
 	public void validateConnectionFlag(Connection connection) {
-		log.info("Validating the connection for {}",connection.getConnectionName());
+		log.info("Validating the connection for {}", connection.getConnectionName());
 		if (connection.isBrokenConnection()) {
 			updateBreakingConnection(connection, connection.getConnectionErrorMsg());
 		}

@@ -31,8 +31,9 @@ import com.publicissapient.kpidashboard.common.mapper.CustomObjectMapper;
 
 public class TestUtil {
 
-	public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(APPLICATION_JSON.getType(),
-			APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
+	public static final MediaType APPLICATION_JSON_UTF8 =
+			new MediaType(
+					APPLICATION_JSON.getType(), APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
 	public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
 		ObjectMapper mapper = new CustomObjectMapper();

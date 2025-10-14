@@ -26,8 +26,9 @@ public class StandardAuthenticationManager implements AuthenticationManager {
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 		try {
-			Authentication auth = authService.authenticate(authentication.getName(),
-					(String) authentication.getCredentials());
+			Authentication auth =
+					authService.authenticate(
+							authentication.getName(), (String) authentication.getCredentials());
 			authService.resetFailAttempts(authentication.getName());
 			return auth;
 		} catch (BadCredentialsException e) {
@@ -36,7 +37,8 @@ public class StandardAuthenticationManager implements AuthenticationManager {
 			throw e;
 
 		} catch (LockedException e) {
-			String error = "User account is locked for " + authProperties.getAccountLockedPeriod() + " minutes";
+			String error =
+					"User account is locked for " + authProperties.getAccountLockedPeriod() + " minutes";
 			throw new LockedException(error, e);
 		} catch (PendingApprovalException e) {
 			throw new PendingApprovalException(e.getMessage());

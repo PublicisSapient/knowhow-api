@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -59,20 +58,21 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.KanbanJiraIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.KanbanJiraIssueRepository;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings("javadoc")
 @Service
 @Slf4j
-public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class CostOfDelayKanbanServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
-	static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+	static final DateTimeFormatter DATE_TIME_FORMATTER =
+			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String COD_DATA = "costOfDelayData";
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private KanbanJiraIssueRepository jiraKanbanIssueRepository;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private KanbanJiraIssueRepository jiraKanbanIssueRepository;
 
 	@Override
 	public Double calculateKPIMetrics(Map<String, Object> subCategoryMap) {
@@ -85,8 +85,8 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
@@ -94,15 +94,20 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 
 		if (CollectionUtils.isNotEmpty(leafNodeList)) {
 
-			leafNodeList.forEach(leaf -> {
-				ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-				projectList.add(basicProjectConfigId.toString());
-			});
+			leafNodeList.forEach(
+					leaf -> {
+						ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+						projectList.add(basicProjectConfigId.toString());
+					});
 		}
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().collect(Collectors.toList()));
-		mapOfFilters.put(JiraFeature.STATUS.getFieldValueInFeature(), Arrays.asList(NormalizedJira.STATUS.getValue()));
-		mapOfFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.STATUS.getFieldValueInFeature(),
+				Arrays.asList(NormalizedJira.STATUS.getValue()));
+		mapOfFilters.put(
+				JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 				Arrays.asList(NormalizedJira.ISSUE_TYPE.getValue()));
 
 		List<KanbanJiraIssue> codList = jiraKanbanIssueRepository.findCostOfDelayByType(mapOfFilters);
@@ -116,31 +121,41 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
 		dateWiseLeafNodeValue(mapTmp, projectList, kpiElement, kpiRequest);
-		log.debug("COST_OF_DELAY-KANBAN-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"COST_OF_DELAY-KANBAN-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.COST_OF_DELAY_KANBAN);
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.COST_OF_DELAY_KANBAN);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.COST_OF_DELAY_KANBAN);
 
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 		kpiElement.setTrendValueList(trendValues);
-		log.debug("[COST_OF_DELAY-KANBAN-WISE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[COST_OF_DELAY-KANBAN-WISE][{}]. Aggregated Value at each level in the tree {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 		return kpiElement;
 	}
 
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> projectList, KpiElement kpiElement,
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> projectList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 
@@ -148,8 +163,8 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 		String endDate = dateRange.getEndDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(projectList, startDate, endDate, kpiRequest);
-		Map<String, Map<String, List<KanbanJiraIssue>>> projectandDayWiseDelay = createProjectandDayWiseDelay(
-				(List<KanbanJiraIssue>) resultMap.get(COD_DATA));
+		Map<String, Map<String, List<KanbanJiraIssue>>> projectandDayWiseDelay =
+				createProjectandDayWiseDelay((List<KanbanJiraIssue>) resultMap.get(COD_DATA));
 		kpiWithoutFilter(projectandDayWiseDelay, mapTmp, projectList, kpiElement);
 	}
 
@@ -159,33 +174,42 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 	 * @param projectList
 	 * @param kpiElement
 	 */
-	private void kpiWithoutFilter(Map<String, Map<String, List<KanbanJiraIssue>>> projectandDayWiseDelay,
-			Map<String, Node> mapTmp, List<Node> projectList, KpiElement kpiElement) {
+	private void kpiWithoutFilter(
+			Map<String, Map<String, List<KanbanJiraIssue>>> projectandDayWiseDelay,
+			Map<String, Node> mapTmp,
+			List<Node> projectList,
+			KpiElement kpiElement) {
 		String requestTrackerId = getKanbanRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
-		projectList.forEach(node -> {
-			LocalDateTime currentDateTime = DateUtil.getTodayTime();
-			String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
-			Map<String, List<KanbanJiraIssue>> dateWiseIssue = projectandDayWiseDelay.get(projectNodeId);
-			if (MapUtils.isNotEmpty(dateWiseIssue)) {
-				List<DataCount> dataCount = new ArrayList<>();
-				List<KanbanJiraIssue> kanbanJiraIssueList = new ArrayList<>();
-				String projectName = node.getProjectFilter().getName();
-				for (int i = 0; i < customApiConfig.getJiraXaxisMonthCount(); i++) {
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDateTime,
-							CommonConstant.MONTH);
-					Double cod = filterDataBasedOnStartAndEndDate(dateWiseIssue, dateRange, kanbanJiraIssueList);
-					String date = DateUtil.convertToMonthYearFormat(dateRange.getStartDateTime().toString());
-					dataCount.add(getDataCountObject(cod, projectName, date));
-					currentDateTime = currentDateTime.minusMonths(1);
-				}
+		projectList.forEach(
+				node -> {
+					LocalDateTime currentDateTime = DateUtil.getTodayTime();
+					String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
+					Map<String, List<KanbanJiraIssue>> dateWiseIssue =
+							projectandDayWiseDelay.get(projectNodeId);
+					if (MapUtils.isNotEmpty(dateWiseIssue)) {
+						List<DataCount> dataCount = new ArrayList<>();
+						List<KanbanJiraIssue> kanbanJiraIssueList = new ArrayList<>();
+						String projectName = node.getProjectFilter().getName();
+						for (int i = 0; i < customApiConfig.getJiraXaxisMonthCount(); i++) {
+							CustomDateRange dateRange =
+									KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+											currentDateTime, CommonConstant.MONTH);
+							Double cod =
+									filterDataBasedOnStartAndEndDate(dateWiseIssue, dateRange, kanbanJiraIssueList);
+							String date =
+									DateUtil.convertToMonthYearFormat(dateRange.getStartDateTime().toString());
+							dataCount.add(getDataCountObject(cod, projectName, date));
+							currentDateTime = currentDateTime.minusMonths(1);
+						}
 
-				mapTmp.get(node.getId()).setValue(dataCount);
-				if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-					KPIExcelUtility.populateKanbanCODExcelData(projectName, kanbanJiraIssueList, excelData);
-				}
-			}
-		});
+						mapTmp.get(node.getId()).setValue(dataCount);
+						if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+							KPIExcelUtility.populateKanbanCODExcelData(
+									projectName, kanbanJiraIssueList, excelData);
+						}
+					}
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.COST_OF_DELAY.getColumns());
 	}
@@ -203,15 +227,19 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 		return dataCount;
 	}
 
-	private Double filterDataBasedOnStartAndEndDate(Map<String, List<KanbanJiraIssue>> dateWiseIssue,
-			CustomDateRange dateRange, List<KanbanJiraIssue> kanbanJiraIssueList) {
+	private Double filterDataBasedOnStartAndEndDate(
+			Map<String, List<KanbanJiraIssue>> dateWiseIssue,
+			CustomDateRange dateRange,
+			List<KanbanJiraIssue> kanbanJiraIssueList) {
 		List<KanbanJiraIssue> dummyList = new LinkedList<>();
 		List<KanbanJiraIssue> issueList = new ArrayList<>();
 
 		Double cod = 0.0d;
 
-		for (LocalDate currentDate = dateRange.getStartDate(); currentDate.compareTo(dateRange.getStartDate()) >= 0 &&
-				dateRange.getEndDate().compareTo(currentDate) >= 0; currentDate = currentDate.plusDays(1)) {
+		for (LocalDate currentDate = dateRange.getStartDate();
+				currentDate.compareTo(dateRange.getStartDate()) >= 0
+						&& dateRange.getEndDate().compareTo(currentDate) >= 0;
+				currentDate = currentDate.plusDays(1)) {
 			dummyList.add(KanbanJiraIssue.builder().costOfDelay(0.0d).projectName("").build());
 			issueList.addAll(dateWiseIssue.getOrDefault(currentDate.toString(), dummyList));
 		}
@@ -232,13 +260,20 @@ public class CostOfDelayKanbanServiceImpl extends JiraKPIService<Double, List<Ob
 	 */
 	private Map<String, Map<String, List<KanbanJiraIssue>>> createProjectandDayWiseDelay(
 			List<KanbanJiraIssue> resultList) {
-		return resultList.stream().filter(p -> p.getProjectID() != null)
-				.collect(Collectors.groupingBy(KanbanJiraIssue::getBasicProjectConfigId, Collectors
-						.groupingBy(f -> LocalDate.parse(f.getChangeDate().split("\\.")[0], DATE_TIME_FORMATTER).toString())));
+		return resultList.stream()
+				.filter(p -> p.getProjectID() != null)
+				.collect(
+						Collectors.groupingBy(
+								KanbanJiraIssue::getBasicProjectConfigId,
+								Collectors.groupingBy(
+										f ->
+												LocalDate.parse(f.getChangeDate().split("\\.")[0], DATE_TIME_FORMATTER)
+														.toString())));
 	}
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI114(), KPICode.COST_OF_DELAY_KANBAN.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI114(), KPICode.COST_OF_DELAY_KANBAN.getKpiId());
 	}
 }

@@ -68,7 +68,12 @@ public class CommonUtilsTest {
 		String separator = "-";
 		DateTime beginDate = endDate.minusDays(3);
 		Map<String, Integer> returnMap = CommonUtils.getDaysBetweenDate(beginDate, endDate);
-		String key = beginDate.getYear() + separator + beginDate.getMonthOfYear() + separator + beginDate.getDayOfMonth();
+		String key =
+				beginDate.getYear()
+						+ separator
+						+ beginDate.getMonthOfYear()
+						+ separator
+						+ beginDate.getDayOfMonth();
 	}
 
 	@Test
@@ -77,7 +82,12 @@ public class CommonUtilsTest {
 		String separator = "-";
 		DateTime beginDate = endDate.minusDays(3);
 		Integer returnMap = CommonUtils.closedStoryAndPotentialDelays(beginDate, endDate);
-		String key = beginDate.getYear() + separator + beginDate.getMonthOfYear() + separator + beginDate.getDayOfMonth();
+		String key =
+				beginDate.getYear()
+						+ separator
+						+ beginDate.getMonthOfYear()
+						+ separator
+						+ beginDate.getDayOfMonth();
 	}
 
 	@Test
@@ -86,7 +96,12 @@ public class CommonUtilsTest {
 		String separator = "-";
 		DateTime beginDate = endDate.minusDays(3);
 		Integer returnMap = CommonUtils.openStoryDelay(beginDate, endDate, true);
-		String key = beginDate.getYear() + separator + beginDate.getMonthOfYear() + separator + beginDate.getDayOfMonth();
+		String key =
+				beginDate.getYear()
+						+ separator
+						+ beginDate.getMonthOfYear()
+						+ separator
+						+ beginDate.getDayOfMonth();
 	}
 
 	@Test
@@ -95,7 +110,12 @@ public class CommonUtilsTest {
 		String separator = "-";
 		DateTime beginDate = endDate.minusDays(5);
 		Map<String, Integer> returnMap = CommonUtils.getDaysBetweenDate(beginDate, endDate);
-		String key = beginDate.getYear() + separator + beginDate.getMonthOfYear() + separator + beginDate.getDayOfMonth();
+		String key =
+				beginDate.getYear()
+						+ separator
+						+ beginDate.getMonthOfYear()
+						+ separator
+						+ beginDate.getDayOfMonth();
 	}
 
 	@Test

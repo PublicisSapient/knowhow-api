@@ -37,11 +37,9 @@ import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 @RunWith(MockitoJUnitRunner.class)
 public class CacheControllerTest {
 
-	@InjectMocks
-	CacheController cacheController;
+	@InjectMocks CacheController cacheController;
 
-	@Mock
-	CacheService cacheService;
+	@Mock CacheService cacheService;
 
 	@Test
 	public void clearCache() {

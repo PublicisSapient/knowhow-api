@@ -80,22 +80,14 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectBas
 public class CodeBuildTimeServiceImplTest {
 
 	Map<String, List<Tool>> toolGroup = new HashMap<>();
-	@Mock
-	KpiDataCacheService kpiDataCacheService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@InjectMocks
-	CodeBuildTimeServiceImpl codeBuildTimeServiceImpl;
+	@Mock KpiDataCacheService kpiDataCacheService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@InjectMocks CodeBuildTimeServiceImpl codeBuildTimeServiceImpl;
 	private Map<String, Object> filterLevelMap;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
@@ -103,10 +95,8 @@ public class CodeBuildTimeServiceImplTest {
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private List<Build> buildList = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private SprintDetailsServiceImpl sprintDetailsService;
+	@Mock private CommonService commonService;
+	@Mock private SprintDetailsServiceImpl sprintDetailsService;
 
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
@@ -125,27 +115,32 @@ public class CodeBuildTimeServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
-		BuildDataFactory buildDataFactory = BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details.json");
+		BuildDataFactory buildDataFactory =
+				BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details.json");
 		buildList = buildDataFactory.getbuildDataList();
 		buildList.forEach(
-				build -> build.setStartTime(LocalDateTime.now().minusDays(2).toInstant(ZoneOffset.UTC).toEpochMilli()));
+				build ->
+						build.setStartTime(
+								LocalDateTime.now().minusDays(2).toInstant(ZoneOffset.UTC).toEpochMilli()));
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
 		projectBasicConfig.setIsKanban(true);
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -154,7 +149,8 @@ public class CodeBuildTimeServiceImplTest {
 		sprintDetails.setCompleteDate(LocalDateTime.now().minusDays(1).toString());
 		sprintDetails.setSprintID("40345_Scrum Project_6335363749794a18e8a4479b");
 		sprintDetails.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
-		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(Arrays.asList(sprintDetails));
+		when(sprintDetailsService.getSprintDetailsByIds(anyList()))
+				.thenReturn(Arrays.asList(sprintDetails));
 	}
 
 	private void setTreadValuesDataCount() {
@@ -165,7 +161,8 @@ public class CodeBuildTimeServiceImplTest {
 		trendValueMap.put("API_Build -> KnowHow", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -177,18 +174,24 @@ public class CodeBuildTimeServiceImplTest {
 	@Test
 	public void testGetCodeBuildTime() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any())).thenReturn(buildList);
+		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any()))
+				.thenReturn(buildList);
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 
 		try {
 			when(customApiConfig.getJenkinsWeekCount()).thenReturn(5);
 
-			KpiElement kpiElement = codeBuildTimeServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Code Build Time :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					codeBuildTimeServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Code Build Time :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 		}
 	}
@@ -196,19 +199,25 @@ public class CodeBuildTimeServiceImplTest {
 	@Test
 	public void testGetCodeBuildTimePort() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any())).thenReturn(buildList);
+		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any()))
+				.thenReturn(buildList);
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 		kpiRequest.setLabel("PORT");
 
 		try {
 			when(customApiConfig.getJenkinsWeekCount()).thenReturn(5);
 
-			KpiElement kpiElement = codeBuildTimeServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Code Build Time :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					codeBuildTimeServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Code Build Time :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 		}
 	}
@@ -218,22 +227,30 @@ public class CodeBuildTimeServiceImplTest {
 		Map<String, Node> mapTmp = new HashMap<>();
 		List<Node> leafNodeList = new ArrayList<>();
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 		try {
-			KpiElement kpiElement = codeBuildTimeServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Code Build Time :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					codeBuildTimeServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Code Build Time :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 
 		}

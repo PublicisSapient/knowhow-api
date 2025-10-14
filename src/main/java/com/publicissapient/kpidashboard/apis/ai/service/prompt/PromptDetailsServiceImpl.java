@@ -17,13 +17,14 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service.prompt;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import com.publicissapient.kpidashboard.apis.ai.repository.PromptDetailsRepository;
 
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service

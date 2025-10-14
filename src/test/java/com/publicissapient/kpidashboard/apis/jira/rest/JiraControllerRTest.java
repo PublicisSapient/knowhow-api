@@ -52,11 +52,11 @@ import com.publicissapient.kpidashboard.common.model.application.AssigneeDetails
 import com.publicissapient.kpidashboard.common.model.application.dto.AssigneeResponseDTO;
 
 /**
- * This class test the Jira Controller. In no way this representation of an
- * integration test. All the underlying services and repositories has been
- * mocked. Please don't format this class to keep the readability. Follow [
- * https://stackoverflow.com/questions/5115088/turn-off-eclipse-formatter-for-selected-code-area
- * ] to switch off formatter for section of code.
+ * This class test the Jira Controller. In no way this representation of an integration test. All
+ * the underlying services and repositories has been mocked. Please don't format this class to keep
+ * the readability. Follow [
+ * https://stackoverflow.com/questions/5115088/turn-off-eclipse-formatter-for-selected-code-area ]
+ * to switch off formatter for section of code.
  *
  * @author tauakram
  */
@@ -65,20 +65,15 @@ public class JiraControllerRTest {
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private JiraServiceR jiraService;
+	@Mock private JiraServiceR jiraService;
 
-	@Mock
-	private JiraServiceKanbanR jiraServiceKanban;
+	@Mock private JiraServiceKanbanR jiraServiceKanban;
 
-	@InjectMocks
-	private JiraController jiraController;
+	@InjectMocks private JiraController jiraController;
 
-	@Mock
-	private JiraToolConfigServiceImpl jiraToolConfigService;
+	@Mock private JiraToolConfigServiceImpl jiraToolConfigService;
 
 	@Before
 	public void before() {
@@ -123,7 +118,8 @@ public class JiraControllerRTest {
 		kpiElement.setKpiSource("Jira");
 		kpiElementList.add(kpiElement);
 		when(jiraService.process(Mockito.any())).thenReturn(kpiElementList);
-		mockMvc.perform(post("/jira/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/jira/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -178,7 +174,8 @@ public class JiraControllerRTest {
 		kpiElement.setKpiSource("JiraKanban");
 		kpiElementList.add(kpiElement);
 		when(jiraServiceKanban.process(Mockito.any())).thenReturn(kpiElementList);
-		mockMvc.perform(post("/jirakanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/jirakanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -221,9 +218,14 @@ public class JiraControllerRTest {
 		boardDetailsDTO2.setBoardName("Scrum Test Board2");
 		boardDetailsList.add(boardDetailsDTO1);
 		boardDetailsList.add(boardDetailsDTO2);
-		when(jiraToolConfigService.getJiraBoardDetailsList(Mockito.any())).thenReturn(ResponseEntity.ok()
-				.body(new ServiceResponse(true, "Successfully fetched board details list", boardDetailsList)));
-		mockMvc.perform(post("/jira/board").contentType(MediaType.APPLICATION_JSON).content(request))
+		when(jiraToolConfigService.getJiraBoardDetailsList(Mockito.any()))
+				.thenReturn(
+						ResponseEntity.ok()
+								.body(
+										new ServiceResponse(
+												true, "Successfully fetched board details list", boardDetailsList)));
+		mockMvc
+				.perform(post("/jira/board").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -238,13 +240,17 @@ public class JiraControllerRTest {
 						+ "}";
 		// @formatter:on
 
-		mockMvc.perform(post("/jirakanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request)).andDo(print())
+		mockMvc
+				.perform(post("/jirakanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+				.andDo(print())
 				.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	public void getJiraAssigneesListReturnError() throws Exception {
-		mockMvc.perform(get("/jira/assignees/").contentType(MediaType.APPLICATION_JSON)).andDo(print())
+		mockMvc
+				.perform(get("/jira/assignees/").contentType(MediaType.APPLICATION_JSON))
+				.andDo(print())
 				.andExpect(status().isNotFound());
 	}
 
@@ -260,8 +266,11 @@ public class JiraControllerRTest {
 
 		assigneeResponseDTO.setBasicProjectConfigId(new ObjectId(request));
 		assigneeResponseDTO.setAssigneeDetailsList(assigneeDetailsDTOList);
-		when(jiraToolConfigService.getProjectAssigneeDetails(Mockito.any())).thenReturn(assigneeResponseDTO);
-		mockMvc.perform(get("/jira/assignees/634fdf4ec859a424263dc035").contentType(MediaType.APPLICATION_JSON))
+		when(jiraToolConfigService.getProjectAssigneeDetails(Mockito.any()))
+				.thenReturn(assigneeResponseDTO);
+		mockMvc
+				.perform(
+						get("/jira/assignees/634fdf4ec859a424263dc035").contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().is2xxSuccessful());
 	}
 }

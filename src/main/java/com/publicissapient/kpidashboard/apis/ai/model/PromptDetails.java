@@ -17,14 +17,15 @@
 
 package com.publicissapient.kpidashboard.apis.ai.model;
 
-import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.util.List;
+
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import lombok.Data;
+import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author shunaray
@@ -44,7 +45,21 @@ public class PromptDetails extends BasicModel {
 
 	@Override
 	public String toString() {
-		return "{" + "context='" + context + '\'' + ", task='" + task + '\'' + ", instructions=" + instructions
-				+ ", input='" + input + '\'' + ", outputFormat='" + outputFormat + '\'' + '}';
+		return "{"
+				+ "context='"
+				+ context
+				+ '\''
+				+ ", task='"
+				+ task
+				+ '\''
+				+ ", instructions="
+				+ instructions
+				+ ", input='"
+				+ input
+				+ '\''
+				+ ", outputFormat='"
+				+ outputFormat
+				+ '\''
+				+ '}';
 	}
 }

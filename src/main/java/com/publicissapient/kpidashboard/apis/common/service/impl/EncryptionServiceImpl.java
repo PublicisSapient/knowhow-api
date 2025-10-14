@@ -60,7 +60,10 @@ public class EncryptionServiceImpl implements EncryptionService {
 
 			try {
 				returnString = Encryption.aesEncryptString(message, key);
-			} catch (NoSuchPaddingException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException
+			} catch (NoSuchPaddingException
+					| NoSuchAlgorithmException
+					| BadPaddingException
+					| IllegalBlockSizeException
 					| InvalidKeyException exception) {
 				log.error("Failed to encript messaege", exception);
 			}

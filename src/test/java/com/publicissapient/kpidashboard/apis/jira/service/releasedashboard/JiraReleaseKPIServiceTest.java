@@ -47,15 +47,12 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus
 @ExtendWith(SpringExtension.class)
 public class JiraReleaseKPIServiceTest {
 
-	@InjectMocks
-	JiraReleaseKPIServiceTestImpl jiraKPIService;
+	@InjectMocks JiraReleaseKPIServiceTestImpl jiraKPIService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	private Map<String, String> aggregationCriteriaMap;
-	@Mock
-	private JiraReleaseServiceR jiraService;
+	@Mock private JiraReleaseServiceR jiraService;
 
 	private static List<JiraIssueCustomHistory> getJiraIssueCustomHistories() {
 		JiraIssueCustomHistory issueCustomHistory = new JiraIssueCustomHistory();
@@ -111,7 +108,8 @@ public class JiraReleaseKPIServiceTest {
 	@Test
 	public void testGetJiraIssuesCustomHistoryFromBaseClass_WithNoParam() {
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = getJiraIssueCustomHistories();
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentRelease()).thenReturn(jiraIssueCustomHistories);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentRelease())
+				.thenReturn(jiraIssueCustomHistories);
 		assertNotNull(jiraKPIService.getJiraIssuesCustomHistoryFromBaseClass());
 	}
 
@@ -183,8 +181,8 @@ public class JiraReleaseKPIServiceTest {
 		}
 
 		@Override
-		public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-				KpiRequest kpiRequest) {
+		public Map<String, Object> fetchKPIDataFromDb(
+				Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 			return null;
 		}
 	}

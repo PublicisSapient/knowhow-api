@@ -48,8 +48,7 @@ public class FileStorageController {
 
 	private final FileStorageService fileStorageService;
 
-	@Autowired
-	public CustomApiConfig customApiConfig;
+	@Autowired public CustomApiConfig customApiConfig;
 
 	@Autowired
 	public FileStorageController(FileStorageService fileStorageService) {
@@ -60,8 +59,7 @@ public class FileStorageController {
 	 * Uploads image file as logo
 	 *
 	 * @param file
-	 * @return BaseResponse with <tt>message</tt> and
-	 *         <tt>success status(true or false)</tt> of upload
+	 * @return BaseResponse with <tt>message</tt> and <tt>success status(true or false)</tt> of upload
 	 */
 	@PostMapping("/file/upload")
 	@PreAuthorize("hasPermission('LOGO', 'FILE_UPLOAD')")
@@ -73,12 +71,12 @@ public class FileStorageController {
 	 * Uploads image file as logo
 	 *
 	 * @param file
-	 * @return BaseResponse with <tt>message</tt> and
-	 *         <tt>success status(true or false)</tt> of upload
+	 * @return BaseResponse with <tt>message</tt> and <tt>success status(true or false)</tt> of upload
 	 */
 	@PostMapping("/file/upload/{type}")
 	@PreAuthorize("hasPermission(#type, 'FILE_UPLOAD')")
-	public BaseResponse uploadFile(@PathVariable String type, @RequestParam("file") MultipartFile file) {
+	public BaseResponse uploadFile(
+			@PathVariable String type, @RequestParam("file") MultipartFile file) {
 		return fileStorageService.upload(type, file);
 	}
 

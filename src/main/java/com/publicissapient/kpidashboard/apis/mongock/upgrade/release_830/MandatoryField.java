@@ -34,7 +34,8 @@ import io.mongock.api.annotations.RollbackExecution;
 @ChangeUnit(id = "mandatory_field", order = "8351", author = "shi6", systemVersion = "8.3.5")
 public class MandatoryField {
 
-	private static final String CUSTOM_ISSUE_TYPE_LABEL = "Issue Types to consider Custom Completion status/es";
+	private static final String CUSTOM_ISSUE_TYPE_LABEL =
+			"Issue Types to consider Custom Completion status/es";
 	private static final String CUSTOM_STATUS_LABEL = "Custom Completion status/es";
 	private static final String FIELD_NAME = "fieldName";
 	private static final String WAIT_STATUS_KPI131 = "jiraWaitStatusKPI131";
@@ -54,7 +55,8 @@ public class MandatoryField {
 
 	@Execution
 	public boolean execution() {
-		BulkOperations bulkOps = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "field_mapping_structure");
+		BulkOperations bulkOps =
+				mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "field_mapping_structure");
 		processorCommonAndMandatoryField(bulkOps, "jiraStoryIdentificationKpi40", false, true);
 		processorCommonAndMandatoryField(bulkOps, "jiraStoryIdentificationKPI164", false, true);
 		processorCommonAndMandatoryField(bulkOps, "jiraDefectInjectionIssueTypeKPI14", false, true);
@@ -130,25 +132,49 @@ public class MandatoryField {
 		processorCommonAndMandatoryField(bulkOps, "jiraSubTaskDefectType", false, true);
 		processorCommonAndMandatoryField(bulkOps, "jiraSubTaskIdentification", false, true);
 
-		String[] issueTypes = {"jiraIterationIssuetypeKPI39", "jiraIterationIssuetypeKPI138",
-				"jiraIterationIssuetypeKPI119", "jiraIterationIssuetypeKPI131", "jiraIterationIssuetypeKPI134",
-				"jiraIterationIssuetypeKPI128", "jiraIterationIssuetypeKPI120", "jiraIterationIssuetypeKPI125",
-				"jiraIterationIssuetypeKPI123", "jiraIterationIssuetypeKPI124", "jiraIterationIssuetypeKPI75",
-				"jiraIterationIssuetypeKPI145", "jiraIterationIssuetypeKPI122", "jiraIterationIssuetypeKpi72",
-				"jiraIterationIssuetypeKpi5"};
+		String[] issueTypes = {
+			"jiraIterationIssuetypeKPI39",
+			"jiraIterationIssuetypeKPI138",
+			"jiraIterationIssuetypeKPI119",
+			"jiraIterationIssuetypeKPI131",
+			"jiraIterationIssuetypeKPI134",
+			"jiraIterationIssuetypeKPI128",
+			"jiraIterationIssuetypeKPI120",
+			"jiraIterationIssuetypeKPI125",
+			"jiraIterationIssuetypeKPI123",
+			"jiraIterationIssuetypeKPI124",
+			"jiraIterationIssuetypeKPI75",
+			"jiraIterationIssuetypeKPI145",
+			"jiraIterationIssuetypeKPI122",
+			"jiraIterationIssuetypeKpi72",
+			"jiraIterationIssuetypeKpi5"
+		};
 
 		for (String issueType : issueTypes) {
 			updateFieldLabel(bulkOps, issueType, CUSTOM_ISSUE_TYPE_LABEL);
 		}
 
-		String[] completionStatusTypes = {"jiraIterationCompletionStatusKpi72", "jiraIterationCompletionStatusKpi5",
-				"jiraIterationCompletionStatusKpi39", "jiraIterationCompletionStatusKPI138", ITERATION_COMPLETIONKPI122,
-				ITERATION_COMPLETIONKPI119, "jiraIterationCompletionStatusKPI131", "jiraIterationCompletionStatusKPI134",
-				"jiraIterationCompletionStatusKPI133", "jiraIterationCompletionStatusKPI128",
-				"jiraIterationCompletionStatusKPI120", "jiraIterationCompletionStatusKPI125", ITERATION_COMPLETIONKPI123,
-				"jiraIterationCompletionStatusKPI135", "jiraIterationCompletionStatusKPI124",
-				"jiraIterationCompletionStatusKPI75", "jiraIterationCompletionStatusKPI145",
-				"jiraIterationCompletionStatusKPI154", "jiraIterationCompletionStatusCustomField"};
+		String[] completionStatusTypes = {
+			"jiraIterationCompletionStatusKpi72",
+			"jiraIterationCompletionStatusKpi5",
+			"jiraIterationCompletionStatusKpi39",
+			"jiraIterationCompletionStatusKPI138",
+			ITERATION_COMPLETIONKPI122,
+			ITERATION_COMPLETIONKPI119,
+			"jiraIterationCompletionStatusKPI131",
+			"jiraIterationCompletionStatusKPI134",
+			"jiraIterationCompletionStatusKPI133",
+			"jiraIterationCompletionStatusKPI128",
+			"jiraIterationCompletionStatusKPI120",
+			"jiraIterationCompletionStatusKPI125",
+			ITERATION_COMPLETIONKPI123,
+			"jiraIterationCompletionStatusKPI135",
+			"jiraIterationCompletionStatusKPI124",
+			"jiraIterationCompletionStatusKPI75",
+			"jiraIterationCompletionStatusKPI145",
+			"jiraIterationCompletionStatusKPI154",
+			"jiraIterationCompletionStatusCustomField"
+		};
 
 		for (String completionStatusType : completionStatusTypes) {
 			updateFieldLabel(bulkOps, completionStatusType, CUSTOM_STATUS_LABEL);
@@ -159,45 +185,54 @@ public class MandatoryField {
 		updateFieldLabel(bulkOps, WAIT_STATUS_KPI131, "Status to identify Wait Statuses");
 		updateFieldLabel(bulkOps, UAT_IDENTIFICATION, "Escaped defects identification");
 		changeToggleLabelRight(bulkOps, "populateByDevDoneKPI150", "Dev Completion");
-		addInfoToTooltip(bulkOps, ITERATION_COMPLETIONKPI122,
+		addInfoToTooltip(
+				bulkOps,
+				ITERATION_COMPLETIONKPI122,
 				"All statuses that signify completion for a team. (If more than one status configured, then the first status that the issue transitions to will be counted as Completion). The configured value need to be same as defined in \"Custom Completion status/es \" under work remaining ");
-		addInfoToTooltip(bulkOps, ITERATION_COMPLETIONKPI123,
+		addInfoToTooltip(
+				bulkOps,
+				ITERATION_COMPLETIONKPI123,
 				"All statuses that signify completion for a team. (If more than one status configured, then the first status that the issue transitions to will be counted as Completion). The configured value need to be same as defined in\"Status to identify In progress issues\" under work remaining ");
 
 		bulkOps.execute();
 		return true;
 	}
 
-	public void processorCommonAndMandatoryField(BulkOperations bulkOps, String field, boolean processorCommon,
-			boolean mandatoryField) {
+	public void processorCommonAndMandatoryField(
+			BulkOperations bulkOps, String field, boolean processorCommon, boolean mandatoryField) {
 		Query query = new Query(Criteria.where(FIELD_NAME).is(field));
-		if (processorCommon)
-			bulkOps.updateOne(query, new Update().set("processorCommon", true));
-		if (mandatoryField)
-			bulkOps.updateOne(query, new Update().set("mandatory", true));
+		if (processorCommon) bulkOps.updateOne(query, new Update().set("processorCommon", true));
+		if (mandatoryField) bulkOps.updateOne(query, new Update().set("mandatory", true));
 	}
 
-	public void updateFieldLabel(BulkOperations bulkOps, String fieldNameToUpdate, String newFieldLabel) {
-		bulkOps.updateOne(new Query(Criteria.where(FIELD_NAME).is(fieldNameToUpdate)),
+	public void updateFieldLabel(
+			BulkOperations bulkOps, String fieldNameToUpdate, String newFieldLabel) {
+		bulkOps.updateOne(
+				new Query(Criteria.where(FIELD_NAME).is(fieldNameToUpdate)),
 				new Update().set("fieldLabel", newFieldLabel));
 	}
 
-	public void changeToggleLabelRight(BulkOperations bulkOps, String fieldNameToUpdate, String newVal) {
-		bulkOps.updateOne(new Query(Criteria.where(FIELD_NAME).is(fieldNameToUpdate)),
+	public void changeToggleLabelRight(
+			BulkOperations bulkOps, String fieldNameToUpdate, String newVal) {
+		bulkOps.updateOne(
+				new Query(Criteria.where(FIELD_NAME).is(fieldNameToUpdate)),
 				new Update().set(TOGGLE_LABEL_RIGHT, newVal));
 	}
 
 	public void addInfoToTooltip(BulkOperations bulkOps, String fieldName, String info) {
-		bulkOps.updateOne(new Query(Criteria.where(FIELD_NAME).is(fieldName)),
+		bulkOps.updateOne(
+				new Query(Criteria.where(FIELD_NAME).is(fieldName)),
 				new Update().set("tooltip.definition", info));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		BulkOperations bulkOps = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "field_mapping_structure");
+		BulkOperations bulkOps =
+				mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "field_mapping_structure");
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraStoryIdentificationKpi40", false, true);
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraStoryIdentificationKPI164", false, true);
-		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraDefectInjectionIssueTypeKPI14", false, true);
+		processorCommonAndMandatoryFieldUnset(
+				bulkOps, "jiraDefectInjectionIssueTypeKPI14", false, true);
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraDodKPI14", false, true);
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraIssueDeliverdStatusKPI82", false, true);
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraKPI82StoryIdentification", false, true);
@@ -270,25 +305,49 @@ public class MandatoryField {
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraSubTaskDefectType", false, true);
 		processorCommonAndMandatoryFieldUnset(bulkOps, "jiraSubTaskIdentification", false, true);
 
-		String[] issueTypes = {"jiraIterationIssuetypeKPI39", "jiraIterationIssuetypeKPI138",
-				"jiraIterationIssuetypeKPI119", "jiraIterationIssuetypeKPI131", "jiraIterationIssuetypeKPI134",
-				"jiraIterationIssuetypeKPI128", "jiraIterationIssuetypeKPI120", "jiraIterationIssuetypeKPI125",
-				"jiraIterationIssuetypeKPI123", "jiraIterationIssuetypeKPI124", "jiraIterationIssuetypeKPI75",
-				"jiraIterationIssuetypeKPI145", "jiraIterationIssuetypeKPI122", "jiraIterationIssuetypeKpi72",
-				"jiraIterationIssuetypeKpi5"};
+		String[] issueTypes = {
+			"jiraIterationIssuetypeKPI39",
+			"jiraIterationIssuetypeKPI138",
+			"jiraIterationIssuetypeKPI119",
+			"jiraIterationIssuetypeKPI131",
+			"jiraIterationIssuetypeKPI134",
+			"jiraIterationIssuetypeKPI128",
+			"jiraIterationIssuetypeKPI120",
+			"jiraIterationIssuetypeKPI125",
+			"jiraIterationIssuetypeKPI123",
+			"jiraIterationIssuetypeKPI124",
+			"jiraIterationIssuetypeKPI75",
+			"jiraIterationIssuetypeKPI145",
+			"jiraIterationIssuetypeKPI122",
+			"jiraIterationIssuetypeKpi72",
+			"jiraIterationIssuetypeKpi5"
+		};
 
 		for (String issueType : issueTypes) {
 			updateFieldLabel(bulkOps, issueType, "Issue types to consider ‘Completed status’");
 		}
 
-		String[] completionStatusTypes = {"jiraIterationCompletionStatusKpi72", "jiraIterationCompletionStatusKpi5",
-				"jiraIterationCompletionStatusKpi39", "jiraIterationCompletionStatusKPI138", ITERATION_COMPLETIONKPI122,
-				ITERATION_COMPLETIONKPI119, "jiraIterationCompletionStatusKPI131", "jiraIterationCompletionStatusKPI134",
-				"jiraIterationCompletionStatusKPI133", "jiraIterationCompletionStatusKPI128",
-				"jiraIterationCompletionStatusKPI120", "jiraIterationCompletionStatusKPI125", ITERATION_COMPLETIONKPI123,
-				"jiraIterationCompletionStatusKPI135", "jiraIterationCompletionStatusKPI124",
-				"jiraIterationCompletionStatusKPI75", "jiraIterationCompletionStatusKPI145",
-				"jiraIterationCompletionStatusKPI154", "jiraIterationCompletionStatusCustomField"};
+		String[] completionStatusTypes = {
+			"jiraIterationCompletionStatusKpi72",
+			"jiraIterationCompletionStatusKpi5",
+			"jiraIterationCompletionStatusKpi39",
+			"jiraIterationCompletionStatusKPI138",
+			ITERATION_COMPLETIONKPI122,
+			ITERATION_COMPLETIONKPI119,
+			"jiraIterationCompletionStatusKPI131",
+			"jiraIterationCompletionStatusKPI134",
+			"jiraIterationCompletionStatusKPI133",
+			"jiraIterationCompletionStatusKPI128",
+			"jiraIterationCompletionStatusKPI120",
+			"jiraIterationCompletionStatusKPI125",
+			ITERATION_COMPLETIONKPI123,
+			"jiraIterationCompletionStatusKPI135",
+			"jiraIterationCompletionStatusKPI124",
+			"jiraIterationCompletionStatusKPI75",
+			"jiraIterationCompletionStatusKPI145",
+			"jiraIterationCompletionStatusKPI154",
+			"jiraIterationCompletionStatusCustomField"
+		};
 
 		for (String completionStatusType : completionStatusTypes) {
 			updateFieldLabel(bulkOps, completionStatusType, "Status to identify completed issues");
@@ -299,20 +358,22 @@ public class MandatoryField {
 		updateFieldLabel(bulkOps, WAIT_STATUS_KPI131, "Status that signify queue");
 		updateFieldLabel(bulkOps, UAT_IDENTIFICATION, "Escaped defects identification (Processor Run)");
 		changeToggleLabelRight(bulkOps, "populateByDevDoneKPI150", "Dev Completion*");
-		addInfoToTooltip(bulkOps, ITERATION_COMPLETIONKPI122,
+		addInfoToTooltip(
+				bulkOps,
+				ITERATION_COMPLETIONKPI122,
 				"All statuses that signify completion for a team. (If more than one status configured, then the first status that the issue transitions to will be counted as Completion).");
-		addInfoToTooltip(bulkOps, ITERATION_COMPLETIONKPI123,
+		addInfoToTooltip(
+				bulkOps,
+				ITERATION_COMPLETIONKPI123,
 				"All statuses that signify completion for a team. (If more than one status configured, then the first status that the issue transitions to will be counted as Completion).");
 
 		bulkOps.execute();
 	}
 
-	public void processorCommonAndMandatoryFieldUnset(BulkOperations bulkOps, String field, boolean processorCommon,
-			boolean mandatoryField) {
+	public void processorCommonAndMandatoryFieldUnset(
+			BulkOperations bulkOps, String field, boolean processorCommon, boolean mandatoryField) {
 		Query query = new Query(Criteria.where(FIELD_NAME).is(field));
-		if (processorCommon)
-			bulkOps.updateOne(query, new Update().unset("processorCommon"));
-		if (mandatoryField)
-			bulkOps.updateOne(query, new Update().unset("mandatory"));
+		if (processorCommon) bulkOps.updateOne(query, new Update().unset("processorCommon"));
+		if (mandatoryField) bulkOps.updateOne(query, new Update().unset("mandatory"));
 	}
 }

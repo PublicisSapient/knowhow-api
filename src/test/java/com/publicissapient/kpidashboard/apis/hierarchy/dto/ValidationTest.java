@@ -25,7 +25,8 @@ public class ValidationTest {
 		UpdateHierarchyRequest updateHierarchyRequest = new UpdateHierarchyRequest();
 		updateHierarchyRequest.setDisplayName("Valid New Name");
 		Set<ConstraintViolation<CreateHierarchyRequest>> hierarchyRequest = validator.validate(request);
-		Set<ConstraintViolation<UpdateHierarchyRequest>> updateRequest = validator.validate(updateHierarchyRequest);
+		Set<ConstraintViolation<UpdateHierarchyRequest>> updateRequest =
+				validator.validate(updateHierarchyRequest);
 
 		assertTrue("Expected no validation errors", hierarchyRequest.isEmpty());
 		assertTrue("Expected no validation errors", updateRequest.isEmpty());
@@ -40,13 +41,13 @@ public class ValidationTest {
 		Set<ConstraintViolation<CreateHierarchyRequest>> hierarchyRequest = validator.validate(request);
 		UpdateHierarchyRequest updateHierarchyRequest = new UpdateHierarchyRequest();
 		updateHierarchyRequest.setDisplayName(null);
-		Set<ConstraintViolation<UpdateHierarchyRequest>> updateRequest = validator.validate(updateHierarchyRequest);
+		Set<ConstraintViolation<UpdateHierarchyRequest>> updateRequest =
+				validator.validate(updateHierarchyRequest);
 
 		assertFalse("Expected validation errors", hierarchyRequest.isEmpty());
 		assertEquals(2, hierarchyRequest.size());
 		assertFalse("Expected validation errors", updateRequest.isEmpty());
 		assertEquals(2, updateRequest.size());
-
 	}
 
 	@Test
@@ -58,8 +59,8 @@ public class ValidationTest {
 		Set<ConstraintViolation<CreateHierarchyRequest>> violations = validator.validate(request);
 		UpdateHierarchyRequest updateHierarchyRequest = new UpdateHierarchyRequest();
 		updateHierarchyRequest.setDisplayName("");
-		Set<ConstraintViolation<UpdateHierarchyRequest>> updateRequest = validator.validate(updateHierarchyRequest);
-
+		Set<ConstraintViolation<UpdateHierarchyRequest>> updateRequest =
+				validator.validate(updateHierarchyRequest);
 
 		assertFalse("Expected validation errors", violations.isEmpty());
 		assertEquals(1, violations.size());
@@ -74,5 +75,4 @@ public class ValidationTest {
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		return factory.getValidator();
 	}
-
 }

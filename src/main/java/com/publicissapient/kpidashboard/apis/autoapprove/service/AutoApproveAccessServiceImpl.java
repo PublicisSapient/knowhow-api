@@ -18,11 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class AutoApproveAccessServiceImpl implements AutoApproveAccessService {
-	@Autowired
-	private AutoApproveAccessConfigRepository autoAccessRepository;
+	@Autowired private AutoApproveAccessConfigRepository autoAccessRepository;
 
-	@Autowired
-	private RolesRepository rolesRepository;
+	@Autowired private RolesRepository rolesRepository;
 
 	@Override
 	public AutoApproveAccessConfig saveAutoApproveConfig(AutoApproveAccessConfig autoApproveRole) {
@@ -41,12 +39,14 @@ public class AutoApproveAccessServiceImpl implements AutoApproveAccessService {
 	}
 
 	@Override
-	public AutoApproveAccessConfig modifyAutoApprovConfigById(String id, AutoApproveAccessConfig autoApproveRole) {
+	public AutoApproveAccessConfig modifyAutoApprovConfigById(
+			String id, AutoApproveAccessConfig autoApproveRole) {
 		List<RoleData> rolesDataList = new ArrayList<>();
 		if (null != autoApproveRole.getRoles()) {
-			rolesDataList = autoApproveRole.getRoles().stream()
-					.filter(roleData -> rolesRepository.findByRoleName(roleData.getRoleName()) != null)
-					.collect(Collectors.toList());
+			rolesDataList =
+					autoApproveRole.getRoles().stream()
+							.filter(roleData -> rolesRepository.findByRoleName(roleData.getRoleName()) != null)
+							.collect(Collectors.toList());
 		}
 
 		autoApproveRole.setRoles(rolesDataList);
@@ -63,7 +63,10 @@ public class AutoApproveAccessServiceImpl implements AutoApproveAccessService {
 		}
 
 		boolean isEnabled = autoApproveConfig.getEnableAutoApprove().equalsIgnoreCase("true");
-		List<String> roles = autoApproveConfig.getRoles().stream().map(RoleData::getRoleName).collect(Collectors.toList());
+		List<String> roles =
+				autoApproveConfig.getRoles().stream()
+						.map(RoleData::getRoleName)
+						.collect(Collectors.toList());
 		return isEnabled && roles.contains(roleName);
 	}
 }

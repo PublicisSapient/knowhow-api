@@ -27,6 +27,8 @@ public enum SuperAdminRoles {
 
 	public static List<String> getAdminRoles() {
 
-		return EnumSet.allOf(SuperAdminRoles.class).stream().map(SuperAdminRoles::name).collect(Collectors.toList());
+		return EnumSet.allOf(SuperAdminRoles.class).stream()
+				.map(SuperAdminRoles::name)
+				.collect(Collectors.toList());
 	}
 }

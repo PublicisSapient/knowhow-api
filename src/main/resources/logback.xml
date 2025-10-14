@@ -42,12 +42,12 @@
     <!--<jsonGeneratorDecorator class="net.logstash.logback.decorate.PrettyPrintingJsonGeneratorDecorator"/>-->
             <providers>
                 <pattern>
-			      <pattern>
-			        {
-			          "app":"CustomAPI"
-			        }
-			      </pattern>
-			    </pattern>
+            <pattern>
+              {
+                "app":"CustomAPI"
+              }
+            </pattern>
+          </pattern>
 
                 <timestamp>
                     <fieldName>createdTime</fieldName>
@@ -104,12 +104,12 @@
     <jsonGeneratorDecorator class="net.logstash.logback.decorate.PrettyPrintingJsonGeneratorDecorator"/>
             <providers>
                 <pattern>
-			      <pattern>
-			        {
-			          "app":"CustomAPIRequestResponse"
-			        }
-			      </pattern>
-			    </pattern>
+            <pattern>
+              {
+                "app":"CustomAPIRequestResponse"
+              }
+            </pattern>
+          </pattern>
 
                 <timestamp>
                     <fieldName>timestamp</fieldName>

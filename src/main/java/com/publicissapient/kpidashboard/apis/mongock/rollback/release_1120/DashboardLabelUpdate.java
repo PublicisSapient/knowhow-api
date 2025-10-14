@@ -26,7 +26,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_dashboard_label_update", order = "011201", author = "kunkambl", systemVersion = "11.2.0")
+@ChangeUnit(
+		id = "r_dashboard_label_update",
+		order = "011201",
+		author = "kunkambl",
+		systemVersion = "11.2.0")
 public class DashboardLabelUpdate {
 
 	private static final String OLD_BOARD_NAME_MY_KNOWHOW = "My KnowHow";
@@ -42,35 +46,57 @@ public class DashboardLabelUpdate {
 
 	@RollbackExecution
 	public void rollback() {
-		updateBoardNames(NEW_BOARD_NAME_MY_KNOWHOW, OLD_BOARD_NAME_MY_KNOWHOW, NEW_BOARD_NAME_KPI_MATURITY,
+		updateBoardNames(
+				NEW_BOARD_NAME_MY_KNOWHOW,
+				OLD_BOARD_NAME_MY_KNOWHOW,
+				NEW_BOARD_NAME_KPI_MATURITY,
 				OLD_BOARD_NAME_KPI_MATURITY);
 	}
 
-	private void updateBoardNames(String oldBoardNameKnowHow, String newBoardNameKnowHow, String oldBoardNameMaturity,
+	private void updateBoardNames(
+			String oldBoardNameKnowHow,
+			String newBoardNameKnowHow,
+			String oldBoardNameMaturity,
 			String newBoardNameMaturity) {
-		Document query = new Document("$or", List.of(new Document("scrum.boardName", oldBoardNameKnowHow),
-				new Document("kanban.boardName", oldBoardNameKnowHow), new Document("others.boardName", oldBoardNameMaturity)));
+		Document query =
+				new Document(
+						"$or",
+						List.of(
+								new Document("scrum.boardName", oldBoardNameKnowHow),
+								new Document("kanban.boardName", oldBoardNameKnowHow),
+								new Document("others.boardName", oldBoardNameMaturity)));
 
-		Document update = new Document("$set",
-				new Document().append("scrum.$[scrumElem].boardName", newBoardNameKnowHow)
-						.append("kanban.$[kanbanElem].boardName", newBoardNameKnowHow)
-						.append("others.$[othersElem].boardName", newBoardNameMaturity));
+		Document update =
+				new Document(
+						"$set",
+						new Document()
+								.append("scrum.$[scrumElem].boardName", newBoardNameKnowHow)
+								.append("kanban.$[kanbanElem].boardName", newBoardNameKnowHow)
+								.append("others.$[othersElem].boardName", newBoardNameMaturity));
 
-		List<Document> arrayFilters = List.of(new Document("scrumElem.boardName", oldBoardNameKnowHow),
-				new Document("kanbanElem.boardName", oldBoardNameKnowHow),
-				new Document("othersElem.boardName", oldBoardNameMaturity));
+		List<Document> arrayFilters =
+				List.of(
+						new Document("scrumElem.boardName", oldBoardNameKnowHow),
+						new Document("kanbanElem.boardName", oldBoardNameKnowHow),
+						new Document("othersElem.boardName", oldBoardNameMaturity));
 
 		UpdateOptions options = new UpdateOptions().arrayFilters(arrayFilters);
 
 		mongoTemplate.getCollection("user_board_config").updateMany(query, update, options);
 
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi989"),
-				new Document("$set", new Document("kpiCategory", newBoardNameMaturity)));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi989"),
+						new Document("$set", new Document("kpiCategory", newBoardNameMaturity)));
 	}
 
 	@Execution
 	public void execution() {
-		updateBoardNames(OLD_BOARD_NAME_MY_KNOWHOW, NEW_BOARD_NAME_MY_KNOWHOW, OLD_BOARD_NAME_KPI_MATURITY,
+		updateBoardNames(
+				OLD_BOARD_NAME_MY_KNOWHOW,
+				NEW_BOARD_NAME_MY_KNOWHOW,
+				OLD_BOARD_NAME_KPI_MATURITY,
 				NEW_BOARD_NAME_KPI_MATURITY);
 	}
 }

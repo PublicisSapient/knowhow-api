@@ -16,8 +16,7 @@ import com.publicissapient.kpidashboard.common.repository.jira.MetadataIdentifie
 public class MetadataIdentifierServiceImpl implements MetaDataIdentifierService {
 	private static final String CUSTOM_TEMPLATE = "Custom Template";
 
-	@Autowired
-	private MetadataIdentifierRepository metadataIdentifierRepository;
+	@Autowired private MetadataIdentifierRepository metadataIdentifierRepository;
 
 	@Override
 	public List<MetadataIdentifier> getMetaDataList() {
@@ -43,7 +42,11 @@ public class MetadataIdentifierServiceImpl implements MetaDataIdentifierService 
 	}
 
 	private List<MetadataIdentifier> getNonCustomList() {
-		return getMetaDataList().stream().filter(template -> StringUtils.isEmpty(template.getTemplateName()) ||
-				!template.getTemplateName().equalsIgnoreCase(CUSTOM_TEMPLATE)).toList();
+		return getMetaDataList().stream()
+				.filter(
+						template ->
+								StringUtils.isEmpty(template.getTemplateName())
+										|| !template.getTemplateName().equalsIgnoreCase(CUSTOM_TEMPLATE))
+				.toList();
 	}
 }

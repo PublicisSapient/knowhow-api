@@ -18,14 +18,15 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.model;
 
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -33,13 +34,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Document(collection = "ai_usage")
 public class AIUsage extends BasicModel {
-    @Indexed
-    private String email;
-    private Integer promptCount;
-    @Indexed
-    private String businessUnit;
-    @Indexed
-    private String account;
-    @Indexed
-    private String vertical;
+	@Indexed private String email;
+	private Integer promptCount;
+	@Indexed private String businessUnit;
+	@Indexed private String account;
+	@Indexed private String vertical;
 }

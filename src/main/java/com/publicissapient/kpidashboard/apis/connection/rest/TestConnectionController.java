@@ -26,11 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.connection.service.TestConnectionService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -45,8 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestConnectionController {
 
-	@Autowired
-	TestConnectionService testConnectionService;
+	@Autowired TestConnectionService testConnectionService;
 
 	public static final String SONAR_CONNECTION_MSG = "validating Sonar connections credentials";
 
@@ -56,9 +51,14 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(path = "/jira", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/jira",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateJiraConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateJiraConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating JIRA connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -72,9 +72,14 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(path = "/sonar", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/sonar",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateSonarConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateSonarConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info(SONAR_CONNECTION_MSG);
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -88,9 +93,14 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(path = "/teamcity", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/teamcity",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateTeamcityConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateTeamcityConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating Teamcity connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -98,9 +108,14 @@ public class TestConnectionController {
 				.body(testConnectionService.validateConnection(connection, Constant.TOOL_TEAMCITY));
 	}
 
-	@RequestMapping(path = "/zephyr", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/zephyr",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateZephyrConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateZephyrConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating Zephyr connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -114,9 +129,14 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(path = "/bamboo", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/bamboo",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateBambooConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateBambooConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating Bamboo connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -130,9 +150,14 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(path = "/jenkins", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/jenkins",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateJenkinsConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateJenkinsConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating Jenkins connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -142,7 +167,8 @@ public class TestConnectionController {
 
 	@PostMapping("/gitlab")
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateGitlabConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateGitlabConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating Gitlab connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -156,7 +182,11 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(path = "/bitbucket", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			path = "/bitbucket",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
 	public ResponseEntity<ServiceResponse> validateBitbucketConnection(
 			@NotNull @RequestBody ConnectionDTO connectionDTO) {
@@ -202,7 +232,8 @@ public class TestConnectionController {
 
 	@PostMapping("/github")
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateGitHubConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateGitHubConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info(SONAR_CONNECTION_MSG);
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -216,9 +247,13 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@PostMapping(path = "/argocd", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			path = "/argocd",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateArgoCDConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateArgoCDConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating ArgoCD connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);
@@ -226,14 +261,19 @@ public class TestConnectionController {
 				.body(testConnectionService.validateConnection(connection, Constant.TOOL_ARGOCD));
 	}
 
-	@RequestMapping(value = "/zephyrcloudurl", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/zephyrcloudurl", produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> getZephyrCloudUrl() {
-		return ResponseEntity.status(HttpStatus.OK).body(testConnectionService.getZephyrCloudUrlDetails());
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(testConnectionService.getZephyrCloudUrlDetails());
 	}
 
-	@PostMapping(path = "/rally", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			path = "/rally",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> validateRallyConnection(@NotNull @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> validateRallyConnection(
+			@NotNull @RequestBody ConnectionDTO connectionDTO) {
 		log.info("validating Rally connections credentials");
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection connection = modelMapper.map(connectionDTO, Connection.class);

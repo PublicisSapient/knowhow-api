@@ -33,7 +33,8 @@ public class AuthenticationUtilTest {
 
 	@Before
 	public void setup() {
-		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken("user", "password");
+		UsernamePasswordAuthenticationToken authentication =
+				new UsernamePasswordAuthenticationToken("user", "password");
 		authentication.setDetails(AuthType.STANDARD.name());
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 	}
@@ -63,7 +64,8 @@ public class AuthenticationUtilTest {
 
 	@Test
 	public void getAuthTypeFromContext() {
-		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken("user", "password");
+		UsernamePasswordAuthenticationToken authentication =
+				new UsernamePasswordAuthenticationToken("user", "password");
 		authentication.setDetails(AuthType.STANDARD);
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		AuthenticationUtil.getAuthTypeFromContext();

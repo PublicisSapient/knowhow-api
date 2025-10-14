@@ -40,186 +40,139 @@ public interface KpiDataCacheService {
 	/**
 	 * Evicts KPI Cache for given project and kpi
 	 *
-	 * @param basicProjectConfigId
-	 *            project basic config id
-	 * @param kpiId
-	 *            kpi id
+	 * @param basicProjectConfigId project basic config id
+	 * @param kpiId kpi id
 	 */
 	void clearCache(String basicProjectConfigId, String kpiId);
 
 	List<String> getKpiBasedOnSource(String source);
 
 	/**
-	 * Fetches data from DB for the given project and sprints combination. Data is
-	 * cached. Cache key - project basic config id and kpi id. Note: Data will be
-	 * cached only if Filter is selected till Sprint level.
+	 * Fetches data from DB for the given project and sprints combination. Data is cached. Cache key -
+	 * project basic config id and kpi id. Note: Data will be cached only if Filter is selected till
+	 * Sprint level.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map containing issues
 	 */
-	Map<String, Object> fetchIssueCountData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchIssueCountData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches Sprint Predictability data from DB and caches the result
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
-	 * @return A map returns sprint wise jira issues list and project wise sprint
-	 *         details
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
+	 * @return A map returns sprint wise jira issues list and project wise sprint details
 	 */
-	Map<String, Object> fetchSprintPredictabilityData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchSprintPredictabilityData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches DIR data from DB and caches the result
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map returns sprint wise jira issues list and defect list details
 	 */
-	Map<String, Object> fetchDefectInjectionRateData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchDefectInjectionRateData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches DIR data from DB and caches the result
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map returns sprint wise jira issues list and defect list details
 	 */
-	Map<String, Object> fetchFirstTimePassRateData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchFirstTimePassRateData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches DD data from DB and caches the result
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map returns sprint wise jira issues list and defect list details
 	 */
-	Map<String, Object> fetchDefectDensityData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchDefectDensityData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches Sprint velocity data from DB and caches the result
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param kpiId
-	 *            The KPI ID.
-	 * @return A map returns sprint wise jira issues list and project wise sprint
-	 *         details
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param kpiId The KPI ID.
+	 * @return A map returns sprint wise jira issues list and project wise sprint details
 	 */
-	Map<String, Object> fetchSprintVelocityData(KpiRequest kpiRequest, ObjectId basicProjectConfigId, String kpiId);
+	Map<String, Object> fetchSprintVelocityData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, String kpiId);
 
 	/**
 	 * Fetches Build Frequency KPI data from DB and caches the result
 	 *
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param startDate
-	 *            the start date
-	 * @param endDate
-	 *            the end date
-	 * @param kpiId
-	 *            the KPI id
+	 * @param basicProjectConfigId The project config ID.
+	 * @param startDate the start date
+	 * @param endDate the end date
+	 * @param kpiId the KPI id
 	 * @return list of builds.
 	 */
-	List<Build> fetchBuildFrequencyData(ObjectId basicProjectConfigId, String startDate, String endDate, String kpiId);
+	List<Build> fetchBuildFrequencyData(
+			ObjectId basicProjectConfigId, String startDate, String endDate, String kpiId);
 
 	/**
-	 * Fetches sprint capacity utilization kpi data from the database and caches the
-	 * result.
+	 * Fetches sprint capacity utilization kpi data from the database and caches the result.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
-	 * @return A map containing estimate time, story list, sprint details, and
-	 *         JiraIssue history.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
+	 * @return A map containing estimate time, story list, sprint details, and JiraIssue history.
 	 */
-	Map<String, Object> fetchSprintCapacityData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchSprintCapacityData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches Scope Churn kpi data from the database and caches the result.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
-	 * @return A map containing sprint details, total issues and scope change issue
-	 *         history.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
+	 * @return A map containing sprint details, total issues and scope change issue history.
 	 */
-	Map<String, Object> fetchScopeChurnData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchScopeChurnData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
-	 * Fetches Commitment Reliability kpi data from the database and caches the
-	 * result.
+	 * Fetches Commitment Reliability kpi data from the database and caches the result.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map containing sprint details and total issues.
 	 */
-	Map<String, Object> fetchCommitmentReliabilityData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchCommitmentReliabilityData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches Cost of Delay kpi data from the database and caches the * result.
 	 *
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param kpiId The KPI ID.
 	 * @return A map containing Cost of delay data.
 	 */
 	Map<String, Object> fetchCostOfDelayData(ObjectId basicProjectConfigId, String kpiId);
@@ -227,10 +180,8 @@ public interface KpiDataCacheService {
 	/**
 	 * Fetches Release Frequency kpi data from the database and caches the * result.
 	 *
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param kpiId The KPI ID.
 	 * @return list of project releases.
 	 */
 	List<ProjectRelease> fetchProjectReleaseData(ObjectId basicProjectConfigId, String kpiId);
@@ -238,10 +189,8 @@ public interface KpiDataCacheService {
 	/**
 	 * Fetches PI Predictability KPI data from the database and caches the * result.
 	 *
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param kpiId The KPI ID.
 	 * @return list of Jira Issues.
 	 */
 	List<JiraIssue> fetchPiPredictabilityData(ObjectId basicProjectConfigId, String kpiId);
@@ -249,62 +198,47 @@ public interface KpiDataCacheService {
 	/**
 	 * Fetches Happiness Index data from DB and caches the result
 	 *
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
-	 * @return A map returns sprint wise jira issues list and project wise sprint
-	 *         details
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
+	 * @return A map returns sprint wise jira issues list and project wise sprint details
 	 */
-	Map<String, Object> fetchHappinessIndexData(ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
+	Map<String, Object> fetchHappinessIndexData(
+			ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches Created vs Resolved KPI data from the database and caches the result.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map containing sprint details, Sub-tasks, Sub-task history.
 	 */
-	Map<String, Object> fetchCreatedVsResolvedData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-			List<String> sprintList, String kpiId);
+	Map<String, Object> fetchCreatedVsResolvedData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches DRR KPI data from the database and caches the result.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map containing sprint details, Sub-tasks, Sub-task history.
 	 */
-	Map<String, Object> fetchDRRData(KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList,
-			String kpiId);
+	Map<String, Object> fetchDRRData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 
 	/**
 	 * Fetches DSR KPI data from the database and caches the result.
 	 *
-	 * @param kpiRequest
-	 *            The KPI request object.
-	 * @param basicProjectConfigId
-	 *            The project config ID.
-	 * @param sprintList
-	 *            The list of sprint IDs.
-	 * @param kpiId
-	 *            The KPI ID.
+	 * @param kpiRequest The KPI request object.
+	 * @param basicProjectConfigId The project config ID.
+	 * @param sprintList The list of sprint IDs.
+	 * @param kpiId The KPI ID.
 	 * @return A map containing sprint details, Sub-tasks, Sub-task history.
 	 */
-	Map<String, Object> fetchDSRData(KpiRequest kpiRequest, ObjectId basicProjectConfigId,
-									 List<String> sprintList, String kpiId);
+	Map<String, Object> fetchDSRData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
 }

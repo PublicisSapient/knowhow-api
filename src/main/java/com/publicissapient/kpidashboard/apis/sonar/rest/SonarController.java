@@ -56,14 +56,10 @@ import lombok.extern.slf4j.Slf4j;
 public class SonarController {
 
 	private static final String FETCHED_SUCCESSFULLY = "fetched successfully";
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private SonarServiceR sonarService;
-	@Autowired
-	private SonarServiceKanbanR sonarServiceKanban;
-	@Autowired
-	private SonarToolConfigServiceImpl sonarToolConfigService;
+	@Autowired private CacheService cacheService;
+	@Autowired private SonarServiceR sonarService;
+	@Autowired private SonarServiceKanbanR sonarServiceKanban;
+	@Autowired private SonarToolConfigServiceImpl sonarToolConfigService;
 
 	/**
 	 * Gets Sonar Aggregate Metrics for Scrum projects
@@ -72,14 +68,19 @@ public class SonarController {
 	 * @return {@code ResponseEntity<List<KpiElement>>}
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/sonar/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			value = "/sonar/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
-	public ResponseEntity<List<KpiElement>> getSonarAggregatedMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	public ResponseEntity<List<KpiElement>> getSonarAggregatedMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 
-		log.info("[SONAR][{}]. Received Sonar KPI request {}", kpiRequest.getRequestTrackerId(), kpiRequest);
+		log.info(
+				"[SONAR][{}]. Received Sonar KPI request {}", kpiRequest.getRequestTrackerId(), kpiRequest);
 
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -101,13 +102,20 @@ public class SonarController {
 	 * @return {@code ResponseEntity<List<KpiElement>>}
 	 * @throws Exception
 	 */
-	@RequestMapping(value = "/sonarkanban/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<List<KpiElement>> getSonarKanbanAggregatedMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	@RequestMapping(
+			value = "/sonarkanban/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<List<KpiElement>> getSonarKanbanAggregatedMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 
-		log.info("[SONAR KANBAN][{}]. Received Sonar KPI request {}", kpiRequest.getRequestTrackerId(), kpiRequest);
+		log.info(
+				"[SONAR KANBAN][{}]. Received Sonar KPI request {}",
+				kpiRequest.getRequestTrackerId(),
+				kpiRequest);
 
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONARKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONARKANBAN.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -136,39 +144,43 @@ public class SonarController {
 	/**
 	 * Provides the list of Sonar Project's Key.
 	 *
-	 * @param connectionId
-	 *          the Sonar connection details
-	 * @param organizationKey
-	 *          in case of Sonar Cloud
+	 * @param connectionId the Sonar connection details
+	 * @param organizationKey in case of Sonar Cloud
 	 * @return @{@code ServiceResponse}
 	 */
-	@GetMapping(value = "/sonar/project/{connectionId}/{organizationKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getSonarProjectList(@PathVariable String connectionId,
-			@PathVariable String organizationKey) {
-		List<String> projectKeyList = sonarToolConfigService.getSonarProjectKeyList(connectionId, organizationKey);
+	@GetMapping(
+			value = "/sonar/project/{connectionId}/{organizationKey}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getSonarProjectList(
+			@PathVariable String connectionId, @PathVariable String organizationKey) {
+		List<String> projectKeyList =
+				sonarToolConfigService.getSonarProjectKeyList(connectionId, organizationKey);
 		if (CollectionUtils.isEmpty(projectKeyList)) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ServiceResponse(false, "No projects found", null));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(new ServiceResponse(false, "No projects found", null));
 		} else {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, FETCHED_SUCCESSFULLY, projectKeyList));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, FETCHED_SUCCESSFULLY, projectKeyList));
 		}
 	}
 
 	/**
-	 * Provides the list of Sonar Project's Branch API call only if version is
-	 * supported.
+	 * Provides the list of Sonar Project's Branch API call only if version is supported.
 	 *
-	 * @param connectionId
-	 *          the Sonar server connection details
-	 * @param version
-	 *          the Sonar server api version
-	 * @param projectKey
-	 *          the Sonar server project's key
+	 * @param connectionId the Sonar server connection details
+	 * @param version the Sonar server api version
+	 * @param projectKey the Sonar server project's key
 	 * @return @{@code ServiceResponse}
 	 */
-	@GetMapping(value = "/sonar/branch/{connectionId}/{version}/{projectKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getSonarProjectBranchList(@PathVariable String connectionId,
-			@PathVariable String version, @PathVariable String projectKey) {
-		ServiceResponse response = sonarToolConfigService.getSonarProjectBranchList(connectionId, version, projectKey);
+	@GetMapping(
+			value = "/sonar/branch/{connectionId}/{version}/{projectKey}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getSonarProjectBranchList(
+			@PathVariable String connectionId,
+			@PathVariable String version,
+			@PathVariable String projectKey) {
+		ServiceResponse response =
+				sonarToolConfigService.getSonarProjectBranchList(connectionId, version, projectKey);
 		HttpStatus httpStatus = HttpStatus.OK;
 		if (!response.getSuccess()) {
 			httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;

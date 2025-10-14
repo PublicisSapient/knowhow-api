@@ -75,49 +75,30 @@ import lombok.extern.slf4j.Slf4j;
 public class BulkUpdateRepository {
 	public static final String SPRINT_ID = "sprintID";
 	public static final String PROJECT_ID = "projectId";
-	@Autowired
-	private ProjectBasicConfigRepository basicConfigRepository;
-	@Autowired
-	private OrganizationHierarchyRepository organizationHierarchyRepository;
-	@Autowired
-	private AccountHierarchyRepository accountHierarchyRepository;
-	@Autowired
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
-	@Autowired
-	private SprintRepository sprintRepository;
-	@Autowired
-	private CapacityKpiDataRepository capacityKpiDataRepository;
-	@Autowired
-	private KanbanCapacityRepository kanbanCapacityRepository;
+	@Autowired private ProjectBasicConfigRepository basicConfigRepository;
+	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Autowired private AccountHierarchyRepository accountHierarchyRepository;
+	@Autowired private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
+	@Autowired private SprintRepository sprintRepository;
+	@Autowired private CapacityKpiDataRepository capacityKpiDataRepository;
+	@Autowired private KanbanCapacityRepository kanbanCapacityRepository;
 
-	@Autowired
-	private HappinessKpiDataRepository happinessKpiDataRepository;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private KanbanJiraIssueRepository kanbanJiraIssueRepository;
-	@Autowired
-	private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-	@Autowired
-	private TestExecutionRepository testExecutionRepository;
-	@Autowired
-	private KanbanTestExecutionRepository kanbanTestExecutionRepository;
-	@Autowired
-	private ProjectReleaseRepo projectReleaseRepo;
-	@Autowired
-	private SprintTraceLogRepository sprintTraceLogRepository;
-	@Autowired
-	private UserInfoRepository userInfoRepository;
-	@Autowired
-	private AccessRequestsRepository accessRequestsRepository;
-	@Autowired
-	private KpiCommentsRepository kpiCommentsRepository;
-	@Autowired
-	private ProjectHierarchyRepository projectHierarchyRepository;
-	@Autowired
-	private MongoTemplate mongoTemplate;
+	@Autowired private HappinessKpiDataRepository happinessKpiDataRepository;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
+	@Autowired private TestExecutionRepository testExecutionRepository;
+	@Autowired private KanbanTestExecutionRepository kanbanTestExecutionRepository;
+	@Autowired private ProjectReleaseRepo projectReleaseRepo;
+	@Autowired private SprintTraceLogRepository sprintTraceLogRepository;
+	@Autowired private UserInfoRepository userInfoRepository;
+	@Autowired private AccessRequestsRepository accessRequestsRepository;
+	@Autowired private KpiCommentsRepository kpiCommentsRepository;
+	@Autowired private ProjectHierarchyRepository projectHierarchyRepository;
+	@Autowired private MongoTemplate mongoTemplate;
 
-	public void saveToOrganizationHierarchy(List<OrganizationHierarchy> nodeWiseOrganizationHierarchyList) {
+	public void saveToOrganizationHierarchy(
+			List<OrganizationHierarchy> nodeWiseOrganizationHierarchyList) {
 		// Save all data to the repository
 		if (organizationHierarchyRepository.count() > 0) {
 			organizationHierarchyRepository.deleteAll(); // Delete existing records
@@ -150,66 +131,110 @@ public class BulkUpdateRepository {
 		log.info("Project Hierarchy successfully saved to the database.");
 	}
 
-	public void bulkUpdateCapacityCollections(List<CapacityKpiData> capacityUpdates,
-			List<KanbanCapacity> kanbanCapacityList) {
+	public void bulkUpdateCapacityCollections(
+			List<CapacityKpiData> capacityUpdates, List<KanbanCapacity> kanbanCapacityList) {
 		// Bulk operations for CapacityKpiData collection
 		if (CollectionUtils.isNotEmpty(capacityUpdates)) {
-			processBulkUpdatesInBatches(capacityUpdates, CapacityKpiData.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set(SPRINT_ID, data.getSprintID()).set(PROJECT_ID, data.getProjectId())),
-					"CapacityKpi Data", 1);
+			processBulkUpdatesInBatches(
+					capacityUpdates,
+					CapacityKpiData.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update()
+											.set(SPRINT_ID, data.getSprintID())
+											.set(PROJECT_ID, data.getProjectId())),
+					"CapacityKpi Data",
+					1);
 		}
 
 		// Bulk operations for another collection (e.g., AdditionalFilterCapacity)
 		if (CollectionUtils.isNotEmpty(kanbanCapacityList)) {
 
-			processBulkUpdatesInBatches(kanbanCapacityList, KanbanCapacity.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set(PROJECT_ID, data.getProjectId())),
-					"KanbanCapacity Data", 1);
+			processBulkUpdatesInBatches(
+					kanbanCapacityList,
+					KanbanCapacity.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set(PROJECT_ID, data.getProjectId())),
+					"KanbanCapacity Data",
+					1);
 		}
 	}
 
 	public void bulkUpdateHappiness(List<HappinessKpiData> happienss) {
 		if (CollectionUtils.isNotEmpty(happienss)) {
-			processBulkUpdatesInBatches(happienss, HappinessKpiData.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set(SPRINT_ID, data.getSprintID())),
-					"Happiness Kpi Data", 1);
+			processBulkUpdatesInBatches(
+					happienss,
+					HappinessKpiData.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set(SPRINT_ID, data.getSprintID())),
+					"Happiness Kpi Data",
+					1);
 			// Execute bulk operations for CapacityKpiData
 
 			log.info("HappienessKpiData successfully saved to the database.");
 		}
 	}
 
-	public void bulkUpdateJiraIssue(List<JiraIssue> scrumJiraIssueList, List<KanbanJiraIssue> kanbanJiraIssueList) {
+	public void bulkUpdateJiraIssue(
+			List<JiraIssue> scrumJiraIssueList, List<KanbanJiraIssue> kanbanJiraIssueList) {
 		// Process Scrum Jira Issues in batches
 		if (CollectionUtils.isNotEmpty(scrumJiraIssueList)) {
-			processBulkUpdatesInBatches(scrumJiraIssueList, JiraIssue.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set(SPRINT_ID, data.getSprintID())),
-					"Scrum JiraIssue", 10000);
+			processBulkUpdatesInBatches(
+					scrumJiraIssueList,
+					JiraIssue.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set(SPRINT_ID, data.getSprintID())),
+					"Scrum JiraIssue",
+					10000);
 		}
 
 		// Process Kanban Jira Issues in batches
 		if (CollectionUtils.isNotEmpty(kanbanJiraIssueList)) {
-			processBulkUpdatesInBatches(kanbanJiraIssueList, KanbanJiraIssue.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set("projectID", data.getProjectID())),
-					"Kanban JiraIssue", 10000);
+			processBulkUpdatesInBatches(
+					kanbanJiraIssueList,
+					KanbanJiraIssue.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set("projectID", data.getProjectID())),
+					"Kanban JiraIssue",
+					10000);
 		}
 	}
 
-	public void bulkUpdateTestExecution(List<TestExecution> testExecutionList,
-			List<KanbanTestExecution> kanbanTestExecutionList) {
+	public void bulkUpdateTestExecution(
+			List<TestExecution> testExecutionList, List<KanbanTestExecution> kanbanTestExecutionList) {
 		if (CollectionUtils.isNotEmpty(testExecutionList)) {
-			processBulkUpdatesInBatches(testExecutionList, TestExecution.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set("sprintId", data.getSprintId()).set(PROJECT_ID, data.getProjectId())),
-					"Scrum Test Execution", 1);
+			processBulkUpdatesInBatches(
+					testExecutionList,
+					TestExecution.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update()
+											.set("sprintId", data.getSprintId())
+											.set(PROJECT_ID, data.getProjectId())),
+					"Scrum Test Execution",
+					1);
 			log.info("Scrum Test Execution Data successfully saved to the database.");
 		}
 		if (CollectionUtils.isNotEmpty(kanbanTestExecutionList)) {
-			processBulkUpdatesInBatches(kanbanTestExecutionList, KanbanTestExecution.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set("projectNodeId", data.getProjectNodeId())),
-					"Kanban Test Execution", 1);
+			processBulkUpdatesInBatches(
+					kanbanTestExecutionList,
+					KanbanTestExecution.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set("projectNodeId", data.getProjectNodeId())),
+					"Kanban Test Execution",
+					1);
 
 			log.info("Kanban Test Execution Data successfully saved to the database.");
 		}
@@ -218,10 +243,17 @@ public class BulkUpdateRepository {
 	public void bulkUpdateProjectRelease(List<ProjectRelease> projectReleaseList) {
 		if (CollectionUtils.isNotEmpty(projectReleaseList)) {
 
-			processBulkUpdatesInBatches(projectReleaseList, ProjectRelease.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set(PROJECT_ID, data.getProjectId()).set("projectName", data.getProjectName())),
-					"Project Release", 1);
+			processBulkUpdatesInBatches(
+					projectReleaseList,
+					ProjectRelease.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update()
+											.set(PROJECT_ID, data.getProjectId())
+											.set("projectName", data.getProjectName())),
+					"Project Release",
+					1);
 			log.info("Project Release Data successfully saved to the database.");
 		}
 	}
@@ -229,78 +261,134 @@ public class BulkUpdateRepository {
 	public void bulkUpdateSprintTraceLog(List<SprintTraceLog> sprintTraceLogList) {
 		if (CollectionUtils.isNotEmpty(sprintTraceLogList)) {
 
-			processBulkUpdatesInBatches(sprintTraceLogList, SprintTraceLog.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set("sprintId", data.getSprintId())),
-					"Sprint Trace Logs", 100);
+			processBulkUpdatesInBatches(
+					sprintTraceLogList,
+					SprintTraceLog.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set("sprintId", data.getSprintId())),
+					"Sprint Trace Logs",
+					100);
 			log.info("Sprint Trace Log Data successfully saved to the database.");
 		}
 	}
 
-	public void bulkUpdateUserInfo(List<UserInfo> userInfoList, List<AccessRequest> accessRequestList) {
+	public void bulkUpdateUserInfo(
+			List<UserInfo> userInfoList, List<AccessRequest> accessRequestList) {
 		if (CollectionUtils.isNotEmpty(userInfoList)) {
-			processBulkUpdatesInBatches(userInfoList, UserInfo.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set("projectsAccess", data.getProjectsAccess())),
-					"User Info", 100);
+			processBulkUpdatesInBatches(
+					userInfoList,
+					UserInfo.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set("projectsAccess", data.getProjectsAccess())),
+					"User Info",
+					100);
 			log.info("UserInfo Data successfully saved to the database.");
 		}
 		if (CollectionUtils.isNotEmpty(accessRequestList)) {
-			processBulkUpdatesInBatches(accessRequestList, AccessRequest.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set("accessNode", data.getAccessNode())),
-					"Access Request", 100);
+			processBulkUpdatesInBatches(
+					accessRequestList,
+					AccessRequest.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set("accessNode", data.getAccessNode())),
+					"Access Request",
+					100);
 			log.info("Access Request Data successfully saved to the database.");
 		}
 	}
 
 	public void bulkUpdateComments(List<KPIComments> kpiCommentsList) {
 		if (CollectionUtils.isNotEmpty(kpiCommentsList)) {
-			processBulkUpdatesInBatches(kpiCommentsList, KPIComments.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set("node", data.getNode()).set("nodeChildId", data.getNodeChildId())),
-					"KpiComments", 1000);
+			processBulkUpdatesInBatches(
+					kpiCommentsList,
+					KPIComments.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update()
+											.set("node", data.getNode())
+											.set("nodeChildId", data.getNodeChildId())),
+					"KpiComments",
+					1000);
 			log.info("Kpi Comments Data successfully saved to the database.");
 		}
 	}
 
 	public void saveToSprintDetails(List<SprintDetails> sprintDetailsList) {
 		if (CollectionUtils.isNotEmpty(sprintDetailsList)) {
-			processBulkUpdatesInBatches(sprintDetailsList, SprintDetails.class, data -> Pair
-					.of(new Query(Criteria.where("_id").is(data.getId())), new Update().set(SPRINT_ID, data.getSprintID())),
-					"SprintDetails", 1000);
+			processBulkUpdatesInBatches(
+					sprintDetailsList,
+					SprintDetails.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update().set(SPRINT_ID, data.getSprintID())),
+					"SprintDetails",
+					1000);
 			log.info("Sprint Details Data successfully saved to the database.");
 		}
 	}
 
 	public void bulkUpdateCommentsHistory(List<KpiCommentsHistory> kpiCommentHistoryList) {
 		if (CollectionUtils.isNotEmpty(kpiCommentHistoryList)) {
-			processBulkUpdatesInBatches(kpiCommentHistoryList, KpiCommentsHistory.class,
-					data -> Pair.of(new Query(Criteria.where("_id").is(data.getId())),
-							new Update().set("node", data.getNode()).set("nodeChildId", data.getNodeChildId())),
-					"Kpi Comments History", 1000);
+			processBulkUpdatesInBatches(
+					kpiCommentHistoryList,
+					KpiCommentsHistory.class,
+					data ->
+							Pair.of(
+									new Query(Criteria.where("_id").is(data.getId())),
+									new Update()
+											.set("node", data.getNode())
+											.set("nodeChildId", data.getNodeChildId())),
+					"Kpi Comments History",
+					1000);
 
 			log.info("Kpi Comments History Data successfully saved to the database.");
 		}
 	}
 
-	private <T> void processBulkUpdatesInBatches(List<T> updates, Class<T> entityClass,
-			Function<T, Pair<Query, Update>> updateMapper, String entityType, int batchCollection) {
+	private <T> void processBulkUpdatesInBatches(
+			List<T> updates,
+			Class<T> entityClass,
+			Function<T, Pair<Query, Update>> updateMapper,
+			String entityType,
+			int batchCollection) {
 		int batchSize = batchCollection; // Set an appropriate batch size
 		List<List<T>> batches = Lists.partition(updates, batchSize);
 
-		log.info("Starting bulk update for {}. Total records: {}, Batch size: {}", entityType, updates.size(), batchSize);
+		log.info(
+				"Starting bulk update for {}. Total records: {}, Batch size: {}",
+				entityType,
+				updates.size(),
+				batchSize);
 		int batchNumber = 1;
 
 		for (List<T> batch : batches) {
 			try {
-				BulkOperations bulkOps = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, entityClass);
+				BulkOperations bulkOps =
+						mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, entityClass);
 				for (T item : batch) {
 					Pair<Query, Update> queryUpdatePair = updateMapper.apply(item);
 					bulkOps.updateOne(queryUpdatePair.getLeft(), queryUpdatePair.getRight());
 				}
 				bulkOps.execute();
-				log.info("Batch {} for {} successfully processed. Records in batch: {}", batchNumber, entityType, batch.size());
+				log.info(
+						"Batch {} for {} successfully processed. Records in batch: {}",
+						batchNumber,
+						entityType,
+						batch.size());
 			} catch (Exception e) {
-				log.error("Error in processing batch {} for {}. Error: {}", batchNumber, entityType, e.getMessage(), e);
+				log.error(
+						"Error in processing batch {} for {}. Error: {}",
+						batchNumber,
+						entityType,
+						e.getMessage(),
+						e);
 				log.error("Recommended to restore your backup and restart customapi");
 				throw e;
 			}

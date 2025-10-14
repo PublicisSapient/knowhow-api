@@ -33,17 +33,13 @@ import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 @Component
 public class ContextAwarePolicyEnforcement {
-	@Autowired
-	protected PolicyEnforcement policy;
+	@Autowired protected PolicyEnforcement policy;
 
-	@Autowired
-	private UserInfoServiceImpl userInfoService;
+	@Autowired private UserInfoServiceImpl userInfoService;
 
-	@Autowired
-	private ProjectAccessManager projectAccessManager;
+	@Autowired private ProjectAccessManager projectAccessManager;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
 	public void checkPermission(Object resource, String permission) {
 

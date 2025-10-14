@@ -74,30 +74,20 @@ public class CodeBuildTimeKanbanServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	Map<String, List<Tool>> toolGroup = new HashMap<>();
-	@Mock
-	BuildRepository buildRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	CommonService commonService;
-	@InjectMocks
-	CodeBuildTimeKanbanServiceImpl codeBuildTimeKanbanServiceImpl;
+	@Mock BuildRepository buildRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock CommonService commonService;
+	@InjectMocks CodeBuildTimeKanbanServiceImpl codeBuildTimeKanbanServiceImpl;
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private List<Build> buildList = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 
@@ -108,15 +98,18 @@ public class CodeBuildTimeKanbanServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi66");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		BuildDataFactory buildDataFactory = BuildDataFactory
-				.newInstance("/json/non-JiraProcessors/build_details_kanban.json");
+		BuildDataFactory buildDataFactory =
+				BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details_kanban.json");
 		buildList = buildDataFactory.getbuildDataList();
 		buildList.forEach(
-				build -> build.setStartTime(LocalDateTime.now().minusDays(2).toInstant(ZoneOffset.UTC).toEpochMilli()));
+				build ->
+						build.setStartTime(
+								LocalDateTime.now().minusDays(2).toInstant(ZoneOffset.UTC).toEpochMilli()));
 
 		Map<String, String> aggregationMap = new HashMap<>();
 		aggregationMap.put("kanbanCodeBuildTime", "average");
@@ -126,16 +119,21 @@ public class CodeBuildTimeKanbanServiceImplTest {
 	@Test
 	public void testGetCodeBuildTimeKanban() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 5);
 
 		when(buildRepository.findBuildList(any(), any(), any(), any())).thenReturn(buildList);
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 
 		try {
-			KpiElement kpiElement = codeBuildTimeKanbanServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Code Build Time :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					codeBuildTimeKanbanServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Code Build Time :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 
 		}

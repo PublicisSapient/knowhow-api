@@ -37,18 +37,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class AuthenticationResultHandler implements AuthenticationSuccessHandler {
 
-	@Autowired
-	private AuthenticationResponseService authenticationResponseService;
+	@Autowired private AuthenticationResponseService authenticationResponseService;
 
-	@Autowired
-	private CustomAnalyticsService customAnalyticsService;
+	@Autowired private CustomAnalyticsService customAnalyticsService;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
 	@Override
-	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-			Authentication authentication) throws IOException, ServletException {
+	public void onAuthenticationSuccess(
+			HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+			throws IOException, ServletException {
 		authenticationResponseService.handle(response, authentication);
 		// sgu106: Google Analytics data population starts
 		String username = authenticationService.getUsername(authentication);

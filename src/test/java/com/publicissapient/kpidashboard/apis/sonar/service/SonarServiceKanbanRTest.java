@@ -74,24 +74,15 @@ public class SonarServiceKanbanRTest {
 	private static final String TESTSONAR = "TEST_SONAR";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	private SonarServiceKanbanR sonarService;
-	@Mock
-	private CustomApiConfig customApiSetting;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private CodeViolationsKanbanServiceImpl sonarViolationsService;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks private SonarServiceKanbanR sonarService;
+	@Mock private CustomApiConfig customApiSetting;
+	@Mock private CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private CodeViolationsKanbanServiceImpl sonarViolationsService;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -115,8 +106,7 @@ public class SonarServiceKanbanRTest {
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
-	@Mock
-	TestService service;
+	@Mock TestService service;
 
 	@Before
 	public void setup() throws ApplicationException {
@@ -128,20 +118,23 @@ public class SonarServiceKanbanRTest {
 
 		sonarKPIServiceFactory.initMyServiceCache();
 
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi64");
 		createKpiRequest("SONAR", 3, kpiRequest);
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 		sonarKPIServiceFactory.initMyServiceCache();
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		Map<String, Integer> map = new HashMap<>();
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(map);
@@ -193,7 +186,8 @@ public class SonarServiceKanbanRTest {
 
 	private void initialization() throws EntityNotFoundException {
 		String[] exampleStringList = {"exampleElement", "exampleElement"};
-		when(filterHelperService.getHierarachyLevelId(Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
+		when(filterHelperService.getHierarachyLevelId(
+						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
 		when(filterHelperService.getFilteredBuildsKanban(ArgumentMatchers.any(), Mockito.anyString()))
 				.thenReturn(accountHierarchyKanbanDataList);
@@ -201,8 +195,9 @@ public class SonarServiceKanbanRTest {
 				.thenReturn(exampleStringList);
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
@@ -212,7 +207,8 @@ public class SonarServiceKanbanRTest {
 	@Test
 	public void sonarViolationsTestProcess_cache() throws Exception {
 		String[] exampleStringList = {"exampleElement", "exampleElement"};
-		when(filterHelperService.getHierarachyLevelId(Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
+		when(filterHelperService.getHierarachyLevelId(
+						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
 		when(filterHelperService.getFilteredBuildsKanban(ArgumentMatchers.any(), Mockito.anyString()))
 				.thenReturn(accountHierarchyKanbanDataList);
@@ -220,13 +216,15 @@ public class SonarServiceKanbanRTest {
 				.thenReturn(exampleStringList);
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
 				.thenReturn(accountHierarchyKanbanDataList);
-		when(cacheService.getFromApplicationCache(eq(exampleStringList), eq(KPISource.SONARKANBAN.name()), eq(1), isNull()))
+		when(cacheService.getFromApplicationCache(
+						eq(exampleStringList), eq(KPISource.SONARKANBAN.name()), eq(1), isNull()))
 				.thenReturn(new ArrayList<KpiElement>());
 
 		try {
@@ -247,7 +245,7 @@ public class SonarServiceKanbanRTest {
 		List<KpiElement> kpiList = new ArrayList<>();
 		addKpiElement(kpiList, TESTSONAR, TESTSONAR, "TechDebt", "", source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"Kanban Project_6335368249794a18e8a4479f"});
+		kpiRequest.setIds(new String[] {"Kanban Project_6335368249794a18e8a4479f"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		Map<String, List<String>> selectedMap = new HashMap<>();
@@ -257,7 +255,12 @@ public class SonarServiceKanbanRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);

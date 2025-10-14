@@ -43,26 +43,19 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExec
 @Service
 public class BuildDataCleanUpService implements ToolDataCleanUpService {
 
-	@Autowired
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Autowired private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Autowired
-	private ProcessorItemRepository processorItemRepository;
+	@Autowired private ProcessorItemRepository processorItemRepository;
 
-	@Autowired
-	private BuildRepository buildRepository;
+	@Autowired private BuildRepository buildRepository;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
 
-	@Autowired
-	private DeploymentRepository deploymentRepository;
+	@Autowired private DeploymentRepository deploymentRepository;
 
-	@Autowired
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Autowired private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
 	@Override
 	public String getToolCategory() {
@@ -90,7 +83,8 @@ public class BuildDataCleanUpService implements ToolDataCleanUpService {
 			cacheService.clearCache(CommonConstant.JENKINS_KPI_CACHE);
 			List<String> kpiList = kpiDataCacheService.getKpiBasedOnSource(KPISource.JENKINS.name());
 			kpiList.forEach(
-					kpiId -> kpiDataCacheService.clearCache(tool.getBasicProjectConfigId().toHexString(), kpiId));
+					kpiId ->
+							kpiDataCacheService.clearCache(tool.getBasicProjectConfigId().toHexString(), kpiId));
 		}
 	}
 }

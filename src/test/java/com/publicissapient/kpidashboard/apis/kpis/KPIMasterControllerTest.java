@@ -50,11 +50,9 @@ public class KPIMasterControllerTest {
 	private MockMvc mockMvc;
 	private List<KpiMaster> kpiMasterList;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 
-	@InjectMocks
-	private KPIMasterController kpiMasterController;
+	@InjectMocks private KPIMasterController kpiMasterController;
 
 	@Before
 	public void before() {

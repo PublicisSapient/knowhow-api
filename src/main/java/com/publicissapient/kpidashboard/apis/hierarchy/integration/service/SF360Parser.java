@@ -29,7 +29,8 @@ public class SF360Parser implements HierarchyDetailParser {
 
 	@Override
 	public HierarchyDetails convertToHierachyDetail(String jsonResponse) {
-		ObjectMapper objectMapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+		ObjectMapper objectMapper =
+				new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 		try (JsonParser parser = objectMapper.createParser(jsonResponse)) {
 			JsonNode rootNode = objectMapper.readTree(parser);
 			JsonNode hierarchyDetailsNode = rootNode.path("data").get(0).path("hierarchyDetails");
@@ -38,5 +39,4 @@ public class SF360Parser implements HierarchyDetailParser {
 			throw new HierarchyParsingException("Failed to parse hierarchy details", e);
 		}
 	}
-
 }

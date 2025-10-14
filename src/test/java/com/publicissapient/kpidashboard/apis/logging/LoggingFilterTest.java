@@ -43,27 +43,19 @@ import jakarta.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class LoggingFilterTest {
 
-	@Mock
-	private RequestLogRepository requestLogRepository;
+	@Mock private RequestLogRepository requestLogRepository;
 
-	@InjectMocks
-	@Autowired
-	private LoggingFilter loggingFilter;
+	@InjectMocks @Autowired private LoggingFilter loggingFilter;
 
-	@Mock
-	private CustomApiConfig settings;
+	@Mock private CustomApiConfig settings;
 
-	@Mock
-	private HttpServletRequest httpServletRequest;
+	@Mock private HttpServletRequest httpServletRequest;
 
-	@Mock
-	private HttpServletResponse httpServletResponse;
+	@Mock private HttpServletResponse httpServletResponse;
 
-	@Mock
-	private FilterChain filterChain;
+	@Mock private FilterChain filterChain;
 
-	@Mock
-	private ServletInputStream servletInputStream;
+	@Mock private ServletInputStream servletInputStream;
 
 	@Test
 	public void testDoFilterPut() throws Exception {

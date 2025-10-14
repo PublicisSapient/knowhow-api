@@ -23,39 +23,27 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for executive dashboard request payload.
- */
+/** DTO for executive dashboard request payload. */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExecutiveDashboardRequestDTO {
 
-	/**
-	 * The hierarchy level for the request
-	 */
+	/** The hierarchy level for the request */
 	@NotNull(message = "Level is mandatory")
 	private Integer level;
 
-	/**
-	 * The label for the request (e.g., "account")
-	 */
+	/** The label for the request (e.g., "account") */
 	@NotNull(message = "Label is mandatory")
 	private String label;
 
-	/**
-	 * The date range type (e.g., "Weeks"). Optional, not used in Scrum.
-	 */
+	/** The date range type (e.g., "Weeks"). Optional, not used in Scrum. */
 	private String date;
 
-	/**
-	 * The duration for the date range. Optional, not used in Scrum.
-	 */
+	/** The duration for the date range. Optional, not used in Scrum. */
 	private Integer duration;
 
-	/**
-	 * The parent ID. If absent, process all account level IDs.
-	 */
+	/** The parent ID. If absent, process all account level IDs. */
 	private String parentId;
 }

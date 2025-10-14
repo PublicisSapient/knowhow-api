@@ -56,26 +56,27 @@ public class ReleaseDefectCountByStatusServiceImpl extends JiraReleaseKPIService
 
 	private static final String TOTAL_DEFECT = "totalDefects";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CommonServiceImpl commonService;
+	@Autowired private CommonServiceImpl commonService;
 
-	private static void getStatusWiseCount(Map<String, List<JiraIssue>> statusData, Map<String, Integer> statusCountMap) {
+	private static void getStatusWiseCount(
+			Map<String, List<JiraIssue>> statusData, Map<String, Integer> statusCountMap) {
 		for (Map.Entry<String, List<JiraIssue>> statusEntry : statusData.entrySet()) {
 			statusCountMap.put(statusEntry.getKey(), statusEntry.getValue().size());
 		}
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Defect count by Status Release -> Requested sprint : {}", leafNode.getName());
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 			if (null != fieldMapping) {
 				List<JiraIssue> releaseDefects = getFilteredReleaseJiraIssuesFromBaseClass(fieldMapping);
 				resultListMap.put(TOTAL_DEFECT, releaseDefects);
@@ -102,7 +103,8 @@ public class ReleaseDefectCountByStatusServiceImpl extends JiraReleaseKPIService
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
-	private void releaseWiseLeafNodeValue(Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void releaseWiseLeafNodeValue(
+			Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
 		if (latestRelease != null) {
@@ -111,16 +113,19 @@ public class ReleaseDefectCountByStatusServiceImpl extends JiraReleaseKPIService
 			List<IterationKpiValue> filterDataList = new ArrayList<>();
 			if (CollectionUtils.isNotEmpty(totalDefects)) {
 				Map<String, List<JiraIssue>> statusWiseList = getStatusWiseList(totalDefects);
-				log.info("ReleaseDefectCountByStatusServiceImpl -> statusWiseList ->  : {}", statusWiseList);
+				log.info(
+						"ReleaseDefectCountByStatusServiceImpl -> statusWiseList ->  : {}", statusWiseList);
 				Map<String, Integer> statusCountMap = new HashMap<>();
 				getStatusWiseCount(statusWiseList, statusCountMap);
 				if (MapUtils.isNotEmpty(statusCountMap)) {
 					Object basicProjectConfigId = latestRelease.getProjectFilter().getBasicProjectConfigId();
-					FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
 					List<DataCount> trendValueListOverAll = new ArrayList<>();
 					DataCount overallData = new DataCount();
-					int sumOfDefectsCount = statusCountMap.values().stream().mapToInt(Integer::intValue).sum();
+					int sumOfDefectsCount =
+							statusCountMap.values().stream().mapToInt(Integer::intValue).sum();
 					overallData.setData(String.valueOf(sumOfDefectsCount));
 					overallData.setValue(statusCountMap);
 					overallData.setKpiGroup(CommonConstant.OVERALL);
@@ -133,14 +138,16 @@ public class ReleaseDefectCountByStatusServiceImpl extends JiraReleaseKPIService
 					middleOverallData.setValue(trendValueListOverAll);
 					middleTrendValueListOverAll.add(middleOverallData);
 					populateExcelDataObject(requestTrackerId, excelData, totalDefects, fieldMapping);
-					IterationKpiValue filterDataOverall = new IterationKpiValue(CommonConstant.OVERALL,
-							middleTrendValueListOverAll);
+					IterationKpiValue filterDataOverall =
+							new IterationKpiValue(CommonConstant.OVERALL, middleTrendValueListOverAll);
 					filterDataList.add(filterDataOverall);
 					kpiElement.setSprint(latestRelease.getName());
 					kpiElement.setModalHeads(KPIExcelColumn.DEFECT_COUNT_BY_STATUS_RELEASE.getColumns());
 					kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_COUNT_BY_STATUS_RELEASE.getColumns());
 					kpiElement.setExcelData(excelData);
-					log.info("ReleaseDefectCountByStatusServiceImpl -> request id : {} total jira Issues : {}", requestTrackerId,
+					log.info(
+							"ReleaseDefectCountByStatusServiceImpl -> request id : {} total jira Issues : {}",
+							requestTrackerId,
 							filterDataList.get(0));
 				}
 			}
@@ -148,20 +155,26 @@ public class ReleaseDefectCountByStatusServiceImpl extends JiraReleaseKPIService
 		}
 	}
 
-	private void populateExcelDataObject(String requestTrackerId, List<KPIExcelData> excelData,
-			List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				CollectionUtils.isNotEmpty(jiraIssueList)) {
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<KPIExcelData> excelData,
+			List<JiraIssue> jiraIssueList,
+			FieldMapping fieldMapping) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+				&& CollectionUtils.isNotEmpty(jiraIssueList)) {
 			KPIExcelUtility.populateReleaseDefectRelatedExcelData(jiraIssueList, excelData, fieldMapping);
 		}
 	}
 
 	private Map<String, List<JiraIssue>> getStatusWiseList(List<JiraIssue> defectJiraIssueList) {
-		return defectJiraIssueList.stream().filter(jiraIssue -> {
-			if (StringUtils.isEmpty(jiraIssue.getStatus())) {
-				jiraIssue.setStatus("-");
-			}
-			return true;
-		}).collect(Collectors.groupingBy(JiraIssue::getStatus));
+		return defectJiraIssueList.stream()
+				.filter(
+						jiraIssue -> {
+							if (StringUtils.isEmpty(jiraIssue.getStatus())) {
+								jiraIssue.setStatus("-");
+							}
+							return true;
+						})
+				.collect(Collectors.groupingBy(JiraIssue::getStatus));
 	}
 }

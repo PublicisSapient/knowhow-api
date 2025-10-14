@@ -27,5 +27,4 @@ public final class PromptKeys {
 	private PromptKeys() {
 		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
 	}
-
 }

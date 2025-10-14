@@ -81,22 +81,14 @@ public class CodeCommitKanbanServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	Map<String, List<Tool>> toolGroup = new HashMap<>();
-	@Mock
-	CommitRepository commitRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@InjectMocks
-	CodeCommitKanbanServiceImpl codeCommitServiceImpl;
+	@Mock CommitRepository commitRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiSetting;
+	@InjectMocks CodeCommitKanbanServiceImpl codeCommitServiceImpl;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
@@ -104,8 +96,7 @@ public class CodeCommitKanbanServiceImplTest {
 	private List<String> filterCategory = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private KpiRequest kpiRequest;
 
@@ -123,12 +114,13 @@ public class CodeCommitKanbanServiceImplTest {
 		selectedMap.put(CommonConstant.DATE, Arrays.asList("DAYS"));
 		kpiRequest.setSelectedMap(selectedMap);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		CommitDetailsDataFactory commitDetailsDataFactory = CommitDetailsDataFactory
-				.newInstance("/json/non-JiraProcessors/commit_details_kanban.json");
+		CommitDetailsDataFactory commitDetailsDataFactory =
+				CommitDetailsDataFactory.newInstance("/json/non-JiraProcessors/commit_details_kanban.json");
 		commitList = commitDetailsDataFactory.getcommitDetailsList();
 
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
@@ -138,13 +130,15 @@ public class CodeCommitKanbanServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -204,7 +198,12 @@ public class CodeCommitKanbanServiceImplTest {
 		toolMap.put(new ObjectId("6335368249794a18e8a4479f"), toolGroup);
 	}
 
-	private Tool createTool(String url, String branch, String toolType, String username, String password,
+	private Tool createTool(
+			String url,
+			String branch,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> processorItemList) {
 		Tool tool = new Tool();
 		tool.setUrl(url);
@@ -214,7 +213,8 @@ public class CodeCommitKanbanServiceImplTest {
 		return tool;
 	}
 
-	private CommitDetails createCommit(String url, String branch, String date, Long count, ObjectId processorItemId) {
+	private CommitDetails createCommit(
+			String url, String branch, String date, Long count, ObjectId processorItemId) {
 		CommitDetails commitDetails = new CommitDetails();
 		commitDetails.setUrl(url);
 		commitDetails.setBranch(branch);
@@ -231,8 +231,9 @@ public class CodeCommitKanbanServiceImplTest {
 		Map<String, Node> mapTmp = new HashMap<>();
 		List<Node> leafNodeList = new ArrayList<>();
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 5);
 
 		when(commitRepository.findCommitList(any(), any(), any(), any())).thenReturn(commitList);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
@@ -240,28 +241,35 @@ public class CodeCommitKanbanServiceImplTest {
 
 		String kpiRequestTrackerId = "Excel-Bitbucket-5be544de025de212549176a9";
 
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
 
-		KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
-		((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(data -> {
-			String projectName = data.getFilter();
-			switch (projectName) {
-				case "Overall" :
-					assertThat("Overall Commit Details:", data.getValue().size(), equalTo(2));
-					break;
+		KpiElement kpiElement =
+				codeCommitServiceImpl.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+		((List<DataCountGroup>) kpiElement.getTrendValueList())
+				.forEach(
+						data -> {
+							String projectName = data.getFilter();
+							switch (projectName) {
+								case "Overall":
+									assertThat("Overall Commit Details:", data.getValue().size(), equalTo(2));
+									break;
 
-				case "BRANCH1->PR_10304" :
-					assertThat("Branch1 Commit Details:", data.getValue().size(), equalTo(2));
-					break;
-			}
-		});
+								case "BRANCH1->PR_10304":
+									assertThat("Branch1 Commit Details:", data.getValue().size(), equalTo(2));
+									break;
+							}
+						});
 	}
 
 	@Test
 	public void getQualifierType() {
-		assertThat(KPICode.NUMBER_OF_CHECK_INS.name(), equalTo(codeCommitServiceImpl.getQualifierType()));
+		assertThat(
+				KPICode.NUMBER_OF_CHECK_INS.name(), equalTo(codeCommitServiceImpl.getQualifierType()));
 	}
 
 	@Test

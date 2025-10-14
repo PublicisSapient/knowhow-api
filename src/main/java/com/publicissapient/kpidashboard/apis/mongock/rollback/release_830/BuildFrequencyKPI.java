@@ -66,9 +66,10 @@ public class BuildFrequencyKPI {
 	}
 
 	public void deleteFieldMappingStructure() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
-		fieldMappingStructure
-				.deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList("thresholdValueKPI172"))));
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
+		fieldMappingStructure.deleteMany(
+				new Document(FIELD_NAME, new Document("$in", Arrays.asList("thresholdValueKPI172"))));
 	}
 
 	@RollbackExecution

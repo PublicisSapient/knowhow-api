@@ -70,22 +70,14 @@ public class CostOfDelayKanbanServiceImplTest {
 
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	KanbanJiraIssueRepository jiraKanbanIssueRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	CostOfDelayKanbanServiceImpl costOfDelayKanbanServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
+	@Mock KanbanJiraIssueRepository jiraKanbanIssueRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks CostOfDelayKanbanServiceImpl costOfDelayKanbanServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiSetting;
 
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 	private List<KanbanJiraIssue> kanbanJiraIssueDataList = new ArrayList<>();
@@ -94,17 +86,22 @@ public class CostOfDelayKanbanServiceImplTest {
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi114");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory = KanbanJiraIssueDataFactory.newInstance();
-		kanbanJiraIssueDataList = kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeName(Arrays.asList("Story"));
-		kanbanJiraIssueDataList.stream().forEach(f -> f.setChangeDate(LocalDateTime.now().minusDays(2).toString()));
+		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory =
+				KanbanJiraIssueDataFactory.newInstance();
+		kanbanJiraIssueDataList =
+				kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeName(Arrays.asList("Story"));
+		kanbanJiraIssueDataList.stream()
+				.forEach(f -> f.setChangeDate(LocalDateTime.now().minusDays(2).toString()));
 		jiraKanbanIssueRepository.saveAll(kanbanJiraIssueDataList);
 		kpiWiseAggregation.put("cost_Of_Delay", "sum");
 
@@ -124,13 +121,18 @@ public class CostOfDelayKanbanServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 4);
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyKanbanDataList, "hierarchyLevelOne", 4);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
-		when(jiraKanbanIssueRepository.findCostOfDelayByType(Mockito.any())).thenReturn(kanbanJiraIssueDataList);
-		Map<String, Object> dataList = costOfDelayKanbanServiceImpl.fetchKPIDataFromDb(projectList, null, null, kpiRequest);
+		when(jiraKanbanIssueRepository.findCostOfDelayByType(Mockito.any()))
+				.thenReturn(kanbanJiraIssueDataList);
+		Map<String, Object> dataList =
+				costOfDelayKanbanServiceImpl.fetchKPIDataFromDb(projectList, null, null, kpiRequest);
 		assertThat("Total Release : ", dataList.size(), equalTo(1));
 	}
 

@@ -60,10 +60,8 @@ public class BuildDeployFields {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 		BuildDeployFields that = (BuildDeployFields) o;
 		return jobName.equals(that.jobName) && number.equals(that.number);
 	}

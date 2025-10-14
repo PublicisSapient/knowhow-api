@@ -40,7 +40,8 @@ public class UniqueShortKeyGenerator {
 			// Return first 8 characters for a short key
 			return shortKey.substring(0, 8);
 		} catch (NoSuchAlgorithmException e) {
-			log.error("Error generating short key for input: {}", input.replaceAll("[^a-zA-Z0-9-_]", ""), e);
+			log.error(
+					"Error generating short key for input: {}", input.replaceAll("[^a-zA-Z0-9-_]", ""), e);
 			throw new IllegalStateException("Error generating short key", e);
 		}
 	}

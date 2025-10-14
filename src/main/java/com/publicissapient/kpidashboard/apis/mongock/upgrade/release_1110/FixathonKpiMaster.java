@@ -78,68 +78,116 @@ public class FixathonKpiMaster {
 
 	private void updateDuplicateInfo(MongoCollection<Document> kpiMaster) {
 
-		kpiMaster.updateMany(new Document(KPIID, "kpi156"), new Document(UNSET, new Document(KPIINFO_DETAILS, "")));
-		kpiMaster.updateMany(new Document(KPIID, "kpi150"), new Document(UNSET, new Document(KPIINFO_DETAILS, "")));
+		kpiMaster.updateMany(
+				new Document(KPIID, "kpi156"), new Document(UNSET, new Document(KPIINFO_DETAILS, "")));
+		kpiMaster.updateMany(
+				new Document(KPIID, "kpi150"), new Document(UNSET, new Document(KPIINFO_DETAILS, "")));
 
 		// Step 2: Set new details
-		kpiMaster.updateMany(new Document(KPIID, "kpi156"), new Document("$set", new Document(KPIINFO_DETAILS, List.of(
-				new Document("type", "paragraph").append("value",
-						"LEAD TIME FOR CHANGE Captures the time between a code change to commit and deployed to production."),
-				new Document("type", "link").append("kpiLinkDetail",
-						new Document("text", "Detailed Information at").append("link",
-								"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/71663772/DORA+Lead+time+for+changes"))))));
+		kpiMaster.updateMany(
+				new Document(KPIID, "kpi156"),
+				new Document(
+						"$set",
+						new Document(
+								KPIINFO_DETAILS,
+								List.of(
+										new Document("type", "paragraph")
+												.append(
+														"value",
+														"LEAD TIME FOR CHANGE Captures the time between a code change to commit and deployed to production."),
+										new Document("type", "link")
+												.append(
+														"kpiLinkDetail",
+														new Document("text", "Detailed Information at")
+																.append(
+																		"link",
+																		"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/71663772/DORA+Lead+time+for+changes"))))));
 
 		// Step 2: Set new details
-		kpiMaster.updateMany(new Document(KPIID, "kpi150"),
-				new Document("$set",
-						new Document(KPIINFO_DETAILS, List.of(new Document("type", "link").append("kpiLinkDetail",
-								new Document("text", "Detailed Information at").append("link",
-										"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/70484023/Release+Release+Burnup"))))));
+		kpiMaster.updateMany(
+				new Document(KPIID, "kpi150"),
+				new Document(
+						"$set",
+						new Document(
+								KPIINFO_DETAILS,
+								List.of(
+										new Document("type", "link")
+												.append(
+														"kpiLinkDetail",
+														new Document("text", "Detailed Information at")
+																.append(
+																		"link",
+																		"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/70484023/Release+Release+Burnup"))))));
 	}
 
-	public void updateYAxisLabel(MongoCollection<Document> kpiMaster, List<String> kpiIds, String yAxisLabel) {
-		kpiMaster.updateMany(new Document(KPIID, new Document("$in", kpiIds)),
+	public void updateYAxisLabel(
+			MongoCollection<Document> kpiMaster, List<String> kpiIds, String yAxisLabel) {
+		kpiMaster.updateMany(
+				new Document(KPIID, new Document("$in", kpiIds)),
 				new Document("$set", new Document("yAxisLabel", yAxisLabel)));
 	}
 
 	public void changeKpiName(String kpiId, String kpiName, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPIID, new Document("$in", Arrays.asList(kpiId))),
+		kpiMaster.updateMany(
+				new Document(KPIID, new Document("$in", Arrays.asList(kpiId))),
 				new Document("$set", new Document("kpiName", kpiName)));
 	}
 
 	public void changeProductionDefectAgeingGraph(MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPIID, new Document("$in", Arrays.asList(KPI_127))), new Document("$set",
-				new Document("chartType", "grouped_column_plus_line").append("isXaxisGroup", true).append("lineChart", false)));
+		kpiMaster.updateMany(
+				new Document(KPIID, new Document("$in", Arrays.asList(KPI_127))),
+				new Document(
+						"$set",
+						new Document("chartType", "grouped_column_plus_line")
+								.append("isXaxisGroup", true)
+								.append("lineChart", false)));
 	}
 
-	public void changeKpiOrder(String kpiId, Integer defaultOrder, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPIID, new Document("$in", Arrays.asList(kpiId))),
+	public void changeKpiOrder(
+			String kpiId, Integer defaultOrder, MongoCollection<Document> kpiMaster) {
+		kpiMaster.updateMany(
+				new Document(KPIID, new Document("$in", Arrays.asList(kpiId))),
 				new Document("$set", new Document("defaultOrder", defaultOrder)));
 	}
 
 	private void updateMaturityInfo(String kpiId) {
 		Document query = new Document(KPIID, kpiId);
-		Document update = new Document("$set",
-				new Document().append("maturityRange", Arrays.asList("60-", "40-60", "25-40", "10-25", "0-10"))
-						.append(AGGREGATION_CRITERIA, "deviation").append("calculateMaturity", true));
+		Document update =
+				new Document(
+						"$set",
+						new Document()
+								.append("maturityRange", Arrays.asList("60-", "40-60", "25-40", "10-25", "0-10"))
+								.append(AGGREGATION_CRITERIA, "deviation")
+								.append("calculateMaturity", true));
 		mongoTemplate.getCollection(KPI_MASTER).updateOne(query, update);
 	}
 
 	private void updateMaturityInfoRollBack(String kpiId) {
 		Document query = new Document(KPIID, kpiId);
-		Document update = new Document(UNSET,
-				new Document().append("maturityRange", Arrays.asList("60-", "40-60", "25-40", "10-25", "0-10"))
-						.append(AGGREGATION_CRITERIA, "deviation").append("calculateMaturity", true));
+		Document update =
+				new Document(
+						UNSET,
+						new Document()
+								.append("maturityRange", Arrays.asList("60-", "40-60", "25-40", "10-25", "0-10"))
+								.append(AGGREGATION_CRITERIA, "deviation")
+								.append("calculateMaturity", true));
 		mongoTemplate.getCollection(KPI_MASTER).updateOne(query, update);
 	}
 
 	public void unsetProductionDefectAgeingChart(MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPIID, new Document("$in", Arrays.asList(KPI_127))),
-				new Document(UNSET, new Document("chartType", "line").append("isXaxisGroup", null).append("lineChart", null)));
+		kpiMaster.updateMany(
+				new Document(KPIID, new Document("$in", Arrays.asList(KPI_127))),
+				new Document(
+						UNSET,
+						new Document("chartType", "line")
+								.append("isXaxisGroup", null)
+								.append("lineChart", null)));
 	}
 
-	private void updateAggregationCriteria(MongoCollection<Document> kpiMaster, List<String> kpiIds, String aggCriteria) {
-		kpiMaster.updateMany(new Document(KPIID, new Document("$in", kpiIds)),
+	private void updateAggregationCriteria(
+			MongoCollection<Document> kpiMaster, List<String> kpiIds, String aggCriteria) {
+		kpiMaster.updateMany(
+				new Document(KPIID, new Document("$in", kpiIds)),
 				new Document("$set", new Document(AGGREGATION_CRITERIA, aggCriteria)));
 	}
 

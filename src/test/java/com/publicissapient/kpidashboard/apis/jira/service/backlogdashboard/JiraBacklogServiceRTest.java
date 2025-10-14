@@ -75,27 +75,17 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 public class JiraBacklogServiceRTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	JiraBacklogServiceR jiraBacklogServiceR;
-	@Mock
-	FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock JiraBacklogServiceR jiraBacklogServiceR;
+	@Mock FilterHelperService filterHelperService;
 	List<KpiElement> mockKpiElementList = new ArrayList<>();
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	private JiraBacklogServiceR jiraServiceR;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private FlowLoadServiceImpl flowLoadService;
+	@Mock SprintRepository sprintRepository;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks private JiraBacklogServiceR jiraServiceR;
+	@Mock private CacheService cacheService;
+	@Mock private FlowLoadServiceImpl flowLoadService;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -106,16 +96,11 @@ public class JiraBacklogServiceRTest {
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
 	private KpiElement ibKpiElement;
 	private Map<String, JiraBacklogKPIService> jiraServiceCache = new HashMap<>();
-	@Mock
-	private JiraNonTrendKPIServiceFactory jiraKPIServiceFactory;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
-	@Mock
-	private FlowLoadServiceImpl service;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private JiraNonTrendKPIServiceFactory jiraKPIServiceFactory;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
+	@Mock private FlowLoadServiceImpl service;
+	@Mock private CustomApiConfig customApiConfig;
 
 	private KpiRequest kpiRequest;
 
@@ -123,15 +108,16 @@ public class JiraBacklogServiceRTest {
 	public void setup() throws ApplicationException {
 		MockitoAnnotations.openMocks(this);
 		List<NonTrendKPIService> mockServices = Arrays.asList(flowLoadService);
-		JiraNonTrendKPIServiceFactory serviceFactory = JiraNonTrendKPIServiceFactory.builder().services(mockServices)
-				.build();
+		JiraNonTrendKPIServiceFactory serviceFactory =
+				JiraNonTrendKPIServiceFactory.builder().services(mockServices).build();
 		doReturn(KPICode.FLOW_LOAD.name()).when(flowLoadService).getQualifierType();
 		serviceFactory.initMyServiceCache();
 
 		kpiRequest = createKpiRequest(5);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/account_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/account_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
@@ -141,25 +127,30 @@ public class JiraBacklogServiceRTest {
 		projectConfig.setProjectName("Scrum Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(cacheService.getFromApplicationCache(any(), any(), any(), any())).thenReturn(null);
 		when(cacheService.cacheAccountHierarchyData()).thenReturn(accountHierarchyDataList);
-		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean())).thenReturn(accountHierarchyDataList);
+		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
+				.thenReturn(accountHierarchyDataList);
 		when(configHelperService.getFieldMapping(any())).thenReturn(fieldMapping);
-		try (MockedStatic<JiraNonTrendKPIServiceFactory> utilities = Mockito
-				.mockStatic(JiraNonTrendKPIServiceFactory.class)) {
+		try (MockedStatic<JiraNonTrendKPIServiceFactory> utilities =
+				Mockito.mockStatic(JiraNonTrendKPIServiceFactory.class)) {
 			utilities
-					.when((MockedStatic.Verification) JiraNonTrendKPIServiceFactory.getJiraKPIService(KPICode.FLOW_LOAD.name()))
+					.when(
+							(MockedStatic.Verification)
+									JiraNonTrendKPIServiceFactory.getJiraKPIService(KPICode.FLOW_LOAD.name()))
 					.thenReturn(flowLoadService);
-			when(flowLoadService.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
+			when(flowLoadService.getKpiData(any(), any(), any()))
+					.thenReturn(kpiRequest.getKpiList().get(0));
 		}
 	}
 
@@ -230,15 +221,33 @@ public class JiraBacklogServiceRTest {
 	public void testGetFutureSprintsList() throws NoSuchFieldException, IllegalAccessException {
 		// Creating test data
 		List<SprintDetails> futureSprintDetails = new ArrayList<>();
-		futureSprintDetails.add(new SprintDetails("s1", "sone", "1", "future", String.valueOf(LocalDate.of(2024, 3, 8)),
-				String.valueOf(LocalDate.of(2024, 4, 8)), "", null, null, null, null, null, null, null, null, null, null,
-				null));
+		futureSprintDetails.add(
+				new SprintDetails(
+						"s1",
+						"sone",
+						"1",
+						"future",
+						String.valueOf(LocalDate.of(2024, 3, 8)),
+						String.valueOf(LocalDate.of(2024, 4, 8)),
+						"",
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null));
 
 		// Using reflection to set the private field futureSprintDetails
 		Field field = JiraBacklogServiceR.class.getDeclaredField("futureSprintDetails");
 		field.setAccessible(true);
 		field.set(jiraServiceR, futureSprintDetails);
-		when(customApiConfig.getSprintCountForBackLogStrength()).thenReturn(5); // Set the expected limit
+		when(customApiConfig.getSprintCountForBackLogStrength())
+				.thenReturn(5); // Set the expected limit
 
 		List<String> result = jiraServiceR.getFutureSprintsList();
 
@@ -267,7 +276,7 @@ public class JiraBacklogServiceRTest {
 
 		addKpiElement(kpiList, KPICode.FLOW_LOAD.getKpiId(), KPICode.FLOW_LOAD.name(), "Backlog", "");
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"Scrum Project_6335363749794a18e8a4479b"});
+		kpiRequest.setIds(new String[] {"Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		kpiRequest.setLabel("project");
@@ -278,7 +287,8 @@ public class JiraBacklogServiceRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit) {
+	private void addKpiElement(
+			List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);
 		kpiElement.setKpiName(kpiName);

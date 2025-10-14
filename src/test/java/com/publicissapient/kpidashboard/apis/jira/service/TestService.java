@@ -42,7 +42,8 @@ public class TestService extends JiraKPIService<Object, Object, Object> {
 	}
 
 	@Override
-	public Object fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
+	public Object fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		return null;
 	}
 
@@ -52,7 +53,8 @@ public class TestService extends JiraKPIService<Object, Object, Object> {
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 		return null;
 	}

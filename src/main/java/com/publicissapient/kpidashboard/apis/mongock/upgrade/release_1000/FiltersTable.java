@@ -63,10 +63,10 @@ public class FiltersTable {
 
 	public void addKpiWidthHeightFields() {
 		// Add kpiWidth: 100 for specific KPIs
-		updateKpiWidth(new String[]{"kpi169", "kpi165", "kpi147", "kpi154", "kpi125", KPI150, KPI120});
+		updateKpiWidth(new String[] {"kpi169", "kpi165", "kpi147", "kpi154", "kpi125", KPI150, KPI120});
 
 		// Add kpiHeight: 100 for specific KPIs
-		updateKpiHeight(new String[]{KPI150, KPI120});
+		updateKpiHeight(new String[] {KPI150, KPI120});
 	}
 
 	private void updateKpiWidth(String[] kpiIds) {
@@ -98,10 +98,10 @@ public class FiltersTable {
 
 	public void rollbackAddKpiWidthHeightFields() {
 		// Remove kpiWidth for specific KPIs
-		removeKpiWidth(new String[]{"kpi169", "kpi165", "kpi147", "kpi154", "kpi125", KPI150, KPI120});
+		removeKpiWidth(new String[] {"kpi169", "kpi165", "kpi147", "kpi154", "kpi125", KPI150, KPI120});
 
 		// Remove kpiHeight for specific KPIs
-		removeKpiHeight(new String[]{KPI150, KPI120});
+		removeKpiHeight(new String[] {KPI150, KPI120});
 	}
 
 	private void removeKpiWidth(String[] kpiIds) {

@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.util;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -50,19 +49,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class IterationKpiHelper {
 
-	private IterationKpiHelper() {
-	}
+	private IterationKpiHelper() {}
 
 	public static final String TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
 	/*
 	 * filter all jiraIssues
 	 */
-	public static List<JiraIssue> getFilteredJiraIssue(List<String> issueNumberList, List<JiraIssue> allJiraIssues) {
+	public static List<JiraIssue> getFilteredJiraIssue(
+			List<String> issueNumberList, List<JiraIssue> allJiraIssues) {
 		List<JiraIssue> filterJiraIssueList = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(issueNumberList) && CollectionUtils.isNotEmpty(allJiraIssues)) {
-			filterJiraIssueList = allJiraIssues.stream().filter(jiraIssue -> issueNumberList.contains(jiraIssue.getNumber()))
-					.collect(Collectors.toList());
+			filterJiraIssueList =
+					allJiraIssues.stream()
+							.filter(jiraIssue -> issueNumberList.contains(jiraIssue.getNumber()))
+							.collect(Collectors.toList());
 		}
 		return filterJiraIssueList;
 	}
@@ -70,12 +71,15 @@ public final class IterationKpiHelper {
 	/*
 	 * filter all issueHistory
 	 */
-	public static List<JiraIssueCustomHistory> getFilteredJiraIssueHistory(List<String> issueNumberList,
-			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList) {
+	public static List<JiraIssueCustomHistory> getFilteredJiraIssueHistory(
+			List<String> issueNumberList, List<JiraIssueCustomHistory> jiraIssueCustomHistoryList) {
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = new ArrayList<>();
-		if (CollectionUtils.isNotEmpty(issueNumberList) && CollectionUtils.isNotEmpty(jiraIssueCustomHistoryList)) {
-			jiraIssueCustomHistories = jiraIssueCustomHistoryList.stream()
-					.filter(jiraIssue -> issueNumberList.contains(jiraIssue.getStoryID())).collect(Collectors.toList());
+		if (CollectionUtils.isNotEmpty(issueNumberList)
+				&& CollectionUtils.isNotEmpty(jiraIssueCustomHistoryList)) {
+			jiraIssueCustomHistories =
+					jiraIssueCustomHistoryList.stream()
+							.filter(jiraIssue -> issueNumberList.contains(jiraIssue.getStoryID()))
+							.collect(Collectors.toList());
 		}
 		return jiraIssueCustomHistories;
 	}
@@ -83,17 +87,25 @@ public final class IterationKpiHelper {
 	/*
 	 * to transform sprintdetails for iteration kpis
 	 */
-	public static SprintDetails transformIterSprintdetail(List<JiraIssueCustomHistory> jiraIssueCustomHistoryList,
-			Set<String> issues, SprintDetails dbSprintDetail, List<String> completeIssueType, List<String> completionStatus,
+	public static SprintDetails transformIterSprintdetail(
+			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList,
+			Set<String> issues,
+			SprintDetails dbSprintDetail,
+			List<String> completeIssueType,
+			List<String> completionStatus,
 			ObjectId projectConfigId) {
 		Map<ObjectId, Map<String, List<LocalDateTime>>> projectIssueWiseClosedDates = new HashMap<>();
 		Map<String, List<LocalDateTime>> issueWiseMinDateTime = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(completionStatus)) {
 			for (String issue : issues) {
-				List<JiraHistoryChangeLog> statusUpdationLog = jiraIssueCustomHistoryList.stream()
-						.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase(issue))
-						.flatMap(history -> history.getStatusUpdationLog().stream())
-						.sorted(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn)).collect(Collectors.toList());
+				List<JiraHistoryChangeLog> statusUpdationLog =
+						jiraIssueCustomHistoryList.stream()
+								.filter(
+										jiraIssueCustomHistory ->
+												jiraIssueCustomHistory.getStoryID().equalsIgnoreCase(issue))
+								.flatMap(history -> history.getStatusUpdationLog().stream())
+								.sorted(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn))
+								.collect(Collectors.toList());
 				/*
 				 * iterate over status logs and if some not completed status appears then that
 				 * has to be considered as reopen scenario, and at that time whatever statuses
@@ -104,13 +116,15 @@ public final class IterationKpiHelper {
 					Map<String, LocalDateTime> minimumCompletedStatusWiseMap = new HashMap<>();
 					List<LocalDateTime> minimumDate = new ArrayList<>();
 
-					KpiDataHelper.getMiniDateOfCompleteCycle(completionStatus, statusUpdationLog, minimumCompletedStatusWiseMap,
-							minimumDate);
+					KpiDataHelper.getMiniDateOfCompleteCycle(
+							completionStatus, statusUpdationLog, minimumCompletedStatusWiseMap, minimumDate);
 					// if some status is left in the last cycle then that has to added in the
 					// minimum set
 					if (MapUtils.isNotEmpty(minimumCompletedStatusWiseMap)) {
-						LocalDateTime minDate = minimumCompletedStatusWiseMap.values().stream().min(LocalDateTime::compareTo)
-								.orElse(null);
+						LocalDateTime minDate =
+								minimumCompletedStatusWiseMap.values().stream()
+										.min(LocalDateTime::compareTo)
+										.orElse(null);
 						if (minDate != null) {
 							minimumDate.add(minDate);
 							minimumCompletedStatusWiseMap.clear();
@@ -121,35 +135,47 @@ public final class IterationKpiHelper {
 			}
 			projectIssueWiseClosedDates.put(projectConfigId, issueWiseMinDateTime);
 		}
-		return KpiDataHelper.processSprintBasedOnFieldMappings(dbSprintDetail, completeIssueType, completionStatus,
-				projectIssueWiseClosedDates);
+		return KpiDataHelper.processSprintBasedOnFieldMappings(
+				dbSprintDetail, completeIssueType, completionStatus, projectIssueWiseClosedDates);
 	}
 
-	public static String getDevCompletionDate(JiraIssueCustomHistory issueCustomHistory, List<String> fieldMapping) {
+	public static String getDevCompletionDate(
+			JiraIssueCustomHistory issueCustomHistory, List<String> fieldMapping) {
 		String devCompleteDate = Constant.BLANK;
 		List<JiraHistoryChangeLog> filterStatusUpdationLog = issueCustomHistory.getStatusUpdationLog();
 
 		if (null != fieldMapping && CollectionUtils.isNotEmpty(fieldMapping)) {
-			devCompleteDate = filterStatusUpdationLog.stream()
-					.filter(jiraHistoryChangeLog -> fieldMapping.contains(jiraHistoryChangeLog.getChangedTo()) &&
-							jiraHistoryChangeLog.getUpdatedOn() != null)
-					.map(JiraHistoryChangeLog::getUpdatedOn)
-					.max(Comparator.naturalOrder()).map(LocalDateTime::toString).orElse(devCompleteDate);
+			devCompleteDate =
+					filterStatusUpdationLog.stream()
+							.filter(
+									jiraHistoryChangeLog ->
+											fieldMapping.contains(jiraHistoryChangeLog.getChangedTo())
+													&& jiraHistoryChangeLog.getUpdatedOn() != null)
+							.map(JiraHistoryChangeLog::getUpdatedOn)
+							.max(Comparator.naturalOrder())
+							.map(LocalDateTime::toString)
+							.orElse(devCompleteDate);
 		}
 		return devCompleteDate;
 	}
 
 	// Filtering the history which happened inside the sprint on basis of activity
 	// date
-	public static List<JiraHistoryChangeLog> getInSprintStatusLogs(List<JiraHistoryChangeLog> issueHistoryLogs,
-			LocalDate sprintStartDate, LocalDate sprintEndDate) {
+	public static List<JiraHistoryChangeLog> getInSprintStatusLogs(
+			List<JiraHistoryChangeLog> issueHistoryLogs,
+			LocalDate sprintStartDate,
+			LocalDate sprintEndDate) {
 		List<JiraHistoryChangeLog> filterStatusUpdationLogs = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(issueHistoryLogs)) {
-			filterStatusUpdationLogs = issueHistoryLogs.stream()
-					.filter(jiraIssueSprint -> DateUtil.isWithinDateRange(
-							jiraIssueSprint.getUpdatedOn().toLocalDate(),
-							sprintStartDate, sprintEndDate))
-					.collect(Collectors.toList());
+			filterStatusUpdationLogs =
+					issueHistoryLogs.stream()
+							.filter(
+									jiraIssueSprint ->
+											DateUtil.isWithinDateRange(
+													jiraIssueSprint.getUpdatedOn().toLocalDate(),
+													sprintStartDate,
+													sprintEndDate))
+							.collect(Collectors.toList());
 		}
 		return filterStatusUpdationLogs;
 	}

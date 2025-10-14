@@ -41,10 +41,8 @@ public class ApiSubError { // NOSONAR
 	/**
 	 * Instantiates a new Api validation error.
 	 *
-	 * @param object
-	 *          objectName the name of the affected object
-	 * @param message
-	 *          the message
+	 * @param object objectName the name of the affected object
+	 * @param message the message
 	 */
 	public ApiValidationError(String object, String message) {
 		super();
@@ -55,14 +53,10 @@ public class ApiSubError { // NOSONAR
 	/**
 	 * Instantiates a new Api validation error.
 	 *
-	 * @param object
-	 *          the name of the affected object
-	 * @param field
-	 *          the field
-	 * @param rejectedValue
-	 *          the rejected value
-	 * @param message
-	 *          the message
+	 * @param object the name of the affected object
+	 * @param field the field
+	 * @param rejectedValue the rejected value
+	 * @param message the message
 	 */
 	public ApiValidationError(String object, String field, Object rejectedValue, String message) {
 		super();
@@ -84,8 +78,7 @@ public class ApiSubError { // NOSONAR
 	/**
 	 * Sets object.
 	 *
-	 * @param object
-	 *          the name of the affected object
+	 * @param object the name of the affected object
 	 */
 	public void setObject(String object) {
 		this.object = object;
@@ -103,8 +96,7 @@ public class ApiSubError { // NOSONAR
 	/**
 	 * Sets field.
 	 *
-	 * @param field
-	 *          the field
+	 * @param field the field
 	 */
 	public void setField(String field) {
 		this.field = field;
@@ -122,8 +114,7 @@ public class ApiSubError { // NOSONAR
 	/**
 	 * Sets rejected value.
 	 *
-	 * @param rejectedValue
-	 *          the rejected value
+	 * @param rejectedValue the rejected value
 	 */
 	public void setRejectedValue(Object rejectedValue) {
 		this.rejectedValue = rejectedValue;
@@ -141,8 +132,7 @@ public class ApiSubError { // NOSONAR
 	/**
 	 * Sets message.
 	 *
-	 * @param message
-	 *          the message
+	 * @param message the message
 	 */
 	public void setMessage(String message) {
 		this.message = message;

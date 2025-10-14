@@ -65,7 +65,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
+public class ScmPickupTimeServiceImpl
+		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String MR_COUNT = "No of PRs";
 	private static final String ASSIGNEE_SET = "assigneeSet";
@@ -85,14 +86,16 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PICKUP_TIME);
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.PICKUP_TIME);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PICKUP_TIME);
 		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
 		return kpiElement;
 	}
@@ -108,8 +111,8 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
 
 		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
@@ -119,46 +122,49 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PICKUP_TIME.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI162(), KPICode.PICKUP_TIME.getKpiId());
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *            kpi element
-	 * @param mapTmp
-	 *            node map
-	 * @param projectLeafNode
-	 *            leaf node of project
-	 * @param kpiRequest
-	 *            kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void calculateProjectKpiTrendData(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
-		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
-				kpiHelperService);
+		List<Tool> scmTools =
+				DeveloperKpiHelper.getScmToolsForProject(
+						projectLeafNode, configHelperService, kpiHelperService);
 
 		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
 			return;
 		}
 
 		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
 
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		List<ScmMergeRequests> mergeRequests =
+				(List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
 			return;
 		}
 
@@ -166,18 +172,31 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			CustomDateRange periodRange =
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
-			List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream()
-					.filter(request -> request.getPickedForReviewOn() != null)
-					.filter(request -> DateUtil.isWithinDateTimeRange(
-							DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
-							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
-					.toList();
+			List<ScmMergeRequests> filteredMergeRequests =
+					mergeRequests.stream()
+							.filter(request -> request.getPickedForReviewOn() != null)
+							.filter(
+									request ->
+											DateUtil.isWithinDateTimeRange(
+													DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
+													periodRange.getStartDateTime(),
+													periodRange.getEndDateTime()))
+							.toList();
 
-			scmTools.forEach(tool -> processToolData(tool, filteredMergeRequests, assignees, kpiTrendDataByGroup,
-					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
+			scmTools.forEach(
+					tool ->
+							processToolData(
+									tool,
+									filteredMergeRequests,
+									assignees,
+									kpiTrendDataByGroup,
+									validationDataList,
+									dateLabel,
+									projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
@@ -186,9 +205,14 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
-			Map<String, List<DataCount>> kpiTrendDataByGroup, List<RepoToolValidationData> validationDataList,
-			String dateLabel, String projectName) {
+	private void processToolData(
+			Tool tool,
+			List<ScmMergeRequests> mergeRequests,
+			Set<Assignee> assignees,
+			Map<String, List<DataCount>> kpiTrendDataByGroup,
+			List<RepoToolValidationData> validationDataList,
+			String dateLabel,
+			String projectName) {
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
@@ -196,74 +220,114 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> matchingRequests = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
+		List<ScmMergeRequests> matchingRequests =
+				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		List<Long> pickUpTimes = matchingRequests.stream().map(mr -> {
-			LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
-			LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-			return Duration.between(createdDate, pickedForReviewOn).toHours();
-		}).toList();
+		List<Long> pickUpTimes =
+				matchingRequests.stream()
+						.map(
+								mr -> {
+									LocalDateTime pickedForReviewOn =
+											DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
+									LocalDateTime createdDate =
+											DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+									return Duration.between(createdDate, pickedForReviewOn).toHours();
+								})
+						.toList();
 
-		long averagePickUpTime = pickUpTimes.isEmpty() ? 0
-				: (long) pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+		long averagePickUpTime =
+				pickUpTimes.isEmpty()
+						? 0
+						: (long) pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
 		long totalMergeRequests = matchingRequests.size();
 
-		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, averagePickUpTime,
-				Map.of(MR_COUNT, totalMergeRequests), kpiTrendDataByGroup);
+		DeveloperKpiHelper.setDataCount(
+				projectName,
+				dateLabel,
+				overallKpiGroup,
+				averagePickUpTime,
+				Map.of(MR_COUNT, totalMergeRequests),
+				kpiTrendDataByGroup);
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
-				.groupMergeRequestsByUser(matchingRequests);
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
+				DeveloperKpiHelper.groupMergeRequestsByUser(matchingRequests);
 
-		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
-				dateLabel, kpiTrendDataByGroup));
+		validationDataList.addAll(
+				prepareUserValidationData(
+						userWiseMergeRequests, assignees, tool, projectName, dateLabel, kpiTrendDataByGroup));
 	}
 
 	private List<RepoToolValidationData> prepareUserValidationData(
-			Map<String, List<ScmMergeRequests>> userWiseMergeRequests, Set<Assignee> assignees, Tool tool,
-			String projectName, String dateLabel, Map<String, List<DataCount>> kpiTrendDataByGroup) {
-		return userWiseMergeRequests.entrySet().stream().map(entry -> {
-			String userEmail = entry.getKey();
-			List<ScmMergeRequests> userMergeRequests = entry.getValue();
+			Map<String, List<ScmMergeRequests>> userWiseMergeRequests,
+			Set<Assignee> assignees,
+			Tool tool,
+			String projectName,
+			String dateLabel,
+			Map<String, List<DataCount>> kpiTrendDataByGroup) {
+		return userWiseMergeRequests.entrySet().stream()
+				.map(
+						entry -> {
+							String userEmail = entry.getKey();
+							List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
-			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			AtomicLong pickUpTime = new AtomicLong(0L);
-			userMergeRequests.forEach(mr -> {
-				LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
-				LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-				pickUpTime.addAndGet(Duration.between(createdDate, pickedForReviewOn).toHours());
+							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
+							AtomicLong pickUpTime = new AtomicLong(0L);
+							userMergeRequests.forEach(
+									mr -> {
+										LocalDateTime pickedForReviewOn =
+												DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
+										LocalDateTime createdDate =
+												DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+										pickUpTime.addAndGet(
+												Duration.between(createdDate, pickedForReviewOn).toHours());
+									});
+							long userMrCount = userMergeRequests.size();
 
-			});
-			long userMrCount = userMergeRequests.size();
+							String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
+							DeveloperKpiHelper.setDataCount(
+									projectName,
+									dateLabel,
+									userKpiGroup,
+									pickUpTime.longValue(),
+									Map.of(MR_COUNT, userMrCount),
+									kpiTrendDataByGroup);
 
-			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, pickUpTime.longValue(),
-					Map.of(MR_COUNT, userMrCount), kpiTrendDataByGroup);
-
-			List<RepoToolValidationData> userValidationData = new ArrayList<>();
-			userMergeRequests.forEach(mr -> {
-				if (mr.getCreatedDate() != null && mr.getMergedAt() != null) {
-					userValidationData.add(createValidationData(projectName, tool, developerName, dateLabel, mr));
-				}
-			});
-			return userValidationData;
-		}).flatMap(List::stream).collect(Collectors.toList());
+							List<RepoToolValidationData> userValidationData = new ArrayList<>();
+							userMergeRequests.forEach(
+									mr -> {
+										if (mr.getCreatedDate() != null && mr.getMergedAt() != null) {
+											userValidationData.add(
+													createValidationData(projectName, tool, developerName, dateLabel, mr));
+										}
+									});
+							return userValidationData;
+						})
+				.flatMap(List::stream)
+				.collect(Collectors.toList());
 	}
 
-	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, ScmMergeRequests mergeRequest) {
+	private RepoToolValidationData createValidationData(
+			String projectName,
+			Tool tool,
+			String developerName,
+			String dateLabel,
+			ScmMergeRequests mergeRequest) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(
+				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
-		LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
-		LocalDateTime pickUpDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
+		LocalDateTime createdDateTime =
+				DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
+		LocalDateTime pickUpDateTime =
+				DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, pickUpDateTime);
-		validationData
-				.setPickupTime((double) KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.00));
+		validationData.setPickupTime(
+				(double) KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.00));
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
 		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
 		LocalDateTime pickUpDateTimeUTC = DateUtil.localDateTimeToUTC(pickUpDateTime);
@@ -273,7 +337,9 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 		return validationData;
 	}
 
-	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
+	private void populateExcelData(
+			String requestTrackerId,
+			List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();

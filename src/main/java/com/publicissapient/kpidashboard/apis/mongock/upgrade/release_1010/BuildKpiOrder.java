@@ -39,7 +39,8 @@ public class BuildKpiOrder {
 
 	@Execution
 	public boolean execution() {
-		MongoCollection<Document> kpiCategoryMapping = mongoTemplate.getCollection("kpi_category_mapping");
+		MongoCollection<Document> kpiCategoryMapping =
+				mongoTemplate.getCollection("kpi_category_mapping");
 
 		// Update documents
 		updateDocument(kpiCategoryMapping, "kpi164", 8); // scope churn kpi
@@ -47,7 +48,8 @@ public class BuildKpiOrder {
 		return true;
 	}
 
-	private void updateDocument(MongoCollection<Document> kpiCategoryMapping, String kpiId, int kpiOrder) {
+	private void updateDocument(
+			MongoCollection<Document> kpiCategoryMapping, String kpiId, int kpiOrder) {
 		// Create the filter
 		Document filter = new Document("kpiId", kpiId);
 
@@ -60,7 +62,8 @@ public class BuildKpiOrder {
 
 	@RollbackExecution
 	public void rollbackOrdering() {
-		MongoCollection<Document> kpiCategoryMapping = mongoTemplate.getCollection("kpi_category_mapping");
+		MongoCollection<Document> kpiCategoryMapping =
+				mongoTemplate.getCollection("kpi_category_mapping");
 
 		// Update documents
 		updateDocument(kpiCategoryMapping, "kpi164", 9); // scope churn kpi

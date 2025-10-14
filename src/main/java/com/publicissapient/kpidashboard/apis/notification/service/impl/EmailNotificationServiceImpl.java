@@ -17,20 +17,22 @@
 
 package com.publicissapient.kpidashboard.apis.notification.service.impl;
 
-import com.publicissapient.kpidashboard.apis.common.service.CommonService;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
-import com.publicissapient.kpidashboard.apis.notification.service.EmailNotificationService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
-import com.publicissapient.kpidashboard.common.service.NotificationService;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Set;
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.notification.service.EmailNotificationService;
+import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.service.NotificationService;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -42,16 +44,21 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 	private final CommonService commonService;
 
 	@Override
-	public ServiceResponse sendEmail(String templateKey, String notificationSubjectKey, EmailRequestPayload request) {
+	public ServiceResponse sendEmail(
+			String templateKey, String notificationSubjectKey, EmailRequestPayload request) {
 		try {
-			Map<String, String> customData = NotificationUtility.toCustomDataMap(request, customApiConfig,
-					commonService);
+			Map<String, String> customData =
+					NotificationUtility.toCustomDataMap(request, customApiConfig, commonService);
 			String templateName = getTemplateName(templateKey);
 			validateTemplateData(templateName, customData);
 			String notificationSubject = getNotificationSubject(notificationSubjectKey);
 
-			notificationService.sendNotificationEvent(request.getRecipients(), customData, notificationSubject,
-					customApiConfig.isNotificationSwitch(), templateName);
+			notificationService.sendNotificationEvent(
+					request.getRecipients(),
+					customData,
+					notificationSubject,
+					customApiConfig.isNotificationSwitch(),
+					templateName);
 		} catch (IllegalArgumentException e) {
 			log.error("Validation error: {}", e.getMessage());
 			return new ServiceResponse(false, e.getMessage(), null);
@@ -73,7 +80,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 	private void validateTemplateData(String templateName, Map<String, String> customData) {
 		Set<String> requiredVars = NotificationUtility.extractEmailTemplateVariables(templateName);
 		for (String var : requiredVars) {
-			if (!customData.containsKey(var) || customData.get(var) == null || customData.get(var).trim().isEmpty()) {
+			if (!customData.containsKey(var)
+					|| customData.get(var) == null
+					|| customData.get(var).trim().isEmpty()) {
 				throw new IllegalArgumentException("Missing required template variable: " + var);
 			}
 		}
@@ -83,9 +92,9 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 		Map<String, String> notificationSubjectMap = customApiConfig.getNotificationSubject();
 		String subject = notificationSubjectMap.get(notificationSubjectKey);
 		if (StringUtils.isBlank(subject)) {
-			throw new IllegalArgumentException("No notification subject found for key: " + notificationSubjectKey);
+			throw new IllegalArgumentException(
+					"No notification subject found for key: " + notificationSubjectKey);
 		}
 		return subject;
 	}
-
 }

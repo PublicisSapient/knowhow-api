@@ -68,7 +68,9 @@ public enum KPISource {
 	}
 
 	public static KPISource getKPISource(String value) {
-		return Arrays.asList(KPISource.values()).stream().filter(kpi -> kpi.getValue().equalsIgnoreCase(value)).findAny()
+		return Arrays.asList(KPISource.values()).stream()
+				.filter(kpi -> kpi.getValue().equalsIgnoreCase(value))
+				.findAny()
 				.orElse(INVALID);
 	}
 

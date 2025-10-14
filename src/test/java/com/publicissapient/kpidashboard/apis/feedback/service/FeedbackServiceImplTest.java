@@ -26,9 +26,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,7 +45,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.google.common.collect.Lists;
@@ -72,18 +69,12 @@ public class FeedbackServiceImplTest {
 	 * Creating a new test FeedbackSubmitDTO object
 	 */
 	FeedbackSubmitDTO feedbackSubmitDTO = new FeedbackSubmitDTO();
-	@InjectMocks
-	private FeedbackServiceImpl feedbackServiceImpl;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private UserInfoService userInfoService;
-	@Mock
-	private GlobalConfigRepository globalConfigRepository;
-	@Mock
-	private NotificationService notificationService;
+	@InjectMocks private FeedbackServiceImpl feedbackServiceImpl;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
+	@Mock private UserInfoService userInfoService;
+	@Mock private GlobalConfigRepository globalConfigRepository;
+	@Mock private NotificationService notificationService;
 
 	/** method includes preprocesses for test cases */
 	@Before
@@ -142,8 +133,6 @@ public class FeedbackServiceImplTest {
 		assertThat("status: ", response, equalTo(true));
 	}
 
-
-
 	@Test
 	public void testSubmitFeedback_Success() throws UnknownHostException {
 		// Arrange
@@ -181,7 +170,8 @@ public class FeedbackServiceImplTest {
 
 		// Assert
 		assertFalse(result);
-		verify(notificationService, never()).sendNotificationEvent(anyList(), anyMap(), anyString(), anyBoolean(), anyString());
+		verify(notificationService, never())
+				.sendNotificationEvent(anyList(), anyMap(), anyString(), anyBoolean(), anyString());
 	}
 
 	@Test
@@ -196,7 +186,8 @@ public class FeedbackServiceImplTest {
 
 		// Assert
 		assertFalse(result);
-		verify(notificationService, never()).sendNotificationEvent(anyList(), anyMap(), anyString(), anyBoolean(), anyString());
+		verify(notificationService, never())
+				.sendNotificationEvent(anyList(), anyMap(), anyString(), anyBoolean(), anyString());
 	}
 
 	@Test

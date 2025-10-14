@@ -49,28 +49,37 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SaveService {
 
-	@Autowired
-	BulkUpdateRepository bulkUpdateRepository;
+	@Autowired BulkUpdateRepository bulkUpdateRepository;
 
 	public void saveToDatabase(Map<String, Object> dataToSave) {
 		log.info("Start--Migration Data Saving");
-		bulkUpdateRepository
-				.saveToOrganizationHierarchy((List<OrganizationHierarchy>) dataToSave.get("ORGANIZATION_HIERARCHY"));
-		bulkUpdateRepository.saveToBasicConfig((List<ProjectBasicConfig>) dataToSave.get("PROJECT_BASIC"));
-		bulkUpdateRepository.saveToProjectHierarchy((List<ProjectHierarchy>) dataToSave.get("PROJECT_HIERARCHY"));
-		bulkUpdateRepository.saveToSprintDetails((List<SprintDetails>) dataToSave.get("SPRINT_DETAILS"));
-		bulkUpdateRepository.bulkUpdateCapacityCollections((List<CapacityKpiData>) dataToSave.get("SCRUM_CAPACITY"),
+		bulkUpdateRepository.saveToOrganizationHierarchy(
+				(List<OrganizationHierarchy>) dataToSave.get("ORGANIZATION_HIERARCHY"));
+		bulkUpdateRepository.saveToBasicConfig(
+				(List<ProjectBasicConfig>) dataToSave.get("PROJECT_BASIC"));
+		bulkUpdateRepository.saveToProjectHierarchy(
+				(List<ProjectHierarchy>) dataToSave.get("PROJECT_HIERARCHY"));
+		bulkUpdateRepository.saveToSprintDetails(
+				(List<SprintDetails>) dataToSave.get("SPRINT_DETAILS"));
+		bulkUpdateRepository.bulkUpdateCapacityCollections(
+				(List<CapacityKpiData>) dataToSave.get("SCRUM_CAPACITY"),
 				(List<KanbanCapacity>) dataToSave.get("KANBAN_CAPACITY"));
 		bulkUpdateRepository.bulkUpdateHappiness((List<HappinessKpiData>) dataToSave.get("HAPPIENSS"));
-		bulkUpdateRepository.bulkUpdateJiraIssue((List<JiraIssue>) dataToSave.get("SCRUM_JIRA_ISSUE"),
+		bulkUpdateRepository.bulkUpdateJiraIssue(
+				(List<JiraIssue>) dataToSave.get("SCRUM_JIRA_ISSUE"),
 				(List<KanbanJiraIssue>) dataToSave.get("KANBAN_JIRA_ISSUE"));
-		bulkUpdateRepository.bulkUpdateTestExecution((List<TestExecution>) dataToSave.get("TEST_EXECUTION_SCRUM"),
+		bulkUpdateRepository.bulkUpdateTestExecution(
+				(List<TestExecution>) dataToSave.get("TEST_EXECUTION_SCRUM"),
 				(List<KanbanTestExecution>) dataToSave.get("TEST_EXECUTION_KANBAN"));
-		bulkUpdateRepository.bulkUpdateProjectRelease((List<ProjectRelease>) dataToSave.get("PROJECT_RELEASE"));
-		bulkUpdateRepository.bulkUpdateSprintTraceLog((List<SprintTraceLog>) dataToSave.get("SPRINT_TRACELOG"));
-		bulkUpdateRepository.bulkUpdateUserInfo((List<UserInfo>) dataToSave.get("USER_INFO"),
+		bulkUpdateRepository.bulkUpdateProjectRelease(
+				(List<ProjectRelease>) dataToSave.get("PROJECT_RELEASE"));
+		bulkUpdateRepository.bulkUpdateSprintTraceLog(
+				(List<SprintTraceLog>) dataToSave.get("SPRINT_TRACELOG"));
+		bulkUpdateRepository.bulkUpdateUserInfo(
+				(List<UserInfo>) dataToSave.get("USER_INFO"),
 				(List<AccessRequest>) dataToSave.get("ACCESS_REQUEST"));
 		bulkUpdateRepository.bulkUpdateComments((List<KPIComments>) dataToSave.get("KPI_COMMENT"));
-		bulkUpdateRepository.bulkUpdateCommentsHistory((List<KpiCommentsHistory>) dataToSave.get("KPI_COMMENT_HISTORY"));
+		bulkUpdateRepository.bulkUpdateCommentsHistory(
+				(List<KpiCommentsHistory>) dataToSave.get("KPI_COMMENT_HISTORY"));
 	}
 }

@@ -29,13 +29,15 @@ import com.publicissapient.kpidashboard.apis.datamigration.util.MigrationEnum;
 @Component
 public class MigrationLockService {
 
-	@Autowired
-	private MigrationLogRepository migrationLogRepository;
+	@Autowired private MigrationLogRepository migrationLogRepository;
 
 	public boolean checkPreviousMigration() {
 		List<MigrationLockLog> all = migrationLogRepository.findAll();
-		Optional<MigrationLockLog> organizationHierarcy = all.stream()
-				.filter(lock -> lock.getStepName().equalsIgnoreCase(MigrationEnum.MIGRATION_STEP.name())).findAny();
+		Optional<MigrationLockLog> organizationHierarcy =
+				all.stream()
+						.filter(
+								lock -> lock.getStepName().equalsIgnoreCase(MigrationEnum.MIGRATION_STEP.name()))
+						.findAny();
 		return organizationHierarcy.map(MigrationLockLog::isMigrated).orElse(false);
 	}
 

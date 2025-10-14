@@ -17,6 +17,8 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.installation;
 
+import java.util.Collections;
+
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -24,35 +26,35 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-import java.util.Collections;
-
 @ChangeUnit(id = "insertRallyProcessor", order = "009", author = "girpatha")
 public class RallyProcessorChangeLog {
 
-    private static final String PROCESSOR_COLLECTION = "processor";
-    private static final String CLASS_KEY = "_class";
+	private static final String PROCESSOR_COLLECTION = "processor";
+	private static final String CLASS_KEY = "_class";
 
-    private final MongoTemplate mongoTemplate;
+	private final MongoTemplate mongoTemplate;
 
-    public RallyProcessorChangeLog(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
-    }
+	public RallyProcessorChangeLog(MongoTemplate mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
 
-    @Execution
-    public void insertRallyProcessor() {
-        Document rallyProcessor = new Document()
-                .append("processorName", "Rally")
-                .append("processorType", "AGILE_TOOL")
-                .append("isActive", true)
-                .append("isOnline", true)
-                .append("errors", Collections.emptyList())
-                .append(CLASS_KEY, "com.publicissapient.kpidashboard.jira.model.RallyProcessor");
-        mongoTemplate.getCollection(PROCESSOR_COLLECTION).insertOne(rallyProcessor);
-    }
+	@Execution
+	public void insertRallyProcessor() {
+		Document rallyProcessor =
+				new Document()
+						.append("processorName", "Rally")
+						.append("processorType", "AGILE_TOOL")
+						.append("isActive", true)
+						.append("isOnline", true)
+						.append("errors", Collections.emptyList())
+						.append(CLASS_KEY, "com.publicissapient.kpidashboard.jira.model.RallyProcessor");
+		mongoTemplate.getCollection(PROCESSOR_COLLECTION).insertOne(rallyProcessor);
+	}
 
-    @RollbackExecution
-    public void rollback() {
-        mongoTemplate.getCollection(PROCESSOR_COLLECTION)
-                .deleteOne(new Document("processorName", "Rally"));
-    }
+	@RollbackExecution
+	public void rollback() {
+		mongoTemplate
+				.getCollection(PROCESSOR_COLLECTION)
+				.deleteOne(new Document("processorName", "Rally"));
+	}
 }

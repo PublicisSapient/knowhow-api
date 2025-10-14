@@ -36,8 +36,7 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 @RequestMapping("/hierarchy/migrate")
 public class MigrationController {
 
-	@Autowired
-	DataMigrationService dataMigrationService;
+	@Autowired DataMigrationService dataMigrationService;
 
 	@GetMapping(value = "/validate")
 	public ResponseEntity<ServiceResponse> dataQualityCheck() {

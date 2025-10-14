@@ -76,34 +76,24 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class PIPredictabilityServiceImplTest {
 
-	@InjectMocks
-	private PIPredictabilityServiceImpl piPredictabilityService;
+	@InjectMocks private PIPredictabilityServiceImpl piPredictabilityService;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private KPIHelperUtil kpiHelperUtil;
+	@Mock private KPIHelperUtil kpiHelperUtil;
 
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
-	@Mock
-	private CustomApiConfig customApiSetting;
+	@Mock private FieldMappingRepository fieldMappingRepository;
+	@Mock private CustomApiConfig customApiSetting;
 
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
-	@Mock
-	private JiraServiceR jiraKPIService;
+	@Mock private JiraServiceR jiraKPIService;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
@@ -121,8 +111,8 @@ public class PIPredictabilityServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.PI_PREDICTABILITY.getKpiId());
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -136,8 +126,8 @@ public class PIPredictabilityServiceImplTest {
 		projectConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
 		projectConfig.setProjectName("Scrum Project");
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -154,8 +144,9 @@ public class PIPredictabilityServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -164,16 +155,18 @@ public class PIPredictabilityServiceImplTest {
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		List<JiraIssue> piWiseEpicList = jiraIssueDataFactory.getJiraIssues();
 
-		when(kpiDataCacheService.fetchPiPredictabilityData(Mockito.any(), Mockito.any())).thenReturn(piWiseEpicList);
-		Map<String, Object> defectDataListMap = piPredictabilityService.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
+		when(kpiDataCacheService.fetchPiPredictabilityData(Mockito.any(), Mockito.any()))
+				.thenReturn(piWiseEpicList);
+		Map<String, Object> defectDataListMap =
+				piPredictabilityService.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void wrongVersionData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -189,8 +182,8 @@ public class PIPredictabilityServiceImplTest {
 		List<ReleaseWisePI> objects = new ArrayList<>();
 
 		objects.add(release1);
-		Map<String, Object> defectDataListMap = piPredictabilityService.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
+		Map<String, Object> defectDataListMap =
+				piPredictabilityService.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
@@ -237,21 +230,27 @@ public class PIPredictabilityServiceImplTest {
 
 	@Test
 	public void getPIPredictability1() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(piPredictabilityService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		List<ReleaseWisePI> releaseWisePIList = new ArrayList<>();
 		when(customApiSetting.getJiraXaxisMonthCount()).thenReturn(5);
-		when(kpiDataCacheService.fetchPiPredictabilityData(Mockito.any(), Mockito.any())).thenReturn(piWiseEpicList);
+		when(kpiDataCacheService.fetchPiPredictabilityData(Mockito.any(), Mockito.any()))
+				.thenReturn(piWiseEpicList);
 		try {
-			KpiElement kpiElement = piPredictabilityService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("PI Predictability TrendValue :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					piPredictabilityService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"PI Predictability TrendValue :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(1));
 		} catch (Exception exception) {
 		}
@@ -259,18 +258,24 @@ public class PIPredictabilityServiceImplTest {
 
 	@Test
 	public void inAccurateReleaseData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(piPredictabilityService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		piWiseEpicList.stream().filter(jiraIssue -> CollectionUtils.isNotEmpty(jiraIssue.getReleaseVersions()))
+		piWiseEpicList.stream()
+				.filter(jiraIssue -> CollectionUtils.isNotEmpty(jiraIssue.getReleaseVersions()))
 				.forEach(jiraIssue -> jiraIssue.getReleaseVersions().get(0).setReleaseDate(null));
 		try {
-			KpiElement kpiElement = piPredictabilityService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("PI Predictability TrendValue :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					piPredictabilityService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"PI Predictability TrendValue :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(1));
 		} catch (Exception exception) {
 		}
@@ -278,16 +283,20 @@ public class PIPredictabilityServiceImplTest {
 
 	@Test
 	public void noFieldMapping() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping1 = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping1.setJiraIssueEpicTypeKPI153(null);
 		try {
-			KpiElement kpiElement = piPredictabilityService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("PI Predictability TrendValue :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					piPredictabilityService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"PI Predictability TrendValue :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(1));
 		} catch (Exception exception) {
 		}
@@ -309,7 +318,9 @@ public class PIPredictabilityServiceImplTest {
 	@Test
 	public void calculateThresholdValue() {
 		fieldMapping.setThresholdValueKPI153("15");
-		Assert.assertEquals(Double.valueOf(15D), piPredictabilityService
-				.calculateThresholdValue(fieldMapping.getThresholdValueKPI153(), KPICode.PI_PREDICTABILITY.getKpiId()));
+		Assert.assertEquals(
+				Double.valueOf(15D),
+				piPredictabilityService.calculateThresholdValue(
+						fieldMapping.getThresholdValueKPI153(), KPICode.PI_PREDICTABILITY.getKpiId()));
 	}
 }

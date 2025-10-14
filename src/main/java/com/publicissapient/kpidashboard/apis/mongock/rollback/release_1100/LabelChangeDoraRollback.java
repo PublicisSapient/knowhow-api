@@ -54,10 +54,11 @@ public class LabelChangeDoraRollback {
 		updateLabel(collection, KPI_166, WEEKS_LABEL, "Hours");
 	}
 
-	public void updateLabel(MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel,
-			String yAxisLabel) {
-		kpiMaster.updateOne(new Document("kpiId", kpiId),
-				new Document("$set", new Document("xAxisLabel", xAxisLabel).append("yAxisLabel", yAxisLabel)));
+	public void updateLabel(
+			MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel, String yAxisLabel) {
+		kpiMaster.updateOne(
+				new Document("kpiId", kpiId),
+				new Document(
+						"$set", new Document("xAxisLabel", xAxisLabel).append("yAxisLabel", yAxisLabel)));
 	}
-
 }

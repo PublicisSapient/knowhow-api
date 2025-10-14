@@ -27,10 +27,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -38,69 +38,73 @@ import com.publicissapient.kpidashboard.apis.usermanagement.dto.request.UserRequ
 import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserResponseDTO;
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
 
-
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    @Mock
-    private UserService userService;
+	@Mock private UserService userService;
 
-    @InjectMocks
-    private UserController userController;
+	@InjectMocks private UserController userController;
 
-    private ObjectMapper mapper;
+	private ObjectMapper mapper;
 
-    @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
-        mapper = new ObjectMapper();
-    }
+	@BeforeEach
+	void setup() {
+		mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+		mapper = new ObjectMapper();
+	}
 
-    @Test
-    void testSaveUserInfo_Success() throws Exception {
-        UserRequestDTO requestDTO = new UserRequestDTO();
-        requestDTO.setUsername("testUser");
+	@Test
+	void testSaveUserInfo_Success() throws Exception {
+		UserRequestDTO requestDTO = new UserRequestDTO();
+		requestDTO.setUsername("testUser");
 
-        // Create response DTO
-        UserResponseDTO responseDTO = new UserResponseDTO();
-        responseDTO.setUsername("testUser");
-        
-        // Create service response
-        ServiceResponse serviceResponse = new ServiceResponse(true, "User information saved successfully", responseDTO);
+		// Create response DTO
+		UserResponseDTO responseDTO = new UserResponseDTO();
+		responseDTO.setUsername("testUser");
 
-        when(userService.saveUserInfo(anyString())).thenReturn(serviceResponse);
+		// Create service response
+		ServiceResponse serviceResponse =
+				new ServiceResponse(true, "User information saved successfully", responseDTO);
 
-        mockMvc.perform(post("/usermanagement/save")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("User information saved successfully"))
-                .andExpect(jsonPath("$.data.username").value("testUser"))
-                .andExpect(jsonPath("$.data.message").doesNotExist());
-    }
+		when(userService.saveUserInfo(anyString())).thenReturn(serviceResponse);
 
-    @Test
-    void testSaveUserInfo_EmptyUsername() throws Exception {
-        UserRequestDTO requestDTO = new UserRequestDTO();
-        requestDTO.setUsername("");
+		mockMvc
+				.perform(
+						post("/usermanagement/save")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(requestDTO)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.success").value(true))
+				.andExpect(jsonPath("$.message").value("User information saved successfully"))
+				.andExpect(jsonPath("$.data.username").value("testUser"))
+				.andExpect(jsonPath("$.data.message").doesNotExist());
+	}
 
-        mockMvc.perform(post("/usermanagement/save")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
-    }
+	@Test
+	void testSaveUserInfo_EmptyUsername() throws Exception {
+		UserRequestDTO requestDTO = new UserRequestDTO();
+		requestDTO.setUsername("");
 
-    @Test
-    void testSaveUserInfo_NullUsername() throws Exception {
-        UserRequestDTO requestDTO = new UserRequestDTO();
-        requestDTO.setUsername(null);
+		mockMvc
+				.perform(
+						post("/usermanagement/save")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(requestDTO)))
+				.andExpect(status().isBadRequest());
+	}
 
-        mockMvc.perform(post("/usermanagement/save")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
-    }
+	@Test
+	void testSaveUserInfo_NullUsername() throws Exception {
+		UserRequestDTO requestDTO = new UserRequestDTO();
+		requestDTO.setUsername(null);
+
+		mockMvc
+				.perform(
+						post("/usermanagement/save")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(mapper.writeValueAsString(requestDTO)))
+				.andExpect(status().isBadRequest());
+	}
 }

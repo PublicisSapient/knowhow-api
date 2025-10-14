@@ -80,8 +80,7 @@ public class AuthProperties { // NOPMD
 	/**
 	 * Sets expiration time.
 	 *
-	 * @param expirationTime
-	 *          the expiration time
+	 * @param expirationTime the expiration time
 	 */
 	public void setExpirationTime(Long expirationTime) {
 		this.expirationTime = expirationTime;
@@ -99,8 +98,7 @@ public class AuthProperties { // NOPMD
 	/**
 	 * Sets secret.
 	 *
-	 * @param secret
-	 *          the secret
+	 * @param secret the secret
 	 */
 	public void setSecret(String secret) {
 		this.secret = secret;
@@ -118,8 +116,7 @@ public class AuthProperties { // NOPMD
 	/**
 	 * Sets authentication providers.
 	 *
-	 * @param authenticationProviders
-	 *          the authentication providers
+	 * @param authenticationProviders the authentication providers
 	 */
 	public void setAuthenticationProviders(List<AuthType> authenticationProviders) {
 		this.authenticationProviders = authenticationProviders;
@@ -137,8 +134,7 @@ public class AuthProperties { // NOPMD
 	/**
 	 * Sets providers.
 	 *
-	 * @param providers
-	 *          the providers
+	 * @param providers the providers
 	 */
 	public void setProviders(String providers) {
 		this.providers = providers;
@@ -156,8 +152,7 @@ public class AuthProperties { // NOPMD
 	/**
 	 * Sets account locked threshold.
 	 *
-	 * @param accountLockedThreshold
-	 *          the account locked threshold
+	 * @param accountLockedThreshold the account locked threshold
 	 */
 	public void setAccountLockedThreshold(Integer accountLockedThreshold) {
 		this.accountLockedThreshold = accountLockedThreshold;
@@ -175,8 +170,7 @@ public class AuthProperties { // NOPMD
 	/**
 	 * Sets account locked period.
 	 *
-	 * @param accountLockedPeriod
-	 *          the account locked period
+	 * @param accountLockedPeriod the account locked period
 	 */
 	public void setAccountLockedPeriod(int accountLockedPeriod) {
 		this.accountLockedPeriod = accountLockedPeriod;

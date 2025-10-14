@@ -55,61 +55,48 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AgileDataCleanUpService implements ToolDataCleanUpService {
 
-	@Autowired
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Autowired private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
 
-	@Autowired
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Autowired
-	private KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Autowired private KanbanJiraIssueRepository kanbanJiraIssueRepository;
 
-	@Autowired
-	private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
+	@Autowired private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
 
-	@Autowired
-	private ProjectBasicConfigService projectBasicConfigService;
+	@Autowired private ProjectBasicConfigService projectBasicConfigService;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private ProjectReleaseRepo projectReleaseRepo;
+	@Autowired private ProjectReleaseRepo projectReleaseRepo;
 
-	@Autowired
-	private TestCaseDetailsRepository testCaseDetailsRepository;
+	@Autowired private TestCaseDetailsRepository testCaseDetailsRepository;
 
-	@Autowired
-	private FieldMappingRepository fieldMappingRepository;
+	@Autowired private FieldMappingRepository fieldMappingRepository;
 
-	@Autowired
-	private AccountHierarchyRepository accountHierarchyRepository;
+	@Autowired private AccountHierarchyRepository accountHierarchyRepository;
 
-	@Autowired
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
+	@Autowired private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
 
-	@Autowired
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Autowired private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
-	@Autowired
-	private SprintRepository sprintRepository;
+	@Autowired private SprintRepository sprintRepository;
 
-	@Autowired
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Autowired private OrganizationHierarchyService organizationHierarchyService;
 
-	@Autowired
-	private ProjectHierarchyService projectHierarchyService;
+	@Autowired private ProjectHierarchyService projectHierarchyService;
 
-	private static void getLevelIds(boolean flag, List<String> levelList, List<HierarchyLevel> accountHierarchyList) {
+	private static void getLevelIds(
+			boolean flag, List<String> levelList, List<HierarchyLevel> accountHierarchyList) {
 		for (HierarchyLevel hierarchyLevel : accountHierarchyList) {
 			if (flag) {
 				levelList.add(hierarchyLevel.getHierarchyLevelId());
 			}
-			if (StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId()) &&
-					hierarchyLevel.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)) {
+			if (StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
+					&& hierarchyLevel
+							.getHierarchyLevelId()
+							.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)) {
 				flag = true;
 			}
 		}
@@ -124,7 +111,8 @@ public class AgileDataCleanUpService implements ToolDataCleanUpService {
 	public void clean(String projectToolConfigId) {
 
 		ProjectToolConfig tool = projectToolConfigRepository.findById(projectToolConfigId);
-		ProjectBasicConfig projectBasicConfig = getProjectBasicConfig(tool.getBasicProjectConfigId().toString());
+		ProjectBasicConfig projectBasicConfig =
+				getProjectBasicConfig(tool.getBasicProjectConfigId().toString());
 		deleteJiraIssuesAndHistory(tool, projectBasicConfig);
 		deleteReleaseInfo(tool);
 		deleteSprintDetailsData(tool);
@@ -135,11 +123,12 @@ public class AgileDataCleanUpService implements ToolDataCleanUpService {
 		return projectBasicConfigService.getProjectBasicConfigs(basicProjectConfigId);
 	}
 
-	private void deleteJiraIssuesAndHistory(ProjectToolConfig tool, ProjectBasicConfig projectBasicConfig) {
+	private void deleteJiraIssuesAndHistory(
+			ProjectToolConfig tool, ProjectBasicConfig projectBasicConfig) {
 		if (tool != null) {
 			String basicProjectConfigId = tool.getBasicProjectConfigId().toHexString();
-			processorExecutionTraceLogRepository.deleteByBasicProjectConfigIdAndProcessorName(basicProjectConfigId,
-					tool.getToolName());
+			processorExecutionTraceLogRepository.deleteByBasicProjectConfigIdAndProcessorName(
+					basicProjectConfigId, tool.getToolName());
 
 			if (projectBasicConfig.getIsKanban()) {
 				kanbanJiraIssueRepository.deleteByBasicProjectConfigId(basicProjectConfigId);
@@ -148,8 +137,8 @@ public class AgileDataCleanUpService implements ToolDataCleanUpService {
 				List<String> levelList = new ArrayList<>();
 				List<HierarchyLevel> accountHierarchyList = cacheService.getFullKanbanHierarchyLevel();
 				getLevelIds(flag, levelList, accountHierarchyList);
-				kanbanAccountHierarchyRepository.deleteByBasicProjectConfigIdAndLabelNameIn(tool.getBasicProjectConfigId(),
-						levelList);
+				kanbanAccountHierarchyRepository.deleteByBasicProjectConfigIdAndLabelNameIn(
+						tool.getBasicProjectConfigId(), levelList);
 
 			} else {
 				jiraIssueRepository.deleteByBasicProjectConfigId(basicProjectConfigId);
@@ -158,8 +147,8 @@ public class AgileDataCleanUpService implements ToolDataCleanUpService {
 				List<String> levelList = new ArrayList<>();
 				List<HierarchyLevel> accountHierarchyList = cacheService.getFullHierarchyLevel();
 				getLevelIds(flag, levelList, accountHierarchyList);
-				accountHierarchyRepository.deleteByBasicProjectConfigIdAndLabelNameIn(tool.getBasicProjectConfigId(),
-						levelList);
+				accountHierarchyRepository.deleteByBasicProjectConfigIdAndLabelNameIn(
+						tool.getBasicProjectConfigId(), levelList);
 			}
 			projectHierarchyService.deleteByBasicProjectConfigId(projectBasicConfig.getId());
 		}

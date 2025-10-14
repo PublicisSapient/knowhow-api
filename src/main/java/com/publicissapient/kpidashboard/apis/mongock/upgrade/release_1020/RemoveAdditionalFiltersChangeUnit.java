@@ -26,7 +26,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "remove_value_additional_filters", order = "10207", author = "shunaray", systemVersion = "10.2.0")
+@ChangeUnit(
+		id = "remove_value_additional_filters",
+		order = "10207",
+		author = "shunaray",
+		systemVersion = "10.2.0")
 public class RemoveAdditionalFiltersChangeUnit {
 	private final MongoTemplate mongoTemplate;
 
@@ -36,8 +40,11 @@ public class RemoveAdditionalFiltersChangeUnit {
 
 	@Execution
 	public void execution() {
-		mongoTemplate.getCollection("filters").updateMany(new Document("boardId", 4),
-				new Document("$unset", new Document("additionalFilters", "")));
+		mongoTemplate
+				.getCollection("filters")
+				.updateMany(
+						new Document("boardId", 4),
+						new Document("$unset", new Document("additionalFilters", "")));
 	}
 
 	@RollbackExecution

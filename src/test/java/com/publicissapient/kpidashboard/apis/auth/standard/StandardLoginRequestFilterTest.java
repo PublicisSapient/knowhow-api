@@ -43,33 +43,28 @@ import jakarta.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class StandardLoginRequestFilterTest {
 
-	@Mock
-	private AuthenticationManager manager;
+	@Mock private AuthenticationManager manager;
 
-	@Mock
-	private AuthenticationResultHandler resultHandler;
+	@Mock private AuthenticationResultHandler resultHandler;
 
-	@Mock
-	private CustomAuthenticationFailureHandler authenticationFailureHandler;
+	@Mock private CustomAuthenticationFailureHandler authenticationFailureHandler;
 
 	private String path;
 
 	private StandardLoginRequestFilter filter;
 
-	@Mock
-	private HttpServletRequest request;
+	@Mock private HttpServletRequest request;
 
-	@Mock
-	private HttpServletResponse response;
+	@Mock private HttpServletResponse response;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void setup() {
 		path = "/login";
-		filter = new StandardLoginRequestFilter(path, manager, resultHandler, authenticationFailureHandler,
-				customApiConfig);
+		filter =
+				new StandardLoginRequestFilter(
+						path, manager, resultHandler, authenticationFailureHandler, customApiConfig);
 	}
 
 	@Test

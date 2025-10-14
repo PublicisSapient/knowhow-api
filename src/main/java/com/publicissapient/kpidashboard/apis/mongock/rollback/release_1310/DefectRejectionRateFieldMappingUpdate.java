@@ -17,7 +17,6 @@
  ******************************************************************************/
 
 /** */
-
 package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1310;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,28 +28,32 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_remove_mandatory_field_kpi37_field_mapping", order = "013105", author = "kunkambl", systemVersion = "13.1.0")
+@ChangeUnit(
+		id = "r_remove_mandatory_field_kpi37_field_mapping",
+		order = "013105",
+		author = "kunkambl",
+		systemVersion = "13.1.0")
 public class DefectRejectionRateFieldMappingUpdate {
 
-    private final MongoTemplate mongoTemplate;
+	private final MongoTemplate mongoTemplate;
 
-    public DefectRejectionRateFieldMappingUpdate(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
-    }
+	public DefectRejectionRateFieldMappingUpdate(MongoTemplate mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
 
-    @Execution
-    public void execution() {
-        Query query = new Query(Criteria.where("fieldName").is("jiraDefectRejectionStatusKPI37"));
-        Update update = new Update();
-        update.set("mandatory", true);
-        mongoTemplate.updateMulti(query, update, "field_mapping_structure");
-    }
+	@Execution
+	public void execution() {
+		Query query = new Query(Criteria.where("fieldName").is("jiraDefectRejectionStatusKPI37"));
+		Update update = new Update();
+		update.set("mandatory", true);
+		mongoTemplate.updateMulti(query, update, "field_mapping_structure");
+	}
 
-    @RollbackExecution
-    public void rollback() {
-        Query query = new Query(Criteria.where("fieldName").is("jiraDefectRejectionStatusKPI37"));
-        Update update = new Update();
-        update.set("mandatory", false);
-        mongoTemplate.updateMulti(query, update, "field_mapping_structure");
-    }
+	@RollbackExecution
+	public void rollback() {
+		Query query = new Query(Criteria.where("fieldName").is("jiraDefectRejectionStatusKPI37"));
+		Update update = new Update();
+		update.set("mandatory", false);
+		mongoTemplate.updateMulti(query, update, "field_mapping_structure");
+	}
 }

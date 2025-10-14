@@ -48,15 +48,12 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 @ExtendWith(SpringExtension.class)
 public class JiraIterationKPIServiceTest {
 
-	@InjectMocks
-	JiraIterationKPIServiceTestImpl jiraKPIService;
+	@InjectMocks JiraIterationKPIServiceTestImpl jiraKPIService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	private Map<String, String> aggregationCriteriaMap;
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private JiraIterationServiceR jiraService;
 
 	private static List<JiraIssueCustomHistory> getJiraIssueCustomHistories() {
 		JiraIssueCustomHistory issueCustomHistory = new JiraIssueCustomHistory();
@@ -132,7 +129,8 @@ public class JiraIterationKPIServiceTest {
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setEstimationCriteria(CommonConstant.STORY_POINT);
 		List<IterationKpiModalValue> modalValues = new ArrayList<>();
-		assertNotNull(jiraKPIService.createIterationKpiData("label", fieldMapping, 10, 13D, 9.5D, modalValues));
+		assertNotNull(
+				jiraKPIService.createIterationKpiData("label", fieldMapping, 10, 13D, 9.5D, modalValues));
 	}
 
 	@Test
@@ -140,7 +138,8 @@ public class JiraIterationKPIServiceTest {
 		FieldMapping fieldMapping = mock(FieldMapping.class);
 		when(fieldMapping.getEstimationCriteria()).thenReturn(null);
 		List<IterationKpiModalValue> modalValues = new ArrayList<>();
-		assertNotNull(jiraKPIService.createIterationKpiData("label", fieldMapping, 10, 13D, 9.5D, modalValues));
+		assertNotNull(
+				jiraKPIService.createIterationKpiData("label", fieldMapping, 10, 13D, 9.5D, modalValues));
 	}
 
 	@Test
@@ -161,14 +160,16 @@ public class JiraIterationKPIServiceTest {
 	@Test
 	public void testGetJiraIssuesCustomHistoryFromBaseClass() {
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = getJiraIssueCustomHistories();
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistories);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(jiraIssueCustomHistories);
 		assertNotNull(jiraKPIService.getJiraIssuesCustomHistoryFromBaseClass(List.of("DTS-123")));
 	}
 
 	@Test
 	public void testGetJiraIssuesCustomHistoryFromBaseClass_WithNoParam() {
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = getJiraIssueCustomHistories();
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistories);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(jiraIssueCustomHistories);
 		assertNotNull(jiraKPIService.getJiraIssuesCustomHistoryFromBaseClass());
 	}
 
@@ -193,8 +194,8 @@ public class JiraIterationKPIServiceTest {
 		}
 
 		@Override
-		public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-				KpiRequest kpiRequest) {
+		public Map<String, Object> fetchKPIDataFromDb(
+				Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 			return null;
 		}
 	}

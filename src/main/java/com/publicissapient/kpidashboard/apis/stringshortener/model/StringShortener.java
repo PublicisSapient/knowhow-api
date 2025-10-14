@@ -26,8 +26,7 @@ import lombok.Data;
 @Data
 @Document(collection = "string_shorteners")
 public class StringShortener {
-	@Id
-	private String id;
+	@Id private String id;
 	private String longStateFiltersString;
 	private String shortStateFiltersString;
 	private String longKPIFiltersString;

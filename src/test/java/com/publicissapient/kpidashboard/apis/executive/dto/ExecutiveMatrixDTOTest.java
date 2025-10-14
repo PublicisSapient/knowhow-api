@@ -77,7 +77,8 @@ public class ExecutiveMatrixDTOTest {
 	@Test
 	public void testToString() {
 		ExecutiveMatrixDTO matrix = ExecutiveMatrixDTO.builder().build();
-		String expected = "ExecutiveMatrixDTO(rows=" + matrix.getRows() + ", columns=" + matrix.getColumns() + ")";
+		String expected =
+				"ExecutiveMatrixDTO(rows=" + matrix.getRows() + ", columns=" + matrix.getColumns() + ")";
 		assertEquals(expected, matrix.toString());
 	}
 }

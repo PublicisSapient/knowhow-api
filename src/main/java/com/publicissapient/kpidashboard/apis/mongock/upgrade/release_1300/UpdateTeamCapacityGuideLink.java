@@ -17,13 +17,18 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1300;
 
-import io.mongock.api.annotations.ChangeUnit;
-import io.mongock.api.annotations.Execution;
-import io.mongock.api.annotations.RollbackExecution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@ChangeUnit(id = "update_team_capacity_guide_link", order = "13003", author = "kunkambl", systemVersion = "13.0.0")
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
+
+@ChangeUnit(
+		id = "update_team_capacity_guide_link",
+		order = "13003",
+		author = "kunkambl",
+		systemVersion = "13.0.0")
 public class UpdateTeamCapacityGuideLink {
 
 	private final MongoTemplate mongoTemplate;
@@ -35,16 +40,27 @@ public class UpdateTeamCapacityGuideLink {
 	@Execution
 	public void execution() {
 
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi58"),
-				new Document("$set", new Document("kpiInfo.details.1.kpiLinkDetail.link",
-						"https://speed.suite.publicissapient.com/wiki/spaces/PS/pages/43057154/Step+6A+-+Capacity+Data+Reporting")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi58"),
+						new Document(
+								"$set",
+								new Document(
+										"kpiInfo.details.1.kpiLinkDetail.link",
+										"https://speed.suite.publicissapient.com/wiki/spaces/PS/pages/43057154/Step+6A+-+Capacity+Data+Reporting")));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi58"),
-				new Document("$set", new Document("kpiInfo.details.1.kpiLinkDetail.link",
-						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/32473095/Capacity+Management")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi58"),
+						new Document(
+								"$set",
+								new Document(
+										"kpiInfo.details.1.kpiLinkDetail.link",
+										"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/32473095/Capacity+Management")));
 	}
-
 }

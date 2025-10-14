@@ -29,19 +29,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AutoApproveAccessController {
 
-	@Autowired
-	AutoApproveAccessService autoApproveService;
+	@Autowired AutoApproveAccessService autoApproveService;
 
 	@PostMapping
 	@PreAuthorize("hasPermission(null, 'ENABLE_AUTO_APPROVE')")
 	public ResponseEntity<ServiceResponse> saveAutoApproveRoles(
 			@Valid @RequestBody AutoApproveAccessConfigDTO autoAcessDTO) {
 		final ModelMapper modelMapper = new ModelMapper();
-		final AutoApproveAccessConfig autoApproveRole = modelMapper.map(autoAcessDTO, AutoApproveAccessConfig.class);
-		AutoApproveAccessConfig approvalConfig = autoApproveService.saveAutoApproveConfig(autoApproveRole);
+		final AutoApproveAccessConfig autoApproveRole =
+				modelMapper.map(autoAcessDTO, AutoApproveAccessConfig.class);
+		AutoApproveAccessConfig approvalConfig =
+				autoApproveService.saveAutoApproveConfig(autoApproveRole);
 		log.info("saved Auto Approve Roles");
 		return ResponseEntity.status(HttpStatus.OK)
-				.body(new ServiceResponse(true, "Added new  auto approve role", Arrays.asList(approvalConfig)));
+				.body(
+						new ServiceResponse(
+								true, "Added new  auto approve role", Arrays.asList(approvalConfig)));
 	}
 
 	@GetMapping
@@ -52,29 +55,39 @@ public class AutoApproveAccessController {
 		if (autoAccessApprovalData == null) {
 			log.info("No roles found for auto approval in db");
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(new ServiceResponse(false, "auto approval not configured", Arrays.asList(autoAccessApprovalData)));
+					.body(
+							new ServiceResponse(
+									false, "auto approval not configured", Arrays.asList(autoAccessApprovalData)));
 		}
 		log.info("Fetched roles for auto access successfully");
 		return ResponseEntity.status(HttpStatus.OK)
-				.body(new ServiceResponse(true, "Found all roles for auto approval", Arrays.asList(autoAccessApprovalData)));
+				.body(
+						new ServiceResponse(
+								true, "Found all roles for auto approval", Arrays.asList(autoAccessApprovalData)));
 	}
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasPermission(null, 'ENABLE_AUTO_APPROVE')")
-	public ResponseEntity<ServiceResponse> modifyAutoApprovConfigById(@PathVariable("id") String id,
-			@Valid @RequestBody AutoApproveAccessConfigDTO autoAcessDTO) {
+	public ResponseEntity<ServiceResponse> modifyAutoApprovConfigById(
+			@PathVariable("id") String id, @Valid @RequestBody AutoApproveAccessConfigDTO autoAcessDTO) {
 		ModelMapper modelMapper = new ModelMapper();
-		AutoApproveAccessConfig autoApproveRole = modelMapper.map(autoAcessDTO, AutoApproveAccessConfig.class);
+		AutoApproveAccessConfig autoApproveRole =
+				modelMapper.map(autoAcessDTO, AutoApproveAccessConfig.class);
 
 		if (!ObjectId.isValid(id)) {
 			log.info("Id not valid");
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(new ServiceResponse(false, "access_request@" + id + " does not exist", Arrays.asList(autoAcessDTO)));
+					.body(
+							new ServiceResponse(
+									false, "access_request@" + id + " does not exist", Arrays.asList(autoAcessDTO)));
 		}
 
-		AutoApproveAccessConfig autoApproveData = autoApproveService.modifyAutoApprovConfigById(id, autoApproveRole);
+		AutoApproveAccessConfig autoApproveData =
+				autoApproveService.modifyAutoApprovConfigById(id, autoApproveRole);
 		log.info("Modifying request@{}", id);
 		return ResponseEntity.status(HttpStatus.OK)
-				.body(new ServiceResponse(true, "modified access_request@" + id, Arrays.asList(autoApproveData)));
+				.body(
+						new ServiceResponse(
+								true, "modified access_request@" + id, Arrays.asList(autoApproveData)));
 	}
 }

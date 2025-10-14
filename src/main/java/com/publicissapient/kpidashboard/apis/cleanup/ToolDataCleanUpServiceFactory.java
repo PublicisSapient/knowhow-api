@@ -37,8 +37,7 @@ import com.publicissapient.kpidashboard.common.constant.ProcessorType;
 public class ToolDataCleanUpServiceFactory {
 
 	private final Map<String, ToolDataCleanUpService> servicesCache = new HashMap<>();
-	@Autowired
-	private List<ToolDataCleanUpService> dataCleanUpServices;
+	@Autowired private List<ToolDataCleanUpService> dataCleanUpServices;
 
 	@PostConstruct
 	public void initServices() {
@@ -50,8 +49,7 @@ public class ToolDataCleanUpServiceFactory {
 	/**
 	 * Gets service object for the tool
 	 *
-	 * @param toolName
-	 *          name of the tool
+	 * @param toolName name of the tool
 	 * @return DataCleanUpService object for the tool
 	 */
 	public ToolDataCleanUpService getService(String toolName) {
@@ -69,36 +67,36 @@ public class ToolDataCleanUpServiceFactory {
 		String toolCategory = "";
 
 		switch (toolName) {
-			case ProcessorConstants.JIRA :
-			case ProcessorConstants.AZURE :
+			case ProcessorConstants.JIRA:
+			case ProcessorConstants.AZURE:
 			case ProcessorConstants.RALLY:
 				toolCategory = ProcessorType.AGILE_TOOL.toString();
 				break;
-			case ProcessorConstants.JIRA_TEST :
-			case ProcessorConstants.ZEPHYR :
+			case ProcessorConstants.JIRA_TEST:
+			case ProcessorConstants.ZEPHYR:
 				toolCategory = ProcessorType.TESTING_TOOLS.toString();
 				break;
-			case ProcessorConstants.SONAR :
+			case ProcessorConstants.SONAR:
 				toolCategory = ProcessorType.SONAR_ANALYSIS.toString();
 				break;
-			case ProcessorConstants.BAMBOO :
-			case ProcessorConstants.JENKINS :
-			case ProcessorConstants.TEAMCITY :
-			case ProcessorConstants.AZUREPIPELINE :
-			case ProcessorConstants.GITHUBACTION :
-			case ProcessorConstants.ARGOCD :
+			case ProcessorConstants.BAMBOO:
+			case ProcessorConstants.JENKINS:
+			case ProcessorConstants.TEAMCITY:
+			case ProcessorConstants.AZUREPIPELINE:
+			case ProcessorConstants.GITHUBACTION:
+			case ProcessorConstants.ARGOCD:
 				toolCategory = ProcessorType.BUILD.toString();
 				break;
-			case ProcessorConstants.BITBUCKET :
-			case ProcessorConstants.GITLAB :
-			case ProcessorConstants.AZUREREPO :
-			case ProcessorConstants.GITHUB :
+			case ProcessorConstants.BITBUCKET:
+			case ProcessorConstants.GITLAB:
+			case ProcessorConstants.AZUREREPO:
+			case ProcessorConstants.GITHUB:
 				toolCategory = ProcessorType.SCM.toString();
 				break;
-			case ProcessorConstants.NEWREILC :
+			case ProcessorConstants.NEWREILC:
 				toolCategory = ProcessorType.NEW_RELIC.toString();
 				break;
-			default :
+			default:
 				throw new IllegalStateException("invalid tool name = " + toolName);
 		}
 		return toolCategory;

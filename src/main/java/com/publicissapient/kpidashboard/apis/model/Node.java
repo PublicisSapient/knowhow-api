@@ -48,8 +48,15 @@ public class Node implements Serializable {
 		this.children = new ArrayList<>();
 	}
 
-	public Node(Object object, String childId, String name, String parentId, String groupName,
-			ProjectHierarchy projectHierarchy, ProjectFilter projectFilter, SprintFilter sprintFilter) {
+	public Node(
+			Object object,
+			String childId,
+			String name,
+			String parentId,
+			String groupName,
+			ProjectHierarchy projectHierarchy,
+			ProjectFilter projectFilter,
+			SprintFilter sprintFilter) {
 		this.value = object;
 		this.id = childId;
 		this.name = name;
@@ -61,8 +68,15 @@ public class Node implements Serializable {
 		this.sprintFilter = sprintFilter;
 	}
 
-	public Node(Object object, String childId, String name, String parentId, String groupName,
-			ProjectHierarchy projectHierarchy, ProjectFilter projectFilter, SprintFilter sprintFilter,
+	public Node(
+			Object object,
+			String childId,
+			String name,
+			String parentId,
+			String groupName,
+			ProjectHierarchy projectHierarchy,
+			ProjectFilter projectFilter,
+			SprintFilter sprintFilter,
 			ReleaseFilter releaseFilter) {
 		this.value = object;
 		this.id = childId;
@@ -76,8 +90,14 @@ public class Node implements Serializable {
 		this.releaseFilter = releaseFilter;
 	}
 
-	public Node(Object object, String childId, String name, String parentId, String groupName,
-			ProjectHierarchy projectHierarchy, ProjectFilter projectFilter) {
+	public Node(
+			Object object,
+			String childId,
+			String name,
+			String parentId,
+			String groupName,
+			ProjectHierarchy projectHierarchy,
+			ProjectFilter projectFilter) {
 		this.value = object;
 		this.id = childId;
 		this.name = name;
@@ -88,7 +108,12 @@ public class Node implements Serializable {
 		this.projectFilter = projectFilter;
 	}
 
-	public Node(Object object, String childId, String name, String parentId, String hierarchyLevelId,
+	public Node(
+			Object object,
+			String childId,
+			String name,
+			String parentId,
+			String hierarchyLevelId,
 			ProjectHierarchy projectHierarchy) {
 		this.value = object;
 		this.id = childId;
@@ -193,8 +218,17 @@ public class Node implements Serializable {
 	/** toString() method of String by adding Parent and Children Nodes */
 	@Override
 	public String toString() {
-		return "Node [id=" + id + ", parentId=" + parentId + ", value=" + value + ", children=" + children + ", level=" +
-				level + "]";
+		return "Node [id="
+				+ id
+				+ ", parentId="
+				+ parentId
+				+ ", value="
+				+ value
+				+ ", children="
+				+ children
+				+ ", level="
+				+ level
+				+ "]";
 	}
 
 	/**
@@ -274,8 +308,9 @@ public class Node implements Serializable {
 			return false;
 		}
 		Node other = (Node) obj;
-		if (obj instanceof Node && this.id.equals(other.id) &&
-				(null == this.parentId || this.parentId.equals(other.parentId))) {
+		if (obj instanceof Node
+				&& this.id.equals(other.id)
+				&& (null == this.parentId || this.parentId.equals(other.parentId))) {
 			isEqual = true;
 		}
 		return isEqual;

@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /***
  * @author rendk
  */
-@ChangeUnit(id = "r_kpi_chartType_update", order = "09007", author = "rendk", systemVersion = "9.0.0")
+@ChangeUnit(
+		id = "r_kpi_chartType_update",
+		order = "09007",
+		author = "rendk",
+		systemVersion = "9.0.0")
 public class UpdateKPIChartType {
 	private final MongoTemplate mongoTemplate;
 
@@ -43,19 +47,32 @@ public class UpdateKPIChartType {
 	@Execution
 	public void execution() {
 		Document query = new Document(KPI_ID, "kpi142");
-		Document update = new Document("$set",
-				new Document().append(CHART_TYPE, "pieChart").append(XAXIS_LABEL, "").append(YAXIS_LABEL, "").append(
-						"kpiInfo.definition",
-						"It shows the breakup of all defects tagged to a release based on RCA. The breakup is shown in terms of count & percentage"));
+		Document update =
+				new Document(
+						"$set",
+						new Document()
+								.append(CHART_TYPE, "pieChart")
+								.append(XAXIS_LABEL, "")
+								.append(YAXIS_LABEL, "")
+								.append(
+										"kpiInfo.definition",
+										"It shows the breakup of all defects tagged to a release based on RCA. The breakup is shown in terms of count & percentage"));
 		mongoTemplate.getCollection("kpi_master").updateOne(query, update);
 	}
 
 	@RollbackExecution
 	public void rollBack() {
 		Document query = new Document(KPI_ID, "kpi142");
-		Document update = new Document("$set", new Document().append(CHART_TYPE, "stackedColumn")
-				.append(XAXIS_LABEL, "Test Phase").append(YAXIS_LABEL, "Count").append("kpiInfo.definition",
-						"It shows the breakup of all defects tagged to a release based on RCA. The breakup is shown in terms of count at different testing phases."));
+		Document update =
+				new Document(
+						"$set",
+						new Document()
+								.append(CHART_TYPE, "stackedColumn")
+								.append(XAXIS_LABEL, "Test Phase")
+								.append(YAXIS_LABEL, "Count")
+								.append(
+										"kpiInfo.definition",
+										"It shows the breakup of all defects tagged to a release based on RCA. The breakup is shown in terms of count at different testing phases."));
 		mongoTemplate.getCollection("kpi_master").updateOne(query, update);
 	}
 }

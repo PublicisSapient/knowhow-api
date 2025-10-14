@@ -23,11 +23,9 @@ import javax.validation.constraints.NotNull;
 /** represents api token request input */
 public class ApiTokenRequest {
 
-	@NotNull
-	private String apiUser;
+	@NotNull private String apiUser;
 
-	@NotNull
-	private Long expirationDt;
+	@NotNull private Long expirationDt;
 
 	/**
 	 * Gets api user.
@@ -41,8 +39,7 @@ public class ApiTokenRequest {
 	/**
 	 * Sets api user.
 	 *
-	 * @param apiUser
-	 *          the api user
+	 * @param apiUser the api user
 	 */
 	public void setApiUser(String apiUser) {
 		this.apiUser = apiUser;
@@ -60,8 +57,7 @@ public class ApiTokenRequest {
 	/**
 	 * Sets expiration dt.
 	 *
-	 * @param expirationDt
-	 *          the expiration dt
+	 * @param expirationDt the expiration dt
 	 */
 	public void setExpirationDt(Long expirationDt) {
 		this.expirationDt = expirationDt;

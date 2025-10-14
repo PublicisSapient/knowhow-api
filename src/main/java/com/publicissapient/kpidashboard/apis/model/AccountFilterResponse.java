@@ -40,8 +40,7 @@ public class AccountFilterResponse extends BaseModel {
 	/**
 	 * Sets level.
 	 *
-	 * @param level
-	 *          the level
+	 * @param level the level
 	 */
 	public void setLevel(int level) {
 		this.level = level;
@@ -59,8 +58,7 @@ public class AccountFilterResponse extends BaseModel {
 	/**
 	 * Sets label.
 	 *
-	 * @param label
-	 *          the label
+	 * @param label the label
 	 */
 	public void setLabel(String label) {
 		this.label = label;
@@ -78,8 +76,7 @@ public class AccountFilterResponse extends BaseModel {
 	/**
 	 * Sets filter data.
 	 *
-	 * @param filterData
-	 *          the filter data
+	 * @param filterData the filter data
 	 */
 	public void setFilterData(List<AccountFilteredData> filterData) {
 		this.filterData = filterData;
@@ -97,8 +94,7 @@ public class AccountFilterResponse extends BaseModel {
 	/**
 	 * Sets enabled.
 	 *
-	 * @param show
-	 *          the enabled
+	 * @param show the enabled
 	 */
 	public void setShow(boolean show) {
 		this.show = show;

@@ -18,118 +18,117 @@
 package com.publicissapient.kpidashboard.apis.hierarchy.integration.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
 @Data
 public class HierarchyNode {
 
-    @JsonProperty("Opportunity_unique_id")
-    private String opportunityUniqueId;
+	@JsonProperty("Opportunity_unique_id")
+	private String opportunityUniqueId;
 
-    @JsonProperty("Portfolio_unique_id")
-    private String portfolioUniqueId;
+	@JsonProperty("Portfolio_unique_id")
+	private String portfolioUniqueId;
 
-    @JsonProperty("Account_unique_id")
-    private String accountUniqueId;
+	@JsonProperty("Account_unique_id")
+	private String accountUniqueId;
 
-    @JsonProperty("Vertical_unique_id")
-    private String verticalUniqueId;
+	@JsonProperty("Vertical_unique_id")
+	private String verticalUniqueId;
 
-    @JsonProperty("BU_unique_id")
-    private String buUniqueId;
+	@JsonProperty("BU_unique_id")
+	private String buUniqueId;
 
-    @JsonProperty("Root_unique_id")
-    private String rootUniqueId;
+	@JsonProperty("Root_unique_id")
+	private String rootUniqueId;
 
-    @JsonProperty("Opportunity")
-    private String opportunity;
+	@JsonProperty("Opportunity")
+	private String opportunity;
 
-    @JsonProperty("Opportunity_id")
-    private String opportunityId;
+	@JsonProperty("Opportunity_id")
+	private String opportunityId;
 
-    @JsonProperty("poc")
-    private String poc;
+	@JsonProperty("poc")
+	private String poc;
 
-    @JsonProperty("alternate_poc")
-    private String alternatePoc;
+	@JsonProperty("alternate_poc")
+	private String alternatePoc;
 
-    @JsonProperty("pid")
-    private String pid;
+	@JsonProperty("pid")
+	private String pid;
 
-    @JsonProperty("archetype")
-    private String archetype;
+	@JsonProperty("archetype")
+	private String archetype;
 
-    @JsonProperty("probability")
-    private String probability;
+	@JsonProperty("probability")
+	private String probability;
 
-    @JsonProperty("clientPartnerLeadName")
-    private String clientPartnerLeadName;
+	@JsonProperty("clientPartnerLeadName")
+	private String clientPartnerLeadName;
 
-    @JsonProperty("clientPartnerLeadEmail")
-    private String clientPartnerLeadEmail;
+	@JsonProperty("clientPartnerLeadEmail")
+	private String clientPartnerLeadEmail;
 
-    @JsonProperty("deliveryLeadName")
-    private String deliveryLeadName;
+	@JsonProperty("deliveryLeadName")
+	private String deliveryLeadName;
 
-    @JsonProperty("deliveryLeadEmail")
-    private String deliveryLeadEmail;
+	@JsonProperty("deliveryLeadEmail")
+	private String deliveryLeadEmail;
 
-    @JsonProperty("engineeringLeadName")
-    private String engineeringLeadName;
+	@JsonProperty("engineeringLeadName")
+	private String engineeringLeadName;
 
-    @JsonProperty("engineeringLeadEmail")
-    private String engineeringLeadEmail;
+	@JsonProperty("engineeringLeadEmail")
+	private String engineeringLeadEmail;
 
-    @JsonProperty("buGroup")
-    private String buGroup;
+	@JsonProperty("buGroup")
+	private String buGroup;
 
-    @JsonProperty("team")
-    private String team;
+	@JsonProperty("team")
+	private String team;
 
-    @JsonProperty("projectType")
-    private String projectType;
+	@JsonProperty("projectType")
+	private String projectType;
 
-    @JsonProperty("capabilityGroup")
-    private String capabilityGroup;
+	@JsonProperty("capabilityGroup")
+	private String capabilityGroup;
 
-    @JsonProperty("Portfolio")
-    private String portfolio;
+	@JsonProperty("Portfolio")
+	private String portfolio;
 
-    @JsonProperty("Portfolio_id")
-    private String portfolioId;
+	@JsonProperty("Portfolio_id")
+	private String portfolioId;
 
-    @JsonProperty("Account")
-    private String account;
+	@JsonProperty("Account")
+	private String account;
 
-    @JsonProperty("Account_id")
-    private String accountId;
+	@JsonProperty("Account_id")
+	private String accountId;
 
-    @JsonProperty("Vertical")
-    private String vertical;
+	@JsonProperty("Vertical")
+	private String vertical;
 
-    @JsonProperty("Vertical_id")
-    private String verticalId;
+	@JsonProperty("Vertical_id")
+	private String verticalId;
 
-    @JsonProperty("BU")
-    private String bu;
+	@JsonProperty("BU")
+	private String bu;
 
-    @JsonProperty("BU_id")
-    private String buId;
+	@JsonProperty("BU_id")
+	private String buId;
 
-    @JsonProperty("Root")
-    private String root;
+	@JsonProperty("Root")
+	private String root;
 
+	@JsonProperty("Root_id")
+	private String rootId;
 
-    @JsonProperty("Root_id")
-    private String rootId;
+	@JsonProperty("Id")
+	private String id;
 
-    @JsonProperty("Id")
-    private String id;
+	@JsonProperty("startDate")
+	private String startDate;
 
-    @JsonProperty("startDate")
-    private String startDate;
-
-    @JsonProperty("endDate")
-    private String endDate;
+	@JsonProperty("endDate")
+	private String endDate;
 }
-

@@ -62,7 +62,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 @AllArgsConstructor
-public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class ScmPrDeclineRateServiceImpl
+		extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
@@ -76,21 +77,23 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_DECLINE_RATE);
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.PR_DECLINE_RATE);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_DECLINE_RATE);
 		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
 		return kpiElement;
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
 
 		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
@@ -115,24 +118,23 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI181(), KPICode.PR_DECLINE_RATE.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI181(), KPICode.PR_DECLINE_RATE.getKpiId());
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *            kpi element
-	 * @param mapTmp
-	 *            node map
-	 * @param projectLeafNode
-	 *            leaf node of project
-	 * @param kpiRequest
-	 *            kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void calculateProjectKpiTrendData(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
@@ -140,22 +142,26 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
-		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
-				kpiHelperService);
+		List<Tool> scmTools =
+				DeveloperKpiHelper.getScmToolsForProject(
+						projectLeafNode, configHelperService, kpiHelperService);
 
 		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
 			return;
 		}
 
 		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
 
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		List<ScmMergeRequests> mergeRequests =
+				(List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
 			return;
 		}
 
@@ -163,13 +169,22 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			CustomDateRange periodRange =
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
-			List<ScmMergeRequests> mergeRequestsInRange = DeveloperKpiHelper
-					.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
-			scmTools.forEach(tool -> processToolData(tool, mergeRequestsInRange, assignees, kpiTrendDataByGroup,
-					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
+			List<ScmMergeRequests> mergeRequestsInRange =
+					DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
+			scmTools.forEach(
+					tool ->
+							processToolData(
+									tool,
+									mergeRequestsInRange,
+									assignees,
+									kpiTrendDataByGroup,
+									validationDataList,
+									dateLabel,
+									projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
@@ -178,9 +193,14 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
-			Map<String, List<DataCount>> kpiTrendDataByGroup, List<RepoToolValidationData> validationDataList,
-			String dateLabel, String projectName) {
+	private void processToolData(
+			Tool tool,
+			List<ScmMergeRequests> mergeRequests,
+			Set<Assignee> assignees,
+			Map<String, List<DataCount>> kpiTrendDataByGroup,
+			List<RepoToolValidationData> validationDataList,
+			String dateLabel,
+			String projectName) {
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
@@ -188,63 +208,88 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmMergeRequests> mergeRequestsForBranch = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests,
-				tool);
+		List<ScmMergeRequests> mergeRequestsForBranch =
+				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
 		double prDeclineRate = calculatePrDeclineRate(mergeRequestsForBranch);
 
-		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, prDeclineRate, new HashMap<>(),
+		DeveloperKpiHelper.setDataCount(
+				projectName,
+				dateLabel,
+				overallKpiGroup,
+				prDeclineRate,
+				new HashMap<>(),
 				kpiTrendDataByGroup);
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
-				.groupMergeRequestsByUser(mergeRequestsForBranch);
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
+				DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch);
 
-		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
-				dateLabel, kpiTrendDataByGroup));
+		validationDataList.addAll(
+				prepareUserValidationData(
+						userWiseMergeRequests, assignees, tool, projectName, dateLabel, kpiTrendDataByGroup));
 	}
 
 	private List<RepoToolValidationData> prepareUserValidationData(
-			Map<String, List<ScmMergeRequests>> userWiseMergeRequests, Set<Assignee> assignees, Tool tool,
-			String projectName, String dateLabel, Map<String, List<DataCount>> kpiTrendDataByGroup) {
-		return userWiseMergeRequests.entrySet().stream().map(entry -> {
-			String userEmail = entry.getKey();
-			List<ScmMergeRequests> userMergeRequests = entry.getValue();
+			Map<String, List<ScmMergeRequests>> userWiseMergeRequests,
+			Set<Assignee> assignees,
+			Tool tool,
+			String projectName,
+			String dateLabel,
+			Map<String, List<DataCount>> kpiTrendDataByGroup) {
+		return userWiseMergeRequests.entrySet().stream()
+				.map(
+						entry -> {
+							String userEmail = entry.getKey();
+							List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
-			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			double userPrDeclineRate = calculatePrDeclineRate(userMergeRequests);
+							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
+							double userPrDeclineRate = calculatePrDeclineRate(userMergeRequests);
 
-			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
+							String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, userPrDeclineRate, new HashMap<>(),
-					kpiTrendDataByGroup);
+							DeveloperKpiHelper.setDataCount(
+									projectName,
+									dateLabel,
+									userKpiGroup,
+									userPrDeclineRate,
+									new HashMap<>(),
+									kpiTrendDataByGroup);
 
-			// Create validation data
-			RepoToolValidationData validationData = new RepoToolValidationData();
-			validationData.setProjectName(projectName);
-			validationData.setBranchName(tool.getBranch());
-			validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
-			validationData.setDeveloperName(developerName);
-			validationData.setDate(dateLabel);
+							// Create validation data
+							RepoToolValidationData validationData = new RepoToolValidationData();
+							validationData.setProjectName(projectName);
+							validationData.setBranchName(tool.getBranch());
+							validationData.setRepoUrl(
+									tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+							validationData.setDeveloperName(developerName);
+							validationData.setDate(dateLabel);
 
-			// Count closed and non-merged PRs
-			long closedPRs = userMergeRequests.stream().filter(ScmMergeRequests::isClosed).count();
-			long nonMergedPRs = userMergeRequests.stream().filter(ScmMergeRequests::isClosed)
-					.filter(mr -> !ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
-					.count();
+							// Count closed and non-merged PRs
+							long closedPRs =
+									userMergeRequests.stream().filter(ScmMergeRequests::isClosed).count();
+							long nonMergedPRs =
+									userMergeRequests.stream()
+											.filter(ScmMergeRequests::isClosed)
+											.filter(
+													mr ->
+															!ScmMergeRequests.MergeRequestState.MERGED
+																	.name()
+																	.equalsIgnoreCase(mr.getState()))
+											.count();
 
-			validationData.setMrCount(closedPRs);
-			validationData.setKpiPRs(nonMergedPRs);
-			validationData.setPrDeclineRate(userPrDeclineRate);
+							validationData.setMrCount(closedPRs);
+							validationData.setKpiPRs(nonMergedPRs);
+							validationData.setPrDeclineRate(userPrDeclineRate);
 
-			return validationData;
-		}).collect(Collectors.toList());
+							return validationData;
+						})
+				.collect(Collectors.toList());
 	}
 
 	/**
 	 * Calculate PR decline rate as (non-merged PRs / closed PRs) * 100
 	 *
-	 * @param mergeRequests
-	 *            list of merge requests
+	 * @param mergeRequests list of merge requests
 	 * @return PR decline rate percentage
 	 */
 	private double calculatePrDeclineRate(List<ScmMergeRequests> mergeRequests) {
@@ -258,14 +303,22 @@ public class ScmPrDeclineRateServiceImpl extends BitBucketKPIService<Double, Lis
 			return 0.0;
 		}
 
-		long nonMergedPRs = mergeRequests.stream().filter(ScmMergeRequests::isClosed)
-				.filter(mr -> !ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
-				.count();
+		long nonMergedPRs =
+				mergeRequests.stream()
+						.filter(ScmMergeRequests::isClosed)
+						.filter(
+								mr ->
+										!ScmMergeRequests.MergeRequestState.MERGED
+												.name()
+												.equalsIgnoreCase(mr.getState()))
+						.count();
 
 		return (double) nonMergedPRs / closedPRs * 100;
 	}
 
-	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
+	private void populateExcelData(
+			String requestTrackerId,
+			List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();

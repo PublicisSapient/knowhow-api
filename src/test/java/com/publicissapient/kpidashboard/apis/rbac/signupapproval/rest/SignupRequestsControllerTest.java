@@ -52,23 +52,16 @@ public class SignupRequestsControllerTest {
 
 	Authentication authentication;
 	ObjectMapper mapper = new ObjectMapper();
-	@Mock
-	AuthenticationService authenticationService;
-	@Mock
-	SignupManager signupManager;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	UserInfoServiceImpl userInfoService;
+	@Mock AuthenticationService authenticationService;
+	@Mock SignupManager signupManager;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock UserInfoServiceImpl userInfoService;
 	private MockMvc mockMvc;
 	private String testId;
-	@Mock
-	private CookieUtil cookieUtil;
-	@InjectMocks
-	private SignupRequestsController signupRequestsController;
+	@Mock private CookieUtil cookieUtil;
+	@InjectMocks private SignupRequestsController signupRequestsController;
 
-	@Mock
-	AuthProperties authProperties;
+	@Mock AuthProperties authProperties;
 
 	@Before
 	public void before() {
@@ -93,7 +86,10 @@ public class SignupRequestsControllerTest {
 	 */
 	@Test
 	public void testGetUnApprovedRequests() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/userapprovals").contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/userapprovals")
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
@@ -105,27 +101,34 @@ public class SignupRequestsControllerTest {
 	@Test
 	public void testGetUnApprovedRequests_ForCentralAuth() throws Exception {
 		List<UserAccessApprovalResponseDTO> UserAccessApprovalResponseDTOList = new ArrayList<>();
-		UserAccessApprovalResponseDTO userAccessApprovalResponseDTO = new UserAccessApprovalResponseDTO();
+		UserAccessApprovalResponseDTO userAccessApprovalResponseDTO =
+				new UserAccessApprovalResponseDTO();
 		userAccessApprovalResponseDTO.setWhitelistDomainEmail(false);
 		userAccessApprovalResponseDTO.setEmail("abc.test@test.com");
 		userAccessApprovalResponseDTO.setApproved(false);
 		UserAccessApprovalResponseDTOList.add(userAccessApprovalResponseDTO);
-		Mockito.when(userInfoService.findAllUnapprovedUsers()).thenReturn(UserAccessApprovalResponseDTOList);
-		mockMvc.perform(MockMvcRequestBuilders.get("/userapprovals/central").contentType(MediaType.APPLICATION_JSON_VALUE))
+		Mockito.when(userInfoService.findAllUnapprovedUsers())
+				.thenReturn(UserAccessApprovalResponseDTOList);
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/userapprovals/central")
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	/**
 	 * method to test GET /grantrequest/all restPoint ;
 	 *
-	 * <p>
-	 * Get all signup requests
+	 * <p>Get all signup requests
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAllRequests() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/userapprovals/all").contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/userapprovals/all")
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 }

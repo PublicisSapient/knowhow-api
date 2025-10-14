@@ -61,59 +61,41 @@ import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AgileDataCleanUpServiceTest {
 
-	@InjectMocks
-	private AgileDataCleanUpService agileDataCleanUpService;
+	@InjectMocks private AgileDataCleanUpService agileDataCleanUpService;
 
-	@Mock
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Mock private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
 
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Mock
-	private KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Mock private KanbanJiraIssueRepository kanbanJiraIssueRepository;
 
-	@Mock
-	private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
+	@Mock private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
 
-	@Mock
-	private AccountHierarchyRepository accountHierarchyRepository;
+	@Mock private AccountHierarchyRepository accountHierarchyRepository;
 
-	@Mock
-	private ProjectBasicConfigService projectBasicConfigService;
+	@Mock private ProjectBasicConfigService projectBasicConfigService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private TestCaseDetailsRepository testCaseDetailsRepository;
+	@Mock private TestCaseDetailsRepository testCaseDetailsRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
-	@Mock
-	private SprintRepository sprintRepository;
+	@Mock private SprintRepository sprintRepository;
 
-	@Mock
-	private ProjectReleaseRepo projectReleaseRepo;
+	@Mock private ProjectReleaseRepo projectReleaseRepo;
 
-	@Mock
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
+	@Mock private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
 
-	@Mock
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Mock private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
-	@Mock
-	private ProjectHierarchyService projectHierarchyService;
+	@Mock private ProjectHierarchyService projectHierarchyService;
 
 	@Test
 	public void getToolCategory() {
@@ -123,8 +105,8 @@ public class AgileDataCleanUpServiceTest {
 
 	@Test
 	public void clean_Kanban() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 
 		ProjectToolConfig projectToolConfig = new ProjectToolConfig();
@@ -139,20 +121,27 @@ public class AgileDataCleanUpServiceTest {
 
 		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any())).thenReturn(fieldMapping);
 		when(projectToolConfigRepository.findById(Mockito.anyString())).thenReturn(projectToolConfig);
-		when(projectBasicConfigService.getProjectBasicConfigs(Mockito.anyString())).thenReturn(projectBasicConfig);
+		when(projectBasicConfigService.getProjectBasicConfigs(Mockito.anyString()))
+				.thenReturn(projectBasicConfig);
 
 		doNothing().when(kanbanJiraIssueRepository).deleteByBasicProjectConfigId(Mockito.anyString());
-		doNothing().when(kanbanJiraIssueHistoryRepository).deleteByBasicProjectConfigId(Mockito.anyString());
+		doNothing()
+				.when(kanbanJiraIssueHistoryRepository)
+				.deleteByBasicProjectConfigId(Mockito.anyString());
 		doNothing().when(testCaseDetailsRepository).deleteByBasicProjectConfigId(Mockito.anyString());
 		doNothing().when(projectReleaseRepo).deleteByConfigId(Mockito.any());
-		doNothing().when(processorExecutionTraceLogRepository).deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(),
-				Mockito.anyString());
+		doNothing()
+				.when(processorExecutionTraceLogRepository)
+				.deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(), Mockito.anyString());
 		agileDataCleanUpService.clean("5e9e4593e4b0c8ece56710c3");
 
-		verify(kanbanJiraIssueRepository, times(1)).deleteByBasicProjectConfigId("6335368249794a18e8a4479f");
-		verify(kanbanJiraIssueHistoryRepository, times(1)).deleteByBasicProjectConfigId("6335368249794a18e8a4479f");
+		verify(kanbanJiraIssueRepository, times(1))
+				.deleteByBasicProjectConfigId("6335368249794a18e8a4479f");
+		verify(kanbanJiraIssueHistoryRepository, times(1))
+				.deleteByBasicProjectConfigId("6335368249794a18e8a4479f");
 		verify(processorExecutionTraceLogRepository, times(1))
-				.deleteByBasicProjectConfigIdAndProcessorName("6335368249794a18e8a4479f", ProcessorConstants.JIRA);
+				.deleteByBasicProjectConfigIdAndProcessorName(
+						"6335368249794a18e8a4479f", ProcessorConstants.JIRA);
 	}
 
 	@Test
@@ -170,18 +159,23 @@ public class AgileDataCleanUpServiceTest {
 		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any())).thenReturn(fieldMapping);
 		when(projectToolConfigRepository.findById(Mockito.anyString())).thenReturn(projectToolConfig);
 		doNothing().when(sprintRepository).deleteByBasicProjectConfigId(Mockito.any());
-		when(projectBasicConfigService.getProjectBasicConfigs(Mockito.anyString())).thenReturn(projectBasicConfig);
+		when(projectBasicConfigService.getProjectBasicConfigs(Mockito.anyString()))
+				.thenReturn(projectBasicConfig);
 
 		doNothing().when(testCaseDetailsRepository).deleteByBasicProjectConfigId(Mockito.anyString());
 		doNothing().when(jiraIssueRepository).deleteByBasicProjectConfigId(Mockito.anyString());
-		doNothing().when(processorExecutionTraceLogRepository).deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(),
-				Mockito.anyString());
+		doNothing()
+				.when(processorExecutionTraceLogRepository)
+				.deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(), Mockito.anyString());
 		agileDataCleanUpService.clean("5e9db8f1e4b0caefbfa8e0c7");
 
 		verify(jiraIssueRepository, times(1)).deleteByBasicProjectConfigId("5e9db8f1e4b0caefbfa8e0c7");
-		verify(jiraIssueCustomHistoryRepository, times(1)).deleteByBasicProjectConfigId("5e9db8f1e4b0caefbfa8e0c7");
-		verify(sprintRepository, times(1)).deleteByBasicProjectConfigId(new ObjectId("5e9db8f1e4b0caefbfa8e0c7"));
+		verify(jiraIssueCustomHistoryRepository, times(1))
+				.deleteByBasicProjectConfigId("5e9db8f1e4b0caefbfa8e0c7");
+		verify(sprintRepository, times(1))
+				.deleteByBasicProjectConfigId(new ObjectId("5e9db8f1e4b0caefbfa8e0c7"));
 		verify(processorExecutionTraceLogRepository, times(1))
-				.deleteByBasicProjectConfigIdAndProcessorName("5e9db8f1e4b0caefbfa8e0c7", ProcessorConstants.JIRA);
+				.deleteByBasicProjectConfigIdAndProcessorName(
+						"5e9db8f1e4b0caefbfa8e0c7", ProcessorConstants.JIRA);
 	}
 }

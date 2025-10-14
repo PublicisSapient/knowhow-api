@@ -44,11 +44,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DefaultLogoInsertor {
 
-	@Autowired
-	private GridFsOperations gridOperations;
+	@Autowired private GridFsOperations gridOperations;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/** Inserts default image. */
 	public void insertDefaultImage() {
@@ -60,13 +58,14 @@ public class DefaultLogoInsertor {
 		String fileName = Constant.LOGO_FIL_NAME;
 		metaData.put("type", "image");
 
-		GridFSFile availableFile = gridOperations.findOne(new Query().addCriteria(Criteria.where("filename").is(fileName)));
+		GridFSFile availableFile =
+				gridOperations.findOne(new Query().addCriteria(Criteria.where("filename").is(fileName)));
 
 		if (null == availableFile) {
 
 			log.info("DefaultLogoInsertor: There is no image available in database");
-			try (
-					InputStream imageInputStream = classLoader.getResourceAsStream(customApiConfig.getApplicationDefaultLogo())) {
+			try (InputStream imageInputStream =
+					classLoader.getResourceAsStream(customApiConfig.getApplicationDefaultLogo())) {
 				if (null == imageInputStream) {
 					log.info("DefaultLogoInsertor: Input stream for default logo is null");
 				} else {

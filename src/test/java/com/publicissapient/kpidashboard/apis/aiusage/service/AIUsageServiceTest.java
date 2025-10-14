@@ -18,24 +18,10 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.service;
 
-import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.mapper.UploadStatusMapper;
-import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
-import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
-import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageUploadStatusRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -46,240 +32,274 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.publicissapient.kpidashboard.apis.aiusage.config.AIUsageFileFormat;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.mapper.UploadStatusMapper;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
+import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageRepository;
+import com.publicissapient.kpidashboard.apis.aiusage.repository.AIUsageUploadStatusRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AIUsageServiceTest {
 
-    @Mock
-    private AIUsageRepository aiUsageRepository;
+	@Mock private AIUsageRepository aiUsageRepository;
 
-    @Mock
-    private AIUsageUploadStatusRepository aiUsageUploadStatusRepository;
+	@Mock private AIUsageUploadStatusRepository aiUsageUploadStatusRepository;
 
-    @Mock
-    private AIUsageFileFormat aiUsageFileFormat;
+	@Mock private AIUsageFileFormat aiUsageFileFormat;
 
-    @Spy
-    private UploadStatusMapper uploadStatusMapper;
+	@Spy private UploadStatusMapper uploadStatusMapper;
 
-    @InjectMocks
-    private AIUsageService aiUsageService;
+	@InjectMocks private AIUsageService aiUsageService;
 
-    private UUID requestId;
-    private Instant submittedAt;
+	private UUID requestId;
+	private Instant submittedAt;
 
-    @BeforeEach
-    void setUp() {
-        requestId = UUID.randomUUID();
-        submittedAt = Instant.now();
-        uploadStatusMapper = new UploadStatusMapper();
-    }
+	@BeforeEach
+	void setUp() {
+		requestId = UUID.randomUUID();
+		submittedAt = Instant.now();
+		uploadStatusMapper = new UploadStatusMapper();
+	}
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "src/test/resources/csv/valid_ai_usage.csv",
-            "src/test/resources/csv/ai_usage_with_empty_lines.csv"
-    })
-    void when_UploadFile_And_ValidInput_ExpectRequestSaved(String validFilePath) {
-        // Given
-        AIUsageRequest uploadStatus = AIUsageRequest.builder()
-                .requestId(String.valueOf(requestId))
-                .submittedAt(submittedAt)
-                .status(UploadStatus.PENDING)
-                .build();
+	@ParameterizedTest
+	@ValueSource(
+			strings = {
+				"src/test/resources/csv/valid_ai_usage.csv",
+				"src/test/resources/csv/ai_usage_with_empty_lines.csv"
+			})
+	void when_UploadFile_And_ValidInput_ExpectRequestSaved(String validFilePath) {
+		// Given
+		AIUsageRequest uploadStatus =
+				AIUsageRequest.builder()
+						.requestId(String.valueOf(requestId))
+						.submittedAt(submittedAt)
+						.status(UploadStatus.PENDING)
+						.build();
 
-        // When
-        when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+		// When
+		when(aiUsageFileFormat.getExpectedHeaders())
+				.thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
-        when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
+		when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
-        InitiateUploadResponse result = aiUsageService.uploadFile(validFilePath, requestId, submittedAt);
+		InitiateUploadResponse result =
+				aiUsageService.uploadFile(validFilePath, requestId, submittedAt);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("File upload request accepted for processing", result.getMessage());
-        verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageRequest.class));
-    }
+		// Then
+		assertNotNull(result);
+		assertEquals("File upload request accepted for processing", result.getMessage());
+		verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageRequest.class));
+	}
 
-    @Test
-    void when_UploadFile_And_InvalidFile_ExpectRequestFailed() {
-        // Given
-        String invalidFilePath = "src/test/resources/csv/invalid_ai_usage.csv";
-        AIUsageRequest uploadStatus = AIUsageRequest.builder()
-                .requestId(String.valueOf(requestId))
-                .submittedAt(submittedAt)
-                .status(UploadStatus.FAILED)
-                .build();
+	@Test
+	void when_UploadFile_And_InvalidFile_ExpectRequestFailed() {
+		// Given
+		String invalidFilePath = "src/test/resources/csv/invalid_ai_usage.csv";
+		AIUsageRequest uploadStatus =
+				AIUsageRequest.builder()
+						.requestId(String.valueOf(requestId))
+						.submittedAt(submittedAt)
+						.status(UploadStatus.FAILED)
+						.build();
 
-        // When
-        when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
-        when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
+		// When
+		when(aiUsageFileFormat.getExpectedHeaders())
+				.thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+		when(aiUsageUploadStatusRepository.save(any(AIUsageRequest.class))).thenReturn(uploadStatus);
 
-        InitiateUploadResponse result = aiUsageService.uploadFile(invalidFilePath, requestId, submittedAt);
+		InitiateUploadResponse result =
+				aiUsageService.uploadFile(invalidFilePath, requestId, submittedAt);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("Error while processing the file", result.getMessage());
-        verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageRequest.class));
-    }
+		// Then
+		assertNotNull(result);
+		assertEquals("Error while processing the file", result.getMessage());
+		verify(aiUsageUploadStatusRepository, times(1)).save(any(AIUsageRequest.class));
+	}
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "src/test/resources/csv/invalid_ai_usage.csv",
-            "src/test/resources/csv/empty.csv",
-            "src/test/resources/csv/invalid_ai_usage.xlx",
-            "nonexistent.csv",
-            "/random/path/to/file.csv"
-    })
-    void when_UploadFile_And_InvalidFilePath_expectException(String filePath) {
-        lenient().when(aiUsageFileFormat.getExpectedHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+	@ParameterizedTest
+	@ValueSource(
+			strings = {
+				"src/test/resources/csv/invalid_ai_usage.csv",
+				"src/test/resources/csv/empty.csv",
+				"src/test/resources/csv/invalid_ai_usage.xlx",
+				"nonexistent.csv",
+				"/random/path/to/file.csv"
+			})
+	void when_UploadFile_And_InvalidFilePath_expectException(String filePath) {
+		lenient()
+				.when(aiUsageFileFormat.getExpectedHeaders())
+				.thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
-        AIUsageRequest receivedStatus = AIUsageRequest.builder()
-                .requestId(String.valueOf(requestId))
-                .submittedAt(submittedAt)
-                .status(UploadStatus.FAILED)
-                .build();
+		AIUsageRequest receivedStatus =
+				AIUsageRequest.builder()
+						.requestId(String.valueOf(requestId))
+						.submittedAt(submittedAt)
+						.status(UploadStatus.FAILED)
+						.build();
 
-        InitiateUploadResponse expected = new InitiateUploadResponse("Error while processing the file", requestId, filePath);
+		InitiateUploadResponse expected =
+				new InitiateUploadResponse("Error while processing the file", requestId, filePath);
 
-        InitiateUploadResponse actual = aiUsageService.uploadFile(filePath, requestId, submittedAt);
+		InitiateUploadResponse actual = aiUsageService.uploadFile(filePath, requestId, submittedAt);
 
-        verify(aiUsageUploadStatusRepository, times(1)).save(receivedStatus);
-        assertEquals(expected, actual);
-    }
+		verify(aiUsageUploadStatusRepository, times(1)).save(receivedStatus);
+		assertEquals(expected, actual);
+	}
 
-    @Test
-    void when_GetProcessingStatus_And_ValidRequestId_expectResponse() {
-        AIUsageRequest aiUsageRequest = AIUsageRequest.builder()
-                .requestId(requestId.toString())
-                .status(UploadStatus.PROCESSING)
-                .submittedAt(Instant.now())
-                .completedAt(null)
-                .errorMessage(null)
-                .failedRecords(0)
-                .totalRecords(0)
-                .successfulRecords(0)
-                .build();
+	@Test
+	void when_GetProcessingStatus_And_ValidRequestId_expectResponse() {
+		AIUsageRequest aiUsageRequest =
+				AIUsageRequest.builder()
+						.requestId(requestId.toString())
+						.status(UploadStatus.PROCESSING)
+						.submittedAt(Instant.now())
+						.completedAt(null)
+						.errorMessage(null)
+						.failedRecords(0)
+						.totalRecords(0)
+						.successfulRecords(0)
+						.build();
 
-        UploadStatusResponse expectedResponse = UploadStatusResponse.builder()
-                .status(UploadStatus.PROCESSING)
-                .requestId(UUID.fromString(aiUsageRequest.getRequestId()))
-                .submittedAt(aiUsageRequest.getSubmittedAt())
-                .completedAt(aiUsageRequest.getCompletedAt())
-                .errorMessage(aiUsageRequest.getErrorMessage())
-                .failedRecords(aiUsageRequest.getFailedRecords())
-                .totalRecords(aiUsageRequest.getTotalRecords())
-                .successfulRecords(aiUsageRequest.getSuccessfulRecords())
-                .build();
+		UploadStatusResponse expectedResponse =
+				UploadStatusResponse.builder()
+						.status(UploadStatus.PROCESSING)
+						.requestId(UUID.fromString(aiUsageRequest.getRequestId()))
+						.submittedAt(aiUsageRequest.getSubmittedAt())
+						.completedAt(aiUsageRequest.getCompletedAt())
+						.errorMessage(aiUsageRequest.getErrorMessage())
+						.failedRecords(aiUsageRequest.getFailedRecords())
+						.totalRecords(aiUsageRequest.getTotalRecords())
+						.successfulRecords(aiUsageRequest.getSuccessfulRecords())
+						.build();
 
-        when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))).thenReturn(Optional.of(aiUsageRequest));
+		when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId)))
+				.thenReturn(Optional.of(aiUsageRequest));
 
-        UploadStatusResponse response = aiUsageService.getProcessingStatus(requestId);
+		UploadStatusResponse response = aiUsageService.getProcessingStatus(requestId);
 
-        assertEquals(expectedResponse, response);
-    }
+		assertEquals(expectedResponse, response);
+	}
 
-    @Test
-    void when_GetProcessingStatus_And_InvalidRequestId_expectException() {
-        UUID invalidRequestId = UUID.randomUUID();
-        when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(invalidRequestId))).thenReturn(Optional.empty());
+	@Test
+	void when_GetProcessingStatus_And_InvalidRequestId_expectException() {
+		UUID invalidRequestId = UUID.randomUUID();
+		when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(invalidRequestId)))
+				.thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> aiUsageService.getProcessingStatus(invalidRequestId));
-    }
+		assertThrows(
+				IllegalArgumentException.class, () -> aiUsageService.getProcessingStatus(invalidRequestId));
+	}
 
-    @Test
-    void when_FindByRequestId_And_ValidRequestId_expect() {
-        AIUsageRequest uploadStatus = new AIUsageRequest();
-        when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId))).thenReturn(Optional.of(uploadStatus));
+	@Test
+	void when_FindByRequestId_And_ValidRequestId_expect() {
+		AIUsageRequest uploadStatus = new AIUsageRequest();
+		when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(requestId)))
+				.thenReturn(Optional.of(uploadStatus));
 
-        AIUsageRequest result = aiUsageService.findByRequestId(requestId);
+		AIUsageRequest result = aiUsageService.findByRequestId(requestId);
 
-        assertNotNull(result);
-        verify(aiUsageUploadStatusRepository, times(1)).findByRequestId(String.valueOf(requestId));
-    }
+		assertNotNull(result);
+		verify(aiUsageUploadStatusRepository, times(1)).findByRequestId(String.valueOf(requestId));
+	}
 
-    @Test
-    void when_FindByRequestId_And_InvalidRequestId_expectException() {
-        UUID invalidRequestId = UUID.randomUUID();
-        when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(invalidRequestId))).thenReturn(Optional.empty());
+	@Test
+	void when_FindByRequestId_And_InvalidRequestId_expectException() {
+		UUID invalidRequestId = UUID.randomUUID();
+		when(aiUsageUploadStatusRepository.findByRequestId(String.valueOf(invalidRequestId)))
+				.thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> aiUsageService.findByRequestId(invalidRequestId));
-    }
+		assertThrows(
+				IllegalArgumentException.class, () -> aiUsageService.findByRequestId(invalidRequestId));
+	}
 
-    @Test
-    void when_SaveUploadStatus_And_ValidStatus_expectSuccess() {
-        AIUsageRequest uploadStatus = new AIUsageRequest();
+	@Test
+	void when_SaveUploadStatus_And_ValidStatus_expectSuccess() {
+		AIUsageRequest uploadStatus = new AIUsageRequest();
 
-        aiUsageService.saveUploadStatus(uploadStatus);
+		aiUsageService.saveUploadStatus(uploadStatus);
 
-        verify(aiUsageUploadStatusRepository, times(1)).save(uploadStatus);
-    }
+		verify(aiUsageUploadStatusRepository, times(1)).save(uploadStatus);
+	}
 
-    @Test
-    void when_SaveAIUsageDocument_AndValidDocument_expectSavedDocument() {
-        AIUsage aiUsage = new AIUsage();
+	@Test
+	void when_SaveAIUsageDocument_AndValidDocument_expectSavedDocument() {
+		AIUsage aiUsage = new AIUsage();
 
-        aiUsageService.saveAIUsageDocument(aiUsage);
+		aiUsageService.saveAIUsageDocument(aiUsage);
 
-        verify(aiUsageRepository, times(1)).save(aiUsage);
-    }
+		verify(aiUsageRepository, times(1)).save(aiUsage);
+	}
 
-    @Test
-    void when_ReadCsvFile_AndValidFile_expectSuccess() throws IOException {
-        // Given
-        String filePath = Paths.get("src/test/resources/csv/valid_ai_usage.csv").toString();
+	@Test
+	void when_ReadCsvFile_AndValidFile_expectSuccess() throws IOException {
+		// Given
+		String filePath = Paths.get("src/test/resources/csv/valid_ai_usage.csv").toString();
 
-        when(aiUsageFileFormat.getRequiredHeaders()).thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
+		when(aiUsageFileFormat.getRequiredHeaders())
+				.thenReturn(List.of("email", "promptCount", "businessUnit", "vertical", "account"));
 
-        String expectedHeader = String.join(",", aiUsageFileFormat.getRequiredHeaders());
+		String expectedHeader = String.join(",", aiUsageFileFormat.getRequiredHeaders());
 
-        // When
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String headerLine = reader.readLine();
+		// When
+		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+			String headerLine = reader.readLine();
 
-            // Then
-            assertEquals(expectedHeader, headerLine);
-        }
-    }
+			// Then
+			assertEquals(expectedHeader, headerLine);
+		}
+	}
 
-    @Test
-    void when_UploadFile_And_NullFilePath_expectException() {
-        assertThrows(NullPointerException.class, () -> {
-            aiUsageService.uploadFile(null, requestId, submittedAt);
-        });
-    }
+	@Test
+	void when_UploadFile_And_NullFilePath_expectException() {
+		assertThrows(
+				NullPointerException.class,
+				() -> {
+					aiUsageService.uploadFile(null, requestId, submittedAt);
+				});
+	}
 
-    @Test
-    void when_MapToDto_expectMappedValues() {
-        // Given
-        Instant completedAt = Instant.now();
+	@Test
+	void when_MapToDto_expectMappedValues() {
+		// Given
+		Instant completedAt = Instant.now();
 
-        AIUsageRequest status = AIUsageRequest.builder()
-                .requestId(requestId.toString())
-                .status(UploadStatus.COMPLETED)
-                .submittedAt(submittedAt)
-                .completedAt(completedAt)
-                .totalRecords(10)
-                .successfulRecords(9)
-                .failedRecords(1)
-                .errorMessage("some error")
-                .build();
+		AIUsageRequest status =
+				AIUsageRequest.builder()
+						.requestId(requestId.toString())
+						.status(UploadStatus.COMPLETED)
+						.submittedAt(submittedAt)
+						.completedAt(completedAt)
+						.totalRecords(10)
+						.successfulRecords(9)
+						.failedRecords(1)
+						.errorMessage("some error")
+						.build();
 
-        // When
-        UploadStatusResponse response = uploadStatusMapper.mapToDto(status);
+		// When
+		UploadStatusResponse response = uploadStatusMapper.mapToDto(status);
 
-        // Then
-        assertEquals(requestId, response.requestId());
-        assertEquals(UploadStatus.COMPLETED, response.status());
-        assertEquals(submittedAt, response.submittedAt());
-        assertEquals(completedAt, response.completedAt());
-        assertEquals(10, response.totalRecords());
-        assertEquals(9, response.successfulRecords());
-        assertEquals(1, response.failedRecords());
-        assertEquals("some error", response.errorMessage());
-    }
+		// Then
+		assertEquals(requestId, response.requestId());
+		assertEquals(UploadStatus.COMPLETED, response.status());
+		assertEquals(submittedAt, response.submittedAt());
+		assertEquals(completedAt, response.completedAt());
+		assertEquals(10, response.totalRecords());
+		assertEquals(9, response.successfulRecords());
+		assertEquals(1, response.failedRecords());
+		assertEquals("some error", response.errorMessage());
+	}
 }

@@ -65,8 +65,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class calculates the QA Defect Density KPI and trend analysis of the
- * same.
+ * This class calculates the QA Defect Density KPI and trend analysis of the same.
  *
  * @author prasaxen3
  */
@@ -84,24 +83,17 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 
 	private static final String DEFECT = "Defects";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private FilterHelperService flterHelperService;
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
-	@Autowired
-	private KpiDataProvider kpiDataProvider;
+	@Autowired private FilterHelperService flterHelperService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
+	@Autowired private KpiDataProvider kpiDataProvider;
 	private List<String> sprintIdList = Collections.synchronizedList(new ArrayList<>());
 
 	@Override
@@ -112,34 +104,37 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 	/**
 	 * Gets the kpi data.
 	 *
-	 * @param kpiRequest
-	 *            the kpi request
-	 * @param kpiElement
-	 *            the kpi element
-	 * @param treeAggregatorDetail
-	 *            the tree aggregator detail
+	 * @param kpiRequest the kpi request
+	 * @param kpiElement the kpi element
+	 * @param treeAggregatorDetail the tree aggregator detail
 	 * @return the kpi data
-	 * @throws ApplicationException
-	 *             the application exception
+	 * @throws ApplicationException the application exception
 	 */
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
-			TreeAggregatorDetail treeAggregatorDetail) throws ApplicationException {
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+			throws ApplicationException {
 
 		List<DataCount> trendValueList = new ArrayList<>();
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		sprintIdList = treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER).stream()
-				.map(node -> node.getSprintFilter().getId()).collect(Collectors.toList());
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
-			}
-		});
+		sprintIdList =
+				treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER).stream()
+						.map(node -> node.getSprintFilter().getId())
+						.collect(Collectors.toList());
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
+							}
+						});
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.DEFECT_DENSITY);
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEFECT_DENSITY);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEFECT_DENSITY);
 		kpiElement.setTrendValueList(trendValues);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
@@ -147,42 +142,54 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 	}
 
 	/**
-	 * This method populates KPI value to sprint leaf nodes. It also gives the trend
-	 * analysis at sprint wise.
+	 * This method populates KPI value to sprint leaf nodes. It also gives the trend analysis at
+	 * sprint wise.
 	 *
-	 * @param mapTmp
-	 *            node is map
-	 * @param sprintLeafNodeList
-	 *            sprint nodes list
-	 * @param trendValueList
-	 *            list to hold trend data
-	 * @param kpiElement
-	 *            KpiElement
-	 * @param kpiRequest
-	 *            KpiRequest
+	 * @param mapTmp node is map
+	 * @param sprintLeafNodeList sprint nodes list
+	 * @param trendValueList list to hold trend data
+	 * @param kpiElement KpiElement
+	 * @param kpiRequest KpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	public void sprintWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList,
-			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	public void sprintWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> sprintLeafNodeList,
+			List<DataCount> trendValueList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
-		sprintLeafNodeList.sort((node1, node2) -> node1.getSprintFilter().getStartDate()
-				.compareTo(node2.getSprintFilter().getStartDate()));
+		sprintLeafNodeList.sort(
+				(node1, node2) ->
+						node1
+								.getSprintFilter()
+								.getStartDate()
+								.compareTo(node2.getSprintFilter().getStartDate()));
 		String startDate = sprintLeafNodeList.get(0).getSprintFilter().getStartDate();
-		String endDate = sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
+		String endDate =
+				sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
 
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-				.get(sprintLeafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
+		FieldMapping fieldMapping =
+				configHelperService
+						.getFieldMappingMap()
+						.get(sprintLeafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
 		long time = System.currentTimeMillis();
-		Map<String, Object> storyDefectDataListMap = fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate,
-				kpiRequest);
-		log.info("QADD taking fetchKPIDataFromDb {}", String.valueOf(System.currentTimeMillis() - time));
+		Map<String, Object> storyDefectDataListMap =
+				fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate, kpiRequest);
+		log.info(
+				"QADD taking fetchKPIDataFromDb {}", String.valueOf(System.currentTimeMillis() - time));
 
-		List<SprintWiseStory> sprintWiseStoryList = (List<SprintWiseStory>) storyDefectDataListMap.get(STORY_DATA);
+		List<SprintWiseStory> sprintWiseStoryList =
+				(List<SprintWiseStory>) storyDefectDataListMap.get(STORY_DATA);
 		List<JiraIssue> storyFilteredList = (List<JiraIssue>) storyDefectDataListMap.get(STORY_POINTS);
 
-		Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap = sprintWiseStoryList.stream().collect(Collectors
-				.groupingBy(sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()), Collectors.toList()));
+		Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap =
+				sprintWiseStoryList.stream()
+						.collect(
+								Collectors.groupingBy(
+										sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()),
+										Collectors.toList()));
 
 		Map<Pair<String, String>, Double> sprintWiseQADDMap = new HashMap<>();
 		List<KPIExcelData> excelData = new ArrayList<>();
@@ -190,73 +197,93 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 
 		Map<Pair<String, String>, List<String>> sprintWiseStoryMAP = new HashMap<>();
 		Map<Pair<String, String>, Set<JiraIssue>> sprintWiseDefectListMap = new HashMap<>();
-		processHowerMap(sprintWiseMap, storyDefectDataListMap, sprintWiseQADDMap, sprintWiseHowerMap, storyFilteredList,
-				sprintWiseStoryMAP, sprintWiseDefectListMap, fieldMapping);
+		processHowerMap(
+				sprintWiseMap,
+				storyDefectDataListMap,
+				sprintWiseQADDMap,
+				sprintWiseHowerMap,
+				storyFilteredList,
+				sprintWiseStoryMAP,
+				sprintWiseDefectListMap,
+				fieldMapping);
 
 		Map<String, JiraIssue> allStoryMap = new HashMap<>();
 		storyFilteredList.stream().forEach(story -> allStoryMap.putIfAbsent(story.getNumber(), story));
 
-		sprintLeafNodeList.forEach(node -> {
-			String trendLineName = node.getProjectFilter().getName();
-			String currentSprintComponentId = node.getSprintFilter().getId();
-			Pair<String, String> currentNodeIdentifier = Pair
-					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), currentSprintComponentId);
+		sprintLeafNodeList.forEach(
+				node -> {
+					String trendLineName = node.getProjectFilter().getName();
+					String currentSprintComponentId = node.getSprintFilter().getId();
+					Pair<String, String> currentNodeIdentifier =
+							Pair.of(
+									node.getProjectFilter().getBasicProjectConfigId().toString(),
+									currentSprintComponentId);
 
-			double qaddForCurrentLeaf;
+					double qaddForCurrentLeaf;
 
-			if (sprintWiseQADDMap.containsKey(currentNodeIdentifier)) {
-				qaddForCurrentLeaf = sprintWiseQADDMap.get(currentNodeIdentifier);
-				if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-					List<String> totalStoryIdList = sprintWiseStoryMAP.get(currentNodeIdentifier);
-					Set<JiraIssue> sprintWiseDefectList = sprintWiseDefectListMap.get(currentNodeIdentifier);
-					KPIExcelUtility.populateDefectDensityExcelData(totalStoryIdList,
-							new ArrayList<>(sprintWiseDefectList), excelData, allStoryMap, fieldMapping,
-							customApiConfig, node);
-				}
-			} else {
-				qaddForCurrentLeaf = 0.0d;
-			}
-			// aggregated value to exclude the sprint with sum of story points
-			// is zero
-			if (qaddForCurrentLeaf == -1000.0) {
-				qaddForCurrentLeaf = 0.0d;
-			}
-			log.debug("[QADD-SPRINT-WISE][{}]. QADD for sprint {}  is {}", requestTrackerId,
-					node.getSprintFilter().getName(), qaddForCurrentLeaf);
+					if (sprintWiseQADDMap.containsKey(currentNodeIdentifier)) {
+						qaddForCurrentLeaf = sprintWiseQADDMap.get(currentNodeIdentifier);
+						if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+							List<String> totalStoryIdList = sprintWiseStoryMAP.get(currentNodeIdentifier);
+							Set<JiraIssue> sprintWiseDefectList =
+									sprintWiseDefectListMap.get(currentNodeIdentifier);
+							KPIExcelUtility.populateDefectDensityExcelData(
+									totalStoryIdList,
+									new ArrayList<>(sprintWiseDefectList),
+									excelData,
+									allStoryMap,
+									fieldMapping,
+									customApiConfig,
+									node);
+						}
+					} else {
+						qaddForCurrentLeaf = 0.0d;
+					}
+					// aggregated value to exclude the sprint with sum of story points
+					// is zero
+					if (qaddForCurrentLeaf == -1000.0) {
+						qaddForCurrentLeaf = 0.0d;
+					}
+					log.debug(
+							"[QADD-SPRINT-WISE][{}]. QADD for sprint {}  is {}",
+							requestTrackerId,
+							node.getSprintFilter().getName(),
+							qaddForCurrentLeaf);
 
-			DataCount dataCount = new DataCount();
-			dataCount.setData(String.valueOf(Math.round(qaddForCurrentLeaf)));
-			dataCount.setSProjectName(trendLineName);
-			dataCount.setSSprintID(node.getSprintFilter().getId());
-			dataCount.setSSprintName(node.getSprintFilter().getName());
-			dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
-			dataCount.setSprintNames(new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
-			dataCount.setValue(qaddForCurrentLeaf);
-			dataCount.setHoverValue(sprintWiseHowerMap.get(currentNodeIdentifier));
-			mapTmp.get(node.getId()).setValue(new ArrayList<DataCount>(Arrays.asList(dataCount)));
+					DataCount dataCount = new DataCount();
+					dataCount.setData(String.valueOf(Math.round(qaddForCurrentLeaf)));
+					dataCount.setSProjectName(trendLineName);
+					dataCount.setSSprintID(node.getSprintFilter().getId());
+					dataCount.setSSprintName(node.getSprintFilter().getName());
+					dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
+					dataCount.setSprintNames(
+							new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
+					dataCount.setValue(qaddForCurrentLeaf);
+					dataCount.setHoverValue(sprintWiseHowerMap.get(currentNodeIdentifier));
+					mapTmp.get(node.getId()).setValue(new ArrayList<DataCount>(Arrays.asList(dataCount)));
 
-			trendValueList.add(dataCount);
-		});
+					trendValueList.add(dataCount);
+				});
 
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(
-				KPIExcelColumn.DEFECT_DENSITY.getColumns(sprintLeafNodeList, cacheService, flterHelperService));
+				KPIExcelColumn.DEFECT_DENSITY.getColumns(
+						sprintLeafNodeList, cacheService, flterHelperService));
 	}
 
 	/**
 	 * Sets the hower map.
 	 *
-	 * @param sprintWiseHowerMap
-	 *            the sprint wise hower map
-	 * @param sprint
-	 *            the sprint
-	 * @param storyList
-	 *            the story list
-	 * @param sprintWiseDefectList
-	 *            the sprint wise defect list
+	 * @param sprintWiseHowerMap the sprint wise hower map
+	 * @param sprint the sprint
+	 * @param storyList the story list
+	 * @param sprintWiseDefectList the sprint wise defect list
 	 */
-	private void setHowerMap(Map<Pair<String, String>, Map<String, Object>> sprintWiseHowerMap,
-			Pair<String, String> sprint, List<JiraIssue> storyList, Set<JiraIssue> sprintWiseDefectList,
+	private void setHowerMap(
+			Map<Pair<String, String>, Map<String, Object>> sprintWiseHowerMap,
+			Pair<String, String> sprint,
+			List<JiraIssue> storyList,
+			Set<JiraIssue> sprintWiseDefectList,
 			FieldMapping fieldMapping) {
 		Map<String, Object> howerMap = new LinkedHashMap<>();
 		if (CollectionUtils.isNotEmpty(sprintWiseDefectList)) {
@@ -266,14 +293,21 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 		}
 		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
 				&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
-			howerMap.put(STORY_POINTS_DATA, storyList.stream().mapToDouble(JiraIssue::getStoryPoints).sum());
+			howerMap.put(
+					STORY_POINTS_DATA, storyList.stream().mapToDouble(JiraIssue::getStoryPoints).sum());
 		} else {
-			double totalOriginalEstimate = storyList.stream()
-					.filter(jiraIssue -> Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
-					.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes).sum();
+			double totalOriginalEstimate =
+					storyList.stream()
+							.filter(
+									jiraIssue -> Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
+							.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes)
+							.sum();
 			double totalOriginalEstimateInHours = totalOriginalEstimate / 60;
-			double storyPointsData = Double.parseDouble(
-					String.format("%.2f", totalOriginalEstimateInHours / fieldMapping.getStoryPointToHourMapping()));
+			double storyPointsData =
+					Double.parseDouble(
+							String.format(
+									"%.2f",
+									totalOriginalEstimateInHours / fieldMapping.getStoryPointToHourMapping()));
 			howerMap.put(STORY_POINTS_DATA, storyPointsData);
 		}
 		sprintWiseHowerMap.put(sprint, howerMap);
@@ -290,56 +324,69 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 	 * @param sprintWiseStoryMAP
 	 * @param sprintWiseDefectListMap
 	 */
-	private void processHowerMap(Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap, // NOPMD//NOSONAR
-			Map<String, Object> storyDefectDataListMap, Map<Pair<String, String>, Double> sprintWiseQADDMap, // NOSONAR
-			Map<Pair<String, String>, Map<String, Object>> sprintWiseHowerMap, List<JiraIssue> storyFilteredList,
+	private void processHowerMap(
+			Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap, // NOPMD//NOSONAR
+			Map<String, Object> storyDefectDataListMap,
+			Map<Pair<String, String>, Double> sprintWiseQADDMap, // NOSONAR
+			Map<Pair<String, String>, Map<String, Object>> sprintWiseHowerMap,
+			List<JiraIssue> storyFilteredList,
 			Map<Pair<String, String>, List<String>> sprintWiseStoryMAP,
-			Map<Pair<String, String>, Set<JiraIssue>> sprintWiseDefectListMap, FieldMapping fieldMapping) { // NOSONAR
-		sprintWiseMap.forEach((sprint, sprintWiseStories) -> {
-			Set<JiraIssue> sprintWiseDefectList = new HashSet<>();
-			List<Double> qaddList = new ArrayList<>();
-			List<String> totalStoryIdList = new ArrayList<>();
-			List<JiraIssue> storyList = new ArrayList<>();
-			List<String> storyPointList = new ArrayList<>();
-			List<String> storyIds = new ArrayList<>();
-			sprintWiseStories.stream().map(SprintWiseStory::getStoryList).collect(Collectors.toList())
-					.forEach(storyIds::addAll);
-			processSubCategoryMap(storyIds, storyDefectDataListMap, qaddList, sprintWiseDefectList, totalStoryIdList,
-					storyList, storyFilteredList, storyPointList, fieldMapping);
+			Map<Pair<String, String>, Set<JiraIssue>> sprintWiseDefectListMap,
+			FieldMapping fieldMapping) { // NOSONAR
+		sprintWiseMap.forEach(
+				(sprint, sprintWiseStories) -> {
+					Set<JiraIssue> sprintWiseDefectList = new HashSet<>();
+					List<Double> qaddList = new ArrayList<>();
+					List<String> totalStoryIdList = new ArrayList<>();
+					List<JiraIssue> storyList = new ArrayList<>();
+					List<String> storyPointList = new ArrayList<>();
+					List<String> storyIds = new ArrayList<>();
+					sprintWiseStories.stream()
+							.map(SprintWiseStory::getStoryList)
+							.collect(Collectors.toList())
+							.forEach(storyIds::addAll);
+					processSubCategoryMap(
+							storyIds,
+							storyDefectDataListMap,
+							qaddList,
+							sprintWiseDefectList,
+							totalStoryIdList,
+							storyList,
+							storyFilteredList,
+							storyPointList,
+							fieldMapping);
 
-			double sprintWiseQADD = calculateKpiValue(qaddList, KPICode.DEFECT_DENSITY.getKpiId());
-			sprintWiseQADDMap.put(sprint, sprintWiseQADD);
-			sprintWiseStoryMAP.put(sprint, totalStoryIdList);
-			sprintWiseDefectListMap.put(sprint, sprintWiseDefectList);
+					double sprintWiseQADD = calculateKpiValue(qaddList, KPICode.DEFECT_DENSITY.getKpiId());
+					sprintWiseQADDMap.put(sprint, sprintWiseQADD);
+					sprintWiseStoryMAP.put(sprint, totalStoryIdList);
+					sprintWiseDefectListMap.put(sprint, sprintWiseDefectList);
 
-			setHowerMap(sprintWiseHowerMap, sprint, storyList, sprintWiseDefectList, fieldMapping);
-		});
+					setHowerMap(sprintWiseHowerMap, sprint, storyList, sprintWiseDefectList, fieldMapping);
+				});
 	}
 
 	/**
 	 * Process sub category map and evaluates the KPI value.
 	 *
-	 * @param storyIdList
-	 *            the story id list
-	 * @param storyDefectDataListMap
-	 *            the story defect data list map
-	 * @param qaddList
-	 *            the qadd list
-	 * @param sprintWiseDefectList
-	 *            the sprint wise defect list
-	 * @param totalStoryIdList
-	 *            the total story id list
-	 * @param storyList
-	 *            the story list
-	 * @param storyFilteredList
-	 *            the story filtered list
-	 * @param storyPointList2
-	 *            the story point list 2
+	 * @param storyIdList the story id list
+	 * @param storyDefectDataListMap the story defect data list map
+	 * @param qaddList the qadd list
+	 * @param sprintWiseDefectList the sprint wise defect list
+	 * @param totalStoryIdList the total story id list
+	 * @param storyList the story list
+	 * @param storyFilteredList the story filtered list
+	 * @param storyPointList2 the story point list 2
 	 */
-	private void processSubCategoryMap(List<String> storyIdList, Map<String, Object> storyDefectDataListMap, // NOSONAR
+	private void processSubCategoryMap(
+			List<String> storyIdList,
+			Map<String, Object> storyDefectDataListMap, // NOSONAR
 			// //NOSONAR
-			List<Double> qaddList, Set<JiraIssue> sprintWiseDefectList, List<String> totalStoryIdList,
-			List<JiraIssue> storyList, List<JiraIssue> storyFilteredList, List<String> storyPointList2,
+			List<Double> qaddList,
+			Set<JiraIssue> sprintWiseDefectList,
+			List<String> totalStoryIdList,
+			List<JiraIssue> storyList,
+			List<JiraIssue> storyFilteredList,
+			List<String> storyPointList2,
 			FieldMapping fieldMapping) { // NOSONAR
 		HashMap<String, JiraIssue> mapOfStories = new HashMap<>();
 		for (JiraIssue f : storyFilteredList) {
@@ -347,15 +394,25 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 		}
 
 		@SuppressWarnings("unchecked")
-		Set<JiraIssue> additionalFilterDefectList = ((List<JiraIssue>) storyDefectDataListMap.get(DEFECT_DATA)).stream()
-				.filter(f -> CollectionUtils.containsAny(f.getDefectStoryID(),
-						storyIdList == null ? Collections.emptyList() : storyIdList))
-				.collect(Collectors.toSet());
+		Set<JiraIssue> additionalFilterDefectList =
+				((List<JiraIssue>) storyDefectDataListMap.get(DEFECT_DATA))
+						.stream()
+								.filter(
+										f ->
+												CollectionUtils.containsAny(
+														f.getDefectStoryID(),
+														storyIdList == null ? Collections.emptyList() : storyIdList))
+								.collect(Collectors.toSet());
 		populateList(additionalFilterDefectList, mapOfStories);
 		@SuppressWarnings("unchecked")
-		List<JiraIssue> storyPointList = ((List<JiraIssue>) storyDefectDataListMap.get(STORY_POINTS)).stream()
-				.filter(f -> CollectionUtils.isNotEmpty(storyIdList) && storyIdList.contains(f.getNumber()))
-				.collect(Collectors.toList());
+		List<JiraIssue> storyPointList =
+				((List<JiraIssue>) storyDefectDataListMap.get(STORY_POINTS))
+						.stream()
+								.filter(
+										f ->
+												CollectionUtils.isNotEmpty(storyIdList)
+														&& storyIdList.contains(f.getNumber()))
+								.collect(Collectors.toList());
 		storyList.addAll(storyPointList);
 		for (JiraIssue f : storyPointList) {
 			storyPointList2.add(String.valueOf(f.getStoryPoints()));
@@ -367,9 +424,13 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 					&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
 				storyPointsTotal = storyList.stream().mapToDouble(JiraIssue::getStoryPoints).sum(); // NOPMD
 			} else {
-				storyPointsTotal = storyList.stream()
-						.filter(jiraIssue -> Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
-						.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes).sum();
+				storyPointsTotal =
+						storyList.stream()
+								.filter(
+										jiraIssue ->
+												Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
+								.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes)
+								.sum();
 				storyPointsTotal = storyPointsTotal / 60;
 				storyPointsTotal = storyPointsTotal / fieldMapping.getStoryPointToHourMapping();
 			}
@@ -386,62 +447,71 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 		totalStoryIdList.addAll(storyIdList == null ? Collections.emptyList() : storyIdList);
 	}
 
-	private void populateList(Set<JiraIssue> additionalFilterDefectList, HashMap<String, JiraIssue> mapOfStories) {
+	private void populateList(
+			Set<JiraIssue> additionalFilterDefectList, HashMap<String, JiraIssue> mapOfStories) {
 		if (!additionalFilterDefectList.isEmpty()) {
 			// Filter for defects NOT linked to stories in a given sprint
-			additionalFilterDefectList.addAll(additionalFilterDefectList.stream()
-					.filter(f -> (!f.getDefectStoryID().isEmpty()
-							&& mapOfStories.containsKey(f.getDefectStoryID().iterator().next())))
-					.collect(Collectors.toList()));
+			additionalFilterDefectList.addAll(
+					additionalFilterDefectList.stream()
+							.filter(
+									f ->
+											(!f.getDefectStoryID().isEmpty()
+													&& mapOfStories.containsKey(f.getDefectStoryID().iterator().next())))
+							.collect(Collectors.toList()));
 		}
 	}
 
 	/**
 	 * Fetch filtered KPI data from database.
 	 *
-	 * @param leafNodeList
-	 *            the leaf node list
-	 * @param startDate
-	 *            the start date
-	 * @param endDate
-	 *            the end date
-	 * @param kpiRequest
-	 *            the kpi request
+	 * @param leafNodeList the leaf node list
+	 * @param startDate the start date
+	 * @param endDate the end date
+	 * @param kpiRequest the kpi request
 	 * @return the map
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<ObjectId, List<String>> projectWiseSprints = new HashMap<>();
 
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			String sprint = leaf.getSprintFilter().getId();
-			projectWiseSprints.putIfAbsent(basicProjectConfigId, new ArrayList<>());
-			projectWiseSprints.get(basicProjectConfigId).add(sprint);
-		});
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					String sprint = leaf.getSprintFilter().getId();
+					projectWiseSprints.putIfAbsent(basicProjectConfigId, new ArrayList<>());
+					projectWiseSprints.get(basicProjectConfigId).add(sprint);
+				});
 
 		List<SprintWiseStory> storyDataList = new ArrayList<>();
 		List<JiraIssue> defectDataList = new ArrayList<>();
 		List<JiraIssue> issueStoryPointList = new ArrayList<>();
-		boolean fetchCachedData = flterHelperService.isFilterSelectedTillSprintLevel(kpiRequest.getLevel(), false);
-		projectWiseSprints.forEach((basicProjectConfigId, sprintList) -> {
-			Map<String, Object> result;
-			if (fetchCachedData) { // fetch data from cache only if Filter is selected till Sprint
-				// level.
-				result = kpiDataCacheService.fetchDefectDensityData(kpiRequest, basicProjectConfigId, sprintIdList,
-						KPICode.DEFECT_DENSITY.getKpiId());
-			} else { // fetch data from DB if filters below Sprint level (i.e. additional filters)
-				result = kpiDataProvider.fetchDefectDensityDataFromDb(kpiRequest, basicProjectConfigId, sprintList);
-			}
+		boolean fetchCachedData =
+				flterHelperService.isFilterSelectedTillSprintLevel(kpiRequest.getLevel(), false);
+		projectWiseSprints.forEach(
+				(basicProjectConfigId, sprintList) -> {
+					Map<String, Object> result;
+					if (fetchCachedData) { // fetch data from cache only if Filter is selected till Sprint
+						// level.
+						result =
+								kpiDataCacheService.fetchDefectDensityData(
+										kpiRequest,
+										basicProjectConfigId,
+										sprintIdList,
+										KPICode.DEFECT_DENSITY.getKpiId());
+					} else { // fetch data from DB if filters below Sprint level (i.e. additional filters)
+						result =
+								kpiDataProvider.fetchDefectDensityDataFromDb(
+										kpiRequest, basicProjectConfigId, sprintList);
+					}
 
-			storyDataList.addAll((List<SprintWiseStory>) result.get(STORY_DATA));
-			issueStoryPointList.addAll((List<JiraIssue>) result.get(STORY_POINTS));
-			defectDataList.addAll((List<JiraIssue>) result.get(DEFECT_DATA));
-		});
+					storyDataList.addAll((List<SprintWiseStory>) result.get(STORY_DATA));
+					issueStoryPointList.addAll((List<JiraIssue>) result.get(STORY_POINTS));
+					defectDataList.addAll((List<JiraIssue>) result.get(DEFECT_DATA));
+				});
 
 		resultListMap.put(STORY_DATA, storyDataList);
 		resultListMap.put(DEFECT_DATA, defectDataList);
@@ -462,6 +532,7 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI111(), KPICode.DEFECT_DENSITY.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI111(), KPICode.DEFECT_DENSITY.getKpiId());
 	}
 }

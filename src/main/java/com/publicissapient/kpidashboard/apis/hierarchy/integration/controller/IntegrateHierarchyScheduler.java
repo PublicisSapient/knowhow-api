@@ -37,8 +37,8 @@ import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.SF360
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author aksshriv1
@@ -65,18 +65,20 @@ public class IntegrateHierarchyScheduler {
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
-		ReaderRetryHelper.RetryableOperation<ResponseEntity<String>> retryableOperation = () -> restTemplate
-				.exchange(apiUrl, HttpMethod.GET, requestEntity, String.class);
+		ReaderRetryHelper.RetryableOperation<ResponseEntity<String>> retryableOperation =
+				() -> restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity, String.class);
 
 		try {
 			ResponseEntity<String> response = retryHelper.executeWithRetry(retryableOperation);
 			if (response.getStatusCode().is2xxSuccessful()) {
 				HierarchyDetailParser hierarchyDetailParser = new SF360Parser();
-				HierarchyDetails hierarchyDetails = hierarchyDetailParser.convertToHierachyDetail(response.getBody());
+				HierarchyDetails hierarchyDetails =
+						hierarchyDetailParser.convertToHierachyDetail(response.getBody());
 				// Step 1: Fetch all existing records from the database
 				List<OrganizationHierarchy> allDbNodes = organizationHierarchyRepository.findAll();
-				Set<OrganizationHierarchy> centralHierarchies = integerationService
-						.convertHieracyResponseToOrganizationHierachy(hierarchyDetails, allDbNodes);
+				Set<OrganizationHierarchy> centralHierarchies =
+						integerationService.convertHieracyResponseToOrganizationHierachy(
+								hierarchyDetails, allDbNodes);
 				integerationService.syncOrganizationHierarchy(centralHierarchies, allDbNodes);
 			} else {
 				throw new HttpServerErrorException(response.getStatusCode(), "API call failed");
@@ -85,5 +87,4 @@ public class IntegrateHierarchyScheduler {
 			log.error("API call failed after retries. Error: {}", e.getMessage());
 		}
 	}
-
 }

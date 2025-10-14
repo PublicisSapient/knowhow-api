@@ -53,7 +53,11 @@ public class CapacityEnableSquad {
 	}
 
 	private void updateKpi(String kpiId, boolean isAdditionalFilterSupport) {
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", kpiId),
-				new Document("$set", new Document("isAdditionalFilterSupport", isAdditionalFilterSupport)));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", kpiId),
+						new Document(
+								"$set", new Document("isAdditionalFilterSupport", isAdditionalFilterSupport)));
 	}
 }

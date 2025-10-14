@@ -24,7 +24,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /***
  * @author rendk
  */
-@ChangeUnit(id = "combined_kpi_source_update", order = "9008", author = "rendk", systemVersion = "9.0.0")
+@ChangeUnit(
+		id = "combined_kpi_source_update",
+		order = "9008",
+		author = "rendk",
+		systemVersion = "9.0.0")
 public class UpdateKpiSource {
 	private final MongoTemplate mongoTemplate;
 
@@ -52,14 +56,19 @@ public class UpdateKpiSource {
 
 	private void updateCombinedKpiSourceForJenkins() {
 		Document condition = new Document(KPI_SOURCE, "Jenkins");
-		Document update = new Document(SET,
-				new Document(COMBINED_KPI_SOURCE, "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity"));
+		Document update =
+				new Document(
+						SET,
+						new Document(
+								COMBINED_KPI_SOURCE, "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity"));
 		mongoTemplate.getCollection(KPI_MASTER).updateMany(condition, update);
 	}
 
 	private void updateCombinedKpiSourceForBitBucketWhenIsRepoToolKpiFalse() {
 		Document condition = new Document(KPI_SOURCE, BITBUCKET).append(IS_REPO_TOOL_KPI, false);
-		Document update = new Document(SET, new Document(COMBINED_KPI_SOURCE, "Bitbucket/AzureRepository/GitHub/GitLab"));
+		Document update =
+				new Document(
+						SET, new Document(COMBINED_KPI_SOURCE, "Bitbucket/AzureRepository/GitHub/GitLab"));
 		mongoTemplate.getCollection(KPI_MASTER).updateMany(condition, update);
 	}
 
@@ -71,7 +80,8 @@ public class UpdateKpiSource {
 
 	private void updateCombinedKpiSourceForZypher() {
 		Document condition = new Document(KPI_SOURCE, "Zypher");
-		Document update = new Document(SET, new Document(COMBINED_KPI_SOURCE, "Zephyr/Zypher/JiraTest"));
+		Document update =
+				new Document(SET, new Document(COMBINED_KPI_SOURCE, "Zephyr/Zypher/JiraTest"));
 		mongoTemplate.getCollection(KPI_MASTER).updateMany(condition, update);
 	}
 

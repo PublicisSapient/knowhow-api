@@ -43,19 +43,14 @@ import com.publicissapient.kpidashboard.common.model.application.OrganizationHie
 @RunWith(MockitoJUnitRunner.class)
 public class HierarchyOptionServiceImplTest {
 
-	@InjectMocks
-	private HierarchyOptionServiceImpl hierarchyOptionService;
+	@InjectMocks private HierarchyOptionServiceImpl hierarchyOptionService;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
 	@BeforeEach
-	public void setUp() {
-
-	}
+	public void setUp() {}
 
 	@Test
 	public void testAddHierarchyOption_NoHierarchyLevelFound() {
@@ -95,7 +90,8 @@ public class HierarchyOptionServiceImplTest {
 		when(cacheService.getFullHierarchyLevel()).thenReturn(List.of(hierarchyLevel));
 		when(organizationHierarchyService.findByNodeId("invalidParentId")).thenReturn(null);
 		// Act
-		ServiceResponse response = hierarchyOptionService.addHierarchyOption(request, "invalidParentId");
+		ServiceResponse response =
+				hierarchyOptionService.addHierarchyOption(request, "invalidParentId");
 
 		// Assert
 		assertFalse(response.getSuccess());
@@ -140,5 +136,4 @@ public class HierarchyOptionServiceImplTest {
 		assertEquals("Node created successfully under parentId: parentId", response.getMessage());
 		verify(organizationHierarchyService).save(any(OrganizationHierarchy.class));
 	}
-
 }

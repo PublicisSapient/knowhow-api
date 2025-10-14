@@ -63,21 +63,14 @@ import com.publicissapient.kpidashboard.common.repository.zephyr.TestCaseDetails
 
 @RunWith(MockitoJUnitRunner.class)
 public class UnlinkedWorkItemsServiceImplTest {
-	@Mock
-	JiraBacklogServiceR jiraBacklogServiceR;
+	@Mock JiraBacklogServiceR jiraBacklogServiceR;
 	List<TestCaseDetails> totalTestCaseList = new ArrayList<>();
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private TestCaseDetailsRepository testCaseDetailsRepository;
-	@InjectMocks
-	private UnlinkedWorkItemsServiceImpl unlinkedWorkItemsService;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private TestCaseDetailsRepository testCaseDetailsRepository;
+	@InjectMocks private UnlinkedWorkItemsServiceImpl unlinkedWorkItemsService;
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
@@ -86,8 +79,8 @@ public class UnlinkedWorkItemsServiceImplTest {
 
 	@Before
 	public void setup() {
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi129");
@@ -95,8 +88,8 @@ public class UnlinkedWorkItemsServiceImplTest {
 		kpiElement = kpiRequest.getKpiList().get(0);
 		totalTestCaseList = TestCaseDetailsDataFactory.newInstance().getTestCaseDetailsList();
 		setMockProjectConfig();
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping.setJiraStoryIdentification(Arrays.asList("Story"));
 		fieldMapping.setJiraStoryIdentificationKPI129(Arrays.asList("Story"));
@@ -114,40 +107,43 @@ public class UnlinkedWorkItemsServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbForTestWithoutStory() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(
-				testCaseDetailsRepository.findNonRegressionTestDetails(Mockito.anyMap(), Mockito.anyMap(), Mockito.anyString()))
+		when(testCaseDetailsRepository.findNonRegressionTestDetails(
+						Mockito.anyMap(), Mockito.anyMap(), Mockito.anyString()))
 				.thenReturn(totalTestCaseList);
-		Map<String, Object> defectDataListMap = unlinkedWorkItemsService
-				.fetchKPIDataFromDbForTestWithoutStory(leafNodeList.get(0));
+		Map<String, Object> defectDataListMap =
+				unlinkedWorkItemsService.fetchKPIDataFromDbForTestWithoutStory(leafNodeList.get(0));
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbForDefectsWithoutStoryLink() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> defectDataListMap = unlinkedWorkItemsService
-				.fetchKPIDataFromDbForDefectsWithoutStoryLink(leafNodeList.get(0));
+		Map<String, Object> defectDataListMap =
+				unlinkedWorkItemsService.fetchKPIDataFromDbForDefectsWithoutStoryLink(leafNodeList.get(0));
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testFetchKPIDataFromDb() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> defectDataListMap = unlinkedWorkItemsService.fetchKPIDataFromDb(leafNodeList.get(0), null, null,
-				kpiRequest);
+		Map<String, Object> defectDataListMap =
+				unlinkedWorkItemsService.fetchKPIDataFromDb(leafNodeList.get(0), null, null, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
@@ -159,16 +155,23 @@ public class UnlinkedWorkItemsServiceImplTest {
 	@Test
 	public void testGetKpiData() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		KpiElement kpiData = unlinkedWorkItemsService.getKpiData(kpiRequest, kpiElement,
-				treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+		KpiElement kpiData =
+				unlinkedWorkItemsService.getKpiData(
+						kpiRequest,
+						kpiElement,
+						treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		assertEquals(null, kpiData.getValue());
 	}
 }

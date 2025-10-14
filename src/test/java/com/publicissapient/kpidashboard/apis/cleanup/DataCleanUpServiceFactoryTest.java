@@ -43,29 +43,25 @@ import com.publicissapient.kpidashboard.common.constant.ProcessorType;
 @RunWith(MockitoJUnitRunner.class)
 public class DataCleanUpServiceFactoryTest {
 
-	@Mock
-	private SonarDataCleanUpService sonarDataCleanupService;
-	@Mock
-	private ScmDataCleanUpService scmDataCleanupService;
-	@Mock
-	private BuildDataCleanUpService buildDataCleanupService;
-	@Mock
-	private ZephyrDataCleanUpService zephyrDataCleanUpService;
+	@Mock private SonarDataCleanUpService sonarDataCleanupService;
+	@Mock private ScmDataCleanUpService scmDataCleanupService;
+	@Mock private BuildDataCleanUpService buildDataCleanupService;
+	@Mock private ZephyrDataCleanUpService zephyrDataCleanUpService;
 
-	@InjectMocks
-	private ToolDataCleanUpServiceFactory dataCleanUpServiceFactory;
+	@InjectMocks private ToolDataCleanUpServiceFactory dataCleanUpServiceFactory;
 
-	@Spy
-	private List<ToolDataCleanUpService> dataCleanUpServices = new ArrayList<>();
+	@Spy private List<ToolDataCleanUpService> dataCleanUpServices = new ArrayList<>();
 
 	@Before
 	public void before() {
 		MockitoAnnotations.openMocks(this);
 
-		when(sonarDataCleanupService.getToolCategory()).thenReturn(ProcessorType.SONAR_ANALYSIS.toString());
+		when(sonarDataCleanupService.getToolCategory())
+				.thenReturn(ProcessorType.SONAR_ANALYSIS.toString());
 		when(scmDataCleanupService.getToolCategory()).thenReturn(ProcessorType.SCM.toString());
 		when(buildDataCleanupService.getToolCategory()).thenReturn(ProcessorType.BUILD.toString());
-		when(zephyrDataCleanUpService.getToolCategory()).thenReturn(ProcessorType.TESTING_TOOLS.toString());
+		when(zephyrDataCleanUpService.getToolCategory())
+				.thenReturn(ProcessorType.TESTING_TOOLS.toString());
 
 		dataCleanUpServices.add(sonarDataCleanupService);
 		dataCleanUpServices.add(scmDataCleanupService);
@@ -92,61 +88,71 @@ public class DataCleanUpServiceFactoryTest {
 
 	@Test
 	public void getService_Sonar() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.SONAR);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.SONAR);
 		assertTrue(dataCleanUpService instanceof SonarDataCleanUpService);
 	}
 
 	@Test
 	public void getService_Bamboo() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.BAMBOO);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.BAMBOO);
 		assertTrue(dataCleanUpService instanceof BuildDataCleanUpService);
 	}
 
 	@Test
 	public void getService_Jenkins() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.JENKINS);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.JENKINS);
 		assertTrue(dataCleanUpService instanceof BuildDataCleanUpService);
 	}
 
 	@Test
 	public void getServiceTemcity() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.TEAMCITY);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.TEAMCITY);
 		assertTrue(dataCleanUpService instanceof BuildDataCleanUpService);
 	}
 
 	@Test
 	public void getService_AzurePipeline() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.AZUREPIPELINE);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.AZUREPIPELINE);
 		assertTrue(dataCleanUpService instanceof BuildDataCleanUpService);
 	}
 
 	@Test
 	public void getService_BitBucket() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.BITBUCKET);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.BITBUCKET);
 		assertTrue(dataCleanUpService instanceof ScmDataCleanUpService);
 	}
 
 	@Test
 	public void getService_Gitlab() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.GITLAB);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.GITLAB);
 		assertTrue(dataCleanUpService instanceof ScmDataCleanUpService);
 	}
 
 	@Test
 	public void getService_AzureRepo() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.AZUREREPO);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.AZUREREPO);
 		assertTrue(dataCleanUpService instanceof ScmDataCleanUpService);
 	}
 
 	@Test
 	public void getService_ZEPHYR() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.ZEPHYR);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.ZEPHYR);
 		assertTrue(dataCleanUpService instanceof ZephyrDataCleanUpService);
 	}
 
 	@Test
 	public void getService_JIRATEST() {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(ProcessorConstants.JIRA_TEST);
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(ProcessorConstants.JIRA_TEST);
 		assertTrue(dataCleanUpService instanceof ZephyrDataCleanUpService);
 	}
 }

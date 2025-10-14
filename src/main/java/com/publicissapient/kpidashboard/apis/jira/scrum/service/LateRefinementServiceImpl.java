@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,8 +34,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.publicissapient.kpidashboard.apis.model.*;
-import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,14 +42,15 @@ import org.springframework.stereotype.Component;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
+import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -66,10 +64,9 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Iteration Burnups KPI gives a graphical representation of no. of issues
- * planned to be closed each day of iteration, actual count of issues closed day
- * wise and the predicted Iteration Burnups for the remaining days of the
- * iteration. {@link JiraKPIService}
+ * Iteration Burnups KPI gives a graphical representation of no. of issues planned to be closed each
+ * day of iteration, actual count of issues closed day wise and the predicted Iteration Burnups for
+ * the remaining days of the iteration. {@link JiraKPIService}
  *
  * @author tauakram
  */
@@ -84,20 +81,15 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	private static final String LATE_REFINED = "Late Refined";
 	private static final String LEGEND = "Unrefined scope";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	public String getQualifierType() {
 		return KPICode.LATE_REFINEMENT.name();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node sprintNode)
 			throws ApplicationException {
@@ -106,21 +98,21 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, final String startDate, final String endDate,
-			final KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, final String startDate, final String endDate, final KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 
-		if (leafNode == null)
-			return resultListMap;
+		if (leafNode == null) return resultListMap;
 
 		log.info("Late Refinement -> Requested sprint : {}", leafNode.getName());
 
 		SprintDetails sprintDetails = getSprintDetailsFromBaseClass();
-		if (sprintDetails == null)
-			return resultListMap;
+		if (sprintDetails == null) return resultListMap;
 
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-				.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+		FieldMapping fieldMapping =
+				configHelperService
+						.getFieldMappingMap()
+						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
 		List<JiraIssueCustomHistory> totalHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
 		List<JiraIssue> totalJiraIssueList = getJiraIssuesFromBaseClass();
@@ -129,54 +121,77 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI187())
 				&& CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusKPI187())) {
 			Set<String> typeName = getTypeNames(fieldMapping);
-			totalJiraIssueList = totalJiraIssueList.stream()
-					.filter(jiraIssue -> typeName.contains(jiraIssue.getTypeName().trim().toLowerCase())).toList();
-			Set<String> jiraIssueNumber = totalJiraIssueList.stream().map(JiraIssue::getNumber)
-					.collect(Collectors.toSet());
-			totalHistoryList = totalHistoryList.stream()
-					.filter(history -> jiraIssueNumber.contains(history.getStoryID())).toList();
+			totalJiraIssueList =
+					totalJiraIssueList.stream()
+							.filter(jiraIssue -> typeName.contains(jiraIssue.getTypeName().trim().toLowerCase()))
+							.toList();
+			Set<String> jiraIssueNumber =
+					totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
+			totalHistoryList =
+					totalHistoryList.stream()
+							.filter(history -> jiraIssueNumber.contains(history.getStoryID()))
+							.toList();
 
 			// there is no need to modify sprintdetails, as there is no check for the
 			// completion status in the kpi
 			List<String> allIssues = new ArrayList<>();
-			List<String> notCompleted = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-					CommonConstant.NOT_COMPLETED_ISSUES);
-			List<String> completed = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-					CommonConstant.COMPLETED_ISSUES);
+			List<String> notCompleted =
+					KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+							sprintDetails, CommonConstant.NOT_COMPLETED_ISSUES);
+			List<String> completed =
+					KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+							sprintDetails, CommonConstant.COMPLETED_ISSUES);
 			allIssues.addAll(notCompleted);
 			allIssues.addAll(completed);
-			allIssues.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-					CommonConstant.ADDED_ISSUES));
-			allIssues.addAll(KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-					CommonConstant.PUNTED_ISSUES));
+			allIssues.addAll(
+					KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+							sprintDetails, CommonConstant.ADDED_ISSUES));
+			allIssues.addAll(
+					KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+							sprintDetails, CommonConstant.PUNTED_ISSUES));
 
 			if (CollectionUtils.isNotEmpty(allIssues)) {
 				Set<SprintIssue> sprintIssues = new HashSet<>();
 				sprintIssues.addAll(checkNullList(sprintDetails.getTotalIssues()));
 				sprintIssues.addAll(checkNullList(sprintDetails.getPuntedIssues()));
-				Set<JiraIssue> totalIssueList = KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
-						sprintDetails, sprintIssues,
-						IterationKpiHelper.getFilteredJiraIssue(allIssues, totalJiraIssueList));
-				List<JiraIssueCustomHistory> allIssuesHistory = IterationKpiHelper
-						.getFilteredJiraIssueHistory(allIssues, totalHistoryList);
+				Set<JiraIssue> totalIssueList =
+						KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
+								sprintDetails,
+								sprintIssues,
+								IterationKpiHelper.getFilteredJiraIssue(allIssues, totalJiraIssueList));
+				List<JiraIssueCustomHistory> allIssuesHistory =
+						IterationKpiHelper.getFilteredJiraIssueHistory(allIssues, totalHistoryList);
 				Map<String, JiraIssueCustomHistory> historyMap = new HashMap<>();
 				Map<LocalDate, List<JiraIssue>> fullSprintIssues = new HashMap<>();
 				Map<LocalDate, List<JiraIssue>> addedIssues = new HashMap<>();
 				Map<LocalDate, List<JiraIssue>> removedIssues = new HashMap<>();
 				Map<LocalDate, List<JiraIssue>> lateRefined = createLateRefinedMap(sprintDetails);
-				allIssuesHistory.forEach(issueHistory -> {
-					historyMap.put(issueHistory.getStoryID(), issueHistory);
-					if (CollectionUtils.isNotEmpty(issueHistory.getSprintUpdationLog())) {
-						List<JiraHistoryChangeLog> sprintUpdationLog = issueHistory.getSprintUpdationLog();
-						List<JiraHistoryChangeLog> statusUpdationLog = issueHistory.getStatusUpdationLog();
-						Collections.sort(sprintUpdationLog, Comparator.comparing(getGetUpdatedOn()));
-						Collections.sort(statusUpdationLog, Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
-						createAddedandRemovedIssueDateWiseMap(sprintDetails, totalIssueList, addedIssues, removedIssues,
-								fullSprintIssues, issueHistory, sprintUpdationLog);
-						createDateWiseRefinementMap(totalIssueList, issueHistory, statusUpdationLog, fieldMapping,
-								lateRefined, sprintDetails);
-					}
-				});
+				allIssuesHistory.forEach(
+						issueHistory -> {
+							historyMap.put(issueHistory.getStoryID(), issueHistory);
+							if (CollectionUtils.isNotEmpty(issueHistory.getSprintUpdationLog())) {
+								List<JiraHistoryChangeLog> sprintUpdationLog = issueHistory.getSprintUpdationLog();
+								List<JiraHistoryChangeLog> statusUpdationLog = issueHistory.getStatusUpdationLog();
+								Collections.sort(sprintUpdationLog, Comparator.comparing(getGetUpdatedOn()));
+								Collections.sort(
+										statusUpdationLog, Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
+								createAddedandRemovedIssueDateWiseMap(
+										sprintDetails,
+										totalIssueList,
+										addedIssues,
+										removedIssues,
+										fullSprintIssues,
+										issueHistory,
+										sprintUpdationLog);
+								createDateWiseRefinementMap(
+										totalIssueList,
+										issueHistory,
+										statusUpdationLog,
+										fieldMapping,
+										lateRefined,
+										sprintDetails);
+							}
+						});
 
 				resultListMap.put(FULL_SPRINT_ISSUES, fullSprintIssues);
 				resultListMap.put(CommonConstant.PUNTED_ISSUES, removedIssues);
@@ -192,9 +207,11 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 
 	private static Set<String> getTypeNames(FieldMapping fieldMapping) {
 		return fieldMapping.getJiraIssueTypeNamesKPI187().stream()
-				.flatMap(name -> "Defect".equalsIgnoreCase(name)
-						? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
-						: Stream.of(name.trim().toLowerCase()))
+				.flatMap(
+						name ->
+								"Defect".equalsIgnoreCase(name)
+										? Stream.of("defect", NormalizedJira.DEFECT_TYPE.getValue().toLowerCase())
+										: Stream.of(name.trim().toLowerCase()))
 				.collect(Collectors.toSet());
 	}
 
@@ -203,28 +220,34 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	}
 
 	private Map<LocalDate, List<JiraIssue>> createLateRefinedMap(SprintDetails sprintDetails) {
-		LocalDate startDate = DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate(),
-				DateUtil.TIME_FORMAT).toLocalDate();
-		LocalDate sprintEndDate = DateUtil.convertingStringToLocalDateTime(sprintDetails.getEndDate(),
-				DateUtil.TIME_FORMAT).toLocalDate();
+		LocalDate startDate =
+				DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT)
+						.toLocalDate();
+		LocalDate sprintEndDate =
+				DateUtil.convertingStringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT)
+						.toLocalDate();
 		Map<LocalDate, List<JiraIssue>> lateRefinementMap = new HashMap<>();
 		while (!startDate.isAfter(sprintEndDate)) {
 			lateRefinementMap.put(startDate, new ArrayList<>());
 			startDate = startDate.plusDays(1);
 		}
 		return lateRefinementMap;
-
 	}
 
-	private void createDateWiseRefinementMap(Set<JiraIssue> totalIssueList, JiraIssueCustomHistory issueHistory,
-			List<JiraHistoryChangeLog> statusUpdationLog, FieldMapping fieldMapping,
-			Map<LocalDate, List<JiraIssue>> lateRefined, SprintDetails sprintDetails) {
-		LocalDateTime startDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+	private void createDateWiseRefinementMap(
+			Set<JiraIssue> totalIssueList,
+			JiraIssueCustomHistory issueHistory,
+			List<JiraHistoryChangeLog> statusUpdationLog,
+			FieldMapping fieldMapping,
+			Map<LocalDate, List<JiraIssue>> lateRefined,
+			SprintDetails sprintDetails) {
+		LocalDateTime startDate =
+				DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 		final LocalDateTime currentDate = DateUtil.getTodayTime();
 
-
 		// Get relevant issues
-		List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
+		List<JiraIssue> jiraIssueList =
+				new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
 		if (jiraIssueList.isEmpty()) {
 			return;
 		}
@@ -233,23 +256,24 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		if (DateUtil.isWithinDateTimeRange(maxDate.atStartOfDay(), startDate, currentDate)) {
 			updateLateRefinedMap(startDate.toLocalDate(), maxDate, lateRefined, jiraIssueList);
 		}
-
 	}
 
 	/*
 	 * Calculates the maximum date for refined status based on status update logs
 	 *
 	 * @param statusUpdationLog List of status update logs
-	 * 
+	 *
 	 * @param fieldMapping Field mapping configuration
-	 * 
+	 *
 	 * @return LocalDate representing the maximum date
 	 */
 
-	private LocalDate calculateMaxDateForRefinedStatus(List<JiraHistoryChangeLog> statusUpdationLog,
-			FieldMapping fieldMapping) {
-		Set<String> statusBeforeDOR = fieldMapping.getJiraStatusKPI187().stream()
-				.map(status -> status.trim().toLowerCase()).collect(Collectors.toSet());
+	private LocalDate calculateMaxDateForRefinedStatus(
+			List<JiraHistoryChangeLog> statusUpdationLog, FieldMapping fieldMapping) {
+		Set<String> statusBeforeDOR =
+				fieldMapping.getJiraStatusKPI187().stream()
+						.map(status -> status.trim().toLowerCase())
+						.collect(Collectors.toSet());
 
 		boolean startDateFound = false;
 		LocalDate maxDate = DateUtil.getTodayDate();
@@ -267,13 +291,18 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		return maxDate;
 	}
 
-	private void updateLateRefinedMap(LocalDate startDate, LocalDate maxDate,
-			Map<LocalDate, List<JiraIssue>> lateRefined, List<JiraIssue> jiraIssueList) {
+	private void updateLateRefinedMap(
+			LocalDate startDate,
+			LocalDate maxDate,
+			Map<LocalDate, List<JiraIssue>> lateRefined,
+			List<JiraIssue> jiraIssueList) {
 		while (!startDate.isAfter(maxDate)) {
-			lateRefined.computeIfPresent(startDate, (k, v) -> {
-				v.addAll(jiraIssueList);
-				return v;
-			});
+			lateRefined.computeIfPresent(
+					startDate,
+					(k, v) -> {
+						v.addAll(jiraIssueList);
+						return v;
+					});
 			startDate = startDate.plusDays(1);
 		}
 	}
@@ -290,57 +319,79 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	 * maintained in removedIssues map
 	 */
 
-	private void createAddedandRemovedIssueDateWiseMap(SprintDetails sprintDetails, Set<JiraIssue> totalIssueList,
-			Map<LocalDate, List<JiraIssue>> addedIssuesMap, Map<LocalDate, List<JiraIssue>> removedIssues,
-			Map<LocalDate, List<JiraIssue>> fullSprintMap, JiraIssueCustomHistory issueHistory,
+	private void createAddedandRemovedIssueDateWiseMap(
+			SprintDetails sprintDetails,
+			Set<JiraIssue> totalIssueList,
+			Map<LocalDate, List<JiraIssue>> addedIssuesMap,
+			Map<LocalDate, List<JiraIssue>> removedIssues,
+			Map<LocalDate, List<JiraIssue>> fullSprintMap,
+			JiraIssueCustomHistory issueHistory,
 			List<JiraHistoryChangeLog> sprintUpdationLog) {
-		LocalDateTime startDateTime = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime startDateTime =
+				DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 		LocalDateTime sprintEndTime = DateUtil.getTodayTime();
-		List<JiraIssue> jiraIssueList = new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
+		List<JiraIssue> jiraIssueList =
+				new ArrayList<>(getRespectiveJiraIssue(totalIssueList, issueHistory));
 		int lastIndex = sprintUpdationLog.size() - 1;
 		sprintUpdationLog.stream()
-				.filter(updateLogs -> updateLogs.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName())
-						|| (updateLogs.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName()) && DateUtil
-								.isWithinDateTimeRange(updateLogs.getUpdatedOn(), startDateTime, sprintEndTime)))
-				.forEach(updateLogs -> {
-					LocalDate startLocalDate = startDateTime.toLocalDate();
-					if (updateLogs.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName())) {
-						if (sprintUpdationLog.get(lastIndex).getUpdatedOn()
-								.isBefore(startDateTime.plusDays(1))) {
-							fullSprintMap.computeIfPresent(startLocalDate, (k, v) -> {
-								v.addAll(jiraIssueList);
-								return v;
-							});
-							fullSprintMap.putIfAbsent(startLocalDate, jiraIssueList);
-						}
-						LocalDateTime updatedLog = updateLogs.getUpdatedOn().isBefore(startDateTime.plusDays(1))
-								? startDateTime
-								: limitDateInSprint(updateLogs.getUpdatedOn(), sprintEndTime);
-						addedIssuesMap.computeIfPresent(updatedLog.toLocalDate(), (k, v) -> {
-							v.addAll(jiraIssueList);
-							return v;
-						});
-						addedIssuesMap.putIfAbsent(updatedLog.toLocalDate(), jiraIssueList);
-					}
+				.filter(
+						updateLogs ->
+								updateLogs.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName())
+										|| (updateLogs.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName())
+												&& DateUtil.isWithinDateTimeRange(
+														updateLogs.getUpdatedOn(), startDateTime, sprintEndTime)))
+				.forEach(
+						updateLogs -> {
+							LocalDate startLocalDate = startDateTime.toLocalDate();
+							if (updateLogs.getChangedTo().equalsIgnoreCase(sprintDetails.getSprintName())) {
+								if (sprintUpdationLog
+										.get(lastIndex)
+										.getUpdatedOn()
+										.isBefore(startDateTime.plusDays(1))) {
+									fullSprintMap.computeIfPresent(
+											startLocalDate,
+											(k, v) -> {
+												v.addAll(jiraIssueList);
+												return v;
+											});
+									fullSprintMap.putIfAbsent(startLocalDate, jiraIssueList);
+								}
+								LocalDateTime updatedLog =
+										updateLogs.getUpdatedOn().isBefore(startDateTime.plusDays(1))
+												? startDateTime
+												: limitDateInSprint(updateLogs.getUpdatedOn(), sprintEndTime);
+								addedIssuesMap.computeIfPresent(
+										updatedLog.toLocalDate(),
+										(k, v) -> {
+											v.addAll(jiraIssueList);
+											return v;
+										});
+								addedIssuesMap.putIfAbsent(updatedLog.toLocalDate(), jiraIssueList);
+							}
 
-					if (updateLogs.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName()) && DateUtil
-							.isWithinDateTimeRange(updateLogs.getUpdatedOn(), startDateTime, sprintEndTime)) {
-						List<JiraIssue> removeJiraIssueLIst = new ArrayList<>(jiraIssueList);
-						LocalDate updatedLog = updateLogs.getUpdatedOn().toLocalDate();
-						removedIssues.computeIfPresent(updatedLog, (k, v) -> {
-							v.addAll(removeJiraIssueLIst);
-							return v;
+							if (updateLogs.getChangedFrom().equalsIgnoreCase(sprintDetails.getSprintName())
+									&& DateUtil.isWithinDateTimeRange(
+											updateLogs.getUpdatedOn(), startDateTime, sprintEndTime)) {
+								List<JiraIssue> removeJiraIssueLIst = new ArrayList<>(jiraIssueList);
+								LocalDate updatedLog = updateLogs.getUpdatedOn().toLocalDate();
+								removedIssues.computeIfPresent(
+										updatedLog,
+										(k, v) -> {
+											v.addAll(removeJiraIssueLIst);
+											return v;
+										});
+								removedIssues.putIfAbsent(updatedLog, removeJiraIssueLIst);
+							}
 						});
-						removedIssues.putIfAbsent(updatedLog, removeJiraIssueLIst);
-					}
-				});
 	}
 
-	private Set<JiraIssue> getRespectiveJiraIssue(Set<JiraIssue> totalIssueList, JiraIssueCustomHistory issueHistory) {
+	private Set<JiraIssue> getRespectiveJiraIssue(
+			Set<JiraIssue> totalIssueList, JiraIssueCustomHistory issueHistory) {
 		return totalIssueList.stream()
 				.filter(jiraIssue -> jiraIssue.getNumber().equalsIgnoreCase(issueHistory.getStoryID()))
 				.collect(Collectors.toSet());
 	}
+
 	/*
 	 * if for closed sprint updation is happening after sprint end date time then it
 	 * would be counted under the last day of sprint
@@ -355,15 +406,16 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	}
 
 	/**
-	 * This method populates KPI value to sprint leaf nodes. It also gives the trend
-	 * analysis at sprint wise.
+	 * This method populates KPI value to sprint leaf nodes. It also gives the trend analysis at
+	 * sprint wise.
 	 *
 	 * @param sprintLeafNode
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings(UNCHECKED)
-	private void sprintWiseLeafNodeValue(Node sprintLeafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void sprintWiseLeafNodeValue(
+			Node sprintLeafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
 		Object basicProjectConfigId = sprintLeafNode.getProjectFilter().getBasicProjectConfigId();
@@ -373,37 +425,54 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 		Map<String, Object> resultMap = fetchKPIDataFromDb(sprintLeafNode, null, null, kpiRequest);
 		SprintDetails sprintDetails = (SprintDetails) resultMap.get(SPRINT);
 		if (ObjectUtils.isNotEmpty(sprintDetails)) {
-			Map<LocalDate, List<JiraIssue>> fullSprintIssuesMap = (Map<LocalDate, List<JiraIssue>>) resultMap
-					.get(FULL_SPRINT_ISSUES);
-			Map<LocalDate, List<JiraIssue>> removedIssuesMap = (Map<LocalDate, List<JiraIssue>>) resultMap
-					.get(CommonConstant.PUNTED_ISSUES);
-			Map<LocalDate, List<JiraIssue>> addedIssuesMap = (Map<LocalDate, List<JiraIssue>>) resultMap
-					.get(CommonConstant.ADDED_ISSUES);
+			Map<LocalDate, List<JiraIssue>> fullSprintIssuesMap =
+					(Map<LocalDate, List<JiraIssue>>) resultMap.get(FULL_SPRINT_ISSUES);
+			Map<LocalDate, List<JiraIssue>> removedIssuesMap =
+					(Map<LocalDate, List<JiraIssue>>) resultMap.get(CommonConstant.PUNTED_ISSUES);
+			Map<LocalDate, List<JiraIssue>> addedIssuesMap =
+					(Map<LocalDate, List<JiraIssue>>) resultMap.get(CommonConstant.ADDED_ISSUES);
 
-			Map<LocalDate, List<JiraIssue>> lateRefinedDateWiseMap = (Map<LocalDate, List<JiraIssue>>) resultMap
-					.get(LATE_REFINED);
+			Map<LocalDate, List<JiraIssue>> lateRefinedDateWiseMap =
+					(Map<LocalDate, List<JiraIssue>>) resultMap.get(LATE_REFINED);
 
-			log.info("Late Refinement -> request id : {} total jira Issues : {}", requestTrackerId,
+			log.info(
+					"Late Refinement -> request id : {} total jira Issues : {}",
+					requestTrackerId,
 					fullSprintIssuesMap.size());
-			LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),
-					DateUtil.TIME_FORMAT_WITH_SEC);
+			LocalDateTime sprintStartDate =
+					DateUtil.stringToLocalDateTime(
+							sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 			LocalDateTime sprintEndDate = DateUtil.getTodayTime().plusDays(1);
 
-			LocalDate maximumRemovalDate = removedIssuesMap.keySet().stream().filter(Objects::nonNull)
-					.min(LocalDate::compareTo).orElse(null);
+			LocalDate maximumRemovalDate =
+					removedIssuesMap.keySet().stream()
+							.filter(Objects::nonNull)
+							.min(LocalDate::compareTo)
+							.orElse(null);
 
 			List<DataCountGroup> currentSprintDataCountGroup = new ArrayList<>();
 			List<JiraIssue> processedAllIssues = new ArrayList<>();
 			List<KPIExcelData> excelDataList = new ArrayList<>();
 			List<IssueKpiModalValue> issueKpiModalValueList = new ArrayList<>();
-			for (LocalDateTime date = sprintStartDate; date.toLocalDate().isBefore(sprintEndDate.toLocalDate()); date = date.plusDays(1)) {
+			for (LocalDateTime date = sprintStartDate;
+					date.toLocalDate().isBefore(sprintEndDate.toLocalDate());
+					date = date.plusDays(1)) {
 				DataCountGroup currentSprint = new DataCountGroup();
 				List<DataCount> dataCountList = new ArrayList<>();
-				List<JiraIssue> overall = calculateOverallScopeDayWise(fullSprintIssuesMap, removedIssuesMap,
-						addedIssuesMap, processedAllIssues, date.toLocalDate(), sprintDetails, maximumRemovalDate);
-				List<JiraIssue> unRefinedData = calculateLateRefinementPercenatge(overall, lateRefinedDateWiseMap, date.toLocalDate(),
-						dataCountList, sprintName);
-				Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(overall);
+				List<JiraIssue> overall =
+						calculateOverallScopeDayWise(
+								fullSprintIssuesMap,
+								removedIssuesMap,
+								addedIssuesMap,
+								processedAllIssues,
+								date.toLocalDate(),
+								sprintDetails,
+								maximumRemovalDate);
+				List<JiraIssue> unRefinedData =
+						calculateLateRefinementPercenatge(
+								overall, lateRefinedDateWiseMap, date.toLocalDate(), dataCountList, sprintName);
+				Map<String, IssueKpiModalValue> issueKpiModalObject =
+						KpiDataHelper.createMapOfIssueModal(overall);
 				createExcelData(unRefinedData, overall, date, fieldMapping, issueKpiModalObject);
 				issueKpiModalValueList.addAll(issueKpiModalObject.values());
 				currentSprint.setFilter(DateUtil.tranformUTCLocalTimeToZFormat(date));
@@ -423,12 +492,14 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			kpiElement.setExcelData(excelDataList);
 			kpiElement.setIssueData(new HashSet<>(issueKpiModalValueList));
 			kpiElement.setTrendValueList(iterationKpiValueList);
-
 		}
 	}
 
-	private List<JiraIssue> calculateLateRefinementPercenatge(List<JiraIssue> overall,
-			Map<LocalDate, List<JiraIssue>> lateRefinedDateWiseMap, LocalDate date, List<DataCount> dataCountList,
+	private List<JiraIssue> calculateLateRefinementPercenatge(
+			List<JiraIssue> overall,
+			Map<LocalDate, List<JiraIssue>> lateRefinedDateWiseMap,
+			LocalDate date,
+			List<DataCount> dataCountList,
 			String sprintName) {
 		Double defaultPercentage = 0.0D;
 		List<JiraIssue> jiraIssueList = lateRefinedDateWiseMap.getOrDefault(date, new ArrayList<>());
@@ -437,61 +508,79 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			commonIssues = (List<JiraIssue>) CollectionUtils.intersection(jiraIssueList, overall);
 			defaultPercentage = roundingOff(((double) commonIssues.size() / overall.size()) * 100);
 		}
-		dataCountList.add(getDataCountObject(defaultPercentage, commonIssues, overall, date.toString(), sprintName));
+		dataCountList.add(
+				getDataCountObject(defaultPercentage, commonIssues, overall, date.toString(), sprintName));
 
 		return commonIssues;
 	}
 
-	private void createExcelData(List<JiraIssue> commonIssues, List<JiraIssue> overall, LocalDateTime date,
-			FieldMapping fieldMapping, Map<String, IssueKpiModalValue> issueKpiModalObject) {
+	private void createExcelData(
+			List<JiraIssue> commonIssues,
+			List<JiraIssue> overall,
+			LocalDateTime date,
+			FieldMapping fieldMapping,
+			Map<String, IssueKpiModalValue> issueKpiModalObject) {
 
-		overall.forEach(issue -> {
-			Map<String, JiraIssue> unRefinedMap = commonIssues.stream()
-					.collect(Collectors.toMap(JiraIssue::getNumber, e -> e));
-			KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
-			IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
-			data.setUnRefined(unRefinedMap.containsKey(issue.getNumber()) ? "Yes" : "No");
-			data.setDate(DateUtil.tranformUTCLocalTimeToZFormat(date));
-
-		});
-
+		overall.forEach(
+				issue -> {
+					Map<String, JiraIssue> unRefinedMap =
+							commonIssues.stream().collect(Collectors.toMap(JiraIssue::getNumber, e -> e));
+					KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
+					IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
+					data.setUnRefined(unRefinedMap.containsKey(issue.getNumber()) ? "Yes" : "No");
+					data.setDate(DateUtil.tranformUTCLocalTimeToZFormat(date));
+				});
 	}
 
-	private List<JiraIssue> calculateOverallScopeDayWise(Map<LocalDate, List<JiraIssue>> allIssues,
-			Map<LocalDate, List<JiraIssue>> removedIssues, Map<LocalDate, List<JiraIssue>> addedIssues,
-			List<JiraIssue> processedIssues, LocalDate date, SprintDetails sprintDetails,
+	private List<JiraIssue> calculateOverallScopeDayWise(
+			Map<LocalDate, List<JiraIssue>> allIssues,
+			Map<LocalDate, List<JiraIssue>> removedIssues,
+			Map<LocalDate, List<JiraIssue>> addedIssues,
+			List<JiraIssue> processedIssues,
+			LocalDate date,
+			SprintDetails sprintDetails,
 			LocalDate maximumRemovalDate) {
 		List<JiraIssue> allIssuesOrDefault = allIssues.getOrDefault(date, new ArrayList<>());
 		List<JiraIssue> removedJiraIssues = removedIssues.getOrDefault(date, new ArrayList<>());
 		List<JiraIssue> addedJiraIssues = addedIssues.getOrDefault(date, new ArrayList<>());
-		Set<String> puntedIssues = checkNullList(sprintDetails.getPuntedIssues()).stream().map(SprintIssue::getNumber)
-				.collect(Collectors.toSet());
-		removeExtraTransitionOnSprintEndDate(sprintDetails, maximumRemovalDate, removedJiraIssues,
+		Set<String> puntedIssues =
+				checkNullList(sprintDetails.getPuntedIssues()).stream()
+						.map(SprintIssue::getNumber)
+						.collect(Collectors.toSet());
+		removeExtraTransitionOnSprintEndDate(
+				sprintDetails,
+				maximumRemovalDate,
+				removedJiraIssues,
 				sprintDetails.getTotalIssues().stream().map(SprintIssue::getNumber).toList());
 
 		// if an issue is present in both on the same day, then whatever in the punted
 		// issues those should be removed once and for all
-		List<JiraIssue> commonIssues = (List<JiraIssue>) CollectionUtils.intersection(removedJiraIssues,
-				addedJiraIssues);
+		List<JiraIssue> commonIssues =
+				(List<JiraIssue>) CollectionUtils.intersection(removedJiraIssues, addedJiraIssues);
 		// if punted issues are present in commonIssues
 		// remove from both, else just remove from added
 		if (CollectionUtils.isNotEmpty(commonIssues)) {
-			commonIssues.stream().forEach(issue -> {
-				if (puntedIssues.contains(issue.getNumber())) {
-					removedJiraIssues.removeIf(jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
-					addedJiraIssues.removeIf(jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
-					allIssuesOrDefault.removeIf(jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
-				} else {
-					// if not in punted then not to be removed from remove issues
-					removedJiraIssues.removeIf(jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
-				}
-			});
+			commonIssues.stream()
+					.forEach(
+							issue -> {
+								if (puntedIssues.contains(issue.getNumber())) {
+									removedJiraIssues.removeIf(
+											jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
+									addedJiraIssues.removeIf(
+											jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
+									allIssuesOrDefault.removeIf(
+											jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
+								} else {
+									// if not in punted then not to be removed from remove issues
+									removedJiraIssues.removeIf(
+											jira -> issue.getNumber().equalsIgnoreCase(jira.getNumber()));
+								}
+							});
 		}
 		processedIssues.addAll(allIssuesOrDefault);
 		processedIssues.addAll(addedJiraIssues);
 		processedIssues.removeAll(removedJiraIssues);
 		return processedIssues.stream().distinct().toList();
-
 	}
 
 	/*
@@ -500,16 +589,23 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	 * those has to be removed from completed Issue Map
 	 */
 
-	private void removeExtraTransitionOnSprintEndDate(SprintDetails sprintDetails, LocalDate maximumRemovalDate,
-			List<JiraIssue> baseIssues, List<String> issuesToBeRemoved) {
+	private void removeExtraTransitionOnSprintEndDate(
+			SprintDetails sprintDetails,
+			LocalDate maximumRemovalDate,
+			List<JiraIssue> baseIssues,
+			List<String> issuesToBeRemoved) {
 		if (sprintDetails.getState().equalsIgnoreCase(SprintDetails.SPRINT_STATE_CLOSED)
 				&& ObjectUtils.isNotEmpty(maximumRemovalDate)) {
 			baseIssues.removeIf(issue -> issuesToBeRemoved.contains(issue.getNumber()));
 		}
 	}
 
-	private DataCount getDataCountObject(Double value, List<JiraIssue> lateIssues, List<JiraIssue> totalIssues,
-			String date, String sprintID) {
+	private DataCount getDataCountObject(
+			Double value,
+			List<JiraIssue> lateIssues,
+			List<JiraIssue> totalIssues,
+			String date,
+			String sprintID) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(value));
 		dataCount.setSProjectName(sprintID);
@@ -527,8 +623,10 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	}
 
 	private double getTotalSum(List<JiraIssue> totalJiraIssue) {
-		return roundingOff(totalJiraIssue.stream().filter(jiraIssue -> Objects.nonNull(jiraIssue.getStoryPoints()))
-				.mapToDouble(JiraIssue::getStoryPoints).sum());
-
+		return roundingOff(
+				totalJiraIssue.stream()
+						.filter(jiraIssue -> Objects.nonNull(jiraIssue.getStoryPoints()))
+						.mapToDouble(JiraIssue::getStoryPoints)
+						.sum());
 	}
 }

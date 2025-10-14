@@ -39,16 +39,32 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/productivity")
 @RequiredArgsConstructor
-@Tag(name = "Productivity", description = "Endpoints to calculate the 'productivity' of an hierarchical level based on multiple KPIs")
+@Tag(
+		name = "Productivity",
+		description =
+				"Endpoints to calculate the 'productivity' of an hierarchical level based on multiple KPIs")
 public class ProductivityController {
 
 	private final ProductivityGainService productivityGainService;
 
-	@Operation(summary = "Calculate productivity", description = "Determines the 'productivity' gain for an entire hierarchical level or for all entries under a specific parentId based on multiple KPIs")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully calculated the 'productivity' gain", content = {
-					@Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class)) }),
-			@ApiResponse(responseCode = "400", description = """
+	@Operation(
+			summary = "Calculate productivity",
+			description =
+					"Determines the 'productivity' gain for an entire hierarchical level or for all entries under a specific parentId based on multiple KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully calculated the 'productivity' gain",
+						content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = ServiceResponse.class))
+						}),
+				@ApiResponse(
+						responseCode = "400",
+						description =
+								"""
 					Bad request. Will be returned if any of the following cases occurs:
 					- No hierarchy 'level' was provided
 					- No hierarchy 'label' was provided
@@ -57,11 +73,15 @@ public class ProductivityController {
 					- The level and the label are corresponding to different hierarchy entities
 					- The level and the label are not corresponding to the next hierarchical child level and label of the 'parentId' when 'parentId' is provided
 					"""),
-			@ApiResponse(responseCode = "403", description = "Current user does not have access to this API"),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error happened") })
+				@ApiResponse(
+						responseCode = "403",
+						description = "Current user does not have access to this API"),
+				@ApiResponse(responseCode = "500", description = "Unexpected server error happened")
+			})
 	@PostMapping("/calculate")
 	public ServiceResponse calculateProductivity(
 			@Valid @RequestBody CalculateProductivityRequestDTO calculateProductivityRequestDTO) {
-		return productivityGainService.processCalculateProductivityRequest(calculateProductivityRequestDTO);
+		return productivityGainService.processCalculateProductivityRequest(
+				calculateProductivityRequestDTO);
 	}
 }

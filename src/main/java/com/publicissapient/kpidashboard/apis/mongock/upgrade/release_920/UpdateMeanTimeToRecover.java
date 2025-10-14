@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author girpatha
  */
-@ChangeUnit(id = "update_meantime_to_recover", order = "9206", author = "girpatha", systemVersion = "9.2.0")
+@ChangeUnit(
+		id = "update_meantime_to_recover",
+		order = "9206",
+		author = "girpatha",
+		systemVersion = "9.2.0")
 public class UpdateMeanTimeToRecover {
 
 	private final MongoTemplate mongoTemplate;

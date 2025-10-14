@@ -43,10 +43,8 @@ public class PushBuild extends BuildDeployFields {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 		PushBuild that = (PushBuild) o;
 		return this.getJobName().equals(that.getJobName()) && this.getNumber().equals(that.getNumber());
 	}

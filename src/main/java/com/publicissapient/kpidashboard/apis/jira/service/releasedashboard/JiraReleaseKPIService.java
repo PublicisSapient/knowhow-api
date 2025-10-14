@@ -32,26 +32,24 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus;
 
 /**
- * All Jira NonTrend KPIs service have to implement this class
- * {@link NonTrendKPIService}
+ * All Jira NonTrend KPIs service have to implement this class {@link NonTrendKPIService}
  *
  * @author purgupta2
  */
 public abstract class JiraReleaseKPIService implements NonTrendKPIService {
 
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private JiraReleaseServiceR jiraService;
+	@Autowired private CacheService cacheService;
+	@Autowired private JiraReleaseServiceR jiraService;
 
 	/**
-	 * Returns API Request tracker Id to be used for logging/debugging and using it
-	 * for maintaining any sort of cache.
+	 * Returns API Request tracker Id to be used for logging/debugging and using it for maintaining
+	 * any sort of cache.
 	 *
 	 * @return Scrum Request Tracker Id
 	 */
 	public String getRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name());
+		return cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name());
 	}
 
 	public double roundingOff(double value) {
@@ -78,14 +76,16 @@ public abstract class JiraReleaseKPIService implements NonTrendKPIService {
 			filteredJiraIssue = subtaskDefects;
 		}
 
-		if (fieldMapping != null && CollectionUtils.isNotEmpty(fieldMapping.getJiradefecttype()) &&
-				CollectionUtils.isNotEmpty(jiraIssuesForCurrentRelease)) {
+		if (fieldMapping != null
+				&& CollectionUtils.isNotEmpty(fieldMapping.getJiradefecttype())
+				&& CollectionUtils.isNotEmpty(jiraIssuesForCurrentRelease)) {
 			defectType.add(NormalizedJira.DEFECT_TYPE.getValue());
 			defectType.addAll(fieldMapping.getJiradefecttype());
-			filteredJiraIssue.addAll(jiraIssuesForCurrentRelease.stream()
-					.filter(jiraIssue -> defectType.contains(jiraIssue.getTypeName())).toList());
-		} else
-			filteredJiraIssue = jiraIssuesForCurrentRelease;
+			filteredJiraIssue.addAll(
+					jiraIssuesForCurrentRelease.stream()
+							.filter(jiraIssue -> defectType.contains(jiraIssue.getTypeName()))
+							.toList());
+		} else filteredJiraIssue = jiraIssuesForCurrentRelease;
 		return filteredJiraIssue;
 	}
 

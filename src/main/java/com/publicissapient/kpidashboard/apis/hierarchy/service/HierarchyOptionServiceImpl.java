@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.hierarchy.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import javax.validation.constraints.NotBlank;
 
 import org.apache.commons.lang3.StringUtils;
@@ -43,14 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HierarchyOptionServiceImpl implements HierarchyOptionService {
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Autowired private OrganizationHierarchyService organizationHierarchyService;
 
 	@Override
-	public ServiceResponse addHierarchyOption(CreateHierarchyRequest hierarchyRequest, String parentId) {
+	public ServiceResponse addHierarchyOption(
+			CreateHierarchyRequest hierarchyRequest, String parentId) {
 		List<HierarchyLevel> fullHierarchyLevel = cacheService.getFullHierarchyLevel();
 
 		// Validate hierarchy levels
@@ -70,9 +68,13 @@ public class HierarchyOptionServiceImpl implements HierarchyOptionService {
 		}
 
 		// Find hierarchy level of parent
-		Optional<HierarchyLevel> parentHierarchyOpt = fullHierarchyLevel.stream()
-				.filter(a -> a.getHierarchyLevelId().equalsIgnoreCase(parentOrganization.getHierarchyLevelId()))
-				.findFirst();
+		Optional<HierarchyLevel> parentHierarchyOpt =
+				fullHierarchyLevel.stream()
+						.filter(
+								a ->
+										a.getHierarchyLevelId()
+												.equalsIgnoreCase(parentOrganization.getHierarchyLevelId()))
+						.findFirst();
 
 		if (parentHierarchyOpt.isEmpty()) {
 			return new ServiceResponse(false, "Hierarchy level for parent node not found", null);
@@ -81,35 +83,39 @@ public class HierarchyOptionServiceImpl implements HierarchyOptionService {
 		int childLevel = parentHierarchyOpt.get().getLevel() + 1;
 
 		// Find the hierarchy level for the child
-		Optional<HierarchyLevel> currentLevelOpt = fullHierarchyLevel.stream().filter(a -> a.getLevel() == childLevel)
-				.findFirst();
+		Optional<HierarchyLevel> currentLevelOpt =
+				fullHierarchyLevel.stream().filter(a -> a.getLevel() == childLevel).findFirst();
 
 		if (currentLevelOpt.isEmpty()) {
 			return new ServiceResponse(false, "Hierarchy level for child node not found", null);
 		}
 
 		// Create child node
-		OrganizationHierarchy organizationHierarchy = createOrganizationHierarchy(parentId, hierarchyRequest.getName(), currentLevelOpt.get().getHierarchyLevelId());
-		return new ServiceResponse(true, "Node created successfully under parentId: " + parentId, organizationHierarchy);
+		OrganizationHierarchy organizationHierarchy =
+				createOrganizationHierarchy(
+						parentId, hierarchyRequest.getName(), currentLevelOpt.get().getHierarchyLevelId());
+		return new ServiceResponse(
+				true, "Node created successfully under parentId: " + parentId, organizationHierarchy);
 	}
 
-	/**
-	 * Creates a root-level node when no parentId is provided.
-	 */
-	private ServiceResponse createRootNode(CreateHierarchyRequest hierarchyRequest,
-			List<HierarchyLevel> fullHierarchyLevel) {
-		Optional<HierarchyLevel> topMostHierarchyOpt = fullHierarchyLevel.stream().filter(a -> a.getLevel() == 1)
-				.findFirst();
+	/** Creates a root-level node when no parentId is provided. */
+	private ServiceResponse createRootNode(
+			CreateHierarchyRequest hierarchyRequest, List<HierarchyLevel> fullHierarchyLevel) {
+		Optional<HierarchyLevel> topMostHierarchyOpt =
+				fullHierarchyLevel.stream().filter(a -> a.getLevel() == 1).findFirst();
 
 		if (topMostHierarchyOpt.isEmpty()) {
 			return new ServiceResponse(false, "No top-level hierarchy found", null);
 		}
 
-		OrganizationHierarchy organizationHierarchy = createOrganizationHierarchy(null, hierarchyRequest.getName(), topMostHierarchyOpt.get().getHierarchyLevelId());
+		OrganizationHierarchy organizationHierarchy =
+				createOrganizationHierarchy(
+						null, hierarchyRequest.getName(), topMostHierarchyOpt.get().getHierarchyLevelId());
 		return new ServiceResponse(true, "Node is created at root level.", organizationHierarchy);
 	}
 
-	public OrganizationHierarchy createOrganizationHierarchy(String parentId, @NotBlank @NotNull @NotEmpty String hierarchyName, String hierarchyLevelId) {
+	public OrganizationHierarchy createOrganizationHierarchy(
+			String parentId, @NotBlank @NotNull @NotEmpty String hierarchyName, String hierarchyLevelId) {
 		OrganizationHierarchy save = new OrganizationHierarchy();
 		save.setNodeId(UUID.randomUUID().toString());
 		save.setHierarchyLevelId(hierarchyLevelId);
@@ -121,5 +127,4 @@ public class HierarchyOptionServiceImpl implements HierarchyOptionService {
 		log.debug("Hierarchy Node create successfully: {}", CommonUtils.sanitize(save.getNodeId()));
 		return save;
 	}
-
 }

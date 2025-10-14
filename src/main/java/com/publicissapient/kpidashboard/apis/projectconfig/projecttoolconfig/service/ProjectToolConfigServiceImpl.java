@@ -18,7 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,8 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -40,7 +37,9 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.cleanup.ToolDataCleanUpService;
 import com.publicissapient.kpidashboard.apis.cleanup.ToolDataCleanUpServiceFactory;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ToolNotFoundException;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
@@ -66,32 +65,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 
-	private static final String SUCCESS_MSG = "Successfully fetched all records for projectToolConfig";
+	private static final String SUCCESS_MSG =
+			"Successfully fetched all records for projectToolConfig";
 	private static final String TOOL_NOT_FOUND = "Tool not found";
-	@Autowired
-	private ProjectToolConfigRepository toolRepository;
-	@Autowired
-	private ConnectionRepository connectionRepository;
-	@Autowired
-	private SubProjectRepository subProjectRepository;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private ToolDataCleanUpServiceFactory dataCleanUpServiceFactory;
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
-	@Autowired
-	private AuthenticationService authenticationService;
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
+	@Autowired private ProjectToolConfigRepository toolRepository;
+	@Autowired private ConnectionRepository connectionRepository;
+	@Autowired private SubProjectRepository subProjectRepository;
+	@Autowired private CacheService cacheService;
+	@Autowired private ToolDataCleanUpServiceFactory dataCleanUpServiceFactory;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Autowired private AuthenticationService authenticationService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
 
 	/**
-	 * make a copy of the list so the original list is not changed, and remove() is
-	 * supported
+	 * make a copy of the list so the original list is not changed, and remove() is supported
 	 *
 	 * @param l1
 	 * @param l2
@@ -111,8 +100,8 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	/**
 	 * Fetch all ProjectToolConfig data.
 	 *
-	 * @return ServiceResponse with data object,message and status flag. Status flag
-	 *         is true, if data is found else false.
+	 * @return ServiceResponse with data object,message and status flag. Status flag is true, if data
+	 *     is found else false.
 	 */
 	@Override
 	public ServiceResponse getAllProjectTool() {
@@ -129,16 +118,16 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	/**
 	 * Fetch a ProjectToolConfig by toolType. *
 	 *
-	 * @param toolType
-	 *          as toolType
-	 * @return ServiceResponse with data object,message and status flag. Status flag
-	 *         is true, if data is found else false.
+	 * @param toolType as toolType
+	 * @return ServiceResponse with data object,message and status flag. Status flag is true, if data
+	 *     is found else false.
 	 */
 	@Override
 	public ServiceResponse getProjectToolByType(String toolType) {
 		if (StringUtils.isEmpty(toolType)) {
 			log.info("Tool type is either null or empty");
-			return new ServiceResponse(false, "Tool type is either null or empty in request parameter", toolType);
+			return new ServiceResponse(
+					false, "Tool type is either null or empty in request parameter", toolType);
 		}
 		final List<ProjectToolConfig> toolTypeList = toolRepository.findByToolName(toolType);
 		if (CollectionUtils.isEmpty(toolTypeList)) {
@@ -147,16 +136,16 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 		List<ProjectToolConfigDTO> projectConfToolDtoList = mapJiraSubProject(toolTypeList);
 		log.info("Successfully fetched projectToolConfig for @{}", toolType);
-		return new ServiceResponse(true, "Successfully fetched projectToolConfig for " + toolType, projectConfToolDtoList);
+		return new ServiceResponse(
+				true, "Successfully fetched projectToolConfig for " + toolType, projectConfToolDtoList);
 	}
 
 	/**
 	 * Create and save a connection in the database.
 	 *
-	 * @param projectToolConfig
-	 *          as project_tool_configs
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param projectToolConfig as project_tool_configs
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse saveProjectToolDetails(ProjectToolConfig projectToolConfig) {
@@ -166,29 +155,30 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 		if (!valid(projectToolConfig)) {
 			log.info("projectToolName is empty");
-			return new ServiceResponse(false, " projectToolName,connectionId,getBasicProjectConfigId, cannot be empty", null);
+			return new ServiceResponse(
+					false, " projectToolName,connectionId,getBasicProjectConfigId, cannot be empty", null);
 		}
 
-		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA) &&
-				hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA)) {
+		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA)
+				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA)) {
 			return new ServiceResponse(false, "Jira already configured for this project", null);
 		}
 		if (isRepoTool(projectToolConfig, projectToolConfig.getBasicProjectConfigId().toString())) {
 			setRepoToolConfig(projectToolConfig);
 		}
 
-		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA_TEST) &&
-				hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA_TEST)) {
+		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA_TEST)
+				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA_TEST)) {
 			return new ServiceResponse(false, "Jira Test already configured for this project", null);
 		}
 
-		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.AZURE) &&
-				hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.AZURE)) {
+		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.AZURE)
+				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.AZURE)) {
 			return new ServiceResponse(false, "Azure already configured for this project", null);
 		}
 
-		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.ZEPHYR) &&
-				hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.ZEPHYR)) {
+		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.ZEPHYR)
+				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.ZEPHYR)) {
 			return new ServiceResponse(false, "Zephyr already configured for this project", null);
 		}
 
@@ -206,11 +196,12 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	/**
 	 * Update project_tool_configs data.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
-	public ServiceResponse modifyProjectToolById(ProjectToolConfig projectToolConfig, String projectToolId) {
+	public ServiceResponse modifyProjectToolById(
+			ProjectToolConfig projectToolConfig, String projectToolId) {
 		if (projectToolId == null || !ObjectId.isValid(projectToolId)) {
 			log.info("Id not valid");
 			return new ServiceResponse(false, "Invalid projectTool id " + projectToolId, null);
@@ -221,12 +212,13 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		}
 		if (!valid(projectToolConfig)) {
 			log.info("projectToolName is empty");
-			return new ServiceResponse(false, " projectToolName,connectionId,getBasicProjectConfigId, cannot be empty", null);
+			return new ServiceResponse(
+					false, " projectToolName,connectionId,getBasicProjectConfigId, cannot be empty", null);
 		}
 
-		if (CollectionUtils.isNotEmpty(projectToolConfig.getBoards()) &&
-				CollectionUtils.isNotEmpty(projectTool.getBoards()) &&
-				!compareTwoListOfObjects(projectTool.getBoards(), projectToolConfig.getBoards())) {
+		if (CollectionUtils.isNotEmpty(projectToolConfig.getBoards())
+				&& CollectionUtils.isNotEmpty(projectTool.getBoards())
+				&& !compareTwoListOfObjects(projectTool.getBoards(), projectToolConfig.getBoards())) {
 			cleanData(projectTool);
 		}
 
@@ -254,14 +246,19 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		projectTool.setCanNotAutomatedTestValue(projectToolConfig.getCanNotAutomatedTestValue());
 		projectTool.setTestRegressionLabel(projectToolConfig.getTestRegressionLabel());
 		projectTool.setTestRegressionValue(projectToolConfig.getTestRegressionValue());
-		projectTool.setRegressionAutomationFolderPath(projectToolConfig.getRegressionAutomationFolderPath());
-		projectTool.setInSprintAutomationFolderPath(projectToolConfig.getInSprintAutomationFolderPath());
+		projectTool.setRegressionAutomationFolderPath(
+				projectToolConfig.getRegressionAutomationFolderPath());
+		projectTool.setInSprintAutomationFolderPath(
+				projectToolConfig.getInSprintAutomationFolderPath());
 		projectTool.setOrganizationKey(projectToolConfig.getOrganizationKey());
 		projectTool.setJiraTestCaseType(projectToolConfig.getJiraTestCaseType());
 		projectTool.setTestAutomatedIdentification(projectToolConfig.getTestAutomatedIdentification());
-		projectTool.setTestAutomationCompletedIdentification(projectToolConfig.getTestAutomationCompletedIdentification());
-		projectTool.setTestRegressionIdentification(projectToolConfig.getTestRegressionIdentification());
-		projectTool.setTestAutomationCompletedByCustomField(projectToolConfig.getTestAutomationCompletedByCustomField());
+		projectTool.setTestAutomationCompletedIdentification(
+				projectToolConfig.getTestAutomationCompletedIdentification());
+		projectTool.setTestRegressionIdentification(
+				projectToolConfig.getTestRegressionIdentification());
+		projectTool.setTestAutomationCompletedByCustomField(
+				projectToolConfig.getTestAutomationCompletedByCustomField());
 		projectTool.setTestRegressionByCustomField(projectToolConfig.getTestRegressionByCustomField());
 		projectTool.setJiraAutomatedTestValue(projectToolConfig.getJiraAutomatedTestValue());
 		projectTool.setJiraRegressionTestValue(projectToolConfig.getJiraRegressionTestValue());
@@ -270,12 +267,15 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		projectTool.setMetadataTemplateCode(projectToolConfig.getMetadataTemplateCode());
 		projectTool.setOriginalTemplateCode(projectToolConfig.getOriginalTemplateCode());
 		projectTool.setGitLabSdmID(projectToolConfig.getGitLabSdmID());
-		projectTool.setAzureIterationStatusFieldUpdate(projectToolConfig.isAzureIterationStatusFieldUpdate());
+		projectTool.setAzureIterationStatusFieldUpdate(
+				projectToolConfig.isAzureIterationStatusFieldUpdate());
 		projectTool.setProjectComponent(projectToolConfig.getProjectComponent());
 		projectTool.setTeam(projectToolConfig.getTeam());
-		projectTool.setAzureRefreshActiveSprintReport(projectToolConfig.getAzureRefreshActiveSprintReport());
+		projectTool.setAzureRefreshActiveSprintReport(
+				projectToolConfig.getAzureRefreshActiveSprintReport());
 		if (Boolean.TRUE.equals(projectToolConfig.getAzureRefreshActiveSprintReport())) {
-			projectTool.setAzureRefreshActiveSprintReportUpdatedBy(authenticationService.getLoggedInUser());
+			projectTool.setAzureRefreshActiveSprintReportUpdatedBy(
+					authenticationService.getLoggedInUser());
 			projectTool.setAzureRefreshActiveSprintReportUpdatedOn(System.currentTimeMillis());
 		}
 		projectTool.setUpdatedBy(authenticationService.getLoggedInUser());
@@ -283,12 +283,14 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		toolRepository.save(projectTool);
 		cacheService.clearCache(CommonConstant.CACHE_TOOL_CONFIG_MAP);
 		cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG_MAP);
-		if (projectTool.getToolName().equalsIgnoreCase(ProcessorConstants.ZEPHYR) ||
-				projectTool.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA_TEST)) {
+		if (projectTool.getToolName().equalsIgnoreCase(ProcessorConstants.ZEPHYR)
+				|| projectTool.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA_TEST)) {
 			cacheService.clearCache(CommonConstant.TESTING_KPI_CACHE);
 			List<String> kpiList = kpiDataCacheService.getKpiBasedOnSource(KPISource.ZEPHYR.name());
-			kpiList.forEach(kpiId -> kpiDataCacheService.clearCache(projectTool.getBasicProjectConfigId().toHexString(),
-					kpiId));
+			kpiList.forEach(
+					kpiId ->
+							kpiDataCacheService.clearCache(
+									projectTool.getBasicProjectConfigId().toHexString(), kpiId));
 		}
 		return new ServiceResponse(true, "updated the project_tools Successfully", projectTool);
 	}
@@ -296,8 +298,8 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	@Override
 	public List<ProjectToolConfigDTO> getProjectToolConfigs(String basicProjectConfigId) {
 
-		final List<ProjectToolConfig> toolConfigList = toolRepository
-				.findByBasicProjectConfigId(new ObjectId(basicProjectConfigId));
+		final List<ProjectToolConfig> toolConfigList =
+				toolRepository.findByBasicProjectConfigId(new ObjectId(basicProjectConfigId));
 		List<ProjectToolConfigDTO> projectConfToolDtoList = mapJiraSubProject(toolConfigList);
 		log.info(SUCCESS_MSG);
 		return projectConfToolDtoList;
@@ -308,7 +310,8 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		return toolRepository.findByBasicProjectConfigId(basicProjectConfigId);
 	}
 
-	public List<ProjectToolConfig> saveProjectToolConfigs(List<ProjectToolConfig> projectToolConfigs) {
+	public List<ProjectToolConfig> saveProjectToolConfigs(
+			List<ProjectToolConfig> projectToolConfigs) {
 		List<ProjectToolConfig> savedProjectToolConfig = toolRepository.saveAll(projectToolConfigs);
 		cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
 		cacheService.clearCache(CommonConstant.CACHE_TOOL_CONFIG_MAP);
@@ -317,9 +320,11 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	}
 
 	@Override
-	public List<ProjectToolConfigDTO> getProjectToolConfigs(String basicProjectConfigId, String type) {
-		final List<ProjectToolConfig> toolConfigList = toolRepository.findByToolNameAndBasicProjectConfigId(type,
-				new ObjectId(basicProjectConfigId));
+	public List<ProjectToolConfigDTO> getProjectToolConfigs(
+			String basicProjectConfigId, String type) {
+		final List<ProjectToolConfig> toolConfigList =
+				toolRepository.findByToolNameAndBasicProjectConfigId(
+						type, new ObjectId(basicProjectConfigId));
 		List<ProjectToolConfigDTO> projectConfToolDtoList = mapJiraSubProject(toolConfigList);
 		log.info(SUCCESS_MSG);
 		return projectConfToolDtoList;
@@ -328,18 +333,26 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	@Override
 	public boolean deleteTool(String basicProjectConfigId, String projectToolId) {
 
-		List<ProjectToolConfig> toolList = toolRepository.findByBasicProjectConfigId(new ObjectId(basicProjectConfigId));
-		Optional<ProjectToolConfig> optionalProjectToolConfig = toolList.stream()
-				.filter(projectToolConfig -> projectToolConfig.getId().equals(new ObjectId(projectToolId))).findFirst();
+		List<ProjectToolConfig> toolList =
+				toolRepository.findByBasicProjectConfigId(new ObjectId(basicProjectConfigId));
+		Optional<ProjectToolConfig> optionalProjectToolConfig =
+				toolList.stream()
+						.filter(
+								projectToolConfig -> projectToolConfig.getId().equals(new ObjectId(projectToolId)))
+						.findFirst();
 		if (!optionalProjectToolConfig.isPresent()) {
 			throw new ToolNotFoundException(TOOL_NOT_FOUND);
 		}
 		ProjectToolConfig tool = optionalProjectToolConfig.get();
 		if (isValidTool(basicProjectConfigId, tool)) {
 			if (isRepoTool(tool, basicProjectConfigId)) {
-				repoToolsConfigService.updateRepoToolProjectConfiguration(toolList.stream()
-						.filter(projectToolConfig -> projectToolConfig.getToolName().equals(tool.getToolName()))
-						.toList(), tool, basicProjectConfigId);
+				repoToolsConfigService.updateRepoToolProjectConfiguration(
+						toolList.stream()
+								.filter(
+										projectToolConfig -> projectToolConfig.getToolName().equals(tool.getToolName()))
+								.toList(),
+						tool,
+						basicProjectConfigId);
 			}
 			cleanData(tool);
 			toolRepository.deleteById(new ObjectId(projectToolId));
@@ -347,20 +360,27 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 
 			return true;
 		} else {
-			log.error("basicConfigId = {}, toolConfigId = {} - not found", basicProjectConfigId, projectToolId);
+			log.error(
+					"basicConfigId = {}, toolConfigId = {} - not found", basicProjectConfigId, projectToolId);
 			throw new ToolNotFoundException(TOOL_NOT_FOUND);
 		}
 	}
 
 	private boolean isRepoTool(ProjectToolConfig tool, String basicProjectConfigId) {
-		ProjectBasicConfig projectBasicConfig = configHelperService.getProjectConfig(basicProjectConfigId);
-		List<String> scmToolList = Arrays.asList(ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
-				ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
+		ProjectBasicConfig projectBasicConfig =
+				configHelperService.getProjectConfig(basicProjectConfigId);
+		List<String> scmToolList =
+				Arrays.asList(
+						ProcessorConstants.BITBUCKET,
+						ProcessorConstants.GITLAB,
+						ProcessorConstants.GITHUB,
+						ProcessorConstants.AZUREREPO);
 		return scmToolList.contains(tool.getToolName()) && projectBasicConfig.isDeveloperKpiEnabled();
 	}
 
 	private void cleanData(ProjectToolConfig tool) {
-		ToolDataCleanUpService dataCleanUpService = dataCleanUpServiceFactory.getService(tool.getToolName());
+		ToolDataCleanUpService dataCleanUpService =
+				dataCleanUpServiceFactory.getService(tool.getToolName());
 		if (dataCleanUpService != null) {
 			dataCleanUpService.clean(tool.getId().toHexString());
 		}
@@ -368,7 +388,8 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 
 	private boolean isValidTool(String basicProjectConfigId, ProjectToolConfig tool) {
 
-		return tool != null && tool.getBasicProjectConfigId().toHexString().equals(basicProjectConfigId);
+		return tool != null
+				&& tool.getBasicProjectConfigId().toHexString().equals(basicProjectConfigId);
 	}
 
 	public boolean valid(ProjectToolConfig projectToolConfig) {
@@ -391,80 +412,91 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	private List<ProjectToolConfigDTO> mapJiraSubProject(List<ProjectToolConfig> toolTypeList) {
 		List<ProjectToolConfigDTO> projectConfToolDtoList;
 		projectConfToolDtoList = mapSubProjects(toolTypeList);
-		List<ObjectId> toolConfiragrationIds = toolTypeList.stream().map(ProjectToolConfig::getId)
-				.collect(Collectors.toList());
-		List<Subproject> subProjectList = subProjectRepository.findBytoolConfigIdIn(toolConfiragrationIds);
-		Map<ObjectId, List<Subproject>> subProjectMap = subProjectList.stream()
-				.collect(Collectors.groupingBy(Subproject::getToolConfigId));
+		List<ObjectId> toolConfiragrationIds =
+				toolTypeList.stream().map(ProjectToolConfig::getId).collect(Collectors.toList());
+		List<Subproject> subProjectList =
+				subProjectRepository.findBytoolConfigIdIn(toolConfiragrationIds);
+		Map<ObjectId, List<Subproject>> subProjectMap =
+				subProjectList.stream().collect(Collectors.groupingBy(Subproject::getToolConfigId));
 		if (CollectionUtils.isNotEmpty(subProjectList)) {
-			projectConfToolDtoList.forEach(e -> e.setSubprojects(subProjectMap.get(new ObjectId(e.getId()))));
+			projectConfToolDtoList.forEach(
+					e -> e.setSubprojects(subProjectMap.get(new ObjectId(e.getId()))));
 		}
 		return projectConfToolDtoList;
 	}
 
 	private List<ProjectToolConfigDTO> mapSubProjects(List<ProjectToolConfig> toolTypeList) {
 		List<ProjectToolConfigDTO> projectConfToolDtoList = new ArrayList<>();
-		toolTypeList.forEach(e -> {
-			ProjectToolConfigDTO projectConfToolDto = new ProjectToolConfigDTO();
-			projectConfToolDto.setApiVersion(e.getApiVersion());
-			projectConfToolDto.setBasicProjectConfigId(e.getBasicProjectConfigId());
-			projectConfToolDto.setBranch(e.getBranch());
-			projectConfToolDto.setDefaultBranch(e.getDefaultBranch());
-			projectConfToolDto.setConnectionId(e.getConnectionId());
-			projectConfToolDto.setBrokenConnection(e.isBrokenConnection());
-			projectConfToolDto.setId(e.getId().toString());
-			projectConfToolDto.setToolName(e.getToolName());
-			projectConfToolDto.setProjectId(e.getProjectId());
-			projectConfToolDto.setGitLabID(e.getGitLabID());
-			projectConfToolDto.setProjectKey(e.getProjectKey());
-			projectConfToolDto.setJobName(e.getJobName());
-			projectConfToolDto.setAzurePipelineName(e.getAzurePipelineName());
-			projectConfToolDto.setJobType(e.getJobType());
-			projectConfToolDto.setEnv(e.getEnv());
-			projectConfToolDto.setRepoSlug(e.getRepoSlug());
-			projectConfToolDto.setRepositoryName(e.getRepositoryName());
-			projectConfToolDto.setGitFullUrl(e.getGitFullUrl());
-			projectConfToolDto.setBitbucketProjKey(e.getBitbucketProjKey());
-			projectConfToolDto.setCreatedAt(DateUtil.tranformUTCLocalDateTimeStringToZFormat(e.getCreatedAt()));
-			projectConfToolDto.setUpdatedAt(DateUtil.tranformUTCLocalDateTimeStringToZFormat(e.getUpdatedAt()));
-			projectConfToolDto.setQueryEnabled(e.isQueryEnabled());
-			projectConfToolDto.setBoardQuery(e.getBoardQuery());
-			projectConfToolDto.setBoards(e.getBoards());
-			projectConfToolDto.setMetadataTemplateCode(e.getMetadataTemplateCode());
-			projectConfToolDto.setOriginalTemplateCode(e.getOriginalTemplateCode());
-			projectConfToolDto.setRegressionAutomationLabels(e.getRegressionAutomationLabels());
-			projectConfToolDto.setTestAutomationStatusLabel(e.getTestAutomationStatusLabel());
-			projectConfToolDto.setAutomatedTestValue(e.getAutomatedTestValue());
-			projectConfToolDto.setTestAutomated(e.getTestAutomated());
-			projectConfToolDto.setCanNotAutomatedTestValue(e.getCanNotAutomatedTestValue());
-			projectConfToolDto.setTestRegressionLabel(e.getTestRegressionLabel());
-			projectConfToolDto.setTestRegressionValue(e.getTestRegressionValue());
-			projectConfToolDto.setRegressionAutomationFolderPath(e.getRegressionAutomationFolderPath());
-			projectConfToolDto.setInSprintAutomationFolderPath(e.getInSprintAutomationFolderPath());
-			projectConfToolDto.setOrganizationKey(e.getOrganizationKey());
-			projectConfToolDto.setDeploymentProjectId(e.getDeploymentProjectId());
-			projectConfToolDto.setDeploymentProjectName(e.getDeploymentProjectName());
-			projectConfToolDto.setParameterNameForEnvironment(e.getParameterNameForEnvironment());
-			projectConfToolDto.setConnectionName(getConnection(e.getConnectionId()).getConnectionName());
-			projectConfToolDto.setTeam(e.getTeam());
-			projectConfToolDtoList.add(projectConfToolDto);
-			projectConfToolDto.setJiraTestCaseType(e.getJiraTestCaseType());
-			projectConfToolDto.setTestAutomatedIdentification(e.getTestAutomatedIdentification());
-			projectConfToolDto.setTestAutomationCompletedIdentification(e.getTestAutomationCompletedIdentification());
-			projectConfToolDto.setTestRegressionIdentification(e.getTestRegressionIdentification());
-			projectConfToolDto.setTestAutomationCompletedByCustomField(e.getTestAutomationCompletedByCustomField());
-			projectConfToolDto.setTestRegressionByCustomField(e.getTestRegressionByCustomField());
-			projectConfToolDto.setJiraAutomatedTestValue(e.getJiraAutomatedTestValue());
-			projectConfToolDto.setJiraRegressionTestValue(e.getJiraRegressionTestValue());
-			projectConfToolDto.setJiraCanBeAutomatedTestValue(e.getJiraCanBeAutomatedTestValue());
-			projectConfToolDto.setTestCaseStatus(e.getTestCaseStatus());
-			projectConfToolDto.setGitLabSdmID(e.getGitLabSdmID());
-			projectConfToolDto.setAzureIterationStatusFieldUpdate(e.isAzureIterationStatusFieldUpdate());
-			projectConfToolDto.setIsNew(e.getIsNew());
-			projectConfToolDto.setConnectionName(getConnection(e.getConnectionId()).getConnectionName());
-			projectConfToolDto.setProjectComponent(e.getProjectComponent());
-			projectConfToolDto.setJiraConfigurationType(e.getJiraConfigurationType());
-		});
+		toolTypeList.forEach(
+				e -> {
+					ProjectToolConfigDTO projectConfToolDto = new ProjectToolConfigDTO();
+					projectConfToolDto.setApiVersion(e.getApiVersion());
+					projectConfToolDto.setBasicProjectConfigId(e.getBasicProjectConfigId());
+					projectConfToolDto.setBranch(e.getBranch());
+					projectConfToolDto.setDefaultBranch(e.getDefaultBranch());
+					projectConfToolDto.setConnectionId(e.getConnectionId());
+					projectConfToolDto.setBrokenConnection(e.isBrokenConnection());
+					projectConfToolDto.setId(e.getId().toString());
+					projectConfToolDto.setToolName(e.getToolName());
+					projectConfToolDto.setProjectId(e.getProjectId());
+					projectConfToolDto.setGitLabID(e.getGitLabID());
+					projectConfToolDto.setProjectKey(e.getProjectKey());
+					projectConfToolDto.setJobName(e.getJobName());
+					projectConfToolDto.setAzurePipelineName(e.getAzurePipelineName());
+					projectConfToolDto.setJobType(e.getJobType());
+					projectConfToolDto.setEnv(e.getEnv());
+					projectConfToolDto.setRepoSlug(e.getRepoSlug());
+					projectConfToolDto.setRepositoryName(e.getRepositoryName());
+					projectConfToolDto.setGitFullUrl(e.getGitFullUrl());
+					projectConfToolDto.setBitbucketProjKey(e.getBitbucketProjKey());
+					projectConfToolDto.setCreatedAt(
+							DateUtil.tranformUTCLocalDateTimeStringToZFormat(e.getCreatedAt()));
+					projectConfToolDto.setUpdatedAt(
+							DateUtil.tranformUTCLocalDateTimeStringToZFormat(e.getUpdatedAt()));
+					projectConfToolDto.setQueryEnabled(e.isQueryEnabled());
+					projectConfToolDto.setBoardQuery(e.getBoardQuery());
+					projectConfToolDto.setBoards(e.getBoards());
+					projectConfToolDto.setMetadataTemplateCode(e.getMetadataTemplateCode());
+					projectConfToolDto.setOriginalTemplateCode(e.getOriginalTemplateCode());
+					projectConfToolDto.setRegressionAutomationLabels(e.getRegressionAutomationLabels());
+					projectConfToolDto.setTestAutomationStatusLabel(e.getTestAutomationStatusLabel());
+					projectConfToolDto.setAutomatedTestValue(e.getAutomatedTestValue());
+					projectConfToolDto.setTestAutomated(e.getTestAutomated());
+					projectConfToolDto.setCanNotAutomatedTestValue(e.getCanNotAutomatedTestValue());
+					projectConfToolDto.setTestRegressionLabel(e.getTestRegressionLabel());
+					projectConfToolDto.setTestRegressionValue(e.getTestRegressionValue());
+					projectConfToolDto.setRegressionAutomationFolderPath(
+							e.getRegressionAutomationFolderPath());
+					projectConfToolDto.setInSprintAutomationFolderPath(e.getInSprintAutomationFolderPath());
+					projectConfToolDto.setOrganizationKey(e.getOrganizationKey());
+					projectConfToolDto.setDeploymentProjectId(e.getDeploymentProjectId());
+					projectConfToolDto.setDeploymentProjectName(e.getDeploymentProjectName());
+					projectConfToolDto.setParameterNameForEnvironment(e.getParameterNameForEnvironment());
+					projectConfToolDto.setConnectionName(
+							getConnection(e.getConnectionId()).getConnectionName());
+					projectConfToolDto.setTeam(e.getTeam());
+					projectConfToolDtoList.add(projectConfToolDto);
+					projectConfToolDto.setJiraTestCaseType(e.getJiraTestCaseType());
+					projectConfToolDto.setTestAutomatedIdentification(e.getTestAutomatedIdentification());
+					projectConfToolDto.setTestAutomationCompletedIdentification(
+							e.getTestAutomationCompletedIdentification());
+					projectConfToolDto.setTestRegressionIdentification(e.getTestRegressionIdentification());
+					projectConfToolDto.setTestAutomationCompletedByCustomField(
+							e.getTestAutomationCompletedByCustomField());
+					projectConfToolDto.setTestRegressionByCustomField(e.getTestRegressionByCustomField());
+					projectConfToolDto.setJiraAutomatedTestValue(e.getJiraAutomatedTestValue());
+					projectConfToolDto.setJiraRegressionTestValue(e.getJiraRegressionTestValue());
+					projectConfToolDto.setJiraCanBeAutomatedTestValue(e.getJiraCanBeAutomatedTestValue());
+					projectConfToolDto.setTestCaseStatus(e.getTestCaseStatus());
+					projectConfToolDto.setGitLabSdmID(e.getGitLabSdmID());
+					projectConfToolDto.setAzureIterationStatusFieldUpdate(
+							e.isAzureIterationStatusFieldUpdate());
+					projectConfToolDto.setIsNew(e.getIsNew());
+					projectConfToolDto.setConnectionName(
+							getConnection(e.getConnectionId()).getConnectionName());
+					projectConfToolDto.setProjectComponent(e.getProjectComponent());
+					projectConfToolDto.setJiraConfigurationType(e.getJiraConfigurationType());
+				});
 
 		return projectConfToolDtoList;
 	}
@@ -478,29 +510,39 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	}
 
 	private boolean hasTool(ObjectId basicProjectConfigId, String type) {
-		List<ProjectToolConfig> tools = toolRepository.findByToolNameAndBasicProjectConfigId(type, basicProjectConfigId);
+		List<ProjectToolConfig> tools =
+				toolRepository.findByToolNameAndBasicProjectConfigId(type, basicProjectConfigId);
 		return CollectionUtils.isNotEmpty(tools);
 	}
 
-	private List<ProjectToolConfig> getRepoTool(ObjectId basicProjectConfigId, Connection connection, String type) {
-		List<ProjectToolConfig> tools = toolRepository.findByToolNameAndBasicProjectConfigId(type, basicProjectConfigId);
-		return tools.stream().filter(projectToolConfig -> projectToolConfig.getConnectionId().equals(connection.getId()))
+	private List<ProjectToolConfig> getRepoTool(
+			ObjectId basicProjectConfigId, Connection connection, String type) {
+		List<ProjectToolConfig> tools =
+				toolRepository.findByToolNameAndBasicProjectConfigId(type, basicProjectConfigId);
+		return tools.stream()
+				.filter(projectToolConfig -> projectToolConfig.getConnectionId().equals(connection.getId()))
 				.toList();
 	}
 
 	private ServiceResponse setRepoToolConfig(ProjectToolConfig projectToolConfig) {
 		Connection connection = getConnection(projectToolConfig.getConnectionId());
-		List<ProjectToolConfig> repoConfigList = getRepoTool(projectToolConfig.getBasicProjectConfigId(), connection,
-				projectToolConfig.getToolName());
-		List<String> branchList = repoConfigList.stream().map(ProjectToolConfig::getBranch).filter(Objects::nonNull)
-				.collect(Collectors.toList());
+		List<ProjectToolConfig> repoConfigList =
+				getRepoTool(
+						projectToolConfig.getBasicProjectConfigId(),
+						connection,
+						projectToolConfig.getToolName());
+		List<String> branchList =
+				repoConfigList.stream()
+						.map(ProjectToolConfig::getBranch)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toList());
 		projectToolConfig.setIsNew(CollectionUtils.isEmpty(repoConfigList));
 		if (projectToolConfig.getBranch() == null) {
 			branchList.add(projectToolConfig.getDefaultBranch());
 			projectToolConfig.setBranch(projectToolConfig.getDefaultBranch());
-		} else
-			branchList.add(projectToolConfig.getBranch());
-		return repoToolsConfigService.configureRepoToolProject(projectToolConfig, connection, branchList);
+		} else branchList.add(projectToolConfig.getBranch());
+		return repoToolsConfigService.configureRepoToolProject(
+				projectToolConfig, connection, branchList);
 	}
 
 	@Override
@@ -508,12 +550,14 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		ProjectToolConfig tool = toolRepository.findById(projectToolId);
 		if (isValidTool(basicProjectConfigId, tool)) {
 			if (isRepoTool(tool, basicProjectConfigId)) {
-				repoToolsConfigService.deleteRepoToolProject(configHelperService.getProjectConfig(basicProjectConfigId), true);
+				repoToolsConfigService.deleteRepoToolProject(
+						configHelperService.getProjectConfig(basicProjectConfigId), true);
 			}
 			cleanData(tool);
 			return true;
 		} else {
-			log.error("basicConfigId = {}, toolConfigId = {} - not found", basicProjectConfigId, projectToolId);
+			log.error(
+					"basicConfigId = {}, toolConfigId = {} - not found", basicProjectConfigId, projectToolId);
 			throw new ToolNotFoundException(TOOL_NOT_FOUND);
 		}
 	}

@@ -60,14 +60,10 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class ReleaseDefectCountByRCAServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	private ReleaseDefectCountByRCAServiceImpl defectCountByRCAService;
-	@Mock
-	private JiraReleaseServiceR jiraService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks private ReleaseDefectCountByRCAServiceImpl defectCountByRCAService;
+	@Mock private JiraReleaseServiceR jiraService;
 
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
@@ -79,34 +75,43 @@ public class ReleaseDefectCountByRCAServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi141");
 		kpiRequest.setLabel("RELEASE");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/account_hierarchy_filter_data_release.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/account_hierarchy_filter_data_release.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		bugList = jiraIssueDataFactory.getBugs();
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 	}
 
 	@Test
 	public void getQualifierType() {
-		assertThat(defectCountByRCAService.getQualifierType(), equalTo(KPICode.DEFECT_COUNT_BY_RCA_RELEASE.name()));
+		assertThat(
+				defectCountByRCAService.getQualifierType(),
+				equalTo(KPICode.DEFECT_COUNT_BY_RCA_RELEASE.name()));
 	}
 
 	@Test
 	public void getKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesForSelectedRelease()).thenReturn(bugList);
-		KpiElement kpiElement = defectCountByRCAService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
-		List<IterationKpiValue> trendValueList = (List<IterationKpiValue>) kpiElement.getTrendValueList();
+		KpiElement kpiElement =
+				defectCountByRCAService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
+		List<IterationKpiValue> trendValueList =
+				(List<IterationKpiValue>) kpiElement.getTrendValueList();
 		assertNotNull(kpiElement.getTrendValueList());
 		assertTrue(trendValueList.get(0).getFilter1().equalsIgnoreCase("Open Defects"));
 		assertTrue(trendValueList.get(1).getFilter1().equalsIgnoreCase("Total Defects"));

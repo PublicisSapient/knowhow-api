@@ -74,24 +74,15 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectBas
 public class CostOfDelayServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	CostOfDelayServiceImpl costOfDelayServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks CostOfDelayServiceImpl costOfDelayServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock FilterHelperService filterHelperService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
 
 	private Map<String, Object> filterLevelMap;
 	private List<JiraIssue> codList = new ArrayList<>();
@@ -117,13 +108,14 @@ public class CostOfDelayServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -131,30 +123,34 @@ public class CostOfDelayServiceImplTest {
 
 		kpiWiseAggregation.put("cost_Of_Delay", "sum");
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		codList = jiraIssueDataFactory.getJiraIssues();
 		codHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
-		codHistoryList.stream().map(JiraIssueCustomHistory::getStatusUpdationLog).forEach(f -> {
-			f.forEach(g -> g.setUpdatedOn(LocalDateTime.now().minusDays(2)));
-		});
+		codHistoryList.stream()
+				.map(JiraIssueCustomHistory::getStatusUpdationLog)
+				.forEach(
+						f -> {
+							f.forEach(g -> g.setUpdatedOn(LocalDateTime.now().minusDays(2)));
+						});
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -164,20 +160,23 @@ public class CostOfDelayServiceImplTest {
 		resultListMap.put(COD_DATA, codList);
 		resultListMap.put(COD_DATA_HISTORY, codHistoryList);
 		resultListMap.put(FIELD_MAPPING, new HashMap<>());
-		when(kpiDataCacheService.fetchCostOfDelayData(Mockito.any(), Mockito.any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchCostOfDelayData(Mockito.any(), Mockito.any()))
+				.thenReturn(resultListMap);
 
-		Map<String, Object> dataList = costOfDelayServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
+		Map<String, Object> dataList =
+				costOfDelayServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 		assertThat("Total Release : ", dataList.size(), equalTo(3));
 	}
 
 	@Test
 	public void testGetKPIList() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(customApiSetting.getJiraXaxisMonthCount()).thenReturn(5);
 		when(costOfDelayServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
@@ -188,12 +187,15 @@ public class CostOfDelayServiceImplTest {
 		resultListMap.put(COD_DATA, codList);
 		resultListMap.put(COD_DATA_HISTORY, codHistoryList);
 		resultListMap.put(FIELD_MAPPING, closedStatusMap);
-		when(kpiDataCacheService.fetchCostOfDelayData(Mockito.any(), Mockito.any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchCostOfDelayData(Mockito.any(), Mockito.any()))
+				.thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = costOfDelayServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("KpiElement : ", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					costOfDelayServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"KpiElement : ", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (ApplicationException enfe) {
 
 		}
@@ -202,11 +204,13 @@ public class CostOfDelayServiceImplTest {
 	@Test
 	public void testGetStoryList() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(costOfDelayServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
@@ -216,11 +220,13 @@ public class CostOfDelayServiceImplTest {
 		resultListMap.put(COD_DATA, codList);
 		resultListMap.put(COD_DATA_HISTORY, codHistoryList);
 		resultListMap.put(FIELD_MAPPING, closedStatusMap);
-		when(kpiDataCacheService.fetchCostOfDelayData(Mockito.any(), Mockito.any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchCostOfDelayData(Mockito.any(), Mockito.any()))
+				.thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = costOfDelayServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					costOfDelayServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat("KpiElement : ", kpiElement.getValue(), equalTo(null));
 		} catch (ApplicationException enfe) {
 

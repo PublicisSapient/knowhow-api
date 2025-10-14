@@ -31,7 +31,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "r_conn_share_with_everyone", order = "010104", author = "shunaray", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "r_conn_share_with_everyone",
+		order = "010104",
+		author = "shunaray",
+		systemVersion = "10.1.0")
 public class ConnectionShare {
 
 	public static final String SHARED_CONNECTION = "sharedConnection";

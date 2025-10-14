@@ -36,20 +36,13 @@ public class SignupManager {
 	private static final String PRE_APPROVAL_NOTIFICATION_SUBJECT_KEY = "preApproval";
 	private static final String PRE_APPROVAL_NOTIFICATION_KEY = "Pre_Approval";
 
-	@Autowired
-	private AuthenticationService authenticationService;
-	@Autowired
-	private AuthenticationRepository authenticationRepository;
-	@Autowired
-	private UserInfoRepository userInfoRepository;
-	@Autowired
-	private CommonService commonService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private NotificationService notificationService;
-	@Autowired
-	private TokenAuthenticationService tokenAuthenticationService;
+	@Autowired private AuthenticationService authenticationService;
+	@Autowired private AuthenticationRepository authenticationRepository;
+	@Autowired private UserInfoRepository userInfoRepository;
+	@Autowired private CommonService commonService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private NotificationService notificationService;
+	@Autowired private TokenAuthenticationService tokenAuthenticationService;
 
 	/**
 	 * when grant is provided to user
@@ -59,7 +52,8 @@ public class SignupManager {
 	 */
 	public void grantAccess(String username, GrantApprovalListener grantApprovalListener) {
 		String loggedInUser = authenticationService.getLoggedInUser();
-		String superAdminEmail = authenticationRepository.findByUsername(loggedInUser).getEmail().toLowerCase();
+		String superAdminEmail =
+				authenticationRepository.findByUsername(loggedInUser).getEmail().toLowerCase();
 		Authentication authentication = getAuthenticationByUserName(username);
 		if (authentication.isApproved()) {
 			if (grantApprovalListener != null) {
@@ -68,14 +62,16 @@ public class SignupManager {
 		} else {
 			if (grantApprovalListener != null) {
 				authentication.setApproved(true);
-				Authentication updateAuthenticationApprovalStatus = updateAuthenticationApprovalStatus(authentication);
+				Authentication updateAuthenticationApprovalStatus =
+						updateAuthenticationApprovalStatus(authentication);
 				grantApprovalListener.onSuccess(updateAuthenticationApprovalStatus);
 				tokenAuthenticationService.updateExpiryDate(username, LocalDateTime.now().toString());
 				List<String> emailAddresses = new ArrayList<>();
 				emailAddresses.add(updateAuthenticationApprovalStatus.getEmail().toLowerCase());
 				String serverPath = getServerPath();
 				Map<String, String> customData = createCustomData("", "", serverPath, superAdminEmail);
-				sendEmailNotification(emailAddresses, customData, APPROVAL_SUBJECT_KEY, NOTIFICATION_KEY_SUCCESS);
+				sendEmailNotification(
+						emailAddresses, customData, APPROVAL_SUBJECT_KEY, NOTIFICATION_KEY_SUCCESS);
 			}
 		}
 	}
@@ -90,21 +86,25 @@ public class SignupManager {
 		try {
 			serverPath = commonService.getApiHost();
 		} catch (UnknownHostException e) {
-			log.error("ApproveRequestController: Server Host name is not bind with Approval Request mail ");
+			log.error(
+					"ApproveRequestController: Server Host name is not bind with Approval Request mail ");
 		}
 		return serverPath;
 	}
 
 	/**
-	 * send notification to super admin for approval and notification to user for
-	 * the status of the request
+	 * send notification to super admin for approval and notification to user for the status of the
+	 * request
 	 *
 	 * @param emailAddresses
 	 * @param customData
 	 * @param subjectKey
 	 * @param notKey
 	 */
-	public void sendEmailNotification(List<String> emailAddresses, Map<String, String> customData, String subjectKey,
+	public void sendEmailNotification(
+			List<String> emailAddresses,
+			Map<String, String> customData,
+			String subjectKey,
 			String notKey) {
 		Map<String, String> notificationSubjects = customApiConfig.getNotificationSubject();
 		if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(emailAddresses)
@@ -112,11 +112,12 @@ public class SignupManager {
 			String subject = notificationSubjects.get(subjectKey);
 			log.info("Notification message sent with key : {}", notKey);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(notKey, "");
-			notificationService.sendNotificationEvent(emailAddresses, customData, subject,
-					customApiConfig.isNotificationSwitch(), templateKey);
+			notificationService.sendNotificationEvent(
+					emailAddresses, customData, subject, customApiConfig.isNotificationSwitch(), templateKey);
 		} else {
-			log.error("Notification Event not sent : No email address found "
-					+ "or Property - notificationSubject.accessRequest not set in property file ");
+			log.error(
+					"Notification Event not sent : No email address found "
+							+ "or Property - notificationSubject.accessRequest not set in property file ");
 		}
 	}
 
@@ -129,7 +130,8 @@ public class SignupManager {
 	 * @param adminEmail
 	 * @return
 	 */
-	private Map<String, String> createCustomData(String username, String email, String serverPath, String adminEmail) {
+	private Map<String, String> createCustomData(
+			String username, String email, String serverPath, String adminEmail) {
 		Map<String, String> customData = new HashMap<>();
 		customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), username);
 		customData.put(NotificationCustomDataEnum.USER_EMAIL.getValue(), email);
@@ -145,9 +147,11 @@ public class SignupManager {
 	public void rejectAccessRequest(String username, RejectApprovalListener listener) {
 
 		String loggedInUser = authenticationService.getLoggedInUser();
-		String superAdminEmail = authenticationRepository.findByUsername(loggedInUser).getEmail().toLowerCase();
+		String superAdminEmail =
+				authenticationRepository.findByUsername(loggedInUser).getEmail().toLowerCase();
 		Authentication authentication = getAuthenticationByUserName(username);
-		Authentication updatedAuthenticationRequest = updateAuthenticationApprovalStatus(authentication);
+		Authentication updatedAuthenticationRequest =
+				updateAuthenticationApprovalStatus(authentication);
 		if (updatedAuthenticationRequest.isApproved()) {
 			if (listener != null) {
 				listener.onFailure(authentication, "Failed to reject the request");
@@ -158,7 +162,8 @@ public class SignupManager {
 				emailAddresses.add(authentication.getEmail().toLowerCase());
 				String serverPath = getServerPath();
 				Map<String, String> customData = createCustomData("", "", serverPath, superAdminEmail);
-				sendEmailNotification(emailAddresses, customData, APPROVAL_SUBJECT_KEY, NOTIFICATION_KEY_REJECT);
+				sendEmailNotification(
+						emailAddresses, customData, APPROVAL_SUBJECT_KEY, NOTIFICATION_KEY_REJECT);
 				deleteUserById(username);
 				listener.onSuccess(updatedAuthenticationRequest);
 			}
@@ -185,7 +190,8 @@ public class SignupManager {
 		if (authenticationById == null) {
 			log.info("Sign up request is not deleted for the user: ", username);
 		} else {
-			userInfoRepository.deleteById(userInfoRepository.findByUsername(authenticationById.getUsername()).getId());
+			userInfoRepository.deleteById(
+					userInfoRepository.findByUsername(authenticationById.getUsername()).getId());
 			authenticationRepository.delete(authenticationById);
 			isDeleted = true;
 			log.info("Sign up request is deleted for the user: ", username);
@@ -208,11 +214,14 @@ public class SignupManager {
 	 * @param email
 	 */
 	public void sendUserPreApprovalRequestEmailToAdmin(String username, String email) {
-		List<String> emailAddresses = commonService
-				.getEmailAddressBasedOnRoles(Arrays.asList(Constant.ROLE_SUPERADMIN));
+		List<String> emailAddresses =
+				commonService.getEmailAddressBasedOnRoles(Arrays.asList(Constant.ROLE_SUPERADMIN));
 		String serverPath = getServerPath();
 		Map<String, String> customData = createCustomData(username, email, serverPath, "");
-		sendEmailNotification(emailAddresses, customData, PRE_APPROVAL_NOTIFICATION_SUBJECT_KEY,
+		sendEmailNotification(
+				emailAddresses,
+				customData,
+				PRE_APPROVAL_NOTIFICATION_SUBJECT_KEY,
 				PRE_APPROVAL_NOTIFICATION_KEY);
 	}
 }

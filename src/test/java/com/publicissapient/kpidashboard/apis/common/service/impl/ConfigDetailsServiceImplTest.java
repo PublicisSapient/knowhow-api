@@ -42,12 +42,9 @@ public class ConfigDetailsServiceImplTest {
 
 	private static final String PERCENTILE = "percentile";
 	private static final String SUM = "sum";
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	private ConfigDetailsServiceImpl configDetailsServiceImpl;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks private ConfigDetailsServiceImpl configDetailsServiceImpl;
+	@Mock private CustomApiConfig customApiConfig;
 	private Map<String, String> kpiWiseAggregation;
 	private DateRangeFilter dateRangeFilter;
 
@@ -71,12 +68,12 @@ public class ConfigDetailsServiceImplTest {
 		kpiWiseAggregation.put("codeBuildTime", PERCENTILE);
 		kpiWiseAggregation.put("defectInjectionRate", PERCENTILE);
 		kpiWiseAggregation.put("storyCount", SUM);
-		dateRangeFilter = new DateRangeFilter(Arrays.asList("Weeks", "Days", "Months"), Arrays.asList(5, 10, 15));
+		dateRangeFilter =
+				new DateRangeFilter(Arrays.asList("Weeks", "Days", "Months"), Arrays.asList(5, 10, 15));
 	}
 
 	@After
-	public void after() {
-	}
+	public void after() {}
 
 	@Test
 	public void testConfigDetails() throws Exception {
@@ -84,12 +81,14 @@ public class ConfigDetailsServiceImplTest {
 		Mockito.when(customApiConfig.getPercentileValue()).thenReturn(90d);
 		Mockito.when(customApiConfig.getHierarchySelectionCount()).thenReturn(3);
 		Mockito.when(customApiConfig.getDateRangeFilterCounts()).thenReturn(Arrays.asList(5, 10, 15));
-		Mockito.when(customApiConfig.getDateRangeFilterTypes()).thenReturn(Arrays.asList("Days", "Weeks", "Months"));
+		Mockito.when(customApiConfig.getDateRangeFilterTypes())
+				.thenReturn(Arrays.asList("Days", "Weeks", "Months"));
 		Mockito.when(customApiConfig.getSprintCountForKpiCalculation()).thenReturn(5);
 
 		ConfigDetails configDetail = getConfigDetailsObject();
 		ConfigDetails configDetails = configDetailsServiceImpl.getConfigDetails();
-		Assert.assertEquals(configDetail.getKpiWiseAggregationType(), configDetails.getKpiWiseAggregationType());
+		Assert.assertEquals(
+				configDetail.getKpiWiseAggregationType(), configDetails.getKpiWiseAggregationType());
 	}
 
 	private ConfigDetails getConfigDetailsObject() {

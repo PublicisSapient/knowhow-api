@@ -79,26 +79,16 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BacklogReadinessEfficiencyServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@InjectMocks
-	BacklogReadinessEfficiencyServiceImpl backlogReadinessEfficiencyServiceImpl;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private JiraBacklogServiceR jiraService;
-	@Mock
-	private SprintVelocityServiceHelper velocityServiceHelper;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock CacheService cacheService;
+	@InjectMocks BacklogReadinessEfficiencyServiceImpl backlogReadinessEfficiencyServiceImpl;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private JiraBacklogServiceR jiraService;
+	@Mock private SprintVelocityServiceHelper velocityServiceHelper;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private FilterHelperService filterHelperService;
 
 	private KpiRequest kpiRequest;
 	private List<JiraIssue> storyList = new ArrayList<>();
@@ -116,8 +106,8 @@ public class BacklogReadinessEfficiencyServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -133,26 +123,32 @@ public class BacklogReadinessEfficiencyServiceImplTest {
 		stringListMap.put("sprint", sprintList);
 		kpiRequest.setSelectedMap(stringListMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 
-		JiraIssueHistoryDataFactory jiraIssueCustomHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueCustomHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistories = jiraIssueCustomHistoryDataFactory.getJiraIssueCustomHistory();
 	}
 
 	@Test
 	public void testGetKpiDataProject_closedSprint() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
 
 		List<SprintDetails> sprintDetailsList = new ArrayList<>();
 		sprintDetailsList.add(sprintDetails);
@@ -160,27 +156,35 @@ public class BacklogReadinessEfficiencyServiceImplTest {
 		sprintVelocityStoryMap.put("sprintVelocityKey", storyList);
 		sprintVelocityStoryMap.put("sprintWiseSprintDetailMap", sprintDetailsList);
 
-		when(kpiHelperService.fetchBackLogReadinessFromdb(any(), any())).thenReturn(sprintVelocityStoryMap);
+		when(kpiHelperService.fetchBackLogReadinessFromdb(any(), any()))
+				.thenReturn(sprintVelocityStoryMap);
 
-		when(jiraIssueCustomHistoryRepository.findByStoryIDIn(any())).thenReturn(jiraIssueCustomHistories);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDIn(any()))
+				.thenReturn(jiraIssueCustomHistories);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findIssuesBySprintAndType(any(), any())).thenReturn(storyList);
 		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(new JiraIssueReleaseStatus());
-		when(backlogReadinessEfficiencyServiceImpl.getBackLogStory(new ObjectId("6335363749794a18e8a4479b")))
+		when(backlogReadinessEfficiencyServiceImpl.getBackLogStory(
+						new ObjectId("6335363749794a18e8a4479b")))
 				.thenReturn(storyList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(velocityServiceHelper.calculateSprintVelocityValue(any(), any(), any())).thenReturn(10.0);
 		doNothing().when(velocityServiceHelper).getSprintIssuesForProject(any(), any(), any());
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(backlogReadinessEfficiencyServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(backlogReadinessEfficiencyServiceImpl.getRequestTrackerId())
+				.thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getSprintCountForBackLogStrength()).thenReturn(5);
 		when(filterHelperService.getFilteredBuilds(any(), any())).thenReturn(accountHierarchyDataList);
 		try {
-			KpiElement kpiElement = backlogReadinessEfficiencyServiceImpl.getKpiData(kpiRequest,
-					kpiRequest.getKpiList().get(0), treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					backlogReadinessEfficiencyServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertNotNull((DataCount) kpiElement.getTrendValueList());
 
 		} catch (ApplicationException enfe) {
@@ -190,7 +194,8 @@ public class BacklogReadinessEfficiencyServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		Assert.assertEquals(backlogReadinessEfficiencyServiceImpl.getQualifierType(), "BACKLOG_READINESS_EFFICIENCY");
+		Assert.assertEquals(
+				backlogReadinessEfficiencyServiceImpl.getQualifierType(), "BACKLOG_READINESS_EFFICIENCY");
 	}
 
 	@Test

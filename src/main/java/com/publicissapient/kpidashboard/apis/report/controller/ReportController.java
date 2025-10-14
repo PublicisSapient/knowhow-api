@@ -49,26 +49,24 @@ public class ReportController {
 	/**
 	 * Creates a new report.
 	 *
-	 * @param report
-	 *          the report data transfer object
+	 * @param report the report data transfer object
 	 * @return the service response containing the created report
 	 */
 	@PostMapping
 	public ServiceResponse create(@Valid @RequestBody ReportRequest report) {
-		log.info("Received request to create a report with name: {}", CommonUtils.sanitize(report.getName()));
+		log.info(
+				"Received request to create a report with name: {}",
+				CommonUtils.sanitize(report.getName()));
 		return reportService.create(report);
 	}
 
 	/**
 	 * Updates an existing report.
 	 *
-	 * @param id
-	 *          the report ID
-	 * @param report
-	 *          the report data transfer object
+	 * @param id the report ID
+	 * @param report the report data transfer object
 	 * @return the service response containing the updated report
-	 * @throws EntityNotFoundException
-	 *           if the report is not found
+	 * @throws EntityNotFoundException if the report is not found
 	 */
 	@PutMapping("/{id}")
 	public ServiceResponse update(@PathVariable String id, @Valid @RequestBody ReportRequest report)
@@ -80,8 +78,7 @@ public class ReportController {
 	/**
 	 * Deletes a report by ID.
 	 *
-	 * @param id
-	 *          the report ID
+	 * @param id the report ID
 	 * @return a response entity with no content
 	 */
 	@DeleteMapping("/{id}")
@@ -95,8 +92,7 @@ public class ReportController {
 	/**
 	 * Fetches a report by ID.
 	 *
-	 * @param id
-	 *          the report ID
+	 * @param id the report ID
 	 * @return the service response containing the report
 	 */
 	@GetMapping("/{id}")
@@ -109,20 +105,22 @@ public class ReportController {
 	/**
 	 * Fetches reports by createdBy with pagination.
 	 *
-	 * @param createdBy
-	 *          the report createdBy
-	 * @param page
-	 *          the page number
-	 * @param limit
-	 *          the page size
+	 * @param createdBy the report createdBy
+	 * @param page the page number
+	 * @param limit the page size
 	 * @return the service response containing a page of reports
 	 */
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
-	public ServiceResponse getReportsByCreatedBy(@RequestParam String createdBy,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int limit) {
-		log.info("Received request to fetch reports by createdBy: {}, page: {}, size: {}", CommonUtils.sanitize(createdBy),
-				page, limit);
+	public ServiceResponse getReportsByCreatedBy(
+			@RequestParam String createdBy,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int limit) {
+		log.info(
+				"Received request to fetch reports by createdBy: {}, page: {}, size: {}",
+				CommonUtils.sanitize(createdBy),
+				page,
+				limit);
 		return reportService.getReportsByCreatedBy(createdBy, page, limit);
 	}
 }

@@ -80,20 +80,13 @@ public class RCAServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> defectList = new ArrayList<>();
 	List<JiraIssue> totalStoryDefectLinkageBugList = new ArrayList<>();
-	@Mock
-	JiraIssueRepository featureRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	RCAServiceImpl rcaServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
+	@Mock JiraIssueRepository featureRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks RCAServiceImpl rcaServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
 	private List<SprintWiseStory> sprintWiseStoryList = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -103,14 +96,11 @@ public class RCAServiceImplTest {
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new LinkedHashMap<>();
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
 	@Before
 	public void setup() {
@@ -126,13 +116,14 @@ public class RCAServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -141,8 +132,8 @@ public class RCAServiceImplTest {
 
 		kpiWiseAggregation.put("cost_Of_Delay", "sum");
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -151,10 +142,13 @@ public class RCAServiceImplTest {
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		defectList = jiraIssueDataFactory.getBugs();
 
-		totalStoryDefectLinkageBugList = defectList.stream().filter(f -> CollectionUtils.isNotEmpty(f.getDefectStoryID()))
-				.collect(Collectors.toList());
+		totalStoryDefectLinkageBugList =
+				defectList.stream()
+						.filter(f -> CollectionUtils.isNotEmpty(f.getDefectStoryID()))
+						.collect(Collectors.toList());
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		sprintWiseStoryList = sprintWiseStoryDataFactory.getSprintWiseStories();
 
 		kpiWiseAggregation.put("defectRCA", "sum");
@@ -183,7 +177,8 @@ public class RCAServiceImplTest {
 		trendValueMap.put("Functionality Not Clear", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -196,8 +191,9 @@ public class RCAServiceImplTest {
 	@Test
 	public void testGetRCA() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, Long> resultMap = new HashMap<>();
 		resultMap.put("code issue", 4L);
@@ -209,13 +205,16 @@ public class RCAServiceImplTest {
 
 		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("On");
 
-		when(featureRepository.findIssuesGroupBySprint(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(featureRepository.findIssuesGroupBySprint(
+						Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(sprintWiseStoryList);
-		when(featureRepository.findDefectCountByRCA(Mockito.any())).thenReturn(totalStoryDefectLinkageBugList);
+		when(featureRepository.findDefectCountByRCA(Mockito.any()))
+				.thenReturn(totalStoryDefectLinkageBugList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(rcaServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
@@ -225,31 +224,36 @@ public class RCAServiceImplTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 
 		try {
-			KpiElement kpiElement = rcaServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					rcaServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(rca -> {
-				String rootCause = rca.getFilter();
-				switch (rootCause) {
-					case "code issue" :
-						assertThat("RCA code issue Value :", rca.getValue().size(), equalTo(1));
-						break;
-					case "Environment Issue" :
-						assertThat("RCA Environment Issue Value :", rca.getValue().size(), equalTo(1));
-						break;
-					case "External Dependency" :
-						assertThat("RCA External Dependency Value :", rca.getValue().size(), equalTo(1));
-						break;
-					case "Functionality Not Clear" :
-						assertThat("RCA Functionality Not Clear Value :", rca.getValue().size(), equalTo(1));
-						break;
-					case "Overall" :
-						assertThat("RCA Overall Value :", rca.getValue().size(), equalTo(1));
-						break;
-					default :
-						break;
-				}
-			});
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							rca -> {
+								String rootCause = rca.getFilter();
+								switch (rootCause) {
+									case "code issue":
+										assertThat("RCA code issue Value :", rca.getValue().size(), equalTo(1));
+										break;
+									case "Environment Issue":
+										assertThat("RCA Environment Issue Value :", rca.getValue().size(), equalTo(1));
+										break;
+									case "External Dependency":
+										assertThat(
+												"RCA External Dependency Value :", rca.getValue().size(), equalTo(1));
+										break;
+									case "Functionality Not Clear":
+										assertThat(
+												"RCA Functionality Not Clear Value :", rca.getValue().size(), equalTo(1));
+										break;
+									case "Overall":
+										assertThat("RCA Overall Value :", rca.getValue().size(), equalTo(1));
+										break;
+									default:
+										break;
+								}
+							});
 		} catch (ApplicationException enfe) {
 
 		}

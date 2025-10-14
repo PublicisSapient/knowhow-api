@@ -42,8 +42,7 @@ public class AccountFilterRequest extends BaseModel {
 	/**
 	 * Sets current selection.
 	 *
-	 * @param currentSelection
-	 *          the current selection
+	 * @param currentSelection the current selection
 	 */
 	public void setCurrentSelection(int currentSelection) {
 		this.currentSelection = currentSelection;
@@ -61,8 +60,7 @@ public class AccountFilterRequest extends BaseModel {
 	/**
 	 * Sets filter data list.
 	 *
-	 * @param filterDataList
-	 *          the filter data list
+	 * @param filterDataList the filter data list
 	 */
 	public void setFilterDataList(List<AccountFilterResponse> filterDataList) {
 		this.filterDataList = filterDataList;
@@ -80,8 +78,7 @@ public class AccountFilterRequest extends BaseModel {
 	/**
 	 * Sets current selection label.
 	 *
-	 * @param currentSelectionLabel
-	 *          the current selection label
+	 * @param currentSelectionLabel the current selection label
 	 */
 	public void setCurrentSelectionLabel(String currentSelectionLabel) {
 		this.currentSelectionLabel = currentSelectionLabel;
@@ -99,8 +96,7 @@ public class AccountFilterRequest extends BaseModel {
 	/**
 	 * Sets kanban.
 	 *
-	 * @param kanban
-	 *          the kanban
+	 * @param kanban the kanban
 	 */
 	public void setKanban(boolean kanban) {
 		this.kanban = kanban;
@@ -122,8 +118,7 @@ public class AccountFilterRequest extends BaseModel {
 	}
 
 	/**
-	 * @param sprintIncluded
-	 *          sprintIncluded
+	 * @param sprintIncluded sprintIncluded
 	 */
 	public void setSprintIncluded(List<String> sprintIncluded) {
 		this.sprintIncluded = sprintIncluded;

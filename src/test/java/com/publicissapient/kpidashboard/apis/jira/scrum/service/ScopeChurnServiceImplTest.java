@@ -76,28 +76,17 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 @RunWith(MockitoJUnitRunner.class)
 public class ScopeChurnServiceImplTest {
 
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	ScopeChurnServiceImpl scopeChurnService;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private KpiDataProvider kpiDataProvider;
-	@Mock
-	private CommonService commonService;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock SprintRepository sprintRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks ScopeChurnServiceImpl scopeChurnService;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataProvider kpiDataProvider;
+	@Mock private CommonService commonService;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
@@ -123,8 +112,8 @@ public class ScopeChurnServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setLevel(5);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
@@ -133,11 +122,12 @@ public class ScopeChurnServiceImplTest {
 
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		sprintDetailsList = sprintDetailsDataFactory.getSprintDetails();
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
@@ -148,9 +138,10 @@ public class ScopeChurnServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfigs -> {
-			projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
-		});
+		projectConfigList.forEach(
+				projectConfigs -> {
+					projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		List<DataCount> dataCountList = new ArrayList<>();
@@ -172,8 +163,9 @@ public class ScopeChurnServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
@@ -183,20 +175,23 @@ public class ScopeChurnServiceImplTest {
 		resultListMap.put(SCOPE_CHANGE_ISSUE_HISTORY, jiraIssueCustomHistoryList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(false);
 		when(kpiDataProvider.fetchScopeChurnData(any(), any(), any())).thenReturn(resultListMap);
 
 		when(customApiSetting.getApplicationDetailedLogger()).thenReturn("on");
-		Map<String, Object> defectDataListMap = scopeChurnService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
+		Map<String, Object> defectDataListMap =
+				scopeChurnService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbEmptyData_BadScenario() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
@@ -205,27 +200,32 @@ public class ScopeChurnServiceImplTest {
 		resultListMap.put(TOTAL_ISSUE, new ArrayList<>());
 		resultListMap.put(SCOPE_CHANGE_ISSUE_HISTORY, new ArrayList<>());
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(customApiSetting.getApplicationDetailedLogger()).thenReturn("on");
-		Map<String, Object> defectDataListMap = scopeChurnService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
+		Map<String, Object> defectDataListMap =
+				scopeChurnService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testGetData() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(customApiSetting.getApplicationDetailedLogger()).thenReturn("on");
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(scopeChurnService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		Map<String, Object> resultListMap = new HashMap<>();
@@ -233,12 +233,17 @@ public class ScopeChurnServiceImplTest {
 		resultListMap.put(TOTAL_ISSUE, totalIssueList);
 		resultListMap.put(SCOPE_CHANGE_ISSUE_HISTORY, new ArrayList<>());
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = scopeChurnService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Scope churn value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(2));
+			KpiElement kpiElement =
+					scopeChurnService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Scope churn value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(2));
 		} catch (Exception exception) {
 		}
 	}
@@ -246,14 +251,16 @@ public class ScopeChurnServiceImplTest {
 	@Test
 	public void testGetData_BadScenario() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(customApiSetting.getApplicationDetailedLogger()).thenReturn("on");
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(scopeChurnService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
@@ -262,11 +269,16 @@ public class ScopeChurnServiceImplTest {
 		resultListMap.put(TOTAL_ISSUE, new ArrayList<>());
 		resultListMap.put(SCOPE_CHANGE_ISSUE_HISTORY, new ArrayList<>());
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 		try {
-			KpiElement kpiElement = scopeChurnService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Scope churn value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(2));
+			KpiElement kpiElement =
+					scopeChurnService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Scope churn value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(2));
 		} catch (Exception exception) {
 		}
 	}
@@ -274,14 +286,16 @@ public class ScopeChurnServiceImplTest {
 	@Test
 	public void testExcelDataFetch() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(customApiSetting.getApplicationDetailedLogger()).thenReturn("off");
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(scopeChurnService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
@@ -290,12 +304,17 @@ public class ScopeChurnServiceImplTest {
 		resultListMap.put(TOTAL_ISSUE, totalIssueList);
 		resultListMap.put(SCOPE_CHANGE_ISSUE_HISTORY, jiraIssueCustomHistoryList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchScopeChurnData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = scopeChurnService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Scope churn value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					scopeChurnService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Scope churn value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(1));
 		} catch (Exception exception) {
 		}
 	}

@@ -72,7 +72,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
+public class CodeCommitKanbanServiceImpl
+		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	/** */
 	private static final int MILISEC_ONE_DAY = 86_399_999;
@@ -84,11 +85,9 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 	private static final String DATE = "Date ";
 	private static final String COMMIT_COUNT = "commitCount";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CommitRepository commitRepository;
+	@Autowired private CommitRepository commitRepository;
 
 	@Override
 	public String getQualifierType() {
@@ -111,36 +110,46 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 		dateWiseLeafNodeValue(projectNode, mapTmp, kpiElement, kpiRequest);
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.NUMBER_OF_CHECK_INS);
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.NUMBER_OF_CHECK_INS);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.NUMBER_OF_CHECK_INS);
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		trendValuesMap.forEach((key, dateWiseDataCount) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			dataCountGroup.setFilter(key);
-			dataCountGroup.setValue(dateWiseDataCount);
-			dataCountGroups.add(dataCountGroup);
-		});
+		trendValuesMap.forEach(
+				(key, dateWiseDataCount) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					dataCountGroup.setFilter(key);
+					dataCountGroup.setValue(dateWiseDataCount);
+					dataCountGroups.add(dataCountGroup);
+				});
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
-		log.debug("[KANBAN-CODE-COMMIT-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), projectNode);
+		log.debug(
+				"[KANBAN-CODE-COMMIT-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
+				kpiRequest.getRequestTrackerId(),
+				projectNode);
 		return kpiElement;
 	}
 
-	private void dateWiseLeafNodeValue(Node projectNode, Map<String, Node> mapTmp, KpiElement kpiElement,
-			KpiRequest kpiRequest) {
+	private void dateWiseLeafNodeValue(
+			Node projectNode, Map<String, Node> mapTmp, KpiElement kpiElement, KpiRequest kpiRequest) {
 
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
-		String startDate = dateRange.getStartDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		String endDate = dateRange.getEndDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		String startDate =
+				dateRange.getStartDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		String endDate =
+				dateRange.getEndDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-		Map<String, Object> resultMap = fetchKPIDataFromDb(Arrays.asList(projectNode), startDate, endDate, null);
+		Map<String, Object> resultMap =
+				fetchKPIDataFromDb(Arrays.asList(projectNode), startDate, endDate, null);
 		kpiWithFilter(resultMap, mapTmp, projectNode, kpiElement, kpiRequest);
 	}
 
-	private void kpiWithFilter(Map<String, Object> resultMap, Map<String, Node> mapTmp, Node node, KpiElement kpiElement,
+	private void kpiWithFilter(
+			Map<String, Object> resultMap,
+			Map<String, Node> mapTmp,
+			Node node,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 		Map<String, ValidationData> validationMap = new HashMap<>();
 		List<KPIExcelData> excelData = new ArrayList<>();
@@ -148,8 +157,12 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 		final Map<ObjectId, Map<String, Long>> commitListItemId = new LinkedHashMap<>();
 		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
 		if (CollectionUtils.isNotEmpty(commitList)) {
-			commitListItemId.putAll(commitList.stream().collect(Collectors.groupingBy(CommitDetails::getProcessorItemId,
-					Collectors.toMap(CommitDetails::getDate, CommitDetails::getCount))));
+			commitListItemId.putAll(
+					commitList.stream()
+							.collect(
+									Collectors.groupingBy(
+											CommitDetails::getProcessorItemId,
+											Collectors.toMap(CommitDetails::getDate, CommitDetails::getCount))));
 		}
 
 		Map<String, List<DataCount>> projectWiseDataMap = new LinkedHashMap<>();
@@ -157,16 +170,19 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 		List<RepoToolValidationData> repoToolValidationDataList = new ArrayList<>();
 		for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 
-			CustomDateRange dateRange = KpiHelperService.getStartAndEndDateExcludingWeekends(currentDate,
-					kpiRequest.getDuration());
+			CustomDateRange dateRange =
+					KpiHelperService.getStartAndEndDateExcludingWeekends(
+							currentDate, kpiRequest.getDuration());
 			List<Tool> reposList = getBitBucketJobs(toolMap, node);
 			if (CollectionUtils.isEmpty(reposList)) {
-				log.error("[CODE_COMMIT_KANBAN]. No Jobs found for this project {}", node.getProjectFilter());
+				log.error(
+						"[CODE_COMMIT_KANBAN]. No Jobs found for this project {}", node.getProjectFilter());
 				return;
 			}
 			String projectName = node.getName();
-			Map<String, Long> filterValueMap = filterKanbanDataBasedOnStartAndEndDateAndCommitDetails(reposList, dateRange,
-					commitListItemId, projectName, repoToolValidationDataList);
+			Map<String, Long> filterValueMap =
+					filterKanbanDataBasedOnStartAndEndDateAndCommitDetails(
+							reposList, dateRange, commitListItemId, projectName, repoToolValidationDataList);
 
 			String dataCountDate = getRange(dateRange, kpiRequest);
 			prepareRepoWiseMap(filterValueMap, projectName, dataCountDate, projectWiseDataMap);
@@ -191,8 +207,11 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 	 * @param repoToolValidationDataList
 	 * @return
 	 */
-	private Map<String, Long> filterKanbanDataBasedOnStartAndEndDateAndCommitDetails(List<Tool> reposList,
-			CustomDateRange dateRange, Map<ObjectId, Map<String, Long>> commitListItemId, String projectName,
+	private Map<String, Long> filterKanbanDataBasedOnStartAndEndDateAndCommitDetails(
+			List<Tool> reposList,
+			CustomDateRange dateRange,
+			Map<ObjectId, Map<String, Long>> commitListItemId,
+			String projectName,
 			List<RepoToolValidationData> repoToolValidationDataList) {
 		LocalDate startDate = dateRange.getStartDate();
 		LocalDate endDate = dateRange.getEndDate();
@@ -202,19 +221,22 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 			Map<String, Long> excelLoader = new LinkedHashMap<>();
 			String keyName = getBranchSubFilter(tool, projectName);
 			Long commitCountValue = 0l;
-			if (!CollectionUtils.isEmpty(tool.getProcessorItemList()) && tool.getProcessorItemList().get(0).getId() != null) {
-				Map<String, Long> commitDateMap = commitListItemId.getOrDefault(tool.getProcessorItemList().get(0).getId(),
-						new HashMap<>());
+			if (!CollectionUtils.isEmpty(tool.getProcessorItemList())
+					&& tool.getProcessorItemList().get(0).getId() != null) {
+				Map<String, Long> commitDateMap =
+						commitListItemId.getOrDefault(
+								tool.getProcessorItemList().get(0).getId(), new HashMap<>());
 				while (currentDate.compareTo(endDate) <= 0) {
-					commitCountValue = commitCountValue + commitDateMap.getOrDefault(currentDate.toString(), 0l);
+					commitCountValue =
+							commitCountValue + commitDateMap.getOrDefault(currentDate.toString(), 0l);
 					excelLoader.put(DATE + DateUtil.localDateTimeConverter(currentDate), commitCountValue);
 					RepoToolValidationData repoToolValidationData = new RepoToolValidationData();
 					repoToolValidationData.setProjectName(projectName);
 					repoToolValidationData.setBranchName(tool.getBranch());
 					repoToolValidationData.setDate(DATE + DateUtil.localDateTimeConverter(currentDate));
 					repoToolValidationData.setCommitCount(commitCountValue);
-					repoToolValidationData
-							.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+					repoToolValidationData.setRepoUrl(
+							tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 					repoToolValidationDataList.add(repoToolValidationData);
 					currentDate = currentDate.plusDays(1);
 				}
@@ -224,16 +246,23 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 		return filterWiseValue;
 	}
 
-	private void prepareRepoWiseMap(Map<String, Long> filterWiseValue, String projectName, String dataCountDate,
+	private void prepareRepoWiseMap(
+			Map<String, Long> filterWiseValue,
+			String projectName,
+			String dataCountDate,
 			Map<String, List<DataCount>> projectWiseDataMap) {
 		List<Long> commitCountList = new ArrayList<>();
-		filterWiseValue.forEach((filter, value) -> {
-			commitCountList.add(value);
-			DataCount dataCountObject = getDataCountObject(value, projectName, dataCountDate);
-			projectWiseDataMap.computeIfAbsent(filter, k -> new LinkedList<>()).add(dataCountObject);
-		});
-		DataCount dcObj = getDataCountObject(calculateKpiValue(commitCountList, KPICode.NUMBER_OF_CHECK_INS.getKpiId()),
-				projectName, dataCountDate);
+		filterWiseValue.forEach(
+				(filter, value) -> {
+					commitCountList.add(value);
+					DataCount dataCountObject = getDataCountObject(value, projectName, dataCountDate);
+					projectWiseDataMap.computeIfAbsent(filter, k -> new LinkedList<>()).add(dataCountObject);
+				});
+		DataCount dcObj =
+				getDataCountObject(
+						calculateKpiValue(commitCountList, KPICode.NUMBER_OF_CHECK_INS.getKpiId()),
+						projectName,
+						dataCountDate);
 		projectWiseDataMap.computeIfAbsent(CommonConstant.OVERALL, k -> new ArrayList<>()).add(dcObj);
 	}
 
@@ -255,12 +284,19 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 	private String getRange(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
-			range = DateUtil.dateTimeConverter(dateRange.getStartDate().toString(), DateUtil.DATE_FORMAT,
-					DateUtil.DISPLAY_DATE_FORMAT) + " to " +
-					DateUtil.dateTimeConverter(dateRange.getEndDate().toString(), DateUtil.DATE_FORMAT,
-							DateUtil.DISPLAY_DATE_FORMAT);
+			range =
+					DateUtil.dateTimeConverter(
+									dateRange.getStartDate().toString(),
+									DateUtil.DATE_FORMAT,
+									DateUtil.DISPLAY_DATE_FORMAT)
+							+ " to "
+							+ DateUtil.dateTimeConverter(
+									dateRange.getEndDate().toString(),
+									DateUtil.DATE_FORMAT,
+									DateUtil.DISPLAY_DATE_FORMAT);
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+			range =
+					dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
 		} else {
 			range = dateRange.getStartDate().toString();
 		}
@@ -276,8 +312,8 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 	 */
 	@SuppressWarnings("PMD.AvoidCatchingGenericException")
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Set<String> listOfmapOfProjectFilters = new HashSet<>();
 		Set<String> branchList = new HashSet<>();
 
@@ -288,33 +324,42 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 		toolMap = configHelperService.getToolItemMap();
 
 		BasicDBList filter = new BasicDBList();
-		leafNodeList.forEach(node -> {
-			List<Tool> bitbucketJob = getBitBucketJobs(toolMap, node);
-			if (CollectionUtils.isEmpty(bitbucketJob)) {
-				return;
-			}
-			bitbucketJob.forEach(job -> {
-				if (CollectionUtils.isEmpty(job.getProcessorItemList())) {
-					return;
-				}
-				tools.add(job.getProcessorItemList().get(0).getId());
-				filter.add(new BasicDBObject("processorItemId", job.getProcessorItemList().get(0).getId())
-						.append("branch", job.getBranch()).append("repoSlug", job.getRepoSlug()));
-				listOfmapOfProjectFilters.add(job.getUrl());
-				branchList.add(job.getBranch());
-			});
-		});
+		leafNodeList.forEach(
+				node -> {
+					List<Tool> bitbucketJob = getBitBucketJobs(toolMap, node);
+					if (CollectionUtils.isEmpty(bitbucketJob)) {
+						return;
+					}
+					bitbucketJob.forEach(
+							job -> {
+								if (CollectionUtils.isEmpty(job.getProcessorItemList())) {
+									return;
+								}
+								tools.add(job.getProcessorItemList().get(0).getId());
+								filter.add(
+										new BasicDBObject("processorItemId", job.getProcessorItemList().get(0).getId())
+												.append("branch", job.getBranch())
+												.append("repoSlug", job.getRepoSlug()));
+								listOfmapOfProjectFilters.add(job.getUrl());
+								branchList.add(job.getBranch());
+							});
+				});
 
 		if (filter.isEmpty()) {
 			return new HashMap<>();
 		}
 
-		List<CommitDetails> commitCount = commitRepository.findCommitList(tools,
-				new DateTime(startDate, DateTimeZone.UTC).withTimeAtStartOfDay().getMillis(),
-				StringUtils.isNotEmpty(endDate)
-						? new DateTime(endDate, DateTimeZone.UTC).withTimeAtStartOfDay().plus(MILISEC_ONE_DAY).getMillis()
-						: new Date().getTime(),
-				filter);
+		List<CommitDetails> commitCount =
+				commitRepository.findCommitList(
+						tools,
+						new DateTime(startDate, DateTimeZone.UTC).withTimeAtStartOfDay().getMillis(),
+						StringUtils.isNotEmpty(endDate)
+								? new DateTime(endDate, DateTimeZone.UTC)
+										.withTimeAtStartOfDay()
+										.plus(MILISEC_ONE_DAY)
+										.getMillis()
+								: new Date().getTime(),
+						filter);
 
 		resultListMap.put(COMMIT_COUNT, commitCount);
 
@@ -327,10 +372,18 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 		Map<String, List<Tool>> toolListMap = toolMap == null ? null : toolMap.get(configId);
 		List<Tool> bitbucketJob = new ArrayList<>();
 		if (null != toolListMap) {
-			bitbucketJob.addAll(toolListMap.get(BITBUCKET) == null ? Collections.emptyList() : toolListMap.get(BITBUCKET));
-			bitbucketJob.addAll(toolListMap.get(AZURE_REPO) == null ? Collections.emptyList() : toolListMap.get(AZURE_REPO));
-			bitbucketJob.addAll(toolListMap.get(GITLAB) == null ? Collections.emptyList() : toolListMap.get(GITLAB));
-			bitbucketJob.addAll(toolListMap.get(GITHUB) == null ? Collections.emptyList() : toolListMap.get(GITHUB));
+			bitbucketJob.addAll(
+					toolListMap.get(BITBUCKET) == null
+							? Collections.emptyList()
+							: toolListMap.get(BITBUCKET));
+			bitbucketJob.addAll(
+					toolListMap.get(AZURE_REPO) == null
+							? Collections.emptyList()
+							: toolListMap.get(AZURE_REPO));
+			bitbucketJob.addAll(
+					toolListMap.get(GITLAB) == null ? Collections.emptyList() : toolListMap.get(GITLAB));
+			bitbucketJob.addAll(
+					toolListMap.get(GITHUB) == null ? Collections.emptyList() : toolListMap.get(GITHUB));
 		}
 
 		if (CollectionUtils.isEmpty(bitbucketJob)) {
@@ -352,6 +405,7 @@ public class CodeCommitKanbanServiceImpl extends BitBucketKPIService<Long, List<
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI65(), KPICode.NUMBER_OF_CHECK_INS.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI65(), KPICode.NUMBER_OF_CHECK_INS.getKpiId());
 	}
 }

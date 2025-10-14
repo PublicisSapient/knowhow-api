@@ -28,8 +28,7 @@ import com.publicissapient.kpidashboard.common.repository.rbac.ActionPolicyRuleR
 
 @Component("simplePolicyDefinition")
 public class SimplePolicyDefinition implements PolicyDefinition {
-	@Autowired
-	ActionPolicyRuleRepository actionPolicyRuleRepository;
+	@Autowired ActionPolicyRuleRepository actionPolicyRuleRepository;
 	private List<ActionPolicyRule> rules;
 
 	public void init() {

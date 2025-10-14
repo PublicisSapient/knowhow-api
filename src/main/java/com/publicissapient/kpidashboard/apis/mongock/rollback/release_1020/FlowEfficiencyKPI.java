@@ -27,7 +27,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_flow_efficiency", order = "010205", author = "aksshriv1", systemVersion = "10.2.0")
+@ChangeUnit(
+		id = "r_flow_efficiency",
+		order = "010205",
+		author = "aksshriv1",
+		systemVersion = "10.2.0")
 public class FlowEfficiencyKPI {
 
 	private final MongoTemplate mongoTemplate;

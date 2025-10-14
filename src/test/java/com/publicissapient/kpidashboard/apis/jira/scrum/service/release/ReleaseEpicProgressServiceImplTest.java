@@ -80,16 +80,11 @@ public class ReleaseEpicProgressServiceImplTest {
 	private static final String TO_DO = "To Do";
 	private static final String IN_PROGRESS = "In Progress";
 	private static final String DONE = "Done";
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	JiraReleaseServiceR jiraService;
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@InjectMocks
-	private ReleaseEpicProgressServiceImpl epicProgressService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock JiraReleaseServiceR jiraService;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@InjectMocks private ReleaseEpicProgressServiceImpl epicProgressService;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private List<JiraIssue> jiraIssueArrayList = new ArrayList<>();
@@ -102,17 +97,19 @@ public class ReleaseEpicProgressServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi165");
 		kpiRequest.setLabel("RELEASE");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/account_hierarchy_filter_data_release.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/account_hierarchy_filter_data_release.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssueArrayList = jiraIssueDataFactory.getJiraIssues();
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		JiraIssueReleaseStatusDataFactory jiraIssueReleaseStatusDataFactory = JiraIssueReleaseStatusDataFactory
-				.newInstance("/json/default/jira_issue_release_status.json");
+		JiraIssueReleaseStatusDataFactory jiraIssueReleaseStatusDataFactory =
+				JiraIssueReleaseStatusDataFactory.newInstance(
+						"/json/default/jira_issue_release_status.json");
 		jiraIssueReleaseStatusList = jiraIssueReleaseStatusDataFactory.getJiraIssueReleaseStatusList();
 	}
 
@@ -123,19 +120,31 @@ public class ReleaseEpicProgressServiceImplTest {
 	public void testSorting() {
 		List<DataCount> dataCountList = createDataCountList();
 		epicProgressService.sorting(dataCountList);
-		assertThat(dataCountList).isSortedAccordingTo((dataCount1, dataCount2) -> {
-			long sum1 = ((List<DataCount>) dataCount1.getValue()).stream()
-					.filter(subfilter -> subfilter.getSubFilter().equalsIgnoreCase(TO_DO) ||
-							subfilter.getSubFilter().equalsIgnoreCase(IN_PROGRESS))
-					.mapToLong(a -> (long) a.getValue()).sum();
+		assertThat(dataCountList)
+				.isSortedAccordingTo(
+						(dataCount1, dataCount2) -> {
+							long sum1 =
+									((List<DataCount>) dataCount1.getValue())
+											.stream()
+													.filter(
+															subfilter ->
+																	subfilter.getSubFilter().equalsIgnoreCase(TO_DO)
+																			|| subfilter.getSubFilter().equalsIgnoreCase(IN_PROGRESS))
+													.mapToLong(a -> (long) a.getValue())
+													.sum();
 
-			long sum2 = ((List<DataCount>) dataCount2.getValue()).stream()
-					.filter(subfilter -> subfilter.getSubFilter().equalsIgnoreCase(TO_DO) ||
-							subfilter.getSubFilter().equalsIgnoreCase(IN_PROGRESS))
-					.mapToLong(a -> (long) a.getValue()).sum();
+							long sum2 =
+									((List<DataCount>) dataCount2.getValue())
+											.stream()
+													.filter(
+															subfilter ->
+																	subfilter.getSubFilter().equalsIgnoreCase(TO_DO)
+																			|| subfilter.getSubFilter().equalsIgnoreCase(IN_PROGRESS))
+													.mapToLong(a -> (long) a.getValue())
+													.sum();
 
-			return Long.compare(sum1, sum2);
-		});
+							return Long.compare(sum1, sum2);
+						});
 	}
 
 	/*
@@ -144,20 +153,28 @@ public class ReleaseEpicProgressServiceImplTest {
 	@Test
 	public void testFetchKPIDataFromDbPositiveScenario() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
-		Set<JiraIssue> epic = jiraIssueArrayList.stream()
-				.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic")).collect(Collectors.toSet());
-		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(anyList(), anyString(), anyString()))
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
+		Set<JiraIssue> epic =
+				jiraIssueArrayList.stream()
+						.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+						.collect(Collectors.toSet());
+		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(
+						anyList(), anyString(), anyString()))
 				.thenReturn(epic);
 		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(jiraIssueReleaseStatusList.get(0));
 		when(jiraService.getJiraIssuesForSelectedRelease()).thenReturn(jiraIssueArrayList);
-		Map<String, Object> resultListMap = epicProgressService.fetchKPIDataFromDb(leafNodeList.get(0), "", "", kpiRequest);
+		Map<String, Object> resultListMap =
+				epicProgressService.fetchKPIDataFromDb(leafNodeList.get(0), "", "", kpiRequest);
 
 		assertThat(resultListMap).isNotEmpty();
 		assertThat(resultListMap.containsKey(TOTAL_ISSUES)).isTrue();
@@ -174,22 +191,28 @@ public class ReleaseEpicProgressServiceImplTest {
 	public void testFetchKPIDataFromDbNegativeScenario() throws ApplicationException {
 		// Create a list of leaf nodes with a valid project filter.
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
-		Map<String, Object> resultListMap = epicProgressService.fetchKPIDataFromDb(leafNodeList.get(0), "", "", kpiRequest);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
+		Map<String, Object> resultListMap =
+				epicProgressService.fetchKPIDataFromDb(leafNodeList.get(0), "", "", kpiRequest);
 		assertThat(((Set<JiraIssue>) resultListMap.get(EPIC_LINKED)).size()).isEqualTo(0);
 	}
 
 	@Test
 	public void testGetStatusWiseCountListPositive() {
 		EpicMetaData epicMetaData = new EpicMetaData("EPIC", "url", "2024-06-04T13:24:14.2500000");
-		DataCount dataCount = epicProgressService.getStatusWiseCountList(jiraIssueArrayList,
-				jiraIssueReleaseStatusList.get(0), epicMetaData, fieldMapping);
+		DataCount dataCount =
+				epicProgressService.getStatusWiseCountList(
+						jiraIssueArrayList, jiraIssueReleaseStatusList.get(0), epicMetaData, fieldMapping);
 		assertThat(dataCount.getData()).isEqualTo("48");
 		assertThat(dataCount.getSize()).isEqualTo("63.0");
 		DataCount toDoCount = ((List<DataCount>) dataCount.getValue()).get(0);
@@ -214,8 +237,9 @@ public class ReleaseEpicProgressServiceImplTest {
 	public void testGetStatusWiseCountListNegative() {
 		List<JiraIssue> jiraIssueList = null;
 		EpicMetaData epicMetaData = new EpicMetaData("EPIC", "url", "2024-06-04T13:24:14.2500000");
-		DataCount dataCount = epicProgressService.getStatusWiseCountList(jiraIssueList, jiraIssueReleaseStatusList.get(0),
-				epicMetaData, fieldMapping);
+		DataCount dataCount =
+				epicProgressService.getStatusWiseCountList(
+						jiraIssueList, jiraIssueReleaseStatusList.get(0), epicMetaData, fieldMapping);
 		assertThat(dataCount.getData()).isEqualTo("0");
 	}
 
@@ -224,14 +248,22 @@ public class ReleaseEpicProgressServiceImplTest {
 	 */
 	@Test
 	public void testCreateDataCountGroupMapPositiveScenario() {
-		jiraIssueArrayList.stream().filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+		jiraIssueArrayList.stream()
+				.filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
 				.forEach(jiraIssue -> jiraIssue.setEpicLinked("EPIC-2"));
-		Set<JiraIssue> epicIssues = jiraIssueArrayList.stream()
-				.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic")).collect(Collectors.toSet());
+		Set<JiraIssue> epicIssues =
+				jiraIssueArrayList.stream()
+						.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+						.collect(Collectors.toSet());
 
 		List<IterationKpiValue> iterationKpiValues = new ArrayList<>();
-		Map<String, String> epicWiseSize = epicProgressService.createDataCountGroupMap(jiraIssueArrayList,
-				jiraIssueReleaseStatusList.get(0), epicIssues, fieldMapping, iterationKpiValues);
+		Map<String, String> epicWiseSize =
+				epicProgressService.createDataCountGroupMap(
+						jiraIssueArrayList,
+						jiraIssueReleaseStatusList.get(0),
+						epicIssues,
+						fieldMapping,
+						iterationKpiValues);
 		assertThat(epicWiseSize).hasSize(1);
 		assertThat(epicWiseSize.get("-")).isEqualTo(null);
 		assertThat(epicWiseSize.get("EPIC-2")).isEqualTo("57.0");
@@ -244,22 +276,31 @@ public class ReleaseEpicProgressServiceImplTest {
 	 */
 	@Test
 	public void getKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Set<JiraIssue> epic = jiraIssueArrayList.stream()
-				.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic")).collect(Collectors.toSet());
-		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(anyList(), anyString(), anyString()))
+		Set<JiraIssue> epic =
+				jiraIssueArrayList.stream()
+						.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+						.collect(Collectors.toSet());
+		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(
+						anyList(), anyString(), anyString()))
 				.thenReturn(epic);
 		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(jiraIssueReleaseStatusList.get(0));
-		jiraIssueArrayList.stream().filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+		jiraIssueArrayList.stream()
+				.filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
 				.forEach(jiraIssue -> jiraIssue.setEpicLinked("EPIC-1"));
 		when(jiraService.getJiraIssuesForSelectedRelease()).thenReturn(jiraIssueArrayList);
-		KpiElement kpiElement = epicProgressService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
+		KpiElement kpiElement =
+				epicProgressService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
 		assertNotNull(kpiElement.getTrendValueList());
 	}
 
@@ -268,24 +309,36 @@ public class ReleaseEpicProgressServiceImplTest {
 	 */
 	@Test
 	public void getKpiDataWithLinkDefect() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Set<JiraIssue> epic = jiraIssueArrayList.stream()
-				.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic")).collect(Collectors.toSet());
-		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(anyList(), anyString(), anyString()))
+		Set<JiraIssue> epic =
+				jiraIssueArrayList.stream()
+						.filter(jiraIssue -> jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+						.collect(Collectors.toSet());
+		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(
+						anyList(), anyString(), anyString()))
 				.thenReturn(epic);
 		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(jiraIssueReleaseStatusList.get(0));
-		jiraIssueArrayList.stream().filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
+		jiraIssueArrayList.stream()
+				.filter(jiraIssue -> !jiraIssue.getTypeName().equalsIgnoreCase("Epic"))
 				.forEach(jiraIssue -> jiraIssue.setEpicLinked("EPIC-1"));
 		when(jiraService.getJiraIssuesForSelectedRelease()).thenReturn(jiraIssueArrayList);
-		when(jiraService.getSubTaskDefects()).thenReturn(jiraIssueArrayList.stream()
-				.filter(defect -> defect.getTypeName().equalsIgnoreCase("bug")).collect(Collectors.toSet()));
-		KpiElement kpiElement = epicProgressService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
+		when(jiraService.getSubTaskDefects())
+				.thenReturn(
+						jiraIssueArrayList.stream()
+								.filter(defect -> defect.getTypeName().equalsIgnoreCase("bug"))
+								.collect(Collectors.toSet()));
+		KpiElement kpiElement =
+				epicProgressService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
 		assertNotNull(kpiElement.getTrendValueList());
 	}
 

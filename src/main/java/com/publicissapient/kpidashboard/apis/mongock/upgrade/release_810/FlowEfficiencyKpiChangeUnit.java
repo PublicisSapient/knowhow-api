@@ -33,7 +33,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author kunkambl
  */
-@ChangeUnit(id = "flow_efficiency_kpi", order = "8107", author = "kunkambl", systemVersion = "8.1.0")
+@ChangeUnit(
+		id = "flow_efficiency_kpi",
+		order = "8107",
+		author = "kunkambl",
+		systemVersion = "8.1.0")
 public class FlowEfficiencyKpiChangeUnit {
 	private final MongoTemplate mongoTemplate;
 
@@ -51,33 +55,64 @@ public class FlowEfficiencyKpiChangeUnit {
 	}
 
 	public void addFlowEfficiencyKpiToKpiMaster() {
-		Document kpiDocument = new Document().append("kpiId", "kpi170").append("kpiName", "Flow Efficiency")
-				.append("kpiUnit", "%").append("isDeleted", "False").append("defaultOrder", 1).append("kpiCategory", "Backlog")
-				.append("kpiSource", "Jira").append("groupId", 11).append("thresholdValue", "").append("kanban", false)
-				.append("chartType", "line")
-				.append("kpiInfo",
-						new Document(DEFINITION,
-								"The percentage of time spent in work states vs wait states across the lifecycle of an issue"))
-				.append("xAxisLabel", "Duration").append("yAxisLabel", "Percentage").append("isPositiveTrend", false)
-				.append("kpiFilter", "dropDown").append("showTrend", false).append("aggregationCriteria", "average")
-				.append("isAdditionalFilterSupport", false).append("calculateMaturity", false)
-				.append("kpiSubCategory", "Flow KPIs");
+		Document kpiDocument =
+				new Document()
+						.append("kpiId", "kpi170")
+						.append("kpiName", "Flow Efficiency")
+						.append("kpiUnit", "%")
+						.append("isDeleted", "False")
+						.append("defaultOrder", 1)
+						.append("kpiCategory", "Backlog")
+						.append("kpiSource", "Jira")
+						.append("groupId", 11)
+						.append("thresholdValue", "")
+						.append("kanban", false)
+						.append("chartType", "line")
+						.append(
+								"kpiInfo",
+								new Document(
+										DEFINITION,
+										"The percentage of time spent in work states vs wait states across the lifecycle of an issue"))
+						.append("xAxisLabel", "Duration")
+						.append("yAxisLabel", "Percentage")
+						.append("isPositiveTrend", false)
+						.append("kpiFilter", "dropDown")
+						.append("showTrend", false)
+						.append("aggregationCriteria", "average")
+						.append("isAdditionalFilterSupport", false)
+						.append("calculateMaturity", false)
+						.append("kpiSubCategory", "Flow KPIs");
 		mongoTemplate.getCollection("kpi_master").insertOne(kpiDocument);
 	}
 
 	public void addFlowEfficiencyFieldMappingStructure() {
 
-		Document closeStatusDocument = new Document(FIELD_NAME, "jiraIssueClosedStateKPI170")
-				.append("fieldLabel", "Status to identify Close Statuses").append("fieldCategory", "workflow")
-				.append("fieldType", "chips").append("section", "WorkFlow Status Mapping").append("tooltip",
-						new Document(DEFINITION, "All statuses that signify an issue is 'DONE' based on 'Definition Of Done'"));
+		Document closeStatusDocument =
+				new Document(FIELD_NAME, "jiraIssueClosedStateKPI170")
+						.append("fieldLabel", "Status to identify Close Statuses")
+						.append("fieldCategory", "workflow")
+						.append("fieldType", "chips")
+						.append("section", "WorkFlow Status Mapping")
+						.append(
+								"tooltip",
+								new Document(
+										DEFINITION,
+										"All statuses that signify an issue is 'DONE' based on 'Definition Of Done'"));
 
-		Document waitStatusDocument = new Document(FIELD_NAME, "jiraIssueWaitStateKPI170")
-				.append("fieldLabel", "Status to identify Wait Statuses").append("fieldCategory", "workflow")
-				.append("fieldType", "chips").append("section", "WorkFlow Status Mapping").append("tooltip", new Document(
-						DEFINITION, "The statuses wherein no activity takes place and signifies that issue is in queue"));
+		Document waitStatusDocument =
+				new Document(FIELD_NAME, "jiraIssueWaitStateKPI170")
+						.append("fieldLabel", "Status to identify Wait Statuses")
+						.append("fieldCategory", "workflow")
+						.append("fieldType", "chips")
+						.append("section", "WorkFlow Status Mapping")
+						.append(
+								"tooltip",
+								new Document(
+										DEFINITION,
+										"The statuses wherein no activity takes place and signifies that issue is in queue"));
 
-		mongoTemplate.getCollection("field_mapping_structure")
+		mongoTemplate
+				.getCollection("field_mapping_structure")
 				.insertMany(Arrays.asList(waitStatusDocument, closeStatusDocument));
 	}
 
@@ -94,7 +129,8 @@ public class FlowEfficiencyKpiChangeUnit {
 	}
 
 	public void addFlowEfficiencyFieldMappingStructureRollback() {
-		List<String> fieldNamesToDelete = Arrays.asList("jiraIssueClosedStateKPI170", "jiraIssueWaitStateKPI170");
+		List<String> fieldNamesToDelete =
+				Arrays.asList("jiraIssueClosedStateKPI170", "jiraIssueWaitStateKPI170");
 		Document filter = new Document(FIELD_NAME, new Document("$in", fieldNamesToDelete));
 		mongoTemplate.getCollection("field_mapping_structure").deleteMany(filter);
 	}

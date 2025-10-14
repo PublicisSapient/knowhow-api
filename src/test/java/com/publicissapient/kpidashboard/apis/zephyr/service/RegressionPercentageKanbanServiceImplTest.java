@@ -75,35 +75,27 @@ public class RegressionPercentageKanbanServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<KanbanJiraIssue> totalTestCaseList = new ArrayList<>();
 	List<TestCaseDetails> testCaseDetailsList = new ArrayList<>();
-	@Mock
-	KanbanJiraIssueRepository kanbanFeatureRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	RegressionPercentageKanbanServiceImpl regressionPercentageKanbanServiceImpl;
-	@Mock
-	TestCaseDetailsRepository testCaseDetailsRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock KanbanJiraIssueRepository kanbanFeatureRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks RegressionPercentageKanbanServiceImpl regressionPercentageKanbanServiceImpl;
+	@Mock TestCaseDetailsRepository testCaseDetailsRepository;
+	@Mock CustomApiConfig customApiConfig;
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 
 	@Before
 	public void setup() {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -112,9 +104,10 @@ public class RegressionPercentageKanbanServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
@@ -146,29 +139,39 @@ public class RegressionPercentageKanbanServiceImplTest {
 		Map<String, Object> filterComponentIdWiseDefectMap = new HashMap<>();
 		String kpiRequestTrackerId = "automationpercenttrack001";
 		filterComponentIdWiseDefectMap.put(TESTCASEKEY, totalTestCaseList);
-		Double automatedValue = regressionPercentageKanbanServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
+		Double automatedValue =
+				regressionPercentageKanbanServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
 		assertThat("Automated Percentage value :", automatedValue, equalTo(null));
 	}
 
 	@Test
 	public void testGetAutomatedTestPercentage() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
-		when(testCaseDetailsRepository.findTestDetails(any(), any(), any())).thenReturn(testCaseDetailsList);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
+		when(testCaseDetailsRepository.findTestDetails(any(), any(), any()))
+				.thenReturn(testCaseDetailsList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Zephyr-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = regressionPercentageKanbanServiceImpl.getKpiData(kpiRequest,
-					kpiRequest.getKpiList().get(0), treeAggregatorDetail);
-			assertThat("Regression Percentage Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					regressionPercentageKanbanServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Regression Percentage Value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(1));
 		} catch (ApplicationException enfe) {
 
@@ -177,30 +180,42 @@ public class RegressionPercentageKanbanServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", regressionPercentageKanbanServiceImpl.getQualifierType(),
+		assertThat(
+				"Kpi Name :",
+				regressionPercentageKanbanServiceImpl.getQualifierType(),
 				equalTo("KANBAN_REGRESSION_PASS_PERCENTAGE"));
 	}
 
 	@Test
 	public void fetchKPIDataFromDb() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 		// when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(testCaseDetailsRepository.findTestDetails(any(), any(), any())).thenReturn(testCaseDetailsList);
-		Map<String, Object> defectDataListMap = regressionPercentageKanbanServiceImpl.fetchKPIDataFromDb(leafNodeList, null,
-				null, kpiRequest);
-		assertThat("Total Test Case value :", (Arrays.asList(defectDataListMap.get(TESTCASEKEY)).size()), equalTo(1));
+		when(testCaseDetailsRepository.findTestDetails(any(), any(), any()))
+				.thenReturn(testCaseDetailsList);
+		Map<String, Object> defectDataListMap =
+				regressionPercentageKanbanServiceImpl.fetchKPIDataFromDb(
+						leafNodeList, null, null, kpiRequest);
+		assertThat(
+				"Total Test Case value :",
+				(Arrays.asList(defectDataListMap.get(TESTCASEKEY)).size()),
+				equalTo(1));
 	}
 
 	@Test
 	public void calculateKpiValue() {
-		Double kpiValue = regressionPercentageKanbanServiceImpl.calculateKpiValue(Arrays.asList(1.0, 2.0), "kpi14");
+		Double kpiValue =
+				regressionPercentageKanbanServiceImpl.calculateKpiValue(Arrays.asList(1.0, 2.0), "kpi14");
 		assertThat("Kpi value  :", kpiValue, equalTo(0.0));
 	}
 }

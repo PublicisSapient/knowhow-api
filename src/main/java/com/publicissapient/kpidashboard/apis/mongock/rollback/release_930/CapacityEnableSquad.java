@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
  * @author shi6
  */
 @SuppressWarnings("java:S1192")
-@ChangeUnit(id = "r_capacity_enable_Squad", order = "09301", author = "shi6", systemVersion = "9.3.0")
+@ChangeUnit(
+		id = "r_capacity_enable_Squad",
+		order = "09301",
+		author = "shi6",
+		systemVersion = "9.3.0")
 public class CapacityEnableSquad {
 
 	private final MongoTemplate mongoTemplate;
@@ -53,7 +57,11 @@ public class CapacityEnableSquad {
 	}
 
 	private void updateKpi(String kpiId, boolean isAdditionalFilterSupport) {
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", kpiId),
-				new Document("$set", new Document("isAdditionalFilterSupport", isAdditionalFilterSupport)));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", kpiId),
+						new Document(
+								"$set", new Document("isAdditionalFilterSupport", isAdditionalFilterSupport)));
 	}
 }

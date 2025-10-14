@@ -24,8 +24,7 @@ import com.publicissapient.kpidashboard.apis.model.BaseResponse;
 import com.publicissapient.kpidashboard.apis.model.Logo;
 
 /**
- * Interface managing all requests to the Excel based MVP on executive dash
- * board.
+ * Interface managing all requests to the Excel based MVP on executive dash board.
  *
  * @author pkum34
  */

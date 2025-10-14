@@ -44,11 +44,11 @@ import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrServiceKanban;
 
 /**
- * This class test the Zephyr Controller. In no way this representation of an
- * integration test. All the underlying services and repositories has been
- * mocked. Please don't format this class to keep the readability. Follow [
- * https://stackoverflow.com/questions/5115088/turn-off-eclipse-formatter-for-selected-code-area
- * ] to switch off formatter for section of code.
+ * This class test the Zephyr Controller. In no way this representation of an integration test. All
+ * the underlying services and repositories has been mocked. Please don't format this class to keep
+ * the readability. Follow [
+ * https://stackoverflow.com/questions/5115088/turn-off-eclipse-formatter-for-selected-code-area ]
+ * to switch off formatter for section of code.
  *
  * @author tauakram
  */
@@ -57,17 +57,13 @@ public class ZephyrControllerTest {
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private ZephyrService zephyrService;
+	@Mock private ZephyrService zephyrService;
 
-	@Mock
-	private ZephyrServiceKanban zephyrServiceKanban;
+	@Mock private ZephyrServiceKanban zephyrServiceKanban;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@InjectMocks
-	private ZephyrController zephyrController;
+	@InjectMocks private ZephyrController zephyrController;
 
 	@Before
 	public void before() {
@@ -130,10 +126,12 @@ public class ZephyrControllerTest {
 		kpiElementList.add(kpi42);
 		when(zephyrService.process(Mockito.any())).thenReturn(kpiElementList);
 
-		mockMvc.perform(post("/zypher/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/zypher/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful())
 				// .andDo(print())
-				.andExpect(jsonPath("$[0].value").value(100)).andExpect(jsonPath("$[1].value").value(80));
+				.andExpect(jsonPath("$[0].value").value(100))
+				.andExpect(jsonPath("$[1].value").value(80));
 	}
 
 	@Test
@@ -151,7 +149,8 @@ public class ZephyrControllerTest {
 						+ "}";
 		// @formatter:on
 
-		mockMvc.perform(post("/zypher/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/zypher/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().isBadRequest());
 	}
 
@@ -190,7 +189,8 @@ public class ZephyrControllerTest {
 
 		when(zephyrServiceKanban.process(Mockito.any())).thenReturn(kpiElementList);
 
-		mockMvc.perform(post("/zypherkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/zypherkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -208,7 +208,8 @@ public class ZephyrControllerTest {
 						+ "}";
 		// @formatter:on
 
-		mockMvc.perform(post("/zypherkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/zypherkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().isBadRequest());
 	}
 }

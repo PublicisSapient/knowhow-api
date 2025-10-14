@@ -16,7 +16,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author aksshriv1
  */
-@ChangeUnit(id = "r_release_defectAssignee", order = "09401", author = "aksshriv1", systemVersion = "9.4.0")
+@ChangeUnit(
+		id = "r_release_defectAssignee",
+		order = "09401",
+		author = "aksshriv1",
+		systemVersion = "9.4.0")
 public class ReleaseDefectAssigneeEnh {
 
 	private final MongoTemplate mongoTemplate;
@@ -28,9 +32,10 @@ public class ReleaseDefectAssigneeEnh {
 
 	@Execution
 	public void execution() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
-		fieldMappingStructure
-				.deleteOne(new Document(FIELD_NAME, new Document("$in", Collections.singletonList("jiraDodKPI143"))));
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
+		fieldMappingStructure.deleteOne(
+				new Document(FIELD_NAME, new Document("$in", Collections.singletonList("jiraDodKPI143"))));
 	}
 
 	@RollbackExecution

@@ -34,12 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class JiraIssueReleaseStatusDataFactory {
-	private static final String FILE_PATH_JIRA_ISSUES = "/json/default/jira_issue_release_status.json";
+	private static final String FILE_PATH_JIRA_ISSUES =
+			"/json/default/jira_issue_release_status.json";
 	private List<JiraIssueReleaseStatus> jiraIssueReleaseStatusList;
 	private ObjectMapper mapper = null;
 
-	public JiraIssueReleaseStatusDataFactory() {
-	}
+	public JiraIssueReleaseStatusDataFactory() {}
 
 	public static JiraIssueReleaseStatusDataFactory newInstance(String filePath) {
 
@@ -59,9 +59,10 @@ public class JiraIssueReleaseStatusDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_JIRA_ISSUES : filePath;
 
-			jiraIssueReleaseStatusList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<JiraIssueReleaseStatus>>() {
-					});
+			jiraIssueReleaseStatusList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<JiraIssueReleaseStatus>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

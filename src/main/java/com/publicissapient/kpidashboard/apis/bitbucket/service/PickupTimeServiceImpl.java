@@ -73,20 +73,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class PickupTimeServiceImpl
+		extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	public static final String MR_COUNT = "No of PRs";
 	private static final String ASSIGNEE = "assignee";
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private AssigneeDetailsRepository assigneeDetailsRepository;
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private AssigneeDetailsRepository assigneeDetailsRepository;
+	@Autowired private KpiHelperService kpiHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -100,54 +97,60 @@ public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Obje
 		Map<String, Node> mapTmp = new HashMap<>();
 		mapTmp.put(projectNode.getId(), projectNode);
 		projectWiseLeafNodeValue(kpiElement, mapTmp, projectNode, kpiRequest);
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PICKUP_TIME);
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.PICKUP_TIME);
-		Map<String, List<DataCount>> unsortedMap = trendValuesMap.entrySet().stream().sorted(Map.Entry.comparingByKey())
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PICKUP_TIME);
+		Map<String, List<DataCount>> unsortedMap =
+				trendValuesMap.entrySet().stream()
+						.sorted(Map.Entry.comparingByKey())
+						.collect(
+								Collectors.toMap(
+										Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
 		Map<String, Map<String, List<DataCount>>> statusTypeProjectWiseDc = new LinkedHashMap<>();
-		unsortedMap.forEach((statusType, dataCounts) -> {
-			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
-					.collect(Collectors.groupingBy(DataCount::getData));
-			statusTypeProjectWiseDc.put(statusType, projectWiseDc);
-		});
+		unsortedMap.forEach(
+				(statusType, dataCounts) -> {
+					Map<String, List<DataCount>> projectWiseDc =
+							dataCounts.stream().collect(Collectors.groupingBy(DataCount::getData));
+					statusTypeProjectWiseDc.put(statusType, projectWiseDc);
+				});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		statusTypeProjectWiseDc.forEach((issueType, projectWiseDc) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDc.entrySet().forEach(trend -> dataList.addAll(trend.getValue()));
-			// split for filters
-			String[] issueFilter = issueType.split("#");
-			dataCountGroup.setFilter1(issueFilter[0]);
-			dataCountGroup.setFilter2(issueFilter[1]);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		statusTypeProjectWiseDc.forEach(
+				(issueType, projectWiseDc) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDc.entrySet().forEach(trend -> dataList.addAll(trend.getValue()));
+					// split for filters
+					String[] issueFilter = issueType.split("#");
+					dataCountGroup.setFilter1(issueFilter[0]);
+					dataCountGroup.setFilter2(issueFilter[1]);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 		kpiElement.setTrendValueList(dataCountGroups);
 		return kpiElement;
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *          kpi element
-	 * @param mapTmp
-	 *          node map
-	 * @param projectLeafNode
-	 *          leaf node of project
-	 * @param kpiRequest
-	 *          kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void projectWiseLeafNodeValue(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
@@ -160,64 +163,92 @@ public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Obje
 		// gets the tool configuration
 		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
 		ProjectFilter projectFilter = projectLeafNode.getProjectFilter();
-		ObjectId projectBasicConfigId = projectFilter == null ? null : projectFilter.getBasicProjectConfigId();
-		Map<String, List<Tool>> toolListMap = toolMap == null ? null : toolMap.get(projectBasicConfigId);
-		List<RepoToolKpiMetricResponse> repoToolKpiMetricResponseList = kpiHelperService.getRepoToolsKpiMetricResponse(
-				localEndDate, kpiHelperService.getScmToolJobs(toolListMap, projectLeafNode), projectLeafNode, duration,
-				dataPoints, customApiConfig.getRepoToolPickupTimeUrl());
+		ObjectId projectBasicConfigId =
+				projectFilter == null ? null : projectFilter.getBasicProjectConfigId();
+		Map<String, List<Tool>> toolListMap =
+				toolMap == null ? null : toolMap.get(projectBasicConfigId);
+		List<RepoToolKpiMetricResponse> repoToolKpiMetricResponseList =
+				kpiHelperService.getRepoToolsKpiMetricResponse(
+						localEndDate,
+						kpiHelperService.getScmToolJobs(toolListMap, projectLeafNode),
+						projectLeafNode,
+						duration,
+						dataPoints,
+						customApiConfig.getRepoToolPickupTimeUrl());
 		if (CollectionUtils.isEmpty(repoToolKpiMetricResponseList)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No kpi data found for this project {}", projectLeafNode);
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No kpi data found for this project {}", projectLeafNode);
 			return;
 		}
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		List<Tool> reposList = kpiHelperService.populateSCMToolsRepoList(toolListMap);
 		if (CollectionUtils.isEmpty(reposList)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No Jobs found for this project {}", projectLeafNode.getProjectFilter());
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No Jobs found for this project {}",
+					projectLeafNode.getProjectFilter());
 			return;
 		}
 
 		String projectName = projectLeafNode.getProjectFilter().getName();
 		Map<String, List<DataCount>> aggDataMap = new HashMap<>();
-		Map<String, Object> resultmap = fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
+		Map<String, Object> resultmap =
+				fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
 		Set<Assignee> assignees = (Set<Assignee>) resultmap.get(ASSIGNEE);
 		LocalDate currentDate = LocalDate.now();
-		Set<String> overAllUsers = repoToolKpiMetricResponseList.stream().flatMap(value -> value.getUsers().stream())
-				.map(RepoToolUserDetails::getEmail).collect(Collectors.toSet());
+		Set<String> overAllUsers =
+				repoToolKpiMetricResponseList.stream()
+						.flatMap(value -> value.getUsers().stream())
+						.map(RepoToolUserDetails::getEmail)
+						.collect(Collectors.toSet());
 		List<RepoToolValidationData> repoToolValidationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
 
 			LocalDate finalCurrentDate = currentDate;
-			CustomDateRange weekRange = KpiDataHelper.getStartAndEndDateForDataFiltering(finalCurrentDate, duration);
+			CustomDateRange weekRange =
+					KpiDataHelper.getStartAndEndDateForDataFiltering(finalCurrentDate, duration);
 			String date = KpiHelperService.getDateRange(weekRange, duration);
 
-			Optional<RepoToolKpiMetricResponse> repoToolKpiMetricResponse = repoToolKpiMetricResponseList.stream()
-					.filter(value -> value.getDateLabel().equals(weekRange.getStartDate().toString())).findFirst();
+			Optional<RepoToolKpiMetricResponse> repoToolKpiMetricResponse =
+					repoToolKpiMetricResponseList.stream()
+							.filter(value -> value.getDateLabel().equals(weekRange.getStartDate().toString()))
+							.findFirst();
 
-			reposList.forEach(repo -> {
-				if (!CollectionUtils.isEmpty(repo.getProcessorItemList()) &&
-						repo.getProcessorItemList().get(0).getId() != null) {
-					List<RepoToolUserDetails> repoToolUserDetailsList = new ArrayList<>();
-					String branchName = getBranchSubFilter(repo, projectName);
-					Double pickupTime = 0.0d;
-					long mrCount = 0L;
-					String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-					if (repoToolKpiMetricResponse.isPresent()) {
-						Optional<Branches> matchingBranch = repoToolKpiMetricResponse.get().getRepositories().stream()
-								.filter(repository -> repository.getName().equals(repo.getRepositoryName()))
-								.flatMap(repository -> repository.getBranches().stream())
-								.filter(branch -> branch.getName().equals(repo.getBranch())).findFirst();
+			reposList.forEach(
+					repo -> {
+						if (!CollectionUtils.isEmpty(repo.getProcessorItemList())
+								&& repo.getProcessorItemList().get(0).getId() != null) {
+							List<RepoToolUserDetails> repoToolUserDetailsList = new ArrayList<>();
+							String branchName = getBranchSubFilter(repo, projectName);
+							Double pickupTime = 0.0d;
+							long mrCount = 0L;
+							String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
+							if (repoToolKpiMetricResponse.isPresent()) {
+								Optional<Branches> matchingBranch =
+										repoToolKpiMetricResponse.get().getRepositories().stream()
+												.filter(repository -> repository.getName().equals(repo.getRepositoryName()))
+												.flatMap(repository -> repository.getBranches().stream())
+												.filter(branch -> branch.getName().equals(repo.getBranch()))
+												.findFirst();
 
-						pickupTime = matchingBranch.map(Branches::getHours).orElse(0.0d);
-						mrCount = matchingBranch.map(Branches::getMergeRequestsPT).map(Map::size).orElse(0);
-						repoToolUserDetailsList = matchingBranch.map(Branches::getUsers).orElse(new ArrayList<>());
-					}
-					repoToolValidationDataList.addAll(
-							setUserDataCounts(overAllUsers, repoToolUserDetailsList, assignees, repo, projectName, date, aggDataMap));
-					setDataCount(projectName, date, overallKpiGroup, pickupTime, mrCount, aggDataMap);
-				}
-			});
+								pickupTime = matchingBranch.map(Branches::getHours).orElse(0.0d);
+								mrCount = matchingBranch.map(Branches::getMergeRequestsPT).map(Map::size).orElse(0);
+								repoToolUserDetailsList =
+										matchingBranch.map(Branches::getUsers).orElse(new ArrayList<>());
+							}
+							repoToolValidationDataList.addAll(
+									setUserDataCounts(
+											overAllUsers,
+											repoToolUserDetailsList,
+											assignees,
+											repo,
+											projectName,
+											date,
+											aggDataMap));
+							setDataCount(projectName, date, overallKpiGroup, pickupTime, mrCount, aggDataMap);
+						}
+					});
 
 			currentDate = KpiHelperService.getNextRangeDate(duration, currentDate);
 		}
@@ -230,22 +261,20 @@ public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * fetch data from db
 	 *
-	 * @param leafNodeList
-	 *          leaf node list
-	 * @param startDate
-	 *          start date
-	 * @param endDate
-	 *          end date
-	 * @param kpiRequest
-	 *          kpi request
+	 * @param leafNodeList leaf node list
+	 * @param startDate start date
+	 * @param endDate end date
+	 * @param kpiRequest kpi request
 	 * @return map of data
 	 */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
-		AssigneeDetails assigneeDetails = assigneeDetailsRepository
-				.findByBasicProjectConfigId(leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
-		Set<Assignee> assignees = assigneeDetails != null ? assigneeDetails.getAssignee() : new HashSet<>();
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
+		AssigneeDetails assigneeDetails =
+				assigneeDetailsRepository.findByBasicProjectConfigId(
+						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
+		Set<Assignee> assignees =
+				assigneeDetails != null ? assigneeDetails.getAssignee() : new HashSet<>();
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put(ASSIGNEE, assignees);
 		return resultMap;
@@ -254,96 +283,129 @@ public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * set data count for user filter
 	 *
-	 * @param overAllUsers
-	 *          list of user emails from repotool
-	 * @param repoToolUserDetailsList
-	 *          list of repo tool user data
-	 * @param assignees
-	 *          assignee data
-	 * @param repo
-	 *          repo tool item
-	 * @param projectName
-	 *          project name
-	 * @param date
-	 *          date
-	 * @param dateUserWiseAverage
-	 *          total data map
+	 * @param overAllUsers list of user emails from repotool
+	 * @param repoToolUserDetailsList list of repo tool user data
+	 * @param assignees assignee data
+	 * @param repo repo tool item
+	 * @param projectName project name
+	 * @param date date
+	 * @param dateUserWiseAverage total data map
 	 * @return repotool validation data
 	 */
-	private List<RepoToolValidationData> setUserDataCounts(Set<String> overAllUsers,
-			List<RepoToolUserDetails> repoToolUserDetailsList, Set<Assignee> assignees, Tool repo, String projectName,
-			String date, Map<String, List<DataCount>> dateUserWiseAverage) {
+	private List<RepoToolValidationData> setUserDataCounts(
+			Set<String> overAllUsers,
+			List<RepoToolUserDetails> repoToolUserDetailsList,
+			Set<Assignee> assignees,
+			Tool repo,
+			String projectName,
+			String date,
+			Map<String, List<DataCount>> dateUserWiseAverage) {
 		List<RepoToolValidationData> repoToolValidationDataList = new ArrayList<>();
-		overAllUsers.forEach(userEmail -> {
-			Optional<RepoToolUserDetails> repoToolUserDetails = repoToolUserDetailsList.stream()
-					.filter(user -> userEmail.equalsIgnoreCase(user.getEmail())).findFirst();
-			Optional<Assignee> assignee = assignees.stream()
-					.filter(assign -> CollectionUtils.isNotEmpty(assign.getEmail()) && assign.getEmail().contains(userEmail))
-					.findFirst();
-			String developerName = assignee.isPresent() ? assignee.get().getAssigneeName() : userEmail;
-			Double userHours = repoToolUserDetails.map(RepoToolUserDetails::getHours).orElse(0.0d);
-			long userMrCount = repoToolUserDetails.map(repoToolUserDetails1 -> {
-				List<MergeRequests> mergeRequestsPT = Optional.ofNullable(repoToolUserDetails1.getMergeRequestList())
-						.orElse(new ArrayList<>()).stream().filter(mergeRequests -> mergeRequests.getUpdatedAt() != null).toList();
-				return mergeRequestsPT.size();
-			}).orElse(0);
+		overAllUsers.forEach(
+				userEmail -> {
+					Optional<RepoToolUserDetails> repoToolUserDetails =
+							repoToolUserDetailsList.stream()
+									.filter(user -> userEmail.equalsIgnoreCase(user.getEmail()))
+									.findFirst();
+					Optional<Assignee> assignee =
+							assignees.stream()
+									.filter(
+											assign ->
+													CollectionUtils.isNotEmpty(assign.getEmail())
+															&& assign.getEmail().contains(userEmail))
+									.findFirst();
+					String developerName =
+							assignee.isPresent() ? assignee.get().getAssigneeName() : userEmail;
+					Double userHours = repoToolUserDetails.map(RepoToolUserDetails::getHours).orElse(0.0d);
+					long userMrCount =
+							repoToolUserDetails
+									.map(
+											repoToolUserDetails1 -> {
+												List<MergeRequests> mergeRequestsPT =
+														Optional.ofNullable(repoToolUserDetails1.getMergeRequestList())
+																.orElse(new ArrayList<>())
+																.stream()
+																.filter(mergeRequests -> mergeRequests.getUpdatedAt() != null)
+																.toList();
+												return mergeRequestsPT.size();
+											})
+									.orElse(0);
 
-			String branchName = getBranchSubFilter(repo, projectName);
-			String userKpiGroup = branchName + "#" + developerName;
-			DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(DateUtil.TIME_FORMAT).optionalStart()
-					.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).optionalEnd().appendPattern("'Z'").toFormatter();
-			if (repoToolUserDetails.isPresent()) {
-				repoToolUserDetails.get().getMergeRequestList().forEach(mr -> {
-					RepoToolValidationData repoToolValidationData = new RepoToolValidationData();
-					repoToolValidationData.setProjectName(projectName);
-					repoToolValidationData.setBranchName(repo.getBranch());
-					repoToolValidationData.setRepoUrl(repo.getRepositoryName());
-					repoToolValidationData.setMergeRequestUrl(mr.getLink());
-					repoToolValidationData.setDeveloperName(developerName);
-					repoToolValidationData.setDate(date);
-					repoToolValidationData.setPrStatus(mr.getMrState());
-					LocalDateTime dateTime = LocalDateTime.parse(mr.getCreatedAt(), formatter);
-					repoToolValidationData
-							.setPrRaisedTime(dateTime.format(DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT)));
-					if (mr.getUpdatedAt() != null) {
-						dateTime = LocalDateTime.parse(mr.getUpdatedAt(), formatter);
-						repoToolValidationData
-								.setPrActivityTime(dateTime.format(DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT)));
-						repoToolValidationData.setPickupTime(mr.getFirstReviewedAt());
+					String branchName = getBranchSubFilter(repo, projectName);
+					String userKpiGroup = branchName + "#" + developerName;
+					DateTimeFormatter formatter =
+							new DateTimeFormatterBuilder()
+									.appendPattern(DateUtil.TIME_FORMAT)
+									.optionalStart()
+									.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+									.optionalEnd()
+									.appendPattern("'Z'")
+									.toFormatter();
+					if (repoToolUserDetails.isPresent()) {
+						repoToolUserDetails
+								.get()
+								.getMergeRequestList()
+								.forEach(
+										mr -> {
+											RepoToolValidationData repoToolValidationData = new RepoToolValidationData();
+											repoToolValidationData.setProjectName(projectName);
+											repoToolValidationData.setBranchName(repo.getBranch());
+											repoToolValidationData.setRepoUrl(repo.getRepositoryName());
+											repoToolValidationData.setMergeRequestUrl(mr.getLink());
+											repoToolValidationData.setDeveloperName(developerName);
+											repoToolValidationData.setDate(date);
+											repoToolValidationData.setPrStatus(mr.getMrState());
+											LocalDateTime dateTime = LocalDateTime.parse(mr.getCreatedAt(), formatter);
+											repoToolValidationData.setPrRaisedTime(
+													dateTime.format(
+															DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT)));
+											if (mr.getUpdatedAt() != null) {
+												dateTime = LocalDateTime.parse(mr.getUpdatedAt(), formatter);
+												repoToolValidationData.setPrActivityTime(
+														dateTime.format(
+																DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT)));
+												repoToolValidationData.setPickupTime(mr.getFirstReviewedAt());
+											}
+
+											repoToolValidationDataList.add(repoToolValidationData);
+										});
 					}
-
-					repoToolValidationDataList.add(repoToolValidationData);
+					setDataCount(
+							projectName, date, userKpiGroup, userHours, userMrCount, dateUserWiseAverage);
 				});
-			}
-			setDataCount(projectName, date, userKpiGroup, userHours, userMrCount, dateUserWiseAverage);
-		});
 		return repoToolValidationDataList;
 	}
 
 	/**
 	 * set individual data count
 	 *
-	 * @param projectName
-	 *          project name
-	 * @param week
-	 *          date
-	 * @param kpiGroup
-	 *          combined filter
-	 * @param value
-	 *          value
-	 * @param dataCountMap
-	 *          data count map by filter
+	 * @param projectName project name
+	 * @param week date
+	 * @param kpiGroup combined filter
+	 * @param value value
+	 * @param dataCountMap data count map by filter
 	 */
-	private void setDataCount(String projectName, String week, String kpiGroup, Double value, Long mrCount,
+	private void setDataCount(
+			String projectName,
+			String week,
+			String kpiGroup,
+			Double value,
+			Long mrCount,
 			Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.get(kpiGroup);
-		Optional<DataCount> optionalDataCount = dataCounts != null
-				? dataCounts.stream().filter(dataCount1 -> dataCount1.getDate().equals(week)).findFirst()
-				: Optional.empty();
+		Optional<DataCount> optionalDataCount =
+				dataCounts != null
+						? dataCounts.stream()
+								.filter(dataCount1 -> dataCount1.getDate().equals(week))
+								.findFirst()
+						: Optional.empty();
 		if (optionalDataCount.isPresent()) {
 			DataCount updatedDataCount = optionalDataCount.get();
-			updatedDataCount.getHoverValue().put(MR_COUNT,
-					((Number) updatedDataCount.getHoverValue().get(MR_COUNT)).longValue() + mrCount);
+			updatedDataCount
+					.getHoverValue()
+					.put(
+							MR_COUNT,
+							((Number) updatedDataCount.getHoverValue().get(MR_COUNT)).longValue() + mrCount);
 			updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value);
 			dataCounts.set(dataCounts.indexOf(optionalDataCount.get()), updatedDataCount);
 		} else {
@@ -363,14 +425,13 @@ public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Obje
 	/**
 	 * populate excel data
 	 *
-	 * @param requestTrackerId
-	 *          request tracker id
-	 * @param repoToolValidationDataList
-	 *          repo tool validation data
-	 * @param validationDataMap
-	 *          excel data map
+	 * @param requestTrackerId request tracker id
+	 * @param repoToolValidationDataList repo tool validation data
+	 * @param validationDataMap excel data map
 	 */
-	private void populateExcelDataObject(String requestTrackerId, List<RepoToolValidationData> repoToolValidationDataList,
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<RepoToolValidationData> repoToolValidationDataList,
 			List<KPIExcelData> validationDataMap) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 
@@ -390,6 +451,7 @@ public class PickupTimeServiceImpl extends BitBucketKPIService<Double, List<Obje
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI160(), KPICode.PICKUP_TIME.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI160(), KPICode.PICKUP_TIME.getKpiId());
 	}
 }

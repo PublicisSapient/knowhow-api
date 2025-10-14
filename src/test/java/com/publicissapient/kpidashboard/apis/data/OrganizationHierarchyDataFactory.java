@@ -16,14 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OrganizationHierarchyDataFactory {
 
-	private static final String FILE_PATH_ORGANIZATION_HIERARCHY = "/json/default/organization_hierarchy.json";
+	private static final String FILE_PATH_ORGANIZATION_HIERARCHY =
+			"/json/default/organization_hierarchy.json";
 
 	private List<OrganizationHierarchy> organizationHierarchies;
 
 	private ObjectMapper mapper;
 
-	private OrganizationHierarchyDataFactory() {
-	}
+	private OrganizationHierarchyDataFactory() {}
 
 	public static OrganizationHierarchyDataFactory newInstance(String filePath) {
 		OrganizationHierarchyDataFactory factory = new OrganizationHierarchyDataFactory();
@@ -39,11 +39,13 @@ public class OrganizationHierarchyDataFactory {
 
 	private void init(String filePath) {
 		try {
-			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ORGANIZATION_HIERARCHY : filePath;
+			String resultPath =
+					StringUtils.isEmpty(filePath) ? FILE_PATH_ORGANIZATION_HIERARCHY : filePath;
 
-			organizationHierarchies = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<OrganizationHierarchy>>() {
-					});
+			organizationHierarchies =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<OrganizationHierarchy>>() {});
 		} catch (Exception e) {
 			log.error("Error in reading organization hierarchy from file = " + filePath, e);
 		}
@@ -66,7 +68,8 @@ public class OrganizationHierarchyDataFactory {
 	public OrganizationHierarchy findById(String id) {
 
 		return organizationHierarchies.stream()
-				.filter(organizationHierarchy -> organizationHierarchy.getId().toHexString().equals(id)).findFirst()
+				.filter(organizationHierarchy -> organizationHierarchy.getId().toHexString().equals(id))
+				.findFirst()
 				.orElse(null);
 	}
 }

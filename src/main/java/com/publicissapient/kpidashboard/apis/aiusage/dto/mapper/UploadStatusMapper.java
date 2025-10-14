@@ -18,25 +18,26 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.dto.mapper;
 
+import java.util.UUID;
+
+import org.springframework.stereotype.Component;
+
 import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
-import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 public class UploadStatusMapper {
-    public UploadStatusResponse mapToDto(AIUsageRequest status) {
-        return UploadStatusResponse.builder()
-                .requestId(UUID.fromString(status.getRequestId()))
-                .status(UploadStatus.valueOf(String.valueOf(status.getStatus())))
-                .submittedAt(status.getSubmittedAt())
-                .completedAt(status.getCompletedAt())
-                .totalRecords(status.getTotalRecords())
-                .successfulRecords(status.getSuccessfulRecords())
-                .failedRecords(status.getFailedRecords())
-                .errorMessage(status.getErrorMessage())
-                .build();
-    }
+	public UploadStatusResponse mapToDto(AIUsageRequest status) {
+		return UploadStatusResponse.builder()
+				.requestId(UUID.fromString(status.getRequestId()))
+				.status(UploadStatus.valueOf(String.valueOf(status.getStatus())))
+				.submittedAt(status.getSubmittedAt())
+				.completedAt(status.getCompletedAt())
+				.totalRecords(status.getTotalRecords())
+				.successfulRecords(status.getSuccessfulRecords())
+				.failedRecords(status.getFailedRecords())
+				.errorMessage(status.getErrorMessage())
+				.build();
+	}
 }

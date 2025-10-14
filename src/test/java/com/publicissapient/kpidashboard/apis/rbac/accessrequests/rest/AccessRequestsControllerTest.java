@@ -57,12 +57,9 @@ public class AccessRequestsControllerTest {
 	private String testUsername;
 	private String testId;
 	private String testStatus;
-	@InjectMocks
-	private AccessRequestsController accessRequestsController;
-	@Mock
-	private AccessRequestsHelperService accessRequestsHelperService;
-	@Mock
-	private UserTokenDeletionService userTokenDeletionService;
+	@InjectMocks private AccessRequestsController accessRequestsController;
+	@Mock private AccessRequestsHelperService accessRequestsHelperService;
+	@Mock private UserTokenDeletionService userTokenDeletionService;
 
 	/** method includes preprocesses for test cases */
 	@Before
@@ -120,58 +117,66 @@ public class AccessRequestsControllerTest {
 	/**
 	 * method to test GET /accessrequests restPoint ;
 	 *
-	 * <p>
-	 * Get all access requests
+	 * <p>Get all access requests
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAllAccessRequests() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/accessrequests/").contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/accessrequests/")
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	/**
-	 * method to test GET /accessrequests/user/{username} restPoint ; Get access
-	 * requests created by username
+	 * method to test GET /accessrequests/user/{username} restPoint ; Get access requests created by
+	 * username
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAccessRequestByUsername() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/accessrequests/user/" + testUsername)
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/accessrequests/user/" + testUsername)
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 	}
 
 	/**
-	 * method to test GET /accessrequests/status/{status} restPoint ; Get access
-	 * requests with current status
+	 * method to test GET /accessrequests/status/{status} restPoint ; Get access requests with current
+	 * status
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAccessRequestByStatus() throws Exception {
 		testStatus = "Pending";
-		mockMvc.perform(MockMvcRequestBuilders.get("/accessrequests/status/" + testStatus)
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/accessrequests/status/" + testStatus)
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 	}
 
 	/**
-	 * method to test GET /accessrequests/{id} restPoint ; Get access request with
-	 * id
+	 * method to test GET /accessrequests/{id} restPoint ; Get access request with id
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAccessRequestById() throws Exception {
 		mockMvc
-				.perform(MockMvcRequestBuilders.get("/accessrequests/" + testId).contentType(MediaType.APPLICATION_JSON_VALUE))
+				.perform(
+						MockMvcRequestBuilders.get("/accessrequests/" + testId)
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	/**
-	 * method to test PUT /accessrequests/{id} restPoint ; Modify access request
-	 * with id
+	 * method to test PUT /accessrequests/{id} restPoint ; Modify access request with id
 	 *
 	 * @throws Exception
 	 */
@@ -179,21 +184,22 @@ public class AccessRequestsControllerTest {
 	public void testModifyAccessRequest() throws Exception {
 
 		mockMvc
-				.perform(MockMvcRequestBuilders.put("/accessrequests/" + testId)
-						.content(mapper.writeValueAsString(testAccessRequestsData)).contentType(MediaType.APPLICATION_JSON_VALUE))
+				.perform(
+						MockMvcRequestBuilders.put("/accessrequests/" + testId)
+								.content(mapper.writeValueAsString(testAccessRequestsData))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	/**
 	 * create ProjectsForAccessRequest object
 	 *
-	 * @param projectName
-	 *          projectName
-	 * @param projectId
-	 *          projectId
+	 * @param projectName projectName
+	 * @param projectId projectId
 	 * @return object
 	 */
-	private ProjectsForAccessRequest createProjectsForAccessRequest(String projectName, String projectId) {
+	private ProjectsForAccessRequest createProjectsForAccessRequest(
+			String projectName, String projectId) {
 		ProjectsForAccessRequest par = new ProjectsForAccessRequest();
 		par.setProjectName(projectName);
 		par.setProjectId(projectId);

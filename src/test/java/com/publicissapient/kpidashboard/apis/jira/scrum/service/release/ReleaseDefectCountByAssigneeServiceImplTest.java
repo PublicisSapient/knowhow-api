@@ -62,14 +62,10 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class ReleaseDefectCountByAssigneeServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	private ReleaseDefectCountByAssigneeServiceImpl defectCountByAssigneeService;
-	@Mock
-	private JiraReleaseServiceR jiraService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks private ReleaseDefectCountByAssigneeServiceImpl defectCountByAssigneeService;
+	@Mock private JiraReleaseServiceR jiraService;
 
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
@@ -81,66 +77,88 @@ public class ReleaseDefectCountByAssigneeServiceImplTest {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi141");
 		kpiRequest.setLabel("RELEASE");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/account_hierarchy_filter_data_release.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/account_hierarchy_filter_data_release.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		bugList = jiraIssueDataFactory.getBugs();
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 	}
 
 	@Test
 	public void getQualifierType() {
-		assertThat(defectCountByAssigneeService.getQualifierType(),
+		assertThat(
+				defectCountByAssigneeService.getQualifierType(),
 				equalTo(KPICode.DEFECT_COUNT_BY_ASSIGNEE_RELEASE.name()));
 	}
 
 	@Test
 	public void getKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesForSelectedRelease()).thenReturn(bugList);
-		KpiElement kpiElement = defectCountByAssigneeService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
-		List<IterationKpiValue> trendValueList = (List<IterationKpiValue>) kpiElement.getTrendValueList();
-		Map<String, Integer> value = (Map<String, Integer>) ((DataCount) ((ArrayList) trendValueList.get(1).getValue()
-				.get(0).getValue()).get(0)).getValue();
+		KpiElement kpiElement =
+				defectCountByAssigneeService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
+		List<IterationKpiValue> trendValueList =
+				(List<IterationKpiValue>) kpiElement.getTrendValueList();
+		Map<String, Integer> value =
+				(Map<String, Integer>)
+						((DataCount) ((ArrayList) trendValueList.get(1).getValue().get(0).getValue()).get(0))
+								.getValue();
 		assertEquals(value, expectedResult(bugList));
 	}
 
 	@Test
 	public void getKpiDataWithoutAssignee() throws ApplicationException {
 		bugList.forEach(jiraIssue -> jiraIssue.setAssigneeName(null));
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesForSelectedRelease()).thenReturn(bugList);
-		KpiElement kpiElement = defectCountByAssigneeService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
-		List<IterationKpiValue> trendValueList = (List<IterationKpiValue>) kpiElement.getTrendValueList();
-		Map<String, Integer> value = (Map<String, Integer>) ((DataCount) ((ArrayList) trendValueList.get(1).getValue()
-				.get(0).getValue()).get(0)).getValue();
+		KpiElement kpiElement =
+				defectCountByAssigneeService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get("release").get(0));
+		List<IterationKpiValue> trendValueList =
+				(List<IterationKpiValue>) kpiElement.getTrendValueList();
+		Map<String, Integer> value =
+				(Map<String, Integer>)
+						((DataCount) ((ArrayList) trendValueList.get(1).getValue().get(0).getValue()).get(0))
+								.getValue();
 		assertEquals(value, expectedResult(bugList));
 	}
 
 	private Map<String, Integer> expectedResult(List<JiraIssue> bugList) {
 		Map<String, Integer> finalMap = new HashMap<>();
-		Map<String, List<JiraIssue>> collect = bugList.stream().filter(jiraIssue -> {
-			if (StringUtils.isEmpty(jiraIssue.getAssigneeName())) {
-				jiraIssue.setAssigneeName("-");
-			}
-			return true;
-		}).collect(Collectors.groupingBy(JiraIssue::getAssigneeName));
+		Map<String, List<JiraIssue>> collect =
+				bugList.stream()
+						.filter(
+								jiraIssue -> {
+									if (StringUtils.isEmpty(jiraIssue.getAssigneeName())) {
+										jiraIssue.setAssigneeName("-");
+									}
+									return true;
+								})
+						.collect(Collectors.groupingBy(JiraIssue::getAssigneeName));
 		collect.forEach((k, v) -> finalMap.put(k, v.size()));
 		return finalMap;
 	}

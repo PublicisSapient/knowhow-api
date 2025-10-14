@@ -47,15 +47,15 @@ public class ProjectReleaseDataFactory {
 	private List<ProjectRelease> projectRelease;
 	private List<ProjectVersion> projectVersion;
 
-	private ProjectReleaseDataFactory() {
-	}
+	private ProjectReleaseDataFactory() {}
 
 	public static ProjectReleaseDataFactory newInstance(String filePath, String versionFilePath) {
 
 		ProjectReleaseDataFactory projectReleaseDataFactory = new ProjectReleaseDataFactory();
 		projectReleaseDataFactory.createObjectMapper();
 		projectReleaseDataFactory.createProjectVersion(versionFilePath);
-		projectReleaseDataFactory.init(StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_REQUEST : filePath);
+		projectReleaseDataFactory.init(
+				StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_REQUEST : filePath);
 		return projectReleaseDataFactory;
 	}
 
@@ -67,9 +67,10 @@ public class ProjectReleaseDataFactory {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_REQUEST : filePath;
 
-			projectRelease = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<ProjectRelease>>() {
-					});
+			projectRelease =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<ProjectRelease>>() {});
 
 			// projectRelease =
 			// mapper.readValue(TypeReference.class.getResourceAsStream(filePath),
@@ -81,10 +82,12 @@ public class ProjectReleaseDataFactory {
 
 	private void createProjectVersion(String versionFilePath) {
 		try {
-			String versionPath = StringUtils.isEmpty(versionFilePath) ? FILE_PATH_PROJECT_VERSION : versionFilePath;
-			projectVersion = mapper.readValue(TypeReference.class.getResourceAsStream(versionPath),
-					new TypeReference<List<ProjectVersion>>() {
-					});
+			String versionPath =
+					StringUtils.isEmpty(versionFilePath) ? FILE_PATH_PROJECT_VERSION : versionFilePath;
+			projectVersion =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(versionPath),
+							new TypeReference<List<ProjectVersion>>() {});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -102,9 +105,13 @@ public class ProjectReleaseDataFactory {
 
 	public List<ProjectRelease> findByBasicProjectConfigId(String projectConfigId) {
 
-		ProjectRelease projectRelease = this.projectRelease.stream()
-				.filter(projectRelease1 -> projectRelease1.getConfigId().toHexString().equalsIgnoreCase(projectConfigId))
-				.findFirst().orElse(null);
+		ProjectRelease projectRelease =
+				this.projectRelease.stream()
+						.filter(
+								projectRelease1 ->
+										projectRelease1.getConfigId().toHexString().equalsIgnoreCase(projectConfigId))
+						.findFirst()
+						.orElse(null);
 		if (projectRelease != null) {
 			projectRelease.setListProjectVersion(projectVersion);
 		}

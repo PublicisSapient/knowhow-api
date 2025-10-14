@@ -67,7 +67,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
+public class TestExecutionKanbanServiceImpl
+		extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String QA = "QaKpi";
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
@@ -76,12 +77,9 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 	private static final String EXECUTED = "Executed Test Cases";
 	private static final String PASSED = "Passed Test Cases";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private FilterHelperService flterHelperService;
-	@Autowired
-	private KanbanTestExecutionRepository kanbanTestExecutionRepository;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private FilterHelperService flterHelperService;
+	@Autowired private KanbanTestExecutionRepository kanbanTestExecutionRepository;
 
 	@Override
 	public String getQualifierType() {
@@ -90,30 +88,37 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
 		dateWiseLeafNodeValue(mapTmp, projectList, kpiElement, kpiRequest);
 
-		log.debug("[TEST-EXECUTION-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[TEST-EXECUTION-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_KANBAN);
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.TEST_EXECUTION_KANBAN);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TEST_EXECUTION_KANBAN);
 
 		kpiElement.setTrendValueList(trendValues);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
-		log.debug("[TEST-EXECUTION-LEAF-NODE-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[TEST-EXECUTION-LEAF-NODE-VALUE][{}]. Aggregated Value at each level in the tree {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		return kpiElement;
 	}
@@ -124,30 +129,38 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		List<String> projectList = new ArrayList<>();
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			projectList.add(basicProjectConfigId.toString());
-		});
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					projectList.add(basicProjectConfigId.toString());
+				});
 		/** additional filter * */
-		String subGroupCategory = KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.KANBAN, QA,
-				flterHelperService);
+		String subGroupCategory =
+				KpiDataHelper.createAdditionalFilterMap(
+						kpiRequest, mapOfFilters, Constant.KANBAN, QA, flterHelperService);
 
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().collect(Collectors.toList()));
-		resultListMap.put(TEST_EXECUTION_DETAIL, kanbanTestExecutionRepository
-				.findTestExecutionDetailByFilters(mapOfFilters, uniqueProjectMap, startDate, endDate));
+		resultListMap.put(
+				TEST_EXECUTION_DETAIL,
+				kanbanTestExecutionRepository.findTestExecutionDetailByFilters(
+						mapOfFilters, uniqueProjectMap, startDate, endDate));
 		resultListMap.put(SUBGROUPCATEGORY, subGroupCategory);
 		return resultListMap;
 	}
 
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
@@ -155,101 +168,130 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 		String startDate = dateRange.getStartDate().format(DATE_FORMATTER);
 		String endDate = dateRange.getEndDate().format(DATE_FORMATTER);
 
-		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		Map<String, Object> resultMap =
+				fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 
-		Map<String, Map<String, KanbanTestExecution>> projectAndDateWiseCapacityMap = groupByProjectsAndDate(resultMap);
+		Map<String, Map<String, KanbanTestExecution>> projectAndDateWiseCapacityMap =
+				groupByProjectsAndDate(resultMap);
 
 		kpiWithoutFilter(projectAndDateWiseCapacityMap, mapTmp, leafNodeList, kpiElement, kpiRequest);
 	}
 
-	private Map<String, Map<String, KanbanTestExecution>> groupByProjectsAndDate(Map<String, Object> dataFromDb) {
-		List<KanbanTestExecution> testExecutionDetails = (List<KanbanTestExecution>) dataFromDb.get(TEST_EXECUTION_DETAIL);
-		Map<String, List<KanbanTestExecution>> groupByProjects = CollectionUtils.emptyIfNull(testExecutionDetails).stream()
-				.collect(Collectors.groupingBy(KanbanTestExecution::getBasicProjectConfigId));
+	private Map<String, Map<String, KanbanTestExecution>> groupByProjectsAndDate(
+			Map<String, Object> dataFromDb) {
+		List<KanbanTestExecution> testExecutionDetails =
+				(List<KanbanTestExecution>) dataFromDb.get(TEST_EXECUTION_DETAIL);
+		Map<String, List<KanbanTestExecution>> groupByProjects =
+				CollectionUtils.emptyIfNull(testExecutionDetails).stream()
+						.collect(Collectors.groupingBy(KanbanTestExecution::getBasicProjectConfigId));
 
 		Map<String, Map<String, KanbanTestExecution>> resultMap = new HashMap<>();
-		groupByProjects.forEach((project, testExecutions) -> resultMap.put(project, testExecutions.stream()
-				.collect(Collectors.toMap(KanbanTestExecution::getExecutionDate, (testExecution -> testExecution)))));
+		groupByProjects.forEach(
+				(project, testExecutions) ->
+						resultMap.put(
+								project,
+								testExecutions.stream()
+										.collect(
+												Collectors.toMap(
+														KanbanTestExecution::getExecutionDate,
+														(testExecution -> testExecution)))));
 
 		return resultMap;
 	}
 
-	private void kpiWithoutFilter(Map<String, Map<String, KanbanTestExecution>> projectWiseTestExecutions,
-			Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void kpiWithoutFilter(
+			Map<String, Map<String, KanbanTestExecution>> projectWiseTestExecutions,
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 		List<KPIExcelData> excelData = new ArrayList<>();
 		String requestTrackerId = getKanbanRequestTrackerId();
 
-		leafNodeList.forEach(node -> {
-			String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
-			String projectName = node.getProjectFilter().getName();
-			Map<String, KanbanTestExecution> existingTestExecutionsByDates = projectWiseTestExecutions.get(projectNodeId);
+		leafNodeList.forEach(
+				node -> {
+					String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
+					String projectName = node.getProjectFilter().getName();
+					Map<String, KanbanTestExecution> existingTestExecutionsByDates =
+							projectWiseTestExecutions.get(projectNodeId);
 
-			if (MapUtils.isNotEmpty(existingTestExecutionsByDates)) {
+					if (MapUtils.isNotEmpty(existingTestExecutionsByDates)) {
 
-				LocalDateTime currentDate = DateUtil.getTodayTime();
-				List<DataCount> dataCounts = new ArrayList<>();
+						LocalDateTime currentDate = DateUtil.getTodayTime();
+						List<DataCount> dataCounts = new ArrayList<>();
 
-				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
-					// fetch date range based on period for which request came
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
-							kpiRequest.getDuration());
+						for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
+							// fetch date range based on period for which request came
+							CustomDateRange dateRange =
+									KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+											currentDate, kpiRequest.getDuration());
 
-					String xAxisDataPointName = getXAxisDataPointName(dateRange, kpiRequest);
-					// calculation based on your kpi
-					Map<String, KanbanTestExecution> dataForTreadList = createDataForDateRange(projectName,
-							existingTestExecutionsByDates, dateRange);
+							String xAxisDataPointName = getXAxisDataPointName(dateRange, kpiRequest);
+							// calculation based on your kpi
+							Map<String, KanbanTestExecution> dataForTreadList =
+									createDataForDateRange(projectName, existingTestExecutionsByDates, dateRange);
 
-					Map<String, Integer> testExecutionAggregatedValuesForDateRange = aggregateValuesForDateRange(
-							dataForTreadList);
+							Map<String, Integer> testExecutionAggregatedValuesForDateRange =
+									aggregateValuesForDateRange(dataForTreadList);
 
-					DataCount dcObj = getDataCountObject(projectName, xAxisDataPointName,
-							testExecutionAggregatedValuesForDateRange);
-					dataCounts.add(dcObj);
+							DataCount dcObj =
+									getDataCountObject(
+											projectName, xAxisDataPointName, testExecutionAggregatedValuesForDateRange);
+							dataCounts.add(dcObj);
 
-					populateValidationDataObject(projectName, requestTrackerId, dataForTreadList, excelData);
+							populateValidationDataObject(
+									projectName, requestTrackerId, dataForTreadList, excelData);
 
-					if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-						currentDate = currentDate.minusWeeks(1);
-					} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-						currentDate = currentDate.minusMonths(1);
-					} else {
-						currentDate = currentDate.minusDays(1);
+							if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
+								currentDate = currentDate.minusWeeks(1);
+							} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
+								currentDate = currentDate.minusMonths(1);
+							} else {
+								currentDate = currentDate.minusDays(1);
+							}
+						}
+
+						mapTmp.get(node.getId()).setValue(dataCounts);
 					}
-				}
-
-				mapTmp.get(node.getId()).setValue(dataCounts);
-			}
-		});
+				});
 
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.TEST_EXECUTION_KANBAN.getColumns());
 	}
 
-	private Map<String, Integer> aggregateValuesForDateRange(Map<String, KanbanTestExecution> dataForTreadList) {
+	private Map<String, Integer> aggregateValuesForDateRange(
+			Map<String, KanbanTestExecution> dataForTreadList) {
 
 		Map<String, Integer> resultMap = new HashMap<>();
 		resultMap.put(TOTAL, 0);
 		resultMap.put(EXECUTED, 0);
 		resultMap.put(PASSED, 0);
 
-		dataForTreadList.forEach((date, testExecution) -> {
-			resultMap.put(TOTAL, resultMap.get(TOTAL) + testExecution.getTotalTestCases());
-			resultMap.put(EXECUTED, resultMap.get(EXECUTED) + testExecution.getExecutedTestCase());
-			resultMap.put(PASSED, resultMap.get(PASSED) + testExecution.getPassedTestCase());
-		});
+		dataForTreadList.forEach(
+				(date, testExecution) -> {
+					resultMap.put(TOTAL, resultMap.get(TOTAL) + testExecution.getTotalTestCases());
+					resultMap.put(EXECUTED, resultMap.get(EXECUTED) + testExecution.getExecutedTestCase());
+					resultMap.put(PASSED, resultMap.get(PASSED) + testExecution.getPassedTestCase());
+				});
 
 		return resultMap;
 	}
 
-	private Map<String, KanbanTestExecution> createDataForDateRange(String projectName,
-			Map<String, KanbanTestExecution> existingTestExecutionsByDate, CustomDateRange dateRange) {
+	private Map<String, KanbanTestExecution> createDataForDateRange(
+			String projectName,
+			Map<String, KanbanTestExecution> existingTestExecutionsByDate,
+			CustomDateRange dateRange) {
 
 		Map<String, KanbanTestExecution> resultMap = new HashMap<>();
 		LocalDate currentDate = dateRange.getStartDate();
-		while (DateUtil.isWithinDateRange(currentDate, dateRange.getStartDate(), dateRange.getEndDate())) {
+		while (DateUtil.isWithinDateRange(
+				currentDate, dateRange.getStartDate(), dateRange.getEndDate())) {
 			String formattedCurrentDate = DateUtil.localDateTimeConverter(currentDate);
-			resultMap.put(formattedCurrentDate, existingTestExecutionsByDate.getOrDefault(currentDate.toString(),
-					emptyKanbanTestExecution(projectName, currentDate.toString())));
+			resultMap.put(
+					formattedCurrentDate,
+					existingTestExecutionsByDate.getOrDefault(
+							currentDate.toString(),
+							emptyKanbanTestExecution(projectName, currentDate.toString())));
 			currentDate = currentDate.plusDays(1);
 		}
 
@@ -270,8 +312,10 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 	private String getXAxisDataPointName(CustomDateRange dateRange, KpiRequest kpiRequest) {
 		String range = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
-					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+			range =
+					DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime())
+							+ " to "
+							+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
 			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
@@ -280,7 +324,9 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 		return range;
 	}
 
-	private DataCount getDataCountObject(String projectName, String date,
+	private DataCount getDataCountObject(
+			String projectName,
+			String date,
 			Map<String, Integer> testExecutionAggregatedValuesForDateRange) {
 		int total = testExecutionAggregatedValuesForDateRange.get(TOTAL);
 		int executed = testExecutionAggregatedValuesForDateRange.get(EXECUTED);
@@ -316,18 +362,26 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 		return hoverData;
 	}
 
-	private void populateValidationDataObject(String projectName, String requestTrackerId,
-			Map<String, KanbanTestExecution> dataForTreadList, List<KPIExcelData> excelData) {
+	private void populateValidationDataObject(
+			String projectName,
+			String requestTrackerId,
+			Map<String, KanbanTestExecution> dataForTreadList,
+			List<KPIExcelData> excelData) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 
-			dataForTreadList.forEach((date, testExecution) -> {
-				double executionPerc = Math
-						.round((100.0 * testExecution.getExecutedTestCase()) / testExecution.getTotalTestCases());
-				double passedPerc = Math
-						.round((100.0 * testExecution.getPassedTestCase()) / (testExecution.getExecutedTestCase()));
-				KPIExcelUtility.populateTestExcecutionExcelData(projectName, null, testExecution, executionPerc, passedPerc,
-						excelData);
-			});
+			dataForTreadList.forEach(
+					(date, testExecution) -> {
+						double executionPerc =
+								Math.round(
+										(100.0 * testExecution.getExecutedTestCase())
+												/ testExecution.getTotalTestCases());
+						double passedPerc =
+								Math.round(
+										(100.0 * testExecution.getPassedTestCase())
+												/ (testExecution.getExecutedTestCase()));
+						KPIExcelUtility.populateTestExcecutionExcelData(
+								projectName, null, testExecution, executionPerc, passedPerc, excelData);
+					});
 		}
 	}
 
@@ -338,6 +392,7 @@ public class TestExecutionKanbanServiceImpl extends ZephyrKPIService<Double, Lis
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI71(), KPICode.TEST_EXECUTION_KANBAN.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI71(), KPICode.TEST_EXECUTION_KANBAN.getKpiId());
 	}
 }

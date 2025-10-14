@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -47,8 +45,8 @@ import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service implementation for executive dashboard functionality. Uses Strategy
- * pattern to delegate to appropriate dashboard strategy (Kanban/Scrum).
+ * Service implementation for executive dashboard functionality. Uses Strategy pattern to delegate
+ * to appropriate dashboard strategy (Kanban/Scrum).
  */
 @Slf4j
 @Service
@@ -64,7 +62,9 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	private final CacheService cacheService;
 
 	@Autowired
-	public ExecutiveServiceImpl(ExecutiveDashboardStrategyFactory strategyFactory, CacheService cacheService,
+	public ExecutiveServiceImpl(
+			ExecutiveDashboardStrategyFactory strategyFactory,
+			CacheService cacheService,
 			AccountHierarchyServiceImpl accountHierarchyService,
 			AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban) {
 		this.strategyFactory = strategyFactory;
@@ -74,8 +74,10 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	}
 
 	@Override
-	public ExecutiveDashboardResponseDTO getExecutiveDashboardScrum(ExecutiveDashboardRequestDTO request) {
-		log.info("Processing Scrum executive dashboard request with parentId: {}", request.getParentId());
+	public ExecutiveDashboardResponseDTO getExecutiveDashboardScrum(
+			ExecutiveDashboardRequestDTO request) {
+		log.info(
+				"Processing Scrum executive dashboard request with parentId: {}", request.getParentId());
 
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setLevel(request.getLevel());
@@ -87,9 +89,10 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CLOSED, "ACTIVE"));
 
-		Set<String> selectedIds = StringUtils.isBlank(request.getParentId())
-				? getNodeIds(kpiRequest, false, accountFilterRequest, null)
-				: getNodeIds(kpiRequest, false, accountFilterRequest, request.getParentId());
+		Set<String> selectedIds =
+				StringUtils.isBlank(request.getParentId())
+						? getNodeIds(kpiRequest, false, accountFilterRequest, null)
+						: getNodeIds(kpiRequest, false, accountFilterRequest, request.getParentId());
 
 		if (CollectionUtils.isNotEmpty(selectedIds)) {
 			kpiRequest.setIds(selectedIds.toArray(new String[0]));
@@ -99,25 +102,27 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 	}
 
 	@Override
-	public ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(ExecutiveDashboardRequestDTO request) {
-		log.info("Processing Kanban executive dashboard request with parentId: {}", request.getParentId());
+	public ExecutiveDashboardResponseDTO getExecutiveDashboardKanban(
+			ExecutiveDashboardRequestDTO request) {
+		log.info(
+				"Processing Kanban executive dashboard request with parentId: {}", request.getParentId());
 
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setLevel(request.getLevel());
 		kpiRequest.setLabel(request.getLabel());
 		kpiRequest.setSelectedMap(createSelectedMap(true));
-		kpiRequest.getSelectedMap().put("date",List.of("Weeks"));
-		kpiRequest.setIds(new String[] { "5" });
+		kpiRequest.getSelectedMap().put("date", List.of("Weeks"));
+		kpiRequest.setIds(new String[] {"5"});
 		kpiRequest.setSprintIncluded(List.of(CLOSED));
 
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(true);
 		accountFilterRequest.setSprintIncluded(List.of(CLOSED));
 
-
-		Set<String> selectedIds = StringUtils.isBlank(request.getParentId())
-				? getNodeIds(kpiRequest, true, accountFilterRequest, null)
-				: getNodeIds(kpiRequest, true, accountFilterRequest, request.getParentId());
+		Set<String> selectedIds =
+				StringUtils.isBlank(request.getParentId())
+						? getNodeIds(kpiRequest, true, accountFilterRequest, null)
+						: getNodeIds(kpiRequest, true, accountFilterRequest, request.getParentId());
 
 		if (CollectionUtils.isNotEmpty(selectedIds)) {
 			kpiRequest.setIds(selectedIds.toArray(new String[0]));
@@ -126,11 +131,11 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 		return strategyFactory.getStrategy(KANBAN).getExecutiveDashboard(kpiRequest);
 	}
 
-	/**
-	 * Unified method to fetch node IDs (all accounts or child accounts by
-	 * parentId).
-	 */
-	private Set<String> getNodeIds(KpiRequest kpiRequest, boolean isKanban, AccountFilterRequest accountFilterRequest,
+	/** Unified method to fetch node IDs (all accounts or child accounts by parentId). */
+	private Set<String> getNodeIds(
+			KpiRequest kpiRequest,
+			boolean isKanban,
+			AccountFilterRequest accountFilterRequest,
 			String parentId) {
 		try {
 			List<HierarchyLevel> hierarchyLevels = getHierarchyLevels(isKanban);
@@ -140,41 +145,54 @@ public class ExecutiveServiceImpl implements ExecutiveService {
 				return Collections.emptySet();
 			}
 
-			HierarchyLevel level = hierarchyLevels.stream()
-					.filter(l -> l.getHierarchyLevelId() != null && l.getLevel() == kpiRequest.getLevel()).findFirst()
-					.orElseThrow(() -> new IllegalStateException("No matching account level in hierarchy"));
+			HierarchyLevel level =
+					hierarchyLevels.stream()
+							.filter(l -> l.getHierarchyLevelId() != null && l.getLevel() == kpiRequest.getLevel())
+							.findFirst()
+							.orElseThrow(
+									() -> new IllegalStateException("No matching account level in hierarchy"));
 
-			Set<AccountFilteredData> filteredList = isKanban
-					? accountHierarchyServiceKanban.getFilteredList(accountFilterRequest)
-					: accountHierarchyService.getFilteredList(accountFilterRequest);
+			Set<AccountFilteredData> filteredList =
+					isKanban
+							? accountHierarchyServiceKanban.getFilteredList(accountFilterRequest)
+							: accountHierarchyService.getFilteredList(accountFilterRequest);
 
-			Set<String> filteredSet = filteredList.stream()
-					.filter(a -> a.getLevel() == kpiRequest.getLevel()
-							&& (parentId == null || parentId.equalsIgnoreCase(a.getParentId())))
-					.map(AccountFilteredData::getNodeId).collect(Collectors.toUnmodifiableSet());
+			Set<String> filteredSet =
+					filteredList.stream()
+							.filter(
+									a ->
+											a.getLevel() == kpiRequest.getLevel()
+													&& (parentId == null || parentId.equalsIgnoreCase(a.getParentId())))
+							.map(AccountFilteredData::getNodeId)
+							.collect(Collectors.toUnmodifiableSet());
 
 			kpiRequest.getSelectedMap().get(level.getHierarchyLevelId()).addAll(filteredSet);
 			kpiRequest.setLevelName(level.getHierarchyLevelName());
 			return filteredSet;
 
 		} catch (Exception e) {
-			log.error("Error retrieving node IDs (isKanban={}, parentId={}, level={})", isKanban, parentId,
-					kpiRequest.getLevel(), e);
+			log.error(
+					"Error retrieving node IDs (isKanban={}, parentId={}, level={})",
+					isKanban,
+					parentId,
+					kpiRequest.getLevel(),
+					e);
 			return Collections.emptySet();
 		}
 	}
 
 	private List<HierarchyLevel> getHierarchyLevels(boolean isKanban) {
-        return isKanban ? cacheService.getFullKanbanHierarchyLevel()
-                : cacheService.getFullHierarchyLevel();
+		return isKanban
+				? cacheService.getFullKanbanHierarchyLevel()
+				: cacheService.getFullHierarchyLevel();
 	}
 
 	@NotNull
 	private Map<String, List<String>> createSelectedMap(boolean isKanban) {
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		List<HierarchyLevel> hierarchyLevels = getHierarchyLevels(isKanban);
-		hierarchyLevels.forEach(hierarchyLevel -> selectedMap.put(hierarchyLevel.getHierarchyLevelId(), new ArrayList<>()));
+		hierarchyLevels.forEach(
+				hierarchyLevel -> selectedMap.put(hierarchyLevel.getHierarchyLevelId(), new ArrayList<>()));
 		return selectedMap;
 	}
-
 }

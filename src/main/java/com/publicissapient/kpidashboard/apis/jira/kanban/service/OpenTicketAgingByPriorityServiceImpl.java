@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,18 +47,20 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.KanbanJiraIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.KanbanJiraIssueRepository;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * open tickets till now from past 15 months count based on x Axis values and
- * did not Works any date filters on kanban
+ * open tickets till now from past 15 months count based on x Axis values and did not Works any date
+ * filters on kanban
  *
  * @author Hiren Babariya
  */
 @Slf4j
 @Component
-public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
+public class OpenTicketAgingByPriorityServiceImpl
+		extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -72,17 +73,12 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 
 	private static final String NIN = "nin";
 
-	@Autowired
-	private KanbanJiraIssueRepository kanbanJiraIssueRepository;
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private KpiHelperService kpiHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private FilterHelperService flterHelperService;
+	@Autowired private FilterHelperService flterHelperService;
 
 	@Override
 	public Long calculateKPIMetrics(Map<String, Object> stringMapMap) {
@@ -90,45 +86,53 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		Map<String, Object> resultListMap = new HashMap<>();
 		List<String> projectList = new ArrayList<>();
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
-			projectList.add(basicProjectConfigId.toString());
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
+					projectList.add(basicProjectConfigId.toString());
 
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-			if (Optional.ofNullable(fieldMapping.getTicketCountIssueTypeKPI997()).isPresent()) {
-				mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
-						CommonUtils.convertToPatternList(fieldMapping.getTicketCountIssueTypeKPI997()));
-			}
-			if (Optional.ofNullable(fieldMapping.getJiraTicketClosedStatusKPI997()).isPresent()) {
-				List<String> closedStatusList = new ArrayList<>();
-				closedStatusList.addAll(fieldMapping.getJiraTicketClosedStatusKPI997());
-				if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI997()).isPresent()) {
-					closedStatusList.add(fieldMapping.getJiraLiveStatusKPI997());
-				}
-				if (Optional.ofNullable(fieldMapping.getJiraTicketRejectedStatusKPI997()).isPresent()) {
-					closedStatusList.addAll(fieldMapping.getJiraTicketRejectedStatusKPI997());
-				}
-				mapOfProjectFilters.put(JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(),
-						CommonUtils.convertToPatternList(closedStatusList));
-			}
-			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
-		});
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+					if (Optional.ofNullable(fieldMapping.getTicketCountIssueTypeKPI997()).isPresent()) {
+						mapOfProjectFilters.put(
+								JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
+								CommonUtils.convertToPatternList(fieldMapping.getTicketCountIssueTypeKPI997()));
+					}
+					if (Optional.ofNullable(fieldMapping.getJiraTicketClosedStatusKPI997()).isPresent()) {
+						List<String> closedStatusList = new ArrayList<>();
+						closedStatusList.addAll(fieldMapping.getJiraTicketClosedStatusKPI997());
+						if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI997()).isPresent()) {
+							closedStatusList.add(fieldMapping.getJiraLiveStatusKPI997());
+						}
+						if (Optional.ofNullable(fieldMapping.getJiraTicketRejectedStatusKPI997()).isPresent()) {
+							closedStatusList.addAll(fieldMapping.getJiraTicketRejectedStatusKPI997());
+						}
+						mapOfProjectFilters.put(
+								JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(),
+								CommonUtils.convertToPatternList(closedStatusList));
+					}
+					uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+				});
 		/** additional filter * */
-		String subGroupCategory = KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.KANBAN, DEV,
-				flterHelperService);
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		String subGroupCategory =
+				KpiDataHelper.createAdditionalFilterMap(
+						kpiRequest, mapOfFilters, Constant.KANBAN, DEV, flterHelperService);
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().collect(Collectors.toList()));
 
-		resultListMap.put(RANGE_TICKET_LIST, kanbanJiraIssueRepository.findIssuesByDateAndTypeAndStatus(mapOfFilters,
-				uniqueProjectMap, startDate, endDate, RANGE, NIN));
+		resultListMap.put(
+				RANGE_TICKET_LIST,
+				kanbanJiraIssueRepository.findIssuesByDateAndTypeAndStatus(
+						mapOfFilters, uniqueProjectMap, startDate, endDate, RANGE, NIN));
 
 		resultListMap.put(SUBGROUPCATEGORY, subGroupCategory);
 		return resultListMap;
@@ -150,51 +154,61 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		log.info("OPEN-TICKET-COUNT-BY-PRIORITY {}", kpiRequest.getRequestTrackerId());
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
 		dateWiseLeafNodeValue(mapTmp, projectList, kpiElement, kpiRequest);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		// for chart with filter,group stack chart
 		calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.OPEN_TICKET_AGING_BY_PRIORITY);
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.OPEN_TICKET_AGING_BY_PRIORITY);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.OPEN_TICKET_AGING_BY_PRIORITY);
 
 		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, priorityTypes(true));
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
-		trendValuesMap.forEach((priority, dataCounts) -> {
-			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
-					.collect(Collectors.groupingBy(DataCount::getData));
-			priorityTypeProjectWiseDc.put(priority, projectWiseDc);
-		});
+		trendValuesMap.forEach(
+				(priority, dataCounts) -> {
+					Map<String, List<DataCount>> projectWiseDc =
+							dataCounts.stream().collect(Collectors.groupingBy(DataCount::getData));
+					priorityTypeProjectWiseDc.put(priority, projectWiseDc);
+				});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		priorityTypeProjectWiseDc.forEach((priority, projectWiseDc) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
-			dataCountGroup.setFilter(priority);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		priorityTypeProjectWiseDc.forEach(
+				(priority, projectWiseDc) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
+					dataCountGroup.setFilter(priority);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
 		log.debug(
 				"[OPEN-TICKET-COUNT-BY-PRIORITY -KANBAN-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+				kpiRequest.getRequestTrackerId(),
+				root);
 		return kpiElement;
 	}
 
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 
 		// this method fetch start and end date to fetch data.
@@ -205,91 +219,120 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 		String endDate = dateRange.getEndDate().format(DATE_FORMATTER);
 
 		// past all tickets and given range ticket data fetch from db
-		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		Map<String, Object> resultMap =
+				fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 
 		String subGroupCategory = (String) resultMap.get(SUBGROUPCATEGORY);
 
-		Map<String, List<KanbanJiraIssue>> projectWiseJiraIssue = KpiDataHelper.createProjectWiseMapKanban(
-				(List<KanbanJiraIssue>) resultMap.get(RANGE_TICKET_LIST), subGroupCategory, flterHelperService);
+		Map<String, List<KanbanJiraIssue>> projectWiseJiraIssue =
+				KpiDataHelper.createProjectWiseMapKanban(
+						(List<KanbanJiraIssue>) resultMap.get(RANGE_TICKET_LIST),
+						subGroupCategory,
+						flterHelperService);
 
 		kpiWithFilter(projectWiseJiraIssue, mapTmp, leafNodeList, kpiElement);
 	}
 
-	private void kpiWithFilter(Map<String, List<KanbanJiraIssue>> projectWiseJiraIssueMap, Map<String, Node> mapTmp,
-			List<Node> leafNodeList, KpiElement kpiElement) {
+	private void kpiWithFilter(
+			Map<String, List<KanbanJiraIssue>> projectWiseJiraIssueMap,
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement) {
 		List<KPIExcelData> excelData = new ArrayList<>();
 		String requestTrackerId = getKanbanRequestTrackerId();
 
 		List<String> xAxisRange = customApiConfig.getTotalDefectCountAgingXAxisRange();
 		kpiElement.setxAxisValues(xAxisRange);
 
-		leafNodeList.forEach(node -> {
-			Map<String, List<DataCount>> trendValueMap = new HashMap<>();
-			String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
+		leafNodeList.forEach(
+				node -> {
+					Map<String, List<DataCount>> trendValueMap = new HashMap<>();
+					String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
 
-			List<KanbanJiraIssue> projectWiseJiraIssueList = projectWiseJiraIssueMap.getOrDefault(projectNodeId,
-					new ArrayList<>());
+					List<KanbanJiraIssue> projectWiseJiraIssueList =
+							projectWiseJiraIssueMap.getOrDefault(projectNodeId, new ArrayList<>());
 
-			if (CollectionUtils.isNotEmpty(projectWiseJiraIssueList)) {
+					if (CollectionUtils.isNotEmpty(projectWiseJiraIssueList)) {
 
-				Set<String> priorityList = projectWiseJiraIssueList.stream()
-						.map(issue -> KPIHelperUtil.mappingPriority(issue.getPriority(), customApiConfig))
-						.collect(Collectors.toSet());
+						Set<String> priorityList =
+								projectWiseJiraIssueList.stream()
+										.map(
+												issue ->
+														KPIHelperUtil.mappingPriority(issue.getPriority(), customApiConfig))
+										.collect(Collectors.toSet());
 
-				Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap = new LinkedHashMap<>();
-				filterKanbanDataBasedOnXAxisRangeWise(xAxisRange, projectWiseJiraIssueList, rangeWiseJiraIssuesMap);
+						Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap = new LinkedHashMap<>();
+						filterKanbanDataBasedOnXAxisRangeWise(
+								xAxisRange, projectWiseJiraIssueList, rangeWiseJiraIssuesMap);
 
-				Map<String, Map<String, Long>> rangeWisePriorityCountMap = new LinkedHashMap<>();
-				rangeWiseJiraIssuesMap.forEach((range, issueList) -> {
-					Map<String, Long> priorityCountMap = KPIHelperUtil.setpriorityKanban(issueList, customApiConfig);
-					rangeWisePriorityCountMap.put(range, priorityCountMap);
+						Map<String, Map<String, Long>> rangeWisePriorityCountMap = new LinkedHashMap<>();
+						rangeWiseJiraIssuesMap.forEach(
+								(range, issueList) -> {
+									Map<String, Long> priorityCountMap =
+											KPIHelperUtil.setpriorityKanban(issueList, customApiConfig);
+									rangeWisePriorityCountMap.put(range, priorityCountMap);
+								});
+
+						rangeWisePriorityCountMap.forEach(
+								(rangeMonth, priorityCountMap) ->
+										populateProjectFilterWiseDataMap(
+												priorityCountMap,
+												priorityList,
+												trendValueMap,
+												node.getProjectFilter().getName(),
+												rangeMonth));
+
+						// Populates data in Excel for validation for tickets created before
+						populateExcelDataObject(
+								requestTrackerId,
+								node.getProjectFilter().getName(),
+								excelData,
+								projectWiseJiraIssueList);
+					}
+					mapTmp.get(node.getId()).setValue(trendValueMap);
 				});
-
-				rangeWisePriorityCountMap
-						.forEach((rangeMonth, priorityCountMap) -> populateProjectFilterWiseDataMap(priorityCountMap, priorityList,
-								trendValueMap, node.getProjectFilter().getName(), rangeMonth));
-
-				// Populates data in Excel for validation for tickets created before
-				populateExcelDataObject(requestTrackerId, node.getProjectFilter().getName(), excelData, projectWiseJiraIssueList);
-			}
-			mapTmp.get(node.getId()).setValue(trendValueMap);
-		});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.OPEN_TICKET_AGING_BY_PRIORITY.getColumns());
 	}
 
 	/**
-	 * as per x Axis values initialize month wise range map and put issues as per
-	 * months bucket follows
+	 * as per x Axis values initialize month wise range map and put issues as per months bucket
+	 * follows
 	 *
 	 * @param xAxisRange
 	 * @param projectWiseJiraIssueList
 	 * @param rangeWiseJiraIssuesMap
 	 */
-	private void filterKanbanDataBasedOnXAxisRangeWise(List<String> xAxisRange,
-			List<KanbanJiraIssue> projectWiseJiraIssueList, Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap) {
+	private void filterKanbanDataBasedOnXAxisRangeWise(
+			List<String> xAxisRange,
+			List<KanbanJiraIssue> projectWiseJiraIssueList,
+			Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap) {
 		String highestRange = xAxisRange.get(xAxisRange.size() - 1);
 		Map<Integer, String> monthRangeMap = new HashMap<>();
 
 		initializeRangeMapForProjects(rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
-		projectWiseJiraIssueList.forEach(issue -> {
-			long daysBetween = DAYS.between(KpiDataHelper.convertStringToDate(issue.getCreatedDate()), DateUtil.getTodayTime());
-			Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
-			String range;
-			if (null == monthRangeMap.get(monthsBetween)) {
-				range = highestRange;
-			} else {
-				range = monthRangeMap.get(monthsBetween);
-			}
-			if (CollectionUtils.isEmpty(rangeWiseJiraIssuesMap.get(range))) {
-				List<KanbanJiraIssue> jiraIssueList = new ArrayList<>();
-				jiraIssueList.add(issue);
-				rangeWiseJiraIssuesMap.put(range, jiraIssueList);
-			} else {
-				rangeWiseJiraIssuesMap.get(range).add(issue);
-			}
-		});
+		projectWiseJiraIssueList.forEach(
+				issue -> {
+					long daysBetween =
+							DAYS.between(
+									KpiDataHelper.convertStringToDate(issue.getCreatedDate()),
+									DateUtil.getTodayTime());
+					Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
+					String range;
+					if (null == monthRangeMap.get(monthsBetween)) {
+						range = highestRange;
+					} else {
+						range = monthRangeMap.get(monthsBetween);
+					}
+					if (CollectionUtils.isEmpty(rangeWiseJiraIssuesMap.get(range))) {
+						List<KanbanJiraIssue> jiraIssueList = new ArrayList<>();
+						jiraIssueList.add(issue);
+						rangeWiseJiraIssuesMap.put(range, jiraIssueList);
+					} else {
+						rangeWiseJiraIssuesMap.get(range).add(issue);
+					}
+				});
 	}
 
 	/**
@@ -301,25 +344,31 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 	 * @param projectName
 	 * @param rangeMonth
 	 */
-	private void populateProjectFilterWiseDataMap(Map<String, Long> projectWisePriorityCountMap,
-			Set<String> projectWisePriorityList, Map<String, List<DataCount>> trendValueMap, String projectName,
+	private void populateProjectFilterWiseDataMap(
+			Map<String, Long> projectWisePriorityCountMap,
+			Set<String> projectWisePriorityList,
+			Map<String, List<DataCount>> trendValueMap,
+			String projectName,
 			String rangeMonth) {
 		Map<String, Long> projectFilterWiseDataMap = new HashMap<>();
 		Map<String, Object> hoverValueMap = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(projectWisePriorityList)) {
-			projectWisePriorityList.forEach(priority -> {
-				Long priorityCount = projectWisePriorityCountMap.getOrDefault(priority, 0L);
-				projectFilterWiseDataMap.put(StringUtils.capitalize(priority), priorityCount);
-				hoverValueMap.put(StringUtils.capitalize(priority), priorityCount.intValue());
-			});
+			projectWisePriorityList.forEach(
+					priority -> {
+						Long priorityCount = projectWisePriorityCountMap.getOrDefault(priority, 0L);
+						projectFilterWiseDataMap.put(StringUtils.capitalize(priority), priorityCount);
+						hoverValueMap.put(StringUtils.capitalize(priority), priorityCount.intValue());
+					});
 			Long overAllCount = projectFilterWiseDataMap.values().stream().mapToLong(val -> val).sum();
 			projectFilterWiseDataMap.put(CommonConstant.OVERALL, overAllCount);
 		}
 
-		projectFilterWiseDataMap.forEach((priority, value) -> {
-			DataCount dcObj = getDataCountObject(value, projectName, rangeMonth, priority, hoverValueMap);
-			trendValueMap.computeIfAbsent(priority, k -> new ArrayList<>()).add(dcObj);
-		});
+		projectFilterWiseDataMap.forEach(
+				(priority, value) -> {
+					DataCount dcObj =
+							getDataCountObject(value, projectName, rangeMonth, priority, hoverValueMap);
+					trendValueMap.computeIfAbsent(priority, k -> new ArrayList<>()).add(dcObj);
+				});
 	}
 
 	/**
@@ -331,7 +380,11 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 	 * @param priority
 	 * @param
 	 */
-	private DataCount getDataCountObject(Long value, String projectName, String date, String priority,
+	private DataCount getDataCountObject(
+			Long value,
+			String projectName,
+			String date,
+			String priority,
 			Map<String, Object> overAllHoverValueMap) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(value));
@@ -351,11 +404,15 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 		return dataCount;
 	}
 
-	public void populateExcelDataObject(String requestTrackerId, String projectName, List<KPIExcelData> excelData,
+	public void populateExcelDataObject(
+			String requestTrackerId,
+			String projectName,
+			List<KPIExcelData> excelData,
 			List<KanbanJiraIssue> projectWiseJiraIssueList) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateOpenTicketByAgeingExcelData(projectName, projectWiseJiraIssueList, excelData);
+			KPIExcelUtility.populateOpenTicketByAgeingExcelData(
+					projectName, projectWiseJiraIssueList, excelData);
 		}
 	}
 
@@ -366,25 +423,35 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 	 * @param xAxisRange
 	 * @param monthRangeMap
 	 */
-	private void initializeRangeMapForProjects(Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap,
-			List<String> xAxisRange, Map<Integer, String> monthRangeMap) {
-		xAxisRange.forEach(range -> {
-			String[] rangeSplitted = range.trim().split("-");
-			if (rangeSplitted.length == 2) {
-				for (int i = Integer.parseInt(rangeSplitted[0]); i <= Integer.parseInt(rangeSplitted[1]); i++) {
-					if (null == monthRangeMap.get(i)) {
-						monthRangeMap.put(i, range);
+	private void initializeRangeMapForProjects(
+			Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap,
+			List<String> xAxisRange,
+			Map<Integer, String> monthRangeMap) {
+		xAxisRange.forEach(
+				range -> {
+					String[] rangeSplitted = range.trim().split("-");
+					if (rangeSplitted.length == 2) {
+						for (int i = Integer.parseInt(rangeSplitted[0]);
+								i <= Integer.parseInt(rangeSplitted[1]);
+								i++) {
+							if (null == monthRangeMap.get(i)) {
+								monthRangeMap.put(i, range);
+							}
+						}
 					}
-				}
-			}
-			rangeWiseJiraIssuesMap.put(range, new ArrayList<>());
-		});
+					rangeWiseJiraIssuesMap.put(range, new ArrayList<>());
+				});
 	}
-
 
 	private List<String> priorityTypes(boolean addOverall) {
 		if (addOverall) {
-			return Arrays.asList(CommonConstant.OVERALL, Constant.P1, Constant.P2, Constant.P3, Constant.P4, Constant.MISC);
+			return Arrays.asList(
+					CommonConstant.OVERALL,
+					Constant.P1,
+					Constant.P2,
+					Constant.P3,
+					Constant.P4,
+					Constant.MISC);
 		} else {
 			return Arrays.asList(Constant.P1, Constant.P2, Constant.P3, Constant.P4, Constant.MISC);
 		}
@@ -392,7 +459,7 @@ public class OpenTicketAgingByPriorityServiceImpl extends JiraKPIService<Long, L
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI997(),
-				KPICode.OPEN_TICKET_AGING_BY_PRIORITY.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI997(), KPICode.OPEN_TICKET_AGING_BY_PRIORITY.getKpiId());
 	}
 }

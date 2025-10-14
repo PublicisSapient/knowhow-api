@@ -33,16 +33,11 @@ import com.publicissapient.kpidashboard.common.repository.application.GlobalConf
 @Component
 public class ApplicationStartupListener implements ApplicationListener<ApplicationReadyEvent> {
 
-	@Autowired
-	ConfigHelperService configHelperService;
-	@Autowired
-	SimplePolicyDefinition simplePolicyDefinition;
-	@Autowired
-	GlobalConfigRepository globalConfigRepository;
-	@Autowired
-	CacheService cacheService;
-	@Autowired
-	DataMigrationService dataMigrationService;
+	@Autowired ConfigHelperService configHelperService;
+	@Autowired SimplePolicyDefinition simplePolicyDefinition;
+	@Autowired GlobalConfigRepository globalConfigRepository;
+	@Autowired CacheService cacheService;
+	@Autowired DataMigrationService dataMigrationService;
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {

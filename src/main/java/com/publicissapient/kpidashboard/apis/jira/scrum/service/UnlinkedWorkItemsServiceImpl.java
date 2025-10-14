@@ -80,23 +80,19 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 	private static final String TEST_WITHOUT_STORY_LIST = "Test Without Story list";
 	private static final String TEST_WITHOUT_STORY_TEST_CASES = "Test Without Story Test Cases";
 	private static final String DEFECTS_WITHOUT_STORY_LIST = "Defects Without Story List";
-	private static final String DEFECTS_WITHOUT_STORY_DEFECTS_LIST = "Defects Without Story Defects List";
+	private static final String DEFECTS_WITHOUT_STORY_DEFECTS_LIST =
+			"Defects Without Story Defects List";
 	private static final String NIN = "nin";
 	private static final String DEFECT_LIST = "Total Defects";
 	private static final String OVERALL = "Overall";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private TestCaseDetailsRepository testCaseDetailsRepository;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private CacheService cacheService;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private TestCaseDetailsRepository testCaseDetailsRepository;
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -107,13 +103,15 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> map = new HashMap<>();
-		Map<String, Object> resultMapForTestWithoutStory = fetchKPIDataFromDbForTestWithoutStory(leafNode);
+		Map<String, Object> resultMapForTestWithoutStory =
+				fetchKPIDataFromDbForTestWithoutStory(leafNode);
 		map.put(TEST_WITHOUT_STORY_LIST, resultMapForTestWithoutStory.get(STORY_LIST));
 		map.put(TEST_WITHOUT_STORY_TEST_CASES, resultMapForTestWithoutStory.get(TOTAL_TEST_CASES));
-		Map<String, Object> resultMapDefectsWithoutStoryLink = fetchKPIDataFromDbForDefectsWithoutStoryLink(leafNode);
+		Map<String, Object> resultMapDefectsWithoutStoryLink =
+				fetchKPIDataFromDbForDefectsWithoutStoryLink(leafNode);
 		map.put(DEFECTS_WITHOUT_STORY_LIST, resultMapDefectsWithoutStoryLink.get(STORY_LIST));
 		map.put(DEFECTS_WITHOUT_STORY_DEFECTS_LIST, resultMapDefectsWithoutStoryLink.get(DEFECT_LIST));
 		return map;
@@ -127,18 +125,20 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 		Map<String, Map<String, Object>> uniqueProjectMapForStories = new HashMap<>();
 		List<String> storyType = new ArrayList<>();
-		Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap = (Map<ObjectId, Map<String, List<ProjectToolConfig>>>) cacheService
-				.cacheProjectToolConfigMapData();
+		Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap =
+				(Map<ObjectId, Map<String, List<ProjectToolConfig>>>)
+						cacheService.cacheProjectToolConfigMapData();
 		Map<ObjectId, FieldMapping> basicProjetWiseConfig = configHelperService.getFieldMappingMap();
 
 		ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
 		List<String> regressionLabels = new ArrayList<>();
 		List<String> sprintAutomationFolderPath = new ArrayList<>();
 		basicProjectConfigIds.add(basicProjectConfigId.toString());
-		List<ProjectToolConfig> zephyrTools = getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId, TOOL_ZEPHYR);
+		List<ProjectToolConfig> zephyrTools =
+				getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId, TOOL_ZEPHYR);
 
-		List<ProjectToolConfig> jiraTestTools = getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId,
-				TOOL_JIRA_TEST);
+		List<ProjectToolConfig> jiraTestTools =
+				getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId, TOOL_JIRA_TEST);
 
 		FieldMapping fieldMapping = basicProjetWiseConfig.get(basicProjectConfigId);
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
@@ -150,14 +150,17 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		if (CollectionUtils.isNotEmpty(jiraTestTools)) {
 			setZephyrSquadConfig(jiraTestTools, regressionLabels, mapOfProjectFilters);
 		}
-		mapOfProjectFilters.put(JiraFeature.LABELS.getFieldValueInFeature(), Arrays.asList("Regression"));
+		mapOfProjectFilters.put(
+				JiraFeature.LABELS.getFieldValueInFeature(), Arrays.asList("Regression"));
 		if (CollectionUtils.isNotEmpty(regressionLabels)) {
-			mapOfProjectFilters.put(JiraFeature.LABELS.getFieldValueInFeature(),
+			mapOfProjectFilters.put(
+					JiraFeature.LABELS.getFieldValueInFeature(),
 					CommonUtils.convertToPatternList(regressionLabels));
 		}
 
 		if (CollectionUtils.isNotEmpty(sprintAutomationFolderPath)) {
-			mapOfProjectFilters.put(JiraFeature.ATM_TEST_FOLDER.getFieldValueInFeature(),
+			mapOfProjectFilters.put(
+					JiraFeature.ATM_TEST_FOLDER.getFieldValueInFeature(),
 					CommonUtils.convertTestFolderToPatternList(sprintAutomationFolderPath));
 		}
 
@@ -167,25 +170,34 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		if (Optional.ofNullable(fieldMapping.getJiraStoryIdentificationKPI129()).isPresent()) {
 
 			if (Optional.ofNullable(fieldMapping.getJiraStoryIdentificationKPI129()).isPresent()) {
-				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(mapOfStoriesFilter, fieldMapping.getJiradefecttype(),
-						fieldMapping.getJiraStoryIdentificationKPI129(), JiraFeature.ISSUE_TYPE.getFieldValueInFeature());
+				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(
+						mapOfStoriesFilter,
+						fieldMapping.getJiradefecttype(),
+						fieldMapping.getJiraStoryIdentificationKPI129(),
+						JiraFeature.ISSUE_TYPE.getFieldValueInFeature());
 			}
 
 			uniqueProjectMapForStories.put(basicProjectConfigId.toString(), mapOfStoriesFilter);
 		}
 		storyType.addAll(fieldMapping.getJiraStoryIdentificationKPI129());
 
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
 
-		List<JiraIssue> storyList = jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters, uniqueProjectMapForStories);
-		List<String> storyIssueNumberList = storyList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
+		List<JiraIssue> storyList =
+				jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters, uniqueProjectMapForStories);
+		List<String> storyIssueNumberList =
+				storyList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
 		resultListMap.put(STORY_LIST, storyIssueNumberList);
 
-		mapOfFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 				Arrays.asList(NormalizedJira.TEST_TYPE.getValue()));
-		resultListMap.put(TOTAL_TEST_CASES,
-				testCaseDetailsRepository.findNonRegressionTestDetails(mapOfFilters, uniqueProjectMap, NIN));
+		resultListMap.put(
+				TOTAL_TEST_CASES,
+				testCaseDetailsRepository.findNonRegressionTestDetails(
+						mapOfFilters, uniqueProjectMap, NIN));
 		return resultListMap;
 	}
 
@@ -197,10 +209,13 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 	 * @return List of ProjectToolConfig
 	 */
 	public List<ProjectToolConfig> getToolConfigBasedOnProcessors(
-			Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap, ObjectId basicProjectConfId, String toolName) {
+			Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap,
+			ObjectId basicProjectConfId,
+			String toolName) {
 		List<ProjectToolConfig> tools = new ArrayList<>();
-		if (MapUtils.isNotEmpty(toolMap) && toolMap.get(basicProjectConfId) != null &&
-				toolMap.get(basicProjectConfId).containsKey(toolName)) {
+		if (MapUtils.isNotEmpty(toolMap)
+				&& toolMap.get(basicProjectConfId) != null
+				&& toolMap.get(basicProjectConfId).containsKey(toolName)) {
 			List<ProjectToolConfig> tool = toolMap.get(basicProjectConfId).get(toolName);
 			tools.addAll(tool);
 		}
@@ -211,19 +226,22 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 	 * @param tools
 	 * @param regressionLabels
 	 */
-	public void setZephyrScaleConfig(List<ProjectToolConfig> tools, List<String> regressionLabels,
+	public void setZephyrScaleConfig(
+			List<ProjectToolConfig> tools,
+			List<String> regressionLabels,
 			List<String> automationFolderPath) {
-		tools.forEach(tool -> {
-			if (CollectionUtils.isNotEmpty(tool.getRegressionAutomationLabels())) {
-				regressionLabels.addAll(tool.getRegressionAutomationLabels());
-			}
-			if (CollectionUtils.isNotEmpty(tool.getTestRegressionValue())) {
-				regressionLabels.addAll(tool.getTestRegressionValue());
-			}
-			if (CollectionUtils.isNotEmpty(tool.getRegressionAutomationFolderPath())) {
-				automationFolderPath.addAll(tool.getRegressionAutomationFolderPath());
-			}
-		});
+		tools.forEach(
+				tool -> {
+					if (CollectionUtils.isNotEmpty(tool.getRegressionAutomationLabels())) {
+						regressionLabels.addAll(tool.getRegressionAutomationLabels());
+					}
+					if (CollectionUtils.isNotEmpty(tool.getTestRegressionValue())) {
+						regressionLabels.addAll(tool.getTestRegressionValue());
+					}
+					if (CollectionUtils.isNotEmpty(tool.getRegressionAutomationFolderPath())) {
+						automationFolderPath.addAll(tool.getRegressionAutomationFolderPath());
+					}
+				});
 	}
 
 	/**
@@ -231,17 +249,21 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 	 * @param regressionLabels
 	 * @param mapOfProjectFiltersNotIn
 	 */
-	public void setZephyrSquadConfig(List<ProjectToolConfig> jiraTestTools, List<String> regressionLabels,
+	public void setZephyrSquadConfig(
+			List<ProjectToolConfig> jiraTestTools,
+			List<String> regressionLabels,
 			Map<String, Object> mapOfProjectFiltersNotIn) {
-		jiraTestTools.forEach(tool -> {
-			if (CollectionUtils.isNotEmpty(tool.getJiraRegressionTestValue())) {
-				regressionLabels.addAll(tool.getJiraRegressionTestValue());
-			}
-			if (CollectionUtils.isNotEmpty(tool.getTestCaseStatus())) {
-				mapOfProjectFiltersNotIn.put(JiraFeature.TEST_CASE_STATUS.getFieldValueInFeature(),
-						CommonUtils.convertTestFolderToPatternList(tool.getTestCaseStatus()));
-			}
-		});
+		jiraTestTools.forEach(
+				tool -> {
+					if (CollectionUtils.isNotEmpty(tool.getJiraRegressionTestValue())) {
+						regressionLabels.addAll(tool.getJiraRegressionTestValue());
+					}
+					if (CollectionUtils.isNotEmpty(tool.getTestCaseStatus())) {
+						mapOfProjectFiltersNotIn.put(
+								JiraFeature.TEST_CASE_STATUS.getFieldValueInFeature(),
+								CommonUtils.convertTestFolderToPatternList(tool.getTestCaseStatus()));
+					}
+				});
 	}
 
 	public Map<String, Object> fetchKPIDataFromDbForDefectsWithoutStoryLink(Node leafNode) {
@@ -263,27 +285,36 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 
 		if (null != fieldMapping) {
 			if (Optional.ofNullable(fieldMapping.getJiraStoryIdentificationKPI129()).isPresent()) {
-				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(mapOfProjectFilters, fieldMapping.getJiradefecttype(),
-						fieldMapping.getJiraStoryIdentificationKPI129(), JiraFeature.ISSUE_TYPE.getFieldValueInFeature());
+				KpiDataHelper.prepareFieldMappingDefectTypeTransformation(
+						mapOfProjectFilters,
+						fieldMapping.getJiradefecttype(),
+						fieldMapping.getJiraStoryIdentificationKPI129(),
+						JiraFeature.ISSUE_TYPE.getFieldValueInFeature());
 			}
-			excludeStatusList.addAll(CollectionUtils.isEmpty(fieldMapping.getExcludeStatusKpi129())
-					? Lists.newArrayList()
-					: fieldMapping.getExcludeStatusKpi129());
-			uniqueProjectIssueStatusMap.put(JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(),
+			excludeStatusList.addAll(
+					CollectionUtils.isEmpty(fieldMapping.getExcludeStatusKpi129())
+							? Lists.newArrayList()
+							: fieldMapping.getExcludeStatusKpi129());
+			uniqueProjectIssueStatusMap.put(
+					JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(),
 					CommonUtils.convertToPatternList(excludeStatusList));
 			uniqueProjectIssueTypeNotIn.put(basicProjectConfigId.toString(), uniqueProjectIssueStatusMap);
 			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 		}
 
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
-		List<JiraIssue> jiraStoryList = jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters, uniqueProjectMap);
-		List<String> storyIssueNumberList = jiraStoryList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
+		List<JiraIssue> jiraStoryList =
+				jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters, uniqueProjectMap);
+		List<String> storyIssueNumberList =
+				jiraStoryList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
 
 		resultListMap.put(STORY_LIST, storyIssueNumberList);
 		defectType.add(NormalizedJira.DEFECT_TYPE.getValue());
 		mapOfFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(), defectType);
-		resultListMap.put(DEFECT_LIST,
+		resultListMap.put(
+				DEFECT_LIST,
 				jiraIssueRepository.findDefectsWithoutStoryLink(mapOfFilters, uniqueProjectIssueTypeNotIn));
 		return resultListMap;
 	}
@@ -293,8 +324,8 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		return KPICode.UNLINKED_WORK_ITEMS.name();
 	}
 
-	private void projectWiseLeafNodeValue(DataCount trendValue, Node leafNode, KpiElement kpiElement,
-			KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			DataCount trendValue, Node leafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
 		List<IterationKpiValue> iterationKpiValues = new ArrayList<>();
@@ -308,27 +339,40 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		Map<String, Object> returnMap = fetchKPIDataFromDb(leafNode, startDate, endDate, kpiRequest);
 
 		List<String> storiesInProject = (List<String>) returnMap.get(TEST_WITHOUT_STORY_LIST);
-		List<TestCaseDetails> totalTestNonRegression = (List<TestCaseDetails>) returnMap.get(TEST_WITHOUT_STORY_TEST_CASES);
-		List<TestCaseDetails> testWithoutStory = totalTestNonRegression.stream()
-				.filter(
-						t -> (t.getDefectStoryID() == null || !CollectionUtils.containsAny(t.getDefectStoryID(), storiesInProject)))
-				.collect(Collectors.toList());
+		List<TestCaseDetails> totalTestNonRegression =
+				(List<TestCaseDetails>) returnMap.get(TEST_WITHOUT_STORY_TEST_CASES);
+		List<TestCaseDetails> testWithoutStory =
+				totalTestNonRegression.stream()
+						.filter(
+								t ->
+										(t.getDefectStoryID() == null
+												|| !CollectionUtils.containsAny(t.getDefectStoryID(), storiesInProject)))
+						.collect(Collectors.toList());
 
-		List<JiraIssue> totalDefects = checkPriority((List<JiraIssue>) returnMap.get(DEFECTS_WITHOUT_STORY_DEFECTS_LIST));
+		List<JiraIssue> totalDefects =
+				checkPriority((List<JiraIssue>) returnMap.get(DEFECTS_WITHOUT_STORY_DEFECTS_LIST));
 		List<JiraIssue> totalStories = (List<JiraIssue>) returnMap.get(DEFECTS_WITHOUT_STORY_LIST);
 		List<JiraIssue> defectWithoutStory = new ArrayList<>();
-		defectWithoutStory.addAll(totalDefects.stream()
-				.filter(f -> !CollectionUtils.containsAny(f.getDefectStoryID(), totalStories)).collect(Collectors.toList()));
+		defectWithoutStory.addAll(
+				totalDefects.stream()
+						.filter(f -> !CollectionUtils.containsAny(f.getDefectStoryID(), totalStories))
+						.collect(Collectors.toList()));
 		if (CollectionUtils.isNotEmpty(totalTestNonRegression)) {
-			populateExcelDataObject(requestTrackerId, totalTestNonRegression, testWithoutStory,
-					leafNode.getProjectFilter().getName(), excelDataDefectsWithoutStoryLink);
+			populateExcelDataObject(
+					requestTrackerId,
+					totalTestNonRegression,
+					testWithoutStory,
+					leafNode.getProjectFilter().getName(),
+					excelDataDefectsWithoutStoryLink);
 		}
 		kpiElement.setExcelData(excelDataForTestWithoutStory);
 		kpiElement.setExcelColumns(KPIExcelColumn.TEST_WITHOUT_STORY_LINK.getColumns());
 
-		if (CollectionUtils.isNotEmpty(defectWithoutStory) &&
-				requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateDefectWithoutIssueLinkExcelData(defectWithoutStory, excelDataDefectsWithoutStoryLink,
+		if (CollectionUtils.isNotEmpty(defectWithoutStory)
+				&& requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+			KPIExcelUtility.populateDefectWithoutIssueLinkExcelData(
+					defectWithoutStory,
+					excelDataDefectsWithoutStoryLink,
 					leafNode.getProjectFilter().getName());
 		}
 
@@ -344,11 +388,22 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		}
 
 		List<IterationKpiData> data = new ArrayList<>();
-		IterationKpiData testCasesWithoutStoryLink = new IterationKpiData(TESTCASES_WITHOUT_STORY_LINK,
-				(double) testWithoutStory.size(), (double) totalTestNonRegression.size(), null, "",
-				testCasesWithoutStoryLinkModals);
-		IterationKpiData defectWithoutStoryLink = new IterationKpiData(DEFECTS_WITHOUT_STORY_LINK,
-				(double) defectWithoutStory.size(), (double) totalDefects.size(), null, "", defectWithoutStoryLinkModals);
+		IterationKpiData testCasesWithoutStoryLink =
+				new IterationKpiData(
+						TESTCASES_WITHOUT_STORY_LINK,
+						(double) testWithoutStory.size(),
+						(double) totalTestNonRegression.size(),
+						null,
+						"",
+						testCasesWithoutStoryLinkModals);
+		IterationKpiData defectWithoutStoryLink =
+				new IterationKpiData(
+						DEFECTS_WITHOUT_STORY_LINK,
+						(double) defectWithoutStory.size(),
+						(double) totalDefects.size(),
+						null,
+						"",
+						defectWithoutStoryLinkModals);
 		data.add(testCasesWithoutStoryLink);
 		data.add(defectWithoutStoryLink);
 		IterationKpiValue overAllIterationKpiValue = new IterationKpiValue(OVERALL, OVERALL, data);
@@ -367,13 +422,20 @@ public class UnlinkedWorkItemsServiceImpl extends JiraBacklogKPIService<Integer,
 		return jiraIssues;
 	}
 
-	private void populateExcelDataObject(String requestTrackerId, List<TestCaseDetails> totalTests,
-			List<TestCaseDetails> testWithoutStory, String projectName, List<KPIExcelData> excelData) {
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<TestCaseDetails> totalTests,
+			List<TestCaseDetails> testWithoutStory,
+			String projectName,
+			List<KPIExcelData> excelData) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			Map<String, TestCaseDetails> totalTestMap = new HashMap<>();
 			totalTests.stream()
-					.forEach(testCaseDetails -> totalTestMap.putIfAbsent(testCaseDetails.getNumber(), testCaseDetails));
-			KPIExcelUtility.populateTestWithoutStoryExcelData(projectName, totalTestMap, testWithoutStory, excelData);
+					.forEach(
+							testCaseDetails ->
+									totalTestMap.putIfAbsent(testCaseDetails.getNumber(), testCaseDetails));
+			KPIExcelUtility.populateTestWithoutStoryExcelData(
+					projectName, totalTestMap, testWithoutStory, excelData);
 		}
 	}
 }

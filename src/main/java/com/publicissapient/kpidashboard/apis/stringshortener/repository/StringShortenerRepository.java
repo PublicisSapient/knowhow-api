@@ -22,9 +22,9 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.publicissapient.kpidashboard.apis.stringshortener.model.StringShortener;
 
 public interface StringShortenerRepository extends MongoRepository<StringShortener, String> {
-	Optional<StringShortener> findByShortKPIFilterStringAndShortStateFiltersString(String shortKPIFilterString,
-			String shortStateFiltersString);
+	Optional<StringShortener> findByShortKPIFilterStringAndShortStateFiltersString(
+			String shortKPIFilterString, String shortStateFiltersString);
 
-	Optional<StringShortener> findByLongKPIFiltersStringAndLongStateFiltersString(String longKPIFiltersString,
-			String longStateFiltersString);
+	Optional<StringShortener> findByLongKPIFiltersStringAndLongStateFiltersString(
+			String longKPIFiltersString, String longStateFiltersString);
 }

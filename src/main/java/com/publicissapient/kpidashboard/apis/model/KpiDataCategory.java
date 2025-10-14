@@ -18,9 +18,9 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
-import lombok.*;
-
 import java.util.Set;
+
+import lombok.*;
 
 @Getter
 @Setter

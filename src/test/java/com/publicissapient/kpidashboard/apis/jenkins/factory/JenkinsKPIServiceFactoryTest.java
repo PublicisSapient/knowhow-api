@@ -43,11 +43,9 @@ import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsKPIService;
 @ExtendWith(SpringExtension.class)
 public class JenkinsKPIServiceFactoryTest {
 
-	@InjectMocks
-	private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
+	@InjectMocks private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
 
-	@Mock
-	private List<JenkinsKPIService<?, ?, ?>> services;
+	@Mock private List<JenkinsKPIService<?, ?, ?>> services;
 
 	@BeforeEach
 	public void setUp() {
@@ -55,14 +53,15 @@ public class JenkinsKPIServiceFactoryTest {
 	}
 
 	@Test
-	public void testGetJenkinsKPIService() throws ApplicationException, NoSuchFieldException, IllegalAccessException {
+	public void testGetJenkinsKPIService()
+			throws ApplicationException, NoSuchFieldException, IllegalAccessException {
 		String type = "someType";
 		JenkinsKPIService<?, ?, ?> expectedService = mock(JenkinsKPIService.class);
 
 		Field cacheField = JenkinsKPIServiceFactory.class.getDeclaredField("JENKINS_SERVICE_CACHE");
 		cacheField.setAccessible(true);
-		Map<String, JenkinsKPIService<?, ?, ?>> cache = (Map<String, JenkinsKPIService<?, ?, ?>>) cacheField
-				.get(jenkinsKPIServiceFactory);
+		Map<String, JenkinsKPIService<?, ?, ?>> cache =
+				(Map<String, JenkinsKPIService<?, ?, ?>>) cacheField.get(jenkinsKPIServiceFactory);
 		cache.put(type, expectedService);
 
 		JenkinsKPIService<?, ?, ?> resultService = JenkinsKPIServiceFactory.getJenkinsKPIService(type);
@@ -83,8 +82,8 @@ public class JenkinsKPIServiceFactoryTest {
 		try {
 			Field cacheField = JenkinsKPIServiceFactory.class.getDeclaredField("JENKINS_SERVICE_CACHE");
 			cacheField.setAccessible(true);
-			Map<String, JenkinsKPIService<?, ?, ?>> cache = (Map<String, JenkinsKPIService<?, ?, ?>>) cacheField
-					.get(jenkinsKPIServiceFactory);
+			Map<String, JenkinsKPIService<?, ?, ?>> cache =
+					(Map<String, JenkinsKPIService<?, ?, ?>>) cacheField.get(jenkinsKPIServiceFactory);
 
 			assertNotNull(cache.get("type1"));
 			assertNotNull(cache.get("type2"));

@@ -32,32 +32,42 @@ import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveMatrixDTO;
 import com.publicissapient.kpidashboard.apis.executive.dto.ProjectMetricsDTO;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 
-/**
- * Mapper class to convert executive dashboard data to DTOs.
- */
+/** Mapper class to convert executive dashboard data to DTOs. */
 public class ExecutiveDashboardMapper {
 
 	/**
 	 * Converts the raw results into the executive dashboard response DTO.
 	 *
-	 * @param finalResults   The map of project metrics by project ID
+	 * @param finalResults The map of project metrics by project ID
 	 * @param projectConfigs The map of project configurations by project ID
 	 * @param levelName
 	 * @return The populated ExecutiveDashboardResponseDTO
 	 */
 	public static ExecutiveDashboardResponseDTO toExecutiveDashboardResponse(
-			Map<String, Map<String, String>> finalResults, Map<String, OrganizationHierarchy> projectConfigs,
-			Map<String, Map<String, Object>> projectEfficiencies, String levelName) {
+			Map<String, Map<String, String>> finalResults,
+			Map<String, OrganizationHierarchy> projectConfigs,
+			Map<String, Map<String, Object>> projectEfficiencies,
+			String levelName) {
 
-		List<ProjectMetricsDTO> rows = finalResults.entrySet().stream().map(entry -> {
-			String uniqueId = entry.getKey();
-			Map<String, Object> efficiency = projectEfficiencies.getOrDefault(uniqueId, new HashMap<>());
-			return toProjectMetricsDTO(uniqueId, entry.getValue(), projectConfigs, efficiency);
-		}).toList();
+		List<ProjectMetricsDTO> rows =
+				finalResults.entrySet().stream()
+						.map(
+								entry -> {
+									String uniqueId = entry.getKey();
+									Map<String, Object> efficiency =
+											projectEfficiencies.getOrDefault(uniqueId, new HashMap<>());
+									return toProjectMetricsDTO(
+											uniqueId, entry.getValue(), projectConfigs, efficiency);
+								})
+						.toList();
 
 		// Get all unique board names from all projects
-		List<String> boardNames = finalResults.values().stream().flatMap(boardScores -> boardScores.keySet().stream())
-				.distinct().sorted().toList();
+		List<String> boardNames =
+				finalResults.values().stream()
+						.flatMap(boardScores -> boardScores.keySet().stream())
+						.distinct()
+						.sorted()
+						.toList();
 
 		// Create column definitions
 		List<ColumnDefinitionDTO> columns = addColumns(boardNames, levelName);
@@ -75,21 +85,25 @@ public class ExecutiveDashboardMapper {
 
 		// Add static columns
 		columns.add(ColumnDefinitionDTO.builder().field("id").header("Project ID").build());
-		columns.add(ColumnDefinitionDTO.builder().field("name").header(levelName+ " Name").build());
+		columns.add(ColumnDefinitionDTO.builder().field("name").header(levelName + " Name").build());
 		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Efficiency(%)").build());
 		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall Health").build());
 
 		// Add dynamic board columns
-		boardNames.forEach(boardName -> {
-			String fieldName = boardName.toLowerCase();
-			String header = capitalizeFirstLetter(boardName);
-			columns.add(ColumnDefinitionDTO.builder().field(fieldName).header(header).build());
-		});
+		boardNames.forEach(
+				boardName -> {
+					String fieldName = boardName.toLowerCase();
+					String header = capitalizeFirstLetter(boardName);
+					columns.add(ColumnDefinitionDTO.builder().field(fieldName).header(header).build());
+				});
 		return columns;
 	}
 
-	private static ProjectMetricsDTO toProjectMetricsDTO(String uniqueId, Map<String, String> boardScores,
-														 Map<String, OrganizationHierarchy> projectConfigs, Map<String, Object> efficiency) {
+	private static ProjectMetricsDTO toProjectMetricsDTO(
+			String uniqueId,
+			Map<String, String> boardScores,
+			Map<String, OrganizationHierarchy> projectConfigs,
+			Map<String, Object> efficiency) {
 
 		OrganizationHierarchy organizationHierarchy = projectConfigs.get(uniqueId);
 
@@ -98,16 +112,18 @@ public class ExecutiveDashboardMapper {
 
 		// Populate the metrics map with board scores
 		if (boardScores != null) {
-			boardScores.forEach((boardName, score) -> {
-				if (boardName != null && score != null) {
-					if(score.equalsIgnoreCase("NA")) {
-						metricsMap.put(boardName.trim().toLowerCase(), score);
-					}
-					else {
-						metricsMap.put(boardName.trim().toLowerCase(), "M" + (int) Math.ceil(Double.parseDouble(score)));
-					}
-				}
-			});
+			boardScores.forEach(
+					(boardName, score) -> {
+						if (boardName != null && score != null) {
+							if (score.equalsIgnoreCase("NA")) {
+								metricsMap.put(boardName.trim().toLowerCase(), score);
+							} else {
+								metricsMap.put(
+										boardName.trim().toLowerCase(),
+										"M" + (int) Math.ceil(Double.parseDouble(score)));
+							}
+						}
+					});
 		}
 
 		CalculateHealth result = getCalculateHealth(efficiency);
@@ -115,8 +131,13 @@ public class ExecutiveDashboardMapper {
 		// Create the BoardMaturityDTO with the populated metrics map
 		BoardMaturityDTO boardMaturity = BoardMaturityDTO.builder().metrics(metricsMap).build();
 
-		return ProjectMetricsDTO.builder().id(uniqueId).completion(result.completion()).health(result.health())
-				.name(organizationHierarchy != null ? organizationHierarchy.getNodeDisplayName() : "Unknown").boardMaturity(boardMaturity)
+		return ProjectMetricsDTO.builder()
+				.id(uniqueId)
+				.completion(result.completion())
+				.health(result.health())
+				.name(
+						organizationHierarchy != null ? organizationHierarchy.getNodeDisplayName() : "Unknown")
+				.boardMaturity(boardMaturity)
 				.build();
 	}
 
@@ -148,12 +169,11 @@ public class ExecutiveDashboardMapper {
 		if (str == null || str.isEmpty()) {
 			return str;
 		}
-		if(str.equalsIgnoreCase("dora")){
+		if (str.equalsIgnoreCase("dora")) {
 			return "DORA";
 		}
 		return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
 	}
 
-	private record CalculateHealth(String completion, String health) {
-	}
+	private record CalculateHealth(String completion, String health) {}
 }

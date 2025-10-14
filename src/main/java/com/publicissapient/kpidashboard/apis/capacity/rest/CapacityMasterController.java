@@ -32,23 +32,21 @@ import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiDTO;
 @RequestMapping("/capacity")
 public class CapacityMasterController {
 
-	@Autowired
-	CapacityMasterService capacityMasterService;
+	@Autowired CapacityMasterService capacityMasterService;
 
-	@Autowired
-	private ContextAwarePolicyEnforcement policy;
+	@Autowired private ContextAwarePolicyEnforcement policy;
 
-	@Autowired
-	private HappinessKpiCapacityImpl happinessKpiService;
+	@Autowired private HappinessKpiCapacityImpl happinessKpiService;
 
 	/**
 	 * This api saves capacity data.
 	 *
-	 * @param capacityMaster
-	 *          data to be saved
+	 * @param capacityMaster data to be saved
 	 * @return service response entity
 	 */
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> addCapacity(@RequestBody CapacityMaster capacityMaster) {
 		ServiceResponse response = new ServiceResponse(false, "Failed to add Capacity Data", null);
 		try {
@@ -78,8 +76,12 @@ public class CapacityMasterController {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
-	@RequestMapping(value = "/assignee", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> saveOrUpdateAssignee(@Valid @RequestBody CapacityMaster capacityMaster) {
+	@RequestMapping(
+			value = "/assignee",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> saveOrUpdateAssignee(
+			@Valid @RequestBody CapacityMaster capacityMaster) {
 		policy.checkPermission(capacityMaster, "SAVE_UPDATE_CAPACITY");
 		ServiceResponse response = new ServiceResponse(false, "Failed to add Capacity Data", null);
 		try {
@@ -95,11 +97,17 @@ public class CapacityMasterController {
 
 	@GetMapping("/assignee/roles")
 	public ResponseEntity<ServiceResponse> assigneeRolesSuggestion() {
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "All Roles", Role.getAllRoles()));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ServiceResponse(true, "All Roles", Role.getAllRoles()));
 	}
 
-	@PostMapping(value = "/jira/happiness", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> saveHappinessKPIData(@Valid @RequestBody HappinessKpiDTO happinessKpiDTO) {
-		return ResponseEntity.status(HttpStatus.OK).body(happinessKpiService.saveHappinessKpiData(happinessKpiDTO));
+	@PostMapping(
+			value = "/jira/happiness",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> saveHappinessKPIData(
+			@Valid @RequestBody HappinessKpiDTO happinessKpiDTO) {
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(happinessKpiService.saveHappinessKpiData(happinessKpiDTO));
 	}
 }

@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
  * @author shunaray
  */
 @SuppressWarnings("java:S1192")
-@ChangeUnit(id = "r_rca_inclusion_change", order = "08207", author = "shunaray", systemVersion = "8.2.0")
+@ChangeUnit(
+		id = "r_rca_inclusion_change",
+		order = "08207",
+		author = "shunaray",
+		systemVersion = "8.2.0")
 public class RCAInclusionChangeUnit {
 
 	private final MongoTemplate mongoTemplate;
@@ -48,39 +52,57 @@ public class RCAInclusionChangeUnit {
 	}
 
 	public void rollbackRCAQualityFTPR() {
-		updateFieldMapping("includeRCAForKPI82", "Root cause values to be excluded",
-				"Root cause reasons for defects which are to be excluded from 'FTPR' calculation", "excludeRCAFromKPI82");
+		updateFieldMapping(
+				"includeRCAForKPI82",
+				"Root cause values to be excluded",
+				"Root cause reasons for defects which are to be excluded from 'FTPR' calculation",
+				"excludeRCAFromKPI82");
 	}
 
 	public void rollbackRCAKPI135ItrFTPR() {
-		updateFieldMapping("includeRCAForKPI135", "Defect RCA exclusion from Quality KPIs",
+		updateFieldMapping(
+				"includeRCAForKPI135",
+				"Defect RCA exclusion from Quality KPIs",
 				"The defects tagged to priority values selected in this field on Mappings screen will be excluded.",
 				"excludeRCAFromKPI135");
 	}
 
 	public void rollbackRCADIR() {
-		updateFieldMapping("includeRCAForKPI14", "Root cause values to be excluded",
+		updateFieldMapping(
+				"includeRCAForKPI14",
+				"Root cause values to be excluded",
 				"Root cause reasons for defects which are to be excluded from 'Defect Injection rate' calculation.",
 				"excludeRCAFromKPI14");
 	}
 
 	public void rollbackRCADefectDensity() {
-		updateFieldMapping("includeRCAForQAKPI111", "Root cause values to be excluded",
+		updateFieldMapping(
+				"includeRCAForQAKPI111",
+				"Root cause values to be excluded",
 				"Root cause reasons for defects which are to be excluded from 'Defect Density' calculation.",
 				"excludeRCAFromQAKPI111");
 	}
 
 	public void rollbackRCAQualityStatus() {
-		updateFieldMapping("includeRCAForKPI133", "Root cause values to be excluded",
+		updateFieldMapping(
+				"includeRCAForKPI133",
+				"Root cause values to be excluded",
 				"Root cause reasons for defects which are to be excluded from 'Quality Status' calculation.",
 				"excludeRCAFromKPI133");
 	}
 
-	public void updateFieldMapping(String currentFieldName, String newFieldLabel, String newTooltipDefinition,
+	public void updateFieldMapping(
+			String currentFieldName,
+			String newFieldLabel,
+			String newTooltipDefinition,
 			String newFieldName) {
 		Document filter = new Document("fieldName", currentFieldName);
-		Document update = new Document("$set", new Document("fieldName", newFieldName)
-				.append("tooltip.definition", newTooltipDefinition).append("fieldLabel", newFieldLabel));
+		Document update =
+				new Document(
+						"$set",
+						new Document("fieldName", newFieldName)
+								.append("tooltip.definition", newTooltipDefinition)
+								.append("fieldLabel", newFieldLabel));
 		mongoTemplate.getCollection("field_mapping_structure").updateOne(filter, update);
 	}
 
@@ -94,30 +116,41 @@ public class RCAInclusionChangeUnit {
 	}
 
 	public void updateRCAQualityFTPR() {
-		updateFieldMapping("excludeRCAFromKPI82", "Root cause values to be included",
-				"Root cause reasons for defects which are to be included in 'FTPR' calculation", "includeRCAForKPI82");
+		updateFieldMapping(
+				"excludeRCAFromKPI82",
+				"Root cause values to be included",
+				"Root cause reasons for defects which are to be included in 'FTPR' calculation",
+				"includeRCAForKPI82");
 	}
 
 	public void updateRCAKPI135ItrFTPR() {
-		updateFieldMapping("excludeRCAFromKPI135", "Defect RCA inclusion for Quality KPIs",
+		updateFieldMapping(
+				"excludeRCAFromKPI135",
+				"Defect RCA inclusion for Quality KPIs",
 				"The defects tagged to as per RCA values selected in this field on Mappings screen will be included.",
 				"includeRCAForKPI135");
 	}
 
 	public void updateRCADIR() {
-		updateFieldMapping("excludeRCAFromKPI14", "Root cause values to be included",
+		updateFieldMapping(
+				"excludeRCAFromKPI14",
+				"Root cause values to be included",
 				"Root cause reasons for defects which are to be included in 'Defect Injection rate' calculation.",
 				"includeRCAForKPI14");
 	}
 
 	public void updateRCADefectDensity() {
-		updateFieldMapping("excludeRCAFromQAKPI111", "Root cause values to be included",
+		updateFieldMapping(
+				"excludeRCAFromQAKPI111",
+				"Root cause values to be included",
 				"Root cause reasons for defects which are to be included in 'Defect Density' calculation.",
 				"includeRCAForQAKPI111");
 	}
 
 	public void updateRCAQualityStatus() {
-		updateFieldMapping("excludeRCAFromKPI133", "Root cause values to be included",
+		updateFieldMapping(
+				"excludeRCAFromKPI133",
+				"Root cause values to be included",
 				"Root cause reasons for defects which are to be included in 'Quality Status' calculation.",
 				"includeRCAForKPI133");
 	}

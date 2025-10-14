@@ -36,14 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProjectHierarchyDataFactory {
 
-	private static final String FILE_PATH_ORGANIZATION_HIERARCHY = "/json/default/project_hierarchy.json";
+	private static final String FILE_PATH_ORGANIZATION_HIERARCHY =
+			"/json/default/project_hierarchy.json";
 
 	private List<ProjectHierarchy> organizationHierarchies;
 
 	private ObjectMapper mapper;
 
-	private ProjectHierarchyDataFactory() {
-	}
+	private ProjectHierarchyDataFactory() {}
 
 	public static ProjectHierarchyDataFactory newInstance(String filePath) {
 		ProjectHierarchyDataFactory factory = new ProjectHierarchyDataFactory();
@@ -59,11 +59,13 @@ public class ProjectHierarchyDataFactory {
 
 	private void init(String filePath) {
 		try {
-			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ORGANIZATION_HIERARCHY : filePath;
+			String resultPath =
+					StringUtils.isEmpty(filePath) ? FILE_PATH_ORGANIZATION_HIERARCHY : filePath;
 
-			organizationHierarchies = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<ProjectHierarchy>>() {
-					});
+			organizationHierarchies =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<ProjectHierarchy>>() {});
 		} catch (Exception e) {
 			log.error("Error in reading organization hierarchy from file = " + filePath, e);
 		}

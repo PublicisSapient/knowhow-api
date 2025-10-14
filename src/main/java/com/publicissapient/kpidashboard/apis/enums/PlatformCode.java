@@ -24,7 +24,9 @@ import java.util.Arrays;
  * @author pkum34 Mapping of Platform id with Platform Name
  */
 public enum PlatformCode {
-	ANDROID("1", "Android"), IOS("2", "iOS"), INVALID("3", "Invalid");
+	ANDROID("1", "Android"),
+	IOS("2", "iOS"),
+	INVALID("3", "Invalid");
 
 	private String platformdId;
 
@@ -38,7 +40,9 @@ public enum PlatformCode {
 	public static PlatformCode getDevicePlatform(String platformdId) {
 
 		return Arrays.asList(PlatformCode.values()).stream()
-				.filter(platId -> platId.getPlatformdId().equalsIgnoreCase(platformdId)).findAny().orElse(INVALID);
+				.filter(platId -> platId.getPlatformdId().equalsIgnoreCase(platformdId))
+				.findAny()
+				.orElse(INVALID);
 	}
 
 	public String getPlatformdId() {

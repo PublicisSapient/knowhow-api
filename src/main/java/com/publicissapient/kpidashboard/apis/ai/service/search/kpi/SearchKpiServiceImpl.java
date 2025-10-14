@@ -18,6 +18,11 @@ package com.publicissapient.kpidashboard.apis.ai.service.search.kpi;
 
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.thymeleaf.util.StringUtils;
+
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
@@ -26,10 +31,6 @@ import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
-import org.thymeleaf.util.StringUtils;
 
 import jakarta.ws.rs.InternalServerErrorException;
 import lombok.AllArgsConstructor;
@@ -47,26 +48,27 @@ public class SearchKpiServiceImpl implements SearchKPIService {
 	@Qualifier("SearchParser")
 	private final ParserStategy<SearchKpiResponseDTO> parserStategy;
 
-	@Autowired
-	PromptGenerator promptGenerator;
+	@Autowired PromptGenerator promptGenerator;
 
 	@Override
 	public SearchKpiResponseDTO searchRelatedKpi(String userMessage) throws EntityNotFoundException {
 		if (StringUtils.isEmpty(userMessage)) {
-			log.error(String.format("%s No prompt was found",
-					"Could not process the user message to search kpi."));
+			log.error(
+					String.format(
+							"%s No prompt was found", "Could not process the user message to search kpi."));
 			throw new InternalServerErrorException("Could not process the user message to search kpi.");
 		}
 		String prompt = promptGenerator.getKpiSearchPrompt(userMessage);
-		ChatGenerationResponseDTO chatGenerationResponseDTO = aiGatewayClient
-				.generate(ChatGenerationRequest.builder().prompt(prompt).build());
-		if (Objects.isNull(chatGenerationResponseDTO) || StringUtils.isEmpty(chatGenerationResponseDTO.content())) {
-			log.error(String.format("%s. Ai Gateway returned a null or empty response",
-					SEARCH_KPI_ERROR_MESSAGE));
+		ChatGenerationResponseDTO chatGenerationResponseDTO =
+				aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
+		if (Objects.isNull(chatGenerationResponseDTO)
+				|| StringUtils.isEmpty(chatGenerationResponseDTO.content())) {
+			log.error(
+					String.format(
+							"%s. Ai Gateway returned a null or empty response", SEARCH_KPI_ERROR_MESSAGE));
 			throw new AiGatewayServiceException(SEARCH_KPI_ERROR_MESSAGE);
 		}
 
 		return parserStategy.parse(chatGenerationResponseDTO.content());
-		
 	}
 }

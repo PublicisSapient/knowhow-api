@@ -82,7 +82,7 @@ public enum JiraFeature {
 	/** Jira production defect jira feature. */
 	JIRA_PRODUCTION_DEFECT("productionDefect"),
 
-  DEFECT_SEVERITY("severity"),
+	DEFECT_SEVERITY("severity"),
 
 	BASIC_PROJECT_CONFIG_ID("basicProjectConfigId"),
 	ADDITIONAL_FILTERS_FILTERID("additionalFilters.filterId"),
@@ -97,14 +97,15 @@ public enum JiraFeature {
 	/**
 	 * Gets jira feature field.
 	 *
-	 * @param valueType
-	 *          the value type
+	 * @param valueType the value type
 	 * @return the jira feature field
 	 */
 	public static JiraFeature getJiraFeatureField(String valueType) {
 
 		return Arrays.asList(JiraFeature.values()).stream()
-				.filter(t -> t.getFieldValueInFeature().equalsIgnoreCase(valueType)).findAny().orElse(INVALID);
+				.filter(t -> t.getFieldValueInFeature().equalsIgnoreCase(valueType))
+				.findAny()
+				.orElse(INVALID);
 	}
 
 	/**

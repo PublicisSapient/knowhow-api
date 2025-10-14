@@ -56,13 +56,15 @@ public class IntegrationServiceImpl implements IntegerationService {
 	private final OrganizationHierarchyService organizationHierarchyService;
 
 	@Override
-	public void syncOrganizationHierarchy(Set<OrganizationHierarchy> externalList,
-			List<OrganizationHierarchy> allDbNodes) {
+	public void syncOrganizationHierarchy(
+			Set<OrganizationHierarchy> externalList, List<OrganizationHierarchy> allDbNodes) {
 
 		// Step 1: Find all ports without external IDs
-		List<OrganizationHierarchy> portsWithoutExternalIds = allDbNodes.stream()
-				.filter(node -> PORT.equalsIgnoreCase(node.getHierarchyLevelId()))
-				.filter(node -> node.getExternalId() == null || node.getExternalId().trim().isEmpty()).toList();
+		List<OrganizationHierarchy> portsWithoutExternalIds =
+				allDbNodes.stream()
+						.filter(node -> PORT.equalsIgnoreCase(node.getHierarchyLevelId()))
+						.filter(node -> node.getExternalId() == null || node.getExternalId().trim().isEmpty())
+						.toList();
 
 		// Pause projects under ports without external IDs
 		if (CollectionUtils.isNotEmpty(portsWithoutExternalIds)) {
@@ -70,13 +72,15 @@ public class IntegrationServiceImpl implements IntegerationService {
 		}
 
 		// Step 2: Map database records by externalId for quick lookup
-		Map<String, OrganizationHierarchy> databaseMapByExternalId = allDbNodes.stream()
-				.filter(node -> node.getExternalId() != null)
-				.collect(Collectors.toMap(OrganizationHierarchy::getExternalId, Function.identity()));
+		Map<String, OrganizationHierarchy> databaseMapByExternalId =
+				allDbNodes.stream()
+						.filter(node -> node.getExternalId() != null)
+						.collect(Collectors.toMap(OrganizationHierarchy::getExternalId, Function.identity()));
 
 		// Create a map of existing nodes by ID for quick lookup
-		Map<String, OrganizationHierarchy> databaseMapById = allDbNodes.stream()
-				.collect(Collectors.toMap(node -> node.getId().toString(), Function.identity()));
+		Map<String, OrganizationHierarchy> databaseMapById =
+				allDbNodes.stream()
+						.collect(Collectors.toMap(node -> node.getId().toString(), Function.identity()));
 
 		// Step 3: Prepare lists for inserts and updates
 		List<OrganizationHierarchy> nodesToSave = new ArrayList<>();
@@ -125,47 +129,51 @@ public class IntegrationServiceImpl implements IntegerationService {
 	}
 
 	@Override
-	public Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(HierarchyDetails hierarchyDetails,
-			List<OrganizationHierarchy> allDbNodes) {
-		return organizationHierarchyAdapter.convertToOrganizationHierarchy(hierarchyDetails, allDbNodes);
+	public Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(
+			HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes) {
+		return organizationHierarchyAdapter.convertToOrganizationHierarchy(
+				hierarchyDetails, allDbNodes);
 	}
 
 	/**
-	 * Pauses all projects that are children of the given ports in the organization
-	 * hierarchy
+	 * Pauses all projects that are children of the given ports in the organization hierarchy
 	 *
-	 * @param ports
-	 *            List of port nodes whose projects should be paused
-	 * @param allNodes
-	 *            All nodes in the organization hierarchy
+	 * @param ports List of port nodes whose projects should be paused
+	 * @param allNodes All nodes in the organization hierarchy
 	 */
-	private void pauseProjectsUnderPorts(List<OrganizationHierarchy> ports, List<OrganizationHierarchy> allNodes) {
+	private void pauseProjectsUnderPorts(
+			List<OrganizationHierarchy> ports, List<OrganizationHierarchy> allNodes) {
 		log.info("Found {} ports without external IDs. Pausing their projects...", ports.size());
 
 		// Get all project nodes that are children of these ports
-		Set<String> portNodeIds = ports.stream().map(node -> node.getNodeId()).collect(Collectors.toSet());
+		Set<String> portNodeIds =
+				ports.stream().map(node -> node.getNodeId()).collect(Collectors.toSet());
 
 		// Find all project nodes that are direct children of these ports
-		List<OrganizationHierarchy> projectNodes = allNodes.stream()
-				.filter(node -> PROJECT.equalsIgnoreCase(node.getHierarchyLevelId()))
-				.filter(node -> portNodeIds.contains(node.getParentId())).toList();
+		List<OrganizationHierarchy> projectNodes =
+				allNodes.stream()
+						.filter(node -> PROJECT.equalsIgnoreCase(node.getHierarchyLevelId()))
+						.filter(node -> portNodeIds.contains(node.getParentId()))
+						.toList();
 
 		// Get all project configs for these project nodes
-		Set<String> projectNodeIds = projectNodes.stream().map(node -> node.getNodeId())
-				.collect(Collectors.toSet());
+		Set<String> projectNodeIds =
+				projectNodes.stream().map(node -> node.getNodeId()).collect(Collectors.toSet());
 
 		if (CollectionUtils.isNotEmpty(projectNodeIds)) {
-			List<ProjectBasicConfig> projectsToPause = projectConfigRepository.findByProjectNodeIdIn(projectNodeIds);
+			List<ProjectBasicConfig> projectsToPause =
+					projectConfigRepository.findByProjectNodeIdIn(projectNodeIds);
 
 			if (CollectionUtils.isNotEmpty(projectsToPause)) {
 				log.info("Pausing {} projects under ports without external IDs", projectsToPause.size());
 				// Mark all in-memory objects as paused
-				projectsToPause.forEach(projectBasicConfig -> {
-					projectBasicConfig.setProjectOnHold(true);
-					projectBasicConfig
-							.setUpdatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
-					projectBasicConfig.setUpdatedBy(SYSTEM);
-				});
+				projectsToPause.forEach(
+						projectBasicConfig -> {
+							projectBasicConfig.setProjectOnHold(true);
+							projectBasicConfig.setUpdatedAt(
+									DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
+							projectBasicConfig.setUpdatedBy(SYSTEM);
+						});
 
 				try {
 					projectConfigRepository.saveAll(projectsToPause);
@@ -181,5 +189,4 @@ public class IntegrationServiceImpl implements IntegerationService {
 			log.info("No project nodes found under ports without external IDs");
 		}
 	}
-
 }

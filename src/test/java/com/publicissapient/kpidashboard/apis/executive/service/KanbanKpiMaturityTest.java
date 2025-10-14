@@ -49,26 +49,19 @@ import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 @RunWith(MockitoJUnitRunner.class)
 public class KanbanKpiMaturityTest {
 
-	@Mock
-	private KpiIntegrationServiceImpl kpiIntegrationServiceImpl;
+	@Mock private KpiIntegrationServiceImpl kpiIntegrationServiceImpl;
 
-	@Mock
-	private JiraServiceKanbanR jiraService;
+	@Mock private JiraServiceKanbanR jiraService;
 
-	@Mock
-	private SonarServiceKanbanR sonarService;
+	@Mock private SonarServiceKanbanR sonarService;
 
-	@Mock
-	private ZephyrServiceKanban zephyrService;
+	@Mock private ZephyrServiceKanban zephyrService;
 
-	@Mock
-	private JenkinsServiceKanbanR jenkinsServiceR;
+	@Mock private JenkinsServiceKanbanR jenkinsServiceR;
 
-	@Mock
-	private BitBucketServiceKanbanR bitBucketServiceR;
+	@Mock private BitBucketServiceKanbanR bitBucketServiceR;
 
-	@InjectMocks
-	private KanbanKpiMaturity kanbanKpiMaturity;
+	@InjectMocks private KanbanKpiMaturity kanbanKpiMaturity;
 
 	private KpiRequest kpiRequest;
 	private KpiMaster dummyKpiMaster;
@@ -91,9 +84,18 @@ public class KanbanKpiMaturityTest {
 		when(jenkinsServiceR.process(any())).thenReturn(List.of(dummyKpiElement));
 		when(bitBucketServiceR.process(any())).thenReturn(List.of(dummyKpiElement));
 
-		Map<String, List<KpiMaster>> sourceWiseKpiList = Map.of("Jira", List.of(dummyKpiMaster), "Sonar",
-				List.of(dummyKpiMaster), "Zypher", List.of(dummyKpiMaster), "Jenkins", List.of(dummyKpiMaster),
-				"BitBucket", List.of(dummyKpiMaster));
+		Map<String, List<KpiMaster>> sourceWiseKpiList =
+				Map.of(
+						"Jira",
+						List.of(dummyKpiMaster),
+						"Sonar",
+						List.of(dummyKpiMaster),
+						"Zypher",
+						List.of(dummyKpiMaster),
+						"Jenkins",
+						List.of(dummyKpiMaster),
+						"BitBucket",
+						List.of(dummyKpiMaster));
 
 		List<KpiElement> result = kanbanKpiMaturity.getKpiElements(kpiRequest, sourceWiseKpiList);
 
@@ -108,12 +110,14 @@ public class KanbanKpiMaturityTest {
 
 	@Test
 	public void testGetKpiElements_DefaultSource() {
-		Map<String, List<KpiMaster>> sourceWiseKpiList = Map.of("UnknownSource", List.of(dummyKpiMaster));
+		Map<String, List<KpiMaster>> sourceWiseKpiList =
+				Map.of("UnknownSource", List.of(dummyKpiMaster));
 
 		List<KpiElement> result = kanbanKpiMaturity.getKpiElements(kpiRequest, sourceWiseKpiList);
 
 		assertTrue(result.isEmpty());
-		verifyNoInteractions(jiraService, sonarService, zephyrService, jenkinsServiceR, bitBucketServiceR);
+		verifyNoInteractions(
+				jiraService, sonarService, zephyrService, jenkinsServiceR, bitBucketServiceR);
 		verify(kpiIntegrationServiceImpl).calculateOverallMaturity(anyList());
 	}
 
@@ -132,13 +136,20 @@ public class KanbanKpiMaturityTest {
 	}
 
 	@Test
-	public void testGetKpiElements_MixedSourcesWithUnknownAndException() throws EntityNotFoundException {
+	public void testGetKpiElements_MixedSourcesWithUnknownAndException()
+			throws EntityNotFoundException {
 		when(kpiIntegrationServiceImpl.mapKpiMasterToKpiElement(any())).thenReturn(dummyKpiElement);
 		when(jiraService.process(any())).thenReturn(List.of(dummyKpiElement));
 		when(sonarService.process(any())).thenThrow(new RuntimeException("Sonar failed"));
 
-		Map<String, List<KpiMaster>> sourceWiseKpiList = Map.of("Jira", List.of(dummyKpiMaster), "Sonar",
-				List.of(dummyKpiMaster), "Unknown", List.of(dummyKpiMaster));
+		Map<String, List<KpiMaster>> sourceWiseKpiList =
+				Map.of(
+						"Jira",
+						List.of(dummyKpiMaster),
+						"Sonar",
+						List.of(dummyKpiMaster),
+						"Unknown",
+						List.of(dummyKpiMaster));
 
 		List<KpiElement> result = kanbanKpiMaturity.getKpiElements(kpiRequest, sourceWiseKpiList);
 

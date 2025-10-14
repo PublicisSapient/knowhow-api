@@ -54,10 +54,8 @@ public class AutoApproveAccessControllerTest {
 	ObjectMapper mapper = new ObjectMapper();
 	private MockMvc mockMvc;
 	private AutoApproveAccessConfigDTO autoApproveAccessConfigDTO;
-	@InjectMocks
-	private AutoApproveAccessController autoApproveController;
-	@Mock
-	private AutoApproveAccessService autoApproveAccessService;
+	@InjectMocks private AutoApproveAccessController autoApproveController;
+	@Mock private AutoApproveAccessService autoApproveAccessService;
 	private String testId;
 
 	@Before
@@ -87,7 +85,10 @@ public class AutoApproveAccessControllerTest {
 	@Test
 	public void testGetAutoApproveConfig() throws Exception {
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/autoapprove").contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/autoapprove")
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
@@ -103,24 +104,33 @@ public class AutoApproveAccessControllerTest {
 
 	@Test
 	public void testSaveAutoApproveRoles() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.post("/autoapprove")
-				.content(mapper.writeValueAsString(autoApproveAccessConfigDTO)).contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/autoapprove")
+								.content(mapper.writeValueAsString(autoApproveAccessConfigDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	@Test
 	public void modifyAutoApprovConfigById() throws Exception {
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/autoapprove/" + testId)
-				.content(mapper.writeValueAsString(autoApproveAccessConfigDTO)).contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.put("/autoapprove/" + testId)
+								.content(mapper.writeValueAsString(autoApproveAccessConfigDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	@Test
 	public void modifyAutoApprovConfigByInvalidId() throws Exception {
 
-		mockMvc.perform(MockMvcRequestBuilders.put("/autoapprove/" + "6000e645ca33dc927b4a")
-				.content(mapper.writeValueAsString(autoApproveAccessConfigDTO)).contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.put("/autoapprove/" + "6000e645ca33dc927b4a")
+								.content(mapper.writeValueAsString(autoApproveAccessConfigDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 }

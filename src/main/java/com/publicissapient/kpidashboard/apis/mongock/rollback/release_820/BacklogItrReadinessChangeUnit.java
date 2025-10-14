@@ -38,7 +38,11 @@ import io.mongock.api.annotations.RollbackExecution;
  * @author shunaray
  */
 @SuppressWarnings("java:S1192")
-@ChangeUnit(id = "r_backlog_itr_ready_Ehc", order = "08204", author = "shunaray", systemVersion = "8.2.0")
+@ChangeUnit(
+		id = "r_backlog_itr_ready_Ehc",
+		order = "08204",
+		author = "shunaray",
+		systemVersion = "8.2.0")
 public class BacklogItrReadinessChangeUnit {
 	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
 	public static final String KPI_161 = "kpi161";
@@ -57,25 +61,37 @@ public class BacklogItrReadinessChangeUnit {
 	}
 
 	public void deleteFieldMapping() {
-		List<String> fieldNamesToDelete = Arrays.asList("jiraStatusForInProgressKPI161", "jiraStatusForRefinedKPI161",
-				"jiraStatusForNotRefinedKPI161");
+		List<String> fieldNamesToDelete =
+				Arrays.asList(
+						"jiraStatusForInProgressKPI161",
+						"jiraStatusForRefinedKPI161",
+						"jiraStatusForNotRefinedKPI161");
 		Document filter = new Document("fieldName", new Document("$in", fieldNamesToDelete));
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteMany(filter);
 	}
 
 	public void rollbackKpiFilterToRadioBtn() {
-		mongoTemplate.getCollection("kpi_master").updateOne(
-				new Document("kpiId", new Document("$in", Collections.singletonList("kpi161"))),
-				new Document("$unset", new Document("kpiFilter", "")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", new Document("$in", Collections.singletonList("kpi161"))),
+						new Document("$unset", new Document("kpiFilter", "")));
 	}
 
 	public void removeLinkDetail() {
 		Query kpiQuery = new Query(Criteria.where("kpiId").is(KPI_161));
 
-		Update kpiUpdate = new Update().pull("kpiInfo.details",
-				new Document("type", "link").append("kpiLinkDetail", new Document("text", "Detailed Information at").append(
-						"link",
-						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/2916400/BACKLOG+Governance#Iteration-Readiness")));
+		Update kpiUpdate =
+				new Update()
+						.pull(
+								"kpiInfo.details",
+								new Document("type", "link")
+										.append(
+												"kpiLinkDetail",
+												new Document("text", "Detailed Information at")
+														.append(
+																"link",
+																"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/2916400/BACKLOG+Governance#Iteration-Readiness")));
 
 		mongoTemplate.updateFirst(kpiQuery, kpiUpdate, KpiMaster.class);
 	}
@@ -88,33 +104,55 @@ public class BacklogItrReadinessChangeUnit {
 	}
 
 	public void insertFieldMappings() {
-		List<Document> fieldMappings = Arrays.asList(
-				MongockUtil.createFieldMapping("jiraStatusForInProgressKPI161", "Status to identify In Progress issues",
-						"WorkFlow Status Mapping", "workflow", "chips",
-						"All statuses that issues have moved from the Created status and also has not been completed."),
-				MongockUtil.createFieldMapping("jiraStatusForRefinedKPI161", "Status to identify In Refined issues",
-						"WorkFlow Status Mapping", "workflow", "chips",
-						"All statuses that correspond to refined status of Iteration Readiness."),
-				MongockUtil.createFieldMapping("jiraStatusForNotRefinedKPI161", "Status to identify In Not Refined issues",
-						"WorkFlow Status Mapping", "workflow", "chips",
-						"All statuses that correspond to not refined status of Iteration Readiness."));
+		List<Document> fieldMappings =
+				Arrays.asList(
+						MongockUtil.createFieldMapping(
+								"jiraStatusForInProgressKPI161",
+								"Status to identify In Progress issues",
+								"WorkFlow Status Mapping",
+								"workflow",
+								"chips",
+								"All statuses that issues have moved from the Created status and also has not been completed."),
+						MongockUtil.createFieldMapping(
+								"jiraStatusForRefinedKPI161",
+								"Status to identify In Refined issues",
+								"WorkFlow Status Mapping",
+								"workflow",
+								"chips",
+								"All statuses that correspond to refined status of Iteration Readiness."),
+						MongockUtil.createFieldMapping(
+								"jiraStatusForNotRefinedKPI161",
+								"Status to identify In Not Refined issues",
+								"WorkFlow Status Mapping",
+								"workflow",
+								"chips",
+								"All statuses that correspond to not refined status of Iteration Readiness."));
 
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertMany(fieldMappings);
 	}
 
 	public void makeKpiFilterToRadioBtn() {
-		mongoTemplate.getCollection("kpi_master").updateOne(
-				new Document("kpiId", new Document("$in", Collections.singletonList("kpi161"))),
-				new Document("$set", new Document("kpiFilter", "radioButton")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", new Document("$in", Collections.singletonList("kpi161"))),
+						new Document("$set", new Document("kpiFilter", "radioButton")));
 	}
 
 	public void addKpiLink() {
 		Query kpiQuery = new Query(Criteria.where("kpiId").is(KPI_161));
 
-		Update kpiUpdate = new Update().push("kpiInfo.details",
-				new Document("type", "link").append("kpiLinkDetail", new Document("text", "Detailed Information at").append(
-						"link",
-						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/2916400/BACKLOG+Governance#Iteration-Readiness")));
+		Update kpiUpdate =
+				new Update()
+						.push(
+								"kpiInfo.details",
+								new Document("type", "link")
+										.append(
+												"kpiLinkDetail",
+												new Document("text", "Detailed Information at")
+														.append(
+																"link",
+																"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/2916400/BACKLOG+Governance#Iteration-Readiness")));
 
 		mongoTemplate.updateFirst(kpiQuery, kpiUpdate, KpiMaster.class);
 	}

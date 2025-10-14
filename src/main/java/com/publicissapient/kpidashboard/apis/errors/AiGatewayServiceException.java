@@ -18,19 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.errors;
 
-
 /**
- * Exception class for AI Gateway service errors.
- * This exception is thrown for the AI Gateway errors.
+ * Exception class for AI Gateway service errors. This exception is thrown for the AI Gateway
+ * errors.
  */
 public class AiGatewayServiceException extends RuntimeException {
 
-    /**
-     * Constructs a new AiGatewayServiceException with the specified detail message.
-     *
-     * @param message the detail message
-     */
-    public AiGatewayServiceException(String message) {
-        super(message);
-    }
+	/**
+	 * Constructs a new AiGatewayServiceException with the specified detail message.
+	 *
+	 * @param message the detail message
+	 */
+	public AiGatewayServiceException(String message) {
+		super(message);
+	}
 }

@@ -56,7 +56,8 @@ public class ReleaseWiseConfiguration {
 	@RollbackExecution
 	public void rollback() {
 
-		MongoCollection<Document> mappingStructure = mongoTemplate.getCollection("field_mapping_structure");
+		MongoCollection<Document> mappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
 
 		// Define the filter to match documents with fieldName "startDateCountKPI150"
 		Document filter = new Document("fieldName", "startDateCountKPI150");

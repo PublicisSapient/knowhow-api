@@ -32,7 +32,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "remove_repo_tool_project_configs", order = "101010", author = "kunkambl", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "remove_repo_tool_project_configs",
+		order = "101010",
+		author = "kunkambl",
+		systemVersion = "10.1.0")
 public class RemoveRepoToolProjectConfigs {
 	private final MongoTemplate mongoTemplate;
 	private List<Document> deletedDocuments;
@@ -45,9 +49,11 @@ public class RemoveRepoToolProjectConfigs {
 	@Execution
 	public void execution() {
 
-		MongoCollection<Document> projectToolConfigs = mongoTemplate.getCollection("project_tool_configs");
+		MongoCollection<Document> projectToolConfigs =
+				mongoTemplate.getCollection("project_tool_configs");
 		// Find and store the documents to be deleted
-		deletedDocuments = projectToolConfigs.find(new Document("toolName", "RepoTool")).into(new ArrayList<>());
+		deletedDocuments =
+				projectToolConfigs.find(new Document("toolName", "RepoTool")).into(new ArrayList<>());
 
 		// Delete the documents
 		projectToolConfigs.deleteMany(new Document("toolName", "RepoTool"));

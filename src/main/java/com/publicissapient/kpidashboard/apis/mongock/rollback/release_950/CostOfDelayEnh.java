@@ -48,8 +48,11 @@ public class CostOfDelayEnh {
 		MongoCollection<Document> kpiMaster = mongoTemplate.getCollection("kpi_master");
 		Document filter = new Document("kpiId", "kpi113");
 
-		Document update = new Document("$set",
-				new Document("kpiName", "Value Delivered (Cost of Delay)").append("yaxisLabel", "Count(Days)"));
+		Document update =
+				new Document(
+						"$set",
+						new Document("kpiName", "Value Delivered (Cost of Delay)")
+								.append("yaxisLabel", "Count(Days)"));
 
 		// Perform the update
 		kpiMaster.updateOne(filter, update);

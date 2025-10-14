@@ -45,7 +45,8 @@ public class ApiAuditLogging extends DispatcherServlet {
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	@Override
-	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	protected void doDispatch(HttpServletRequest request, HttpServletResponse response)
+			throws Exception {
 		ContentCachingRequestWrapper requestWrapper = new ContentCachingRequestWrapper(request);
 		ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
 

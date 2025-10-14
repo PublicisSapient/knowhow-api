@@ -35,8 +35,7 @@ public class Logo {
 	/**
 	 * Sets image.
 	 *
-	 * @param image
-	 *          the image
+	 * @param image the image
 	 */
 	public void setImage(byte[] image) {
 		this.image = image == null ? null : image.clone();

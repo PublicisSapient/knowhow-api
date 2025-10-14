@@ -39,18 +39,20 @@ import com.publicissapient.kpidashboard.common.model.application.KpiColumnConfig
 @RequestMapping("/kpi-column-config")
 public class KpiColumnConfigController {
 
-	@Autowired
-	KpiColumnConfigService kpiColumnConfigService;
+	@Autowired KpiColumnConfigService kpiColumnConfigService;
 
 	/**
 	 * Api to get kpi column configurations
 	 *
 	 * @return response
 	 */
-	@GetMapping(value = "/{basicProjectConfigId}/{kpiId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getKpiColumnConfiguration(@PathVariable String basicProjectConfigId,
-			@PathVariable String kpiId) {
-		KpiColumnConfigDTO kpiColumnConfigDTO = kpiColumnConfigService.getByKpiColumnConfig(basicProjectConfigId, kpiId);
+	@GetMapping(
+			value = "/{basicProjectConfigId}/{kpiId}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getKpiColumnConfiguration(
+			@PathVariable String basicProjectConfigId, @PathVariable String kpiId) {
+		KpiColumnConfigDTO kpiColumnConfigDTO =
+				kpiColumnConfigService.getByKpiColumnConfig(basicProjectConfigId, kpiId);
 
 		ServiceResponse response = new ServiceResponse(false, "No data found", null);
 		if (null != kpiColumnConfigDTO) {
@@ -65,9 +67,13 @@ public class KpiColumnConfigController {
 	 * @param kpiColumnConfigDTO *
 	 * @return response
 	 */
-	@PostMapping(value = "/kpiColumnConfig", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/kpiColumnConfig",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveKpiColumnConfig(
 			@Valid @RequestBody KpiColumnConfigDTO kpiColumnConfigDTO) {
-		return ResponseEntity.status(HttpStatus.OK).body(kpiColumnConfigService.saveKpiColumnConfig(kpiColumnConfigDTO));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(kpiColumnConfigService.saveKpiColumnConfig(kpiColumnConfigDTO));
 	}
 }

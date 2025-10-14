@@ -74,14 +74,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long, Map<ObjectId, List<Deployment>>> {
+public class DeploymentFrequencyServiceImpl
+		extends JenkinsKPIService<Long, Long, Map<ObjectId, List<Deployment>>> {
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private DeploymentRepository deploymentRepository;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private DeploymentRepository deploymentRepository;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	@Override
 	public Long calculateKPIMetrics(Map<ObjectId, List<Deployment>> objectIdListMap) {
@@ -94,42 +92,51 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
 
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
 		projectWiseLeafNodeValue(mapTmp, projectList, kpiElement);
 
-		log.debug("[DEPLOYMENT-FREQUENCY-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[DEPLOYMENT-FREQUENCY-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.DEPLOYMENT_FREQUENCY);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
-		Map<String, List<DataCount>> trendValuesMap = getAggregateTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.DEPLOYMENT_FREQUENCY);
+		Map<String, List<DataCount>> trendValuesMap =
+				getAggregateTrendValuesMap(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEPLOYMENT_FREQUENCY);
 		Map<String, Map<String, List<DataCount>>> envNameProjectWiseDc = new LinkedHashMap<>();
-		trendValuesMap.forEach((envName, dataCounts) -> {
-			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
-					.collect(Collectors.groupingBy(DataCount::getData));
-			envNameProjectWiseDc.put(envName, projectWiseDc);
-		});
+		trendValuesMap.forEach(
+				(envName, dataCounts) -> {
+					Map<String, List<DataCount>> projectWiseDc =
+							dataCounts.stream().collect(Collectors.groupingBy(DataCount::getData));
+					envNameProjectWiseDc.put(envName, projectWiseDc);
+				});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		envNameProjectWiseDc.forEach((envName, projectWiseDc) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
-			dataCountGroup.setFilter(envName);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		envNameProjectWiseDc.forEach(
+				(envName, projectWiseDc) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
+					dataCountGroup.setFilter(envName);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 		kpiElement.setTrendValueList(dataCountGroups);
-		log.debug("[DEPLOYMENT-FREQUENCY-LEAF-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[DEPLOYMENT-FREQUENCY-LEAF-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 		return kpiElement;
 	}
 
@@ -140,8 +147,8 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 	 * @param projectLeafNodeList
 	 * @param kpiElement
 	 */
-	private void projectWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> projectLeafNodeList,
-			KpiElement kpiElement) {
+	private void projectWiseLeafNodeValue(
+			Map<String, Node> mapTmp, List<Node> projectLeafNodeList, KpiElement kpiElement) {
 
 		String requestTrackerId = getRequestTrackerId();
 		Map<String, Object> durationFilter = KpiDataHelper.getDurationFilter(kpiElement);
@@ -151,63 +158,82 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 		String startDate = localStartDate.format(formatterMonth);
 		String endDate = localEndDate.format(formatterMonth);
 		List<KPIExcelData> excelData = new ArrayList<>();
-		Map<ObjectId, List<Deployment>> deploymentGroup = fetchKPIDataFromDb(projectLeafNodeList, startDate, endDate, null);
+		Map<ObjectId, List<Deployment>> deploymentGroup =
+				fetchKPIDataFromDb(projectLeafNodeList, startDate, endDate, null);
 
 		if (MapUtils.isEmpty(deploymentGroup)) {
 			return;
 		}
 
 		DeploymentFrequencyInfo deploymentFrequencyInfo = new DeploymentFrequencyInfo();
-		projectLeafNodeList.forEach(node -> {
-			Map<String, List<DataCount>> trendValueMap = new HashMap<>();
-			List<DataCount> dataCountAggList = new ArrayList<>();
-			String trendLineName = node.getProjectFilter().getName();
-			ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
-			String projectName = node.getProjectFilter().getName();
-			List<Deployment> deploymentListProjectWise = deploymentGroup.get(basicProjectConfigId);
+		projectLeafNodeList.forEach(
+				node -> {
+					Map<String, List<DataCount>> trendValueMap = new HashMap<>();
+					List<DataCount> dataCountAggList = new ArrayList<>();
+					String trendLineName = node.getProjectFilter().getName();
+					ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
+					String projectName = node.getProjectFilter().getName();
+					List<Deployment> deploymentListProjectWise = deploymentGroup.get(basicProjectConfigId);
 
-			if (CollectionUtils.isNotEmpty(deploymentListProjectWise)) {
-				prepareProjectNodeValue(deploymentListProjectWise, dataCountAggList, trendValueMap, trendLineName,
-						deploymentFrequencyInfo, durationFilter);
-			}
-			if (CollectionUtils.isEmpty(dataCountAggList)) {
-				mapTmp.get(node.getId()).setValue(null);
-				return;
-			}
-			List<DataCount> aggData = calculateAggregatedWeeksWise(KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), dataCountAggList);
-			if (CollectionUtils.isNotEmpty(aggData)) {
-				trendValueMap.put(CommonConstant.OVERALL, aggData);
-			}
-			mapTmp.get(node.getId()).setValue(trendValueMap);
+					if (CollectionUtils.isNotEmpty(deploymentListProjectWise)) {
+						prepareProjectNodeValue(
+								deploymentListProjectWise,
+								dataCountAggList,
+								trendValueMap,
+								trendLineName,
+								deploymentFrequencyInfo,
+								durationFilter);
+					}
+					if (CollectionUtils.isEmpty(dataCountAggList)) {
+						mapTmp.get(node.getId()).setValue(null);
+						return;
+					}
+					List<DataCount> aggData =
+							calculateAggregatedWeeksWise(
+									KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), dataCountAggList);
+					if (CollectionUtils.isNotEmpty(aggData)) {
+						trendValueMap.put(CommonConstant.OVERALL, aggData);
+					}
+					mapTmp.get(node.getId()).setValue(trendValueMap);
 
-			if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-				Map<String, String> deploymentMapPipelineNameWise = deploymentListProjectWise.stream()
-						.filter(d -> StringUtils.isNotEmpty(d.getJobName()) && StringUtils.isNotEmpty(d.getPipelineName()))
-						.collect(Collectors.toMap(Deployment::getJobName, Deployment::getPipelineName, (e1, e2) -> e1,
-								LinkedHashMap::new));
-				KPIExcelUtility.populateDeploymentFrequencyExcelData(projectName, deploymentFrequencyInfo, excelData,
-						deploymentMapPipelineNameWise);
-			}
-		});
+					if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+						Map<String, String> deploymentMapPipelineNameWise =
+								deploymentListProjectWise.stream()
+										.filter(
+												d ->
+														StringUtils.isNotEmpty(d.getJobName())
+																&& StringUtils.isNotEmpty(d.getPipelineName()))
+										.collect(
+												Collectors.toMap(
+														Deployment::getJobName,
+														Deployment::getPipelineName,
+														(e1, e2) -> e1,
+														LinkedHashMap::new));
+						KPIExcelUtility.populateDeploymentFrequencyExcelData(
+								projectName, deploymentFrequencyInfo, excelData, deploymentMapPipelineNameWise);
+					}
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.DEPLOYMENT_FREQUENCY.getColumns());
 	}
 
 	@Override
-	public Map<ObjectId, List<Deployment>> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<ObjectId, List<Deployment>> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, List<String>> mapOfFilters = new HashMap<>();
 		List<String> statusList = new ArrayList<>();
 		Set<ObjectId> projectBasicConfigIds = new HashSet<>();
-		leafNodeList.forEach(node -> {
-			ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
-			projectBasicConfigIds.add(basicProjectConfigId);
-		});
+		leafNodeList.forEach(
+				node -> {
+					ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
+					projectBasicConfigIds.add(basicProjectConfigId);
+				});
 		statusList.add(DeploymentStatus.SUCCESS.name());
 		mapOfFilters.put("deploymentStatus", statusList);
-		List<Deployment> deploymentList = deploymentRepository.findDeploymentList(mapOfFilters, projectBasicConfigIds,
-				startDate, endDate);
+		List<Deployment> deploymentList =
+				deploymentRepository.findDeploymentList(
+						mapOfFilters, projectBasicConfigIds, startDate, endDate);
 		return deploymentList.stream()
 				.collect(Collectors.groupingBy(Deployment::getBasicProjectConfigId, Collectors.toList()));
 	}
@@ -222,59 +248,72 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 	 * @param deploymentFrequencyInfo
 	 * @param durationFilter
 	 */
-	private void prepareProjectNodeValue(List<Deployment> deploymentListProjectWise, List<DataCount> aggDataCountList,
-			Map<String, List<DataCount>> trendValueMap, String trendLineName, DeploymentFrequencyInfo deploymentFrequencyInfo,
+	private void prepareProjectNodeValue(
+			List<Deployment> deploymentListProjectWise,
+			List<DataCount> aggDataCountList,
+			Map<String, List<DataCount>> trendValueMap,
+			String trendLineName,
+			DeploymentFrequencyInfo deploymentFrequencyInfo,
 			Map<String, Object> durationFilter) {
 		String duration = (String) durationFilter.getOrDefault(Constant.DURATION, CommonConstant.WEEK);
 		int previousTimeCount = (int) durationFilter.getOrDefault(Constant.COUNT, 5);
-		Map<String, List<Deployment>> deploymentMapEnvWise = deploymentListProjectWise.stream()
-				.collect(Collectors.groupingBy(Deployment::getEnvName, Collectors.toList()));
+		Map<String, List<Deployment>> deploymentMapEnvWise =
+				deploymentListProjectWise.stream()
+						.collect(Collectors.groupingBy(Deployment::getEnvName, Collectors.toList()));
 
-		deploymentMapEnvWise.forEach((envName, deploymentListEnvWise) -> {
-			if (StringUtils.isNotEmpty(envName) && CollectionUtils.isNotEmpty(deploymentListEnvWise)) {
+		deploymentMapEnvWise.forEach(
+				(envName, deploymentListEnvWise) -> {
+					if (StringUtils.isNotEmpty(envName)
+							&& CollectionUtils.isNotEmpty(deploymentListEnvWise)) {
 
-				Map<String, List<Deployment>> deploymentMapTimeWise = duration.equalsIgnoreCase(CommonConstant.WEEK)
-						? getLastNWeek(previousTimeCount)
-						: getLastNMonth(previousTimeCount);
-				List<DataCount> dataCountList = new ArrayList<>();
+						Map<String, List<Deployment>> deploymentMapTimeWise =
+								duration.equalsIgnoreCase(CommonConstant.WEEK)
+										? getLastNWeek(previousTimeCount)
+										: getLastNMonth(previousTimeCount);
+						List<DataCount> dataCountList = new ArrayList<>();
 
-				for (Deployment deployment : deploymentListEnvWise) {
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
-					LocalDateTime dateValue = LocalDateTime.parse(deployment.getStartTime(), formatter);
-					String timeValue = duration.equalsIgnoreCase(CommonConstant.WEEK)
-							? DateUtil.getWeekRange(dateValue.toLocalDate())
-							: dateValue.getYear() + Constant.DASH + dateValue.getMonthValue();
+						for (Deployment deployment : deploymentListEnvWise) {
+							DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
+							LocalDateTime dateValue = LocalDateTime.parse(deployment.getStartTime(), formatter);
+							String timeValue =
+									duration.equalsIgnoreCase(CommonConstant.WEEK)
+											? DateUtil.getWeekRange(dateValue.toLocalDate())
+											: dateValue.getYear() + Constant.DASH + dateValue.getMonthValue();
 
-					deploymentMapTimeWise.computeIfPresent(timeValue, (key, deploymentListCurrentTime) -> {
-						deploymentListCurrentTime.add(deployment);
-						return deploymentListCurrentTime;
-					});
-				}
+							deploymentMapTimeWise.computeIfPresent(
+									timeValue,
+									(key, deploymentListCurrentTime) -> {
+										deploymentListCurrentTime.add(deployment);
+										return deploymentListCurrentTime;
+									});
+						}
 
-				deploymentMapTimeWise.forEach((time, deploymentListCurrentTime) -> {
-					DataCount dataCount = createDataCount(trendLineName, envName, time, deploymentListCurrentTime);
-					dataCountList.add(dataCount);
-					setDeploymentFrequencyInfoForExcel(deploymentFrequencyInfo, deploymentListCurrentTime);
+						deploymentMapTimeWise.forEach(
+								(time, deploymentListCurrentTime) -> {
+									DataCount dataCount =
+											createDataCount(trendLineName, envName, time, deploymentListCurrentTime);
+									dataCountList.add(dataCount);
+									setDeploymentFrequencyInfoForExcel(
+											deploymentFrequencyInfo, deploymentListCurrentTime);
+								});
+
+						aggDataCountList.addAll(dataCountList);
+						trendValue(trendValueMap, envName, deploymentListEnvWise, dataCountList);
+					}
 				});
-
-				aggDataCountList.addAll(dataCountList);
-				trendValue(trendValueMap, envName, deploymentListEnvWise, dataCountList);
-			}
-		});
 	}
 
 	/**
-	 * @param trendValueMap
-	 *          trendValueMap
-	 * @param envName
-	 *          envName
-	 * @param deploymentListEnvWise
-	 *          deploymentListEnvWise
-	 * @param dataCountList
-	 *          dataCountList
+	 * @param trendValueMap trendValueMap
+	 * @param envName envName
+	 * @param deploymentListEnvWise deploymentListEnvWise
+	 * @param dataCountList dataCountList
 	 */
-	private static void trendValue(Map<String, List<DataCount>> trendValueMap, String envName,
-			List<Deployment> deploymentListEnvWise, List<DataCount> dataCountList) {
+	private static void trendValue(
+			Map<String, List<DataCount>> trendValueMap,
+			String envName,
+			List<Deployment> deploymentListEnvWise,
+			List<DataCount> dataCountList) {
 		if (StringUtils.isNotEmpty(deploymentListEnvWise.get(0).getEnvName())) {
 			trendValueMap.putIfAbsent(deploymentListEnvWise.get(0).getEnvName(), new ArrayList<>());
 			trendValueMap.get(deploymentListEnvWise.get(0).getEnvName()).addAll(dataCountList);
@@ -293,7 +332,10 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 	 * @param deploymentListCurrentMonth
 	 * @return ValidationData object
 	 */
-	private DataCount createDataCount(String trendLineName, String envName, String month,
+	private DataCount createDataCount(
+			String trendLineName,
+			String envName,
+			String month,
 			List<Deployment> deploymentListCurrentMonth) {
 		Long envCount = Long.valueOf(deploymentListCurrentMonth.size());
 		DataCount dataCount = new DataCount();
@@ -319,22 +361,28 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 	 * @param deploymentListCurrentMonth
 	 * @return
 	 */
-	private void setDeploymentFrequencyInfoForExcel(DeploymentFrequencyInfo deploymentFrequencyInfo,
+	private void setDeploymentFrequencyInfoForExcel(
+			DeploymentFrequencyInfo deploymentFrequencyInfo,
 			List<Deployment> deploymentListCurrentMonth) {
 		if (null != deploymentFrequencyInfo && CollectionUtils.isNotEmpty(deploymentListCurrentMonth)) {
-			deploymentListCurrentMonth.stream().forEach(deployment -> {
-				deploymentFrequencyInfo.addEnvironmentList(deployment.getEnvName());
-				if (StringUtils.isNotEmpty(deployment.getJobFolderName())) {
-					deploymentFrequencyInfo.addJobNameList(deployment.getJobFolderName());
-				} else {
-					deploymentFrequencyInfo.addJobNameList(deployment.getJobName());
-				}
-				deploymentFrequencyInfo.addDeploymentDateList(
-						DateUtil.dateTimeConverter(deployment.getStartTime(), DateUtil.TIME_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
-				LocalDateTime dateTime = LocalDateTime.parse(deployment.getStartTime(), formatter);
-				deploymentFrequencyInfo.addMonthList(DateUtil.getWeekRange(dateTime.toLocalDate()));
-			});
+			deploymentListCurrentMonth.stream()
+					.forEach(
+							deployment -> {
+								deploymentFrequencyInfo.addEnvironmentList(deployment.getEnvName());
+								if (StringUtils.isNotEmpty(deployment.getJobFolderName())) {
+									deploymentFrequencyInfo.addJobNameList(deployment.getJobFolderName());
+								} else {
+									deploymentFrequencyInfo.addJobNameList(deployment.getJobName());
+								}
+								deploymentFrequencyInfo.addDeploymentDateList(
+										DateUtil.dateTimeConverter(
+												deployment.getStartTime(),
+												DateUtil.TIME_FORMAT,
+												DateUtil.DISPLAY_DATE_FORMAT));
+								DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
+								LocalDateTime dateTime = LocalDateTime.parse(deployment.getStartTime(), formatter);
+								deploymentFrequencyInfo.addMonthList(DateUtil.getWeekRange(dateTime.toLocalDate()));
+							});
 		}
 	}
 
@@ -371,38 +419,42 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 		return lastNWeek;
 	}
 
-	public List<DataCount> calculateAggregatedWeeksWise(String kpiId, List<DataCount> jobsAggregatedValueList) {
+	public List<DataCount> calculateAggregatedWeeksWise(
+			String kpiId, List<DataCount> jobsAggregatedValueList) {
 
-		Map<String, List<DataCount>> weeksWiseDataCount = jobsAggregatedValueList.stream()
-				.collect(Collectors.groupingBy(DataCount::getDate, LinkedHashMap::new, Collectors.toList()));
+		Map<String, List<DataCount>> weeksWiseDataCount =
+				jobsAggregatedValueList.stream()
+						.collect(
+								Collectors.groupingBy(DataCount::getDate, LinkedHashMap::new, Collectors.toList()));
 
 		List<DataCount> aggregatedDataCount = new ArrayList<>();
-		weeksWiseDataCount.forEach((date, data) -> {
-			Set<String> projectNames = new HashSet<>();
-			DataCount dataCount = new DataCount();
-			List<Long> values = new ArrayList<>();
-			Map<String, Object> hoverMap = new HashMap<>();
-			for (DataCount dc : data) {
-				projectNames.add(dc.getSProjectName());
-				Object obj = dc.getValue();
-				String keyName = dc.getKpiGroup();
-				Long value = obj instanceof Long ? ((Long) obj) : 0L;
-				values.add(value);
-				hoverMap.put(keyName, value.intValue());
-			}
-			Long aggregatedValue = calculateKpiValue(values, kpiId);
-			dataCount.setProjectNames(new ArrayList<>(projectNames));
-			dataCount.setSSprintID(date);
-			dataCount.setSSprintName(date);
-			dataCount.setSprintIds(Arrays.asList(date));
-			dataCount.setSprintNames(Arrays.asList(date));
-			dataCount.setSProjectName(projectNames.stream().collect(Collectors.joining(" ")));
-			dataCount.setValue(aggregatedValue);
-			dataCount.setData(aggregatedValue.toString());
-			dataCount.setDate(date);
-			dataCount.setHoverValue(hoverMap);
-			aggregatedDataCount.add(dataCount);
-		});
+		weeksWiseDataCount.forEach(
+				(date, data) -> {
+					Set<String> projectNames = new HashSet<>();
+					DataCount dataCount = new DataCount();
+					List<Long> values = new ArrayList<>();
+					Map<String, Object> hoverMap = new HashMap<>();
+					for (DataCount dc : data) {
+						projectNames.add(dc.getSProjectName());
+						Object obj = dc.getValue();
+						String keyName = dc.getKpiGroup();
+						Long value = obj instanceof Long ? ((Long) obj) : 0L;
+						values.add(value);
+						hoverMap.put(keyName, value.intValue());
+					}
+					Long aggregatedValue = calculateKpiValue(values, kpiId);
+					dataCount.setProjectNames(new ArrayList<>(projectNames));
+					dataCount.setSSprintID(date);
+					dataCount.setSSprintName(date);
+					dataCount.setSprintIds(Arrays.asList(date));
+					dataCount.setSprintNames(Arrays.asList(date));
+					dataCount.setSProjectName(projectNames.stream().collect(Collectors.joining(" ")));
+					dataCount.setValue(aggregatedValue);
+					dataCount.setData(aggregatedValue.toString());
+					dataCount.setDate(date);
+					dataCount.setHoverValue(hoverMap);
+					aggregatedDataCount.add(dataCount);
+				});
 		return aggregatedDataCount;
 	}
 
@@ -413,6 +465,7 @@ public class DeploymentFrequencyServiceImpl extends JenkinsKPIService<Long, Long
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI118(), KPICode.DEPLOYMENT_FREQUENCY.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI118(), KPICode.DEPLOYMENT_FREQUENCY.getKpiId());
 	}
 }

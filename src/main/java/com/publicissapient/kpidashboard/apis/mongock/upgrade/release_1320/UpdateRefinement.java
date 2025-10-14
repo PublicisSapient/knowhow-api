@@ -17,9 +17,10 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1320;
 
-import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.mongodb.client.MongoCollection;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -68,54 +69,94 @@ public class UpdateRefinement {
 	private static void updateKpi188(MongoCollection<Document> kpiMaster) {
 		Document filter = new Document(KEY_KPI_ID, KPI188);
 
-		Document updateFields = new Document().append(KEY_KPI_WIDTH, 33).append(KEY_KPI_HEIGHT, 50)
-				.append(KEY_IS_RAW_DATA, false).append(KEY_CHART_TYPE, "tabular-with-donut-chart")
-				.append("kpiInfo.details.0.kpiLinkDetail.link", "https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinemnt+Future+Sprint");
+		Document updateFields =
+				new Document()
+						.append(KEY_KPI_WIDTH, 33)
+						.append(KEY_KPI_HEIGHT, 50)
+						.append(KEY_IS_RAW_DATA, false)
+						.append(KEY_CHART_TYPE, "tabular-with-donut-chart")
+						.append(
+								"kpiInfo.details.0.kpiLinkDetail.link",
+								"https://knowhow.tools.publicis.sapient.com/wiki/kpi188-Late+Refinemnt+Future+Sprint");
 		Document update = new Document("$set", updateFields);
 		kpiMaster.updateOne(filter, update);
 	}
 
 	private static void updateKpi187(MongoCollection<Document> kpiMaster) {
 		Document filter = new Document(KEY_KPI_ID, KPI187);
-		Document updateFields = new Document().append(KEY_KPI_SUB_CATEGORY, "Iteration Review")
-				.append(KEY_KPI_WIDTH, 66).append(KEY_KPI_HEIGHT, 100).append(KEY_IS_RAW_DATA, false).append(KEY_DEFAULT_ORDER,11)
-				.append("kpiInfo.details.0.kpiLinkDetail.link", "https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinemnt+Current+Sprint");
+		Document updateFields =
+				new Document()
+						.append(KEY_KPI_SUB_CATEGORY, "Iteration Review")
+						.append(KEY_KPI_WIDTH, 66)
+						.append(KEY_KPI_HEIGHT, 100)
+						.append(KEY_IS_RAW_DATA, false)
+						.append(KEY_DEFAULT_ORDER, 11)
+						.append(
+								"kpiInfo.details.0.kpiLinkDetail.link",
+								"https://knowhow.tools.publicis.sapient.com/wiki/kpi187-Late+Refinemnt+Current+Sprint");
 		Document update = new Document("$set", updateFields);
 		kpiMaster.updateOne(filter, update);
-		kpiMaster.updateOne(new Document(KEY_KPI_ID, "kpi133"), new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 10)));
+		kpiMaster.updateOne(
+				new Document(KEY_KPI_ID, "kpi133"),
+				new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 10)));
 	}
 
 	private static void updateSprintGoalKPIID(MongoCollection<Document> mongoTemplate) {
-		Document filter = new Document().append(KEY_KPI_ID, KPI187).append(KEY_KPI_NAME, "Sprint Goals");
+		Document filter =
+				new Document().append(KEY_KPI_ID, KPI187).append(KEY_KPI_NAME, "Sprint Goals");
 		Document update = new Document("$set", new Document(KEY_KPI_ID, "kpi189"));
 		mongoTemplate.updateMany(filter, update);
 	}
 
 	public void addKpi188ExcelConfig(MongoTemplate mongoTemplate) {
 		// Construct the document with column details
-		Document kpiColumnConfig = new Document(KEY_BASIC_PROJECT_CONFIG_ID, null).append(KEY_KPI_ID, KPI187).append(
-				KEY_KPI_COLUMN_DETAILS,
-				new Document[] {
-						new Document(KEY_COLUMN_NAME, "Sprint Name").append(KEY_ORDER, 0).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, false),
-						new Document(KEY_COLUMN_NAME, "Date").append(KEY_ORDER, 1).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, false),
-						new Document(KEY_COLUMN_NAME, "Issue Id").append(KEY_ORDER, 2).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, false),
-						new Document(KEY_COLUMN_NAME, "Issue Type").append(KEY_ORDER, 3).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, true),
-						new Document(KEY_COLUMN_NAME, "Issue Description").append(KEY_ORDER, 4)
-								.append(KEY_IS_SHOWN, true).append(KEY_IS_DEFAULT, true),
-						new Document(KEY_COLUMN_NAME, "Size(story point/hours)").append(KEY_ORDER, 5)
-								.append(KEY_IS_SHOWN, true).append(KEY_IS_DEFAULT, true),
-						new Document(KEY_COLUMN_NAME, "Due Date").append(KEY_ORDER, 6).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, false),
-						new Document(KEY_COLUMN_NAME, "Assignee").append(KEY_ORDER, 7).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, false),
-						new Document(KEY_COLUMN_NAME, "Issue Status").append(KEY_ORDER, 8).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, true),
-						new Document(KEY_COLUMN_NAME, "Un-Refined").append(KEY_ORDER, 9).append(KEY_IS_SHOWN, true)
-								.append(KEY_IS_DEFAULT, true) });
+		Document kpiColumnConfig =
+				new Document(KEY_BASIC_PROJECT_CONFIG_ID, null)
+						.append(KEY_KPI_ID, KPI187)
+						.append(
+								KEY_KPI_COLUMN_DETAILS,
+								new Document[] {
+									new Document(KEY_COLUMN_NAME, "Sprint Name")
+											.append(KEY_ORDER, 0)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, false),
+									new Document(KEY_COLUMN_NAME, "Date")
+											.append(KEY_ORDER, 1)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, false),
+									new Document(KEY_COLUMN_NAME, "Issue Id")
+											.append(KEY_ORDER, 2)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, false),
+									new Document(KEY_COLUMN_NAME, "Issue Type")
+											.append(KEY_ORDER, 3)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, true),
+									new Document(KEY_COLUMN_NAME, "Issue Description")
+											.append(KEY_ORDER, 4)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, true),
+									new Document(KEY_COLUMN_NAME, "Size(story point/hours)")
+											.append(KEY_ORDER, 5)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, true),
+									new Document(KEY_COLUMN_NAME, "Due Date")
+											.append(KEY_ORDER, 6)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, false),
+									new Document(KEY_COLUMN_NAME, "Assignee")
+											.append(KEY_ORDER, 7)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, false),
+									new Document(KEY_COLUMN_NAME, "Issue Status")
+											.append(KEY_ORDER, 8)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, true),
+									new Document(KEY_COLUMN_NAME, "Un-Refined")
+											.append(KEY_ORDER, 9)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, true)
+								});
 
 		mongoTemplate.insert(kpiColumnConfig, KPI_EXCEL_COLUMN_CONFIG);
 	}
@@ -130,24 +171,35 @@ public class UpdateRefinement {
 		kpiMaster.updateMany(filter, rollbackUpdate);
 
 		Document filter1 = new Document(KEY_KPI_ID, KPI188);
-		Document rollbackFields = new Document().append(KEY_KPI_WIDTH, null)
-				.append(KEY_KPI_HEIGHT, null).append(KEY_IS_RAW_DATA, null).append(KEY_CHART_TYPE, null);
+		Document rollbackFields =
+				new Document()
+						.append(KEY_KPI_WIDTH, null)
+						.append(KEY_KPI_HEIGHT, null)
+						.append(KEY_IS_RAW_DATA, null)
+						.append(KEY_CHART_TYPE, null);
 
 		Document rollbackUpdate188 = new Document("$set", rollbackFields);
 		kpiMaster.updateOne(filter1, rollbackUpdate188);
 
 		Document filter2 = new Document(KEY_KPI_ID, KPI187);
-		Document rollbackfields = new Document().append(KEY_KPI_WIDTH, 100)
-				.append(KEY_KPI_HEIGHT, null).append(KEY_IS_RAW_DATA, null).append(KEY_CHART_TYPE, null)
-				.append(KEY_KPI_SUB_CATEGORY,"Iteration Progress")
-				.append(KEY_DEFAULT_ORDER, 10);
+		Document rollbackfields =
+				new Document()
+						.append(KEY_KPI_WIDTH, 100)
+						.append(KEY_KPI_HEIGHT, null)
+						.append(KEY_IS_RAW_DATA, null)
+						.append(KEY_CHART_TYPE, null)
+						.append(KEY_KPI_SUB_CATEGORY, "Iteration Progress")
+						.append(KEY_DEFAULT_ORDER, 10);
 
 		Document rollbackUpdate187 = new Document("$set", rollbackfields);
 		kpiMaster.updateOne(filter2, rollbackUpdate187);
 
-		kpiMaster.updateOne(new Document(KEY_KPI_ID, "kpi133"), new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 11)));
+		kpiMaster.updateOne(
+				new Document(KEY_KPI_ID, "kpi133"),
+				new Document("$set", new Document().append(KEY_DEFAULT_ORDER, 11)));
 
-		mongoTemplate.getCollection(KPI_EXCEL_COLUMN_CONFIG).deleteMany(new Document(KEY_KPI_ID, KPI187));
+		mongoTemplate
+				.getCollection(KPI_EXCEL_COLUMN_CONFIG)
+				.deleteMany(new Document(KEY_KPI_ID, KPI187));
 	}
-
 }

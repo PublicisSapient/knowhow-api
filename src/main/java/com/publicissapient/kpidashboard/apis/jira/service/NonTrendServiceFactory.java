@@ -28,14 +28,11 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 @Service
 public class NonTrendServiceFactory {
 
-	@Autowired
-	private JiraIterationServiceR jiraIterationService;
+	@Autowired private JiraIterationServiceR jiraIterationService;
 
-	@Autowired
-	private JiraReleaseServiceR jiraReleaseService;
+	@Autowired private JiraReleaseServiceR jiraReleaseService;
 
-	@Autowired
-	private JiraBacklogServiceR jiraBacklogService;
+	@Autowired private JiraBacklogServiceR jiraBacklogService;
 
 	public JiraNonTrendKPIServiceR getService(String factoryType) {
 		if (CommonConstant.ITERATION.equals(factoryType)) {

@@ -33,9 +33,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.FieldMappingHelper;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +72,7 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectBas
 import com.publicissapient.kpidashboard.common.repository.application.ProjectToolConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExecutionTraceLogRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+import com.publicissapient.kpidashboard.common.util.FieldMappingHelper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -87,41 +87,29 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	public static final String HISTORY = "history";
 	public static final String UPDATED_AT = "updatedAt";
 	public static final String UPDATED_BY = "updatedBy";
-	@Autowired
-	private FieldMappingRepository fieldMappingRepository;
+	@Autowired private FieldMappingRepository fieldMappingRepository;
 
-	@Autowired
-	private ProjectToolConfigRepository toolConfigRepository;
+	@Autowired private ProjectToolConfigRepository toolConfigRepository;
 
-	@Autowired
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Autowired private ProjectBasicConfigRepository projectBasicConfigRepository;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
 
-	@Autowired
-	private TokenAuthenticationService tokenAuthenticationService;
+	@Autowired private TokenAuthenticationService tokenAuthenticationService;
 
-	@Autowired
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Autowired private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@Autowired
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Autowired private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
-	@Autowired
-	private MongoTemplate operations;
+	@Autowired private MongoTemplate operations;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
-	@Autowired
-	private KpiHelperService kPIHelperService;
+	@Autowired private KpiHelperService kPIHelperService;
 
 	@Override
 	public FieldMapping getFieldMapping(ProjectBasicConfig projectBasicConfig) {
@@ -138,8 +126,8 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	@Override
-	public FieldMapping addFieldMapping(String projectToolConfigId, FieldMapping fieldMapping,
-			ObjectId basicProjectConfigId) {
+	public FieldMapping addFieldMapping(
+			String projectToolConfigId, FieldMapping fieldMapping, ObjectId basicProjectConfigId) {
 
 		if (!ObjectId.isValid(projectToolConfigId)) {
 			throw new IllegalArgumentException(INVALID_PROJECT_TOOL_CONFIG_ID);
@@ -152,11 +140,12 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		fieldMapping.setProjectToolConfigId(new ObjectId(projectToolConfigId));
 		fieldMapping.setBasicProjectConfigId(basicProjectConfigId);
 
-		FieldMapping existingFieldMapping = fieldMappingRepository
-				.findByBasicProjectConfigId(basicProjectConfigId);
+		FieldMapping existingFieldMapping =
+				fieldMappingRepository.findByBasicProjectConfigId(basicProjectConfigId);
 		if (existingFieldMapping != null) {
 			fieldMapping.setId(existingFieldMapping.getId());
-			updateJiraData(existingFieldMapping.getBasicProjectConfigId(), fieldMapping, existingFieldMapping);
+			updateJiraData(
+					existingFieldMapping.getBasicProjectConfigId(), fieldMapping, existingFieldMapping);
 		} else {
 			// when no fieldmapping is present in the db, all the history should get
 			// maintained
@@ -167,10 +156,11 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		clearCache();
 		List<String> kpiList = kpiDataCacheService.getKpiBasedOnSource(CommonConstant.ALL_KPI);
 		kpiList.forEach(
-				kpiId -> kpiDataCacheService.clearCache(fieldMapping.getBasicProjectConfigId().toString(), kpiId));
+				kpiId ->
+						kpiDataCacheService.clearCache(
+								fieldMapping.getBasicProjectConfigId().toString(), kpiId));
 		return mapping;
 	}
-
 
 	private boolean hasProjectAccess(ProjectBasicConfig projectBasicConfig) {
 		Set<String> configIds = tokenAuthenticationService.getUserProjects();
@@ -202,34 +192,46 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	 * first from fieldmapping table
 	 */
 	@Override
-	public List<FieldMappingResponse> getKpiSpecificFieldsAndHistory(KPICode kpi, ProjectToolConfig projectToolConfig,
-			FieldMappingMeta requestData) throws NoSuchFieldException, IllegalAccessException {
+	public List<FieldMappingResponse> getKpiSpecificFieldsAndHistory(
+			KPICode kpi, ProjectToolConfig projectToolConfig, FieldMappingMeta requestData)
+			throws NoSuchFieldException, IllegalAccessException {
 		FieldMappingEnum fieldMappingEnum = FieldMappingEnum.valueOf(kpi.getKpiId().toUpperCase());
 		List<String> fields = fieldMappingEnum.getFields();
 		String releaseNodeId = requestData.getReleaseNodeId();
 		List<String> nodeSpecifFields = getNodeSpecificFields();
 		List<String> projectLevelThresholdFields = getProjectLevelThresholdFields();
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-				.get(projectToolConfig.getBasicProjectConfigId());
+		FieldMapping fieldMapping =
+				configHelperService.getFieldMappingMap().get(projectToolConfig.getBasicProjectConfigId());
 		List<FieldMappingResponse> fieldMappingResponses = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(fields) && fieldMapping != null) {
 			Class<FieldMapping> fieldMappingClass = FieldMapping.class;
 			for (String field : fields) {
 				FieldMappingResponse mappingResponse = new FieldMappingResponse();
-				Object value = FieldMappingHelper.getFieldMappingData(fieldMapping, fieldMappingClass, field, releaseNodeId,
-						nodeSpecifFields.contains(field));
+				Object value =
+						FieldMappingHelper.getFieldMappingData(
+								fieldMapping,
+								fieldMappingClass,
+								field,
+								releaseNodeId,
+								nodeSpecifFields.contains(field));
 				// If the threshold value is empty, populate it with the default value from
 				// kpi_master
-				setDefaultKPIThresholdIfEmpty(kpi, field, projectLevelThresholdFields, value, mappingResponse);
-				List<ConfigurationHistoryChangeLog> changeLogs = FieldMappingHelper.getFieldMappingHistory(fieldMapping, field,
-						releaseNodeId, nodeSpecifFields.contains(field));
+				setDefaultKPIThresholdIfEmpty(
+						kpi, field, projectLevelThresholdFields, value, mappingResponse);
+				List<ConfigurationHistoryChangeLog> changeLogs =
+						FieldMappingHelper.getFieldMappingHistory(
+								fieldMapping, field, releaseNodeId, nodeSpecifFields.contains(field));
 				if (CollectionUtils.isNotEmpty(changeLogs)) {
-					List<ConfigurationHistoryChangeLog> changeHistory = changeLogs.stream()
-							.sorted(Comparator.comparing(ConfigurationHistoryChangeLog::getUpdatedOn).reversed()).limit(5).toList();
+					List<ConfigurationHistoryChangeLog> changeHistory =
+							changeLogs.stream()
+									.sorted(
+											Comparator.comparing(ConfigurationHistoryChangeLog::getUpdatedOn).reversed())
+									.limit(5)
+									.toList();
 
-                    changeHistory.forEach(changeLog -> changeLog.setUpdatedOn(transformToUTCZFormat(changeLog.getUpdatedOn())));
-                    mappingResponse.setHistory(changeHistory);
-
+					changeHistory.forEach(
+							changeLog -> changeLog.setUpdatedOn(transformToUTCZFormat(changeLog.getUpdatedOn())));
+					mappingResponse.setHistory(changeHistory);
 				}
 				fieldMappingResponses.add(mappingResponse);
 			}
@@ -238,96 +240,108 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	/**
-	 * Converts the given date string to UTC 'Z' format if not already in UTC.
-	 * Prevents parsing errors for cached data that may already be in UTC format.
+	 * Converts the given date string to UTC 'Z' format if not already in UTC. Prevents parsing errors
+	 * for cached data that may already be in UTC format.
 	 *
-	 * @param updatedOn
-	 *            the date string to transform
-	 * @return the transformed date string in UTC 'Z' format or the original string
-	 *         if no transformation is needed
+	 * @param updatedOn the date string to transform
+	 * @return the transformed date string in UTC 'Z' format or the original string if no
+	 *     transformation is needed
 	 */
 	private String transformToUTCZFormat(String updatedOn) {
 		if (StringUtils.isNotEmpty(updatedOn) && !updatedOn.endsWith("Z")) {
-			return DateUtil.tranformUTCLocalDateTimeStringToZFormat(DateUtil.localDateTimeToUTC(updatedOn));
+			return DateUtil.tranformUTCLocalDateTimeStringToZFormat(
+					DateUtil.localDateTimeToUTC(updatedOn));
 		}
 		return updatedOn;
 	}
 
 	/**
-	 * for each changed field present in the fieldMappingResponseList-- the normal
-	 * value and its history implementation has to be updated by bulkupdate
-	 * operation
+	 * for each changed field present in the fieldMappingResponseList-- the normal value and its
+	 * history implementation has to be updated by bulkupdate operation
 	 *
-	 * <p>
-	 * if there is diversion from the default configuration field then the prompt
-	 * should appear only once
+	 * <p>if there is diversion from the default configuration field then the prompt should appear
+	 * only once
 	 *
-	 * <p>
-	 * if some processor level field is changed, then only the tracelog to be
-	 * deleted if the field matches the azure level field the tool repo is to be
-	 * updated
+	 * <p>if some processor level field is changed, then only the tracelog to be deleted if the field
+	 * matches the azure level field the tool repo is to be updated
 	 *
-	 * @param kpi
-	 *          kpiCode
-	 * @param projectToolConfig
-	 *          projectToolConfig
-	 * @param fieldMappingMeta
-	 *          fieldMappingMeta
+	 * @param kpi kpiCode
+	 * @param projectToolConfig projectToolConfig
+	 * @param fieldMappingMeta fieldMappingMeta
 	 */
 	@Override
-	public void updateSpecificFieldsAndHistory(KPICode kpi, ProjectToolConfig projectToolConfig,
-			FieldMappingMeta fieldMappingMeta) throws NoSuchFieldException, IllegalAccessException {
-		List<FieldMappingResponse> originalFieldMappingRequestList = fieldMappingMeta.getFieldMappingRequests();
-		List<FieldMappingStructure> fieldMappingStructureList = (List<FieldMappingStructure>) configHelperService
-				.loadFieldMappingStructure();
-		if (projectToolConfig != null && CollectionUtils.isNotEmpty(originalFieldMappingRequestList) &&
-				CollectionUtils.isNotEmpty(fieldMappingStructureList)) {
+	public void updateSpecificFieldsAndHistory(
+			KPICode kpi, ProjectToolConfig projectToolConfig, FieldMappingMeta fieldMappingMeta)
+			throws NoSuchFieldException, IllegalAccessException {
+		List<FieldMappingResponse> originalFieldMappingRequestList =
+				fieldMappingMeta.getFieldMappingRequests();
+		List<FieldMappingStructure> fieldMappingStructureList =
+				(List<FieldMappingStructure>) configHelperService.loadFieldMappingStructure();
+		if (projectToolConfig != null
+				&& CollectionUtils.isNotEmpty(originalFieldMappingRequestList)
+				&& CollectionUtils.isNotEmpty(fieldMappingStructureList)) {
 			FieldMappingEnum fieldMappingEnum = FieldMappingEnum.valueOf(kpi.getKpiId().toUpperCase());
 			List<String> fieldList = fieldMappingEnum.getFields();
-			List<FieldMappingStructure> fieldMappingStructure = kPIHelperService
-					.getFieldMappingStructure(fieldMappingStructureList, fieldList);
+			List<FieldMappingStructure> fieldMappingStructure =
+					kPIHelperService.getFieldMappingStructure(fieldMappingStructureList, fieldList);
 
-			Map<String, FieldMappingStructure> fieldMappingStructureMap = fieldMappingStructure.stream()
-					.collect(Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
-			ProjectBasicConfig projectBasicConfig = ((Map<String, ProjectBasicConfig>) cacheService
-					.cacheProjectConfigMapData()).get(projectToolConfig.getBasicProjectConfigId().toString());
+			Map<String, FieldMappingStructure> fieldMappingStructureMap =
+					fieldMappingStructure.stream()
+							.collect(Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
+			ProjectBasicConfig projectBasicConfig =
+					((Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData())
+							.get(projectToolConfig.getBasicProjectConfigId().toString());
 
-			Query query = new Query(Criteria.where("basicProjectConfigId").is(projectBasicConfig.getId()));
+			Query query =
+					new Query(Criteria.where("basicProjectConfigId").is(projectBasicConfig.getId()));
 			Update update = new Update();
 			// Map to store fieldName and corresponding object
 			Map<String, FieldMappingResponse> responseHashMap = new HashMap<>();
 			// Iterate over responses
-			FieldMappingHelper.removeDuplicateFieldsFromResponse(originalFieldMappingRequestList, responseHashMap);
+			FieldMappingHelper.removeDuplicateFieldsFromResponse(
+					originalFieldMappingRequestList, responseHashMap);
 			final String loggedInUser = authenticationService.getLoggedInUser();
-			List<FieldMappingResponse> fieldMappingResponseList = new ArrayList<>(responseHashMap.values());
+			List<FieldMappingResponse> fieldMappingResponseList =
+					new ArrayList<>(responseHashMap.values());
 			String cleanTraceLog = "false";
 			for (FieldMappingResponse fieldMappingResponse : fieldMappingResponseList) {
-				FieldMappingStructure mappingStructure = fieldMappingStructureMap.get(fieldMappingResponse.getFieldName());
+				FieldMappingStructure mappingStructure =
+						fieldMappingStructureMap.get(fieldMappingResponse.getFieldName());
 				update.set(fieldMappingResponse.getFieldName(), fieldMappingResponse.getOriginalValue());
 
 				if (null != mappingStructure) {
-					cleanTraceLog = createSpecialFieldsAndUpdateFieldMapping(projectToolConfig, fieldMappingMeta, update,
-							fieldMappingResponseList, cleanTraceLog, fieldMappingResponse, mappingStructure);
+					cleanTraceLog =
+							createSpecialFieldsAndUpdateFieldMapping(
+									projectToolConfig,
+									fieldMappingMeta,
+									update,
+									fieldMappingResponseList,
+									cleanTraceLog,
+									fieldMappingResponse,
+									mappingStructure);
 					updateFields(fieldMappingResponse.getFieldName(), projectToolConfig, projectBasicConfig);
-					ConfigurationHistoryChangeLog configurationHistoryChangeLog = FieldMappingHelper
-							.createHistoryChangeLog(fieldMappingMeta, fieldMappingResponse, mappingStructure, loggedInUser);
-					update.addToSet(HISTORY + fieldMappingResponse.getFieldName(), configurationHistoryChangeLog);
+					ConfigurationHistoryChangeLog configurationHistoryChangeLog =
+							FieldMappingHelper.createHistoryChangeLog(
+									fieldMappingMeta, fieldMappingResponse, mappingStructure, loggedInUser);
+					update.addToSet(
+							HISTORY + fieldMappingResponse.getFieldName(), configurationHistoryChangeLog);
 				}
 			}
 			update.set(UPDATED_AT, DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
 			update.set(UPDATED_BY, loggedInUser);
 			operations.upsert(query, update, "field_mapping");
 			saveTemplateCode(projectBasicConfig, projectToolConfig);
-			if (cleanTraceLog.equalsIgnoreCase("True"))
-				removeTraceLog(projectBasicConfig.getId());
+			if (cleanTraceLog.equalsIgnoreCase("True")) removeTraceLog(projectBasicConfig.getId());
 			clearCache();
-			kpiDataCacheService.clearCache(projectToolConfig.getBasicProjectConfigId().toString(), kpi.getKpiId());
+			kpiDataCacheService.clearCache(
+					projectToolConfig.getBasicProjectConfigId().toString(), kpi.getKpiId());
 		}
 	}
 
 	@Override
-	public boolean convertToFieldMappingAndCheckIsFieldPresent(List<FieldMappingResponse> fieldMappingResponseList,
-			FieldMapping fieldMapping) throws IllegalAccessException {
+	public boolean convertToFieldMappingAndCheckIsFieldPresent(
+			List<FieldMappingResponse> fieldMappingResponseList, FieldMapping fieldMapping)
+			throws IllegalAccessException {
 		// this function checks if Fields are Present in FieldMapping or not and
 		// converts fieldMappingResponseList to FieldMapping.
 		boolean allfieldFound = false;
@@ -335,7 +349,9 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		for (FieldMappingResponse response : fieldMappingResponseList) {
 			String fieldName = response.getFieldName();
 
-			if (fieldName.contains(HISTORY) || fieldName.equalsIgnoreCase("id") || nodeSpecificFields.contains(fieldName)) {
+			if (fieldName.contains(HISTORY)
+					|| fieldName.equalsIgnoreCase("id")
+					|| nodeSpecificFields.contains(fieldName)) {
 				continue;
 			}
 			if (FieldMappingHelper.isFieldPresent(fieldMapping.getClass(), fieldName)) {
@@ -355,29 +371,30 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		clearCache();
 		List<String> kpiList = kpiDataCacheService.getKpiBasedOnSource(CommonConstant.ALL_KPI);
 		kpiList.forEach(
-				kpiId -> kpiDataCacheService.clearCache(fieldMapping.getBasicProjectConfigId().toString(), kpiId));
+				kpiId ->
+						kpiDataCacheService.clearCache(
+								fieldMapping.getBasicProjectConfigId().toString(), kpiId));
 	}
 
 	/**
 	 * Checks if fields are updated and then unset changeDate in jira collections.
 	 *
-	 * @param basicProjectConfigId
-	 *          basicProjectConfigId
-	 * @param fieldMapping
-	 *          fieldMapping
-	 * @param existingFieldMapping
-	 *          existingFieldMapping
+	 * @param basicProjectConfigId basicProjectConfigId
+	 * @param fieldMapping fieldMapping
+	 * @param existingFieldMapping existingFieldMapping
 	 */
-	private void updateJiraData(ObjectId basicProjectConfigId, FieldMapping fieldMapping,
-			FieldMapping existingFieldMapping) {
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = projectBasicConfigRepository.findById(basicProjectConfigId);
+	private void updateJiraData(
+			ObjectId basicProjectConfigId, FieldMapping fieldMapping, FieldMapping existingFieldMapping) {
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				projectBasicConfigRepository.findById(basicProjectConfigId);
 		if (projectBasicConfigOpt.isPresent()) {
 			ProjectBasicConfig projectBasicConfig = projectBasicConfigOpt.get();
-			Optional<ProjectToolConfig> projectToolConfigOpt = toolConfigRepository
-					.findById(fieldMapping.getProjectToolConfigId());
+			Optional<ProjectToolConfig> projectToolConfigOpt =
+					toolConfigRepository.findById(fieldMapping.getProjectToolConfigId());
 			updateFields(fieldMapping, existingFieldMapping, projectBasicConfig, projectToolConfigOpt);
 			removeTraceLog(basicProjectConfigId);
-			projectToolConfigOpt.ifPresent(projectToolConfig -> saveTemplateCode(projectBasicConfig, projectToolConfig));
+			projectToolConfigOpt.ifPresent(
+					projectToolConfig -> saveTemplateCode(projectBasicConfig, projectToolConfig));
 		}
 	}
 
@@ -390,27 +407,29 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 		cacheService.clearCache(CommonConstant.SONAR_KPI_CACHE);
 		cacheService.clearCache(CommonConstant.TESTING_KPI_CACHE);
 		cacheService.clearCache(CommonConstant.JENKINS_KPI_CACHE);
-
 	}
 
 	/**
-	 * if jiraIterationCompletionStatusCustomField field mapping changes then put
-	 * identifier to change in sprint report issues based on status for azure board
+	 * if jiraIterationCompletionStatusCustomField field mapping changes then put identifier to change
+	 * in sprint report issues based on status for azure board
 	 *
-	 * @param fieldMapping
-	 *          fieldMapping
-	 * @param existingFieldMapping
-	 *          existingFieldMapping
-	 * @param projectBasicConfig
-	 *          projectBasicConfig
-	 * @param projectToolConfigOpt
-	 *          projectToolConfigOpt
+	 * @param fieldMapping fieldMapping
+	 * @param existingFieldMapping existingFieldMapping
+	 * @param projectBasicConfig projectBasicConfig
+	 * @param projectToolConfigOpt projectToolConfigOpt
 	 */
-	private void updateFields(FieldMapping fieldMapping, FieldMapping existingFieldMapping,
-			ProjectBasicConfig projectBasicConfig, Optional<ProjectToolConfig> projectToolConfigOpt) {
+	private void updateFields(
+			FieldMapping fieldMapping,
+			FieldMapping existingFieldMapping,
+			ProjectBasicConfig projectBasicConfig,
+			Optional<ProjectToolConfig> projectToolConfigOpt) {
 		// azureSprintReportStatusUpdateBasedOnFieldChange
-		if (projectToolConfigOpt.isPresent() && projectToolConfigOpt.get().getToolName().equals(ProcessorConstants.AZURE) &&
-				!projectBasicConfig.getIsKanban() && checkFieldsForUpdation(fieldMapping, existingFieldMapping,
+		if (projectToolConfigOpt.isPresent()
+				&& projectToolConfigOpt.get().getToolName().equals(ProcessorConstants.AZURE)
+				&& !projectBasicConfig.getIsKanban()
+				&& checkFieldsForUpdation(
+						fieldMapping,
+						existingFieldMapping,
 						Collections.singletonList("jiraIterationCompletionStatusCustomField"))) {
 			ProjectToolConfig projectToolConfig = projectToolConfigOpt.get();
 			projectToolConfig.setAzureIterationStatusFieldUpdate(true);
@@ -422,24 +441,36 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	private List<String> getNodeSpecificFields() {
-		return ((List<FieldMappingStructure>) configHelperService.loadFieldMappingStructure()).stream()
-				.filter(BaseFieldMappingStructure::isNodeSpecific).map(BaseFieldMappingStructure::getFieldName).toList();
+		return ((List<FieldMappingStructure>) configHelperService.loadFieldMappingStructure())
+				.stream()
+						.filter(BaseFieldMappingStructure::isNodeSpecific)
+						.map(BaseFieldMappingStructure::getFieldName)
+						.toList();
 	}
 
-	private String createSpecialFieldsAndUpdateFieldMapping(ProjectToolConfig projectToolConfig,
-			FieldMappingMeta fieldMappingMeta, Update update, List<FieldMappingResponse> fieldMappingResponseList,
-			String cleanTraceLog, FieldMappingResponse fieldMappingResponse, FieldMappingStructure mappingStructure)
+	private String createSpecialFieldsAndUpdateFieldMapping(
+			ProjectToolConfig projectToolConfig,
+			FieldMappingMeta fieldMappingMeta,
+			Update update,
+			List<FieldMappingResponse> fieldMappingResponseList,
+			String cleanTraceLog,
+			FieldMappingResponse fieldMappingResponse,
+			FieldMappingStructure mappingStructure)
 			throws NoSuchFieldException, IllegalAccessException {
 		// for nested fields
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-				.get(projectToolConfig.getBasicProjectConfigId());
-		FieldMappingHelper.generateHistoryForNestedFields(fieldMappingResponseList, fieldMappingResponse, mappingStructure,
-				fieldMapping);
+		FieldMapping fieldMapping =
+				configHelperService.getFieldMappingMap().get(projectToolConfig.getBasicProjectConfigId());
+		FieldMappingHelper.generateHistoryForNestedFields(
+				fieldMappingResponseList, fieldMappingResponse, mappingStructure, fieldMapping);
 		// for additionalfilters
 		FieldMappingHelper.setMappingResponseWithGeneratedField(fieldMappingResponse, fieldMapping);
 		// for nodeSpecific
-		FieldMappingHelper.setNodeSpecificFields(mappingStructure, fieldMappingResponse, fieldMapping,
-				fieldMappingMeta.getReleaseNodeId(), update);
+		FieldMappingHelper.setNodeSpecificFields(
+				mappingStructure,
+				fieldMappingResponse,
+				fieldMapping,
+				fieldMappingMeta.getReleaseNodeId(),
+				update);
 
 		if (cleanTraceLog.equalsIgnoreCase("False")) {
 			cleanTraceLog = mappingStructure.isProcessorCommon() ? "True" : "False";
@@ -449,35 +480,33 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	/**
-	 * if jiraIterationCompletionStatusCustomField field mapping changes then put
-	 * identifier to change in sprint report issues based on status for azure board
+	 * if jiraIterationCompletionStatusCustomField field mapping changes then put identifier to change
+	 * in sprint report issues based on status for azure board
 	 *
-	 * @param fieldName
-	 *          fieldName
-	 * @param projectToolConfig
-	 *          projectToolConfig
-	 * @param projectBasicConfig
-	 *          projectBasicConfig
+	 * @param fieldName fieldName
+	 * @param projectToolConfig projectToolConfig
+	 * @param projectBasicConfig projectBasicConfig
 	 */
-	private void updateFields(String fieldName, ProjectToolConfig projectToolConfig,
+	private void updateFields(
+			String fieldName,
+			ProjectToolConfig projectToolConfig,
 			ProjectBasicConfig projectBasicConfig) {
-		if (fieldName.equalsIgnoreCase("jiraIterationCompletionStatusCustomField") &&
-				projectToolConfig.getToolName().equals(ProcessorConstants.AZURE) && !projectBasicConfig.getIsKanban()) {
+		if (fieldName.equalsIgnoreCase("jiraIterationCompletionStatusCustomField")
+				&& projectToolConfig.getToolName().equals(ProcessorConstants.AZURE)
+				&& !projectBasicConfig.getIsKanban()) {
 			projectToolConfig.setAzureIterationStatusFieldUpdate(true);
 			toolConfigRepository.save(projectToolConfig);
 		}
 	}
 
 	/**
-	 * @param unsaved
-	 *          new field mapping
-	 * @param saved
-	 *          fieldmapping already in db
-	 * @param fieldNameList
-	 *          input fieldNameList
+	 * @param unsaved new field mapping
+	 * @param saved fieldmapping already in db
+	 * @param fieldNameList input fieldNameList
 	 * @return updated or not
 	 */
-	private boolean checkFieldsForUpdation(FieldMapping unsaved, FieldMapping saved, List<String> fieldNameList) {
+	private boolean checkFieldsForUpdation(
+			FieldMapping unsaved, FieldMapping saved, List<String> fieldNameList) {
 		boolean isUpdated = false;
 		if (CollectionUtils.isNotEmpty(fieldNameList)) {
 			for (String fName : fieldNameList) {
@@ -486,7 +515,10 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 					FieldMappingHelper.setAccessible(field);
 					isUpdated = FieldMappingHelper.isValueUpdated(field.get(unsaved), field.get(saved));
 
-				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+				} catch (NoSuchFieldException
+						| SecurityException
+						| IllegalArgumentException
+						| IllegalAccessException e) {
 					isUpdated = false;
 				}
 
@@ -503,21 +535,20 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	/**
-	 * checking each Field which are changed, and set the History of each
-	 * fieldmapping
+	 * checking each Field which are changed, and set the History of each fieldmapping
 	 *
-	 * @param newMapping
-	 *          unsaved FieldMapping
-	 * @param oldMapping
-	 *          saved FieldMapping
+	 * @param newMapping unsaved FieldMapping
+	 * @param oldMapping saved FieldMapping
 	 */
 	private void checkAllFieldsForUpdation(FieldMapping newMapping, FieldMapping oldMapping) {
 		Class<FieldMapping> fieldMappingClass = FieldMapping.class;
 		Field[] fields = fieldMappingClass.getDeclaredFields();
 		Class<? super FieldMapping> historyClass = fieldMappingClass.getSuperclass();
-		Map<String, FieldMappingStructure> fieldMappingStructureMap = ((List<FieldMappingStructure>) configHelperService
-				.loadFieldMappingStructure()).stream()
-				.collect(Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
+		Map<String, FieldMappingStructure> fieldMappingStructureMap =
+				((List<FieldMappingStructure>) configHelperService.loadFieldMappingStructure())
+						.stream()
+								.collect(
+										Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
 		String loggedInUser = authenticationService.getLoggedInUser();
 		for (Field field : fields) {
 			FieldMappingHelper.setAccessible(field);
@@ -528,42 +559,57 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 				String setterName = "setHistory" + fieldName;
 				FieldMappingStructure mappingStructure = fieldMappingStructureMap.get(fieldName);
 				if (mappingStructure != null) {
-					List<ConfigurationHistoryChangeLog> changeLogs = FieldMappingHelper.getAccessibleFieldHistory(oldMapping,
-							field.getName());
+					List<ConfigurationHistoryChangeLog> changeLogs =
+							FieldMappingHelper.getAccessibleFieldHistory(oldMapping, field.getName());
 					Method setter = historyClass.getMethod(setterName, List.class);
 					if (FieldMappingHelper.isValueUpdated(oldValue, newValue)) {
-						newValue = FieldMappingHelper.getNestedField(newMapping, fieldMappingClass, newValue, mappingStructure);
+						newValue =
+								FieldMappingHelper.getNestedField(
+										newMapping, fieldMappingClass, newValue, mappingStructure);
 						newValue = FieldMappingHelper.generateAdditionalFilters(newValue, fieldName);
 						String localDateTime = LocalDateTime.now().toString();
 						if (CollectionUtils.isNotEmpty(changeLogs)) {
 							// if change log is already present then we will be adding the new log
-							changeLogs.add(new ConfigurationHistoryChangeLog(changeLogs.get(changeLogs.size() - 1).getChangedTo(),
-									newValue, loggedInUser, localDateTime));
+							changeLogs.add(
+									new ConfigurationHistoryChangeLog(
+											changeLogs.get(changeLogs.size() - 1).getChangedTo(),
+											newValue,
+											loggedInUser,
+											localDateTime));
 						} else {
 							// if change log is absent then we will be creating the new log
 							changeLogs = new ArrayList<>();
-							changeLogs.add(new ConfigurationHistoryChangeLog("", newValue, loggedInUser, localDateTime));
+							changeLogs.add(
+									new ConfigurationHistoryChangeLog("", newValue, loggedInUser, localDateTime));
 						}
 						setter.invoke(newMapping, changeLogs);
 					}
 				}
-			} catch (IllegalAccessException | NoSuchFieldException | InvocationTargetException | NoSuchMethodException e) {
+			} catch (IllegalAccessException
+					| NoSuchFieldException
+					| InvocationTargetException
+					| NoSuchMethodException e) {
 				log.debug("No Such Method Found" + e);
 			}
 		}
 	}
 
-	private void saveTemplateCode(ProjectBasicConfig projectBasicConfig, ProjectToolConfig projectToolConfig) {
-		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA) ||
-				projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.AZURE)) {
+	private void saveTemplateCode(
+			ProjectBasicConfig projectBasicConfig, ProjectToolConfig projectToolConfig) {
+		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA)
+				|| projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.AZURE)) {
 			if (projectToolConfig.getMetadataTemplateCode() != null) {
-				if (projectBasicConfig.getIsKanban() &&
-						!projectToolConfig.getMetadataTemplateCode().equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_KANBAN)) {
+				if (projectBasicConfig.getIsKanban()
+						&& !projectToolConfig
+								.getMetadataTemplateCode()
+								.equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_KANBAN)) {
 					projectToolConfig.setMetadataTemplateCode(CommonConstant.CUSTOM_TEMPLATE_CODE_KANBAN);
 					toolConfigRepository.save(projectToolConfig);
 					cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
-				} else if (!projectBasicConfig.getIsKanban() &&
-						!projectToolConfig.getMetadataTemplateCode().equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_SCRUM)) {
+				} else if (!projectBasicConfig.getIsKanban()
+						&& !projectToolConfig
+								.getMetadataTemplateCode()
+								.equalsIgnoreCase(CommonConstant.CUSTOM_TEMPLATE_CODE_SCRUM)) {
 					projectToolConfig.setMetadataTemplateCode(CommonConstant.CUSTOM_TEMPLATE_CODE_SCRUM);
 					toolConfigRepository.save(projectToolConfig);
 					cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
@@ -577,16 +623,15 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	/**
-	 * remove trace log, when u directly import some fieldmapping or when some
-	 * processor common field is get update
+	 * remove trace log, when u directly import some fieldmapping or when some processor common field
+	 * is get update
 	 *
-	 * @param basicProjectConfigId
-	 *          project Basic Config id
+	 * @param basicProjectConfigId project Basic Config id
 	 */
 	private void removeTraceLog(ObjectId basicProjectConfigId) {
-		List<ProcessorExecutionTraceLog> traceLogs = processorExecutionTraceLogRepository
-				.findByProcessorNameAndBasicProjectConfigIdIn(ProcessorConstants.JIRA,
-						Collections.singletonList(basicProjectConfigId.toHexString()));
+		List<ProcessorExecutionTraceLog> traceLogs =
+				processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
+						ProcessorConstants.JIRA, Collections.singletonList(basicProjectConfigId.toHexString()));
 
 		if (!traceLogs.isEmpty()) {
 			for (ProcessorExecutionTraceLog traceLog : traceLogs) {
@@ -600,40 +645,46 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 	}
 
 	/**
-	 * Retrieves a list of field names that are categorized under the project level
-	 * threshold.
+	 * Retrieves a list of field names that are categorized under the project level threshold.
 	 *
-	 * @return a list of field names that belong to the project level threshold
-	 *         section.
+	 * @return a list of field names that belong to the project level threshold section.
 	 */
 	private List<String> getProjectLevelThresholdFields() {
-		return ((List<FieldMappingStructure>) configHelperService.loadFieldMappingStructure()).stream()
-				.filter(structure -> structure.getSection() != null &&
-						structure.getSection().equalsIgnoreCase(Constant.PROJECT_LEVEL_THRESHOLD))
-				.map(BaseFieldMappingStructure::getFieldName).toList();
+		return ((List<FieldMappingStructure>) configHelperService.loadFieldMappingStructure())
+				.stream()
+						.filter(
+								structure ->
+										structure.getSection() != null
+												&& structure
+														.getSection()
+														.equalsIgnoreCase(Constant.PROJECT_LEVEL_THRESHOLD))
+						.map(BaseFieldMappingStructure::getFieldName)
+						.toList();
 	}
 
 	/**
 	 * Sets the default KPI threshold value if the value is empty.
 	 *
-	 * @param kpi
-	 *          The KPI code for which the threshold is being set.
-	 * @param field
-	 *          The field name being checked.
-	 * @param projectLevelThresholdFields
-	 *          List of fields that are categorized under the project level
-	 *          threshold.
-	 * @param value
-	 *          The current value of the field.
-	 * @param mappingResponse
-	 *          The response object where the field name and value will be set.
+	 * @param kpi The KPI code for which the threshold is being set.
+	 * @param field The field name being checked.
+	 * @param projectLevelThresholdFields List of fields that are categorized under the project level
+	 *     threshold.
+	 * @param value The current value of the field.
+	 * @param mappingResponse The response object where the field name and value will be set.
 	 */
-	private void setDefaultKPIThresholdIfEmpty(KPICode kpi, String field, List<String> projectLevelThresholdFields,
-			Object value, FieldMappingResponse mappingResponse) {
+	private void setDefaultKPIThresholdIfEmpty(
+			KPICode kpi,
+			String field,
+			List<String> projectLevelThresholdFields,
+			Object value,
+			FieldMappingResponse mappingResponse) {
 		if (projectLevelThresholdFields.contains(field) && ObjectUtils.isEmpty(value)) {
 			List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
-			value = masterList.stream().filter(j -> j.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
-					.mapToDouble(j -> j.getThresholdValue() != null ? j.getThresholdValue() : 0.0).sum();
+			value =
+					masterList.stream()
+							.filter(j -> j.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
+							.mapToDouble(j -> j.getThresholdValue() != null ? j.getThresholdValue() : 0.0)
+							.sum();
 		}
 		mappingResponse.setFieldName(field);
 		mappingResponse.setOriginalValue(value);

@@ -38,17 +38,15 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class AbacPermissionEvaluator implements PermissionEvaluator {
 
-	@Autowired
-	PolicyEnforcement policy;
+	@Autowired PolicyEnforcement policy;
 
-	@Autowired
-	UserInfoServiceImpl userInfoService;
+	@Autowired UserInfoServiceImpl userInfoService;
 
-	@Autowired
-	ProjectAccessManager projectAccessManager;
+	@Autowired ProjectAccessManager projectAccessManager;
 
 	@Override
-	public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
+	public boolean hasPermission(
+			Authentication authentication, Object targetDomainObject, Object permission) {
 		String userName = (String) authentication.getPrincipal();
 		UserInfo user = userInfoService.getUserInfo(userName);
 
@@ -61,8 +59,8 @@ public class AbacPermissionEvaluator implements PermissionEvaluator {
 	}
 
 	@Override
-	public boolean hasPermission(Authentication authentication, Serializable targetId, String targetType,
-			Object permission) {
+	public boolean hasPermission(
+			Authentication authentication, Serializable targetId, String targetType, Object permission) {
 		return false;
 	}
 }

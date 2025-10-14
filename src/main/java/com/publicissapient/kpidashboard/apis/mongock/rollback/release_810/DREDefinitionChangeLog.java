@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author eswbogol
  */
-@ChangeUnit(id = "r_dre_definition_changeLog", order = "08112", author = "eswbogol", systemVersion = "8.1.0")
+@ChangeUnit(
+		id = "r_dre_definition_changeLog",
+		order = "08112",
+		author = "eswbogol",
+		systemVersion = "8.1.0")
 public class DREDefinitionChangeLog {
 
 	private final MongoTemplate mongoTemplate;
@@ -43,17 +47,30 @@ public class DREDefinitionChangeLog {
 	}
 
 	public void updateKpiDefinition() {
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi34"),
-				new Document("$set", new Document("kpiInfo.definition",
-						"Measure of percentage of story linked defects fixed against the total number of defects raised in  the sprint.")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi34"),
+						new Document(
+								"$set",
+								new Document(
+										"kpiInfo.definition",
+										"Measure of percentage of story linked defects fixed against the total number of defects raised in  the sprint.")));
 	}
 
 	public void rollbackDREFieldMappingStructure() {
 		Document filter = new Document("fieldName", "jiraDodKPI14");
 
-		Document update = new Document("$set",
-				new Document().append("fieldLabel", "Status considered for defect closure").append("tooltip", new Document(
-						"definition", "Status considered for defect closure (Mention completed status of all types of defects)")));
+		Document update =
+				new Document(
+						"$set",
+						new Document()
+								.append("fieldLabel", "Status considered for defect closure")
+								.append(
+										"tooltip",
+										new Document(
+												"definition",
+												"Status considered for defect closure (Mention completed status of all types of defects)")));
 
 		mongoTemplate.getCollection("field_mapping_structure").updateOne(filter, update);
 	}

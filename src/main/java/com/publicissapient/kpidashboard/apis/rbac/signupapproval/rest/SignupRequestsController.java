@@ -61,17 +61,12 @@ import lombok.extern.slf4j.Slf4j;
 public class SignupRequestsController {
 
 	private final ModelMapper mapper = new ModelMapper();
-	@Autowired
-	private AuthenticationService authenticationService;
-	@Autowired
-	private SignupManager signupManager;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private AuthenticationService authenticationService;
+	@Autowired private SignupManager signupManager;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private AuthProperties authProperties;
-	@Autowired
-	UserInfoServiceImpl userInfoService;
+	@Autowired private AuthProperties authProperties;
+	@Autowired UserInfoServiceImpl userInfoService;
 
 	/**
 	 * Gets all unapproved requests data.l
@@ -82,14 +77,17 @@ public class SignupRequestsController {
 	@PreAuthorize("hasPermission(null , 'APPROVE_USER')")
 	public ResponseEntity<ServiceResponse> getAllUnapprovedRequestsForCentralAuth() {
 		log.info("Getting all unapproved requests for central auth");
-		List<UserAccessApprovalResponseDTO> unapprovedUsersList = userInfoService.findAllUnapprovedUsers();
+		List<UserAccessApprovalResponseDTO> unapprovedUsersList =
+				userInfoService.findAllUnapprovedUsers();
 
 		if (Objects.nonNull(unapprovedUsersList)) {
 			return ResponseEntity.status(HttpStatus.OK)
 					.body(new ServiceResponse(true, "Unapproved User details", unapprovedUsersList));
 		} else {
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(new ServiceResponse(false, "Error While Fetching User details from Central Auth Service", null));
+					.body(
+							new ServiceResponse(
+									false, "Error While Fetching User details from Central Auth Service", null));
 		}
 	}
 
@@ -97,24 +95,32 @@ public class SignupRequestsController {
 	@PreAuthorize("hasPermission(null , 'APPROVE_USER')")
 	public ResponseEntity<ServiceResponse> getAllUnapprovedRequests() {
 		log.info("Getting all unapproved requests");
-		return ResponseEntity.status(HttpStatus.OK).body(
-				new ServiceResponse(true, "Unapproved User details", authenticationService.getAuthenticationByApproved(false)));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(
+						new ServiceResponse(
+								true,
+								"Unapproved User details",
+								authenticationService.getAuthenticationByApproved(false)));
 	}
 
 	@GetMapping("/all")
 	@PreAuthorize("hasPermission(null , 'APPROVE_USER')")
 	public ResponseEntity<ServiceResponse> getAllRequests() {
 		log.info("Getting all requests");
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "User details",
-				mapper.map(authenticationService.all(), new TypeToken<List<AuthenticationDTO>>() {
-				}.getType())));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(
+						new ServiceResponse(
+								true,
+								"User details",
+								mapper.map(
+										authenticationService.all(),
+										new TypeToken<List<AuthenticationDTO>>() {}.getType())));
 	}
 
 	/**
 	 * Modify an access request data by username access request id
 	 *
-	 * @param accessRequestDecision
-	 *          decision data
+	 * @param accessRequestDecision decision data
 	 * @return updated access request
 	 */
 	@PutMapping
@@ -124,33 +130,39 @@ public class SignupRequestsController {
 		ServiceResponse[] serviceResponse = new ServiceResponse[1];
 		String username = accessRequestDecision.getUserName();
 
-		if (Constant.ACCESS_REQUEST_STATUS_APPROVED.equalsIgnoreCase(accessRequestDecision.getStatus())) {
+		if (Constant.ACCESS_REQUEST_STATUS_APPROVED.equalsIgnoreCase(
+				accessRequestDecision.getStatus())) {
 			log.info("Approve access {}", username);
 
-			signupManager.grantAccess(username, new GrantApprovalListener() {
-				@Override
-				public void onSuccess(Authentication authentication) {
-					serviceResponse[0] = new ServiceResponse(true, "Granted", true);
-				}
+			signupManager.grantAccess(
+					username,
+					new GrantApprovalListener() {
+						@Override
+						public void onSuccess(Authentication authentication) {
+							serviceResponse[0] = new ServiceResponse(true, "Granted", true);
+						}
 
-				@Override
-				public void onFailure(Authentication authentication, String message) {
-					serviceResponse[0] = new ServiceResponse(false, message, null);
-				}
-			});
-		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(accessRequestDecision.getStatus())) {
+						@Override
+						public void onFailure(Authentication authentication, String message) {
+							serviceResponse[0] = new ServiceResponse(false, message, null);
+						}
+					});
+		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(
+				accessRequestDecision.getStatus())) {
 			log.info("Reject access {}", username);
-			signupManager.rejectAccessRequest(username, new RejectApprovalListener() {
-				@Override
-				public void onSuccess(Authentication authentication) {
-					serviceResponse[0] = new ServiceResponse(true, "Rejected Successfully", true);
-				}
+			signupManager.rejectAccessRequest(
+					username,
+					new RejectApprovalListener() {
+						@Override
+						public void onSuccess(Authentication authentication) {
+							serviceResponse[0] = new ServiceResponse(true, "Rejected Successfully", true);
+						}
 
-				@Override
-				public void onFailure(Authentication authentication, String message) {
-					serviceResponse[0] = new ServiceResponse(false, message, null);
-				}
-			});
+						@Override
+						public void onFailure(Authentication authentication, String message) {
+							serviceResponse[0] = new ServiceResponse(false, message, null);
+						}
+					});
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(serviceResponse[0]);
 	}
@@ -158,8 +170,7 @@ public class SignupRequestsController {
 	/**
 	 * Modify an access request data by username for central auth service
 	 *
-	 * @param accessRequestDecision
-	 *          decision data
+	 * @param accessRequestDecision decision data
 	 * @return updated access request
 	 */
 	@PutMapping("/central")
@@ -167,25 +178,33 @@ public class SignupRequestsController {
 	public ResponseEntity<ServiceResponse> modifyAccessRequestByIdForCentral(
 			@Valid @RequestBody AccessRequestDecision accessRequestDecision) {
 		String username = accessRequestDecision.getUserName();
-		if (Constant.ACCESS_REQUEST_STATUS_APPROVED.equalsIgnoreCase(accessRequestDecision.getStatus())) {
+		if (Constant.ACCESS_REQUEST_STATUS_APPROVED.equalsIgnoreCase(
+				accessRequestDecision.getStatus())) {
 			log.info("Approve access For Central Auth {}", username);
 			boolean approvedCentral = userInfoService.updateUserApprovalStatus(username);
 			if (approvedCentral) {
-				return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "Granted For that User", true));
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(new ServiceResponse(true, "Granted For that User", true));
 			} else {
 				return ResponseEntity.status(HttpStatus.OK)
-						.body(new ServiceResponse(false, "Error While Granted from Central Auth Service", false));
+						.body(
+								new ServiceResponse(false, "Error While Granted from Central Auth Service", false));
 			}
-		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(accessRequestDecision.getStatus())) {
+		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(
+				accessRequestDecision.getStatus())) {
 			log.info("Reject access For Central Auth {}", username);
 			boolean rejectedCentral = userInfoService.deleteFromCentralAuthUser(username);
 			if (rejectedCentral) {
-				return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "Rejected For that User", true));
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(new ServiceResponse(true, "Rejected For that User", true));
 			} else {
 				return ResponseEntity.status(HttpStatus.OK)
-						.body(new ServiceResponse(false, "Error While Rejected from Central Auth Service", false));
+						.body(
+								new ServiceResponse(
+										false, "Error While Rejected from Central Auth Service", false));
 			}
 		}
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ServiceResponse(false, "Status is Wrong", false));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(new ServiceResponse(false, "Status is Wrong", false));
 	}
 }

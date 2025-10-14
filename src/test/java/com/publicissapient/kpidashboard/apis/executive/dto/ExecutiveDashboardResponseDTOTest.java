@@ -31,7 +31,8 @@ public class ExecutiveDashboardResponseDTOTest {
 	@Test
 	public void testBuilder() {
 		ExecutiveDashboardDataDTO data = ExecutiveDashboardDataDTO.builder().build();
-		ExecutiveDashboardResponseDTO response = ExecutiveDashboardResponseDTO.builder().data(data).build();
+		ExecutiveDashboardResponseDTO response =
+				ExecutiveDashboardResponseDTO.builder().data(data).build();
 
 		assertNotNull(response);
 		assertNotNull(response.getData());

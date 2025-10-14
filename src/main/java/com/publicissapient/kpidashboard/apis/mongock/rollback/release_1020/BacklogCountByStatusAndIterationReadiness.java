@@ -31,18 +31,25 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author aksshriv1
  */
-@ChangeUnit(id = "r_backlog_itr_cosmetic", order = "010206", author = "aksshriv1", systemVersion = "10.2.0")
+@ChangeUnit(
+		id = "r_backlog_itr_cosmetic",
+		order = "010206",
+		author = "aksshriv1",
+		systemVersion = "10.2.0")
 public class BacklogCountByStatusAndIterationReadiness {
 
 	private final MongoTemplate mongoTemplate;
 	public static final String FIELD_TYPE = "fieldType";
 	public static final String FIELD_NAME = "fieldName";
-	public static final String JIRA_DEFECT_REJECTION_STATUS_KPI_151 = "jiraDefectRejectionStatusKPI151";
+	public static final String JIRA_DEFECT_REJECTION_STATUS_KPI_151 =
+			"jiraDefectRejectionStatusKPI151";
 	public static final String TEXT = "text";
 	public static final String JIRA_STATUS_FOR_REFINED_KPI_161 = "jiraStatusForRefinedKPI161";
 	public static final String FIELD_LABEL = "fieldLabel";
-	public static final String STATUS_TO_IDENTIFY_IN_REFINED_ISSUES = "Status to identify In Refined issues";
-	public static final String STATUS_TO_IDENTIFY_IN_READY_FOR_DEV = "Status to identify In Ready For Dev";
+	public static final String STATUS_TO_IDENTIFY_IN_REFINED_ISSUES =
+			"Status to identify In Refined issues";
+	public static final String STATUS_TO_IDENTIFY_IN_READY_FOR_DEV =
+			"Status to identify In Ready For Dev";
 	public static final String CHIPS = "chips";
 
 	public BacklogCountByStatusAndIterationReadiness(MongoTemplate mongoTemplate) {
@@ -53,7 +60,8 @@ public class BacklogCountByStatusAndIterationReadiness {
 	public void execution() {
 		MongoCollection<Document> fieldMapping = mongoTemplate.getCollection("field_mapping");
 		updateFieldMappingBackToString(fieldMapping);
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
 		updateFieldMappingstructureBack(fieldMappingStructure);
 	}
 
@@ -61,7 +69,8 @@ public class BacklogCountByStatusAndIterationReadiness {
 	public void rollBack() {
 		MongoCollection<Document> fieldMapping = mongoTemplate.getCollection("field_mapping");
 		updateFieldMappingField(fieldMapping);
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
 		updateFieldMappingstructure(fieldMappingStructure);
 	}
 
@@ -71,41 +80,53 @@ public class BacklogCountByStatusAndIterationReadiness {
 		fieldMappingStructure.updateOne(backlog, update);
 
 		Document itr = new Document(FIELD_NAME, JIRA_STATUS_FOR_REFINED_KPI_161);
-		Document itrUpdate = new Document("$set", new Document(FIELD_LABEL, STATUS_TO_IDENTIFY_IN_READY_FOR_DEV));
+		Document itrUpdate =
+				new Document("$set", new Document(FIELD_LABEL, STATUS_TO_IDENTIFY_IN_READY_FOR_DEV));
 		fieldMappingStructure.updateOne(itr, itrUpdate);
 	}
 
 	private static void updateFieldMappingField(MongoCollection<Document> fieldMapping) {
-		fieldMapping.find(new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, new Document("$type", "string")))
-				.forEach(doc -> {
-					String value = doc.getString(JIRA_DEFECT_REJECTION_STATUS_KPI_151);
-					Document updateQuery = new Document("_id", doc.get("_id"));
-					Document updateDoc = new Document("$set",
-							new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, value == null ? null : List.of(value)));
-					fieldMapping.updateOne(updateQuery, updateDoc);
-				});
+		fieldMapping
+				.find(new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, new Document("$type", "string")))
+				.forEach(
+						doc -> {
+							String value = doc.getString(JIRA_DEFECT_REJECTION_STATUS_KPI_151);
+							Document updateQuery = new Document("_id", doc.get("_id"));
+							Document updateDoc =
+									new Document(
+											"$set",
+											new Document(
+													JIRA_DEFECT_REJECTION_STATUS_KPI_151,
+													value == null ? null : List.of(value)));
+							fieldMapping.updateOne(updateQuery, updateDoc);
+						});
 	}
 
 	private static void updateFieldMappingBackToString(MongoCollection<Document> fieldMapping) {
-		fieldMapping.find(new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, new Document("$type", "array")))
-				.forEach(doc -> {
-					List<String> values = (List<String>) doc.get(JIRA_DEFECT_REJECTION_STATUS_KPI_151);
-					// Assuming that the list contains a single string, so we take the first
-					// element.
-					String value = values != null && !values.isEmpty() ? values.get(0) : null;
-					Document updateQuery = new Document("_id", doc.get("_id"));
-					Document updateDoc = new Document("$set", new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, value));
-					fieldMapping.updateOne(updateQuery, updateDoc);
-				});
+		fieldMapping
+				.find(new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, new Document("$type", "array")))
+				.forEach(
+						doc -> {
+							List<String> values = (List<String>) doc.get(JIRA_DEFECT_REJECTION_STATUS_KPI_151);
+							// Assuming that the list contains a single string, so we take the first
+							// element.
+							String value = values != null && !values.isEmpty() ? values.get(0) : null;
+							Document updateQuery = new Document("_id", doc.get("_id"));
+							Document updateDoc =
+									new Document("$set", new Document(JIRA_DEFECT_REJECTION_STATUS_KPI_151, value));
+							fieldMapping.updateOne(updateQuery, updateDoc);
+						});
 	}
 
-	private static void updateFieldMappingstructureBack(MongoCollection<Document> fieldMappingStructure) {
+	private static void updateFieldMappingstructureBack(
+			MongoCollection<Document> fieldMappingStructure) {
 		Document filter = new Document(FIELD_NAME, JIRA_DEFECT_REJECTION_STATUS_KPI_151);
 		Document update = new Document("$set", new Document(FIELD_TYPE, TEXT));
 		fieldMappingStructure.updateOne(filter, update);
 
 		Document itr = new Document(FIELD_NAME, JIRA_STATUS_FOR_REFINED_KPI_161);
-		Document itrUpdate = new Document("$set", new Document(FIELD_LABEL, STATUS_TO_IDENTIFY_IN_REFINED_ISSUES));
+		Document itrUpdate =
+				new Document("$set", new Document(FIELD_LABEL, STATUS_TO_IDENTIFY_IN_REFINED_ISSUES));
 		fieldMappingStructure.updateOne(itr, itrUpdate);
 	}
 }

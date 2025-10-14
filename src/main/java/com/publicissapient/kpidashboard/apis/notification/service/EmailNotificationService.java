@@ -25,14 +25,11 @@ public interface EmailNotificationService {
 	/**
 	 * Method to send an email using the specified template and request data.
 	 *
-	 * @param templateKey
-	 *            email template key
-	 * @param notificationSubjectKey-
-	 *            email Subject
-	 * @param request
-	 *            email request payload containing recipient and template data
+	 * @param templateKey email template key
+	 * @param notificationSubjectKey- email Subject
+	 * @param request email request payload containing recipient and template data
 	 * @return ServiceResponse containing the status of the operation
 	 */
-	ServiceResponse sendEmail(String templateKey, String notificationSubjectKey, EmailRequestPayload request);
-
+	ServiceResponse sendEmail(
+			String templateKey, String notificationSubjectKey, EmailRequestPayload request);
 }

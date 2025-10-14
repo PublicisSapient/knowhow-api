@@ -39,8 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HappinessKpiCapacityImpl implements HappinessKpiCapacity {
 
-	@Autowired
-	HappinessKpiDataRepository happinessKpiDataRepository;
+	@Autowired HappinessKpiDataRepository happinessKpiDataRepository;
 
 	@Override
 	public ServiceResponse saveHappinessKpiData(HappinessKpiDTO happinessKpiDTO) {
@@ -53,7 +52,8 @@ public class HappinessKpiCapacityImpl implements HappinessKpiCapacity {
 			ModelMapper mapper = new ModelMapper();
 			happinessKpiDTO.setDateOfSubmission(result);
 			happinessKpiData = mapper.map(happinessKpiDTO, HappinessKpiData.class);
-			happinessKpiData.setBasicProjectConfigId(new ObjectId(happinessKpiDTO.getBasicProjectConfigId()));
+			happinessKpiData.setBasicProjectConfigId(
+					new ObjectId(happinessKpiDTO.getBasicProjectConfigId()));
 		}
 		if (null == happinessKpiData) {
 			log.info("happinessKpiData object is empty");
@@ -66,13 +66,15 @@ public class HappinessKpiCapacityImpl implements HappinessKpiCapacity {
 
 		if (!valid(happinessKpiData)) {
 			log.info("happinessKpiData is not valid");
-			return new ServiceResponse(false, "BasicProjectConfigId, Sprint Id or userRatingList cannot be empty or null",
-					null);
+			return new ServiceResponse(
+					false, "BasicProjectConfigId, Sprint Id or userRatingList cannot be empty or null", null);
 		}
 
-		HappinessKpiData existingForSameDay = happinessKpiDataRepository
-				.findExistingByBasicProjectConfigIdAndSprintIDAndDateOfSubmission(happinessKpiData.getBasicProjectConfigId(),
-						happinessKpiData.getSprintID(), happinessKpiData.getDateOfSubmission());
+		HappinessKpiData existingForSameDay =
+				happinessKpiDataRepository.findExistingByBasicProjectConfigIdAndSprintIDAndDateOfSubmission(
+						happinessKpiData.getBasicProjectConfigId(),
+						happinessKpiData.getSprintID(),
+						happinessKpiData.getDateOfSubmission());
 		if (existingForSameDay != null) {
 			happinessKpiData.setId(existingForSameDay.getId());
 			happinessKpiDataRepository.save(happinessKpiData);
@@ -94,7 +96,8 @@ public class HappinessKpiCapacityImpl implements HappinessKpiCapacity {
 			log.info("sprintID is null or empty");
 			return false;
 		}
-		if (happinessKpiData.getDateOfSubmission() == null || happinessKpiData.getDateOfSubmission().isEmpty()) {
+		if (happinessKpiData.getDateOfSubmission() == null
+				|| happinessKpiData.getDateOfSubmission().isEmpty()) {
 			log.info("dateOfSubmission is null or empty");
 			return false;
 		}

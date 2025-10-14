@@ -22,22 +22,18 @@ import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardRes
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 
 /**
- * Strategy interface for different types of executive dashboards.
- * Implementations should handle their specific business logic and data
- * retrieval.
+ * Strategy interface for different types of executive dashboards. Implementations should handle
+ * their specific business logic and data retrieval.
  */
 public interface ExecutiveDashboardStrategy {
 
 	/**
 	 * Gets the executive dashboard data based on the provided KPI request.
 	 *
-	 * @param kpiRequest
-	 *            the KPI request containing filter criteria
+	 * @param kpiRequest the KPI request containing filter criteria
 	 * @return the executive dashboard response DTO
-	 * @throws ExecutiveDataException
-	 *             if there is an error processing the dashboard data
-	 * @throws IllegalArgumentException
-	 *             if the request parameters are invalid
+	 * @throws ExecutiveDataException if there is an error processing the dashboard data
+	 * @throws IllegalArgumentException if the request parameters are invalid
 	 */
 	ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest kpiRequest)
 			throws ExecutiveDataException, IllegalArgumentException;

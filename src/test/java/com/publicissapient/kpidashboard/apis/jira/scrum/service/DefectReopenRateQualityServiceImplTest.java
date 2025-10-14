@@ -30,17 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
-import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
-import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
-import com.publicissapient.kpidashboard.common.model.application.DataCount;
-import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
-import com.publicissapient.kpidashboard.common.repository.application.FieldMappingRepository;
-import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -54,12 +43,15 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
+import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
+import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.data.SprintWiseStoryDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.Filters;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -72,10 +64,18 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
+import com.publicissapient.kpidashboard.common.repository.application.FieldMappingRepository;
+import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefectReopenRateQualityServiceImplTest {
@@ -88,26 +88,16 @@ public class DefectReopenRateQualityServiceImplTest {
 	String P2 = "p2, critical, p2-critical, 2";
 	String P3 = "p3, p3-major, major, 3";
 	String P4 = "p4, p4-minor, minor, 4, p5-trivial, 5,trivial";
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	DefectReopenRateQualityServiceImpl defectReopenRateQualityService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks DefectReopenRateQualityServiceImpl defectReopenRateQualityService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock SprintRepository sprintRepository;
+	@Mock CustomApiConfig customApiConfig;
 	private List<SprintWiseStory> sprintWiseStoryList = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -117,10 +107,8 @@ public class DefectReopenRateQualityServiceImplTest {
 	private List<SprintDetails> sprintDetailsList = new ArrayList<>();
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private CommonService commonService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private CommonService commonService;
 
 	@Before
 	public void setup() {
@@ -136,13 +124,14 @@ public class DefectReopenRateQualityServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		sprintDetailsList = sprintDetailsDataFactory.getSprintDetails();
@@ -150,8 +139,8 @@ public class DefectReopenRateQualityServiceImplTest {
 		filterLevelMap.put("PROJECT", Filters.PROJECT);
 		filterLevelMap.put("SPRINT", Filters.SPRINT);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -161,10 +150,12 @@ public class DefectReopenRateQualityServiceImplTest {
 		totalBugList = jiraIssueDataFactory.getBugs();
 		jiraIssueList = jiraIssueDataFactory.getJiraIssues();
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		sprintWiseStoryList = sprintWiseStoryDataFactory.getSprintWiseStories();
 
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 
 		// setTreadValuesDataCount();
@@ -178,29 +169,33 @@ public class DefectReopenRateQualityServiceImplTest {
 	@Test
 	public void testGetKPIData() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put("defectCountByPriority", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
+		maturityRangeMap.put(
+				"defectCountByPriority", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		maturityRangeMap.put("defectPriorityWeight", Arrays.asList("10", "7", "5", "3"));
 
 		when(jiraIssueRepository.findIssuesByFilterAndProjectMapFilter(Mockito.any(), Mockito.any()))
 				.thenReturn(jiraIssueList);
 
-		fieldMappingMap.forEach((k, v) -> {
-			v.setIncludeRCAForKPI35(Arrays.asList("code issue"));
-			v.setDefectPriorityKPI35(Arrays.asList("P3"));
-
-		});
+		fieldMappingMap.forEach(
+				(k, v) -> {
+					v.setIncludeRCAForKPI35(Arrays.asList("code issue"));
+					v.setDefectPriorityKPI35(Arrays.asList("P3"));
+				});
 		when(sprintRepository.findBySprintIDIn(any())).thenReturn(sprintDetailsList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(configHelperService.getFieldMapping(any()))
 				.thenReturn(fieldMappingMap.get(new ObjectId("6335363749794a18e8a4479b")));
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(Mockito.any(), Mockito.any()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						Mockito.any(), Mockito.any()))
 				.thenReturn(jiraIssueCustomHistoryList);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(defectReopenRateQualityService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(P1);
@@ -209,29 +204,32 @@ public class DefectReopenRateQualityServiceImplTest {
 		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 
 		try {
-			KpiElement kpiElement = defectReopenRateQualityService.getKpiData(kpiRequest,
-					kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			KpiElement kpiElement =
+					defectReopenRateQualityService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
-			((List<DataCount>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String priority = dc.getData();
-				switch (priority) {
-				case "High":
-					assertThat("DC Value :", dc.getCount(), equalTo(1));
-					break;
-				case "Low":
-					assertThat("DC Value :", dc.getCount(), equalTo(1));
-					break;
-				case "Medium":
-					assertThat("DC Value :", dc.getCount(), equalTo(1));
-					break;
-				case "Critical":
-					assertThat("DC Value :", dc.getCount(), equalTo(1));
-					break;
+			((List<DataCount>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String priority = dc.getData();
+								switch (priority) {
+									case "High":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
+									case "Low":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
+									case "Medium":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
+									case "Critical":
+										assertThat("DC Value :", dc.getCount(), equalTo(1));
+										break;
 
-				default:
-					break;
-				}
-			});
+									default:
+										break;
+								}
+							});
 
 		} catch (ApplicationException enfe) {
 
@@ -240,37 +238,46 @@ public class DefectReopenRateQualityServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat(defectReopenRateQualityService.getQualifierType(),
+		assertThat(
+				defectReopenRateQualityService.getQualifierType(),
 				equalTo(KPICode.DEFECT_REOPEN_RATE_QUALITY.name()));
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
-		fieldMappingMap.forEach((k, v) -> {
-			v.setIncludeRCAForKPI35(Arrays.asList("code issue"));
-			v.setDefectPriorityKPI35(Arrays.asList("P3"));
+		fieldMappingMap.forEach(
+				(k, v) -> {
+					v.setIncludeRCAForKPI35(Arrays.asList("code issue"));
+					v.setDefectPriorityKPI35(Arrays.asList("P3"));
 
-			v.setJiraDefectRejectionStatusKPI190("rejected");
-			v.setResolutionTypeForRejectionKPI190(Arrays.asList("Invalid", "Duplicate", "Unrequired"));
-		});
+					v.setJiraDefectRejectionStatusKPI190("rejected");
+					v.setResolutionTypeForRejectionKPI190(
+							Arrays.asList("Invalid", "Duplicate", "Unrequired"));
+				});
 		when(sprintRepository.findBySprintIDIn(any())).thenReturn(sprintDetailsList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(configHelperService.getFieldMapping(any()))
 				.thenReturn(fieldMappingMap.get(new ObjectId("6335363749794a18e8a4479b")));
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(Mockito.any(), Mockito.any()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						Mockito.any(), Mockito.any()))
 				.thenReturn(jiraIssueCustomHistoryList);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
-		Map<String, Object> defectDataListMap = defectReopenRateQualityService.fetchKPIDataFromDb(leafNodeList,
-				startDate, endDate, kpiRequest);
-		assertThat("Total Defects value :",
-				((List<JiraIssue>) (defectDataListMap.get("totalDefectWithoutDrop"))).size(), equalTo(0));
+		Map<String, Object> defectDataListMap =
+				defectReopenRateQualityService.fetchKPIDataFromDb(
+						leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Total Defects value :",
+				((List<JiraIssue>) (defectDataListMap.get("totalDefectWithoutDrop"))).size(),
+				equalTo(0));
 	}
 }

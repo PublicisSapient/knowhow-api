@@ -28,8 +28,7 @@ import com.publicissapient.kpidashboard.common.model.application.KpiColumnDetail
 import com.publicissapient.kpidashboard.common.model.application.ValidationData;
 
 /**
- * Validation Data response. Variables to be added to serve the need of other
- * KPI's.
+ * Validation Data response. Variables to be added to serve the need of other KPI's.
  *
  * @author tauakram
  */
@@ -73,8 +72,7 @@ public class KPIExcelValidationDataResponse {
 	/**
 	 * Sets map of sprint and data.
 	 *
-	 * @param mapOfSprintAndData
-	 *          the map of sprint and data
+	 * @param mapOfSprintAndData the map of sprint and data
 	 */
 	public void setMapOfSprintAndData(Map<String, ValidationData> mapOfSprintAndData) {
 		this.mapOfSprintAndData = mapOfSprintAndData;
@@ -92,8 +90,7 @@ public class KPIExcelValidationDataResponse {
 	/**
 	 * Sets kpi name.
 	 *
-	 * @param kpiName
-	 *          the kpi name
+	 * @param kpiName the kpi name
 	 */
 	public void setKpiName(String kpiName) {
 		this.kpiName = kpiName;
@@ -120,8 +117,7 @@ public class KPIExcelValidationDataResponse {
 	/**
 	 * Sets kpi id.
 	 *
-	 * @param kpiId
-	 *          the kpi id
+	 * @param kpiId the kpi id
 	 */
 	public void setKpiId(String kpiId) {
 		this.kpiId = kpiId;

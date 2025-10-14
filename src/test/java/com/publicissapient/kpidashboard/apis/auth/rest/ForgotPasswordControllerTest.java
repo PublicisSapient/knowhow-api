@@ -52,16 +52,12 @@ public class ForgotPasswordControllerTest extends Mockito {
 
 	private MockMvc mockMvc;
 
-	@InjectMocks
-	private ForgotPasswordController forgotPasswordController;
+	@InjectMocks private ForgotPasswordController forgotPasswordController;
 
-	@Mock
-	private ForgotPasswordService forgotPasswordService;
+	@Mock private ForgotPasswordService forgotPasswordService;
 
-	@Mock
-	private HttpServletRequest httpServletRequest;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private HttpServletRequest httpServletRequest;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void before() {
@@ -77,8 +73,12 @@ public class ForgotPasswordControllerTest extends Mockito {
 	public void processForgotPasswordTest() throws Exception {
 		ForgotPasswordRequest forgotPasswordRequest = new ForgotPasswordRequest();
 		forgotPasswordRequest.setEmail("abc@xyz.com");
-		mockMvc.perform(MockMvcRequestBuilders.post("/forgotPassword").contentType(TestUtil.APPLICATION_JSON_UTF8)
-				.content(TestUtil.convertObjectToJsonBytes(forgotPasswordRequest))).andExpect(status().isBadRequest());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/forgotPassword")
+								.contentType(TestUtil.APPLICATION_JSON_UTF8)
+								.content(TestUtil.convertObjectToJsonBytes(forgotPasswordRequest)))
+				.andExpect(status().isBadRequest());
 	}
 
 	@Test
@@ -114,8 +114,12 @@ public class ForgotPasswordControllerTest extends Mockito {
 		ResetPasswordRequest resetPasswordRequest = new ResetPasswordRequest();
 		resetPasswordRequest.setResetToken("resetToken");
 		resetPasswordRequest.setPassword("password");
-		mockMvc.perform(MockMvcRequestBuilders.post("/resetPassword").contentType(TestUtil.APPLICATION_JSON_UTF8)
-				.content(TestUtil.convertObjectToJsonBytes(resetPasswordRequest))).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/resetPassword")
+								.contentType(TestUtil.APPLICATION_JSON_UTF8)
+								.content(TestUtil.convertObjectToJsonBytes(resetPasswordRequest)))
+				.andExpect(status().isOk());
 	}
 
 	@Test

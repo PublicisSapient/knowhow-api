@@ -30,12 +30,17 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_cod_kpi_field_mapping", order = "011105", author = "kunkambl", systemVersion = "11.1.0")
+@ChangeUnit(
+		id = "r_cod_kpi_field_mapping",
+		order = "011105",
+		author = "kunkambl",
+		systemVersion = "11.1.0")
 public class CODKpiFieldMapping {
 
 	public static final String FIELD_NAME = "fieldName";
 	public static final String ISSUE_TYPES_TO_CONSIDER_KPI_113 = "issueTypesToConsiderKpi113";
-	public static final String CLOSED_ISSUE_STATUS_TO_CONSIDER_KPI_113 = "closedIssueStatusToConsiderKpi113";
+	public static final String CLOSED_ISSUE_STATUS_TO_CONSIDER_KPI_113 =
+			"closedIssueStatusToConsiderKpi113";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -45,9 +50,12 @@ public class CODKpiFieldMapping {
 
 	@Execution
 	public void execution() {
-		mongoTemplate.getCollection("field_mapping_structure")
-				.deleteMany(Filters.or(Filters.eq(FIELD_NAME, ISSUE_TYPES_TO_CONSIDER_KPI_113),
-						Filters.eq(FIELD_NAME, CLOSED_ISSUE_STATUS_TO_CONSIDER_KPI_113)));
+		mongoTemplate
+				.getCollection("field_mapping_structure")
+				.deleteMany(
+						Filters.or(
+								Filters.eq(FIELD_NAME, ISSUE_TYPES_TO_CONSIDER_KPI_113),
+								Filters.eq(FIELD_NAME, CLOSED_ISSUE_STATUS_TO_CONSIDER_KPI_113)));
 
 		Document update = new Document();
 		update.append("$unset", new Document(ISSUE_TYPES_TO_CONSIDER_KPI_113, ""));
@@ -57,27 +65,49 @@ public class CODKpiFieldMapping {
 
 	@RollbackExecution
 	public void rollback() {
-		Document issueTypeFieldMapping = new Document().append(FIELD_NAME, ISSUE_TYPES_TO_CONSIDER_KPI_113)
-				.append("fieldLabel", "Issue types to consider").append("fieldType", "chips")
-				.append("fieldCategory", "Issue_Type").append("section", "Issue Types Mapping").append("processorCommon", false)
-				.append("tooltip", new Document("definition", "All issue types used for epics or features"))
-				.append("fieldDisplayOrder", 1).append("sectionOrder", 1).append("mandatory", true)
-				.append("nodeSpecific", false);
+		Document issueTypeFieldMapping =
+				new Document()
+						.append(FIELD_NAME, ISSUE_TYPES_TO_CONSIDER_KPI_113)
+						.append("fieldLabel", "Issue types to consider")
+						.append("fieldType", "chips")
+						.append("fieldCategory", "Issue_Type")
+						.append("section", "Issue Types Mapping")
+						.append("processorCommon", false)
+						.append(
+								"tooltip", new Document("definition", "All issue types used for epics or features"))
+						.append("fieldDisplayOrder", 1)
+						.append("sectionOrder", 1)
+						.append("mandatory", true)
+						.append("nodeSpecific", false);
 
-		Document issueStatusFieldMapping = new Document().append(FIELD_NAME, CLOSED_ISSUE_STATUS_TO_CONSIDER_KPI_113)
-				.append("fieldLabel", "Status to identify completed issues").append("fieldType", "chips")
-				.append("section", "WorkFlow Status Mapping").append("fieldCategory", "workflow")
-				.append("processorCommon", false)
-				.append("tooltip", new Document("definition",
-						"All workflow statuses to identify completed issues. If multiple statuses are specified, the first status an issue transitions to will be considered"))
-				.append("fieldDisplayOrder", 1).append("sectionOrder", 1).append("mandatory", true)
-				.append("nodeSpecific", false);
+		Document issueStatusFieldMapping =
+				new Document()
+						.append(FIELD_NAME, CLOSED_ISSUE_STATUS_TO_CONSIDER_KPI_113)
+						.append("fieldLabel", "Status to identify completed issues")
+						.append("fieldType", "chips")
+						.append("section", "WorkFlow Status Mapping")
+						.append("fieldCategory", "workflow")
+						.append("processorCommon", false)
+						.append(
+								"tooltip",
+								new Document(
+										"definition",
+										"All workflow statuses to identify completed issues. If multiple statuses are specified, the first status an issue transitions to will be considered"))
+						.append("fieldDisplayOrder", 1)
+						.append("sectionOrder", 1)
+						.append("mandatory", true)
+						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection("field_mapping_structure")
+		mongoTemplate
+				.getCollection("field_mapping_structure")
 				.insertMany(Arrays.asList(issueTypeFieldMapping, issueStatusFieldMapping));
 
-		Document update = new Document().append("$set",
-				new Document().append(ISSUE_TYPES_TO_CONSIDER_KPI_113, Collections.singleton("Epic")));
+		Document update =
+				new Document()
+						.append(
+								"$set",
+								new Document()
+										.append(ISSUE_TYPES_TO_CONSIDER_KPI_113, Collections.singleton("Epic")));
 		mongoTemplate.getCollection("field_mapping").updateMany(new Document(), update);
 	}
 }

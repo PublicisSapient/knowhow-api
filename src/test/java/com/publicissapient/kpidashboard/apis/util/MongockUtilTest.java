@@ -49,11 +49,9 @@ author @shi6
 @RunWith(MockitoJUnitRunner.class)
 public class MongockUtilTest {
 
-	@Mock
-	private MongoTemplate mongoTemplate;
+	@Mock private MongoTemplate mongoTemplate;
 
-	@InjectMocks
-	private MongockUtil mongoUtils;
+	@InjectMocks private MongockUtil mongoUtils;
 
 	@Test
 	public void testGetOrCreateCollection_WhenCollectionDoesNotExist_ShouldCreateCollection() {
@@ -62,7 +60,8 @@ public class MongockUtilTest {
 		when(mongoTemplate.collectionExists(collectionName)).thenReturn(false);
 		when(mongoTemplate.createCollection(collectionName)).thenReturn(mock(MongoCollection.class));
 
-		MongoCollection<Document> result = mongoUtils.getOrCreateCollection(mongoTemplate, collectionName);
+		MongoCollection<Document> result =
+				mongoUtils.getOrCreateCollection(mongoTemplate, collectionName);
 
 		assertNotNull(result);
 		verify(mongoTemplate, times(1)).collectionExists(collectionName);
@@ -77,7 +76,8 @@ public class MongockUtilTest {
 		when(mongoTemplate.collectionExists(collectionName)).thenReturn(true);
 		when(mongoTemplate.getCollection(collectionName)).thenReturn(existingCollection);
 
-		MongoCollection<Document> result = mongoUtils.getOrCreateCollection(mongoTemplate, collectionName);
+		MongoCollection<Document> result =
+				mongoUtils.getOrCreateCollection(mongoTemplate, collectionName);
 
 		assertNotNull(result);
 		verify(mongoTemplate, times(1)).collectionExists(collectionName);
@@ -123,8 +123,9 @@ public class MongockUtilTest {
 		String fieldType = "Test Type";
 		String tooltipDefinition = "Test Tooltip";
 
-		Document result = mongoUtils.createFieldMapping(fieldName, fieldLabel, section, fieldCategory, fieldType,
-				tooltipDefinition);
+		Document result =
+				mongoUtils.createFieldMapping(
+						fieldName, fieldLabel, section, fieldCategory, fieldType, tooltipDefinition);
 
 		assertEquals(fieldName, result.getString("fieldName"));
 		assertEquals(fieldLabel, result.getString("fieldLabel"));

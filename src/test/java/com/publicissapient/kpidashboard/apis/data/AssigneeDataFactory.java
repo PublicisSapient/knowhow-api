@@ -32,48 +32,48 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AssigneeDataFactory {
-    private static final String FILE_PATH_ASSIGNEE = "/json/default/assignee.json";
-    @Getter
-    private List<AssigneeDetails> assigneeDetailsList;
-    private ObjectMapper mapper;
+	private static final String FILE_PATH_ASSIGNEE = "/json/default/assignee.json";
+	@Getter private List<AssigneeDetails> assigneeDetailsList;
+	private ObjectMapper mapper;
 
-    private AssigneeDataFactory() {
-    }
+	private AssigneeDataFactory() {}
 
-    public static AssigneeDataFactory newInstance(String filePath) {
-        AssigneeDataFactory factory = new AssigneeDataFactory();
-        factory.createObjectMapper();
-        factory.init(filePath);
-        return factory;
-    }
+	public static AssigneeDataFactory newInstance(String filePath) {
+		AssigneeDataFactory factory = new AssigneeDataFactory();
+		factory.createObjectMapper();
+		factory.init(filePath);
+		return factory;
+	}
 
-    public static AssigneeDataFactory newInstance() {
-        return newInstance(null);
-    }
+	public static AssigneeDataFactory newInstance() {
+		return newInstance(null);
+	}
 
-    private void init(String filePath) {
-        try {
-            String resultPath = filePath == null ? FILE_PATH_ASSIGNEE : filePath;
-            assigneeDetailsList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-                    new TypeReference<List<AssigneeDetails>>() {});
-        } catch (IOException e) {
-            log.error("Error in reading assignee details from file = " + filePath, e);
-        }
-    }
+	private void init(String filePath) {
+		try {
+			String resultPath = filePath == null ? FILE_PATH_ASSIGNEE : filePath;
+			assigneeDetailsList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<AssigneeDetails>>() {});
+		} catch (IOException e) {
+			log.error("Error in reading assignee details from file = " + filePath, e);
+		}
+	}
 
-    private void createObjectMapper() {
-        if (mapper == null) {
-            mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        }
-    }
+	private void createObjectMapper() {
+		if (mapper == null) {
+			mapper = new ObjectMapper();
+			mapper.registerModule(new JavaTimeModule());
+			mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		}
+	}
 
-    public AssigneeDetails findByProjectConfigId(String projectConfigId) {
-        return assigneeDetailsList.stream()
-                .filter(details -> details.getBasicProjectConfigId().equals(projectConfigId))
-                .findFirst()
-                .orElse(null);
-    }
+	public AssigneeDetails findByProjectConfigId(String projectConfigId) {
+		return assigneeDetailsList.stream()
+				.filter(details -> details.getBasicProjectConfigId().equals(projectConfigId))
+				.findFirst()
+				.orElse(null);
+	}
 }

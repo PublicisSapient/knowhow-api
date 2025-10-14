@@ -33,45 +33,54 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CommentsController {
 
-	@Autowired
-	private CommentsService commentsService;
+	@Autowired private CommentsService commentsService;
 
 	/**
-	 * This method will get the comments data based on the selected project from the
-	 * organization level. This feature will work for both, Scrum and Kanban KPIs.
+	 * This method will get the comments data based on the selected project from the organization
+	 * level. This feature will work for both, Scrum and Kanban KPIs.
 	 *
 	 * @param commentRequestDTO
 	 * @return
 	 */
 	@PostMapping("/getCommentsByKpiId")
-	public ResponseEntity<ServiceResponse> getCommentsByKPI(@RequestBody CommentRequestDTO commentRequestDTO) {
+	public ResponseEntity<ServiceResponse> getCommentsByKPI(
+			@RequestBody CommentRequestDTO commentRequestDTO) {
 
-		final Map<String, Object> mappedCommentInfo = commentsService.findCommentByKPIId(commentRequestDTO.getNode(),
-				commentRequestDTO.getLevel(), commentRequestDTO.getNodeChildId(), commentRequestDTO.getKpiId());
+		final Map<String, Object> mappedCommentInfo =
+				commentsService.findCommentByKPIId(
+						commentRequestDTO.getNode(),
+						commentRequestDTO.getLevel(),
+						commentRequestDTO.getNodeChildId(),
+						commentRequestDTO.getKpiId());
 		if (MapUtils.isEmpty(mappedCommentInfo)) {
 			return ResponseEntity.status(HttpStatus.OK)
 					.body(new ServiceResponse(false, "Comment not found", mappedCommentInfo));
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "Found comments", mappedCommentInfo));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ServiceResponse(true, "Found comments", mappedCommentInfo));
 	}
 
 	/**
-	 * This method will save the comment for a selected project from the
-	 * organization level. Only one comment can submit at a time for the project &
-	 * selected KPI.
+	 * This method will save the comment for a selected project from the organization level. Only one
+	 * comment can submit at a time for the project & selected KPI.
 	 *
 	 * @param comment
 	 * @return
 	 */
 	@PostMapping("/submitComments")
-	public ResponseEntity<ServiceResponse> submitComments(@Valid @RequestBody CommentSubmitDTO comment) {
+	public ResponseEntity<ServiceResponse> submitComments(
+			@Valid @RequestBody CommentSubmitDTO comment) {
 		boolean responseStatus = commentsService.submitComment(comment);
 		if (responseStatus) {
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(new ServiceResponse(responseStatus, "Your comment is submitted successfully.", comment));
+					.body(
+							new ServiceResponse(
+									responseStatus, "Your comment is submitted successfully.", comment));
 		} else {
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(new ServiceResponse(responseStatus, "Issue occurred while saving the comment.", comment));
+					.body(
+							new ServiceResponse(
+									responseStatus, "Issue occurred while saving the comment.", comment));
 		}
 	}
 
@@ -82,12 +91,18 @@ public class CommentsController {
 	@PostMapping("/getCommentCount")
 	public ResponseEntity<ServiceResponse> getKpiWiseCommentsCount(
 			@RequestBody CommentViewRequestDTO commentViewRequestDTO) {
-		Map<String, Integer> kpiWiseCount = commentsService.findCommentByBoard(commentViewRequestDTO.getNodes(),
-				commentViewRequestDTO.getLevel(), commentViewRequestDTO.getNodeChildId(), commentViewRequestDTO.getKpiIds());
+		Map<String, Integer> kpiWiseCount =
+				commentsService.findCommentByBoard(
+						commentViewRequestDTO.getNodes(),
+						commentViewRequestDTO.getLevel(),
+						commentViewRequestDTO.getNodeChildId(),
+						commentViewRequestDTO.getKpiIds());
 		if (MapUtils.isEmpty(kpiWiseCount)) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false, "Comments not found", null));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(false, "Comments not found", null));
 		} else {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "Found Comments Count", kpiWiseCount));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, "Found Comments Count", kpiWiseCount));
 		}
 	}
 
@@ -112,13 +127,18 @@ public class CommentsController {
 	 * @return
 	 */
 	@PostMapping("/commentsSummary")
-	public ResponseEntity<ServiceResponse> getCommentsSummary(@RequestBody CommentViewRequestDTO commentViewRequestDTO) {
+	public ResponseEntity<ServiceResponse> getCommentsSummary(
+			@RequestBody CommentViewRequestDTO commentViewRequestDTO) {
 
-		List<CommentViewResponseDTO> commentViewAllByBoard = commentsService.findLatestCommentSummary(
-				commentViewRequestDTO.getNodes(), commentViewRequestDTO.getLevel(), commentViewRequestDTO.getNodeChildId(),
-				commentViewRequestDTO.getKpiIds());
+		List<CommentViewResponseDTO> commentViewAllByBoard =
+				commentsService.findLatestCommentSummary(
+						commentViewRequestDTO.getNodes(),
+						commentViewRequestDTO.getLevel(),
+						commentViewRequestDTO.getNodeChildId(),
+						commentViewRequestDTO.getKpiIds());
 		if (CollectionUtils.isEmpty(commentViewAllByBoard)) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false, "Comments not found", null));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(false, "Comments not found", null));
 		} else {
 			return ResponseEntity.status(HttpStatus.OK)
 					.body(new ServiceResponse(true, "Found comments", commentViewAllByBoard));

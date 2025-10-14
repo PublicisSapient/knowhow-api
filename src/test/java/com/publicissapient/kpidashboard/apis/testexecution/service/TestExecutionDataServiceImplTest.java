@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import org.bson.types.ObjectId;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,6 +46,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
 import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
@@ -71,24 +71,15 @@ public class TestExecutionDataServiceImplTest {
 	TestExecutionData testExecutionData = new TestExecutionData();
 	private MockMvc mockMvc;
 	private FieldMapping fieldMapping;
-	@InjectMocks
-	private TestExecutionDataServiceImpl testExecutionDataServiceImpl;
-	@Mock
-	private TestExecutionRepository testExecutionRepository;
-	@Mock
-	private KanbanTestExecutionRepository kanbanTestExecutionRepo;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private ProjectBasicConfigService projectBasicConfigService;
-	@Mock
-	private SprintDetailsService sprintDetailsService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
+	@InjectMocks private TestExecutionDataServiceImpl testExecutionDataServiceImpl;
+	@Mock private TestExecutionRepository testExecutionRepository;
+	@Mock private KanbanTestExecutionRepository kanbanTestExecutionRepo;
+	@Mock private CacheService cacheService;
+	@Mock private ProjectBasicConfigService projectBasicConfigService;
+	@Mock private SprintDetailsService sprintDetailsService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
 
 	/** initialize values to be used in testing */
 	@Before
@@ -100,8 +91,8 @@ public class TestExecutionDataServiceImplTest {
 		testExecutionData.setTotalTestCases(500);
 		testExecutionData.setExecutedTestCase(23);
 		testExecutionData.setPassedTestCase(45);
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 	}
 
@@ -155,11 +146,13 @@ public class TestExecutionDataServiceImplTest {
 		ProjectBasicConfig project = createScrumProject();
 		when(customApiConfig.getSprintCountForFilters()).thenReturn(5);
 		when(projectBasicConfigService.getProjectBasicConfigs(anyString())).thenReturn(project);
-		when(sprintDetailsService.getSprintDetails(anyString())).thenReturn(Arrays.asList(createSprint()));
+		when(sprintDetailsService.getSprintDetails(anyString()))
+				.thenReturn(Arrays.asList(createSprint()));
 		when(testExecutionRepository.findBySprintIdIn(anyList()))
 				.thenReturn(Arrays.asList(createTestExecutionKpiDbDataScrum()));
 		when(configHelperService.getFieldMapping(any())).thenReturn(fieldMapping);
-		List<TestExecutionData> testExecutions = testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
+		List<TestExecutionData> testExecutions =
+				testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
 		Assert.assertEquals(1, testExecutions.size());
 	}
 
@@ -168,10 +161,12 @@ public class TestExecutionDataServiceImplTest {
 		ProjectBasicConfig project = createScrumProject();
 		when(customApiConfig.getSprintCountForFilters()).thenReturn(5);
 		when(projectBasicConfigService.getProjectBasicConfigs(anyString())).thenReturn(project);
-		when(sprintDetailsService.getSprintDetails(anyString())).thenReturn(Arrays.asList(createSprint()));
+		when(sprintDetailsService.getSprintDetails(anyString()))
+				.thenReturn(Arrays.asList(createSprint()));
 		when(testExecutionRepository.findBySprintIdIn(anyList())).thenReturn(new ArrayList<>());
 		when(configHelperService.getFieldMapping(any())).thenReturn(fieldMapping);
-		List<TestExecutionData> testExecutions = testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
+		List<TestExecutionData> testExecutions =
+				testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
 		Assert.assertEquals(1, testExecutions.size());
 	}
 
@@ -183,7 +178,8 @@ public class TestExecutionDataServiceImplTest {
 				.thenReturn(Arrays.asList(createTestExecutionKpiDbDataKanban()));
 		when(customApiConfig.getNumberOfPastDaysForKanbanTestExecution()).thenReturn(2);
 		when(customApiConfig.getNumberOfFutureDaysForKanbanTestExecution()).thenReturn(2);
-		List<TestExecutionData> testExecutions = testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
+		List<TestExecutionData> testExecutions =
+				testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
 
 		Assert.assertEquals(5, testExecutions.size());
 	}
@@ -192,10 +188,12 @@ public class TestExecutionDataServiceImplTest {
 	public void getTestExecutions_KanbanWithNoDataSaved() {
 		ProjectBasicConfig project = createKanbanProject();
 		when(projectBasicConfigService.getProjectBasicConfigs(anyString())).thenReturn(project);
-		when(kanbanTestExecutionRepo.findByBasicProjectConfigId(anyString())).thenReturn(new ArrayList<>());
+		when(kanbanTestExecutionRepo.findByBasicProjectConfigId(anyString()))
+				.thenReturn(new ArrayList<>());
 		when(customApiConfig.getNumberOfPastDaysForKanbanTestExecution()).thenReturn(2);
 		when(customApiConfig.getNumberOfFutureDaysForKanbanTestExecution()).thenReturn(2);
-		List<TestExecutionData> testExecutions = testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
+		List<TestExecutionData> testExecutions =
+				testExecutionDataServiceImpl.getTestExecutions("5fba82843ab187639c1147bd");
 
 		Assert.assertEquals(5, testExecutions.size());
 	}
@@ -235,7 +233,8 @@ public class TestExecutionDataServiceImplTest {
 		testExecution.setPassedTestCase(40);
 		testExecution.setTotalTestCases(50);
 		Week currentWeek = DateUtil.getWeek(LocalDate.now());
-		testExecution.setExecutionDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		testExecution.setExecutionDate(
+				LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 		return testExecution;
 	}
 

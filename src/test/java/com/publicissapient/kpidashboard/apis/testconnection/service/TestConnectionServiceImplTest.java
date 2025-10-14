@@ -61,17 +61,13 @@ import com.publicissapient.kpidashboard.common.model.connection.Connection;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class TestConnectionServiceImplTest {
-	@InjectMocks
-	TestConnectionServiceImpl testConnectionServiceImpl;
+	@InjectMocks TestConnectionServiceImpl testConnectionServiceImpl;
 
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock CustomApiConfig customApiConfig;
 
-	@Mock
-	RepoToolsProviderRepository repoToolsProviderRepository;
+	@Mock RepoToolsProviderRepository repoToolsProviderRepository;
 
-	@Mock
-	RestTemplate restTemplate;
+	@Mock RestTemplate restTemplate;
 
 	Connection conn = new Connection();
 
@@ -110,15 +106,22 @@ public class TestConnectionServiceImplTest {
 	@Test
 	public void validateConnectionJiraSaml() {
 		conn.setJaasKrbAuth(true);
-		client = new KerberosClient(conn.getJaasConfigFilePath(), conn.getKrb5ConfigFilePath(), conn.getJaasUser(),
-				conn.getSamlEndPoint(), conn.getBaseUrl());
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_JIRA);
+		client =
+				new KerberosClient(
+						conn.getJaasConfigFilePath(),
+						conn.getKrb5ConfigFilePath(),
+						conn.getJaasUser(),
+						conn.getSamlEndPoint(),
+						conn.getBaseUrl());
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_JIRA);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
 	@Test
 	public void validateConnectionBamboo() {
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BAMBOO);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BAMBOO);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
@@ -129,25 +132,29 @@ public class TestConnectionServiceImplTest {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Bearer key");
 
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ZEPHYR);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ZEPHYR);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
 	@Test
 	public void validateConnectionTeamCity() {
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_TEAMCITY);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_TEAMCITY);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
 	@Test
 	public void validateConnectionBitbucket() {
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BITBUCKET);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BITBUCKET);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
 	@Test
 	public void validateConnectionJenkins() {
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_JENKINS);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_JENKINS);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
@@ -198,7 +205,8 @@ public class TestConnectionServiceImplTest {
 
 	@Test
 	public void validateConnectionArgoCD() {
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ARGOCD);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ARGOCD);
 		Assert.assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
@@ -251,9 +259,14 @@ public class TestConnectionServiceImplTest {
 		conn.setBaseUrl("https://abc.com/v2/");
 		conn.setAccessToken("testAccessToken");
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class),
-				ArgumentMatchers.<Class<String>>any())).thenReturn(responseEntity);
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ZEPHYR);
+		when(restTemplate.exchange(
+						any(URI.class),
+						any(HttpMethod.class),
+						any(HttpEntity.class),
+						ArgumentMatchers.<Class<String>>any()))
+				.thenReturn(responseEntity);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_ZEPHYR);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 		assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
 	}
@@ -267,8 +280,13 @@ public class TestConnectionServiceImplTest {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Authorization", "Bearer " + "testAccessToken");
 		ResponseEntity<String> response = new ResponseEntity<>("Success", HttpStatus.OK);
-		Mockito.when(restTemplate.exchange(new URI("https://abc.com/api/favorites/search"), HttpMethod.GET,
-				new HttpEntity<>(headers), String.class)).thenReturn(response);
+		Mockito.when(
+						restTemplate.exchange(
+								new URI("https://abc.com/api/favorites/search"),
+								HttpMethod.GET,
+								new HttpEntity<>(headers),
+								String.class))
+				.thenReturn(response);
 		testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_SONAR);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
@@ -281,10 +299,15 @@ public class TestConnectionServiceImplTest {
 		conn.setPassword("testPassword");
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Basic dGVzdF9hdXRvX3VzZXIxMDp0ZXN0UGFzc3dvcmQ=");
-		when(restTemplate.exchange(new URI("https://abc.com/bitbucket/rest/api/1.0/projects/"), HttpMethod.GET,
-				new HttpEntity<>(headers), String.class)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		when(restTemplate.exchange(
+						new URI("https://abc.com/bitbucket/rest/api/1.0/projects/"),
+						HttpMethod.GET,
+						new HttpEntity<>(headers),
+						String.class))
+				.thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BITBUCKET);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BITBUCKET);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 	}
 
@@ -306,9 +329,14 @@ public class TestConnectionServiceImplTest {
 		conn.setPassword("testPassword");
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Basic dGVzdDp0ZXN0UGFzc3dvcmQ=");
-		when(restTemplate.exchange(new URI("https://abc.com/bitbucket/rest/api/1.0/projects/"), HttpMethod.GET,
-				new HttpEntity<>(headers), String.class)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BITBUCKET);
+		when(restTemplate.exchange(
+						new URI("https://abc.com/bitbucket/rest/api/1.0/projects/"),
+						HttpMethod.GET,
+						new HttpEntity<>(headers),
+						String.class))
+				.thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_BITBUCKET);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 	}
 
@@ -320,24 +348,31 @@ public class TestConnectionServiceImplTest {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.AUTHORIZATION, "Basic dXNlcjprZXk=");
 
-		when(restTemplate.exchange(new URI("https://abc.com/testUser/testProject/_apis/wit/fields"), HttpMethod.GET,
-				new HttpEntity<>(headers), String.class)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		when(restTemplate.exchange(
+						new URI("https://abc.com/testUser/testProject/_apis/wit/fields"),
+						HttpMethod.GET,
+						new HttpEntity<>(headers),
+						String.class))
+				.thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_AZURE);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_AZURE);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 	}
 
 	@Test
 	public void validateConnectionAzureRepoInvalidCredentials() {
 		conn.setBaseUrl("https://abc/testUser/testProject");
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_AZUREREPO);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_AZUREREPO);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
 	@Test
 	public void validateConnectionAzurePipelineInvalidCredentials() {
 		conn.setBaseUrl("https://abc/testUser/testProject");
-		ServiceResponse response = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_AZUREPIPELINE);
+		ServiceResponse response =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_AZUREPIPELINE);
 		assertThat("status: ", response.getSuccess(), equalTo(false));
 	}
 
@@ -346,9 +381,14 @@ public class TestConnectionServiceImplTest {
 		conn.setBaseUrl("https://api.github.com");
 		conn.setAccessToken("testAccessToken");
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.OK);
-		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class),
-				ArgumentMatchers.<Class<String>>any())).thenReturn(responseEntity);
-		ServiceResponse serviceResponse = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITHUB);
+		when(restTemplate.exchange(
+						any(URI.class),
+						any(HttpMethod.class),
+						any(HttpEntity.class),
+						ArgumentMatchers.<Class<String>>any()))
+				.thenReturn(responseEntity);
+		ServiceResponse serviceResponse =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITHUB);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 
@@ -357,9 +397,14 @@ public class TestConnectionServiceImplTest {
 		conn.setBaseUrl("https://api.github.com");
 		conn.setAccessToken("testAccessToken");
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class),
-				ArgumentMatchers.<Class<String>>any())).thenReturn(responseEntity);
-		ServiceResponse serviceResponse = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITHUB);
+		when(restTemplate.exchange(
+						any(URI.class),
+						any(HttpMethod.class),
+						any(HttpEntity.class),
+						ArgumentMatchers.<Class<String>>any()))
+				.thenReturn(responseEntity);
+		ServiceResponse serviceResponse =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITHUB);
 		assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
 	}
 
@@ -369,9 +414,14 @@ public class TestConnectionServiceImplTest {
 		conn.setAccessToken("testAccessToken");
 		when(customApiConfig.getGitlabTestConnection()).thenReturn("api/v4/projects");
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.OK);
-		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class),
-				ArgumentMatchers.<Class<String>>any())).thenReturn(responseEntity);
-		ServiceResponse serviceResponse = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITLAB);
+		when(restTemplate.exchange(
+						any(URI.class),
+						any(HttpMethod.class),
+						any(HttpEntity.class),
+						ArgumentMatchers.<Class<String>>any()))
+				.thenReturn(responseEntity);
+		ServiceResponse serviceResponse =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITLAB);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 
@@ -381,9 +431,14 @@ public class TestConnectionServiceImplTest {
 		conn.setAccessToken("testAccessToken");
 		when(customApiConfig.getGitlabTestConnection()).thenReturn("api/v4/projects");
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class),
-				ArgumentMatchers.<Class<String>>any())).thenReturn(responseEntity);
-		ServiceResponse serviceResponse = testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITLAB);
+		when(restTemplate.exchange(
+						any(URI.class),
+						any(HttpMethod.class),
+						any(HttpEntity.class),
+						ArgumentMatchers.<Class<String>>any()))
+				.thenReturn(responseEntity);
+		ServiceResponse serviceResponse =
+				testConnectionServiceImpl.validateConnection(conn, Constant.TOOL_GITLAB);
 		assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
 	}
 
@@ -396,7 +451,8 @@ public class TestConnectionServiceImplTest {
 		RepoToolsProvider provider = new RepoToolsProvider();
 		provider.setTestApiUrl("https://www.test.com");
 
-		ServiceResponse serviceResponse = testConnectionServiceImpl.validateConnection(conn, Constant.REPO_TOOLS);
+		ServiceResponse serviceResponse =
+				testConnectionServiceImpl.validateConnection(conn, Constant.REPO_TOOLS);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 
@@ -422,7 +478,8 @@ public class TestConnectionServiceImplTest {
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(HttpStatus.OK);
 		RepoToolsProvider provider = new RepoToolsProvider();
 		provider.setTestApiUrl("https://www.test.com");
-		ServiceResponse serviceResponse = testConnectionServiceImpl.validateConnection(conn, Constant.REPO_TOOLS);
+		ServiceResponse serviceResponse =
+				testConnectionServiceImpl.validateConnection(conn, Constant.REPO_TOOLS);
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
 

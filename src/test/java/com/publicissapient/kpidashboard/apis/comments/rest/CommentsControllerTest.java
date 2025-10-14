@@ -59,10 +59,8 @@ public class CommentsControllerTest {
 	String sprintId;
 	String kpiId;
 	private MockMvc mockMvc;
-	@Mock
-	private CommentsService commentsService;
-	@InjectMocks
-	private CommentsController commentsController;
+	@Mock private CommentsService commentsService;
+	@InjectMocks private CommentsController commentsController;
 
 	@Before
 	public void before() {
@@ -90,16 +88,24 @@ public class CommentsControllerTest {
 		comment.setCommentsInfo(commentsInfo);
 
 		when(commentsService.submitComment(comment)).thenReturn(true);
-		mockMvc.perform(MockMvcRequestBuilders.post("/comments/submitComments").content(mapper.writeValueAsString(comment))
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/comments/submitComments")
+								.content(mapper.writeValueAsString(comment))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 		verify(commentsService).submitComment(comment);
 	}
 
 	@Test
 	public void submitCommentsIssueTest() throws Exception {
 		CommentSubmitDTO comment = Mockito.mock(CommentSubmitDTO.class);
-		mockMvc.perform(MockMvcRequestBuilders.post("/comments/submitComments").content(mapper.writeValueAsString(comment))
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/comments/submitComments")
+								.content(mapper.writeValueAsString(comment))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 	}
 
 	@Test
@@ -113,9 +119,14 @@ public class CommentsControllerTest {
 
 		Map<String, Object> mappedCollection = new LinkedHashMap<>();
 		mappedCollection.put("node", node);
-		when(commentsService.findCommentByKPIId(node, level, sprintId, kpiId)).thenReturn(mappedCollection);
-		mockMvc.perform(post("/comments/getCommentsByKpiId").content(mapper.writeValueAsString(commentRequestDTO))
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		when(commentsService.findCommentByKPIId(node, level, sprintId, kpiId))
+				.thenReturn(mappedCollection);
+		mockMvc
+				.perform(
+						post("/comments/getCommentsByKpiId")
+								.content(mapper.writeValueAsString(commentRequestDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 	}
 
 	@Test
@@ -129,9 +140,12 @@ public class CommentsControllerTest {
 		commentRequestDTO.setKpiId(kpiId);
 
 		mockMvc
-				.perform(post("/comments/getCommentsByKpiId").content(mapper.writeValueAsString(commentRequestDTO))
-						.contentType(MediaType.APPLICATION_JSON_VALUE))
-				.andExpect(status().isOk()).andExpect(MockMvcResultMatchers.content().json(expectedResponse));
+				.perform(
+						post("/comments/getCommentsByKpiId")
+								.content(mapper.writeValueAsString(commentRequestDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk())
+				.andExpect(MockMvcResultMatchers.content().json(expectedResponse));
 	}
 
 	@Test
@@ -162,8 +176,12 @@ public class CommentsControllerTest {
 		commentViewResponseDTOList.add(commentViewResponseDTO);
 		when(commentsService.findLatestCommentSummary(nodes, level, sprintId, kpiIds))
 				.thenReturn(commentViewResponseDTOList);
-		mockMvc.perform(post("/comments/commentsSummary").content(mapper.writeValueAsString(commentViewRequestDTO))
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						post("/comments/commentsSummary")
+								.content(mapper.writeValueAsString(commentViewRequestDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 	}
 
 	@After

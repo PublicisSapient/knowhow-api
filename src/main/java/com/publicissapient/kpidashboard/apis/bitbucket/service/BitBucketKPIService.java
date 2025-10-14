@@ -18,9 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service;
 
-import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
-import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.publicissapient.kpidashboard.apis.common.service.ApplicationKPIService;
@@ -34,43 +33,40 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
-
-import java.util.List;
+import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 
 /**
  * Bitbucket Kpi service.
  *
- * @param <R>
- *          type of kpi value
- * @param <S>
- *          type of kpi trend object
- * @param <T>
- *          type of db object
+ * @param <R> type of kpi value
+ * @param <S> type of kpi trend object
+ * @param <T> type of db object
  */
 public abstract class BitBucketKPIService<R, S, T> extends ToolsKPIService<R, S>
-		implements
-			ApplicationKPIService<R, S, T> {
+		implements ApplicationKPIService<R, S, T> {
 
 	private static final String CONNECTOR = " -> ";
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private CommonService commonService;
+	@Autowired private CacheService cacheService;
+	@Autowired private CommonService commonService;
 
 	public abstract String getQualifierType();
 
 	/**
-	 * Returns API Request tracker Id to be used for logging/debugging and using it
-	 * for maintaining any sort of cache.
+	 * Returns API Request tracker Id to be used for logging/debugging and using it for maintaining
+	 * any sort of cache.
 	 *
 	 * @return
 	 */
 	protected String getRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name());
+		return cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name());
 	}
 
 	protected String getRequestTrackerIdKanban() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name());
+		return cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name());
 	}
 
 	/**
@@ -81,16 +77,14 @@ public abstract class BitBucketKPIService<R, S, T> extends ToolsKPIService<R, S>
 	 * @return
 	 * @throws ApplicationException
 	 */
-	public abstract KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
-			throws ApplicationException;
+	public abstract KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode) throws ApplicationException;
 
 	/**
 	 * This method creates branch filters for kpis
 	 *
-	 * @param repo
-	 *          tool repo
-	 * @param projectName
-	 *          projectName
+	 * @param repo tool repo
+	 * @param projectName projectName
 	 * @return branch filter
 	 */
 	public String getBranchSubFilter(Tool repo, String projectName) {
@@ -105,16 +99,15 @@ public abstract class BitBucketKPIService<R, S, T> extends ToolsKPIService<R, S>
 		return subfilter;
 	}
 
-    public List<ScmMergeRequests> getMergeRequestsFromBaseClass() {
-        return BitBucketServiceR.getThreadLocalMergeRequests();
-    }
+	public List<ScmMergeRequests> getMergeRequestsFromBaseClass() {
+		return BitBucketServiceR.getThreadLocalMergeRequests();
+	}
 
-    public List<ScmCommits> getCommitsFromBaseClass() {
-        return BitBucketServiceR.getThreadLocalCommits();
-    }
+	public List<ScmCommits> getCommitsFromBaseClass() {
+		return BitBucketServiceR.getThreadLocalCommits();
+	}
 
-    public List<Assignee> getScmUsersFromBaseClass() {
-        return BitBucketServiceR.getThreadLocalAssignees();
-    }
-
+	public List<Assignee> getScmUsersFromBaseClass() {
+		return BitBucketServiceR.getThreadLocalAssignees();
+	}
 }

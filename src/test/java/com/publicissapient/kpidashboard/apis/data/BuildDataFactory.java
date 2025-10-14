@@ -41,8 +41,7 @@ public class BuildDataFactory {
 	private List<Build> buildDataFactory;
 	private ObjectMapper mapper;
 
-	private BuildDataFactory() {
-	}
+	private BuildDataFactory() {}
 
 	public static BuildDataFactory newInstance(String filePath) {
 
@@ -62,9 +61,10 @@ public class BuildDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_BUILD_DATA : filePath;
 
-			buildDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<Build>>() {
-					});
+			buildDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<Build>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

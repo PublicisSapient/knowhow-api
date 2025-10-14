@@ -17,8 +17,7 @@ import lombok.extern.java.Log;
 @RestController
 public class AnalyticsController {
 
-	@Autowired
-	private CustomAnalyticsService customAnalyticsService;
+	@Autowired private CustomAnalyticsService customAnalyticsService;
 
 	/**
 	 * Gets logo image file

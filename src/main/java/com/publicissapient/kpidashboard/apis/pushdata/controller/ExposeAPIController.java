@@ -43,18 +43,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExposeAPIController {
 
-	@Autowired
-	private AuthExposeAPIService authExposeAPIService;
+	@Autowired private AuthExposeAPIService authExposeAPIService;
 
 	/**
-	 * API to generate token for push data based and generate token has permission
-	 * only superadmin and project admin of particular project
+	 * API to generate token for push data based and generate token has permission only superadmin and
+	 * project admin of particular project
 	 *
 	 * @param exposeAPITokenRequestDTO
 	 * @return
 	 */
-	@PreAuthorize("hasPermission(#exposeAPITokenRequestDTO.basicProjectConfigId, 'SAVE_PROJECT_TOOL')")
-	@RequestMapping(value = "/generateToken", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@PreAuthorize(
+			"hasPermission(#exposeAPITokenRequestDTO.basicProjectConfigId, 'SAVE_PROJECT_TOOL')")
+	@RequestMapping(
+			value = "/generateToken",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> generateAndSaveToken(
 			@RequestBody @Valid ExposeAPITokenRequestDTO exposeAPITokenRequestDTO) {
 		return ResponseEntity.status(HttpStatus.OK)

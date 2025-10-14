@@ -44,8 +44,7 @@ public interface UserInfoService {
 	/**
 	 * Gets authorities.
 	 *
-	 * @param username
-	 *          the username
+	 * @param username the username
 	 * @return the authorities
 	 */
 	Collection<GrantedAuthority> getAuthorities(String username);
@@ -53,10 +52,8 @@ public interface UserInfoService {
 	/**
 	 * Gets user info.
 	 *
-	 * @param username
-	 *          the username
-	 * @param authType
-	 *          the auth type
+	 * @param username the username
+	 * @param authType the auth type
 	 * @return the user info
 	 */
 	UserInfo getUserInfo(String username, AuthType authType);
@@ -80,10 +77,8 @@ public interface UserInfoService {
 	/**
 	 * Demote from admin user info.
 	 *
-	 * @param username
-	 *          the username
-	 * @param authType
-	 *          the auth type
+	 * @param username the username
+	 * @param authType the auth type
 	 * @return the user info
 	 */
 	UserInfo demoteFromAdmin(String username, AuthType authType);
@@ -108,10 +103,8 @@ public interface UserInfoService {
 	/**
 	 * Return userinfo along with email in case of standardlogin
 	 *
-	 * @param username
-	 *          username
-	 * @param authType
-	 *          authtype enum
+	 * @param username username
+	 * @param authType authtype enum
 	 * @return userinfo
 	 */
 	public UserInfo getUserInfoWithEmail(String username, AuthType authType);
@@ -123,8 +116,7 @@ public interface UserInfoService {
 	/**
 	 * This method is for deleting the users
 	 *
-	 * @param username
-	 *          username
+	 * @param username username
 	 */
 	ServiceResponse deleteUser(String username, boolean centralAuthService);
 
@@ -149,8 +141,7 @@ public interface UserInfoService {
 	UserInfoDTO getOrSaveDefaultUserInfo(String username, AuthType authType, String email);
 
 	/**
-	 * This method return user info object by comparing username, auth type and
-	 * authorities
+	 * This method return user info object by comparing username, auth type and authorities
 	 *
 	 * @param userName
 	 * @param authType
@@ -182,8 +173,8 @@ public interface UserInfoService {
 	UserInfo updateNotificationEmail(String loggedUserName, Map<String, Boolean> notificationEmail);
 
 	/**
-	 * all unapproved users from central auth and also flag which is not whitelist
-	 * domain as per properties
+	 * all unapproved users from central auth and also flag which is not whitelist domain as per
+	 * properties
 	 */
 	List<UserAccessApprovalResponseDTO> findAllUnapprovedUsers();
 }

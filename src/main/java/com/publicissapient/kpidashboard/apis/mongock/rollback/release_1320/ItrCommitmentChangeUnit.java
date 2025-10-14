@@ -26,7 +26,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "r_itr_commit_enhc", order = "013202", author = "shunaray", systemVersion = "13.2.0")
+@ChangeUnit(
+		id = "r_itr_commit_enhc",
+		order = "013202",
+		author = "shunaray",
+		systemVersion = "13.2.0")
 public class ItrCommitmentChangeUnit {
 
 	public static final String JIRA_LABELS_KPI_120 = "jiraLabelsKPI120";
@@ -40,24 +44,33 @@ public class ItrCommitmentChangeUnit {
 
 	@Execution
 	public void execution() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteOne(new Document(FIELD_NAME, JIRA_LABELS_KPI_120));
-
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.deleteOne(new Document(FIELD_NAME, JIRA_LABELS_KPI_120));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		Document existingDocument = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE)
-				.find(new Document(FIELD_NAME, JIRA_LABELS_KPI_120)).first();
+		Document existingDocument =
+				mongoTemplate
+						.getCollection(FIELD_MAPPING_STRUCTURE)
+						.find(new Document(FIELD_NAME, JIRA_LABELS_KPI_120))
+						.first();
 
 		if (existingDocument == null) {
-			Document document = new Document().append(FIELD_NAME, JIRA_LABELS_KPI_120)
-					.append("fieldLabel", "Labels for Scope Change Identification").append("fieldType", "chips")
-					.append("section", "WorkFlow Status Mapping").append("tooltip",
-							new Document("definition", "Specify labels to detect and track scope changes effectively"));
+			Document document =
+					new Document()
+							.append(FIELD_NAME, JIRA_LABELS_KPI_120)
+							.append("fieldLabel", "Labels for Scope Change Identification")
+							.append("fieldType", "chips")
+							.append("section", "WorkFlow Status Mapping")
+							.append(
+									"tooltip",
+									new Document(
+											"definition",
+											"Specify labels to detect and track scope changes effectively"));
 
 			mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(document);
-
 		}
 	}
-
 }

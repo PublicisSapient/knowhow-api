@@ -48,8 +48,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Controller for CRUD operations related to all processors details running on
- * the instance
+ * Controller for CRUD operations related to all processors details running on the instance
  *
  * @author pansharm5, swati.lamba
  */
@@ -58,18 +57,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProcessorController {
 
-	@Autowired
-	private ProcessorService processorService;
+	@Autowired private ProcessorService processorService;
 
-	@Autowired
-	private ProcessorExecutionTraceLogService processorExecutionTraceLogService;
+	@Autowired private ProcessorExecutionTraceLogService processorExecutionTraceLogService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
-	 * Gets details of all processors on the running instance including: Last
-	 * executed time of the processor to fetch new data and Status Success/Failure
+	 * Gets details of all processors on the running instance including: Last executed time of the
+	 * processor to fetch new data and Status Success/Failure
 	 *
 	 * @return {@code ResponseEntity<ServiceResponse>} with Processor object
 	 */
@@ -89,19 +85,20 @@ public class ProcessorController {
 	/**
 	 * Triggers the processor to run the job to fetch the latest data from the tool
 	 *
-	 * @return {@code ResponseEntity<ServiceResponse>} with true is triggered
-	 *         successfully success
+	 * @return {@code ResponseEntity<ServiceResponse>} with true is triggered successfully success
 	 */
 	@PostMapping(path = "/trigger/{processorName}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#projectBasicConfigIds, 'TRIGGER_PROCESSOR')")
-	public ResponseEntity<ServiceResponse> triggerProcessor(@PathVariable String processorName,
-			@RequestBody List<String> projectBasicConfigIds) {
-		ProcessorExecutionBasicConfig processorExecutionBasicConfig = new ProcessorExecutionBasicConfig();
+	public ResponseEntity<ServiceResponse> triggerProcessor(
+			@PathVariable String processorName, @RequestBody List<String> projectBasicConfigIds) {
+		ProcessorExecutionBasicConfig processorExecutionBasicConfig =
+				new ProcessorExecutionBasicConfig();
 		processorExecutionBasicConfig.setProjectBasicConfigIds(projectBasicConfigIds);
 		processorExecutionBasicConfig.setLogContext(ExecutionLogContext.getContext());
 
 		// NOSONAR
-		ServiceResponse response = processorService.runProcessor(processorName, processorExecutionBasicConfig);
+		ServiceResponse response =
+				processorService.runProcessor(processorName, processorExecutionBasicConfig);
 
 		HttpStatus responseStatus = HttpStatus.OK;
 		if (null == response) {
@@ -112,11 +109,12 @@ public class ProcessorController {
 	}
 
 	@GetMapping("/tracelog")
-	public ResponseEntity<ServiceResponse> getProcessorTraceLog(@RequestParam(required = false) String processorName,
+	public ResponseEntity<ServiceResponse> getProcessorTraceLog(
+			@RequestParam(required = false) String processorName,
 			@RequestParam(required = false) String basicProjectConfigId) {
 
-		List<ProcessorExecutionTraceLogDTO> traceLogs = processorExecutionTraceLogService.getTraceLogDTOs(processorName,
-				basicProjectConfigId);
+		List<ProcessorExecutionTraceLogDTO> traceLogs =
+				processorExecutionTraceLogService.getTraceLogDTOs(processorName, basicProjectConfigId);
 
 		ServiceResponse response = new ServiceResponse(true, "Processor trace logs", traceLogs);
 
@@ -140,17 +138,17 @@ public class ProcessorController {
 	/**
 	 * to be hit by repo tool platform to save repo tool tracelogs
 	 *
-	 * @param request
-	 *          http request with api key
-	 * @param repoToolsStatusResponse
-	 *          status to be saved in trace logs
+	 * @param request http request with api key
+	 * @param repoToolsStatusResponse status to be saved in trace logs
 	 * @return {@code ResponseEntity<>} with HttpStatus OK if authorized
 	 */
 	@PostMapping(path = "/saveRepoToolsStatus", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> saveRepoToolsStatus(HttpServletRequest request,
+	public ResponseEntity<ServiceResponse> saveRepoToolsStatus(
+			HttpServletRequest request,
 			@NonNull @RequestBody RepoToolsStatusResponse repoToolsStatusResponse) {
 		log.info("Received {} request for /saveRepoToolsStatus", request.getMethod());
-		Boolean isApiAuth = customApiConfig.getxApiKey().equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
+		Boolean isApiAuth =
+				customApiConfig.getxApiKey().equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
 		if (Boolean.FALSE.equals(isApiAuth)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
 		}
@@ -158,9 +156,12 @@ public class ProcessorController {
 		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 
-	@PostMapping(path = "/metadata/step/{projectBasicConfigId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			path = "/metadata/step/{projectBasicConfigId}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#projectBasicConfigId, 'TRIGGER_PROCESSOR')")
-	public ResponseEntity<ServiceResponse> triggerMetaDataStep(@PathVariable String projectBasicConfigId) {
+	public ResponseEntity<ServiceResponse> triggerMetaDataStep(
+			@PathVariable String projectBasicConfigId) {
 		ServiceResponse response = processorService.runMetadataStep(projectBasicConfigId);
 		HttpStatus responseStatus = HttpStatus.OK;
 		if (null == response) {

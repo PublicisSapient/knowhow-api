@@ -48,23 +48,19 @@ public class FieldMappingStructureControllerTest {
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 
-	@InjectMocks
-	private FieldMappingStructureController fieldMappingStructureController;
+	@InjectMocks private FieldMappingStructureController fieldMappingStructureController;
 
-	@Mock
-	private FieldMappingStructure fieldMappingStructure = new FieldMappingStructure();
+	@Mock private FieldMappingStructure fieldMappingStructure = new FieldMappingStructure();
 
 	private List<FieldMappingStructure> fieldMappingStructureList = new ArrayList<>();
-	private FieldMappingStructureResponse fieldMappingStructureResponse = new FieldMappingStructureResponse();
+	private FieldMappingStructureResponse fieldMappingStructureResponse =
+			new FieldMappingStructureResponse();
 
-	@Mock
-	private ProjectAccessUtil projectAccessUtil;
+	@Mock private ProjectAccessUtil projectAccessUtil;
 
-	@Mock
-	private UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Mock private UserAuthorizedProjectsService userAuthorizedProjectsService;
 
 	@Before
 	public void before() {

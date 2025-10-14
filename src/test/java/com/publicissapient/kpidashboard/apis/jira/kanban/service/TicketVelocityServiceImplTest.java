@@ -69,23 +69,15 @@ public class TicketVelocityServiceImplTest {
 	private static final String TICKETVELOCITYKEY = "ticketVelocityKey";
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
 	List<KanbanIssueCustomHistory> jiraHistoryList = new ArrayList<>();
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
 
-	@Mock
-	FilterHelperService filterHelperService;
-	@InjectMocks
-	TicketVelocityServiceImpl ticketVelocityServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	private CommonService commonService;
+	@Mock FilterHelperService filterHelperService;
+	@InjectMocks TicketVelocityServiceImpl ticketVelocityServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock private CommonService commonService;
 	private KpiRequest kpiRequest;
 
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
@@ -96,7 +88,8 @@ public class TicketVelocityServiceImplTest {
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi49");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
@@ -108,25 +101,30 @@ public class TicketVelocityServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		KanbanIssueCustomHistoryDataFactory issueHistoryFactory = KanbanIssueCustomHistoryDataFactory.newInstance();
-		jiraHistoryList = issueHistoryFactory
-				.getKanbanIssueCustomHistoryDataListByTypeName(Arrays.asList("Story", "Defect", "Issue"));
+		KanbanIssueCustomHistoryDataFactory issueHistoryFactory =
+				KanbanIssueCustomHistoryDataFactory.newInstance();
+		jiraHistoryList =
+				issueHistoryFactory.getKanbanIssueCustomHistoryDataListByTypeName(
+						Arrays.asList("Story", "Defect", "Issue"));
 	}
 
 	@Test
 	public void testCalculateKPIMetrics() {
 		Map<String, Object> filterComponentIdWiseDefectMap = new HashMap<>();
 		filterComponentIdWiseDefectMap.put(TICKETVELOCITYKEY, jiraHistoryList);
-		Double velocityValue = ticketVelocityServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
+		Double velocityValue =
+				ticketVelocityServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
 		assertThat("Velocity value :", velocityValue, equalTo(638.5));
 	}
 
@@ -134,14 +132,23 @@ public class TicketVelocityServiceImplTest {
 	public void testFetchKPIDataFromDbNoData() throws ApplicationException {
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(TICKETVELOCITYKEY, new ArrayList<KanbanJiraIssue>());
-		when(kpiHelperService.fetchTicketVelocityDataFromDb(Mockito.any(), Mockito.any(), Mockito.any()))
+		when(kpiHelperService.fetchTicketVelocityDataFromDb(
+						Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(resultListMap);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
-		Map<String, Object> velocityListMap = ticketVelocityServiceImpl.fetchKPIDataFromDb(
-				treeAggregatorDetail.getMapOfListOfProjectNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT), null, null,
-				kpiRequest);
-		assertThat("Velocity value :", ((List<KanbanJiraIssue>) (velocityListMap.get(TICKETVELOCITYKEY))).size(),
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		Map<String, Object> velocityListMap =
+				ticketVelocityServiceImpl.fetchKPIDataFromDb(
+						treeAggregatorDetail
+								.getMapOfListOfProjectNodes()
+								.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT),
+						null,
+						null,
+						kpiRequest);
+		assertThat(
+				"Velocity value :",
+				((List<KanbanJiraIssue>) (velocityListMap.get(TICKETVELOCITYKEY))).size(),
 				equalTo(0));
 	}
 
@@ -150,22 +157,30 @@ public class TicketVelocityServiceImplTest {
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(TICKETVELOCITYKEY, jiraHistoryList);
 		resultListMap.put(SUBGROUPCATEGORY, "date");
-		when(kpiHelperService.fetchTicketVelocityDataFromDb(Mockito.any(), Mockito.any(), Mockito.any()))
+		when(kpiHelperService.fetchTicketVelocityDataFromDb(
+						Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(resultListMap);
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 
 		try {
-			KpiElement kpiElement = ticketVelocityServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Velocity Value :",
-					((List<DataCount>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(), equalTo(7));
+			KpiElement kpiElement =
+					ticketVelocityServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Velocity Value :",
+					((List<DataCount>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue())
+							.size(),
+					equalTo(7));
 		} catch (ApplicationException enfe) {
 
 		}
@@ -173,6 +188,7 @@ public class TicketVelocityServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", ticketVelocityServiceImpl.getQualifierType(), equalTo("TICKET_VELOCITY"));
+		assertThat(
+				"Kpi Name :", ticketVelocityServiceImpl.getQualifierType(), equalTo("TICKET_VELOCITY"));
 	}
 }

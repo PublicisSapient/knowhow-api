@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +32,6 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
@@ -51,18 +49,18 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectRelease;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectReleaseRepo;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class ProjectVersionKanbanServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String PROJECT_RELEASE_DETAIL = "projectReleaseDetail";
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private ProjectReleaseRepo projectReleaseRepo;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private ProjectReleaseRepo projectReleaseRepo;
 
 	@Override
 	public Double calculateKPIMetrics(Map<String, Object> subCategoryMap) {
@@ -70,14 +68,16 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		List<ObjectId> basicProjectConfigIds = new ArrayList<>();
 
-		leafNodeList.forEach(leaf -> basicProjectConfigIds.add(leaf.getProjectFilter().getBasicProjectConfigId()));
-		resultListMap.put(PROJECT_RELEASE_DETAIL, projectReleaseRepo.findByConfigIdIn(basicProjectConfigIds));
+		leafNodeList.forEach(
+				leaf -> basicProjectConfigIds.add(leaf.getProjectFilter().getBasicProjectConfigId()));
+		resultListMap.put(
+				PROJECT_RELEASE_DETAIL, projectReleaseRepo.findByConfigIdIn(basicProjectConfigIds));
 		return resultListMap;
 	}
 
@@ -87,25 +87,30 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		log.info("[PROJECT-RELEASE-KANBAN-LEAF-NODE-VALUE][{}]", kpiRequest.getRequestTrackerId());
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
 		List<KPIExcelData> excelData = new ArrayList<>();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
 		projectWiseLeafNodeValue(mapTmp, projectList, kpiElement, kpiRequest, excelData);
-		log.debug("[PROJECT-RELEASE-KANBAN-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[PROJECT-RELEASE-KANBAN-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.PROJECT_RELEASES_KANBAN);
 		// 3rd change : remove code to set trendValuelist and call getTrendValues method
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.PROJECT_RELEASES_KANBAN);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PROJECT_RELEASES_KANBAN);
 		kpiElement.setTrendValueList(trendValues);
 		return kpiElement;
 	}
@@ -113,62 +118,72 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
 	/**
 	 * Calculate KPI value for selected project nodes.
 	 *
-	 * @param leafNodeList
-	 *          list of sprint leaf nodes
-	 * @param mapTmp
-	 *          map containing data to show on KPI
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param kpiRequest
-	 *          KpiRequest
+	 * @param leafNodeList list of sprint leaf nodes
+	 * @param mapTmp map containing data to show on KPI
+	 * @param kpiElement kpiElement
+	 * @param kpiRequest KpiRequest
 	 */
-	private void projectWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
-			KpiRequest kpiRequest, List<KPIExcelData> excelData) {
+	private void projectWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest,
+			List<KPIExcelData> excelData) {
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		String requestTrackerId = getKanbanRequestTrackerId();
 
-		Map<String, ProjectRelease> filterWiseDataMap = createProjectWiseRelease(
-				(List<ProjectRelease>) resultMap.get(PROJECT_RELEASE_DETAIL));
-		leafNodeList.forEach(node -> {
-			String projectNodeId = node.getProjectFilter().getId();
-			ProjectRelease projectRelease = filterWiseDataMap.get(projectNodeId);
-			if (projectRelease != null) {
-				String projectName = node.getProjectFilter().getName();
-				Map<String, String> formatDate= new HashMap<>();
-				Map<String, Double> dateCount = getLastNMonth(customApiConfig.getJiraXaxisMonthCount(), formatDate);
+		Map<String, ProjectRelease> filterWiseDataMap =
+				createProjectWiseRelease((List<ProjectRelease>) resultMap.get(PROJECT_RELEASE_DETAIL));
+		leafNodeList.forEach(
+				node -> {
+					String projectNodeId = node.getProjectFilter().getId();
+					ProjectRelease projectRelease = filterWiseDataMap.get(projectNodeId);
+					if (projectRelease != null) {
+						String projectName = node.getProjectFilter().getName();
+						Map<String, String> formatDate = new HashMap<>();
+						Map<String, Double> dateCount =
+								getLastNMonth(customApiConfig.getJiraXaxisMonthCount(), formatDate);
 
-				List<DataCount> dc = new ArrayList<>();
-				List<ProjectVersion> projectVersionList = Lists.newArrayList();
-				// Filter to include only released versions
-				List<ProjectVersion> releasedVersions = projectRelease.getListProjectVersion().stream()
-						.filter(ProjectVersion::isReleased).toList();
-				for (ProjectVersion pv : releasedVersions) {
-                    if (pv.getReleaseDate() != null) {
-                        LocalDateTime localDateTime = DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate());
-                        String yearMonth = (localDateTime.getYear()) + String.valueOf(localDateTime.getMonth());
-                        if (dateCount.keySet().contains(yearMonth)) {
-                            projectVersionList.add(pv);
-                            dateCount.put(yearMonth, dateCount.get(yearMonth) + 1);
-                            formatDate.put(yearMonth, DateUtil.convertToMonthYearFormat(localDateTime.toString())); //formatDate
-                        }
-                    }
-                }
-				dateCount.forEach((k, v) -> {
-					DataCount dataCount = new DataCount();
-					dataCount.setDate(formatDate.get(k));
-					dataCount.setValue(v);
-					dataCount.setData(v.toString());
-					dataCount.setHoverValue(new HashMap<>());
-					dataCount.setSProjectName(projectName);
-					dc.add(dataCount);
+						List<DataCount> dc = new ArrayList<>();
+						List<ProjectVersion> projectVersionList = Lists.newArrayList();
+						// Filter to include only released versions
+						List<ProjectVersion> releasedVersions =
+								projectRelease.getListProjectVersion().stream()
+										.filter(ProjectVersion::isReleased)
+										.toList();
+						for (ProjectVersion pv : releasedVersions) {
+							if (pv.getReleaseDate() != null) {
+								LocalDateTime localDateTime =
+										DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate());
+								String yearMonth =
+										(localDateTime.getYear()) + String.valueOf(localDateTime.getMonth());
+								if (dateCount.keySet().contains(yearMonth)) {
+									projectVersionList.add(pv);
+									dateCount.put(yearMonth, dateCount.get(yearMonth) + 1);
+									formatDate.put(
+											yearMonth,
+											DateUtil.convertToMonthYearFormat(localDateTime.toString())); // formatDate
+								}
+							}
+						}
+						dateCount.forEach(
+								(k, v) -> {
+									DataCount dataCount = new DataCount();
+									dataCount.setDate(formatDate.get(k));
+									dataCount.setValue(v);
+									dataCount.setData(v.toString());
+									dataCount.setHoverValue(new HashMap<>());
+									dataCount.setSProjectName(projectName);
+									dc.add(dataCount);
+								});
+						if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+							KPIExcelUtility.populateReleaseFreqExcelData(
+									projectVersionList, projectName, excelData);
+						}
+						mapTmp.get(node.getId()).setValue(dc);
+					}
 				});
-				if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-					KPIExcelUtility.populateReleaseFreqExcelData(projectVersionList, projectName, excelData);
-				}
-				mapTmp.get(node.getId()).setValue(dc);
-			}
-		});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.RELEASE_FREQUENCY_KANBAN.getColumns());
 	}
@@ -180,7 +195,8 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
 	 * @return
 	 */
 	private Map<String, ProjectRelease> createProjectWiseRelease(List<ProjectRelease> resultList) {
-		return resultList.stream().collect(Collectors.toMap(ProjectRelease::getProjectId, data -> data));
+		return resultList.stream()
+				.collect(Collectors.toMap(ProjectRelease::getProjectId, data -> data));
 	}
 
 	@Override
@@ -190,6 +206,7 @@ public class ProjectVersionKanbanServiceImpl extends JiraKPIService<Double, List
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI74(), KPICode.PROJECT_RELEASES_KANBAN.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI74(), KPICode.PROJECT_RELEASES_KANBAN.getKpiId());
 	}
 }

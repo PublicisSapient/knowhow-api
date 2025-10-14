@@ -52,28 +52,20 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExec
 @RunWith(MockitoJUnitRunner.class)
 public class BuildDataCleanUpServiceTest {
 
-	@Mock
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Mock private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Mock
-	private ProcessorItemRepository processorItemRepository;
+	@Mock private ProcessorItemRepository processorItemRepository;
 
-	@Mock
-	private BuildRepository buildRepository;
+	@Mock private BuildRepository buildRepository;
 
-	@Mock
-	private DeploymentRepository deploymentRepository;
+	@Mock private DeploymentRepository deploymentRepository;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
 
-	@InjectMocks
-	private BuildDataCleanUpService buildDataCleanupService;
-	@Mock
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@InjectMocks private BuildDataCleanUpService buildDataCleanupService;
+	@Mock private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
 	@Test
 	public void getToolCategory() {
@@ -92,12 +84,15 @@ public class BuildDataCleanUpServiceTest {
 				.thenReturn(List.of(KPICode.BUILD_FREQUENCY.getKpiId()));
 		doNothing().when(buildRepository).deleteByProjectToolConfigId(projectToolConfig.getId());
 		doNothing().when(processorItemRepository).deleteByToolConfigId(Mockito.any(ObjectId.class));
-		doNothing().when(processorExecutionTraceLogRepository).deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(),
-				Mockito.anyString());
+		doNothing()
+				.when(processorExecutionTraceLogRepository)
+				.deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(), Mockito.anyString());
 		doNothing().when(cacheService).clearCache(Mockito.anyString());
 		buildDataCleanupService.clean("5e9e4593e4b0c8ece56710c3");
-		verify(processorItemRepository, times(1)).deleteByToolConfigId(new ObjectId("5e9e4593e4b0c8ece56710c3"));
+		verify(processorItemRepository, times(1))
+				.deleteByToolConfigId(new ObjectId("5e9e4593e4b0c8ece56710c3"));
 		verify(processorExecutionTraceLogRepository, times(1))
-				.deleteByBasicProjectConfigIdAndProcessorName("5e9db8f1e4b0caefbfa8e0c7", ProcessorConstants.JENKINS);
+				.deleteByBasicProjectConfigIdAndProcessorName(
+						"5e9db8f1e4b0caefbfa8e0c7", ProcessorConstants.JENKINS);
 	}
 }

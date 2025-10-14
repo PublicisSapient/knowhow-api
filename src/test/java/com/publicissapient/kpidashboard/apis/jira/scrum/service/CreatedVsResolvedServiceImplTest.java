@@ -84,22 +84,14 @@ public class CreatedVsResolvedServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> totalIssueList = new ArrayList<>();
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	CreatedVsResolvedServiceImpl createdVsResolvedServiceImpl;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private JiraServiceR jiraService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private KpiDataProvider kpiDataProvider;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks CreatedVsResolvedServiceImpl createdVsResolvedServiceImpl;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private JiraServiceR jiraService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataProvider kpiDataProvider;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -110,8 +102,7 @@ public class CreatedVsResolvedServiceImplTest {
 	private Map<String, List<DataCount>> trendValueMap = new LinkedHashMap<>();
 
 	private KpiRequest kpiRequest;
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	@Before
 	public void setup() {
@@ -127,13 +118,14 @@ public class CreatedVsResolvedServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -147,8 +139,8 @@ public class CreatedVsResolvedServiceImplTest {
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		sprintDetailsList = sprintDetailsDataFactory.getSprintDetails();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -163,13 +155,13 @@ public class CreatedVsResolvedServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -183,11 +175,14 @@ public class CreatedVsResolvedServiceImplTest {
 		resultListMap.put(SPRINT_WISE_SPRINTDETAILS, sprintDetailsList);
 		resultListMap.put(STORY_LIST, totalIssueList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchCreatedVsResolvedData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchCreatedVsResolvedData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 
-		Map<String, Object> createdVsResolvedListMap = createdVsResolvedServiceImpl.fetchKPIDataFromDb(leafNodeList,
-				startDate, endDate, kpiRequest);
-		assertThat("createdVsResolved value :",
+		Map<String, Object> createdVsResolvedListMap =
+				createdVsResolvedServiceImpl.fetchKPIDataFromDb(
+						leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"createdVsResolved value :",
 				((List<JiraIssue>) (createdVsResolvedListMap.get(CREATED_VS_RESOLVED_KEY))).size(),
 				equalTo(totalIssueList.size()));
 	}
@@ -195,8 +190,9 @@ public class CreatedVsResolvedServiceImplTest {
 	@Test
 	public void testGetCreatedVsResolved() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("sprintVelocity", Arrays.asList("-5", "5-25", "25-50", "50-75", "75-"));
@@ -204,7 +200,8 @@ public class CreatedVsResolvedServiceImplTest {
 		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("On");
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(createdVsResolvedServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
@@ -224,8 +221,9 @@ public class CreatedVsResolvedServiceImplTest {
 		when(kpiDataProvider.fetchCreatedVsResolvedData(any(), any(), any())).thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = createdVsResolvedServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					createdVsResolvedServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			List<DataCountGroup> dataCountList = (List<DataCountGroup>) kpiElement.getTrendValueList();
 			System.out.println(dataCountList);
 
@@ -238,8 +236,9 @@ public class CreatedVsResolvedServiceImplTest {
 	@Test
 	public void testGetCreatedVsResolved_EmptySprintDetails_AzureCase() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("sprintVelocity", Arrays.asList("-5", "5-25", "25-50", "50-75", "75-"));
@@ -247,7 +246,8 @@ public class CreatedVsResolvedServiceImplTest {
 		when(customApiConfig.getApplicationDetailedLogger()).thenReturn("On");
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(createdVsResolvedServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
@@ -259,15 +259,17 @@ public class CreatedVsResolvedServiceImplTest {
 		resultListMap.put(SPRINT_WISE_SPRINTDETAILS, sprintDetailsList);
 		resultListMap.put(STORY_LIST, totalIssueList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchCreatedVsResolvedData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchCreatedVsResolvedData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
 		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 
 		try {
-			KpiElement kpiElement = createdVsResolvedServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					createdVsResolvedServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			List<DataCountGroup> dataCountList = (List<DataCountGroup>) kpiElement.getTrendValueList();
 
 			assertThat("Created Vs Resolved trend value : ", dataCountList.size(), equalTo(2));
@@ -278,7 +280,8 @@ public class CreatedVsResolvedServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat(createdVsResolvedServiceImpl.getQualifierType(), equalTo("CREATED_VS_RESOLVED_DEFECTS"));
+		assertThat(
+				createdVsResolvedServiceImpl.getQualifierType(), equalTo("CREATED_VS_RESOLVED_DEFECTS"));
 	}
 
 	private void setTreadValuesDataCount() {
@@ -293,7 +296,8 @@ public class CreatedVsResolvedServiceImplTest {
 		trendValueMap.put("Defects Tagged After Sprint Start", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);

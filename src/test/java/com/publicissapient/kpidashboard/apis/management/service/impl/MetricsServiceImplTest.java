@@ -23,10 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,16 +35,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -59,10 +52,9 @@ import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
 
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Meter.Id;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Statistic;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.search.Search;
 
 @ExtendWith(MockitoExtension.class)
@@ -76,20 +68,15 @@ public class MetricsServiceImplTest {
 	private static final String STATUS_DOWN = Status.DOWN.getCode();
 	private static final double ERROR_THRESHOLD = 5.0;
 
-	@Mock
-	private MeterRegistry meterRegistry;
+	@Mock private MeterRegistry meterRegistry;
 
-	@Mock
-	private DashboardConfig dashboardConfig;
+	@Mock private DashboardConfig dashboardConfig;
 
-	@Mock
-	private MetricsEndpoint metricsEndpoint;
+	@Mock private MetricsEndpoint metricsEndpoint;
 
-	@Mock
-	private Search search;
+	@Mock private Search search;
 
-	@InjectMocks
-	private MetricsServiceImpl metricsService;
+	@InjectMocks private MetricsServiceImpl metricsService;
 
 	@BeforeEach
 	public void setup() {
@@ -172,7 +159,8 @@ public class MetricsServiceImplTest {
 	@DisplayName("Test getApiMetrics with exception")
 	public void testGetApiMetricsWithException() {
 		// Setup
-		when(metricsEndpoint.metric(eq(METRIC_NAME), any())).thenThrow(new RuntimeException("Test exception"));
+		when(metricsEndpoint.metric(eq(METRIC_NAME), any()))
+				.thenThrow(new RuntimeException("Test exception"));
 
 		// Execute
 		ApiDetailDto result = metricsService.getApiMetrics(TEST_API_PATH);
@@ -326,7 +314,8 @@ public class MetricsServiceImplTest {
 		assertFalse(result);
 	}
 
-	private MetricsEndpoint.MetricDescriptor mockMetricDescriptor(double max, double count, double totalTime) {
+	private MetricsEndpoint.MetricDescriptor mockMetricDescriptor(
+			double max, double count, double totalTime) {
 		List<MetricsEndpoint.Sample> measurements = new ArrayList<>();
 
 		MetricsEndpoint.Sample maxSample = mock(MetricsEndpoint.Sample.class);

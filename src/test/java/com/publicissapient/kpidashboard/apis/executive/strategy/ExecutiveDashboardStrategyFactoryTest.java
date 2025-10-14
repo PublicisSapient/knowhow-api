@@ -73,16 +73,17 @@ public class ExecutiveDashboardStrategyFactoryTest {
 
 	@Test
 	public void testGetStrategy_UnknownType() {
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-				() -> factory.getStrategy("unknown"));
+		IllegalArgumentException exception =
+				assertThrows(IllegalArgumentException.class, () -> factory.getStrategy("unknown"));
 		assertEquals("No strategy found for type: unknown", exception.getMessage());
 	}
 
 	@Test
 	public void testFactoryWithEmptyStrategyList() {
-		ExecutiveDashboardStrategyFactory emptyFactory = new ExecutiveDashboardStrategyFactory(List.of());
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-				() -> emptyFactory.getStrategy("scrum"));
+		ExecutiveDashboardStrategyFactory emptyFactory =
+				new ExecutiveDashboardStrategyFactory(List.of());
+		IllegalArgumentException exception =
+				assertThrows(IllegalArgumentException.class, () -> emptyFactory.getStrategy("scrum"));
 		assertEquals("No strategy found for type: scrum", exception.getMessage());
 	}
 }

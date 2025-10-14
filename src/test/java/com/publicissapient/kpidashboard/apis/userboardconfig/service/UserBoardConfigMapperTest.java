@@ -31,8 +31,7 @@ import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardCo
 @RunWith(MockitoJUnitRunner.class)
 public class UserBoardConfigMapperTest {
 
-	@InjectMocks
-	private UserBoardConfigMapper userBoardConfigMapper;
+	@InjectMocks private UserBoardConfigMapper userBoardConfigMapper;
 
 	@Test
 	public void testToDto() {

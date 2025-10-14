@@ -29,7 +29,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "r_cod_kpi_column_config_update", order = "012104", author = "kunkambl", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "r_cod_kpi_column_config_update",
+		order = "012104",
+		author = "kunkambl",
+		systemVersion = "12.1.0")
 public class KpiColumnConfigUpdate {
 
 	private final MongoTemplate mongoTemplate;
@@ -50,22 +54,49 @@ public class KpiColumnConfigUpdate {
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection("kpi_column_configs").insertOne(
-				new Document().append("basicProjectConfigId", null).append("kpiId", "kpi114").append("kpiColumnDetails",
-						List.of(
-								new Document().append(COLUMN_NAME, "Project Name").append(ORDER, 1).append(IS_SHOWN, true)
-										.append(IS_DEFAULT, true),
-								new Document().append(COLUMN_NAME, "Cost of Delay").append(ORDER, 2).append(IS_SHOWN, true)
-										.append(IS_DEFAULT, true),
-								new Document().append(COLUMN_NAME, "Epic ID").append(ORDER, 3).append(IS_SHOWN, true).append(IS_DEFAULT,
-										true),
-								new Document().append(COLUMN_NAME, "Epic Name").append(ORDER, 4).append(IS_SHOWN, true)
-										.append(IS_DEFAULT, true),
-								new Document().append(COLUMN_NAME, "Squad").append(ORDER, 5).append(IS_SHOWN, true).append(IS_DEFAULT,
-										true),
-								new Document().append(COLUMN_NAME, "Epic End Date").append(ORDER, 6).append(IS_SHOWN, true)
-										.append(IS_DEFAULT, true),
-								new Document().append(COLUMN_NAME, "Month").append(ORDER, 7).append(IS_SHOWN, true).append(IS_DEFAULT,
-										true))));
+		mongoTemplate
+				.getCollection("kpi_column_configs")
+				.insertOne(
+						new Document()
+								.append("basicProjectConfigId", null)
+								.append("kpiId", "kpi114")
+								.append(
+										"kpiColumnDetails",
+										List.of(
+												new Document()
+														.append(COLUMN_NAME, "Project Name")
+														.append(ORDER, 1)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true),
+												new Document()
+														.append(COLUMN_NAME, "Cost of Delay")
+														.append(ORDER, 2)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true),
+												new Document()
+														.append(COLUMN_NAME, "Epic ID")
+														.append(ORDER, 3)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true),
+												new Document()
+														.append(COLUMN_NAME, "Epic Name")
+														.append(ORDER, 4)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true),
+												new Document()
+														.append(COLUMN_NAME, "Squad")
+														.append(ORDER, 5)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true),
+												new Document()
+														.append(COLUMN_NAME, "Epic End Date")
+														.append(ORDER, 6)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true),
+												new Document()
+														.append(COLUMN_NAME, "Month")
+														.append(ORDER, 7)
+														.append(IS_SHOWN, true)
+														.append(IS_DEFAULT, true))));
 	}
 }

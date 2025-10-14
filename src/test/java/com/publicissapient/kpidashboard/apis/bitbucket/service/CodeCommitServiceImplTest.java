@@ -87,24 +87,15 @@ public class CodeCommitServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	Map<String, List<Tool>> toolGroup = new HashMap<>();
 	Map<String, Object> commitMap = new HashMap<String, Object>();
-	@Mock
-	CommitRepository commitRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@InjectMocks
-	CodeCommitServiceImpl codeCommitServiceImpl;
+	@Mock CommitRepository commitRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@InjectMocks CodeCommitServiceImpl codeCommitServiceImpl;
 	List<Tool> toolList1;
 	List<Tool> toolList2;
 	private Map<String, Object> filterLevelMap;
@@ -112,14 +103,10 @@ public class CodeCommitServiceImplTest {
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private List<CommitDetails> commitList = new ArrayList<>();
-	@Mock
-	private MergeRequestRepository mergeRequestRepository;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private KpiRequest kpiRequest;
-	@Mock
-	private TreeAggregatorDetail treeAggregatorDetail;
+	@Mock private MergeRequestRepository mergeRequestRepository;
+	@Mock private CommonService commonService;
+	@Mock private KpiRequest kpiRequest;
+	@Mock private TreeAggregatorDetail treeAggregatorDetail;
 	private List<MergeRequests> mergeList = new ArrayList<>();
 	private KpiElement kpiElement;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
@@ -141,8 +128,8 @@ public class CodeCommitServiceImplTest {
 		kpiRequest.setLabel("Project");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		CommitDetailsDataFactory commitDetailsDataFactory = CommitDetailsDataFactory.newInstance();
@@ -158,13 +145,15 @@ public class CodeCommitServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -189,9 +178,22 @@ public class CodeCommitServiceImplTest {
 		List<ProcessorItem> collectorItemList1 = new ArrayList<>();
 		collectorItemList1.add(processorItem1);
 
-		tool1 = createTool("21c056722dba82182340470ecd20112c", "job1", "url1", "Bitbucket", "user1", collectorItemList);
-		tool2 = createTool("1c056f7m0dba82182340470ecd20112c", "job2", "url2", "AzureRepository", "user2",
-				collectorItemList1);
+		tool1 =
+				createTool(
+						"21c056722dba82182340470ecd20112c",
+						"job1",
+						"url1",
+						"Bitbucket",
+						"user1",
+						collectorItemList);
+		tool2 =
+				createTool(
+						"1c056f7m0dba82182340470ecd20112c",
+						"job2",
+						"url2",
+						"AzureRepository",
+						"user2",
+						collectorItemList1);
 		toolList1.add(tool1);
 		toolList2.add(tool2);
 
@@ -200,7 +202,12 @@ public class CodeCommitServiceImplTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), toolGroup);
 	}
 
-	private Tool createTool(String apiKeys, String jobName, String url, String toolType, String username,
+	private Tool createTool(
+			String apiKeys,
+			String jobName,
+			String url,
+			String toolType,
+			String username,
 			List<ProcessorItem> collectorItemList) {
 		Tool tool = new Tool();
 		tool.setTool(toolType);
@@ -210,7 +217,8 @@ public class CodeCommitServiceImplTest {
 		return tool;
 	}
 
-	private CommitDetails createCommit(String url, String branch, String date, Long count, ObjectId collectorItemId) {
+	private CommitDetails createCommit(
+			String url, String branch, String date, Long count, ObjectId collectorItemId) {
 		CommitDetails commitDetails = new CommitDetails();
 		commitDetails.setUrl(url);
 		commitDetails.setBranch(branch);
@@ -224,8 +232,9 @@ public class CodeCommitServiceImplTest {
 	@Test
 	public void testGetCommitCountPerDay() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(mergeRequestRepository.findMergeList(any(), any(), any(), any())).thenReturn(mergeList);
@@ -233,7 +242,8 @@ public class CodeCommitServiceImplTest {
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 
 		String kpiRequestTrackerId = "Bitbucket-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
@@ -241,8 +251,11 @@ public class CodeCommitServiceImplTest {
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
 		try {
-			KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					codeCommitServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -252,16 +265,20 @@ public class CodeCommitServiceImplTest {
 	@Test
 	public void testGetCommitCountPerDayExcel() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
 
 		String kpiRequestTrackerId = "excel-Bitbucket-5be544de025de212549176a9";
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("codeCommit", Arrays.asList("0", "2", "4", "8", "32"));
 		try {
-			KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					codeCommitServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -271,14 +288,18 @@ public class CodeCommitServiceImplTest {
 	@Test
 	public void testGetCommitCountPerDayEmptyList() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		String kpiRequestTrackerId = "excel-Bitbucket-5be544de025de212549176a9";
 
 		try {
-			KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					codeCommitServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -287,16 +308,20 @@ public class CodeCommitServiceImplTest {
 	@Test
 	public void testGetCommitCountPerDayNoJob() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		toolMap = new HashMap<>();
 
 		String kpiRequestTrackerId = "Excel-Bitbucket-5be544de025de212549176a9";
 
 		try {
-			KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					codeCommitServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -305,16 +330,20 @@ public class CodeCommitServiceImplTest {
 	@Test
 	public void testGetCommitCountPerDay1() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		toolMap = new HashMap<>();
 
 		String kpiRequestTrackerId = "Excel-Bitbucket-5be544de025de212549176a9";
 
 		try {
-			KpiElement kpiElement = codeCommitServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					codeCommitServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -344,7 +373,8 @@ public class CodeCommitServiceImplTest {
 		trendValueMap.put(P4, trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);

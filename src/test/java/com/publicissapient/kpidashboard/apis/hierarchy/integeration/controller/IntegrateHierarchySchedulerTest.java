@@ -5,7 +5,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integration.controller.IntegrateHierarchyScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.controller.IntegrateHierarchyScheduler;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.helper.ReaderRetryHelper;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.IntegerationService;
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
@@ -26,23 +26,17 @@ import com.publicissapient.kpidashboard.common.repository.application.Organizati
 @RunWith(MockitoJUnitRunner.class)
 public class IntegrateHierarchySchedulerTest {
 
-	@Mock
-	private IntegerationService integerationService;
+	@Mock private IntegerationService integerationService;
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@Mock
-	private ReaderRetryHelper retryHelper;
+	@Mock private ReaderRetryHelper retryHelper;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Mock private OrganizationHierarchyRepository organizationHierarchyRepository;
 
-	@InjectMocks
-	private IntegrateHierarchyScheduler integrateHierarchyScheduler;
+	@InjectMocks private IntegrateHierarchyScheduler integrateHierarchyScheduler;
 
 	private String apiUrl = "http://test-api-url";
 	private String apiKey = "test-api-key";
@@ -78,5 +72,4 @@ public class IntegrateHierarchySchedulerTest {
 		// Assert
 		verify(retryHelper, times(1)).executeWithRetry(any());
 	}
-
 }

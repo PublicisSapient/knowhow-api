@@ -19,8 +19,8 @@
 package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
 public enum UploadStatus {
-    PENDING,
-    PROCESSING,
-    COMPLETED,
-    FAILED
+	PENDING,
+	PROCESSING,
+	COMPLETED,
+	FAILED
 }

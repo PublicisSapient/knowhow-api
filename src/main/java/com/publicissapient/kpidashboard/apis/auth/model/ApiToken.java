@@ -50,12 +50,9 @@ public class ApiToken extends BasicModel {
 	/**
 	 * Instantiates a new Api token.
 	 *
-	 * @param apiUser
-	 *          the api user
-	 * @param apiKey
-	 *          the api key
-	 * @param expirationDt
-	 *          the expiration dt
+	 * @param apiUser the api user
+	 * @param apiKey the api key
+	 * @param expirationDt the expiration dt
 	 */
 	public ApiToken(String apiUser, String apiKey, Long expirationDt) {
 		super();
@@ -67,8 +64,7 @@ public class ApiToken extends BasicModel {
 	/**
 	 * Hash string.
 	 *
-	 * @param apiKey
-	 *          the api key
+	 * @param apiKey the api key
 	 * @return the string
 	 */
 	private static String hash(String apiKey) {
@@ -90,8 +86,7 @@ public class ApiToken extends BasicModel {
 	/**
 	 * Check api key boolean.
 	 *
-	 * @param apiKey
-	 *          the api key
+	 * @param apiKey the api key
 	 * @return the boolean
 	 */
 	public boolean checkApiKey(String apiKey) {

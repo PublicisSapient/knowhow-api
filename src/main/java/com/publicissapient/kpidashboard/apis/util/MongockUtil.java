@@ -30,16 +30,17 @@ import com.mongodb.client.MongoCollection;
 public final class MongockUtil {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongockUtil.class);
 
-	private MongockUtil() {
-	}
+	private MongockUtil() {}
 
-	public static MongoCollection<Document> getOrCreateCollection(MongoTemplate mongoTemplate, String collectionName) {
+	public static MongoCollection<Document> getOrCreateCollection(
+			MongoTemplate mongoTemplate, String collectionName) {
 		if (!mongoTemplate.collectionExists(collectionName))
 			return mongoTemplate.createCollection(collectionName);
 		return mongoTemplate.getCollection(collectionName);
 	}
 
-	public static void saveListToDB(List<?> dataList, String collectionName, MongoTemplate mongoTemplate) {
+	public static void saveListToDB(
+			List<?> dataList, String collectionName, MongoTemplate mongoTemplate) {
 		MongoCollection<Document> collection = getOrCreateCollection(mongoTemplate, collectionName);
 		if (collection.countDocuments() == 0) {
 			List<Document> documentList = new ArrayList<>();
@@ -65,28 +66,32 @@ public final class MongockUtil {
 	/**
 	 * Method to create a fieldMappingStructure
 	 *
-	 * @param fieldName
-	 *          fieldName
-	 * @param fieldLabel
-	 *          fieldLabel
-	 * @param section
-	 *          section
-	 * @param fieldCategory
-	 *          fieldCategory
-	 * @param fieldType
-	 *          fieldType
-	 * @param tooltipDefinition
-	 *          tooltipDefinition
+	 * @param fieldName fieldName
+	 * @param fieldLabel fieldLabel
+	 * @param section section
+	 * @param fieldCategory fieldCategory
+	 * @param fieldType fieldType
+	 * @param tooltipDefinition tooltipDefinition
 	 * @return Document
 	 */
-	public static Document createFieldMapping(String fieldName, String fieldLabel, String section, String fieldCategory,
-			String fieldType, String tooltipDefinition) {
-		return new Document().append("fieldName", fieldName).append("fieldLabel", fieldLabel).append("section", section)
-				.append("fieldType", fieldType).append("fieldCategory", fieldCategory)
+	public static Document createFieldMapping(
+			String fieldName,
+			String fieldLabel,
+			String section,
+			String fieldCategory,
+			String fieldType,
+			String tooltipDefinition) {
+		return new Document()
+				.append("fieldName", fieldName)
+				.append("fieldLabel", fieldLabel)
+				.append("section", section)
+				.append("fieldType", fieldType)
+				.append("fieldCategory", fieldCategory)
 				.append("tooltip", new Document("definition", tooltipDefinition));
 	}
 
-	public static void insertFilteredListToDB(List<?> dataList, String collectionName, MongoTemplate mongoTemplate) {
+	public static void insertFilteredListToDB(
+			List<?> dataList, String collectionName, MongoTemplate mongoTemplate) {
 		List<Document> documentList = new ArrayList<>();
 		dataList.forEach(data -> prepDocList(data, documentList));
 		mongoTemplate.insert(documentList, collectionName);

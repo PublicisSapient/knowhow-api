@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author aksshriv1
  */
-@ChangeUnit(id = "r_add_kpi_category_mapping", order = "012107", author = "aksshriv1", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "r_add_kpi_category_mapping",
+		order = "012107",
+		author = "aksshriv1",
+		systemVersion = "12.1.0")
 public class IncludeKPIInDashBoardKPI {
 
 	private final MongoTemplate mongoTemplate;
@@ -44,7 +48,13 @@ public class IncludeKPIInDashBoardKPI {
 
 	@RollbackExecution
 	public void execution() {
-		mongoTemplate.getCollection("kpi_category_mapping").insertOne(new Document().append("kpiId", "kpi149")
-				.append("categoryId", "value").append("kpiOrder", 4.0).append("kanban", false));
+		mongoTemplate
+				.getCollection("kpi_category_mapping")
+				.insertOne(
+						new Document()
+								.append("kpiId", "kpi149")
+								.append("categoryId", "value")
+								.append("kpiOrder", 4.0)
+								.append("kanban", false));
 	}
 }

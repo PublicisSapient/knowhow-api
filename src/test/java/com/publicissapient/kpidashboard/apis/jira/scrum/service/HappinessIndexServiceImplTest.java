@@ -73,26 +73,17 @@ public class HappinessIndexServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private static final String SPRINT_DETAILS = "sprintDetails";
 	private static final String HAPPINESS_INDEX_DETAILS = "happinessIndexDetails";
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	private SprintRepository sprintRepository;
-	@Mock
-	private HappinessKpiDataRepository happinessKpiDataRepository;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	KpiDataProvider kpiDataProvider;
-	@Mock
-	KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock private SprintRepository sprintRepository;
+	@Mock private HappinessKpiDataRepository happinessKpiDataRepository;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock KpiDataProvider kpiDataProvider;
+	@Mock KpiDataCacheService kpiDataCacheService;
+	@Mock private FilterHelperService filterHelperService;
 	private KpiRequest kpiRequest;
 
-	@InjectMocks
-	private HappinessIndexServiceImpl happinessIndexImpl;
+	@InjectMocks private HappinessIndexServiceImpl happinessIndexImpl;
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
@@ -110,17 +101,18 @@ public class HappinessIndexServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -143,18 +135,21 @@ public class HappinessIndexServiceImplTest {
 
 	@Test
 	public void getKpiDataEmptyTest() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(HAPPINESS_INDEX_DETAILS, Arrays.asList(new ArrayList<>()));
 		resultListMap.put(SPRINT_DETAILS, new ArrayList<>());
 		when(kpiDataProvider.fetchHappinessIndexDataFromDb(any())).thenReturn(resultListMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
-		KpiElement kpiElement = happinessIndexImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail);
+		KpiElement kpiElement =
+				happinessIndexImpl.getKpiData(
+						kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 		List<DataCount> dataCountList = (List<DataCount>) kpiElement.getTrendValueList();
 
 		assertEquals("Story Count : ", 1, dataCountList.size());
@@ -162,8 +157,9 @@ public class HappinessIndexServiceImplTest {
 
 	@Test
 	public void getKpiDataSuccessTest() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintID("38294_Scrum Project_6335363749794a18e8a4479b");
@@ -176,14 +172,16 @@ public class HappinessIndexServiceImplTest {
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(HAPPINESS_INDEX_DETAILS, Arrays.asList(happinessKpiData));
 		resultListMap.put(SPRINT_DETAILS, Arrays.asList(sprintDetails));
 		when(kpiDataProvider.fetchHappinessIndexDataFromDb(any())).thenReturn(resultListMap);
-		KpiElement kpiElement = happinessIndexImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail);
+		KpiElement kpiElement =
+				happinessIndexImpl.getKpiData(
+						kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 		List<DataCount> dataCountList = (List<DataCount>) kpiElement.getTrendValueList();
 
 		assertEquals("Story Count : ", 1, dataCountList.size());

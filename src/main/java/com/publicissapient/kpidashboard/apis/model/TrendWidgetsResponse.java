@@ -47,8 +47,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets labels.
 	 *
-	 * @param labels
-	 *          the labels
+	 * @param labels the labels
 	 */
 	public void setLabels(List<String> labels) {
 		this.labels = labels;
@@ -66,8 +65,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets data.
 	 *
-	 * @param data
-	 *          the data
+	 * @param data the data
 	 */
 	public void setData(List<String> data) {
 		this.data = data;
@@ -85,8 +83,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets start date.
 	 *
-	 * @param startDate
-	 *          the start date
+	 * @param startDate the start date
 	 */
 	public void setStartDate(String startDate) {
 		this.startDate = startDate;
@@ -104,8 +101,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets end date.
 	 *
-	 * @param endDate
-	 *          the end date
+	 * @param endDate the end date
 	 */
 	public void setEndDate(String endDate) {
 		this.endDate = endDate;
@@ -123,8 +119,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets unit.
 	 *
-	 * @param unit
-	 *          the unit
+	 * @param unit the unit
 	 */
 	public void setUnit(String unit) {
 		this.unit = unit;
@@ -142,8 +137,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets from sprint.
 	 *
-	 * @param fromSprint
-	 *          the from sprint
+	 * @param fromSprint the from sprint
 	 */
 	public void setFromSprint(String fromSprint) {
 		this.fromSprint = fromSprint;
@@ -161,8 +155,7 @@ public class TrendWidgetsResponse extends BaseResponse {
 	/**
 	 * Sets to sprint.
 	 *
-	 * @param toSprint
-	 *          the to sprint
+	 * @param toSprint the to sprint
 	 */
 	public void setToSprint(String toSprint) {
 		this.toSprint = toSprint;

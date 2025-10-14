@@ -60,24 +60,16 @@ import com.publicissapient.kpidashboard.common.repository.application.KanbanAcco
 @RunWith(MockitoJUnitRunner.class)
 public class UserAuthorizedProjectsServiceTest {
 
-	@Mock
-	TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	Authentication authentication;
-	@InjectMocks
-	UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Mock TokenAuthenticationService tokenAuthenticationService;
+	@Mock Authentication authentication;
+	@InjectMocks UserAuthorizedProjectsService userAuthorizedProjectsService;
 	KpiRequest kpiRequest;
 	KpiElement kpiElement;
-	@Mock
-	private UserInfoServiceImpl userInfoService;
-	@Mock
-	private AccountHierarchyRepository accountHierarchyRepo;
-	@Mock
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
-	@Mock
-	private AuthenticationService authenticationService;
-	@Mock
-	private CacheService cacheService;
+	@Mock private UserInfoServiceImpl userInfoService;
+	@Mock private AccountHierarchyRepository accountHierarchyRepo;
+	@Mock private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
+	@Mock private AuthenticationService authenticationService;
+	@Mock private CacheService cacheService;
 	private UserInfoDataFactory userInfoDataFactory = null;
 	private AccountHierarchyFilterDataFactory filterDataFactory = null;
 	private AccountHierarchiesDataFactory hierarchyFactory = null;
@@ -90,7 +82,8 @@ public class UserAuthorizedProjectsServiceTest {
 		MockitoAnnotations.openMocks(this);
 		SecurityContext securityContext = mock(SecurityContext.class);
 
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi51");
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
@@ -130,7 +123,8 @@ public class UserAuthorizedProjectsServiceTest {
 		when(tokenAuthenticationService.getUserProjects()).thenReturn(projectList);
 		when(accountHierarchyRepo.findAll()).thenReturn(accountHierarchyList);
 		Assertions.assertTrue(
-				!userAuthorizedProjectsService.checkUserAuthForProjects(filterDataFactory.getAccountHierarchyDataList()));
+				!userAuthorizedProjectsService.checkUserAuthForProjects(
+						filterDataFactory.getAccountHierarchyDataList()));
 	}
 
 	@Test
@@ -146,8 +140,8 @@ public class UserAuthorizedProjectsServiceTest {
 		Set<String> projectList = new HashSet<>();
 		projectList.add("60dabc03e17b2269cc76d13c");
 		when(tokenAuthenticationService.getUserProjects()).thenReturn(projectList);
-		userAuthorizedProjectsService
-				.checkKanbanUserAuthForProjects(kanbanFilterDataFactory.getAccountHierarchyKanbanDataList());
+		userAuthorizedProjectsService.checkKanbanUserAuthForProjects(
+				kanbanFilterDataFactory.getAccountHierarchyKanbanDataList());
 	}
 
 	@Test
@@ -155,21 +149,23 @@ public class UserAuthorizedProjectsServiceTest {
 		Set<String> projectList = new HashSet<>();
 		projectList.add("63330b7068b5d05cf59c4386");
 		when(tokenAuthenticationService.getUserProjects()).thenReturn(projectList);
-		userAuthorizedProjectsService.filterKanbanProjects(kanbanFilterDataFactory.getAccountHierarchyKanbanDataList());
+		userAuthorizedProjectsService.filterKanbanProjects(
+				kanbanFilterDataFactory.getAccountHierarchyKanbanDataList());
 	}
 
 	@Test
 	public void getKanbanProjectKey() {
 		Set<String> projectList = new HashSet<>();
 		projectList.add("63330b7068b5d05cf59c4386");
-		userAuthorizedProjectsService.getKanbanProjectKey(kanbanFilterDataFactory.getAccountHierarchyKanbanDataList(),
-				kpiRequest);
+		userAuthorizedProjectsService.getKanbanProjectKey(
+				kanbanFilterDataFactory.getAccountHierarchyKanbanDataList(), kpiRequest);
 	}
 
 	@Test
 	public void getProjectKey() {
 		Set<String> projectList = new HashSet<>();
 		projectList.add("63330b7068b5d05cf59c4386");
-		userAuthorizedProjectsService.getProjectKey(filterDataFactory.getAccountHierarchyDataList(), kpiRequest);
+		userAuthorizedProjectsService.getProjectKey(
+				filterDataFactory.getAccountHierarchyDataList(), kpiRequest);
 	}
 }

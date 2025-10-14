@@ -70,7 +70,8 @@ public class StandardAuthenticationTokenTest {
 	@Test
 	public void shouldEraseCreds() {
 		Collection<? extends GrantedAuthority> authorities = Sets.newHashSet();
-		StandardAuthenticationToken auth = new StandardAuthenticationToken(PRINCIPAL, CREDS, authorities);
+		StandardAuthenticationToken auth =
+				new StandardAuthenticationToken(PRINCIPAL, CREDS, authorities);
 		auth.eraseCredentials();
 		assertNull(auth.getCredentials());
 	}
@@ -78,7 +79,8 @@ public class StandardAuthenticationTokenTest {
 	@Test
 	public void equals() {
 		StandardAuthenticationToken obj = new StandardAuthenticationToken(PRINCIPAL, CREDS);
-		assertTrue(obj.equals(obj));;
+		assertTrue(obj.equals(obj));
+		;
 	}
 
 	@Test
@@ -86,13 +88,15 @@ public class StandardAuthenticationTokenTest {
 		Collection<? extends GrantedAuthority> authorities = Sets.newHashSet();
 		StandardAuthenticationToken obj = new StandardAuthenticationToken(PRINCIPAL, CREDS);
 		StandardAuthenticationToken obj1 = new StandardAuthenticationToken(PRINCIPAL, authorities);
-		assertFalse(obj.equals(obj1));;
+		assertFalse(obj.equals(obj1));
+		;
 	}
 
 	@Test
 	public void nullObj() {
 		StandardAuthenticationToken obj = new StandardAuthenticationToken(PRINCIPAL, CREDS);
-		assertFalse(obj.equals(null));;
+		assertFalse(obj.equals(null));
+		;
 	}
 
 	@Test

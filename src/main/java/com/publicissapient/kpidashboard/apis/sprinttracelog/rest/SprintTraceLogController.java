@@ -32,8 +32,7 @@ import com.publicissapient.kpidashboard.apis.sprinttracelog.service.SprintTraceL
 @RestController
 @RequestMapping("/activeIteration")
 public class SprintTraceLogController {
-	@Autowired
-	SprintTraceLogService sprintTraceLogService;
+	@Autowired SprintTraceLogService sprintTraceLogService;
 
 	@GetMapping("/fetchStatus/{sprintId}")
 	public ResponseEntity<ServiceResponse> getActiveItrFetchStatus(@PathVariable String sprintId) {

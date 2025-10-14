@@ -42,8 +42,7 @@ public class KpiCategoryDataFactory {
 	private List<KpiCategory> kpiCategoryList;
 	private ObjectMapper mapper;
 
-	private KpiCategoryDataFactory() {
-	}
+	private KpiCategoryDataFactory() {}
 
 	public static KpiCategoryDataFactory newInstance(String filePath) {
 
@@ -63,9 +62,10 @@ public class KpiCategoryDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
-			kpiCategoryList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KpiCategory>>() {
-					});
+			kpiCategoryList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KpiCategory>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

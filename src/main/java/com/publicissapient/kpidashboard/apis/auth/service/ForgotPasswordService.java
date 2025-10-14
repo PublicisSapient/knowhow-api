@@ -48,5 +48,6 @@ public interface ForgotPasswordService {
 	 * @return Authentication
 	 * @throws ApplicationException
 	 */
-	Authentication resetPassword(ResetPasswordRequest updatedPasswordRequest) throws ApplicationException;
+	Authentication resetPassword(ResetPasswordRequest updatedPasswordRequest)
+			throws ApplicationException;
 }

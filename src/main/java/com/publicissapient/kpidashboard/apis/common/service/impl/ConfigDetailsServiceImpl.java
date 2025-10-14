@@ -35,24 +35,24 @@ import com.publicissapient.kpidashboard.apis.model.DateRangeFilter;
  */
 @Service
 public class ConfigDetailsServiceImpl implements ConfigDetailService {
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	@Override
 	public ConfigDetails getConfigDetails() {
 		ConfigDetails configDetails = new ConfigDetails();
-		DateRangeFilter dateRangeFilter = new DateRangeFilter(customApiConfig.getDateRangeFilterTypes(),
-				customApiConfig.getDateRangeFilterCounts());
+		DateRangeFilter dateRangeFilter =
+				new DateRangeFilter(
+						customApiConfig.getDateRangeFilterTypes(), customApiConfig.getDateRangeFilterCounts());
 		configDetails.setKpiWiseAggregationType(configHelperService.calculateCriteria());
 		configDetails.setPercentile(customApiConfig.getPercentileValue());
 		configDetails.setHierarchySelectionCount(customApiConfig.getHierarchySelectionCount());
 		configDetails.setDateRangeFilter(dateRangeFilter);
 		configDetails.setNoOfDataPoints(customApiConfig.getSprintCountForFilters());
 		configDetails.setGitlabToolFieldFlag(customApiConfig.getIsGitlabFieldEnable());
-		configDetails.setSprintCountForKpiCalculation(customApiConfig.getSprintCountForKpiCalculation());
+		configDetails.setSprintCountForKpiCalculation(
+				customApiConfig.getSprintCountForKpiCalculation());
 		configDetails.setOpenSource(StringUtils.isEmpty(customApiConfig.getCentralHierarchyUrl()));
 		return configDetails;
 	}

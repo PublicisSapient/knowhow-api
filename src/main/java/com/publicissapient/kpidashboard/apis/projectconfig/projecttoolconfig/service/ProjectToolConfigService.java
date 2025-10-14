@@ -35,8 +35,8 @@ public interface ProjectToolConfigService {
 	/**
 	 * Get all tools.
 	 *
-	 * @return ServiceResponse with data object,message and status flag. Status flag
-	 *         is true, if data is found else false.
+	 * @return ServiceResponse with data object,message and status flag. Status flag is true, if data
+	 *     is found else false.
 	 */
 	ServiceResponse getAllProjectTool();
 
@@ -44,8 +44,8 @@ public interface ProjectToolConfigService {
 	 * Get tool by type.
 	 *
 	 * @param type
-	 * @return ServiceResponse with data object,message and status flag. Status flag
-	 *         is true, if data is found else false.
+	 * @return ServiceResponse with data object,message and status flag. Status flag is true, if data
+	 *     is found else false.
 	 */
 	ServiceResponse getProjectToolByType(String type);
 
@@ -53,27 +53,26 @@ public interface ProjectToolConfigService {
 	 * Creates and save proejectTool. *
 	 *
 	 * @param projectToolConfig*
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse saveProjectToolDetails(ProjectToolConfig projectToolConfig);
 
 	/**
-	 * Modifies a project_tool_configs. Finds by @param proejcToolId and replaces it
-	 * with @param projectToolConfig *
+	 * Modifies a project_tool_configs. Finds by @param proejcToolId and replaces it with @param
+	 * projectToolConfig *
 	 *
 	 * @param projectToolConfig
 	 * @param proejcToolId *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse modifyProjectToolById(ProjectToolConfig projectToolConfig, String proejcToolId);
 
 	/**
 	 * Gets tools of the project
 	 *
-	 * @param basicProjectConfigId
-	 *          mongo id of
+	 * @param basicProjectConfigId mongo id of
 	 * @return list of tools
 	 */
 	List<ProjectToolConfigDTO> getProjectToolConfigs(String basicProjectConfigId);

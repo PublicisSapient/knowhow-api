@@ -32,25 +32,22 @@ import com.publicissapient.kpidashboard.common.model.connection.Connection;
 
 @Component
 public class ProjectAccessUtil {
-	@Autowired
-	private TokenAuthenticationService tokenAuthenticationService;
-	@Autowired
-	private UserAuthorizedProjectsService userAuthorizedProjectsService;
-	@Autowired
-	private UserInfoServiceImpl userInfoService;
+	@Autowired private TokenAuthenticationService tokenAuthenticationService;
+	@Autowired private UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Autowired private UserInfoServiceImpl userInfoService;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
 	public boolean configIdHasUserAccess(String basicConfigId) {
 		Set<String> basicProjectConfigIds = tokenAuthenticationService.getUserProjects();
-		return userAuthorizedProjectsService.ifSuperAdminUser() ||
-				(Optional.ofNullable(basicProjectConfigIds).isPresent() && basicProjectConfigIds.contains(basicConfigId));
+		return userAuthorizedProjectsService.ifSuperAdminUser()
+				|| (Optional.ofNullable(basicProjectConfigIds).isPresent()
+						&& basicProjectConfigIds.contains(basicConfigId));
 	}
 
 	public boolean ifConnectionNotAccessible(Connection connection) {
-		return !connection.isSharedConnection() &&
-				(!(connection.getCreatedBy().equals(authenticationService.getLoggedInUser()) ||
-						userAuthorizedProjectsService.ifSuperAdminUser()));
+		return !connection.isSharedConnection()
+				&& (!(connection.getCreatedBy().equals(authenticationService.getLoggedInUser())
+						|| userAuthorizedProjectsService.ifSuperAdminUser()));
 	}
 }

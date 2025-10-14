@@ -21,8 +21,8 @@ package com.publicissapient.kpidashboard.apis.enums;
 import java.util.Arrays;
 
 /**
- * This enum is used to compare the key in thymeleaf email template. Make sure
- * the same key should be in HTML email format
+ * This enum is used to compare the key in thymeleaf email template. Make sure the same key should
+ * be in HTML email format
  *
  * @author pkum34
  */
@@ -81,7 +81,9 @@ public enum NotificationCustomDataEnum {
 
 	public static NotificationCustomDataEnum getKPISource(String value) {
 		return Arrays.asList(NotificationCustomDataEnum.values()).stream()
-				.filter(kpi -> kpi.getValue().equalsIgnoreCase(value)).findAny().orElse(INVALID);
+				.filter(kpi -> kpi.getValue().equalsIgnoreCase(value))
+				.findAny()
+				.orElse(INVALID);
 	}
 
 	/**

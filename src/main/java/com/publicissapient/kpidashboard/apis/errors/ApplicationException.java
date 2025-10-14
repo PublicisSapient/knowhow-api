@@ -38,14 +38,13 @@ public class ApplicationException extends Exception {
 	/**
 	 * Instantiates a new CustomApiApplication exception.
 	 *
-	 * @param clazz
-	 *          the clazz
-	 * @param searchParamsMap
-	 *          the search params map
+	 * @param clazz the clazz
+	 * @param searchParamsMap the search params map
 	 */
 	public ApplicationException(Class clazz, String... searchParamsMap) {
-		super(ApplicationException.generateMessage(clazz.getSimpleName(),
-				toMap(String.class, String.class, searchParamsMap)));
+		super(
+				ApplicationException.generateMessage(
+						clazz.getSimpleName(), toMap(String.class, String.class, searchParamsMap)));
 	}
 
 	/**
@@ -69,7 +68,11 @@ public class ApplicationException extends Exception {
 		if (entries.length % 2 == ONE) {
 			throw new IllegalArgumentException("Invalid entries");
 		}
-		return IntStream.range(0, entries.length / 2).map(i -> i * 2).collect(HashMap::new,
-				(m, i) -> m.put(keyType.cast(entries[i]), valueType.cast(entries[i + 1])), Map::putAll);
+		return IntStream.range(0, entries.length / 2)
+				.map(i -> i * 2)
+				.collect(
+						HashMap::new,
+						(m, i) -> m.put(keyType.cast(entries[i]), valueType.cast(entries[i + 1])),
+						Map::putAll);
 	}
 }

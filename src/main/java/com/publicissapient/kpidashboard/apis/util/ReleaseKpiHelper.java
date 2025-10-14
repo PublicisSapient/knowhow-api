@@ -44,11 +44,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ReleaseKpiHelper {
 
-	private ReleaseKpiHelper() {
-	}
+	private ReleaseKpiHelper() {}
 
-	public static List<JiraIssue> getFilteredReleaseJiraIssuesFromBaseClass(List<JiraIssue> jiraIssuesForCurrentRelease,
-			Set<JiraIssue> defectsList) {
+	public static List<JiraIssue> getFilteredReleaseJiraIssuesFromBaseClass(
+			List<JiraIssue> jiraIssuesForCurrentRelease, Set<JiraIssue> defectsList) {
 		List<JiraIssue> filteredJiraIssue = new ArrayList<>();
 		List<JiraIssue> subtaskDefects = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(defectsList)) {
@@ -63,17 +62,18 @@ public final class ReleaseKpiHelper {
 	/**
 	 * Filtering the jiraIssue based on releaseStatus
 	 *
-	 * @param jiraIssueList
-	 *          jiraIssueList
-	 * @param statusMap
-	 *          statusMap
+	 * @param jiraIssueList jiraIssueList
+	 * @param statusMap statusMap
 	 * @return list of jiraIssue
 	 */
-	public static List<JiraIssue> filterIssuesByStatus(List<JiraIssue> jiraIssueList, Map<Long, String> statusMap) {
+	public static List<JiraIssue> filterIssuesByStatus(
+			List<JiraIssue> jiraIssueList, Map<Long, String> statusMap) {
 		List<JiraIssue> filteredJiraIssue = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(jiraIssueList) && MapUtils.isNotEmpty(statusMap)) {
-			filteredJiraIssue = jiraIssueList.stream().filter(jiraIssue -> statusMap.containsValue(jiraIssue.getStatus()))
-					.collect(Collectors.toList());
+			filteredJiraIssue =
+					jiraIssueList.stream()
+							.filter(jiraIssue -> statusMap.containsValue(jiraIssue.getStatus()))
+							.collect(Collectors.toList());
 		}
 		return filteredJiraIssue;
 	}
@@ -81,10 +81,8 @@ public final class ReleaseKpiHelper {
 	/**
 	 * Get Sum of StoryPoint for List of JiraIssue
 	 *
-	 * @param jiraIssueList
-	 *          List<JiraIssue>
-	 * @param fieldMapping
-	 *          fieldMapping
+	 * @param jiraIssueList List<JiraIssue>
+	 * @param fieldMapping fieldMapping
 	 * @return Sum of Story Points
 	 */
 	public static Double getStoryPoint(List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
@@ -96,22 +94,27 @@ public final class ReleaseKpiHelper {
 	/**
 	 * Get Sum of StoryPoint for List of JiraIssue
 	 *
-	 * @param jiraIssueList
-	 *          List<JiraIssue>
-	 * @param fieldMapping
-	 *          fieldMapping
+	 * @param jiraIssueList List<JiraIssue>
+	 * @param fieldMapping fieldMapping
 	 * @return Sum of Story Point
 	 */
-	public static double getTicketEstimate(List<JiraIssue> jiraIssueList, FieldMapping fieldMapping,
-			double ticketEstimate) {
+	public static double getTicketEstimate(
+			List<JiraIssue> jiraIssueList, FieldMapping fieldMapping, double ticketEstimate) {
 		if (CollectionUtils.isNotEmpty(jiraIssueList)) {
-			if (org.apache.commons.lang.StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria()) &&
-					fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
-				ticketEstimate = jiraIssueList.stream().mapToDouble(ji -> Optional.ofNullable(ji.getStoryPoints()).orElse(0.0d))
-						.sum();
+			if (org.apache.commons.lang.StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
+					&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
+				ticketEstimate =
+						jiraIssueList.stream()
+								.mapToDouble(ji -> Optional.ofNullable(ji.getStoryPoints()).orElse(0.0d))
+								.sum();
 			} else {
-				double totalOriginalEstimate = jiraIssueList.stream().mapToDouble(
-						jiraIssue -> Optional.ofNullable(jiraIssue.getAggregateTimeOriginalEstimateMinutes()).orElse(0)).sum();
+				double totalOriginalEstimate =
+						jiraIssueList.stream()
+								.mapToDouble(
+										jiraIssue ->
+												Optional.ofNullable(jiraIssue.getAggregateTimeOriginalEstimateMinutes())
+														.orElse(0))
+								.sum();
 				double inHours = totalOriginalEstimate / 60;
 				ticketEstimate = inHours / fieldMapping.getStoryPointToHourMapping();
 			}

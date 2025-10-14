@@ -55,14 +55,11 @@ import com.publicissapient.kpidashboard.apis.report.repository.ReportRepository;
 @RunWith(MockitoJUnitRunner.class)
 public class ReportServiceTest {
 
-	@Mock
-	private ReportRepository reportRepository;
+	@Mock private ReportRepository reportRepository;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
-	@InjectMocks
-	private ReportService reportService;
+	@InjectMocks private ReportService reportService;
 
 	private ReportRequest reportRequest;
 	private Report report;
@@ -86,7 +83,8 @@ public class ReportServiceTest {
 		kpi.setMetadata("metadata1");
 
 		report = new Report();
-		report.setId(new ObjectId("507f1f77bcf86cd799439011")); // Use a valid 24-character hexadecimal string
+		report.setId(
+				new ObjectId("507f1f77bcf86cd799439011")); // Use a valid 24-character hexadecimal string
 		report.setName("Report1");
 		report.setKpis(Collections.singletonList(kpi));
 	}

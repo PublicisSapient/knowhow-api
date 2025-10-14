@@ -53,23 +53,25 @@ import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardCo
 public class UserBoardConfigController {
 
 	private static final String NO_DATA_FOUND = "No data found";
-	@Autowired
-	UserBoardConfigService userBoardConfigService;
-	@Autowired
-	private ConfigDetailService configDetailService;
+	@Autowired UserBoardConfigService userBoardConfigService;
+	@Autowired private ConfigDetailService configDetailService;
 
 	/**
 	 * Api to get user based configurations
 	 *
 	 * @return response
 	 */
-	@PostMapping(value = "/getBoardConfig", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/getBoardConfig",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getUserBoardConfigurations(
 			@Valid @RequestBody ProjectListRequested listOfRequestedProj) {
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigService.getBoardConfig(ConfigLevel.USER,
-				listOfRequestedProj);
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigService.getBoardConfig(ConfigLevel.USER, listOfRequestedProj);
 		if (userBoardConfigDTO == null) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false, NO_DATA_FOUND, null));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(false, NO_DATA_FOUND, null));
 		}
 
 		ConfigDetails configDetails = configDetailService.getConfigDetails();
@@ -79,21 +81,24 @@ public class UserBoardConfigController {
 		userBoardDTO.setUserBoardConfigDTO(userBoardConfigDTO);
 		userBoardDTO.setConfigDetails(configDetails);
 
-		ServiceResponse response = new ServiceResponse(true, "Project Config Fetched successfully", userBoardDTO);
+		ServiceResponse response =
+				new ServiceResponse(true, "Project Config Fetched successfully", userBoardDTO);
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
 	/**
 	 * Api to save user based config
 	 *
-	 * @param userBoardConfigDTO
-	 *          userBoardConfigDTO
+	 * @param userBoardConfigDTO userBoardConfigDTO
 	 * @return response
 	 */
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveUserBoardConfig(
 			@Valid @RequestBody UserBoardConfigDTO userBoardConfigDTO) {
-		ServiceResponse response = userBoardConfigService.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, null);
+		ServiceResponse response =
+				userBoardConfigService.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, null);
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
@@ -103,17 +108,22 @@ public class UserBoardConfigController {
 	 * @return response
 	 */
 	@GetMapping(value = "/{basicProjectConfigId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getUserBoardConfigurationAdmin(@PathVariable String basicProjectConfigId) {
+	public ResponseEntity<ServiceResponse> getUserBoardConfigurationAdmin(
+			@PathVariable String basicProjectConfigId) {
 		ProjectListRequested projectListRequested = new ProjectListRequested();
-		Optional.ofNullable(projectListRequested.getBasicProjectConfigIds()).orElseGet(() -> {
-			projectListRequested.setBasicProjectConfigIds(new ArrayList<>());
-			return projectListRequested.getBasicProjectConfigIds();
-		}).add(basicProjectConfigId);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigService.getBoardConfig(ConfigLevel.PROJECT,
-				projectListRequested);
+		Optional.ofNullable(projectListRequested.getBasicProjectConfigIds())
+				.orElseGet(
+						() -> {
+							projectListRequested.setBasicProjectConfigIds(new ArrayList<>());
+							return projectListRequested.getBasicProjectConfigIds();
+						})
+				.add(basicProjectConfigId);
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigService.getBoardConfig(ConfigLevel.PROJECT, projectListRequested);
 		ServiceResponse response = new ServiceResponse(false, NO_DATA_FOUND, null);
 		if (null != userBoardConfigDTO) {
-			response = new ServiceResponse(true, "Project Config Fetched successfully", userBoardConfigDTO);
+			response =
+					new ServiceResponse(true, "Project Config Fetched successfully", userBoardConfigDTO);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
@@ -121,15 +131,19 @@ public class UserBoardConfigController {
 	/**
 	 * Api to save project board config
 	 *
-	 * @param userBoardConfigDTO
-	 *          userBoardConfigDTO
+	 * @param userBoardConfigDTO userBoardConfigDTO
 	 * @return response
 	 */
-	@PostMapping(value = "/saveAdmin/{basicProjectConfigId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/saveAdmin/{basicProjectConfigId}",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveUserBoardConfigAdmin(
-			@Valid @RequestBody UserBoardConfigDTO userBoardConfigDTO, @PathVariable String basicProjectConfigId) {
-		ServiceResponse response = userBoardConfigService.saveBoardConfig(userBoardConfigDTO, ConfigLevel.PROJECT,
-				basicProjectConfigId);
+			@Valid @RequestBody UserBoardConfigDTO userBoardConfigDTO,
+			@PathVariable String basicProjectConfigId) {
+		ServiceResponse response =
+				userBoardConfigService.saveBoardConfig(
+						userBoardConfigDTO, ConfigLevel.PROJECT, basicProjectConfigId);
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 }

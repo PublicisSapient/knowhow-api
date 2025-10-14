@@ -18,15 +18,17 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 @RestController
 public class GithubActionController {
 
-	@Autowired
-	private GithubActionToolConfigServiceImpl githubActionToolConfigService;
+	@Autowired private GithubActionToolConfigServiceImpl githubActionToolConfigService;
 
-	@PostMapping(value = "/githubAction/workflowName/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ServiceResponse getGithubActionWorkflows(@PathVariable String connectionId,
-			@RequestBody GithubActionRepoDTO repoName) {
+	@PostMapping(
+			value = "/githubAction/workflowName/{connectionId}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ServiceResponse getGithubActionWorkflows(
+			@PathVariable String connectionId, @RequestBody GithubActionRepoDTO repoName) {
 		ServiceResponse response;
-		List<GithubActionWorkflowsDTO> workFlowList = githubActionToolConfigService.getGitHubWorkFlowList(connectionId,
-				repoName.getRepositoryName());
+		List<GithubActionWorkflowsDTO> workFlowList =
+				githubActionToolConfigService.getGitHubWorkFlowList(
+						connectionId, repoName.getRepositoryName());
 		if (CollectionUtils.isEmpty(workFlowList)) {
 			response = new ServiceResponse(false, "No workflow details found", null);
 		} else {

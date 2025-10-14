@@ -34,7 +34,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author girpatha
  */
-@ChangeUnit(id = "r_metadata_identifier_updater_for_templates", order = "012102", author = "girpatha", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "r_metadata_identifier_updater_for_templates",
+		order = "012102",
+		author = "girpatha",
+		systemVersion = "12.1.0")
 public class MetadataIdentifierUpdaterForTemplates {
 
 	private final MongoTemplate mongoTemplate;
@@ -50,24 +54,33 @@ public class MetadataIdentifierUpdaterForTemplates {
 
 	@Execution
 	public void execution() {
-		MongoCollection<Document> collection = mongoTemplate.getCollection(METADATA_IDENTIFIER_COLLECTION);
+		MongoCollection<Document> collection =
+				mongoTemplate.getCollection(METADATA_IDENTIFIER_COLLECTION);
 		collection.deleteMany(new Document(TEMPLATE_CODE, new Document("$in", List.of("11", "12"))));
 
-		collection.updateMany(new Document(TEMPLATE_NAME, "Standard DOJO Template"),
+		collection.updateMany(
+				new Document(TEMPLATE_NAME, "Standard DOJO Template"),
 				new Document("$set", new Document(TEMPLATE_NAME, "Standard Template")));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		MongoCollection<Document> collection = mongoTemplate.getCollection(METADATA_IDENTIFIER_COLLECTION);
-		MetaDataIdentifierDataFactory metaDataIdentifierDataFactory = MetaDataIdentifierDataFactory.newInstance();
+		MongoCollection<Document> collection =
+				mongoTemplate.getCollection(METADATA_IDENTIFIER_COLLECTION);
+		MetaDataIdentifierDataFactory metaDataIdentifierDataFactory =
+				MetaDataIdentifierDataFactory.newInstance();
 		metadataIdentifierList = metaDataIdentifierDataFactory.getMetadataIdentifierList();
-		List<MetadataIdentifier> filteredMetadataIdentifiers = metadataIdentifierList.stream()
-				.filter(metadataIdentifier -> "11".equals(metadataIdentifier.getTemplateCode()) ||
-						"12".equals(metadataIdentifier.getTemplateCode()))
-				.toList();
-		MongockUtil.insertFilteredListToDB(filteredMetadataIdentifiers, METADATA_IDENTIFIER_COLLECTION, mongoTemplate);
-		collection.updateMany(new Document(TEMPLATE_NAME, "Standard Template"),
+		List<MetadataIdentifier> filteredMetadataIdentifiers =
+				metadataIdentifierList.stream()
+						.filter(
+								metadataIdentifier ->
+										"11".equals(metadataIdentifier.getTemplateCode())
+												|| "12".equals(metadataIdentifier.getTemplateCode()))
+						.toList();
+		MongockUtil.insertFilteredListToDB(
+				filteredMetadataIdentifiers, METADATA_IDENTIFIER_COLLECTION, mongoTemplate);
+		collection.updateMany(
+				new Document(TEMPLATE_NAME, "Standard Template"),
 				new Document("$set", new Document(TEMPLATE_NAME, "Standard DOJO Template")));
 	}
 }

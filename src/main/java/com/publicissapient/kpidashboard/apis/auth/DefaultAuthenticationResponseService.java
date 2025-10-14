@@ -43,11 +43,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DefaultAuthenticationResponseService implements AuthenticationResponseService {
 
-	@Autowired
-	private TokenAuthenticationService tokenAuthenticationService;
+	@Autowired private TokenAuthenticationService tokenAuthenticationService;
 
-	@Autowired
-	private UserInfoService userInfoService;
+	@Autowired private UserInfoService userInfoService;
 
 	/** {@inheritDoc} */
 	@Override
@@ -55,8 +53,9 @@ public class DefaultAuthenticationResponseService implements AuthenticationRespo
 		String username = authentication.getPrincipal().toString();
 
 		Collection<GrantedAuthority> authorities = userInfoService.getAuthorities(username);
-		AbstractAuthenticationToken authenticationWithAuthorities = new UsernamePasswordAuthenticationToken(
-				authentication.getPrincipal(), authentication.getCredentials(), authorities);
+		AbstractAuthenticationToken authenticationWithAuthorities =
+				new UsernamePasswordAuthenticationToken(
+						authentication.getPrincipal(), authentication.getCredentials(), authorities);
 		authenticationWithAuthorities.setDetails(AuthType.STANDARD);
 		tokenAuthenticationService.addAuthentication(response, authenticationWithAuthorities);
 	}

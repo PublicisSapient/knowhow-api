@@ -29,8 +29,7 @@ public class ProjectFilter implements Serializable {
 	private String name;
 	private ObjectId basicProjectConfigId;
 
-	public ProjectFilter() {
-	}
+	public ProjectFilter() {}
 
 	public ProjectFilter(String projectId, String projectName, ObjectId basicProjectConfigId) {
 		super();

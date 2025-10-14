@@ -59,28 +59,17 @@ import com.publicissapient.kpidashboard.common.service.NotificationService;
 public class SignupManagerTest {
 	String testId = "5dbfcc60e645ca2ee4075381";
 
-	@InjectMocks
-	SignupManager signupManager;
-	@Mock
-	RejectApprovalListener rejectApprovalListener;
-	@Mock
-	GrantApprovalListener grantApprovalListener;
-	@Mock
-	AuthenticationRepository authenticationRepository;
-	@Mock
-	AuthenticationService authenticationService;
-	@Mock
-	UserInfoRepository userInfoRepository;
-	@Mock
-	Authentication authentication;
-	@Mock
-	CommonService commonService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private NotificationService notificationService;
-	@Mock
-	private TokenAuthenticationService tokenAuthenticationService;
+	@InjectMocks SignupManager signupManager;
+	@Mock RejectApprovalListener rejectApprovalListener;
+	@Mock GrantApprovalListener grantApprovalListener;
+	@Mock AuthenticationRepository authenticationRepository;
+	@Mock AuthenticationService authenticationService;
+	@Mock UserInfoRepository userInfoRepository;
+	@Mock Authentication authentication;
+	@Mock CommonService commonService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private NotificationService notificationService;
+	@Mock private TokenAuthenticationService tokenAuthenticationService;
 
 	@Test
 	public void testRejectAccessRequestSuccess() throws Exception {
@@ -170,9 +159,11 @@ public class SignupManagerTest {
 		List<String> emailAddresses = Arrays.asList("admin@example.com");
 		Map<String, String> notificationSubjects = Map.of("preApproval", "Pre-Approval Request");
 
-		when(commonService.getEmailAddressBasedOnRoles(Arrays.asList("ROLE_SUPERADMIN"))).thenReturn(emailAddresses);
+		when(commonService.getEmailAddressBasedOnRoles(Arrays.asList("ROLE_SUPERADMIN")))
+				.thenReturn(emailAddresses);
 		when(customApiConfig.getNotificationSubject()).thenReturn(notificationSubjects);
-		when(customApiConfig.getMailTemplate()).thenReturn(Map.of("Pre_Approval", "preApprovalTemplate"));
+		when(customApiConfig.getMailTemplate())
+				.thenReturn(Map.of("Pre_Approval", "preApprovalTemplate"));
 
 		// Act
 		signupManager.sendUserPreApprovalRequestEmailToAdmin(username, email);

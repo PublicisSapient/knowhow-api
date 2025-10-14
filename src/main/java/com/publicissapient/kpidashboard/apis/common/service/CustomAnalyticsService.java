@@ -34,10 +34,8 @@ public interface CustomAnalyticsService {
 	/**
 	 * Creates and return JSON object containing analytics data.
 	 *
-	 * @param httpServletResponse
-	 *          HttpServletResponse
-	 * @param username
-	 *          user name
+	 * @param httpServletResponse HttpServletResponse
+	 * @param username user name
 	 * @return JSON of analytics data
 	 */
 	JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, String username);
@@ -45,14 +43,12 @@ public interface CustomAnalyticsService {
 	/**
 	 * Creates and return JSON object containing analytics data.
 	 *
-	 * @param httpServletResponse
-	 *          HttpServletResponse
-	 * @param username
-	 *          user name
+	 * @param httpServletResponse HttpServletResponse
+	 * @param username user name
 	 * @return JSON of analytics data
 	 */
-	Map<String, Object> addAnalyticsDataAndSaveCentralUser(HttpServletResponse httpServletResponse, String username,
-			String authToken);
+	Map<String, Object> addAnalyticsDataAndSaveCentralUser(
+			HttpServletResponse httpServletResponse, String username, String authToken);
 
 	JSONObject getAnalyticsCheck();
 }

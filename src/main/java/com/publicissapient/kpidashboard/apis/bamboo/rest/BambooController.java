@@ -23,18 +23,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BambooController {
 
-	@Autowired
-	private BambooToolConfigServiceImpl bambooToolConfigService;
+	@Autowired private BambooToolConfigServiceImpl bambooToolConfigService;
 
 	/**
-	 * @param connectionId
-	 *          the bamboo server connection details
+	 * @param connectionId the bamboo server connection details
 	 * @return @{@code ServiceResponse}
 	 */
 	@GetMapping(value = "/bamboo/plans/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getBambooProjectsAndPlanKeys(@PathVariable String connectionId) {
+	public ResponseEntity<ServiceResponse> getBambooProjectsAndPlanKeys(
+			@PathVariable String connectionId) {
 		ServiceResponse response;
-		List<BambooPlansResponseDTO> projectKeyList = bambooToolConfigService.getProjectsAndPlanKeyList(connectionId);
+		List<BambooPlansResponseDTO> projectKeyList =
+				bambooToolConfigService.getProjectsAndPlanKeyList(connectionId);
 		if (CollectionUtils.isEmpty(projectKeyList)) {
 			response = new ServiceResponse(false, "No plans details found", null);
 		} else {
@@ -44,18 +44,18 @@ public class BambooController {
 	}
 
 	/**
-	 * @param connectionId
-	 *          the bamboo server connection details
-	 * @param jobNameKey
-	 *          the bamboo server jobNameKey
+	 * @param connectionId the bamboo server connection details
+	 * @param jobNameKey the bamboo server jobNameKey
 	 * @return @{@code ServiceResponse}
 	 */
-	@GetMapping(value = "/bamboo/branches/{connectionId}/{jobNameKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getBambooBranchesNameAndKeys(@PathVariable String connectionId,
-			@PathVariable String jobNameKey) {
+	@GetMapping(
+			value = "/bamboo/branches/{connectionId}/{jobNameKey}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getBambooBranchesNameAndKeys(
+			@PathVariable String connectionId, @PathVariable String jobNameKey) {
 		ServiceResponse response;
-		List<BambooBranchesResponseDTO> projectKeyList = bambooToolConfigService.getBambooBranchesNameAndKeys(connectionId,
-				jobNameKey);
+		List<BambooBranchesResponseDTO> projectKeyList =
+				bambooToolConfigService.getBambooBranchesNameAndKeys(connectionId, jobNameKey);
 		if (CollectionUtils.isEmpty(projectKeyList)) {
 			response = new ServiceResponse(false, "No branches details found", null);
 		} else {
@@ -65,15 +65,15 @@ public class BambooController {
 	}
 
 	/**
-	 * @param connectionId
-	 *          the bamboo server connection details
+	 * @param connectionId the bamboo server connection details
 	 * @return @{@code ServiceResponse}
 	 */
 	@GetMapping(value = "/bamboo/deploy/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getBambooDeploymentProject(@PathVariable String connectionId) {
+	public ResponseEntity<ServiceResponse> getBambooDeploymentProject(
+			@PathVariable String connectionId) {
 		ServiceResponse response;
-		List<BambooDeploymentProjectsResponseDTO> projectKeyList = bambooToolConfigService
-				.getDeploymentProjectList(connectionId);
+		List<BambooDeploymentProjectsResponseDTO> projectKeyList =
+				bambooToolConfigService.getDeploymentProjectList(connectionId);
 		if (CollectionUtils.isEmpty(projectKeyList)) {
 			response = new ServiceResponse(false, "No deployment project found", null);
 		} else {

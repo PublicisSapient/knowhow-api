@@ -17,27 +17,28 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.boot.actuate.health.Status;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
+import com.publicissapient.kpidashboard.apis.management.service.DashboardHealthService;
+import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
 import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
 import com.publicissapient.kpidashboard.apis.model.ComponentDto;
 import com.publicissapient.kpidashboard.apis.model.DetailsDto;
 import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
 import com.publicissapient.kpidashboard.apis.model.LinkDto;
 import com.publicissapient.kpidashboard.apis.model.LinksDto;
-import com.publicissapient.kpidashboard.apis.management.service.DashboardHealthService;
-import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.actuate.health.Status;
-import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -55,14 +56,18 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		log.info("Starting dashboard health overview generation");
 		Map<String, ComponentDto> components = new HashMap<>();
 		MetricsAggregate metricsAggregate = new MetricsAggregate();
-		dashboardConfig.getTypes().forEach((boardType, boardTypeConfig) -> {
-			log.debug("Processing board type: {}", boardType);
-			HealthResponseDto boardHealth = getBoardTypeHealth(boardType);
-			components.put(boardType, buildBoardTypeComponentDto(boardType, boardHealth));
-			updateAggregatedMetrics(metricsAggregate, boardHealth);
-		});
+		dashboardConfig
+				.getTypes()
+				.forEach(
+						(boardType, boardTypeConfig) -> {
+							log.debug("Processing board type: {}", boardType);
+							HealthResponseDto boardHealth = getBoardTypeHealth(boardType);
+							components.put(boardType, buildBoardTypeComponentDto(boardType, boardHealth));
+							updateAggregatedMetrics(metricsAggregate, boardHealth);
+						});
 		log.info("Dashboard health overview generation completed successfully");
-		return buildHealthResponseDto(metricsAggregate, components, dashboardConfig.getHealthApiBasePath());
+		return buildHealthResponseDto(
+				metricsAggregate, components, dashboardConfig.getHealthApiBasePath());
 	}
 
 	@Override
@@ -72,20 +77,27 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		Map<String, ComponentDto> components = new HashMap<>();
 		MetricsAggregate metricsAggregate = new MetricsAggregate();
 
-		boardTypeConfig.getBoards().forEach((dashboardName, board) -> {
-			log.debug("Processing dashboard: {} in board type: {}", dashboardName, boardType);
-			HealthResponseDto dashboardHealth = getDashboardDetailHealth(boardType, dashboardName);
-			components.put(dashboardName, buildDashboardComponentDto(boardType, dashboardName, dashboardHealth));
-			updateAggregatedMetrics(metricsAggregate, dashboardHealth);
-		});
+		boardTypeConfig
+				.getBoards()
+				.forEach(
+						(dashboardName, board) -> {
+							log.debug("Processing dashboard: {} in board type: {}", dashboardName, boardType);
+							HealthResponseDto dashboardHealth =
+									getDashboardDetailHealth(boardType, dashboardName);
+							components.put(
+									dashboardName,
+									buildDashboardComponentDto(boardType, dashboardName, dashboardHealth));
+							updateAggregatedMetrics(metricsAggregate, dashboardHealth);
+						});
 		log.info("Health generation for board type: {} completed successfully", boardType);
-		return buildHealthResponseDto(metricsAggregate, components,
-				dashboardConfig.getHealthApiBasePath() + "/" + boardType);
+		return buildHealthResponseDto(
+				metricsAggregate, components, dashboardConfig.getHealthApiBasePath() + "/" + boardType);
 	}
 
 	@Override
 	public HealthResponseDto getDashboardDetailHealth(String boardType, String dashboard) {
-		log.info("Starting health generation for dashboard: {} in board type: {}", dashboard, boardType);
+		log.info(
+				"Starting health generation for dashboard: {} in board type: {}", dashboard, boardType);
 		DashboardConfig.BoardType boardTypeConfig = validateBoardType(boardType, dashboardConfig);
 		DashboardConfig.Board board = validateDashboard(boardType, dashboard, boardTypeConfig);
 		log.debug("Fetching API metrics for dashboard: {}", dashboard);
@@ -93,100 +105,122 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		List<ApiDetailDto> apiMetrics = metricsService.getApisMetrics(board.getApis());
 		MetricsAggregate metricsAggregate = calculateAggregatedMetrics(apiMetrics);
 
-		log.info("Health generation for dashboard: {} in board type: {} completed successfully", dashboard, boardType);
-		return buildHealthResponseDto(metricsAggregate, apiMetrics,
+		log.info(
+				"Health generation for dashboard: {} in board type: {} completed successfully",
+				dashboard,
+				boardType);
+		return buildHealthResponseDto(
+				metricsAggregate,
+				apiMetrics,
 				dashboardConfig.getHealthApiBasePath() + "/" + boardType + "/" + dashboard);
 	}
 
 	/**
 	 * Builds a {@link ComponentDto} from board type health response.
 	 *
-	 * @param boardType
-	 *            board type name
-	 * @param boardHealth
-	 *            {@link HealthResponseDto} health response
+	 * @param boardType board type name
+	 * @param boardHealth {@link HealthResponseDto} health response
 	 * @return {@link ComponentDto}
 	 */
 	private ComponentDto buildBoardTypeComponentDto(String boardType, HealthResponseDto boardHealth) {
-		return ComponentDto.builder().status(boardHealth.getStatus()).max(boardHealth.getMax())
-				.count(boardHealth.getCount()).totalTime(boardHealth.getTotalTime())
-				.errorRate(boardHealth.getErrorRate()).errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
-				.links(LinksDto.builder()
-						.self(LinkDto.builder().href(dashboardConfig.getHealthApiBasePath() + "/" + boardType).build())
-						.build())
+		return ComponentDto.builder()
+				.status(boardHealth.getStatus())
+				.max(boardHealth.getMax())
+				.count(boardHealth.getCount())
+				.totalTime(boardHealth.getTotalTime())
+				.errorRate(boardHealth.getErrorRate())
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
+				.links(
+						LinksDto.builder()
+								.self(
+										LinkDto.builder()
+												.href(dashboardConfig.getHealthApiBasePath() + "/" + boardType)
+												.build())
+								.build())
 				.build();
 	}
 
 	/**
 	 * Builds a {@link ComponentDto} from dashboard health response.
 	 *
-	 * @param boardType
-	 *            board type name
-	 * @param dashboardName
-	 *            dashboard name
-	 * @param dashboardHealth
-	 *            {@link HealthResponseDto} health response
+	 * @param boardType board type name
+	 * @param dashboardName dashboard name
+	 * @param dashboardHealth {@link HealthResponseDto} health response
 	 * @return {@link ComponentDto}
 	 */
-	private ComponentDto buildDashboardComponentDto(String boardType, String dashboardName,
-			HealthResponseDto dashboardHealth) {
-		return ComponentDto.builder().status(dashboardHealth.getStatus()).max(dashboardHealth.getMax())
-				.count(dashboardHealth.getCount()).totalTime(dashboardHealth.getTotalTime())
-				.errorRate(dashboardHealth.getErrorRate()).errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
-				.links(LinksDto.builder().self(LinkDto.builder()
-						.href(dashboardConfig.getHealthApiBasePath() + "/" + boardType + "/" + dashboardName).build())
-						.build())
+	private ComponentDto buildDashboardComponentDto(
+			String boardType, String dashboardName, HealthResponseDto dashboardHealth) {
+		return ComponentDto.builder()
+				.status(dashboardHealth.getStatus())
+				.max(dashboardHealth.getMax())
+				.count(dashboardHealth.getCount())
+				.totalTime(dashboardHealth.getTotalTime())
+				.errorRate(dashboardHealth.getErrorRate())
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
+				.links(
+						LinksDto.builder()
+								.self(
+										LinkDto.builder()
+												.href(
+														dashboardConfig.getHealthApiBasePath()
+																+ "/"
+																+ boardType
+																+ "/"
+																+ dashboardName)
+												.build())
+								.build())
 				.build();
 	}
 
 	/**
 	 * Builds a {@link HealthResponseDto} from aggregated metrics and components.
 	 *
-	 * @param metrics
-	 *            {@link MetricsAggregate} metrics aggregate
-	 * @param components
-	 *            map of components
-	 * @param path
-	 *            API path
+	 * @param metrics {@link MetricsAggregate} metrics aggregate
+	 * @param components map of components
+	 * @param path API path
 	 * @return {@link HealthResponseDto}
 	 */
-	private HealthResponseDto buildHealthResponseDto(MetricsAggregate metrics, Map<String, ComponentDto> components,
-			String path) {
-		return HealthResponseDto.builder().status(metrics.isAllUp() ? STATUS_UP : STATUS_DOWN)
-				.max(metrics.getMaxResponseTime()).count(metrics.getTotalCount())
-				.totalTime(metrics.getTotalResponseTime()).errorRate(metrics.getErrorRate())
-				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold()).components(components)
-				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build()).build();
+	private HealthResponseDto buildHealthResponseDto(
+			MetricsAggregate metrics, Map<String, ComponentDto> components, String path) {
+		return HealthResponseDto.builder()
+				.status(metrics.isAllUp() ? STATUS_UP : STATUS_DOWN)
+				.max(metrics.getMaxResponseTime())
+				.count(metrics.getTotalCount())
+				.totalTime(metrics.getTotalResponseTime())
+				.errorRate(metrics.getErrorRate())
+				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
+				.components(components)
+				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build())
+				.build();
 	}
 
 	/**
 	 * Builds a {@link HealthResponseDto} from aggregated metrics and API metrics.
 	 *
-	 * @param metrics
-	 *            {@link MetricsAggregate} metrics aggregate
-	 * @param apiMetrics
-	 *            list of {@link ApiDetailDto}
-	 * @param path
-	 *            API path
+	 * @param metrics {@link MetricsAggregate} metrics aggregate
+	 * @param apiMetrics list of {@link ApiDetailDto}
+	 * @param path API path
 	 * @return {@link HealthResponseDto}
 	 */
-	private HealthResponseDto buildHealthResponseDto(MetricsAggregate metrics, List<ApiDetailDto> apiMetrics,
-			String path) {
-		return HealthResponseDto.builder().status(metrics.isAllUp() ? STATUS_UP : STATUS_DOWN)
-				.max(metrics.getMaxResponseTime()).count(metrics.getTotalCount())
-				.totalTime(metrics.getTotalResponseTime()).errorRate(metrics.getErrorRate())
+	private HealthResponseDto buildHealthResponseDto(
+			MetricsAggregate metrics, List<ApiDetailDto> apiMetrics, String path) {
+		return HealthResponseDto.builder()
+				.status(metrics.isAllUp() ? STATUS_UP : STATUS_DOWN)
+				.max(metrics.getMaxResponseTime())
+				.count(metrics.getTotalCount())
+				.totalTime(metrics.getTotalResponseTime())
+				.errorRate(metrics.getErrorRate())
 				.errorThreshold(dashboardConfig.getMaxApiErrorThreshold())
 				.details(DetailsDto.builder().apis(apiMetrics).build())
-				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build()).build();
+				.links(LinksDto.builder().self(LinkDto.builder().href(path).build()).build())
+				.build();
 	}
 
 	/**
 	 * Updates aggregated metrics with health response data.
 	 *
-	 * @param metrics
-	 *            {@link MetricsAggregate}
-	 * @param healthResponse
-	 *            {@link HealthResponseDto}
+	 * @param metrics {@link MetricsAggregate}
+	 * @param healthResponse {@link HealthResponseDto}
 	 */
 	private void updateAggregatedMetrics(MetricsAggregate metrics, HealthResponseDto healthResponse) {
 		metrics.setMaxResponseTime(Math.max(metrics.getMaxResponseTime(), healthResponse.getMax()));
@@ -196,8 +230,9 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		if (STATUS_DOWN.equals(healthResponse.getStatus())) {
 			metrics.setAllUp(false);
 		}
-		double totalWeightedErrorRate = (metrics.getErrorRate() * originalTotalCount)
-				+ (healthResponse.getErrorRate() * healthResponse.getCount());
+		double totalWeightedErrorRate =
+				(metrics.getErrorRate() * originalTotalCount)
+						+ (healthResponse.getErrorRate() * healthResponse.getCount());
 		int totalWeight = originalTotalCount + healthResponse.getCount();
 		metrics.setErrorRate(totalWeight == 0 ? 0 : totalWeightedErrorRate / totalWeight);
 		metrics.setErrorThreshold(dashboardConfig.getMaxApiErrorThreshold());
@@ -206,8 +241,7 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 	/**
 	 * Calculates aggregated metrics from API metrics.
 	 *
-	 * @param apiMetrics
-	 *            list of {@link ApiDetailDto}
+	 * @param apiMetrics list of {@link ApiDetailDto}
 	 * @return {@link MetricsAggregate}
 	 */
 	private MetricsAggregate calculateAggregatedMetrics(List<ApiDetailDto> apiMetrics) {
@@ -217,28 +251,26 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		boolean allUp = apiMetrics.stream().allMatch(api -> STATUS_UP.equals(api.getStatus()));
 
 		// Calculate weighted average error rate
-		double weightedErrorRate = apiMetrics.stream().mapToDouble(api -> api.getErrorRate() * api.getCount()).sum()
-				/ (totalCount > 0 ? totalCount : 1);
+		double weightedErrorRate =
+				apiMetrics.stream().mapToDouble(api -> api.getErrorRate() * api.getCount()).sum()
+						/ (totalCount > 0 ? totalCount : 1);
 
 		double errorThreshold = dashboardConfig.getMaxApiErrorThreshold();
 
-		return new MetricsAggregate(maxResponseTime, totalCount, totalResponseTime, allUp, weightedErrorRate,
-				errorThreshold);
-
+		return new MetricsAggregate(
+				maxResponseTime, totalCount, totalResponseTime, allUp, weightedErrorRate, errorThreshold);
 	}
 
 	/**
 	 * Validates and returns the board type config.
 	 *
-	 * @param boardType
-	 *            board type name
-	 * @param dashboardConfig
-	 *            {@link DashboardConfig}
+	 * @param boardType board type name
+	 * @param dashboardConfig {@link DashboardConfig}
 	 * @return {@link DashboardConfig.BoardType}
-	 * @throws IllegalArgumentException
-	 *             if not found
+	 * @throws IllegalArgumentException if not found
 	 */
-	public DashboardConfig.BoardType validateBoardType(String boardType, DashboardConfig dashboardConfig) {
+	public DashboardConfig.BoardType validateBoardType(
+			String boardType, DashboardConfig dashboardConfig) {
 		DashboardConfig.BoardType boardTypeConfig = dashboardConfig.getTypes().get(boardType);
 		if (boardTypeConfig == null) {
 			throw new IllegalArgumentException("Board type not found: " + boardType);
@@ -249,28 +281,23 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 	/**
 	 * Validates and returns the dashboard config.
 	 *
-	 * @param boardType
-	 *            board type name
-	 * @param dashboard
-	 *            dashboard name
-	 * @param boardTypeConfig
-	 *            {@link DashboardConfig.BoardType}
+	 * @param boardType board type name
+	 * @param dashboard dashboard name
+	 * @param boardTypeConfig {@link DashboardConfig.BoardType}
 	 * @return {@link DashboardConfig.Board}
-	 * @throws IllegalArgumentException
-	 *             if not found
+	 * @throws IllegalArgumentException if not found
 	 */
-	private DashboardConfig.Board validateDashboard(String boardType, String dashboard,
-			DashboardConfig.BoardType boardTypeConfig) {
+	private DashboardConfig.Board validateDashboard(
+			String boardType, String dashboard, DashboardConfig.BoardType boardTypeConfig) {
 		DashboardConfig.Board board = boardTypeConfig.getBoards().get(dashboard);
 		if (board == null) {
-			throw new IllegalArgumentException("Dashboard not found: " + dashboard + " in board type " + boardType);
+			throw new IllegalArgumentException(
+					"Dashboard not found: " + dashboard + " in board type " + boardType);
 		}
 		return board;
 	}
 
-	/**
-	 * Helper class for aggregating metrics.
-	 */
+	/** Helper class for aggregating metrics. */
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
@@ -282,5 +309,4 @@ public class DashboardHealthServiceImpl implements DashboardHealthService {
 		private double errorRate = 0.0;
 		private double errorThreshold = 0.0;
 	}
-
 }

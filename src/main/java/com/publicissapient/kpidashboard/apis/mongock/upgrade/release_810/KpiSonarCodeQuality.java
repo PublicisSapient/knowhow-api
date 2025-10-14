@@ -64,33 +64,73 @@ public class KpiSonarCodeQuality {
 
 	public void addSonarCodeQualityInKpiMaster() {
 		// Create the document to insert
-		Document document = new Document().append(KPI_ID, KPI_168).append("kpiName", "Sonar Code Quality")
-				.append("kpiUnit", "unit").append("maxValue", "90").append("isDeleted", "False").append("defaultOrder", 14)
-				.append("kpiSource", "Sonar").append("groupId", 1).append("kanban", false)
-				.append("chartType", "bar-with-y-axis-group")
-				.append("kpiInfo", new Document().append("definition",
-						"Sonar Code Quality is graded based on the static and dynamic code analysis procedure built in Sonarqube that analyses code from multiple perspectives.")
-						.append("details", Arrays.asList(
-								new Document().append("type", PARAGRAPH).append(VALUE,
-										"Code Quality in Sonarqube is shown as Grades (A to E)."),
-								new Document().append("type", PARAGRAPH).append(VALUE, "A is the highest (best) and,"),
-								new Document().append("type", PARAGRAPH).append(VALUE, "E is the least"),
-								new Document().append("type", "link").append("kpiLinkDetail",
-										new Document().append("text", "Detailed Information at").append("link",
-												"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/27197457/Scrum+QUALITY+KPIs#Sonar-Code-Quality")))))
-				.append("xAxisLabel", "Months").append("yAxisLabel", "Code Quality").append("isPositiveTrend", true)
-				.append("showTrend", true).append("kpiFilter", "dropDown").append("aggregationCriteria", "average")
-				.append("isAdditionalFilterSupport", false).append("calculateMaturity", true).append("hideOverallFilter", true)
-				.append("maturityRange", Arrays.asList("5", "4", "3", "2", "1"))
-				.append("yaxisOrder", new Document().append(String.valueOf(5), "E").append(String.valueOf(4), "D")
-						.append(String.valueOf(3), "C").append(String.valueOf(2), "B").append(String.valueOf(1), "A"));
+		Document document =
+				new Document()
+						.append(KPI_ID, KPI_168)
+						.append("kpiName", "Sonar Code Quality")
+						.append("kpiUnit", "unit")
+						.append("maxValue", "90")
+						.append("isDeleted", "False")
+						.append("defaultOrder", 14)
+						.append("kpiSource", "Sonar")
+						.append("groupId", 1)
+						.append("kanban", false)
+						.append("chartType", "bar-with-y-axis-group")
+						.append(
+								"kpiInfo",
+								new Document()
+										.append(
+												"definition",
+												"Sonar Code Quality is graded based on the static and dynamic code analysis procedure built in Sonarqube that analyses code from multiple perspectives.")
+										.append(
+												"details",
+												Arrays.asList(
+														new Document()
+																.append("type", PARAGRAPH)
+																.append(
+																		VALUE,
+																		"Code Quality in Sonarqube is shown as Grades (A to E)."),
+														new Document()
+																.append("type", PARAGRAPH)
+																.append(VALUE, "A is the highest (best) and,"),
+														new Document()
+																.append("type", PARAGRAPH)
+																.append(VALUE, "E is the least"),
+														new Document()
+																.append("type", "link")
+																.append(
+																		"kpiLinkDetail",
+																		new Document()
+																				.append("text", "Detailed Information at")
+																				.append(
+																						"link",
+																						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/27197457/Scrum+QUALITY+KPIs#Sonar-Code-Quality")))))
+						.append("xAxisLabel", "Months")
+						.append("yAxisLabel", "Code Quality")
+						.append("isPositiveTrend", true)
+						.append("showTrend", true)
+						.append("kpiFilter", "dropDown")
+						.append("aggregationCriteria", "average")
+						.append("isAdditionalFilterSupport", false)
+						.append("calculateMaturity", true)
+						.append("hideOverallFilter", true)
+						.append("maturityRange", Arrays.asList("5", "4", "3", "2", "1"))
+						.append(
+								"yaxisOrder",
+								new Document()
+										.append(String.valueOf(5), "E")
+										.append(String.valueOf(4), "D")
+										.append(String.valueOf(3), "C")
+										.append(String.valueOf(2), "B")
+										.append(String.valueOf(1), "A"));
 
 		// Insert the document into the kpiMaster
 		mongoTemplate.getCollection("kpi_master").insertOne(document);
 	}
 
 	private void updateInKpiCategoryMapping() {
-		MongoCollection<Document> kpiCategoryMapping = mongoTemplate.getCollection("kpi_category_mapping");
+		MongoCollection<Document> kpiCategoryMapping =
+				mongoTemplate.getCollection("kpi_category_mapping");
 
 		// Check if KPI_168 already exists in the collection
 		Document query = new Document(KPI_ID, KPI_168);
@@ -99,7 +139,8 @@ public class KpiSonarCodeQuality {
 		if (count == 0) { // KPI_168 does not exist, proceed with insertion
 			// Query to find the kpi_category_mapping for kpiId = 38
 			// Execute the query
-			MongoCursor<Document> cursor = kpiCategoryMapping.find(new Document(KPI_ID, "kpi38")).iterator();
+			MongoCursor<Document> cursor =
+					kpiCategoryMapping.find(new Document(KPI_ID, "kpi38")).iterator();
 
 			// Initialize the categoryId
 			String categoryId = null;
@@ -112,8 +153,12 @@ public class KpiSonarCodeQuality {
 			// Check if categoryId is not null
 			if (categoryId != null) {
 				// Create the insert script document
-				kpiCategoryMapping.insertOne(new Document().append(KPI_ID, KPI_168).append("categoryId", categoryId)
-						.append("kpiOrder", 15).append("kanban", false));
+				kpiCategoryMapping.insertOne(
+						new Document()
+								.append(KPI_ID, KPI_168)
+								.append("categoryId", categoryId)
+								.append("kpiOrder", 15)
+								.append("kanban", false));
 			}
 		} else {
 			log.info("KPI_168 already exists in the collection.");

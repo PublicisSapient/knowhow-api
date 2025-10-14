@@ -48,15 +48,12 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 @ExtendWith(SpringExtension.class)
 public class JiraKPIServiceTest {
 
-	@InjectMocks
-	JiraKpiServiceTestImpl jiraKPIService;
+	@InjectMocks JiraKpiServiceTestImpl jiraKPIService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	private Map<String, String> aggregationCriteriaMap;
-	@Mock
-	private JiraServiceR jiraService;
+	@Mock private JiraServiceR jiraService;
 
 	private static List<JiraIssueCustomHistory> getJiraIssueCustomHistories() {
 		JiraIssueCustomHistory issueCustomHistory = new JiraIssueCustomHistory();
@@ -122,8 +119,9 @@ public class JiraKPIServiceTest {
 		}
 
 		@Override
-		public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
-				TreeAggregatorDetail treeAggregatorDetail) throws ApplicationException {
+		public KpiElement getKpiData(
+				KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+				throws ApplicationException {
 			return null;
 		}
 
@@ -133,7 +131,8 @@ public class JiraKPIServiceTest {
 		}
 
 		@Override
-		public Object fetchKPIDataFromDb(List leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
+		public Object fetchKPIDataFromDb(
+				List leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 			return null;
 		}
 	}

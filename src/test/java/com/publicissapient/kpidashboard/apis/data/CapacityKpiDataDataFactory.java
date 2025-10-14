@@ -40,8 +40,7 @@ public class CapacityKpiDataDataFactory {
 	private List<CapacityKpiData> capacityKpiDataList;
 	private ObjectMapper mapper = null;
 
-	private CapacityKpiDataDataFactory() {
-	}
+	private CapacityKpiDataDataFactory() {}
 
 	public static CapacityKpiDataDataFactory newInstance(String filePath) {
 		CapacityKpiDataDataFactory factory = new CapacityKpiDataDataFactory();
@@ -57,9 +56,10 @@ public class CapacityKpiDataDataFactory {
 	private void init(String filePath) {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_TEST_CASE_DETAILS : filePath;
-			capacityKpiDataList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<CapacityKpiData>>() {
-					});
+			capacityKpiDataList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<CapacityKpiData>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

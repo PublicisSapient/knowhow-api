@@ -17,25 +17,29 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1330;
 
+import static com.mongodb.client.model.Filters.eq;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.mongodb.client.MongoCollection;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-import static com.mongodb.client.model.Filters.eq;
-
 /**
- *
  * @author shi6
  */
-@ChangeUnit(id = "update_time_kpi_column", order = "13300", author = "shi6", systemVersion = "13.3.0")
+@ChangeUnit(
+		id = "update_time_kpi_column",
+		order = "13300",
+		author = "shi6",
+		systemVersion = "13.3.0")
 public class UpdateKPIColumnTime {
 	public static final String REOPEN_DATE = "Reopen Date";
 	public static final String REOPEN_TIME = "Reopen Time";
@@ -78,17 +82,24 @@ public class UpdateKPIColumnTime {
 		updateMultipleKpisColumns(mongoTemplate, kpiRenameMap);
 	}
 
-	public void updateMultipleKpisColumns(MongoTemplate mongoTemplate, Map<String, Map<String, String>> kpiRenameMap) {
+	public void updateMultipleKpisColumns(
+			MongoTemplate mongoTemplate, Map<String, Map<String, String>> kpiRenameMap) {
 
-		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_column_configs"); // Replace with your
-																								  // collection name
+		MongoCollection<Document> collection =
+				mongoTemplate.getCollection("kpi_column_configs"); // Replace with your
+		// collection name
 		for (Map.Entry<String, Map<String, String>> entry : kpiRenameMap.entrySet()) {
 			String kpiId = entry.getKey();
 			Map<String, String> renameMap = entry.getValue();
 
 			// Filter documents for this KPI with relevant old column names
-			Document filter = new Document("kpiId", kpiId).append(KPI_COLUMN_DETAILS,
-					new Document("$elemMatch", new Document(COLUMN_NAME, new Document("$in", renameMap.keySet()))));
+			Document filter =
+					new Document("kpiId", kpiId)
+							.append(
+									KPI_COLUMN_DETAILS,
+									new Document(
+											"$elemMatch",
+											new Document(COLUMN_NAME, new Document("$in", renameMap.keySet()))));
 
 			for (Document doc : collection.find(filter)) {
 				boolean updated = false;
@@ -103,7 +114,8 @@ public class UpdateKPIColumnTime {
 				}
 
 				if (updated) {
-					collection.updateOne(eq("_id", doc.getObjectId("_id")),
+					collection.updateOne(
+							eq("_id", doc.getObjectId("_id")),
 							new Document("$set", new Document(KPI_COLUMN_DETAILS, kpiColumnDetails)));
 				}
 			}

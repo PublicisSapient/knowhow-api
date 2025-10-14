@@ -29,12 +29,18 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author girpatha
  */
-@ChangeUnit(id = "r_update_combinedKpiSource_in_kpi_master_to_add_argocd", order = "012000", author = "girpatha", systemVersion = "12.0.0")
+@ChangeUnit(
+		id = "r_update_combinedKpiSource_in_kpi_master_to_add_argocd",
+		order = "012000",
+		author = "girpatha",
+		systemVersion = "12.0.0")
 public class UpdateCombinedKPISourceInKPIMasterToAddArgoCD {
 
 	private final MongoTemplate mongoTemplate;
-	private static final String EXISTING_KPI_SOURCE = "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity";
-	private static final String UPDATED_KPI_SOURCE = "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD";
+	private static final String EXISTING_KPI_SOURCE =
+			"Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity";
+	private static final String UPDATED_KPI_SOURCE =
+			"Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD";
 
 	public UpdateCombinedKPISourceInKPIMasterToAddArgoCD(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
@@ -47,7 +53,9 @@ public class UpdateCombinedKPISourceInKPIMasterToAddArgoCD {
 		updateDocument(kpiMaster, UPDATED_KPI_SOURCE, EXISTING_KPI_SOURCE);
 	}
 
-	private void updateDocument(MongoCollection<Document> kpiCategoryMapping, String updatedKPISource,
+	private void updateDocument(
+			MongoCollection<Document> kpiCategoryMapping,
+			String updatedKPISource,
 			String existingKPISource) {
 		// Create the filter
 		Document filter = new Document("combinedKpiSource", updatedKPISource);

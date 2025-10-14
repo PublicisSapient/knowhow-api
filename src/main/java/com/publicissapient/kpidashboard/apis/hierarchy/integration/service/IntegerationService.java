@@ -18,15 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.hierarchy.integration.service;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
-
 import java.util.List;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
+
 public interface IntegerationService {
 
-    void syncOrganizationHierarchy(Set<OrganizationHierarchy> externalList, List<OrganizationHierarchy> allDbNodes);
+	void syncOrganizationHierarchy(
+			Set<OrganizationHierarchy> externalList, List<OrganizationHierarchy> allDbNodes);
 
-    Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes);
+	Set<OrganizationHierarchy> convertHieracyResponseToOrganizationHierachy(
+			HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes);
 }

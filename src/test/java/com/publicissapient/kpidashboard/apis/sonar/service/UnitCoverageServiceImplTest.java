@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -56,6 +54,7 @@ import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.data.SonarHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -66,6 +65,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.generic.ProcessorItem;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.sonar.SonarHistory;
 import com.publicissapient.kpidashboard.common.repository.sonar.SonarHistoryRepository;
 
@@ -79,20 +79,13 @@ public class UnitCoverageServiceImplTest {
 	private static Tool tool2;
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	UnitCoverageServiceimpl ucServiceImpl;
-	@Mock
-	SonarHistoryRepository sonarHistoryRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private SprintDetailsServiceImpl sprintDetailsService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks UnitCoverageServiceimpl ucServiceImpl;
+	@Mock SonarHistoryRepository sonarHistoryRepository;
+	@Mock CacheService cacheService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
+	@Mock private SprintDetailsServiceImpl sprintDetailsService;
 	private List<AccountHierarchyData> ahdList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
@@ -115,8 +108,8 @@ public class UnitCoverageServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		SonarHistoryDataFactory sonarHistoryDataFactory = SonarHistoryDataFactory.newInstance();
@@ -127,19 +120,22 @@ public class UnitCoverageServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfigs -> {
-			projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
-		});
+		projectConfigList.forEach(
+				projectConfigs -> {
+					projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		List<DataCount> dataCountList = new ArrayList<>();
@@ -160,7 +156,8 @@ public class UnitCoverageServiceImplTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setCompleteDate("2025-04-01T13:44:44.421Z");
 		sprintDetails.setSprintID("40345_Scrum Project_6335363749794a18e8a4479b");
-		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(Arrays.asList(sprintDetails));
+		when(sprintDetailsService.getSprintDetailsByIds(anyList()))
+				.thenReturn(Arrays.asList(sprintDetails));
 
 		setToolMap();
 	}
@@ -191,7 +188,12 @@ public class UnitCoverageServiceImplTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), toolGroup);
 	}
 
-	private Tool createTool(String key, String url, String toolType, String username, String password,
+	private Tool createTool(
+			String key,
+			String url,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> collectorItemList) {
 		Tool tool = new Tool();
 		tool.setTool(toolType);
@@ -201,8 +203,7 @@ public class UnitCoverageServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void getQualifierType() {
@@ -213,19 +214,24 @@ public class UnitCoverageServiceImplTest {
 	public void testGetUnitCoverage() throws Exception {
 
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.CODE_VIOLATIONS.name(),
+		maturityRangeMap.put(
+				KPICode.CODE_VIOLATIONS.name(),
 				Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		try {
-			KpiElement kpiElement = ucServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Double unitCoverage = (Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					ucServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Double unitCoverage =
+					(Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", unitCoverage, equalTo("0.0"));
 		} catch (Exception enfe) {
 
@@ -240,20 +246,25 @@ public class UnitCoverageServiceImplTest {
 	@Test
 	public void testGetUnitCoverage2() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.CODE_VIOLATIONS.name(),
+		maturityRangeMap.put(
+				KPICode.CODE_VIOLATIONS.name(),
 				Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 
 		try {
-			KpiElement kpiElement = ucServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Double unitCoverage = (Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					ucServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Double unitCoverage =
+					(Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", unitCoverage, equalTo("67.00"));
 		} catch (Exception enfe) {
 
@@ -268,19 +279,24 @@ public class UnitCoverageServiceImplTest {
 	@Test
 	public void testGetUnitCoverage3() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.CODE_VIOLATIONS.name(),
+		maturityRangeMap.put(
+				KPICode.CODE_VIOLATIONS.name(),
 				Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		try {
-			KpiElement kpiElement = ucServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Double unitCoverage = (Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					ucServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Double unitCoverage =
+					(Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", unitCoverage, equalTo("159.00"));
 		} catch (Exception enfe) {
 
@@ -295,19 +311,24 @@ public class UnitCoverageServiceImplTest {
 	@Test
 	public void testGetUnitCoverage4() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.CODE_VIOLATIONS.name(),
+		maturityRangeMap.put(
+				KPICode.CODE_VIOLATIONS.name(),
 				Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		try {
-			KpiElement kpiElement = ucServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Double unitCoverage = (Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					ucServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Double unitCoverage =
+					(Double) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Tech Debt :", unitCoverage, equalTo("55.00"));
 		} catch (Exception enfe) {
 
@@ -322,23 +343,31 @@ public class UnitCoverageServiceImplTest {
 	@Test
 	public void testGetUnitCoverage5() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.CODE_VIOLATIONS.name(),
+		maturityRangeMap.put(
+				KPICode.CODE_VIOLATIONS.name(),
 				Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		try {
-			KpiElement kpiElement = ucServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Tech Debt :", ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getData(), equalTo("37.00"));
+			KpiElement kpiElement =
+					ucServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Tech Debt :",
+					((List<DataCount>) kpiElement.getTrendValueList()).get(0).getData(),
+					equalTo("37.00"));
 		} catch (Exception enfe) {
 
 		}
@@ -347,20 +376,25 @@ public class UnitCoverageServiceImplTest {
 	@Test
 	public void testGetUnitCoverageDateWise() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		kpiRequest.setLabel("PORT");
 		when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(KPICode.CODE_VIOLATIONS.name(),
+		maturityRangeMap.put(
+				KPICode.CODE_VIOLATIONS.name(),
 				Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		try {
-			KpiElement kpiElement = ucServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertNull("Tech Debt :", ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getData());
+			KpiElement kpiElement =
+					ucServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertNull(
+					"Tech Debt :", ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getData());
 		} catch (Exception enfe) {
 
 		}

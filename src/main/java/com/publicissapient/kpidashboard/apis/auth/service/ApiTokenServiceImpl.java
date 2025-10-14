@@ -52,12 +52,9 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 	}
 
 	/**
-	 * @param argA
-	 *          firstDate
-	 * @param argB
-	 *          secondDate
-	 * @return 0 = equal, -1 = firstDate is before secondDate, 1 = firstDate is
-	 *         after secondDate
+	 * @param argA firstDate
+	 * @param argB secondDate
+	 * @return 0 = equal, -1 = firstDate is before secondDate, 1 = firstDate is after secondDate
 	 */
 	private static int compareDates(Date argA, Date argB) {
 
@@ -81,7 +78,8 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 	}
 
 	@Override
-	public String getApiToken(String apiUser, Long expirationDt) throws EncryptionException, ApplicationException {
+	public String getApiToken(String apiUser, Long expirationDt)
+			throws EncryptionException, ApplicationException {
 		ApiToken apiToken = apiTokenRepository.findByApiUserAndExpirationDt(apiUser, expirationDt);
 		String apiKey = "";
 		if (apiToken == null) {
@@ -91,14 +89,18 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 		} else {
 			SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.US);
 			throw new ApplicationException(
-					"Token already exists for " + apiUser + " expiring " + sdf.format(new Date(apiToken.getExpirationDt())),
+					"Token already exists for "
+							+ apiUser
+							+ " expiring "
+							+ sdf.format(new Date(apiToken.getExpirationDt())),
 					ApplicationException.DUPLICATE_DATA);
 		}
 		return apiKey;
 	}
 
 	@Override
-	public org.springframework.security.core.Authentication authenticate(String username, String password) {
+	public org.springframework.security.core.Authentication authenticate(
+			String username, String password) {
 		List<ApiToken> apiTokens = apiTokenRepository.findByApiUser(username);
 		for (ApiToken apiToken : apiTokens) {
 			if (isUserExists(username, apiToken) && apiToken.checkApiKey(password)) {
@@ -110,12 +112,14 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 					Collection<String> roles = new ArrayList<>();
 					roles.add("ProjectViewer");
 
-					return new UsernamePasswordAuthenticationToken(username, password, createAuthorities(roles));
+					return new UsernamePasswordAuthenticationToken(
+							username, password, createAuthorities(roles));
 				}
 			}
 		}
 
-		throw new BadCredentialsException("Login Failed: The username or password entered is incorrect");
+		throw new BadCredentialsException(
+				"Login Failed: The username or password entered is incorrect");
 	}
 
 	/**

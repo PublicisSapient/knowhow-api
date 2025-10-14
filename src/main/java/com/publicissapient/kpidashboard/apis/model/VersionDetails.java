@@ -37,8 +37,7 @@ public class VersionDetails {
 	/**
 	 * Sets version details map.
 	 *
-	 * @param versionDetailsMap
-	 *          the version details map
+	 * @param versionDetailsMap the version details map
 	 */
 	public void setVersionDetailsMap(Map<String, String> versionDetailsMap) {
 		this.versionDetailsMap = versionDetailsMap;

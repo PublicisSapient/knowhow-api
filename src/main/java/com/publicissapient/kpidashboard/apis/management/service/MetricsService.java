@@ -17,17 +17,16 @@
 
 package com.publicissapient.kpidashboard.apis.management.service;
 
-import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
-
 import java.util.List;
+
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
 
 public interface MetricsService {
 
 	/**
 	 * Retrieves metrics for a specific API endpoint.
 	 *
-	 * @param apiPath
-	 *            the API path
+	 * @param apiPath the API path
 	 * @return {@link ApiDetailDto} containing metrics details for the API
 	 */
 	ApiDetailDto getApiMetrics(String apiPath);
@@ -35,8 +34,7 @@ public interface MetricsService {
 	/**
 	 * Retrieves metrics for a list of API endpoints.
 	 *
-	 * @param apiPaths
-	 *            list of API paths
+	 * @param apiPaths list of API paths
 	 * @return list of {@link ApiDetailDto} containing metrics details for each API
 	 */
 	List<ApiDetailDto> getApisMetrics(List<String> apiPaths);
@@ -44,10 +42,8 @@ public interface MetricsService {
 	/**
 	 * Determines if an API is healthy based on its error rate.
 	 *
-	 * @param apiPath
-	 *            the API path
+	 * @param apiPath the API path
 	 * @return true if the API is healthy, false otherwise
 	 */
 	boolean isApiHealthy(String apiPath);
-
 }

@@ -28,7 +28,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.springframework.security.access.AccessDeniedException;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +51,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -85,44 +86,31 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExec
 @RunWith(MockitoJUnitRunner.class)
 public class FieldMappingServiceImplTest {
 
-	@InjectMocks
-	private FieldMappingServiceImpl fieldMappingService;
+	@InjectMocks private FieldMappingServiceImpl fieldMappingService;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
-	@Mock
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Mock private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Mock
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Mock private ProjectBasicConfigRepository projectBasicConfigRepository;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
 
-	@Mock
-	private TokenAuthenticationService tokenAuthenticationService;
+	@Mock private TokenAuthenticationService tokenAuthenticationService;
 
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@Mock
-	private MongoTemplate operations;
+	@Mock private MongoTemplate operations;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
-	@Mock
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Mock private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 	FieldMappingDataFactory fieldMappingDataFactory;
 	private FieldMapping scrumFieldMapping;
 	private FieldMapping scrumFieldMapping2;
@@ -131,13 +119,16 @@ public class FieldMappingServiceImplTest {
 
 	@Before
 	public void setUp() {
-		fieldMappingDataFactory = FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
+		fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		scrumFieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		List<ConfigurationHistoryChangeLog> configurationHistoryChangeLogList = new ArrayList<>();
-		configurationHistoryChangeLogList
-				.add(new ConfigurationHistoryChangeLog("", "customField", "currentUser", LocalDateTime.now().toString()));
+		configurationHistoryChangeLogList.add(
+				new ConfigurationHistoryChangeLog(
+						"", "customField", "currentUser", LocalDateTime.now().toString()));
 		scrumFieldMapping.setHistorysprintName(configurationHistoryChangeLogList);
-		ConfigurationHistoryChangeLog configurationHistoryChangeLog = new ConfigurationHistoryChangeLog();
+		ConfigurationHistoryChangeLog configurationHistoryChangeLog =
+				new ConfigurationHistoryChangeLog();
 		configurationHistoryChangeLog.setChangedTo("Customfield");
 		configurationHistoryChangeLog.setChangedFrom("");
 		configurationHistoryChangeLog.setChangedBy("currentUser");
@@ -146,22 +137,26 @@ public class FieldMappingServiceImplTest {
 		scrumFieldMapping2 = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(scrumFieldMapping.getBasicProjectConfigId(), scrumFieldMapping);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		FieldMappingStructureDataFactory fieldMappingStructureDataFactory = FieldMappingStructureDataFactory.newInstance();
+		FieldMappingStructureDataFactory fieldMappingStructureDataFactory =
+				FieldMappingStructureDataFactory.newInstance();
 		fieldMappingStructureList = fieldMappingStructureDataFactory.getFieldMappingStructureList();
 		when(configHelperService.loadFieldMappingStructure()).thenReturn(fieldMappingStructureList);
-		when(kpiHelperService.getFieldMappingStructure(anyList(), anyList())).thenReturn(fieldMappingStructureList);
+		when(kpiHelperService.getFieldMappingStructure(anyList(), anyList()))
+				.thenReturn(fieldMappingStructureList);
 	}
 
 	@Test
 	public void getFieldMappingSuccess() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(fieldMapping.getBasicProjectConfigId());
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				fieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(fieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, fieldMapping.getBasicProjectConfigId());
 
 		Set<String> configIds = new HashSet<>();
 		configIds.add(fieldMapping.getBasicProjectConfigId().toString());
-		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class)))
+				.thenReturn(fieldMapping);
 		when(tokenAuthenticationService.getUserProjects()).thenReturn(configIds);
 
 		FieldMapping result = fieldMappingService.getFieldMapping(projectBasicConfigOpt.get());
@@ -180,11 +175,13 @@ public class FieldMappingServiceImplTest {
 	@Test
 	public void addFieldMappingSuccess() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(null);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class)))
+				.thenReturn(null);
 		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class))).thenReturn(fieldMapping);
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -193,8 +190,11 @@ public class FieldMappingServiceImplTest {
 	@Test
 	public void addFieldMappingSuccess2() {
 		mockRepositoriesForScrum();
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618",
-				fieldMappingDataFactory.getFieldMappings().get(1), new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618",
+						fieldMappingDataFactory.getFieldMappings().get(1),
+						new ObjectId("6335363749794a18e8a4479b"));
 		assertNotNull(result);
 	}
 
@@ -202,8 +202,9 @@ public class FieldMappingServiceImplTest {
 	public void addFieldMappingSuccess_History() {
 		mockRepositoriesForScrum();
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(1);
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping, new ObjectId("6335363749794a18e8a4479b"));
 		assertNotNull(result);
 	}
 
@@ -214,8 +215,9 @@ public class FieldMappingServiceImplTest {
 
 		FieldMapping fieldMapping1 = scrumFieldMapping;
 		fieldMapping1.setEpicJobSize("8");
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -227,8 +229,9 @@ public class FieldMappingServiceImplTest {
 
 		FieldMapping fieldMapping1 = scrumFieldMapping;
 		fieldMapping1.setRootCause(null);
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -239,10 +242,11 @@ public class FieldMappingServiceImplTest {
 		mockRepositoriesForScrum();
 
 		FieldMapping fieldMapping1 = scrumFieldMapping;
-		fieldMapping1.setJiraIssueTypeNames(new String[]{"Story", "Feature"});
+		fieldMapping1.setJiraIssueTypeNames(new String[] {"Story", "Feature"});
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -256,8 +260,9 @@ public class FieldMappingServiceImplTest {
 		fieldMapping1.setJiraTechDebtIdentification(CommonConstant.CUSTOM_FIELD);
 		fieldMapping1.setJiraTechDebtValue(Arrays.asList("Story", "Feature"));
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -271,8 +276,9 @@ public class FieldMappingServiceImplTest {
 		fieldMapping1.setJiraTechDebtIdentification(CommonConstant.CUSTOM_FIELD);
 		fieldMapping1.setJiraTechDebtValue(Arrays.asList("Feature"));
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -286,8 +292,9 @@ public class FieldMappingServiceImplTest {
 		fieldMapping1.setJiraTechDebtIdentification(CommonConstant.CUSTOM_FIELD);
 		fieldMapping1.setJiraTechDebtValue(Arrays.asList("Story"));
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -301,8 +308,9 @@ public class FieldMappingServiceImplTest {
 		fieldMapping1.setJiraTechDebtIdentification(CommonConstant.CUSTOM_FIELD);
 		fieldMapping1.setJiraTechDebtValue(Arrays.asList("Feature"));
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -314,8 +322,9 @@ public class FieldMappingServiceImplTest {
 
 		FieldMapping fieldMapping1 = scrumFieldMapping;
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping1,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping1, new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -325,26 +334,32 @@ public class FieldMappingServiceImplTest {
 		FieldMapping fieldMapping = scrumFieldMapping;
 		mockRepositoriesForScrum();
 
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", fieldMapping,
-				new ObjectId("6335363749794a18e8a4479b"));
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618", fieldMapping, new ObjectId("6335363749794a18e8a4479b"));
 		assertNotNull(result);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addFieldMappingValueNull() {
-		fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", null, new ObjectId("6335363749794a18e8a4479b"));
+		fieldMappingService.addFieldMapping(
+				"5d0533b0ff45ea9c730bb618", null, new ObjectId("6335363749794a18e8a4479b"));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addFieldMappingInvalidId() {
-		fieldMappingService.addFieldMapping("5d0533b0ff40bb618", null, new ObjectId("6335363749794a18e8a4479b"));
+		fieldMappingService.addFieldMapping(
+				"5d0533b0ff40bb618", null, new ObjectId("6335363749794a18e8a4479b"));
 	}
 
 	@Test
 	public void deleteByBasicProjectConfigId() {
-		doNothing().when(fieldMappingRepository).deleteByBasicProjectConfigId(Mockito.any(ObjectId.class));
+		doNothing()
+				.when(fieldMappingRepository)
+				.deleteByBasicProjectConfigId(Mockito.any(ObjectId.class));
 		fieldMappingService.deleteByBasicProjectConfigId(new ObjectId("601a75729638120001b90891"));
-		verify(fieldMappingRepository, times(1)).deleteByBasicProjectConfigId(new ObjectId("601a75729638120001b90891"));
+		verify(fieldMappingRepository, times(1))
+				.deleteByBasicProjectConfigId(new ObjectId("601a75729638120001b90891"));
 	}
 
 	@Test
@@ -357,46 +372,67 @@ public class FieldMappingServiceImplTest {
 	}
 
 	@Test
-	public void getKpiSpecificFieldsAndNullHistory() throws NoSuchFieldException, IllegalAccessException {
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping.getBasicProjectConfigId());
+	public void getKpiSpecificFieldsAndNullHistory()
+			throws NoSuchFieldException, IllegalAccessException {
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId());
 		Set<String> configIds = new HashSet<>();
 		configIds.add(scrumFieldMapping.getBasicProjectConfigId().toString());
-		List<FieldMappingResponse> fieldMappingResponses = fieldMappingService.getKpiSpecificFieldsAndHistory(
-				KPICode.getKPI("kpi36"), createProjectToolConfigOpt(scrumFieldMapping.getBasicProjectConfigId()).get(),
-				new FieldMappingMeta());
+		List<FieldMappingResponse> fieldMappingResponses =
+				fieldMappingService.getKpiSpecificFieldsAndHistory(
+						KPICode.getKPI("kpi36"),
+						createProjectToolConfigOpt(scrumFieldMapping.getBasicProjectConfigId()).get(),
+						new FieldMappingMeta());
 		assertNotNull(fieldMappingResponses);
-		Map<String, Object> collect = fieldMappingResponses.stream()
-				.filter(response -> Objects.nonNull(response.getOriginalValue()))
-				.collect(Collectors.toMap(FieldMappingResponse::getFieldName, FieldMappingResponse::getOriginalValue));
-		List<String> resolutionTypeForRejectionRCAKPI36 = (List<String>) collect.get("resolutionTypeForRejectionRCAKPI36");
-		assertEquals(scrumFieldMapping.getResolutionTypeForRejectionRCAKPI36(), resolutionTypeForRejectionRCAKPI36);
+		Map<String, Object> collect =
+				fieldMappingResponses.stream()
+						.filter(response -> Objects.nonNull(response.getOriginalValue()))
+						.collect(
+								Collectors.toMap(
+										FieldMappingResponse::getFieldName, FieldMappingResponse::getOriginalValue));
+		List<String> resolutionTypeForRejectionRCAKPI36 =
+				(List<String>) collect.get("resolutionTypeForRejectionRCAKPI36");
+		assertEquals(
+				scrumFieldMapping.getResolutionTypeForRejectionRCAKPI36(),
+				resolutionTypeForRejectionRCAKPI36);
 	}
 
 	@Test
-	public void getKpiSpecificFieldsAndWithHistory() throws NoSuchFieldException, IllegalAccessException {
+	public void getKpiSpecificFieldsAndWithHistory()
+			throws NoSuchFieldException, IllegalAccessException {
 		ConfigurationHistoryChangeLog log = new ConfigurationHistoryChangeLog();
 		log.setUpdatedOn(LocalDateTime.now().toString());
 		log.setChangedTo(scrumFieldMapping2.getResolutionTypeForRejectionRCAKPI36());
 		log.setChangedFrom(Arrays.asList("1", "2"));
 		log.setChangedBy("User");
 		scrumFieldMapping2.setHistoryresolutionTypeForRejectionRCAKPI36(Collections.singletonList(log));
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping2.getBasicProjectConfigId());
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping2.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping2.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping2.getBasicProjectConfigId());
 		Set<String> configIds = new HashSet<>();
 		configIds.add(scrumFieldMapping2.getBasicProjectConfigId().toString());
-		List<FieldMappingResponse> fieldMappingResponses = fieldMappingService.getKpiSpecificFieldsAndHistory(
-				KPICode.getKPI("kpi36"), createProjectToolConfigOpt(scrumFieldMapping.getBasicProjectConfigId()).get(),
-				new FieldMappingMeta());
+		List<FieldMappingResponse> fieldMappingResponses =
+				fieldMappingService.getKpiSpecificFieldsAndHistory(
+						KPICode.getKPI("kpi36"),
+						createProjectToolConfigOpt(scrumFieldMapping.getBasicProjectConfigId()).get(),
+						new FieldMappingMeta());
 		assertNotNull(fieldMappingResponses);
-		Map<String, Object> collect = fieldMappingResponses.stream()
-				.filter(response -> Objects.nonNull(response.getOriginalValue()) && Objects.nonNull(response.getHistory()))
-				.collect(Collectors.toMap(FieldMappingResponse::getFieldName, FieldMappingResponse::getHistory));
-		List<ConfigurationHistoryChangeLog> resolutionTypeForRejectionRCAKPI36 = (List<ConfigurationHistoryChangeLog>) collect
-				.get("resolutionTypeForRejectionRCAKPI36");
-		assertEquals(scrumFieldMapping2.getResolutionTypeForRejectionRCAKPI36(),
+		Map<String, Object> collect =
+				fieldMappingResponses.stream()
+						.filter(
+								response ->
+										Objects.nonNull(response.getOriginalValue())
+												&& Objects.nonNull(response.getHistory()))
+						.collect(
+								Collectors.toMap(
+										FieldMappingResponse::getFieldName, FieldMappingResponse::getHistory));
+		List<ConfigurationHistoryChangeLog> resolutionTypeForRejectionRCAKPI36 =
+				(List<ConfigurationHistoryChangeLog>) collect.get("resolutionTypeForRejectionRCAKPI36");
+		assertEquals(
+				scrumFieldMapping2.getResolutionTypeForRejectionRCAKPI36(),
 				resolutionTypeForRejectionRCAKPI36.get(0).getChangedTo());
 	}
 
@@ -410,17 +446,20 @@ public class FieldMappingServiceImplTest {
 		fieldMappingStructure.setNestedFields(Arrays.asList(baseFieldMappingStructure));
 		fieldMappingStructure.setProcessorCommon(true);
 		fieldMappingStructure.setNodeSpecific(false);
-		when(kpiHelperService.getFieldMappingStructure(anyList(), anyList())).thenReturn(fieldMappingStructureList);
+		when(kpiHelperService.getFieldMappingStructure(anyList(), anyList()))
+				.thenReturn(fieldMappingStructureList);
 
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId());
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
+		mapOfProjectDetails.put(
+				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
 		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		FieldMappingResponse response = new FieldMappingResponse();
 		response.setFieldName("resolutionTypeForRejectionRCAKPI36");
 		response.setOriginalValue(Arrays.asList("1", "2"));
@@ -428,20 +467,23 @@ public class FieldMappingServiceImplTest {
 		FieldMappingMeta fieldMappingMeta = new FieldMappingMeta();
 		fieldMappingMeta.setFieldMappingRequests(Arrays.asList(response));
 
-		fieldMappingService.updateSpecificFieldsAndHistory(KPICode.getKPI("kpi36"), projectToolConfig, fieldMappingMeta);
+		fieldMappingService.updateSpecificFieldsAndHistory(
+				KPICode.getKPI("kpi36"), projectToolConfig, fieldMappingMeta);
 	}
 
 	@Test
 	public void updateKpiFieldRemoveTraceLog() throws NoSuchFieldException, IllegalAccessException {
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId());
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
+		mapOfProjectDetails.put(
+				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
 		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		FieldMappingResponse response = new FieldMappingResponse();
 		response.setFieldName("resolutionTypeForRejectionRCAKPI36");
 		response.setOriginalValue(Arrays.asList("1", "2"));
@@ -450,18 +492,21 @@ public class FieldMappingServiceImplTest {
 		FieldMappingMeta fieldMappingMeta = new FieldMappingMeta();
 		fieldMappingMeta.setFieldMappingRequests(Arrays.asList(response));
 
-		fieldMappingService.updateSpecificFieldsAndHistory(KPICode.getKPI("kpi36"), projectToolConfig, fieldMappingMeta);
+		fieldMappingService.updateSpecificFieldsAndHistory(
+				KPICode.getKPI("kpi36"), projectToolConfig, fieldMappingMeta);
 	}
 
 	@Test
 	public void updateKpiCustomField() throws NoSuchFieldException, IllegalAccessException {
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId());
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
+		mapOfProjectDetails.put(
+				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		Set<String> configIds = new HashSet<>();
 		configIds.add(scrumFieldMapping.getBasicProjectConfigId().toString());
 
@@ -481,21 +526,24 @@ public class FieldMappingServiceImplTest {
 		FieldMappingMeta fieldMappingMeta = new FieldMappingMeta();
 		fieldMappingMeta.setFieldMappingRequests(Arrays.asList(response, response2));
 
-		fieldMappingService.updateSpecificFieldsAndHistory(KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
+		fieldMappingService.updateSpecificFieldsAndHistory(
+				KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
 	}
 
 	@Test
 	public void updateKpiFieldAzure() throws NoSuchFieldException, IllegalAccessException {
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId());
 		projectBasicConfigOpt.get();
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
+		mapOfProjectDetails.put(
+				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
 		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		projectToolConfig.setToolName(ProcessorConstants.AZURE);
 		FieldMappingResponse response = new FieldMappingResponse();
 		response.setFieldName("jiraIterationCompletionStatusCustomField");
@@ -505,21 +553,25 @@ public class FieldMappingServiceImplTest {
 		FieldMappingMeta fieldMappingMeta = new FieldMappingMeta();
 		fieldMappingMeta.setFieldMappingRequests(Arrays.asList(response));
 
-		fieldMappingService.updateSpecificFieldsAndHistory(KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
+		fieldMappingService.updateSpecificFieldsAndHistory(
+				KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
 	}
 
 	@Test
-	public void updateKpiFieldAzure_NoTemplateCode() throws NoSuchFieldException, IllegalAccessException {
+	public void updateKpiFieldAzure_NoTemplateCode()
+			throws NoSuchFieldException, IllegalAccessException {
 
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(false,
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(false, scrumFieldMapping.getBasicProjectConfigId());
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
+		mapOfProjectDetails.put(
+				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
 		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		projectToolConfig.setToolName(ProcessorConstants.AZURE);
 		projectToolConfig.setMetadataTemplateCode(null);
 		FieldMappingResponse response = new FieldMappingResponse();
@@ -530,7 +582,8 @@ public class FieldMappingServiceImplTest {
 		FieldMappingMeta fieldMappingMeta = new FieldMappingMeta();
 		fieldMappingMeta.setFieldMappingRequests(Arrays.asList(response));
 
-		fieldMappingService.updateSpecificFieldsAndHistory(KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
+		fieldMappingService.updateSpecificFieldsAndHistory(
+				KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
 	}
 
 	@Test
@@ -539,16 +592,18 @@ public class FieldMappingServiceImplTest {
 		fieldMappingStructure.setFieldName("jiraIterationCompletionStatusCustomField");
 		fieldMappingStructure.setProcessorCommon(true);
 
-		Optional<ProjectBasicConfig> projectBasicConfigOpt = createProjectBasicConfig(true,
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectBasicConfig> projectBasicConfigOpt =
+				createProjectBasicConfig(true, scrumFieldMapping.getBasicProjectConfigId());
 		projectBasicConfigOpt.get();
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
-		mapOfProjectDetails.put(scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
+		mapOfProjectDetails.put(
+				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
 		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
-		ProjectToolConfig projectToolConfig = createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
+		ProjectToolConfig projectToolConfig =
+				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		projectToolConfig.setToolName(ProcessorConstants.AZURE);
 		FieldMappingResponse response = new FieldMappingResponse();
 		response.setFieldName("jiraIterationCompletionStatusCustomField");
@@ -558,32 +613,41 @@ public class FieldMappingServiceImplTest {
 		FieldMappingMeta fieldMappingMeta = new FieldMappingMeta();
 		fieldMappingMeta.setFieldMappingRequests(Arrays.asList(response));
 
-		fieldMappingService.updateSpecificFieldsAndHistory(KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
+		fieldMappingService.updateSpecificFieldsAndHistory(
+				KPICode.getKPI("kpi0"), projectToolConfig, fieldMappingMeta);
 	}
 
 	@Test
 	public void addFieldMappingForAzure() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping scrumFieldMapping2 = fieldMappingDataFactory.getFieldMappings().get(0);
 		scrumFieldMapping2.setJiraIterationCompletionStatusCustomField(Arrays.asList("1", "2", "3"));
-		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(scrumFieldMapping);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class)))
+				.thenReturn(scrumFieldMapping);
 		doReturn(createProjectBasicConfig(false, scrumFieldMapping2.getBasicProjectConfigId()))
-				.when(projectBasicConfigRepository).findById(Mockito.any(ObjectId.class));
-		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class))).thenReturn(scrumFieldMapping);
+				.when(projectBasicConfigRepository)
+				.findById(Mockito.any(ObjectId.class));
+		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class)))
+				.thenReturn(scrumFieldMapping);
 
 		List<ProcessorExecutionTraceLog> tracelogList = new ArrayList<>();
 		tracelogList.add(createProcessorExecutionTraceLog());
 
-		doReturn(tracelogList).when(processorExecutionTraceLogRepository)
+		doReturn(tracelogList)
+				.when(processorExecutionTraceLogRepository)
 				.findByProcessorNameAndBasicProjectConfigIdIn(anyString(), anyList());
 
-		Optional<ProjectToolConfig> projectToolConfigOpt = createProjectToolConfigOpt(
-				scrumFieldMapping.getBasicProjectConfigId());
+		Optional<ProjectToolConfig> projectToolConfigOpt =
+				createProjectToolConfigOpt(scrumFieldMapping.getBasicProjectConfigId());
 		projectToolConfigOpt.get().setToolName(ProcessorConstants.AZURE);
-		when(projectToolConfigRepository.findById(any(ObjectId.class))).thenReturn(projectToolConfigOpt);
-		FieldMapping result = fieldMappingService.addFieldMapping("5d0533b0ff45ea9c730bb618", scrumFieldMapping2,
-				new ObjectId("6335363749794a18e8a4479b"));
+		when(projectToolConfigRepository.findById(any(ObjectId.class)))
+				.thenReturn(projectToolConfigOpt);
+		FieldMapping result =
+				fieldMappingService.addFieldMapping(
+						"5d0533b0ff45ea9c730bb618",
+						scrumFieldMapping2,
+						new ObjectId("6335363749794a18e8a4479b"));
 
 		assertNotNull(result);
 	}
@@ -605,8 +669,8 @@ public class FieldMappingServiceImplTest {
 		response3.setOriginalValue("bc");
 		response3.setPreviousValue("");
 
-		fieldMappingService.convertToFieldMappingAndCheckIsFieldPresent(Arrays.asList(response, response2, response3),
-				new FieldMapping());
+		fieldMappingService.convertToFieldMappingAndCheckIsFieldPresent(
+				Arrays.asList(response, response2, response3), new FieldMapping());
 	}
 
 	private void mockRepositoriesForScrum() {
@@ -623,12 +687,14 @@ public class FieldMappingServiceImplTest {
 
 	private void mockRepositoriesForKanban() {
 		FieldMapping fieldMapping = scrumFieldMapping;
-		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class))).thenReturn(fieldMapping);
+		when(fieldMappingRepository.findByBasicProjectConfigId(Mockito.any(ObjectId.class)))
+				.thenReturn(fieldMapping);
 		when(projectBasicConfigRepository.findById(Mockito.any(ObjectId.class)))
 				.thenReturn(createProjectBasicConfig(true, fieldMapping.getBasicProjectConfigId()));
 		when(fieldMappingRepository.save(Mockito.any(FieldMapping.class))).thenReturn(fieldMapping);
-		when(processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(Mockito.any(String.class),
-				any())).thenReturn(Collections.emptyList());
+		when(processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
+						Mockito.any(String.class), any()))
+				.thenReturn(Collections.emptyList());
 	}
 
 	private ProjectToolConfig createProjectToolConfig(ObjectId basicProjectConfigId) {
@@ -643,7 +709,8 @@ public class FieldMappingServiceImplTest {
 		return projectToolConfig;
 	}
 
-	private Optional<ProjectBasicConfig> createProjectBasicConfig(boolean isKanban, ObjectId projectId) {
+	private Optional<ProjectBasicConfig> createProjectBasicConfig(
+			boolean isKanban, ObjectId projectId) {
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(projectId);
 		projectBasicConfig.setIsKanban(isKanban);

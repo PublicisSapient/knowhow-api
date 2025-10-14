@@ -31,45 +31,39 @@ import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardCo
 public interface UserBoardConfigService {
 
 	/**
-	 * Retrieves the board configuration based on the specified configuration level
-	 * and list of requested projects.
+	 * Retrieves the board configuration based on the specified configuration level and list of
+	 * requested projects.
 	 *
-	 * @param configLevel
-	 *          {@link ConfigLevel}
-	 * @param listOfRequestedProj
-	 *          the list of requested projects
+	 * @param configLevel {@link ConfigLevel}
+	 * @param listOfRequestedProj the list of requested projects
 	 * @return the board configuration DTO
 	 */
-	UserBoardConfigDTO getBoardConfig(ConfigLevel configLevel, ProjectListRequested listOfRequestedProj);
+	UserBoardConfigDTO getBoardConfig(
+			ConfigLevel configLevel, ProjectListRequested listOfRequestedProj);
 
 	/**
-	 * Saves the board configuration based on the specified configuration level and
-	 * project configuration ID.
+	 * Saves the board configuration based on the specified configuration level and project
+	 * configuration ID.
 	 *
-	 * @param userBoardConfigDTO
-	 *          the user board configuration DTO
-	 * @param configLevel
-	 *          {@link ConfigLevel}
-	 * @param basicProjectConfigId
-	 *          the ID of the basic project configuration
+	 * @param userBoardConfigDTO the user board configuration DTO
+	 * @param configLevel {@link ConfigLevel}
+	 * @param basicProjectConfigId the ID of the basic project configuration
 	 * @return the service response indicating success or failure
 	 */
-	ServiceResponse saveBoardConfig(UserBoardConfigDTO userBoardConfigDTO, ConfigLevel configLevel,
-			String basicProjectConfigId);
+	ServiceResponse saveBoardConfig(
+			UserBoardConfigDTO userBoardConfigDTO, ConfigLevel configLevel, String basicProjectConfigId);
 
 	/**
 	 * delete UserBoard config by userName
 	 *
-	 * @param userName
-	 *          userName
+	 * @param userName userName
 	 */
 	void deleteUser(String userName);
 
 	/**
 	 * Deletes the project board config.
 	 *
-	 * @param basicProjectConfigId
-	 *          basicProjectConfigId
+	 * @param basicProjectConfigId basicProjectConfigId
 	 */
 	void deleteProjectBoardConfig(String basicProjectConfigId);
 }

@@ -64,16 +64,11 @@ public class TestExecutionTimeServiceImplTest {
 	private static final String TESTCASEKEY = "testCaseData";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	JiraIssueRepository featureRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	TestExecutionTimeServiceImpl testExecutionTimeServiceImpl;
-	@Mock
-	TestCaseDetailsRepository testCaseDetailsRepository;
+	@Mock JiraIssueRepository featureRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks TestExecutionTimeServiceImpl testExecutionTimeServiceImpl;
+	@Mock TestCaseDetailsRepository testCaseDetailsRepository;
 	List<TestCaseDetails> totalTestCaseList = new ArrayList<>();
 	List<TestCaseDetails> automatedTestCaseList = new ArrayList<>();
 	List<TestCaseDetails> manualTestCaseList = new ArrayList<>();
@@ -93,8 +88,8 @@ public class TestExecutionTimeServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 		kpiWiseAggregation.put("defectInjectionRate", "average");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		totalTestCaseList = TestCaseDetailsDataFactory.newInstance().getTestCaseDetailsList();
 		automatedTestCaseList = TestCaseDetailsDataFactory.newInstance().findAutomatedTestCases();
@@ -102,9 +97,10 @@ public class TestExecutionTimeServiceImplTest {
 		manualTestCaseList = TestCaseDetailsDataFactory.newInstance().findManualTestCases();
 		issues = new ArrayList<>(JiraIssueDataFactory.newInstance().getStories());
 		setMockFieldMapping();
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -113,9 +109,10 @@ public class TestExecutionTimeServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 	}
 
@@ -129,17 +126,23 @@ public class TestExecutionTimeServiceImplTest {
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
-		List<SprintWiseStory> sprintWiseStories = JiraIssueDataFactory.newInstance().getSprintWiseStories();
-		sprintWiseStories
-				.forEach(sprintWiseStory -> sprintWiseStory.setBasicProjectConfigId("6335363749794a18e8a4479b"));
-		when(featureRepository.findIssuesGroupBySprint(any(), any(), any(), any())).thenReturn(sprintWiseStories);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
+		List<SprintWiseStory> sprintWiseStories =
+				JiraIssueDataFactory.newInstance().getSprintWiseStories();
+		sprintWiseStories.forEach(
+				sprintWiseStory -> sprintWiseStory.setBasicProjectConfigId("6335363749794a18e8a4479b"));
+		when(featureRepository.findIssuesGroupBySprint(any(), any(), any(), any()))
+				.thenReturn(sprintWiseStories);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap = new HashMap<>();
 		Map<String, List<ProjectToolConfig>> projectTool = new HashMap<>();
@@ -158,16 +161,19 @@ public class TestExecutionTimeServiceImplTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), projectTool);
 		when(cacheService.cacheProjectToolConfigMapData()).thenReturn(toolMap);
 
-		Map<String, Object> defectDataListMap = testExecutionTimeServiceImpl.fetchKPIDataFromDb(leafNodeList, null,
-				null, kpiRequest);
-		assertThat("Total Test Case value :", ((List<JiraIssue>) (defectDataListMap.get(TESTCASEKEY))).size(),
+		Map<String, Object> defectDataListMap =
+				testExecutionTimeServiceImpl.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
+		assertThat(
+				"Total Test Case value :",
+				((List<JiraIssue>) (defectDataListMap.get(TESTCASEKEY))).size(),
 				equalTo(0));
 	}
 
 	@Test
 	public void getKpiDataTest() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
@@ -176,16 +182,25 @@ public class TestExecutionTimeServiceImplTest {
 				.thenReturn(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name());
 
 		testFetchKPIDataFromDbData();
-		when(testCaseDetailsRepository.findTestDetails(anyMap(), anyMap(), anyString())).thenReturn(totalTestCaseList);
+		when(testCaseDetailsRepository.findTestDetails(anyMap(), anyMap(), anyString()))
+				.thenReturn(totalTestCaseList);
 		try {
-			kpiElement = testExecutionTimeServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Test Execution Data Trend Value :",
+			kpiElement =
+					testExecutionTimeServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Test Execution Data Trend Value :",
 					((ArrayList) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
 					equalTo(5));
-			assertThat("Test Execution Time Hower Value :",
-					((DataCount) ((ArrayList) ((DataCount) ((ArrayList) kpiElement.getTrendValueList()).get(0))
-							.getValue()).get(0)).getHoverValue().size(),
+			assertThat(
+					"Test Execution Time Hower Value :",
+					((DataCount)
+									((ArrayList)
+													((DataCount) ((ArrayList) kpiElement.getTrendValueList()).get(0))
+															.getValue())
+											.get(0))
+							.getHoverValue()
+							.size(),
 					equalTo(3));
 		} catch (ApplicationException ignored) {
 			ignored.printStackTrace();

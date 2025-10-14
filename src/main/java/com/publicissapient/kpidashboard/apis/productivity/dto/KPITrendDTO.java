@@ -26,8 +26,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KPITrendDTO {
-    private double trendValue;
+	private double trendValue;
 
-    private String kpiName;
-    private String kpiCategory;
+	private String kpiName;
+	private String kpiCategory;
 }

@@ -21,13 +21,10 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,41 +49,49 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectRelease;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class ProjectVersionServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String PROJECT_RELEASE_DETAIL = "projectReleaseDetail";
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 		List<DataCount> trendValueList = Lists.newArrayList();
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		treeAggregatorDetail.getMapOfListOfProjectNodes().forEach((k, v) -> {
-			Filters filters = Filters.getFilter(k);
-			if (Filters.PROJECT == filters) {
-				projectWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, getRequestTrackerId(), kpiRequest);
-			}
-		});
+		treeAggregatorDetail
+				.getMapOfListOfProjectNodes()
+				.forEach(
+						(k, v) -> {
+							Filters filters = Filters.getFilter(k);
+							if (Filters.PROJECT == filters) {
+								projectWiseLeafNodeValue(
+										mapTmp, v, trendValueList, kpiElement, getRequestTrackerId(), kpiRequest);
+							}
+						});
 
-		log.debug("[PROJECT-RELEASE-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[PROJECT-RELEASE-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.PROJECT_RELEASES);
 		// 3rd change : remove code to set trendValuelist and call
 		// getTrendValues method
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PROJECT_RELEASES);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PROJECT_RELEASES);
 		kpiElement.setTrendValueList(trendValues);
 		return kpiElement;
 	}
@@ -97,16 +102,20 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		List<ObjectId> basicProjectConfigIds = new ArrayList<>();
 		List<ProjectRelease> releaseList = new ArrayList<>();
 
-		leafNodeList.forEach(leaf -> basicProjectConfigIds.add(leaf.getProjectFilter().getBasicProjectConfigId()));
-		basicProjectConfigIds.forEach(basicProjectConfigId -> releaseList.addAll(
-				kpiDataCacheService.fetchProjectReleaseData(basicProjectConfigId, KPICode.PROJECT_RELEASES.getKpiId())));
+		leafNodeList.forEach(
+				leaf -> basicProjectConfigIds.add(leaf.getProjectFilter().getBasicProjectConfigId()));
+		basicProjectConfigIds.forEach(
+				basicProjectConfigId ->
+						releaseList.addAll(
+								kpiDataCacheService.fetchProjectReleaseData(
+										basicProjectConfigId, KPICode.PROJECT_RELEASES.getKpiId())));
 		resultListMap.put(PROJECT_RELEASE_DETAIL, releaseList);
 		return resultListMap;
 	}
@@ -119,32 +128,41 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 	/**
 	 * Calculate KPI value for selected project nodes.
 	 *
-	 * @param projectLeafNodeList
-	 *          list of sprint leaf nodes
-	 * @param trendValueList
-	 *          list containing data to show on KPI
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param kpiRequest
-	 *          KpiRequest
+	 * @param projectLeafNodeList list of sprint leaf nodes
+	 * @param trendValueList list containing data to show on KPI
+	 * @param kpiElement kpiElement
+	 * @param kpiRequest KpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> projectLeafNodeList,
-			List<DataCount> trendValueList, KpiElement kpiElement, String requestTrackerId, KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> projectLeafNodeList,
+			List<DataCount> trendValueList,
+			KpiElement kpiElement,
+			String requestTrackerId,
+			KpiRequest kpiRequest) {
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(projectLeafNodeList, null, null, kpiRequest);
-		Map<String, ProjectRelease> filterWiseDataMap = createProjectWiseRelease(
-				(List<ProjectRelease>) resultMap.get(PROJECT_RELEASE_DETAIL));
+		Map<String, ProjectRelease> filterWiseDataMap =
+				createProjectWiseRelease((List<ProjectRelease>) resultMap.get(PROJECT_RELEASE_DETAIL));
 		List<KPIExcelData> excelData = new ArrayList<>();
-		projectLeafNodeList.forEach(node -> {
-			String currentProjectId = node.getProjectFilter().getBasicProjectConfigId().toString();
-			String projectName = node.getProjectFilter().getName();
+		projectLeafNodeList.forEach(
+				node -> {
+					String currentProjectId = node.getProjectFilter().getBasicProjectConfigId().toString();
+					String projectName = node.getProjectFilter().getName();
 
-			ProjectRelease releaseDetail = filterWiseDataMap.get(currentProjectId);
-			if (releaseDetail != null) {
-				setProjectNodeValue(mapTmp, node, releaseDetail, trendValueList, projectName, requestTrackerId, excelData);
-			}
-		});
+					ProjectRelease releaseDetail = filterWiseDataMap.get(currentProjectId);
+					if (releaseDetail != null) {
+						setProjectNodeValue(
+								mapTmp,
+								node,
+								releaseDetail,
+								trendValueList,
+								projectName,
+								requestTrackerId,
+								excelData);
+					}
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.RELEASE_FREQUENCY.getColumns());
 	}
@@ -157,18 +175,26 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 	 * @param projectName
 	 * @return
 	 */
-	private void setProjectNodeValue(Map<String, Node> mapTmp, Node node, ProjectRelease projectRelease,
-			List<DataCount> trendValueList, String projectName, String requestTrackerId, List<KPIExcelData> excelData) {
+	private void setProjectNodeValue(
+			Map<String, Node> mapTmp,
+			Node node,
+			ProjectRelease projectRelease,
+			List<DataCount> trendValueList,
+			String projectName,
+			String requestTrackerId,
+			List<KPIExcelData> excelData) {
 		Map<String, String> timeFormatMap = new HashMap<>();
-		Map<String, Double> dateCount = getLastNMonth(customApiConfig.getSprintCountForFilters(), timeFormatMap);
+		Map<String, Double> dateCount =
+				getLastNMonth(customApiConfig.getSprintCountForFilters(), timeFormatMap);
 		List<ProjectVersion> projectVersionList = Lists.newArrayList();
 		List<String> dateList = Lists.newArrayList();
 		// Filter to include only released versions
-		List<ProjectVersion> releasedVersions = projectRelease.getListProjectVersion().stream()
-				.filter(ProjectVersion::isReleased).toList();
+		List<ProjectVersion> releasedVersions =
+				projectRelease.getListProjectVersion().stream().filter(ProjectVersion::isReleased).toList();
 		for (ProjectVersion pv : releasedVersions) {
 			if (pv.getReleaseDate() != null) {
-				LocalDateTime localDateTime = DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate());
+				LocalDateTime localDateTime =
+						DateUtil.convertJodaDateTimeToLocalDateTime(pv.getReleaseDate());
 				String yearMonth = (localDateTime.getYear()) + String.valueOf(localDateTime.getMonth());
 				if (dateCount.keySet().contains(yearMonth)) {
 					projectVersionList.add(pv);
@@ -179,7 +205,8 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 			}
 		}
 		List<DataCount> dcList = new ArrayList<>();
-		dateCount.forEach((k, v) -> setDataCount(trendValueList, projectName, dcList, timeFormatMap.get(k), v));
+		dateCount.forEach(
+				(k, v) -> setDataCount(trendValueList, projectName, dcList, timeFormatMap.get(k), v));
 		mapTmp.get(node.getId()).setValue(dcList);
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
@@ -194,8 +221,12 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 	 * @param k
 	 * @param v
 	 */
-	private void setDataCount(List<DataCount> trendValueList, String projectName, List<DataCount> dcList, String k,
-							  Double v) {
+	private void setDataCount(
+			List<DataCount> trendValueList,
+			String projectName,
+			List<DataCount> dcList,
+			String k,
+			Double v) {
 		DataCount dataCount = new DataCount();
 		dataCount.setDate(k);
 		dataCount.setValue(v);
@@ -213,7 +244,8 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 	 * @return
 	 */
 	private Map<String, ProjectRelease> createProjectWiseRelease(List<ProjectRelease> resultList) {
-		return resultList.stream().collect(Collectors.toMap(pr -> pr.getConfigId().toString(), data -> data));
+		return resultList.stream()
+				.collect(Collectors.toMap(pr -> pr.getConfigId().toString(), data -> data));
 	}
 
 	@Override
@@ -223,6 +255,7 @@ public class ProjectVersionServiceImpl extends JiraKPIService<Double, List<Objec
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI73(), KPICode.PROJECT_RELEASES.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI73(), KPICode.PROJECT_RELEASES.getKpiId());
 	}
 }

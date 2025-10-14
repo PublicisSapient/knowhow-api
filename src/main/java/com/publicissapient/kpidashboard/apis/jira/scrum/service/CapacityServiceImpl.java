@@ -53,11 +53,9 @@ public class CapacityServiceImpl extends JiraIterationKPIService {
 
 	private static final String CAPACITY_DATA = "Capacity";
 
-	@Autowired
-	private CapacityKpiDataRepository capacityKpiDataRepository;
+	@Autowired private CapacityKpiDataRepository capacityKpiDataRepository;
 
-	@Autowired
-	private FilterHelperService filterHelperService;
+	@Autowired private FilterHelperService filterHelperService;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node filteredNode)
@@ -73,8 +71,8 @@ public class CapacityServiceImpl extends JiraIterationKPIService {
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Capacity -> Requested sprint : {}", leafNode.getName());
@@ -82,31 +80,31 @@ public class CapacityServiceImpl extends JiraIterationKPIService {
 
 			String sprintId = leafNode.getSprintFilter().getId();
 
-			CapacityKpiData capacityKpiData = capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(sprintId,
-					basicProjectConfigId);
+			CapacityKpiData capacityKpiData =
+					capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(
+							sprintId, basicProjectConfigId);
 
-			resultListMap.put(CAPACITY_DATA, getCapacityDataForAdditionalFilter(kpiRequest, capacityKpiData));
+			resultListMap.put(
+					CAPACITY_DATA, getCapacityDataForAdditionalFilter(kpiRequest, capacityKpiData));
 		}
 		return resultListMap;
 	}
 
 	/**
-	 * Retrieves the capacity data for an additional filter based on the given KPI
-	 * request.
+	 * Retrieves the capacity data for an additional filter based on the given KPI request.
 	 *
-	 * @param kpiRequest
-	 *          the KPI request containing selected filters
-	 * @param capacityKpiData
-	 *          the current capacity KPI data
-	 * @return a new CapacityKpiData object with updated capacity per sprint if
-	 *         additional capacity was found, otherwise returns the original
-	 *         capacityKpiData
+	 * @param kpiRequest the KPI request containing selected filters
+	 * @param capacityKpiData the current capacity KPI data
+	 * @return a new CapacityKpiData object with updated capacity per sprint if additional capacity
+	 *     was found, otherwise returns the original capacityKpiData
 	 */
-	private CapacityKpiData getCapacityDataForAdditionalFilter(KpiRequest kpiRequest, CapacityKpiData capacityKpiData) {
+	private CapacityKpiData getCapacityDataForAdditionalFilter(
+			KpiRequest kpiRequest, CapacityKpiData capacityKpiData) {
 		// Create a map of additional filter categories with keys in uppercase for
 		// case-insensitive matching
-		Map<String, AdditionalFilterCategory> addFilterCategory = filterHelperService.getAdditionalFilterHierarchyLevel()
-				.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
+		Map<String, AdditionalFilterCategory> addFilterCategory =
+				filterHelperService.getAdditionalFilterHierarchyLevel().entrySet().stream()
+						.collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
 
 		boolean additionalCapacity = false;
 		Double capacity = 0.0D;
@@ -118,10 +116,12 @@ public class CapacityServiceImpl extends JiraIterationKPIService {
 
 			// Check if the filter has a non-empty value list, exists in the additional
 			// filter categories, and capacity data is not empty
-			if (CollectionUtils.isNotEmpty(value) && addFilterCategory.containsKey(key.toUpperCase()) &&
-					ObjectUtils.isNotEmpty(capacityKpiData)) {
+			if (CollectionUtils.isNotEmpty(value)
+					&& addFilterCategory.containsKey(key.toUpperCase())
+					&& ObjectUtils.isNotEmpty(capacityKpiData)) {
 
-				List<AdditionalFilterCapacity> additionalFilterCapacityList = capacityKpiData.getAdditionalFilterCapacityList();
+				List<AdditionalFilterCapacity> additionalFilterCapacityList =
+						capacityKpiData.getAdditionalFilterCapacityList();
 
 				// If there are additional filter capacities, calculate the total capacity
 				if (CollectionUtils.isNotEmpty(additionalFilterCapacityList)) {
@@ -130,13 +130,20 @@ public class CapacityServiceImpl extends JiraIterationKPIService {
 					List<String> additionalFilter = new ArrayList<>(value);
 
 					// Sum the capacities matching the filter criteria
-					capacity += additionalFilterCapacityList.stream()
-							.filter(
-									additionalFilterCapacity -> upperCaseKey.equals(additionalFilterCapacity.getFilterId().toUpperCase()))
-							.flatMap(additionalFilterCapacity -> additionalFilterCapacity.getNodeCapacityList().stream())
-							.filter(leaf -> additionalFilter.contains(leaf.getAdditionalFilterId()) &&
-									leaf.getAdditionalFilterCapacity() != null)
-							.mapToDouble(LeafNodeCapacity::getAdditionalFilterCapacity).sum();
+					capacity +=
+							additionalFilterCapacityList.stream()
+									.filter(
+											additionalFilterCapacity ->
+													upperCaseKey.equals(additionalFilterCapacity.getFilterId().toUpperCase()))
+									.flatMap(
+											additionalFilterCapacity ->
+													additionalFilterCapacity.getNodeCapacityList().stream())
+									.filter(
+											leaf ->
+													additionalFilter.contains(leaf.getAdditionalFilterId())
+															&& leaf.getAdditionalFilterCapacity() != null)
+									.mapToDouble(LeafNodeCapacity::getAdditionalFilterCapacity)
+									.sum();
 				}
 			}
 		}
@@ -158,23 +165,25 @@ public class CapacityServiceImpl extends JiraIterationKPIService {
 	}
 
 	/**
-	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at
-	 * sprint level.
+	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at sprint level.
 	 *
 	 * @param sprintLeafNode
 	 * @param trendValue
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
-	private void projectWiseLeafNodeValue(Node sprintLeafNode, DataCount trendValue, KpiElement kpiElement,
-			KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Node sprintLeafNode, DataCount trendValue, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(sprintLeafNode, null, null, kpiRequest);
 		CapacityKpiData capacityKpiData = (CapacityKpiData) resultMap.get(CAPACITY_DATA);
 		if (null != capacityKpiData) {
-			log.info("Capacity -> request id : {} Project Name : {}  Sprint Id : {}", requestTrackerId,
-					capacityKpiData.getProjectName(), capacityKpiData.getSprintID());
+			log.info(
+					"Capacity -> request id : {} Project Name : {}  Sprint Id : {}",
+					requestTrackerId,
+					capacityKpiData.getProjectName(),
+					capacityKpiData.getSprintID());
 			kpiElement.setSprint(Objects.requireNonNull(sprintLeafNode).getName());
 			trendValue.setValue(capacityKpiData.getCapacityPerSprint());
 			kpiElement.setTrendValueList(trendValue);

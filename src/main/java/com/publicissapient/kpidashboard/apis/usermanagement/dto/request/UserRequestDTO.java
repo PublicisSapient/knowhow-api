@@ -21,14 +21,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for user information request
- */
+/** DTO for user information request */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequestDTO {
-    
-    @NotBlank(message = "Username cannot be blank")
-    private String username;
+
+	@NotBlank(message = "Username cannot be blank")
+	private String username;
 }

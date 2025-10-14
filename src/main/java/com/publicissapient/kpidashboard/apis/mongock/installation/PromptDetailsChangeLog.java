@@ -17,17 +17,17 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.installation;
 
+import java.util.List;
+
+import org.springframework.data.mongodb.core.MongoTemplate;
+
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import com.publicissapient.kpidashboard.apis.mongock.data.PromptDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.util.MongockUtil;
-import org.springframework.data.mongodb.core.MongoTemplate;
-
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-
-import java.util.List;
 
 @ChangeUnit(id = "ddl10", order = "0010", author = "shunaray")
 public class PromptDetailsChangeLog {

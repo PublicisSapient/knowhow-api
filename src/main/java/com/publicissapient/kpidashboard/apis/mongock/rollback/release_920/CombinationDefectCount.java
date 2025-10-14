@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
  * @author shi6
  */
 @SuppressWarnings("java:S1192")
-@ChangeUnit(id = "r_combination_defect_count", order = "09202", author = "shi6", systemVersion = "9.2.0")
+@ChangeUnit(
+		id = "r_combination_defect_count",
+		order = "09202",
+		author = "shi6",
+		systemVersion = "9.2.0")
 public class CombinationDefectCount {
 	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
 	public static final String FIELD_LABEL = "fieldLabel";
@@ -52,18 +56,40 @@ public class CombinationDefectCount {
 
 	@RollbackExecution
 	public void rollback() {
-		Document kpiDocument = new Document().append(KPI_ID, "kpi178").append("kpiName", "Defect Count By")
-				.append("isDeleted", "False").append("defaultOrder", 1).append("kpiCategory", "Release")
-				.append("kpiSubCategory", "Quality").append("kpiSource", "Jira").append("combinedKpiSource", "Jira/Azure")
-				.append("groupId", 9).append("kanban", false).append("chartType", "chartWithFilter")
-				.append("kpiInfo", new Document()
-						.append(DEFINITION,
-								"It shows the breakup of all defects tagged to a release grouped by Status, Priority, or RCA.")
-						.append("details", Collections.singletonList(new Document("type", "link").append("kpiLinkDetail",
-								new Document().append("text", "Detailed Information at").append("link",
-										"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/144146433/Release+Defect+count+by")))))
-				.append("isAdditionalFilterSupport", false).append("kpiFilter", "").append("boxType", "chart")
-				.append("calculateMaturity", false);
+		Document kpiDocument =
+				new Document()
+						.append(KPI_ID, "kpi178")
+						.append("kpiName", "Defect Count By")
+						.append("isDeleted", "False")
+						.append("defaultOrder", 1)
+						.append("kpiCategory", "Release")
+						.append("kpiSubCategory", "Quality")
+						.append("kpiSource", "Jira")
+						.append("combinedKpiSource", "Jira/Azure")
+						.append("groupId", 9)
+						.append("kanban", false)
+						.append("chartType", "chartWithFilter")
+						.append(
+								"kpiInfo",
+								new Document()
+										.append(
+												DEFINITION,
+												"It shows the breakup of all defects tagged to a release grouped by Status, Priority, or RCA.")
+										.append(
+												"details",
+												Collections.singletonList(
+														new Document("type", "link")
+																.append(
+																		"kpiLinkDetail",
+																		new Document()
+																				.append("text", "Detailed Information at")
+																				.append(
+																						"link",
+																						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/144146433/Release+Defect+count+by")))))
+						.append("isAdditionalFilterSupport", false)
+						.append("kpiFilter", "")
+						.append("boxType", "chart")
+						.append("calculateMaturity", false);
 		// Insert the document into the collection
 		mongoTemplate.getCollection(KPI_MASTER).insertOne(kpiDocument);
 	}

@@ -80,20 +80,13 @@ public class MeanTimeToMergeServiceImplTest {
 	private static Tool tool2;
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	MergeRequestRepository mergeRequestRepository;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	CacheService cacheService;
-	@InjectMocks
-	MeanTimeToMergeServiceImpl meanTimeToMergeServiceImpl;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	private CommonService commonService;
+	@Mock MergeRequestRepository mergeRequestRepository;
+	@Mock ConfigHelperService configHelperService;
+	@Mock CacheService cacheService;
+	@InjectMocks MeanTimeToMergeServiceImpl meanTimeToMergeServiceImpl;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock private CommonService commonService;
 	private List<MergeRequests> mergeRequestsList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap1 = new HashMap<>();
@@ -116,8 +109,8 @@ public class MeanTimeToMergeServiceImplTest {
 		kpiRequest.setLabel("Project");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		MergeRequestDataFactory mergeRequestDataFactory = MergeRequestDataFactory.newInstance();
@@ -130,13 +123,15 @@ public class MeanTimeToMergeServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		setToolMap();
@@ -150,7 +145,8 @@ public class MeanTimeToMergeServiceImplTest {
 		trendValueMap.put("BRANCH1 -> PR", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -159,8 +155,8 @@ public class MeanTimeToMergeServiceImplTest {
 		return dataCount;
 	}
 
-	private MergeRequests createMergeRequests(String state, String toBranch, String repoSlug, String projKey,
-			ObjectId collectorItemId) {
+	private MergeRequests createMergeRequests(
+			String state, String toBranch, String repoSlug, String projKey, ObjectId collectorItemId) {
 		MergeRequests mergeRequests = new MergeRequests();
 		mergeRequests.setState(state);
 		mergeRequests.setToBranch(toBranch);
@@ -197,7 +193,12 @@ public class MeanTimeToMergeServiceImplTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), toolGroup);
 	}
 
-	private Tool createTool(String url, String branch, String toolType, String username, String password,
+	private Tool createTool(
+			String url,
+			String branch,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> collectorItemList) {
 		Tool tool = new Tool();
 		tool.setUrl(url);
@@ -212,21 +213,27 @@ public class MeanTimeToMergeServiceImplTest {
 	public void testGetKpiData() throws Exception {
 
 		setup();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, String> aggregationMap = new HashMap<>();
 		aggregationMap.put("meanTimeToMerge", "average");
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn("Jira-Excel-5be544de025de212549176a9");
-		when(mergeRequestRepository.findMergeRequestList(any(), any(), any(), any())).thenReturn(mergeRequestsList);
+		when(mergeRequestRepository.findMergeRequestList(any(), any(), any(), any()))
+				.thenReturn(mergeRequestsList);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
-		KpiElement kpiElement = meanTimeToMergeServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+		KpiElement kpiElement =
+				meanTimeToMergeServiceImpl.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 		List<BranchMergeReqCount> out = (List<BranchMergeReqCount>) kpiElement.getTrendValueList();
 		assertThat("merge requests", out.size(), equalTo(2));
 	}

@@ -42,24 +42,26 @@ import com.publicissapient.kpidashboard.common.repository.jira.HappinessKpiDataR
 
 @RunWith(MockitoJUnitRunner.class)
 public class HappinessKpiCapacityImplTest {
-	@InjectMocks
-	HappinessKpiCapacityImpl happinessKpiService;
+	@InjectMocks HappinessKpiCapacityImpl happinessKpiService;
 
-	@Mock
-	HappinessKpiDataRepository happinessKpiDataRepository;
+	@Mock HappinessKpiDataRepository happinessKpiDataRepository;
 
 	@Test
 	public void saveHappinessKpiDataSuccessUpdateTest() {
-		Mockito.when(happinessKpiDataRepository
-				.findExistingByBasicProjectConfigIdAndSprintIDAndDateOfSubmission(Mockito.any(), Mockito.any(), Mockito.any()))
+		Mockito.when(
+						happinessKpiDataRepository
+								.findExistingByBasicProjectConfigIdAndSprintIDAndDateOfSubmission(
+										Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(createHappinessData());
-		ServiceResponse serviceResponse = happinessKpiService.saveHappinessKpiData(createHappinessDto());
+		ServiceResponse serviceResponse =
+				happinessKpiService.saveHappinessKpiData(createHappinessDto());
 		assertEquals(serviceResponse.getSuccess(), Boolean.TRUE);
 	}
 
 	@Test
 	public void saveHappinessKpiDataSuccessSaveTest() {
-		ServiceResponse serviceResponse = happinessKpiService.saveHappinessKpiData(createHappinessDto());
+		ServiceResponse serviceResponse =
+				happinessKpiService.saveHappinessKpiData(createHappinessDto());
 		assertEquals(serviceResponse.getSuccess(), Boolean.TRUE);
 	}
 

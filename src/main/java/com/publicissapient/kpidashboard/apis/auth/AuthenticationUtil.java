@@ -30,8 +30,7 @@ import com.publicissapient.kpidashboard.common.constant.AuthType;
  */
 public final class AuthenticationUtil {
 
-	private AuthenticationUtil() {
-	}
+	private AuthenticationUtil() {}
 
 	/**
 	 * Gets username from context.

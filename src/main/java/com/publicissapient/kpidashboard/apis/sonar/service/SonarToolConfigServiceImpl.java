@@ -45,29 +45,27 @@ public class SonarToolConfigServiceImpl {
 	public static final String PROJECT_KEY = "key";
 	public static final String BRANCH_LIST = "branches";
 	public static final String BRANCH_NAME = "name";
-	private static final String RESOURCE_PROJECT_ENDPOINT = "/api/components/search?qualifiers=TRK&p=%d&ps=%d";
+	private static final String RESOURCE_PROJECT_ENDPOINT =
+			"/api/components/search?qualifiers=TRK&p=%d&ps=%d";
 
 	private static final String RESOURCE_BRANCH_ENDPOINT = "/api/project_branches/list?project=%s";
-	private static final String RESOURCE_CLOUD_PROJECT_ENDPOINT = "/api/components/search?qualifiers=TRK&organization=%s&p=%d&ps=%d";
-	private static final List<String> SONAR_SERVER_VERSION_BRANCH_NOT_SUPPORTED = Arrays.asList("6.5", "6.4", "6.3",
-			"6.2", "6.1", "6.0");
-	private static final List<String> SONAR_SERVER_VERSION_BRANCH_SUPPORTED = Arrays.asList("9.x", "8.x", "7.x", "6.7",
-			"6.6");
-	private static final List<String> SONAR_CLOUD_VERSION_BRANCH_NOT_SUPPORTED = Arrays.asList("7.1", "7.0", "6.x");
-	private static final List<String> SONAR_CLOUD_VERSION_BRANCH_SUPPORTED = Arrays.asList("9.x", "8.x", "7.9", "7.8",
-			"7.7", "7.6", "7.5", "7.4", "7.3", "7.2");
+	private static final String RESOURCE_CLOUD_PROJECT_ENDPOINT =
+			"/api/components/search?qualifiers=TRK&organization=%s&p=%d&ps=%d";
+	private static final List<String> SONAR_SERVER_VERSION_BRANCH_NOT_SUPPORTED =
+			Arrays.asList("6.5", "6.4", "6.3", "6.2", "6.1", "6.0");
+	private static final List<String> SONAR_SERVER_VERSION_BRANCH_SUPPORTED =
+			Arrays.asList("9.x", "8.x", "7.x", "6.7", "6.6");
+	private static final List<String> SONAR_CLOUD_VERSION_BRANCH_NOT_SUPPORTED =
+			Arrays.asList("7.1", "7.0", "6.x");
+	private static final List<String> SONAR_CLOUD_VERSION_BRANCH_SUPPORTED =
+			Arrays.asList("9.x", "8.x", "7.9", "7.8", "7.7", "7.6", "7.5", "7.4", "7.3", "7.2");
 	private static final String SONAR_SERVER = "Sonar Server";
 	private static final String SONAR_CLOUD = "Sonar Cloud";
-	@Autowired
-	private ConnectionRepository connectionRepository;
-	@Autowired
-	private RestTemplate restTemplate;
-	@Autowired
-	private AesEncryptionService aesEncryptionService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private ConnectionService connectionService;
+	@Autowired private ConnectionRepository connectionRepository;
+	@Autowired private RestTemplate restTemplate;
+	@Autowired private AesEncryptionService aesEncryptionService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private ConnectionService connectionService;
 	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
@@ -77,14 +75,14 @@ public class SonarToolConfigServiceImpl {
 	 */
 	public ServiceResponse getSonarVersionList() {
 		List<SonarVersionResponseDTO> sonarVersionResponse = new ArrayList<>();
-		SonarVersionResponseDTO sonarServerBranchSupportedList = prepareSonarVersionList(SONAR_SERVER, true,
-				SONAR_SERVER_VERSION_BRANCH_SUPPORTED);
-		SonarVersionResponseDTO sonarServerBranchNotSupportedList = prepareSonarVersionList(SONAR_SERVER, false,
-				SONAR_SERVER_VERSION_BRANCH_NOT_SUPPORTED);
-		SonarVersionResponseDTO sonarCloudBranchSupportedList = prepareSonarVersionList(SONAR_CLOUD, true,
-				SONAR_CLOUD_VERSION_BRANCH_SUPPORTED);
-		SonarVersionResponseDTO sonarCloudBranchNotSupportedList = prepareSonarVersionList(SONAR_CLOUD, false,
-				SONAR_CLOUD_VERSION_BRANCH_NOT_SUPPORTED);
+		SonarVersionResponseDTO sonarServerBranchSupportedList =
+				prepareSonarVersionList(SONAR_SERVER, true, SONAR_SERVER_VERSION_BRANCH_SUPPORTED);
+		SonarVersionResponseDTO sonarServerBranchNotSupportedList =
+				prepareSonarVersionList(SONAR_SERVER, false, SONAR_SERVER_VERSION_BRANCH_NOT_SUPPORTED);
+		SonarVersionResponseDTO sonarCloudBranchSupportedList =
+				prepareSonarVersionList(SONAR_CLOUD, true, SONAR_CLOUD_VERSION_BRANCH_SUPPORTED);
+		SonarVersionResponseDTO sonarCloudBranchNotSupportedList =
+				prepareSonarVersionList(SONAR_CLOUD, false, SONAR_CLOUD_VERSION_BRANCH_NOT_SUPPORTED);
 		sonarVersionResponse.add(sonarServerBranchSupportedList);
 		sonarVersionResponse.add(sonarServerBranchNotSupportedList);
 		sonarVersionResponse.add(sonarCloudBranchSupportedList);
@@ -92,8 +90,8 @@ public class SonarToolConfigServiceImpl {
 		return new ServiceResponse(true, "Version List Successfully Fetched", sonarVersionResponse);
 	}
 
-	private SonarVersionResponseDTO prepareSonarVersionList(String type, boolean branchSupport,
-			List<String> versionList) {
+	private SonarVersionResponseDTO prepareSonarVersionList(
+			String type, boolean branchSupport, List<String> versionList) {
 		SonarVersionResponseDTO sonarVersionList = new SonarVersionResponseDTO();
 		sonarVersionList.setType(type);
 		sonarVersionList.setBranchSupport(branchSupport);
@@ -120,19 +118,18 @@ public class SonarToolConfigServiceImpl {
 	/**
 	 * Provides the list of Sonar Project's Branch.
 	 *
-	 * @param connectionId
-	 *          the Sonar connection details
-	 * @param version
-	 *          the Sonar api version
-	 * @param projectKey
-	 *          the Sonar project's key
+	 * @param connectionId the Sonar connection details
+	 * @param version the Sonar api version
+	 * @param projectKey the Sonar project's key
 	 * @return the list of Sonar project's branch
 	 */
-	public ServiceResponse getSonarProjectBranchList(String connectionId, String version, String projectKey) {
+	public ServiceResponse getSonarProjectBranchList(
+			String connectionId, String version, String projectKey) {
 		List<String> branchList = null;
-		if (SONAR_SERVER_VERSION_BRANCH_SUPPORTED.stream().anyMatch(version::equalsIgnoreCase) ||
-				SONAR_CLOUD_VERSION_BRANCH_SUPPORTED.stream().anyMatch(version::equalsIgnoreCase)) {
-			Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
+		if (SONAR_SERVER_VERSION_BRANCH_SUPPORTED.stream().anyMatch(version::equalsIgnoreCase)
+				|| SONAR_CLOUD_VERSION_BRANCH_SUPPORTED.stream().anyMatch(version::equalsIgnoreCase)) {
+			Optional<Connection> optConnection =
+					connectionRepository.findById(new ObjectId(connectionId));
 			if (optConnection.isPresent()) {
 				branchList = getSonarProjectBranchList(optConnection.get(), projectKey);
 			}
@@ -162,11 +159,14 @@ public class SonarToolConfigServiceImpl {
 
 			int nextPageIndex = paging.getPageIndex();
 			do {
-				SearchProjectsResponse response = getSearchProjectsResponse(connection, organizationKey, paging, nextPageIndex);
+				SearchProjectsResponse response =
+						getSearchProjectsResponse(connection, organizationKey, paging, nextPageIndex);
 
 				if (Objects.nonNull(response)) {
-					projectList
-							.addAll(response.getComponents().stream().map(SonarComponent::getKey).collect(Collectors.toList()));
+					projectList.addAll(
+							response.getComponents().stream()
+									.map(SonarComponent::getKey)
+									.collect(Collectors.toList()));
 					paging = response.getPaging();
 				} else {
 					paging = null;
@@ -191,19 +191,25 @@ public class SonarToolConfigServiceImpl {
 	 * @param nextPageIndex
 	 * @return
 	 */
-	private SearchProjectsResponse getSearchProjectsResponse(Connection connection, String organizationKey, Paging paging,
-			int nextPageIndex) {
+	private SearchProjectsResponse getSearchProjectsResponse(
+			Connection connection, String organizationKey, Paging paging, int nextPageIndex) {
 		SearchProjectsResponse response;
 		String baseUrl = connection.getBaseUrl() == null ? null : connection.getBaseUrl().trim();
 		if (connection.isCloudEnv()) {
-			String sonarCloudUrl = String.format(
-					new StringBuilder(baseUrl).append(RESOURCE_CLOUD_PROJECT_ENDPOINT).toString(), organizationKey, nextPageIndex,
-					paging.getPageSize());
+			String sonarCloudUrl =
+					String.format(
+							new StringBuilder(baseUrl).append(RESOURCE_CLOUD_PROJECT_ENDPOINT).toString(),
+							organizationKey,
+							nextPageIndex,
+							paging.getPageSize());
 			HttpEntity<?> httpEntity = createHeaders(connection);
 			response = searchProjects(sonarCloudUrl, httpEntity, connection);
 		} else {
-			String sonarUrl = String.format(new StringBuilder(baseUrl).append(RESOURCE_PROJECT_ENDPOINT).toString(),
-					nextPageIndex, paging.getPageSize());
+			String sonarUrl =
+					String.format(
+							new StringBuilder(baseUrl).append(RESOURCE_PROJECT_ENDPOINT).toString(),
+							nextPageIndex,
+							paging.getPageSize());
 			HttpEntity<?> httpEntity = createHeaders(connection);
 			response = searchProjects(sonarUrl, httpEntity, connection);
 		}
@@ -240,12 +246,14 @@ public class SonarToolConfigServiceImpl {
 	 * @param connection
 	 * @return
 	 */
-	private SearchProjectsResponse searchProjects(String sonarUrl, HttpEntity<?> httpEntity, Connection connection) {
+	private SearchProjectsResponse searchProjects(
+			String sonarUrl, HttpEntity<?> httpEntity, Connection connection) {
 
 		SearchProjectsResponse searchProjectsResponse = null;
 		try {
 			connectionService.validateConnectionFlag(connection);
-			ResponseEntity<String> response = restTemplate.exchange(sonarUrl, HttpMethod.GET, httpEntity, String.class);
+			ResponseEntity<String> response =
+					restTemplate.exchange(sonarUrl, HttpMethod.GET, httpEntity, String.class);
 			if (response.getStatusCode() == HttpStatus.OK) {
 				searchProjectsResponse = mapper.readValue(response.getBody(), SearchProjectsResponse.class);
 			} else {
@@ -262,16 +270,16 @@ public class SonarToolConfigServiceImpl {
 	}
 
 	/**
-	 * @param connection
-	 *          connection
-	 * @param exception
-	 *          exception
+	 * @param connection connection
+	 * @param exception exception
 	 */
 	private void isClientException(Connection connection, RestClientException exception) {
-		if (exception instanceof HttpClientErrorException &&
-				((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
-			String errMsg = ClientErrorMessageEnum.fromValue(((HttpClientErrorException) exception).getStatusCode().value())
-					.getReasonPhrase();
+		if (exception instanceof HttpClientErrorException
+				&& ((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
+			String errMsg =
+					ClientErrorMessageEnum.fromValue(
+									((HttpClientErrorException) exception).getStatusCode().value())
+							.getReasonPhrase();
 			connectionService.updateBreakingConnection(connection, errMsg);
 		}
 	}
@@ -280,12 +288,15 @@ public class SonarToolConfigServiceImpl {
 		List<String> branchNameList = new ArrayList<>();
 
 		String baseUrl = connection.getBaseUrl() == null ? null : connection.getBaseUrl().trim();
-		String url = String.format(new StringBuilder(baseUrl).append(RESOURCE_BRANCH_ENDPOINT).toString(), projectKey);
+		String url =
+				String.format(
+						new StringBuilder(baseUrl).append(RESOURCE_BRANCH_ENDPOINT).toString(), projectKey);
 
 		HttpEntity<?> httpEntity = createHeaders(connection);
 		try {
 
-			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
+			ResponseEntity<String> response =
+					restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
 
 			if (response.getStatusCode() == HttpStatus.OK) {
 				JSONArray jsonArray = SonarAPIUtils.parseData(response.getBody(), BRANCH_LIST);
@@ -305,13 +316,17 @@ public class SonarToolConfigServiceImpl {
 	}
 
 	private HttpEntity<?> createHeaders(Connection connection) {
-		String accessToken = connection.getAccessToken() == null
-				? null
-				: aesEncryptionService.decrypt(connection.getAccessToken(), customApiConfig.getAesEncryptionKey());
+		String accessToken =
+				connection.getAccessToken() == null
+						? null
+						: aesEncryptionService.decrypt(
+								connection.getAccessToken(), customApiConfig.getAesEncryptionKey());
 		String username = connection.getUsername() == null ? null : connection.getUsername().trim();
-		String password = connection.getPassword() == null
-				? null
-				: aesEncryptionService.decrypt(connection.getPassword(), customApiConfig.getAesEncryptionKey());
+		String password =
+				connection.getPassword() == null
+						? null
+						: aesEncryptionService.decrypt(
+								connection.getPassword(), customApiConfig.getAesEncryptionKey());
 
 		HttpEntity<?> httpEntity;
 		if (connection.isCloudEnv()) {

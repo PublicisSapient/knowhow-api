@@ -31,16 +31,16 @@ public interface AccessRequestsHelperService {
 	/**
 	 * Gets all access requests.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAllAccessRequests();
 
 	/**
 	 * Gets all access requests for that Id.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAccessRequestById(String id);
 
@@ -48,8 +48,8 @@ public interface AccessRequestsHelperService {
 	 * Gets all access requests created by @param username.
 	 *
 	 * @param username
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAccessRequestByUsername(String username);
 
@@ -58,8 +58,8 @@ public interface AccessRequestsHelperService {
 	 *
 	 * @param username
 	 * @param status
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAccessRequestByUsernameAndStatus(String username, String status);
 
@@ -67,18 +67,17 @@ public interface AccessRequestsHelperService {
 	 * Gets all access requests with current status @param status.
 	 *
 	 * @param status
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAccessRequestByStatus(String status);
 
 	/**
 	 * Gets access requests count with current status @param status.
 	 *
-	 * @param status
-	 *          status
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param status status
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getNotificationByStatus(String status, boolean centralAuthService);
 
@@ -93,8 +92,7 @@ public interface AccessRequestsHelperService {
 	/**
 	 * Update access request
 	 *
-	 * @param accessRequestsData
-	 *          access request
+	 * @param accessRequestsData access request
 	 * @return updated access request
 	 */
 	AccessRequest updateAccessRequest(AccessRequest accessRequestsData);

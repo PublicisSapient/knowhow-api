@@ -71,18 +71,12 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 public class BuildFrequencyServiceImplTest {
 
 	Map<String, List<Tool>> toolGroup = new HashMap<>();
-	@Mock
-	KpiDataCacheService kpiDataCacheService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	private SprintDetailsServiceImpl sprintDetailsService;
-	@InjectMocks
-	BuildFrequencyServiceImpl buildFrequencyServiceImpl;
+	@Mock KpiDataCacheService kpiDataCacheService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock private SprintDetailsServiceImpl sprintDetailsService;
+	@InjectMocks BuildFrequencyServiceImpl buildFrequencyServiceImpl;
 	private Map<String, Object> filterLevelMap;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
@@ -90,8 +84,7 @@ public class BuildFrequencyServiceImplTest {
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private List<Build> buildList = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
@@ -112,11 +105,12 @@ public class BuildFrequencyServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
-		BuildDataFactory buildDataFactory = BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details.json");
+		BuildDataFactory buildDataFactory =
+				BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details.json");
 		buildList = buildDataFactory.getbuildDataList();
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -124,13 +118,15 @@ public class BuildFrequencyServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -140,7 +136,8 @@ public class BuildFrequencyServiceImplTest {
 		sprintDetails.setCompleteDate(LocalDateTime.now().minusDays(1).toString());
 		sprintDetails.setSprintID("40345_Scrum Project_6335363749794a18e8a4479b");
 		sprintDetails.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
-		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(Arrays.asList(sprintDetails));
+		when(sprintDetailsService.getSprintDetailsByIds(anyList()))
+				.thenReturn(Arrays.asList(sprintDetails));
 	}
 
 	private void getBuildFrequencyInfo() {
@@ -158,7 +155,8 @@ public class BuildFrequencyServiceImplTest {
 		trendValueMap.put("API_Build (KnowHow) ", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -170,17 +168,23 @@ public class BuildFrequencyServiceImplTest {
 	@Test
 	public void testGetBuildFrquency() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any())).thenReturn(buildList);
+		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any()))
+				.thenReturn(buildList);
 
 		try {
 			when(customApiConfig.getJenkinsWeekCount()).thenReturn(5);
 
-			KpiElement kpiElement = buildFrequencyServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Build Frequency :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					buildFrequencyServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Build Frequency :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 		}
 	}
@@ -188,17 +192,23 @@ public class BuildFrequencyServiceImplTest {
 	@Test
 	public void testGetBuildFrquencyPort() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		kpiRequest.setLabel("PORT");
-		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any())).thenReturn(buildList);
+		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any()))
+				.thenReturn(buildList);
 
 		try {
 			when(customApiConfig.getJenkinsWeekCount()).thenReturn(5);
 
-			KpiElement kpiElement = buildFrequencyServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Build Frequency :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					buildFrequencyServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Build Frequency :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 		}
 	}
@@ -208,22 +218,30 @@ public class BuildFrequencyServiceImplTest {
 		Map<String, Node> mapTmp = new HashMap<>();
 		List<Node> leafNodeList = new ArrayList<>();
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 		try {
-			KpiElement kpiElement = buildFrequencyServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Build Frequency :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					buildFrequencyServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Build Frequency :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 
 		}
@@ -232,8 +250,9 @@ public class BuildFrequencyServiceImplTest {
 	@Test
 	public void testBuildFrquencyNegativeScenario() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		LocalDateTime weekDay = LocalDateTime.now();
 		while (weekDay.getDayOfWeek() != DayOfWeek.MONDAY) {
@@ -244,15 +263,20 @@ public class BuildFrequencyServiceImplTest {
 		buildList.get(0).setJobFolder("");
 		buildList.get(0).setStartTime(weekDayTime);
 		buildList.get(1).setStartTime(weekDayTime);
-		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any())).thenReturn(buildList);
+		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any()))
+				.thenReturn(buildList);
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 		try {
 			when(customApiConfig.getJenkinsWeekCount()).thenReturn(5);
 			when(cacheService.getFromApplicationCache(any())).thenReturn(kpiRequestTrackerId);
 
-			KpiElement kpiElement = buildFrequencyServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Build Frequency :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
+			KpiElement kpiElement =
+					buildFrequencyServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Build Frequency :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(0));
 		} catch (Exception enfe) {
 		}
 	}
@@ -295,18 +319,24 @@ public class BuildFrequencyServiceImplTest {
 	@Test
 	public void testGetBuildFrquency_pipelineName_empty() throws Exception {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		buildList.forEach(build -> build.setPipelineName(null));
-		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any())).thenReturn(buildList);
+		when(kpiDataCacheService.fetchBuildFrequencyData(any(), any(), any(), any()))
+				.thenReturn(buildList);
 		String kpiRequestTrackerId = "Excel-Jenkins-5be544de025de212549176a9";
 
 		try {
 			when(customApiConfig.getJenkinsWeekCount()).thenReturn(5);
 
-			KpiElement kpiElement = buildFrequencyServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Build Frequency :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					buildFrequencyServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Build Frequency :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception enfe) {
 		}
 	}

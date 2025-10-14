@@ -41,14 +41,11 @@ public class VersionMetadataServiceImplTest {
 
 	private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@InjectMocks
-	private VersionMetadataServiceImpl versionMetadataServiceImpl;
+	@InjectMocks private VersionMetadataServiceImpl versionMetadataServiceImpl;
 
 	@Test
 	public void testGetVersionMetadata() {
@@ -65,7 +62,8 @@ public class VersionMetadataServiceImplTest {
 
 	@Test
 	public void testGetVersionMetadataC() {
-		String pathAccountData = "classpath:\\com\\publicissapient\\kpidashboard\\apis\\filter\\service\\accountDataList";
+		String pathAccountData =
+				"classpath:\\com\\publicissapient\\kpidashboard\\apis\\filter\\service\\accountDataList";
 		File file = null;
 		try {
 			Resource resource = resourceLoader.getResource(pathAccountData);

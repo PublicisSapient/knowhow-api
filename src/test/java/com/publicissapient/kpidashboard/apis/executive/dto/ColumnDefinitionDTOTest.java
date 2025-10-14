@@ -31,7 +31,8 @@ public class ColumnDefinitionDTOTest {
 
 	@Test
 	public void testBuilder() {
-		ColumnDefinitionDTO column = ColumnDefinitionDTO.builder().field("projectName").header("Project Name").build();
+		ColumnDefinitionDTO column =
+				ColumnDefinitionDTO.builder().field("projectName").header("Project Name").build();
 
 		assertNotNull(column);
 		assertEquals("projectName", column.getField());

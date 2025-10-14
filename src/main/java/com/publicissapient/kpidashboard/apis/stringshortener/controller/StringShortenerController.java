@@ -46,11 +46,13 @@ public class StringShortenerController {
 	}
 
 	@PostMapping("/shorten")
-	public ResponseEntity<ServiceResponse> createShortString(@RequestBody StringShortenerDTO stringShortenerDTO) {
+	public ResponseEntity<ServiceResponse> createShortString(
+			@RequestBody StringShortenerDTO stringShortenerDTO) {
 		ServiceResponse response = null;
 		StringShortener stringShortener = stringShortenerService.createShortString(stringShortenerDTO);
 		final ModelMapper modelMapper = new ModelMapper();
-		final StringShortenerDTO responseDTO = modelMapper.map(stringShortener, StringShortenerDTO.class);
+		final StringShortenerDTO responseDTO =
+				modelMapper.map(stringShortener, StringShortenerDTO.class);
 		if (responseDTO != null && !responseDTO.toString().isEmpty()) {
 			response = new ServiceResponse(true, SHORT_STRING_RESPONSE_MESSAGE, responseDTO);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -61,13 +63,15 @@ public class StringShortenerController {
 	}
 
 	@GetMapping("/longString")
-	public ResponseEntity<ServiceResponse> getLongString(@RequestParam String kpiFilters,
-			@RequestParam String stateFilters) {
+	public ResponseEntity<ServiceResponse> getLongString(
+			@RequestParam String kpiFilters, @RequestParam String stateFilters) {
 		ServiceResponse response = null;
-		Optional<StringShortener> stringShortener = stringShortenerService.getLongString(kpiFilters, stateFilters);
+		Optional<StringShortener> stringShortener =
+				stringShortenerService.getLongString(kpiFilters, stateFilters);
 		if (stringShortener.isPresent()) {
 			final ModelMapper modelMapper = new ModelMapper();
-			final StringShortenerDTO responseDTO = modelMapper.map(stringShortener.get(), StringShortenerDTO.class);
+			final StringShortenerDTO responseDTO =
+					modelMapper.map(stringShortener.get(), StringShortenerDTO.class);
 			response = new ServiceResponse(true, FETCH_SUCCESS_MESSAGE, responseDTO);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {

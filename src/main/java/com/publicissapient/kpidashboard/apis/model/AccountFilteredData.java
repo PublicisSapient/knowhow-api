@@ -62,8 +62,9 @@ public class AccountFilteredData {
 			return false;
 		}
 		AccountFilteredData other = (AccountFilteredData) obj;
-		if (obj instanceof AccountFilteredData && this.nodeId.equals(other.nodeId) &&
-				(null == this.parentId || this.parentId.equals(other.parentId))) {
+		if (obj instanceof AccountFilteredData
+				&& this.nodeId.equals(other.nodeId)
+				&& (null == this.parentId || this.parentId.equals(other.parentId))) {
 			isEqual = true;
 		}
 		return isEqual;

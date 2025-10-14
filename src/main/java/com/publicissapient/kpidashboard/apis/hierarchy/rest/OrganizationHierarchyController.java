@@ -44,11 +44,9 @@ import jakarta.validation.Valid;
 @RequestMapping("/hierarchy")
 public class OrganizationHierarchyController {
 
-	@Autowired
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Autowired private OrganizationHierarchyService organizationHierarchyService;
 
-	@Autowired
-	private HierarchyOptionService hierarchyOptionService;
+	@Autowired private HierarchyOptionService hierarchyOptionService;
 
 	@GetMapping
 	public ResponseEntity<ServiceResponse> getHierarchyLevel() {
@@ -56,23 +54,30 @@ public class OrganizationHierarchyController {
 		List<OrganizationHierarchy> organizationHierarchies = organizationHierarchyService.findAll();
 
 		if (CollectionUtils.isNotEmpty(organizationHierarchies)) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true,
-					"Fetched organization Hierarchies Successfully.", organizationHierarchies));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(
+							new ServiceResponse(
+									true, "Fetched organization Hierarchies Successfully.", organizationHierarchies));
 		} else {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false,
-					"Organization hierarchy is not set up. Please configure it to proceed.", null));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(
+							new ServiceResponse(
+									false,
+									"Organization hierarchy is not set up. Please configure it to proceed.",
+									null));
 		}
 	}
 
-	@PostMapping({ "", "/{parentid}" })
-	public ServiceResponse addHierarchyOption(@PathVariable(required = false) String parentid,
+	@PostMapping({"", "/{parentid}"})
+	public ServiceResponse addHierarchyOption(
+			@PathVariable(required = false) String parentid,
 			@RequestBody @Valid CreateHierarchyRequest createHierarchyRequest) {
 		return hierarchyOptionService.addHierarchyOption(createHierarchyRequest, parentid);
 	}
 
 	@PutMapping("/{id}")
-	public ServiceResponse updateHierarchy(@PathVariable String id,
-			@Valid @RequestBody UpdateHierarchyRequest request) {
+	public ServiceResponse updateHierarchy(
+			@PathVariable String id, @Valid @RequestBody UpdateHierarchyRequest request) {
 		return organizationHierarchyService.updateName(request.getDisplayName(), id);
 	}
 }

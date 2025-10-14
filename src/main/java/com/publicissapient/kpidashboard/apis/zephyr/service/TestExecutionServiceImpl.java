@@ -57,7 +57,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
+public class TestExecutionServiceImpl
+		extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String QA = "QaKpi";
 	private static final String SPRINT_ID = "sprintId";
@@ -65,35 +66,39 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 	private static final String TOTAL = "Total Test Cases";
 	private static final String EXECUTED = "Executed Test Cases";
 	private static final String PASSED = "Passed Test Cases";
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private FilterHelperService flterHelperService;
-	@Autowired
-	private TestExecutionRepository testExecutionRepository;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private FilterHelperService flterHelperService;
+	@Autowired private TestExecutionRepository testExecutionRepository;
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 		List<DataCount> trendValueList = new ArrayList<>();
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
-			}
-		});
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
+							}
+						});
 
-		log.debug("[TEST-EXECUTION-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[TEST-EXECUTION-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE);
 		// 3rd change : remove code to set trendValuelist and call
 		// getTrendValues method
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE);
+		List<DataCount> trendValues =
+				getTrendValues(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE);
 		kpiElement.setTrendValueList(trendValues);
 
 		return kpiElement;
@@ -110,8 +115,8 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
@@ -119,19 +124,23 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 		List<String> basicProjectConfigIds = new ArrayList<>();
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			sprintList.add(leaf.getSprintFilter().getId());
-			basicProjectConfigIds.add(basicProjectConfigId.toString());
-		});
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					sprintList.add(leaf.getSprintFilter().getId());
+					basicProjectConfigIds.add(basicProjectConfigId.toString());
+				});
 		/** additional filter * */
-		KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, QA, flterHelperService);
+		KpiDataHelper.createAdditionalFilterMap(
+				kpiRequest, mapOfFilters, Constant.SCRUM, QA, flterHelperService);
 
 		mapOfFilters.put(SPRINT_ID, sprintList.stream().distinct().collect(Collectors.toList()));
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
 
-		resultListMap.put(TEST_EXECUTION_DETAIL,
+		resultListMap.put(
+				TEST_EXECUTION_DETAIL,
 				testExecutionRepository.findTestExecutionDetailByFilters(mapOfFilters, uniqueProjectMap));
 
 		return resultListMap;
@@ -140,53 +149,60 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 	/**
 	 * Calculate KPI value for selected sprint nodes.
 	 *
-	 * @param mapTmp
-	 *          key-value pair of node id aand node object
-	 * @param sprintLeafNodeList
-	 *          list of sprint leaf nodes
-	 * @param trendValueList
-	 *          list containing data to show on KPI
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param kpiRequest
-	 *          KpiRequest
+	 * @param mapTmp key-value pair of node id aand node object
+	 * @param sprintLeafNodeList list of sprint leaf nodes
+	 * @param trendValueList list containing data to show on KPI
+	 * @param kpiElement kpiElement
+	 * @param kpiRequest KpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void sprintWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList,
-			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void sprintWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> sprintLeafNodeList,
+			List<DataCount> trendValueList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 
-		log.info("[TEST-EXECUTION-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}");
-		Collections.sort(sprintLeafNodeList,
-				(Node o1, Node o2) -> o1.getSprintFilter().getStartDate().compareTo(o2.getSprintFilter().getStartDate()));
+		log.info(
+				"[TEST-EXECUTION-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}");
+		Collections.sort(
+				sprintLeafNodeList,
+				(Node o1, Node o2) ->
+						o1.getSprintFilter().getStartDate().compareTo(o2.getSprintFilter().getStartDate()));
 		String startDate = sprintLeafNodeList.get(0).getSprintFilter().getStartDate();
-		String endDate = sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
+		String endDate =
+				sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
 
-		Map<String, Object> resultMap = fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate, kpiRequest);
-		Map<String, TestExecution> sprintWiseDataMap = createSprintWiseTestExecutionMap(
-				(List<TestExecution>) resultMap.get(TEST_EXECUTION_DETAIL));
+		Map<String, Object> resultMap =
+				fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate, kpiRequest);
+		Map<String, TestExecution> sprintWiseDataMap =
+				createSprintWiseTestExecutionMap(
+						(List<TestExecution>) resultMap.get(TEST_EXECUTION_DETAIL));
 
 		List<KPIExcelData> excelData = new ArrayList<>();
-		sprintLeafNodeList.forEach(node -> {
-			List<DataCount> resultList = new ArrayList<>();
-			String sprintId = node.getSprintFilter().getId();
-			String trendLineName = node.getProjectFilter().getName();
+		sprintLeafNodeList.forEach(
+				node -> {
+					List<DataCount> resultList = new ArrayList<>();
+					String sprintId = node.getSprintFilter().getId();
+					String trendLineName = node.getProjectFilter().getName();
 
-			if (null != sprintWiseDataMap.get(sprintId)) {
-				setSprintNodeValue(sprintWiseDataMap.get(sprintId), resultList, trendLineName, node, excelData);
-			} else {
-				DataCount dataCount = new DataCount();
-				dataCount.setSubFilter(Constant.EMPTY_STRING);
-				dataCount.setSProjectName(trendLineName);
-				dataCount.setValue(0.0);
-				dataCount.setLineValue(0.0);
-				dataCount.setHoverValue(new HashMap<>());
-				dataCount.setSSprintID(node.getSprintFilter().getId());
-				dataCount.setSSprintName(node.getSprintFilter().getName());
-				resultList.add(dataCount);
-				trendValueList.add(dataCount);
-			}
-			mapTmp.get(node.getId()).setValue(resultList);
-		});
+					if (null != sprintWiseDataMap.get(sprintId)) {
+						setSprintNodeValue(
+								sprintWiseDataMap.get(sprintId), resultList, trendLineName, node, excelData);
+					} else {
+						DataCount dataCount = new DataCount();
+						dataCount.setSubFilter(Constant.EMPTY_STRING);
+						dataCount.setSProjectName(trendLineName);
+						dataCount.setValue(0.0);
+						dataCount.setLineValue(0.0);
+						dataCount.setHoverValue(new HashMap<>());
+						dataCount.setSSprintID(node.getSprintFilter().getId());
+						dataCount.setSSprintName(node.getSprintFilter().getName());
+						resultList.add(dataCount);
+						trendValueList.add(dataCount);
+					}
+					mapTmp.get(node.getId()).setValue(resultList);
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.TEST_EXECUTION_AND_PASS_PERCENTAGE.getColumns());
 	}
@@ -201,14 +217,21 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 	 * @param validationKey
 	 * @param excelData
 	 */
-	private void setSprintNodeValue(TestExecution executionDetail, List<DataCount> trendValueList, String trendLineName,
-			Node node, List<KPIExcelData> excelData) {
+	private void setSprintNodeValue(
+			TestExecution executionDetail,
+			List<DataCount> trendValueList,
+			String trendLineName,
+			Node node,
+			List<KPIExcelData> excelData) {
 
 		// aggregated value of all sub-filters of a project for given sprint
-		double executionPerc = Math
-				.round((100.0 * executionDetail.getExecutedTestCase()) / executionDetail.getTotalTestCases());
-		double passedPerc = Math
-				.round((100.0 * executionDetail.getPassedTestCase()) / (executionDetail.getExecutedTestCase()));
+		double executionPerc =
+				Math.round(
+						(100.0 * executionDetail.getExecutedTestCase()) / executionDetail.getTotalTestCases());
+		double passedPerc =
+				Math.round(
+						(100.0 * executionDetail.getPassedTestCase())
+								/ (executionDetail.getExecutedTestCase()));
 
 		DataCount dataCount = new DataCount();
 		dataCount.setSProjectName(trendLineName);
@@ -221,16 +244,20 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 		trendValueList.add(dataCount);
 
 		if (getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateTestExcecutionExcelData(node.getSprintFilter().getName(), executionDetail, null,
-					executionPerc, passedPerc, excelData);
+			KPIExcelUtility.populateTestExcecutionExcelData(
+					node.getSprintFilter().getName(),
+					executionDetail,
+					null,
+					executionPerc,
+					passedPerc,
+					excelData);
 		}
 	}
 
 	/**
 	 * return map of data
 	 *
-	 * @param detail
-	 *          detail
+	 * @param detail detail
 	 * @return
 	 */
 	private Map<String, Object> getHoverValue(TestExecution detail) {
@@ -248,10 +275,14 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 	 * @param resultList
 	 * @return
 	 */
-	public Map<String, TestExecution> createSprintWiseTestExecutionMap(List<TestExecution> resultList) {
+	public Map<String, TestExecution> createSprintWiseTestExecutionMap(
+			List<TestExecution> resultList) {
 		return resultList.stream()
-				.filter(testExecution -> testExecution.getExecutedTestCase() != null &&
-						testExecution.getTotalTestCases() != null && testExecution.getPassedTestCase() != null)
+				.filter(
+						testExecution ->
+								testExecution.getExecutedTestCase() != null
+										&& testExecution.getTotalTestCases() != null
+										&& testExecution.getPassedTestCase() != null)
 				.collect(Collectors.toMap(TestExecution::getSprintId, Function.identity()));
 	}
 
@@ -262,7 +293,8 @@ public class TestExecutionServiceImpl extends ZephyrKPIService<Double, List<Obje
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI70(),
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI70(),
 				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId());
 	}
 }

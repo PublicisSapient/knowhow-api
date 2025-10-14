@@ -48,10 +48,11 @@ public class LabelChangeDora {
 		updateLabel(collection, "kpi166", null, null);
 	}
 
-	public void updateLabel(MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel,
-			String yAxisLabel) {
-		kpiMaster.updateOne(new Document("kpiId", kpiId),
-				new Document("$set", new Document("xAxisLabel", xAxisLabel).append("yAxisLabel", yAxisLabel)));
+	public void updateLabel(
+			MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel, String yAxisLabel) {
+		kpiMaster.updateOne(
+				new Document("kpiId", kpiId),
+				new Document(
+						"$set", new Document("xAxisLabel", xAxisLabel).append("yAxisLabel", yAxisLabel)));
 	}
-
 }

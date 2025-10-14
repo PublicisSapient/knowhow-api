@@ -26,11 +26,10 @@ import lombok.Setter;
 @Getter
 public class ServiceResponse extends BaseResponse {
 
-    private Object data;
+	private Object data;
 
 	// --- auth-N-auth required code starts here --------------
-	public ServiceResponse() {
-	}
+	public ServiceResponse() {}
 
 	// --- auth-N-auth required code end here --------------
 	/**

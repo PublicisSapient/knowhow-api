@@ -20,5 +20,10 @@ package com.publicissapient.kpidashboard.apis.abac.policy;
 
 public interface PolicyEnforcement {
 
-	boolean check(Object projectAccessManager, Object subject, Object resource, Object action, Object environment);
+	boolean check(
+			Object projectAccessManager,
+			Object subject,
+			Object resource,
+			Object action,
+			Object environment);
 }

@@ -38,26 +38,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UsersSessionServiceImpl implements UsersSessionService {
 
-	@Autowired
-	private UsersSessionRepository usersSessionRepository;
-	@Autowired
-	private UserInfoRepository userInfoRepository;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private UsersSessionRepository usersSessionRepository;
+	@Autowired private UserInfoRepository userInfoRepository;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
 	 * Method to create user login history info
 	 *
-	 * @param userInfo
-	 *          user info
-	 * @param status
-	 *          event status
-	 * @param event
-	 *          authentication event
+	 * @param userInfo user info
+	 * @param status event status
+	 * @param event authentication event
 	 * @return user login history
 	 */
 	@Override
-	public UsersSession createUsersSessionInfo(UserInfo userInfo, AuthenticationEvent event, Status status) {
+	public UsersSession createUsersSessionInfo(
+			UserInfo userInfo, AuthenticationEvent event, Status status) {
 		UsersSession usersSessionInfo = new UsersSession();
 		usersSessionInfo.setUserId(userInfo.getId());
 		usersSessionInfo.setUserName(userInfo.getUsername());
@@ -66,31 +61,30 @@ public class UsersSessionServiceImpl implements UsersSessionService {
 		usersSessionInfo.setEvent(event);
 		usersSessionInfo.setStatus(status);
 		usersSessionInfo.setTimeStamp(LocalDateTime.now());
-		usersSessionInfo.setExpiresOn(LocalDateTime.now().plusMonths(customApiConfig.getUserSessionsExpiresOn()));
+		usersSessionInfo.setExpiresOn(
+				LocalDateTime.now().plusMonths(customApiConfig.getUserSessionsExpiresOn()));
 		return usersSessionRepository.save(usersSessionInfo);
 	}
 
 	/**
 	 * Method to get last logout of user
 	 *
-	 * @param username
-	 *          username
+	 * @param username username
 	 * @return last login time
 	 */
 	@Override
 	public LocalDateTime getLastLogoutTimeOfUser(String username) {
-		UsersSession lastLogout = usersSessionRepository.findTopByUserNameAndEventOrderByTimeStampDesc(username,
-				AuthenticationEvent.LOGOUT);
+		UsersSession lastLogout =
+				usersSessionRepository.findTopByUserNameAndEventOrderByTimeStampDesc(
+						username, AuthenticationEvent.LOGOUT);
 		return lastLogout != null ? lastLogout.getTimeStamp() : null;
 	}
 
 	/**
 	 * Audit logout.
 	 *
-	 * @param userName
-	 *          the userName
-	 * @param status
-	 *          the status {@link Status}
+	 * @param userName the userName
+	 * @param status the status {@link Status}
 	 */
 	@Override
 	public void auditLogout(String userName, Status status) {

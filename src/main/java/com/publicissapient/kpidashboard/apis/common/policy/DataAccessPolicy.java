@@ -16,13 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.common.policy;
 
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-
 import java.util.List;
+
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 /**
  * @author gursinh49
  */
 public interface DataAccessPolicy {
-    List<UserInfo> getAccessibleMembers(String userName);
+	List<UserInfo> getAccessibleMembers(String userName);
 }

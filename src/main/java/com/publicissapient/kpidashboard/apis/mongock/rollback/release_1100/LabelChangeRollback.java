@@ -40,7 +40,6 @@ public class LabelChangeRollback {
 		updateLabel(collection, "kpi73", null, null);
 		updateLabel(collection, "kpi153", null, null);
 		updateLabel(collection, "kpi113", null, null);
-
 	}
 
 	@RollbackExecution
@@ -51,10 +50,11 @@ public class LabelChangeRollback {
 		updateLabel(collection, "kpi113", "Months", "Cost of Delay");
 	}
 
-	public void updateLabel(MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel,
-			String yAxisLabel) {
-		kpiMaster.updateOne(new Document("kpiId", kpiId),
-				new Document("$set", new Document("xAxisLabel", xAxisLabel).append("yAxisLabel", yAxisLabel)));
+	public void updateLabel(
+			MongoCollection<Document> kpiMaster, String kpiId, String xAxisLabel, String yAxisLabel) {
+		kpiMaster.updateOne(
+				new Document("kpiId", kpiId),
+				new Document(
+						"$set", new Document("xAxisLabel", xAxisLabel).append("yAxisLabel", yAxisLabel)));
 	}
-
 }

@@ -76,23 +76,15 @@ public class TicketOpenVsClosedByPriorityServiceImplTest {
 
 	List<KanbanJiraIssue> kanbanJiraIssueList = new ArrayList<>();
 	List<KanbanIssueCustomHistory> historyClosedList = new ArrayList<>();
-	@Mock
-	KanbanJiraIssueRepository kanbanJiraIssueRepository;
-	@Mock
-	KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	TicketOpenVsClosedByPriorityServiceImpl ticketOpenVsClosedByPriorityServiceImpl;
+	@Mock KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Mock KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks TicketOpenVsClosedByPriorityServiceImpl ticketOpenVsClosedByPriorityServiceImpl;
 
-	@Mock
-	private FilterHelperService flterHelperService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CommonService commonService;
+	@Mock private FilterHelperService flterHelperService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
@@ -103,7 +95,8 @@ public class TicketOpenVsClosedByPriorityServiceImplTest {
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi55");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
@@ -115,23 +108,27 @@ public class TicketOpenVsClosedByPriorityServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Kanban Project_6335368249794a18e8a4479f");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory = KanbanJiraIssueDataFactory.newInstance();
+		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory =
+				KanbanJiraIssueDataFactory.newInstance();
 		kanbanJiraIssueList = kanbanJiraIssueDataFactory.getKanbanJiraIssueDataList();
 		kanbanJiraIssueRepository.saveAll(kanbanJiraIssueList);
 
-		historyClosedList = KanbanIssueCustomHistoryDataFactory.newInstance().getKanbanIssueCustomHistoryDataList();
+		historyClosedList =
+				KanbanIssueCustomHistoryDataFactory.newInstance().getKanbanIssueCustomHistoryDataList();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
@@ -142,31 +139,36 @@ public class TicketOpenVsClosedByPriorityServiceImplTest {
 		kpiWiseAggregation.put("storyOpenRateByIssue", "sum");
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetStoryOpenRateIssueType() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put("storyOpenRateByIssue", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
+		maturityRangeMap.put(
+				"storyOpenRateByIssue", Arrays.asList("-390", "390-309", "309-221", "221-140", "140-"));
 		maturityRangeMap.put("ticketPriorityWeight", Arrays.asList("10", "7", "5", "3"));
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(ticketOpenVsClosedByPriorityServiceImpl.getKanbanRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(ticketOpenVsClosedByPriorityServiceImpl.getKanbanRequestTrackerId())
+				.thenReturn(kpiRequestTrackerId);
 		when(kanbanJiraIssueRepository.findIssuesByDateAndType(any(), any(), any(), any(), any()))
 				.thenReturn(kanbanJiraIssueList);
-		when(kanbanJiraIssueHistoryRepository.findIssuesByStatusAndDate(any(), any(), any(), any(), any()))
+		when(kanbanJiraIssueHistoryRepository.findIssuesByStatusAndDate(
+						any(), any(), any(), any(), any()))
 				.thenReturn(historyClosedList);
 		// when(customApiConfig.getpriorityP1()).thenReturn(P1);
 
@@ -175,8 +177,9 @@ public class TicketOpenVsClosedByPriorityServiceImplTest {
 		when(commonService.sortTrendValueMap(any())).thenReturn(trendMap);
 
 		try {
-			KpiElement kpiElement = ticketOpenVsClosedByPriorityServiceImpl.getKpiData(kpiRequest,
-					kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			KpiElement kpiElement =
+					ticketOpenVsClosedByPriorityServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			List<DataCount> response = (List<DataCount>) kpiElement.getTrendValueList();
 			assertEquals(1, response.size());
 		} catch (ApplicationException e) {
@@ -191,7 +194,9 @@ public class TicketOpenVsClosedByPriorityServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", ticketOpenVsClosedByPriorityServiceImpl.getQualifierType(),
+		assertThat(
+				"Kpi Name :",
+				ticketOpenVsClosedByPriorityServiceImpl.getQualifierType(),
 				equalTo("TICKET_OPEN_VS_CLOSE_BY_PRIORITY"));
 	}
 }

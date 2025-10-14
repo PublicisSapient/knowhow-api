@@ -51,7 +51,8 @@ public class CommonUtilsTest {
 
 	@Test
 	public void convertToPatternListStartsWith() {
-		Assert.assertNotNull(CommonUtils.convertTestFolderToPatternList(Arrays.asList("test", "test/2", "test3")));
+		Assert.assertNotNull(
+				CommonUtils.convertTestFolderToPatternList(Arrays.asList("test", "test/2", "test3")));
 		Assert.assertNotNull(CommonUtils.convertToPatternList(Arrays.asList("test", "test2", "test3")));
 	}
 
@@ -86,7 +87,8 @@ public class CommonUtilsTest {
 	@Test
 	public void getDaysBetweenDate() {
 
-		Assert.assertNotNull(CommonUtils.getDaysBetweenDate(DateTime.now().minusDays(4), new DateTime()));
+		Assert.assertNotNull(
+				CommonUtils.getDaysBetweenDate(DateTime.now().minusDays(4), new DateTime()));
 	}
 
 	@Test

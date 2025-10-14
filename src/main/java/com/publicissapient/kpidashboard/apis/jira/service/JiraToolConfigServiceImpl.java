@@ -69,61 +69,63 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JiraToolConfigServiceImpl {
 
-	private static final String RESOURCE_JIRA_BOARD_ENDPOINT = "/rest/agile/1.0/board?projectKeyOrId=%s&startAt=%d&type=%s";
+	private static final String RESOURCE_JIRA_BOARD_ENDPOINT =
+			"/rest/agile/1.0/board?projectKeyOrId=%s&startAt=%d&type=%s";
 	final ObjectMapper mapper = new ObjectMapper();
 
-	@Autowired
-	private RestTemplate restTemplate;
+	@Autowired private RestTemplate restTemplate;
 
-	@Autowired
-	private RestAPIUtils restAPIUtils;
+	@Autowired private RestAPIUtils restAPIUtils;
 
-	@Autowired
-	private ConnectionRepository connectionRepository;
+	@Autowired private ConnectionRepository connectionRepository;
 
-	@Autowired
-	private ToolCredentialProvider toolCredentialProvider;
+	@Autowired private ToolCredentialProvider toolCredentialProvider;
 
-	@Autowired
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Autowired private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Autowired
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Autowired private ProjectBasicConfigRepository projectBasicConfigRepository;
 
-	@Autowired
-	private AssigneeDetailsRepository assigneeDetailsRepository;
+	@Autowired private AssigneeDetailsRepository assigneeDetailsRepository;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private ProjectAccessUtil projectAccessUtil;
-	@Autowired
-	private ConnectionService connectionService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private ProjectAccessUtil projectAccessUtil;
+	@Autowired private ConnectionService connectionService;
 
 	public ResponseEntity<ServiceResponse> getJiraBoardDetailsList(BoardRequestDTO boardRequestDTO) {
 
 		List<BoardDetailsDTO> responseList = new ArrayList<>();
-		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(boardRequestDTO.getConnectionId()));
+		Optional<Connection> optConnection =
+				connectionRepository.findById(new ObjectId(boardRequestDTO.getConnectionId()));
 		try {
 			if (optConnection.isPresent()) {
 				Connection connection = optConnection.get();
 				connectionService.validateConnectionFlag(connection);
 				if (projectAccessUtil.ifConnectionNotAccessible(connection)) {
-					return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false,
-							"Not found any configure board details with provided connection details", null));
+					return ResponseEntity.status(HttpStatus.OK)
+							.body(
+									new ServiceResponse(
+											false,
+											"Not found any configure board details with provided connection details",
+											null));
 				}
 				String baseUrl = connection.getBaseUrl() == null ? null : connection.getBaseUrl().trim();
 				HttpEntity<?> httpEntity = getHttpEntity(connection);
-				fetchBoardDetailsRestAPICall(boardRequestDTO, responseList, baseUrl, httpEntity, connection);
+				fetchBoardDetailsRestAPICall(
+						boardRequestDTO, responseList, baseUrl, httpEntity, connection);
 				return ResponseEntity.ok()
-						.body(new ServiceResponse(true, "Successfully fetched board details list", responseList));
+						.body(
+								new ServiceResponse(true, "Successfully fetched board details list", responseList));
 			}
 		} catch (RestClientException exception) {
 			isClientException(optConnection, exception);
 			log.error("exception occured while trying to hit api.");
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(
-				new ServiceResponse(false, "Not found any configure board details with provided connection details", null));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(
+						new ServiceResponse(
+								false,
+								"Not found any configure board details with provided connection details",
+								null));
 	}
 
 	/**
@@ -132,32 +134,46 @@ public class JiraToolConfigServiceImpl {
 	 * @param optConnection
 	 * @param exception
 	 */
-	private void isClientException(Optional<Connection> optConnection, RestClientException exception) {
-		if (exception instanceof HttpClientErrorException &&
-				((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
-			String errMsg = ClientErrorMessageEnum.fromValue(((HttpClientErrorException) exception).getStatusCode().value())
-					.getReasonPhrase();
-			optConnection.ifPresent(connection -> connectionService.updateBreakingConnection(connection, errMsg));
+	private void isClientException(
+			Optional<Connection> optConnection, RestClientException exception) {
+		if (exception instanceof HttpClientErrorException
+				&& ((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
+			String errMsg =
+					ClientErrorMessageEnum.fromValue(
+									((HttpClientErrorException) exception).getStatusCode().value())
+							.getReasonPhrase();
+			optConnection.ifPresent(
+					connection -> connectionService.updateBreakingConnection(connection, errMsg));
 		}
 	}
 
-	public void fetchBoardDetailsRestAPICall(BoardRequestDTO boardRequestDTO, List<BoardDetailsDTO> responseList,
-			String baseUrl, HttpEntity<?> httpEntity, Connection connection) {
+	public void fetchBoardDetailsRestAPICall(
+			BoardRequestDTO boardRequestDTO,
+			List<BoardDetailsDTO> responseList,
+			String baseUrl,
+			HttpEntity<?> httpEntity,
+			Connection connection) {
 		long startAt = 0;
 		long nextPageIndex = startAt;
 		boolean isLast = false;
 		do {
 			try {
-				String url = String.format(new StringBuilder(baseUrl).append(RESOURCE_JIRA_BOARD_ENDPOINT).toString(),
-						boardRequestDTO.getProjectKey(), nextPageIndex, boardRequestDTO.getBoardType());
+				String url =
+						String.format(
+								new StringBuilder(baseUrl).append(RESOURCE_JIRA_BOARD_ENDPOINT).toString(),
+								boardRequestDTO.getProjectKey(),
+								nextPageIndex,
+								boardRequestDTO.getBoardType());
 
-				ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
+				ResponseEntity<String> response =
+						restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
 
 				if (response.getStatusCode() == HttpStatus.OK) {
-					JiraBoardListResponse jiraBoardListResponse = mapper.readValue(response.getBody(),
-							JiraBoardListResponse.class);
+					JiraBoardListResponse jiraBoardListResponse =
+							mapper.readValue(response.getBody(), JiraBoardListResponse.class);
 					if (!jiraBoardListResponse.getIsLast().equalsIgnoreCase("true")) {
-						nextPageIndex = jiraBoardListResponse.getStartAt() + jiraBoardListResponse.getMaxResults();
+						nextPageIndex =
+								jiraBoardListResponse.getStartAt() + jiraBoardListResponse.getMaxResults();
 						isLast = true;
 					} else {
 						isLast = false;
@@ -169,25 +185,32 @@ public class JiraToolConfigServiceImpl {
 				}
 
 			} catch (Exception exception) {
-				if (exception instanceof HttpClientErrorException &&
-						((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
-					String errMsg = ClientErrorMessageEnum
-							.fromValue(((HttpClientErrorException) exception).getStatusCode().value()).getReasonPhrase();
+				if (exception instanceof HttpClientErrorException
+						&& ((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
+					String errMsg =
+							ClientErrorMessageEnum.fromValue(
+											((HttpClientErrorException) exception).getStatusCode().value())
+									.getReasonPhrase();
 					connectionService.updateBreakingConnection(connection, errMsg);
 				}
-				log.error("Error while fetching boardList for projectKey Id {}:  {}", boardRequestDTO.getProjectKey(),
+				log.error(
+						"Error while fetching boardList for projectKey Id {}:  {}",
+						boardRequestDTO.getProjectKey(),
 						exception.getMessage());
 			}
 		} while (isLast);
 	}
 
-	private void setBoardListResponse(List<BoardDetailsDTO> responseList, JiraBoardListResponse jiraBoardListResponse) {
-		jiraBoardListResponse.getValues().stream().forEach(jiraBoardValueResponse -> {
-			BoardDetailsDTO boardDetailsDTO = new BoardDetailsDTO();
-			boardDetailsDTO.setBoardId(jiraBoardValueResponse.getId());
-			boardDetailsDTO.setBoardName(jiraBoardValueResponse.getName());
-			responseList.add(boardDetailsDTO);
-		});
+	private void setBoardListResponse(
+			List<BoardDetailsDTO> responseList, JiraBoardListResponse jiraBoardListResponse) {
+		jiraBoardListResponse.getValues().stream()
+				.forEach(
+						jiraBoardValueResponse -> {
+							BoardDetailsDTO boardDetailsDTO = new BoardDetailsDTO();
+							boardDetailsDTO.setBoardId(jiraBoardValueResponse.getId());
+							boardDetailsDTO.setBoardName(jiraBoardValueResponse.getName());
+							responseList.add(boardDetailsDTO);
+						});
 	}
 
 	private HttpEntity<?> getHttpEntity(Connection connection) {
@@ -195,15 +218,24 @@ public class JiraToolConfigServiceImpl {
 		String password = "";
 		HttpHeaders headers = new HttpHeaders();
 		if (connection.isJaasKrbAuth()) {
-			KerberosClient client = new KerberosClient(connection.getJaasConfigFilePath(), connection.getKrb5ConfigFilePath(),
-					connection.getJaasUser(), connection.getSamlEndPoint(), connection.getBaseUrl());
-			client.login(customApiConfig.getSamlTokenStartString(), customApiConfig.getSamlTokenEndString(),
-					customApiConfig.getSamlUrlStartString(), customApiConfig.getSamlUrlEndString());
+			KerberosClient client =
+					new KerberosClient(
+							connection.getJaasConfigFilePath(),
+							connection.getKrb5ConfigFilePath(),
+							connection.getJaasUser(),
+							connection.getSamlEndPoint(),
+							connection.getBaseUrl());
+			client.login(
+					customApiConfig.getSamlTokenStartString(),
+					customApiConfig.getSamlTokenEndString(),
+					customApiConfig.getSamlUrlStartString(),
+					customApiConfig.getSamlUrlEndString());
 			password = client.getCookies();
 			headers = restAPIUtils.addHeaders(headers, "Cookie", password);
 		} else if (connection.isVault()) {
-			ToolCredential credential = toolCredentialProvider
-					.findCredential(connection.getUsername() == null ? null : connection.getUsername().trim());
+			ToolCredential credential =
+					toolCredentialProvider.findCredential(
+							connection.getUsername() == null ? null : connection.getUsername().trim());
 			if (credential != null) {
 				username = credential.getUsername();
 				password = credential.getPassword();
@@ -214,7 +246,10 @@ public class JiraToolConfigServiceImpl {
 			headers = restAPIUtils.getHeadersForPAT(patOAuthToken);
 		} else {
 			username = connection.getUsername() == null ? null : connection.getUsername().trim();
-			password = connection.getPassword() == null ? null : restAPIUtils.decryptPassword(connection.getPassword());
+			password =
+					connection.getPassword() == null
+							? null
+							: restAPIUtils.decryptPassword(connection.getPassword());
 			headers = restAPIUtils.getHeaders(username, password);
 		}
 		return new HttpEntity<>(headers);
@@ -222,18 +257,23 @@ public class JiraToolConfigServiceImpl {
 
 	public AssigneeResponseDTO getProjectAssigneeDetails(String projectConfigId) {
 		AssigneeResponseDTO assigneeResponseDTO = new AssigneeResponseDTO();
-		AssigneeDetails assigneeDetails = assigneeDetailsRepository.findByBasicProjectConfigId(projectConfigId);
+		AssigneeDetails assigneeDetails =
+				assigneeDetailsRepository.findByBasicProjectConfigId(projectConfigId);
 		List<AssigneeDetailsDTO> assigneeDetailsDTOResponseList = new ArrayList<>();
 		if (assigneeDetails != null && CollectionUtils.isNotEmpty(assigneeDetails.getAssignee())) {
-			assigneeDetails.getAssignee().stream().forEach(assignee -> {
-				AssigneeDetailsDTO assigneeDetailsDTO = new AssigneeDetailsDTO();
-				// assigneeId will be unique id for assignee
-				assigneeDetailsDTO.setName(assignee.getAssigneeId());
-				assigneeDetailsDTO.setDisplayName(assignee.getAssigneeName());
-				assigneeDetailsDTOResponseList.add(assigneeDetailsDTO);
-			});
-			Collections.sort(assigneeDetailsDTOResponseList,
-					(AssigneeDetailsDTO o1, AssigneeDetailsDTO o2) -> o1.getDisplayName().compareTo(o2.getDisplayName()));
+			assigneeDetails.getAssignee().stream()
+					.forEach(
+							assignee -> {
+								AssigneeDetailsDTO assigneeDetailsDTO = new AssigneeDetailsDTO();
+								// assigneeId will be unique id for assignee
+								assigneeDetailsDTO.setName(assignee.getAssigneeId());
+								assigneeDetailsDTO.setDisplayName(assignee.getAssigneeName());
+								assigneeDetailsDTOResponseList.add(assigneeDetailsDTO);
+							});
+			Collections.sort(
+					assigneeDetailsDTOResponseList,
+					(AssigneeDetailsDTO o1, AssigneeDetailsDTO o2) ->
+							o1.getDisplayName().compareTo(o2.getDisplayName()));
 		}
 		assigneeResponseDTO.setBasicProjectConfigId(new ObjectId(projectConfigId));
 		assigneeResponseDTO.setAssigneeDetailsList(assigneeDetailsDTOResponseList);

@@ -79,25 +79,18 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class MeanTimeToRecoverServiceImplTest {
 
-	@InjectMocks
-	private MeanTimeToRecoverServiceImpl meanTimeToRecoverService;
+	@InjectMocks private MeanTimeToRecoverServiceImpl meanTimeToRecoverService;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
 
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Mock
-	private CustomApiConfig customApiSetting;
-	@Mock
-	private CacheService cacheService;
+	@Mock private CustomApiConfig customApiSetting;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
 	private KpiRequest kpiRequest;
 	KpiElement kpiElement;
@@ -119,8 +112,8 @@ public class MeanTimeToRecoverServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.MEAN_TIME_TO_RECOVER.getKpiId());
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		// when(cacheService.cacheAccountHierarchyData()).thenReturn(accountHierarchyDataList);
 
@@ -129,16 +122,17 @@ public class MeanTimeToRecoverServiceImplTest {
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssueList = jiraIssueDataFactory.getJiraIssues();
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory
-				.newInstance("/json/default/iteration/jira_issue_custom_history_new_structure.json");
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance(
+						"/json/default/iteration/jira_issue_custom_history_new_structure.json");
 		issueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 
 		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
 		projectConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
 		projectConfig.setProjectName("Scrum Project");
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -154,9 +148,10 @@ public class MeanTimeToRecoverServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfigs -> {
-			projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
-		});
+		projectConfigList.forEach(
+				projectConfigs -> {
+					projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 	}
 
@@ -167,15 +162,17 @@ public class MeanTimeToRecoverServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
-		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(any(), any(), any(), any()))
+		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+						any(), any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> meanTimeToRecoverDataListMap = meanTimeToRecoverService.fetchKPIDataFromDb(leafNodeList, null,
-				null, kpiRequest);
+		Map<String, Object> meanTimeToRecoverDataListMap =
+				meanTimeToRecoverService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		assertNotNull(meanTimeToRecoverDataListMap);
 	}
 
@@ -188,24 +185,36 @@ public class MeanTimeToRecoverServiceImplTest {
 
 	@Test
 	public void getMeanTimeToRecoverForJiraData_weekWise() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 
-		issueCustomHistoryList.stream().forEach(issue -> issue.setCreatedDate(new DateTime().minusWeeks(3)));
-		when(jiraIssueRepository.findIssuesWithBoolean(Mockito.anyMap(), Mockito.anyString(), Mockito.anyBoolean(),
-				Mockito.anyString(), Mockito.anyString())).thenReturn(jiraIssueList);
-		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(any(), any(), any(), any()))
+		issueCustomHistoryList.stream()
+				.forEach(issue -> issue.setCreatedDate(new DateTime().minusWeeks(3)));
+		when(jiraIssueRepository.findIssuesWithBoolean(
+						Mockito.anyMap(),
+						Mockito.anyString(),
+						Mockito.anyBoolean(),
+						Mockito.anyString(),
+						Mockito.anyString()))
+				.thenReturn(jiraIssueList);
+		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+						any(), any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
 		when(meanTimeToRecoverService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = meanTimeToRecoverService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Mean Time to Recover TrendValue :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					meanTimeToRecoverService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Mean Time to Recover TrendValue :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(1));
 		} catch (Exception exception) {
 		}
@@ -256,23 +265,34 @@ public class MeanTimeToRecoverServiceImplTest {
 		durationFilter.put(Constant.COUNT, 20);
 		kpiElement = kpiRequest.getKpiList().get(0);
 		kpiElement.setFilterDuration(durationFilter);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		// Correct usage of argument matcher
-		when(jiraIssueRepository.findIssuesWithBoolean(Mockito.anyMap(), Mockito.anyString(), Mockito.anyBoolean(),
-				Mockito.anyString(), Mockito.anyString())).thenReturn(jiraIssueList);
-		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(any(), any(), any(), any()))
+		when(jiraIssueRepository.findIssuesWithBoolean(
+						Mockito.anyMap(),
+						Mockito.anyString(),
+						Mockito.anyBoolean(),
+						Mockito.anyString(),
+						Mockito.anyString()))
+				.thenReturn(jiraIssueList);
+		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+						any(), any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
 		when(meanTimeToRecoverService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = meanTimeToRecoverService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Mean Time to Recover TrendValue :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					meanTimeToRecoverService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Mean Time to Recover TrendValue :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(1));
 		} catch (Exception exception) {
 		}
@@ -280,39 +300,52 @@ public class MeanTimeToRecoverServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData_BadScenario() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		// when(jiraIssueRepository.findIssuesWithBoolean(Mockito.anyMap(),
 		// Mockito.anyString(),Mockito.anyBoolean(), Mockito.anyString(),
 		// Mockito.anyString())).thenReturn(new ArrayList<>());
-		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(any(), any(), any(), any()))
+		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+						any(), any(), any(), any()))
 				.thenReturn(new ArrayList<>());
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> meanTimeToRecoverDataListMap = meanTimeToRecoverService.fetchKPIDataFromDb(leafNodeList, null,
-				null, kpiRequest);
+		Map<String, Object> meanTimeToRecoverDataListMap =
+				meanTimeToRecoverService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		assertNotNull(meanTimeToRecoverDataListMap);
 	}
 
 	@Test
 	public void getMeanTimeToRecoverForJiraData_BadScenario() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(jiraIssueRepository.findIssuesWithBoolean(Mockito.anyMap(), Mockito.anyString(), Mockito.anyBoolean(),
-				Mockito.anyString(), Mockito.anyString())).thenReturn(new ArrayList<>());
-		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(any(), any(), any(), any()))
+		when(jiraIssueRepository.findIssuesWithBoolean(
+						Mockito.anyMap(),
+						Mockito.anyString(),
+						Mockito.anyBoolean(),
+						Mockito.anyString(),
+						Mockito.anyString()))
+				.thenReturn(new ArrayList<>());
+		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+						any(), any(), any(), any()))
 				.thenReturn(new ArrayList<>());
 		when(meanTimeToRecoverService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = meanTimeToRecoverService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Mean Time to Recover TrendValue :", ((List<DataCount>) kpiElement.getTrendValueList()).size(),
+			KpiElement kpiElement =
+					meanTimeToRecoverService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Mean Time to Recover TrendValue :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
 					equalTo(0));
 		} catch (Exception exception) {
 		}

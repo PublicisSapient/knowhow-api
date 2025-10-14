@@ -36,12 +36,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings("java:S1075")
 public class FieldMappingStructureDataFactory {
-	private static final String FILE_PATH_KPI_LIST = "/json/mongock/default/field_mapping_structure.json";
+	private static final String FILE_PATH_KPI_LIST =
+			"/json/mongock/default/field_mapping_structure.json";
 	private List<FieldMappingStructure> fieldMappingStructureList;
 	private ObjectMapper mapper;
 
-	private FieldMappingStructureDataFactory() {
-	}
+	private FieldMappingStructureDataFactory() {}
 
 	public static FieldMappingStructureDataFactory newInstance(String filePath) {
 
@@ -61,9 +61,10 @@ public class FieldMappingStructureDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
-			fieldMappingStructureList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<FieldMappingStructure>>() {
-					});
+			fieldMappingStructureList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<FieldMappingStructure>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading from file = " + filePath, e);
 		}

@@ -33,10 +33,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /**
- *
  * @author shi6
  */
-@ChangeUnit(id = "r_update_time_kpi_column", order = "013300", author = "shi6", systemVersion = "13.3.0")
+@ChangeUnit(
+		id = "r_update_time_kpi_column",
+		order = "013300",
+		author = "shi6",
+		systemVersion = "13.3.0")
 public class RollbackUpdateKPIColumnTime {
 	private static final String COLUMN_NAME = "columnName";
 	private static final String KPI_COLUMN_DETAILS = "kpiColumnDetails";
@@ -79,17 +82,24 @@ public class RollbackUpdateKPIColumnTime {
 		updateMultipleKpisColumns(mongoTemplate, kpiRenameMap);
 	}
 
-	public void updateMultipleKpisColumns(MongoTemplate mongoTemplate, Map<String, Map<String, String>> kpiRenameMap) {
+	public void updateMultipleKpisColumns(
+			MongoTemplate mongoTemplate, Map<String, Map<String, String>> kpiRenameMap) {
 
-		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_column_configs"); // Replace with your
-																								  // collection name
+		MongoCollection<Document> collection =
+				mongoTemplate.getCollection("kpi_column_configs"); // Replace with your
+		// collection name
 		for (Map.Entry<String, Map<String, String>> entry : kpiRenameMap.entrySet()) {
 			String kpiId = entry.getKey();
 			Map<String, String> renameMap = entry.getValue();
 
 			// Filter documents for this KPI with relevant old column names
-			Document filter = new Document("kpiId", kpiId).append(KPI_COLUMN_DETAILS,
-					new Document("$elemMatch", new Document(COLUMN_NAME, new Document("$in", renameMap.keySet()))));
+			Document filter =
+					new Document("kpiId", kpiId)
+							.append(
+									KPI_COLUMN_DETAILS,
+									new Document(
+											"$elemMatch",
+											new Document(COLUMN_NAME, new Document("$in", renameMap.keySet()))));
 
 			for (Document doc : collection.find(filter)) {
 				boolean updated = false;
@@ -104,7 +114,8 @@ public class RollbackUpdateKPIColumnTime {
 				}
 
 				if (updated) {
-					collection.updateOne(eq("_id", doc.getObjectId("_id")),
+					collection.updateOne(
+							eq("_id", doc.getObjectId("_id")),
 							new Document("$set", new Document(KPI_COLUMN_DETAILS, kpiColumnDetails)));
 				}
 			}

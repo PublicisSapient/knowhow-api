@@ -20,6 +20,4 @@ package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 
-public record UploadAIUsageRequest(@NotEmpty String filePath) {
-}
-
+public record UploadAIUsageRequest(@NotEmpty String filePath) {}

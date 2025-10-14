@@ -52,8 +52,7 @@ public class IssueHygieneServiceImpl extends JiraIterationKPIService {
 	private static final String ISSUES_WITHOUT_ESTIMATES = "Issue without estimates";
 	private static final String ISSUES_WITH_MISSING_WORKLOGS = "Issue with missing worklogs";
 	private static final String FILTER_TYPE = "Multi";
-	@Autowired
-	ConfigHelperService configHelperService;
+	@Autowired ConfigHelperService configHelperService;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node sprintNode)
@@ -68,37 +67,52 @@ public class IssueHygieneServiceImpl extends JiraIterationKPIService {
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Issue Hygiene -> Requested sprint : {}", leafNode.getName());
 			SprintDetails dbSprintDetail = getSprintDetailsFromBaseClass();
 			SprintDetails sprintDetails;
 			if (null != dbSprintDetail) {
-				FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+				FieldMapping fieldMapping =
+						configHelperService
+								.getFieldMappingMap()
+								.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 				// to modify sprint details on the basis of configuration for the project
 				List<JiraIssueCustomHistory> totalHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
 				List<JiraIssue> totalJiraIssueList = getJiraIssuesFromBaseClass();
-				Set<String> issueList = totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
+				Set<String> issueList =
+						totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
 
-				sprintDetails = IterationKpiHelper.transformIterSprintdetail(totalHistoryList, issueList, dbSprintDetail,
-						fieldMapping.getJiraIterationIssuetypeKPI124(), fieldMapping.getJiraIterationCompletionStatusKPI124(),
-						leafNode.getProjectFilter().getBasicProjectConfigId());
+				sprintDetails =
+						IterationKpiHelper.transformIterSprintdetail(
+								totalHistoryList,
+								issueList,
+								dbSprintDetail,
+								fieldMapping.getJiraIterationIssuetypeKPI124(),
+								fieldMapping.getJiraIterationCompletionStatusKPI124(),
+								leafNode.getProjectFilter().getBasicProjectConfigId());
 
-				List<String> totalIssues = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-						CommonConstant.TOTAL_ISSUES);
+				List<String> totalIssues =
+						KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+								sprintDetails, CommonConstant.TOTAL_ISSUES);
 				if (CollectionUtils.isNotEmpty(totalIssues)) {
-					List<JiraIssue> jiraIssueList = IterationKpiHelper.getFilteredJiraIssue(totalIssues, totalJiraIssueList);
-					Set<JiraIssue> filtersIssuesList = KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
-							sprintDetails, sprintDetails.getTotalIssues(), jiraIssueList);
+					List<JiraIssue> jiraIssueList =
+							IterationKpiHelper.getFilteredJiraIssue(totalIssues, totalJiraIssueList);
+					Set<JiraIssue> filtersIssuesList =
+							KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
+									sprintDetails, sprintDetails.getTotalIssues(), jiraIssueList);
 					if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeExcludeKPI124())) {
-						Set<String> defectTypeSet = fieldMapping.getJiraIssueTypeExcludeKPI124().stream().map(String::toLowerCase)
-								.collect(Collectors.toSet());
-						filtersIssuesList = filtersIssuesList.stream()
-								.filter(jiraIssue -> !defectTypeSet.contains(jiraIssue.getTypeName().toLowerCase()))
-								.collect(Collectors.toCollection(HashSet::new));
+						Set<String> defectTypeSet =
+								fieldMapping.getJiraIssueTypeExcludeKPI124().stream()
+										.map(String::toLowerCase)
+										.collect(Collectors.toSet());
+						filtersIssuesList =
+								filtersIssuesList.stream()
+										.filter(
+												jiraIssue -> !defectTypeSet.contains(jiraIssue.getTypeName().toLowerCase()))
+										.collect(Collectors.toCollection(HashSet::new));
 					}
 					resultListMap.put(ISSUES, new ArrayList<>(filtersIssuesList));
 				}
@@ -108,38 +122,48 @@ public class IssueHygieneServiceImpl extends JiraIterationKPIService {
 	}
 
 	/**
-	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at
-	 * sprint level.
+	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at sprint level.
 	 *
 	 * @param latestSprint
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Node latestSprint, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Node latestSprint, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(latestSprint, null, null, kpiRequest);
 		List<JiraIssue> allIssues = (List<JiraIssue>) resultMap.get(ISSUES);
 		if (CollectionUtils.isNotEmpty(allIssues)) {
-			log.info("Issue Hygiene -> request id : {} total jira Issues : {}", requestTrackerId, allIssues.size());
+			log.info(
+					"Issue Hygiene -> request id : {} total jira Issues : {}",
+					requestTrackerId,
+					allIssues.size());
 			// Creating map of modal Objects
-			Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(allIssues);
+			Map<String, IssueKpiModalValue> issueKpiModalObject =
+					KpiDataHelper.createMapOfIssueModal(allIssues);
 
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(Objects.requireNonNull(latestSprint).getProjectFilter().getBasicProjectConfigId());
-			allIssues.forEach(issue -> {
-				KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
-				IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
-				data.setCategory(new ArrayList<>());
-				if (issue.getEstimate() == null || Double.valueOf(issue.getEstimate()).equals(0.0)) {
-					data.getCategory().add(ISSUES_WITHOUT_ESTIMATES);
-				}
-				if ((issue.getTimeSpentInMinutes() == null || issue.getTimeSpentInMinutes() == 0) &&
-						!checkStatus(issue, fieldMapping)) {
-					data.getCategory().add(ISSUES_WITH_MISSING_WORKLOGS);
-				}
-			});
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(
+									Objects.requireNonNull(latestSprint)
+											.getProjectFilter()
+											.getBasicProjectConfigId());
+			allIssues.forEach(
+					issue -> {
+						KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
+						IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
+						data.setCategory(new ArrayList<>());
+						if (issue.getEstimate() == null || Double.valueOf(issue.getEstimate()).equals(0.0)) {
+							data.getCategory().add(ISSUES_WITHOUT_ESTIMATES);
+						}
+						if ((issue.getTimeSpentInMinutes() == null || issue.getTimeSpentInMinutes() == 0)
+								&& !checkStatus(issue, fieldMapping)) {
+							data.getCategory().add(ISSUES_WITH_MISSING_WORKLOGS);
+						}
+					});
 
 			kpiElement.setSprint(latestSprint.getName());
 			kpiElement.setModalHeads(KPIExcelColumn.ISSUE_HYGINE.getColumns());
@@ -191,9 +215,18 @@ public class IssueHygieneServiceImpl extends JiraIterationKPIService {
 		KpiDataGroup dataGroup = new KpiDataGroup();
 
 		List<KpiData> dataGroup1 = new ArrayList<>();
-		dataGroup1.add(createKpiData("", ISSUES_WITHOUT_ESTIMATES, 1, "count", "", "Category", ISSUES_WITHOUT_ESTIMATES));
-		dataGroup1
-				.add(createKpiData("", ISSUES_WITH_MISSING_WORKLOGS, 2, "count", "", "Category", ISSUES_WITH_MISSING_WORKLOGS));
+		dataGroup1.add(
+				createKpiData(
+						"", ISSUES_WITHOUT_ESTIMATES, 1, "count", "", "Category", ISSUES_WITHOUT_ESTIMATES));
+		dataGroup1.add(
+				createKpiData(
+						"",
+						ISSUES_WITH_MISSING_WORKLOGS,
+						2,
+						"count",
+						"",
+						"Category",
+						ISSUES_WITH_MISSING_WORKLOGS));
 
 		dataGroup.setDataGroup1(dataGroup1);
 		return dataGroup;
@@ -209,7 +242,13 @@ public class IssueHygieneServiceImpl extends JiraIterationKPIService {
 	 * @param unit
 	 * @return
 	 */
-	private KpiData createKpiData(String key, String name, Integer order, String aggregation, String unit, String key1,
+	private KpiData createKpiData(
+			String key,
+			String name,
+			Integer order,
+			String aggregation,
+			String unit,
+			String key1,
 			String value1) {
 		KpiData data = new KpiData();
 		data.setKey(key);
@@ -227,9 +266,13 @@ public class IssueHygieneServiceImpl extends JiraIterationKPIService {
 	private boolean checkStatus(JiraIssue jiraIssue, FieldMapping fieldMapping) {
 
 		boolean toDrop = false;
-		if (null != fieldMapping && CollectionUtils.isNotEmpty(fieldMapping.getIssueStatusExcluMissingWorkKPI124())) {
-			toDrop = fieldMapping.getIssueStatusExcluMissingWorkKPI124().stream().map(String::toUpperCase).toList()
-					.contains(jiraIssue.getJiraStatus().toUpperCase());
+		if (null != fieldMapping
+				&& CollectionUtils.isNotEmpty(fieldMapping.getIssueStatusExcluMissingWorkKPI124())) {
+			toDrop =
+					fieldMapping.getIssueStatusExcluMissingWorkKPI124().stream()
+							.map(String::toUpperCase)
+							.toList()
+							.contains(jiraIssue.getJiraStatus().toUpperCase());
 		}
 		return toDrop;
 	}

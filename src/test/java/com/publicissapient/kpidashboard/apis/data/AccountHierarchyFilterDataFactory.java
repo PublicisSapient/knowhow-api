@@ -37,12 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountHierarchyFilterDataFactory {
 
-	private static final String FILE_PATH_ACCOUNT_HIERARCHIES_FILTER_DATA = "/json/default/account_hierarchy_filter_data.json";
+	private static final String FILE_PATH_ACCOUNT_HIERARCHIES_FILTER_DATA =
+			"/json/default/account_hierarchy_filter_data.json";
 	private List<AccountHierarchyData> accountHierarchyDataList;
 	private ObjectMapper mapper;
 
-	private AccountHierarchyFilterDataFactory() {
-	}
+	private AccountHierarchyFilterDataFactory() {}
 
 	public static AccountHierarchyFilterDataFactory newInstance(String filePath) {
 
@@ -60,11 +60,13 @@ public class AccountHierarchyFilterDataFactory {
 	private void init(String filePath) {
 		try {
 
-			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ACCOUNT_HIERARCHIES_FILTER_DATA : filePath;
+			String resultPath =
+					StringUtils.isEmpty(filePath) ? FILE_PATH_ACCOUNT_HIERARCHIES_FILTER_DATA : filePath;
 
-			accountHierarchyDataList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<AccountHierarchyData>>() {
-					});
+			accountHierarchyDataList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<AccountHierarchyData>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

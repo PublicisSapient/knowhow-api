@@ -84,43 +84,29 @@ import com.publicissapient.kpidashboard.common.repository.userboardconfig.UserBo
 @RunWith(MockitoJUnitRunner.class)
 public class UserBoardConfigServiceImplTest {
 
-	@InjectMocks
-	private UserBoardConfigServiceImpl userBoardConfigServiceImpl;
+	@InjectMocks private UserBoardConfigServiceImpl userBoardConfigServiceImpl;
 
-	@Mock
-	private UserBoardConfigRepository userBoardConfigRepository;
+	@Mock private UserBoardConfigRepository userBoardConfigRepository;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
-	@Mock
-	private KpiMasterRepository kpiMasterRepository;
+	@Mock private KpiMasterRepository kpiMasterRepository;
 
-	@Mock
-	private UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Mock private UserAuthorizedProjectsService userAuthorizedProjectsService;
 
-	@Mock
-	private KpiCategoryRepository kpiCategoryRepository;
+	@Mock private KpiCategoryRepository kpiCategoryRepository;
 
-	@Mock
-	private KpiCategoryMappingRepository kpiCategoryMappingRepository;
+	@Mock private KpiCategoryMappingRepository kpiCategoryMappingRepository;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private UserInfoCustomRepository userInfoCustomRepository;
-	@Mock
-	private FiltersRepository filtersRepository;
-	@Mock
-	private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-	@Mock
-	private UserBoardConfigMapper userBoardConfigMapper;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private UserInfoCustomRepository userInfoCustomRepository;
+	@Mock private FiltersRepository filtersRepository;
+	@Mock private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
+	@Mock private UserBoardConfigMapper userBoardConfigMapper;
 
 	private List<KpiCategory> kpiCategoryList;
 	private List<KpiCategoryMapping> kpiCategoryMappingList;
@@ -130,7 +116,8 @@ public class UserBoardConfigServiceImplTest {
 	@Before
 	public void setUp() {
 		kpiCategoryList = KpiCategoryDataFactory.newInstance().getKpiCategoryList();
-		kpiCategoryMappingList = KpiCategoryMappingDataFactory.newInstance().getKpiCategoryMappingList();
+		kpiCategoryMappingList =
+				KpiCategoryMappingDataFactory.newInstance().getKpiCategoryMappingList();
 		ProjectListRequested projectListRequested = new ProjectListRequested();
 		projectListRequested.setBasicProjectConfigIds(Arrays.asList("proj1", "proj2"));
 		listOfReqProjects = projectListRequested;
@@ -155,8 +142,10 @@ public class UserBoardConfigServiceImplTest {
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
 		when(authenticationService.getLoggedInUser()).thenReturn(username);
-		when(userBoardConfigRepository.save(getData(username, true))).thenReturn(getData(username, true));
-		ServiceResponse response = userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
+		when(userBoardConfigRepository.save(getData(username, true)))
+				.thenReturn(getData(username, true));
+		ServiceResponse response =
+				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
 		assertNotNull(response);
 	}
 
@@ -166,10 +155,12 @@ public class UserBoardConfigServiceImplTest {
 		String projId = "id";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(authenticationService.getLoggedInUser()).thenReturn(username);
-		when(userBoardConfigRepository.save(getData(username, true))).thenReturn(getData(username, true));
+		when(userBoardConfigRepository.save(getData(username, true)))
+				.thenReturn(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 
-		ServiceResponse response = userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
+		ServiceResponse response =
+				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
 		assertNotNull(response);
 	}
 
@@ -181,7 +172,8 @@ public class UserBoardConfigServiceImplTest {
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
 		when(authenticationService.getLoggedInUser()).thenReturn(username);
-		ServiceResponse response = userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
+		ServiceResponse response =
+				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
 		assertNotNull(response.getData());
 	}
 
@@ -191,12 +183,16 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 		when(authenticationService.getLoggedInUser()).thenReturn("invalid");
-		assertNull(userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, "proj1").getData());
+		assertNull(
+				userBoardConfigServiceImpl
+						.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, "proj1")
+						.getData());
 	}
 
 	@Test
 	public void testSaveUserBoardConfig_DTOIsNull() {
-		assertNull(userBoardConfigServiceImpl.saveBoardConfig(null, ConfigLevel.USER, "proj1").getData());
+		assertNull(
+				userBoardConfigServiceImpl.saveBoardConfig(null, ConfigLevel.USER, "proj1").getData());
 	}
 
 	@Test
@@ -211,15 +207,19 @@ public class UserBoardConfigServiceImplTest {
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
 		when(authenticationService.getLoggedInUser()).thenReturn(username);
 
-		assertNotNull(userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId).getData());
+		assertNotNull(
+				userBoardConfigServiceImpl
+						.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId)
+						.getData());
 	}
 
 	@Test
 	public void testGetOrPrepareBoardConfig_success() {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -228,8 +228,9 @@ public class UserBoardConfigServiceImplTest {
 	public void testGetOrPrepareBoardConfig_null_success() {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -239,8 +240,8 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		String projId = "id";
 		doReturn(username).when(authenticationService).getLoggedInUser();
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.PROJECT,
-				projId);
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.PROJECT, projId);
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getBasicProjectConfigId(), projId);
 	}
@@ -250,8 +251,8 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		String projId = "id";
 		doReturn(username).when(authenticationService).getLoggedInUser();
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.PROJECT,
-				projId);
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.PROJECT, projId);
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getBasicProjectConfigId(), projId);
 	}
@@ -263,8 +264,9 @@ public class UserBoardConfigServiceImplTest {
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		Iterable<KpiMaster> kpiMasters = kpiMasterDataFactory.getKpiList();
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertNotNull(userBoardConfigDTO);
 	}
 
@@ -275,8 +277,8 @@ public class UserBoardConfigServiceImplTest {
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		Iterable<KpiMaster> kpiMasters = kpiMasterDataFactory.getKpiList();
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getBoardConfig(ConfigLevel.PROJECT,
-				listOfReqProjects);
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getBoardConfig(ConfigLevel.PROJECT, listOfReqProjects);
 		assertNotNull(userBoardConfigDTO);
 	}
 
@@ -289,8 +291,8 @@ public class UserBoardConfigServiceImplTest {
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(configHelperService.loadUserBoardConfig()).thenReturn(userBoardConfigMap);
 
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getBoardConfig(ConfigLevel.USER,
-				listOfReqProjects);
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getBoardConfig(ConfigLevel.USER, listOfReqProjects);
 		assertNotNull(userBoardConfigDTO);
 	}
 
@@ -298,8 +300,9 @@ public class UserBoardConfigServiceImplTest {
 	public void testGetUserBoardConfig_NoOrPrepareBoardConfigFound_success() {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertNotNull(userBoardConfigDTO);
 	}
 
@@ -315,8 +318,8 @@ public class UserBoardConfigServiceImplTest {
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO1);
 		when(userBoardConfigRepository.save(data)).thenReturn(data);
 
-		ServiceResponse response = userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO1, ConfigLevel.USER,
-				projId);
+		ServiceResponse response =
+				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO1, ConfigLevel.USER, projId);
 		UserBoardConfigDTO userBoardConfig = (UserBoardConfigDTO) response.getData();
 		boolean shown = userBoardConfig.getScrum().get(0).getKpis().get(0).isShown();
 		assertFalse(shown);
@@ -334,8 +337,8 @@ public class UserBoardConfigServiceImplTest {
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO1)).thenReturn(data);
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO1);
 
-		ServiceResponse response = userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO1, ConfigLevel.USER,
-				projId);
+		ServiceResponse response =
+				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO1, ConfigLevel.USER, projId);
 		UserBoardConfigDTO userBoardConfig = (UserBoardConfigDTO) response.getData();
 		boolean shown = userBoardConfig.getScrum().get(0).getKpis().get(0).isShown();
 		assertFalse(shown);
@@ -350,14 +353,21 @@ public class UserBoardConfigServiceImplTest {
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		List<String> kpiCategoryList = Arrays.asList("Iteration", "Backlog", "Kpi Maturity");
-		List<KpiMaster> filteredMaster = ((List<KpiMaster>) kpiMasters).stream()
-				.filter(master -> (!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
-				.collect(Collectors.toList());
-		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList())).thenReturn(filteredMaster);
-		when(kpiMasterRepository.findByKpiCategoryAndKanban(anyString(), anyBoolean())).thenReturn(filteredMaster);
+		List<KpiMaster> filteredMaster =
+				((List<KpiMaster>) kpiMasters)
+						.stream()
+								.filter(
+										master ->
+												(!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
+								.collect(Collectors.toList());
+		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList()))
+				.thenReturn(filteredMaster);
+		when(kpiMasterRepository.findByKpiCategoryAndKanban(anyString(), anyBoolean()))
+				.thenReturn(filteredMaster);
 		when(kpiCategoryMappingRepository.findAll()).thenReturn(kpiCategoryMappingList);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertEquals(userBoardConfigDTO.getOthers().size(), 1);
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
@@ -368,14 +378,17 @@ public class UserBoardConfigServiceImplTest {
 		String username = "user";
 		doReturn(username).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
-		List<String> kpiIdList = Arrays.asList("kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119",
-				"kpi128", "kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79", "kpi80", "kpi127",
-				"kpi989");
+		List<String> kpiIdList =
+				Arrays.asList(
+						"kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119", "kpi128",
+						"kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79",
+						"kpi80", "kpi127", "kpi989");
 		List<KpiMaster> kpiMasters = kpiMasterDataFactory.getSpecificKpis(kpiIdList);
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertEquals(userBoardConfigDTO.getKanban().get(0).getKpis().size(), 7);
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
@@ -386,22 +399,31 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
-		List<String> kpiIdList = Arrays.asList("kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119",
-				"kpi128", "kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi63", "kpi79", "kpi80", "kpi127", "kpi989");
+		List<String> kpiIdList =
+				Arrays.asList(
+						"kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119", "kpi128",
+						"kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi63", "kpi79", "kpi80",
+						"kpi127", "kpi989");
 		List<KpiMaster> kpiMasters = kpiMasterDataFactory.getSpecificKpis(kpiIdList);
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		List<String> kpiCategoryList = Arrays.asList("Iteration", "Backlog", "Kpi Maturity");
-		List<KpiMaster> filteredMaster = kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
-				.collect(Collectors.toList());
-		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList())).thenReturn(filteredMaster);
-		when(kpiMasterRepository.findByKpiCategoryAndKanban(anyString(), anyBoolean())).thenReturn(filteredMaster);
+		List<KpiMaster> filteredMaster =
+				kpiMasters.stream()
+						.filter(
+								master ->
+										(!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
+						.collect(Collectors.toList());
+		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList()))
+				.thenReturn(filteredMaster);
+		when(kpiMasterRepository.findByKpiCategoryAndKanban(anyString(), anyBoolean()))
+				.thenReturn(filteredMaster);
 		when(kpiCategoryMappingRepository.findAll()).thenReturn(kpiCategoryMappingList);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertEquals(userBoardConfigDTO.getKanban().get(1).getKpis().size(), 6);
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
@@ -412,49 +434,91 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
-		List<String> kpiIdList = Arrays.asList("kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119",
-				"kpi128", "kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79", "kpi80", "kpi127",
-				"kpi989");
+		List<String> kpiIdList =
+				Arrays.asList(
+						"kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119", "kpi128",
+						"kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79",
+						"kpi80", "kpi127", "kpi989");
 		List<KpiMaster> kpiMasters = kpiMasterDataFactory.getSpecificKpis(kpiIdList);
 		kpiMasters.addAll(kpiMasterDataFactory.getSpecificKpis(Arrays.asList("kpi124")));
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		List<String> kpiCategoryList = Arrays.asList("Iteration", "Backlog", "Kpi Maturity");
-		List<KpiMaster> filteredMaster = kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
-				.collect(Collectors.toList());
-		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList())).thenReturn(filteredMaster);
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Iteration".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		List<KpiMaster> filteredMaster =
+				kpiMasters.stream()
+						.filter(
+								master ->
+										(!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
+						.collect(Collectors.toList());
+		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList()))
+				.thenReturn(filteredMaster);
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Iteration".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Backlog".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Backlog".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 		when(kpiCategoryMappingRepository.findAll()).thenReturn(kpiCategoryMappingList);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 
-		assertEquals(userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 5");
+		assertEquals(
+				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 5");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
 
 	private List<UserInfo> createDummyAdminUsers() {
 		// Arrays.asList("proj1","proj2")
-		List<UserInfo> users = Arrays.asList(
-				createUserInfo("poorao",
-						Arrays.asList(createProjectAccess("ROLE_PROJECT_ADMIN",
-								Arrays.asList(createAccessNode("project",
-										Arrays.asList(createAccessItem("proj1", "proj1"), createAccessItem("proj2", "proj2"))))))),
-				createUserInfo("andtejas",
-						Arrays.asList(createProjectAccess("ROLE_PROJECT_ADMIN",
-								Arrays.asList(createAccessNode("project", Arrays.asList(createAccessItem("proj2", "proj2"))))))),
-				createUserInfo("palaggar2", Arrays.asList(createProjectAccess("ROLE_SUPERADMIN",
-						Arrays.asList(createAccessNode("project", Arrays.asList(createAccessItem("proj2", "proj2"))))))));
+		List<UserInfo> users =
+				Arrays.asList(
+						createUserInfo(
+								"poorao",
+								Arrays.asList(
+										createProjectAccess(
+												"ROLE_PROJECT_ADMIN",
+												Arrays.asList(
+														createAccessNode(
+																"project",
+																Arrays.asList(
+																		createAccessItem("proj1", "proj1"),
+																		createAccessItem("proj2", "proj2"))))))),
+						createUserInfo(
+								"andtejas",
+								Arrays.asList(
+										createProjectAccess(
+												"ROLE_PROJECT_ADMIN",
+												Arrays.asList(
+														createAccessNode(
+																"project", Arrays.asList(createAccessItem("proj2", "proj2"))))))),
+						createUserInfo(
+								"palaggar2",
+								Arrays.asList(
+										createProjectAccess(
+												"ROLE_SUPERADMIN",
+												Arrays.asList(
+														createAccessNode(
+																"project", Arrays.asList(createAccessItem("proj2", "proj2"))))))));
 		return users;
 	}
 
@@ -490,32 +554,55 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
-		List<String> kpiIdList = Arrays.asList("kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119",
-				"kpi128", "kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79", "kpi80", "kpi127",
-				"kpi989");
+		List<String> kpiIdList =
+				Arrays.asList(
+						"kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119", "kpi128",
+						"kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79",
+						"kpi80", "kpi127", "kpi989");
 		List<KpiMaster> kpiMasters = kpiMasterDataFactory.getSpecificKpis(kpiIdList);
 		kpiMasters.addAll(kpiMasterDataFactory.getSpecificKpis(Arrays.asList("kpi124", "kpi125")));
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		List<String> kpiCategoryList = Arrays.asList("Iteration", "Backlog", "Kpi Maturity");
-		List<KpiMaster> filteredMaster = kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
-				.collect(Collectors.toList());
-		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList())).thenReturn(filteredMaster);
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Iteration".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		List<KpiMaster> filteredMaster =
+				kpiMasters.stream()
+						.filter(
+								master ->
+										(!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
+						.collect(Collectors.toList());
+		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList()))
+				.thenReturn(filteredMaster);
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Iteration".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Backlog".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Backlog".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 		when(kpiCategoryMappingRepository.findAll()).thenReturn(kpiCategoryMappingList);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
-		assertEquals(userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 6");
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
+		assertEquals(
+				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 6");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -525,32 +612,55 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
-		List<String> kpiIdList = Arrays.asList("kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119",
-				"kpi128", "kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79", "kpi80", "kpi127",
-				"kpi989");
+		List<String> kpiIdList =
+				Arrays.asList(
+						"kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119", "kpi128",
+						"kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79",
+						"kpi80", "kpi127", "kpi989");
 		List<KpiMaster> kpiMasters = kpiMasterDataFactory.getSpecificKpis(kpiIdList);
 		kpiMasters.addAll(kpiMasterDataFactory.getSpecificKpis(Arrays.asList("kpi124")));
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		List<String> kpiCategoryList = Arrays.asList("Iteration", "Backlog", "Kpi Maturity");
-		List<KpiMaster> filteredMaster = kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
-				.collect(Collectors.toList());
-		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList())).thenReturn(filteredMaster);
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Iteration".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		List<KpiMaster> filteredMaster =
+				kpiMasters.stream()
+						.filter(
+								master ->
+										(!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
+						.collect(Collectors.toList());
+		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList()))
+				.thenReturn(filteredMaster);
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Iteration".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Backlog".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Backlog".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 		when(kpiCategoryMappingRepository.findAll()).thenReturn(kpiCategoryMappingList);
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
-		assertEquals(userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 6");
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
+		assertEquals(
+				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 6");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -560,32 +670,55 @@ public class UserBoardConfigServiceImplTest {
 		String username = "testuser";
 		doReturn(username).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
-		List<String> kpiIdList = Arrays.asList("kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119",
-				"kpi128", "kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79", "kpi80", "kpi127",
-				"kpi989");
+		List<String> kpiIdList =
+				Arrays.asList(
+						"kpi14", "kpi82", "kpi111", "kpi35", "kpi34", "kpi37", "kpi121", "kpi119", "kpi128",
+						"kpi75", "kpi55", "kpi54", "kpi50", "kpi51", "kpi48", "kpi997", "kpi63", "kpi79",
+						"kpi80", "kpi127", "kpi989");
 		List<KpiMaster> kpiMasters = kpiMasterDataFactory.getSpecificKpis(kpiIdList);
 		kpiMasters.addAll(kpiMasterDataFactory.getSpecificKpis(Arrays.asList("kpi124")));
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
 		when(kpiCategoryRepository.findAll()).thenReturn(kpiCategoryList);
 		List<String> kpiCategoryList = Arrays.asList("Iteration", "Backlog", "Kpi Maturity");
-		List<KpiMaster> filteredMaster = kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
-				.collect(Collectors.toList());
-		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList())).thenReturn(filteredMaster);
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Iteration".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
-		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false)).thenReturn(kpiMasters.stream()
-				.filter(master -> (!master.getKanban() && "Backlog".equalsIgnoreCase(master.getKpiCategory())))
-				.collect(Collectors.toList()));
+		List<KpiMaster> filteredMaster =
+				kpiMasters.stream()
+						.filter(
+								master ->
+										(!master.getKanban() && !kpiCategoryList.contains(master.getKpiCategory())))
+						.collect(Collectors.toList());
+		when(kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(anyBoolean(), anyList()))
+				.thenReturn(filteredMaster);
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Iteration", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Iteration".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("KPI Maturity", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "KPI Maturity".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
+		when(kpiMasterRepository.findByKpiCategoryAndKanban("Backlog", false))
+				.thenReturn(
+						kpiMasters.stream()
+								.filter(
+										master ->
+												(!master.getKanban()
+														&& "Backlog".equalsIgnoreCase(master.getKpiCategory())))
+								.collect(Collectors.toList()));
 		when(kpiCategoryMappingRepository.findAll()).thenReturn(kpiCategoryMappingList);
 
-		UserBoardConfigDTO userBoardConfigDTO = userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.USER,
-				listOfReqProjects.getBasicProjectConfigIds().get(0));
-		assertEquals(userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 5");
+		UserBoardConfigDTO userBoardConfigDTO =
+				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
+						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
+		assertEquals(
+				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 5");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}

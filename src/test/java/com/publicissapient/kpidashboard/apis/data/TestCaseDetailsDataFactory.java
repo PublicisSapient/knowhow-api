@@ -41,8 +41,7 @@ public class TestCaseDetailsDataFactory {
 	private List<TestCaseDetails> testCaseDetailsList;
 	private ObjectMapper mapper = null;
 
-	private TestCaseDetailsDataFactory() {
-	}
+	private TestCaseDetailsDataFactory() {}
 
 	public static TestCaseDetailsDataFactory newInstance(String filePath) {
 		TestCaseDetailsDataFactory factory = new TestCaseDetailsDataFactory();
@@ -58,9 +57,10 @@ public class TestCaseDetailsDataFactory {
 	private void init(String filePath) {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_TEST_CASE_DETAILS : filePath;
-			testCaseDetailsList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<TestCaseDetails>>() {
-					});
+			testCaseDetailsList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<TestCaseDetails>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}
@@ -81,12 +81,14 @@ public class TestCaseDetailsDataFactory {
 	}
 
 	public List<TestCaseDetails> findAutomatedTestCases() {
-		return testCaseDetailsList.stream().filter(testCaseDetails -> testCaseDetails.getIsTestAutomated().equals("Yes"))
+		return testCaseDetailsList.stream()
+				.filter(testCaseDetails -> testCaseDetails.getIsTestAutomated().equals("Yes"))
 				.collect(Collectors.toList());
 	}
 
 	public List<TestCaseDetails> findManualTestCases() {
-		return testCaseDetailsList.stream().filter(testCaseDetails -> testCaseDetails.getIsTestAutomated().equals("No"))
+		return testCaseDetailsList.stream()
+				.filter(testCaseDetails -> testCaseDetails.getIsTestAutomated().equals("No"))
 				.collect(Collectors.toList());
 	}
 }

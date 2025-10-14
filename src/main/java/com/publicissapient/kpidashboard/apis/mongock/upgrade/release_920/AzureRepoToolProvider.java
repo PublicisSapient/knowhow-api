@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "azure_repo_tool_provider", order = "9205", author = "kunkambl", systemVersion = "9.2.0")
+@ChangeUnit(
+		id = "azure_repo_tool_provider",
+		order = "9205",
+		author = "kunkambl",
+		systemVersion = "9.2.0")
 public class AzureRepoToolProvider {
 
 	private final MongoTemplate mongoTemplate;
@@ -47,6 +51,8 @@ public class AzureRepoToolProvider {
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection("repo_tools_provider").deleteOne(new Document("toolName", "azurerepository"));
+		mongoTemplate
+				.getCollection("repo_tools_provider")
+				.deleteOne(new Document("toolName", "azurerepository"));
 	}
 }

@@ -37,12 +37,8 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Controller for handling executive dashboard requests.
- */
-/**
- * Controller for handling executive dashboard requests.
- */
+/** Controller for handling executive dashboard requests. */
+/** Controller for handling executive dashboard requests. */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/executive")
@@ -50,45 +46,49 @@ import lombok.extern.slf4j.Slf4j;
 @Validated
 public class ExecutiveController {
 
-	private static final String EXECUTIVE_DASHBOARD_REQUEST = "Processing executive dashboard request for {} methodology with level: {}, label: {}";
-	private static final String REQUEST_PROCESSED_SUCCESS = "Successfully processed executive dashboard request";
-	private static final String REQUEST_PROCESSING_ERROR = "Error processing executive dashboard request";
+	private static final String EXECUTIVE_DASHBOARD_REQUEST =
+			"Processing executive dashboard request for {} methodology with level: {}, label: {}";
+	private static final String REQUEST_PROCESSED_SUCCESS =
+			"Successfully processed executive dashboard request";
+	private static final String REQUEST_PROCESSING_ERROR =
+			"Error processing executive dashboard request";
 
 	private final ExecutiveService executiveService;
 
 	/**
 	 * Retrieves executive dashboard data based on the provided request.
 	 *
-	 * @param request
-	 *            The executive dashboard request containing filter criteria
-	 * @param iskanban
-	 *            Flag indicating whether to use Kanban (true) or Scrum (false)
-	 *            strategy
+	 * @param request The executive dashboard request containing filter criteria
+	 * @param iskanban Flag indicating whether to use Kanban (true) or Scrum (false) strategy
 	 * @return Executive dashboard response with project metrics
 	 */
 	/**
 	 * Retrieves executive dashboard data based on the provided request.
 	 *
-	 * @param request
-	 *            the executive dashboard request DTO containing filter criteria
-	 * @param iskanban
-	 *            flag indicating whether to use Kanban (true) or Scrum (false)
-	 *            methodology
-	 * @return response entity containing the executive dashboard data or error
-	 *         message
+	 * @param request the executive dashboard request DTO containing filter criteria
+	 * @param iskanban flag indicating whether to use Kanban (true) or Scrum (false) methodology
+	 * @return response entity containing the executive dashboard data or error message
 	 */
 	@PostMapping()
-	public ResponseEntity<ServiceResponse> getExecutive(@Valid @RequestBody ExecutiveDashboardRequestDTO request,
+	public ResponseEntity<ServiceResponse> getExecutive(
+			@Valid @RequestBody ExecutiveDashboardRequestDTO request,
 			@RequestParam(required = true) boolean iskanban) {
 
-		log.info(EXECUTIVE_DASHBOARD_REQUEST, iskanban ? "Kanban" : "Scrum", request.getLevel(), request.getLabel());
+		log.info(
+				EXECUTIVE_DASHBOARD_REQUEST,
+				iskanban ? "Kanban" : "Scrum",
+				request.getLevel(),
+				request.getLabel());
 
 		try {
-			ExecutiveDashboardResponseDTO response = iskanban ? executiveService.getExecutiveDashboardKanban(request)
-					: executiveService.getExecutiveDashboardScrum(request);
+			ExecutiveDashboardResponseDTO response =
+					iskanban
+							? executiveService.getExecutiveDashboardKanban(request)
+							: executiveService.getExecutiveDashboardScrum(request);
 
 			log.debug(REQUEST_PROCESSED_SUCCESS);
-			return new ResponseEntity<>(new ServiceResponse(true, "Data fetched successfully", response.getData()),
+			return new ResponseEntity<>(
+					new ServiceResponse(true, "Data fetched successfully", response.getData()),
 					HttpStatus.OK);
 
 		} catch (ExecutiveDataException e) {
@@ -96,8 +96,8 @@ public class ExecutiveController {
 			throw e;
 		} catch (Exception e) {
 			log.error("{}: {}", REQUEST_PROCESSING_ERROR, e.getMessage(), e);
-			throw new ExecutiveDataException("Service unavailable. Please try again later.",
-					HttpStatus.SERVICE_UNAVAILABLE, e);
+			throw new ExecutiveDataException(
+					"Service unavailable. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE, e);
 		}
 	}
 }

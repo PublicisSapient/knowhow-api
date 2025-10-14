@@ -19,15 +19,14 @@ package com.publicissapient.kpidashboard.apis.hierarchy.service;
 
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
@@ -38,14 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OrganizationHierarchyServiceImpl implements OrganizationHierarchyService {
 
-	@Autowired
-	private OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	@Override
 	public List<OrganizationHierarchy> findAll() {
@@ -61,7 +57,7 @@ public class OrganizationHierarchyServiceImpl implements OrganizationHierarchySe
 	@Override
 	public OrganizationHierarchy findByNodeId(String nodeId) {
 		List<OrganizationHierarchy> all = findAll();
-		if(CollectionUtils.isNotEmpty(all)){
+		if (CollectionUtils.isNotEmpty(all)) {
 			return all.stream().filter(node -> node.getNodeId().equals(nodeId)).findFirst().orElse(null);
 		}
 		return null;

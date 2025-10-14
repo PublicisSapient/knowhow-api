@@ -76,48 +76,36 @@ public class TokenAuthenticationServiceImplTest {
 	private static final String USERNAME = "username";
 
 	private static final String AUTH_RESPONSE_HEADER = "X-Authentication-Token";
-	@Mock
-	UserTokenReopository userTokenReopository;
-	@Mock
-	Authentication authentication;
-	@Mock
-	SecurityContext securityContext;
+	@Mock UserTokenReopository userTokenReopository;
+	@Mock Authentication authentication;
+	@Mock SecurityContext securityContext;
 	List<AccessNode> listAccessNode = new ArrayList<>();
 	AccessNode accessNodes;
 	AccessItem accessItem;
 	List<AccessItem> accessItems = new ArrayList<>();
-	@InjectMocks
-	private TokenAuthenticationServiceImpl service;
-	@Mock
-	private AuthProperties tokenAuthProperties;
-	@Mock
-	private HttpServletResponse response;
-	@Mock
-	private HttpServletRequest request;
-	@Mock
-	private UserInfoService userInfoService;
-	@Mock
-	private ProjectAccessManager projectAccessManager;
-	@Mock
-	private AuthenticationService authenticationService;
-	@Mock
-	private CookieUtil cookieUtil;
-	@Mock
-	private Cookie cookie;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	UsersSessionService usersSessionService;
+	@InjectMocks private TokenAuthenticationServiceImpl service;
+	@Mock private AuthProperties tokenAuthProperties;
+	@Mock private HttpServletResponse response;
+	@Mock private HttpServletRequest request;
+	@Mock private UserInfoService userInfoService;
+	@Mock private ProjectAccessManager projectAccessManager;
+	@Mock private AuthenticationService authenticationService;
+	@Mock private CookieUtil cookieUtil;
+	@Mock private Cookie cookie;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock UsersSessionService usersSessionService;
 
-	@Mock
-	UserTokenAuthenticationDTO userTokenAuthenticationDTO;
+	@Mock UserTokenAuthenticationDTO userTokenAuthenticationDTO;
 
 	@Before
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
 		SecurityContextHolder.clearContext();
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class)))
-				.thenReturn(new Cookie("authCookie", AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
+				.thenReturn(
+						new Cookie(
+								"authCookie",
+								AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
 	}
 
 	@Test
@@ -138,7 +126,10 @@ public class TokenAuthenticationServiceImplTest {
 		when(tokenAuthProperties.getExpirationTime()).thenReturn(0l);
 		when(tokenAuthProperties.getSecret()).thenReturn("userTokenData");
 		when(cookieUtil.createAccessTokenCookie(any()))
-				.thenReturn(new Cookie("authCookie", AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
+				.thenReturn(
+						new Cookie(
+								"authCookie",
+								AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
 		service.addAuthentication(response, AuthenticationFixture.getAuthentication(USERNAME));
 		verify(response).addHeader(eq(AUTH_RESPONSE_HEADER), anyString());
 	}
@@ -246,8 +237,9 @@ public class TokenAuthenticationServiceImplTest {
 	@Test
 	public void getOrSaveUserByToken() {
 		HttpServletRequest request = mock(HttpServletRequest.class);
-		UserTokenData userTokenData = new UserTokenData(USERNAME, cookieUtil.getAuthCookie(request).getValue(),
-				"2023-01-19T12:33:14.013");
+		UserTokenData userTokenData =
+				new UserTokenData(
+						USERNAME, cookieUtil.getAuthCookie(request).getValue(), "2023-01-19T12:33:14.013");
 
 		UserInfo testUser = new UserInfo();
 		Object auth = "STANDARD";
@@ -262,7 +254,8 @@ public class TokenAuthenticationServiceImplTest {
 		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(null);
 		when(userTokenReopository.findAllByUserName(null)).thenReturn(userTokenDataList);
 		when(authentication.getDetails()).thenReturn(auth);
-		when(userInfoService.getOrSaveUserInfo(USERNAME, AuthType.STANDARD, new ArrayList<>())).thenReturn(testUser);
+		when(userInfoService.getOrSaveUserInfo(USERNAME, AuthType.STANDARD, new ArrayList<>()))
+				.thenReturn(testUser);
 		assertEquals(service.getOrSaveUserByToken(request, authentication), jsonObject);
 	}
 }
