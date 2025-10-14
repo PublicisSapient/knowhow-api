@@ -16,9 +16,9 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.service;
 
-import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.shared.dto.BaseAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 public interface AiUsageAnalyticsService {
-	ServiceResponse computeAiUsageAnalyticsData(AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO);
+	ServiceResponse computeAiUsageAnalyticsData(BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO);
 }

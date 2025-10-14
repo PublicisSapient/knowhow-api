@@ -18,13 +18,14 @@ package com.publicissapient.kpidashboard.apis.analysis.controller;
 
 import javax.validation.Valid;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.service.AiUsageAnalyticsService;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.shared.dto.BaseAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,8 @@ public class AnalysisController {
 	private final AiUsageAnalyticsService aiUsageAnalyticsService;
 
 	@PostMapping("/analytics/ai-usage/query")
-	public ServiceResponse computeAiUsageAnalyticsData(
-			@RequestBody @Valid AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
-		return aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO);
+	public ResponseEntity<ServiceResponse> computeAiUsageAnalyticsData(
+			@RequestBody @Valid BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
+		return ResponseEntity.ok(aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO));
 	}
 }

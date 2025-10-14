@@ -21,35 +21,30 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsResponseDTO;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsSummaryDTO;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.shared.dto.BaseAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -90,46 +85,21 @@ public class AiUsageAnalyticsServiceTest {
 	private AiUsageAnalyticsServiceImpl aiUsageAnalyticsService;
 
 	@Test
-	public void when_AiUsageAnalyticsRequestDTOIsNull_Expect_ExceptionIsThrown() {
+	public void when_BaseAnalyticsRequestDTOIsNull_Expect_ExceptionIsThrown() {
 		assertThrows(BadRequestException.class, () -> aiUsageAnalyticsService.computeAiUsageAnalyticsData(null));
 	}
 
 	@Test
 	public void when_UserDoesNotHaveAccessToAnyProjects_ExpectExceptionIsThrown() {
 		assertThrows(ForbiddenException.class,
-				() -> aiUsageAnalyticsService.computeAiUsageAnalyticsData(new AiUsageAnalyticsRequestDTO()));
-	}
-
-	@Test
-	public void when_AccountFilteredDataIsRequestedWithANullOrEmptyLabel_Expect_ExceptionIsThrown() {
-		assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(aiUsageAnalyticsService,
-				"getHierarchyDataCurrentUserHasAccessTo", PROJECT_LEVEL, null));
-		assertThrows(IllegalArgumentException.class, () -> ReflectionTestUtils.invokeMethod(aiUsageAnalyticsService,
-				"getHierarchyDataCurrentUserHasAccessTo", PROJECT_LEVEL, StringUtils.EMPTY));
-	}
-
-	@Test
-	public void when_AccountFilteredDataIsRequestedForSpecificLevelAndLabel_Expect_DataWillBeReturnedAccordingly() {
-		when(accountHierarchyServiceImpl.getFilteredList(any(AccountFilterRequest.class)))
-				.thenReturn(generateAccountFilteredDataSetByLabelAndLevel(PROJECT_LABEL, PROJECT_LEVEL));
-
-		List<AccountFilteredData> resultedAccountFilteredData = ReflectionTestUtils.invokeMethod(
-				aiUsageAnalyticsService, "getHierarchyDataCurrentUserHasAccessTo", PROJECT_LEVEL, PROJECT_LABEL);
-
-		assertTrue(CollectionUtils.isNotEmpty(resultedAccountFilteredData));
-		assertTrue(resultedAccountFilteredData.stream()
-				.allMatch(accountFilteredData -> Objects.nonNull(accountFilteredData)
-						&& StringUtils.isNotEmpty(accountFilteredData.getLabelName())
-						&& accountFilteredData.getLabelName().equals(PROJECT_LABEL)
-						&& accountFilteredData.getLevel() == PROJECT_LEVEL));
+				() -> aiUsageAnalyticsService.computeAiUsageAnalyticsData(new BaseAnalyticsRequestDTO()));
 	}
 
 	@Test
 	public void when_UserDoesntHaveAccessToTheRequestedBasicProjectConfigIdsOrTheyDoNotExist_Expect_ExceptionIsThrown() {
-		when(accountHierarchyServiceImpl.getFilteredList(any(AccountFilterRequest.class)))
-				.thenReturn(generateProjectAccountFilteredData());
+		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(anyString())).thenReturn(generateProjectAccountFilteredData());
 
-		AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO = generateAiUsageAnalyticsRequestDTO(10,
+		BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO = new BaseAnalyticsRequestDTO(10,
 				Set.of("invalid-basic-project-config-id"));
 
 		assertThrows(BadRequestException.class,
@@ -141,8 +111,8 @@ public class AiUsageAnalyticsServiceTest {
 		int sprintsLimit = 2;
 
 		List<String> basicProjectConfigIdsAsString = List.of("64f123abc9a4d2e1b7f02c11", "64f123abc9a4d2e1b7f02c12");
-		when(accountHierarchyServiceImpl.getFilteredList(any(AccountFilterRequest.class)))
-				.thenReturn(generateProjectAccountFilteredData());
+		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(anyString())).thenReturn(generateProjectAccountFilteredData());
+
 		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(
 				List.of(new ObjectId("64f123abc9a4d2e1b7f02c11"), new ObjectId("64f123abc9a4d2e1b7f02c12")),
 				sprintsLimit))
@@ -170,7 +140,7 @@ public class AiUsageAnalyticsServiceTest {
 						JiraIssue.builder().number("issue-4").aiUsageType("AI Usage type 4").aiEfficiencyGain(6.0D)
 								.basicProjectConfigId("64f123abc9a4d2e1b7f02c12").build()));
 
-		AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO = new AiUsageAnalyticsRequestDTO();
+		BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO = new BaseAnalyticsRequestDTO();
 		aiUsageAnalyticsRequestDTO.setProjectBasicConfigIds(new HashSet<>(basicProjectConfigIdsAsString));
 		aiUsageAnalyticsRequestDTO.setNumberOfSprintsToInclude(sprintsLimit);
 
@@ -236,29 +206,11 @@ public class AiUsageAnalyticsServiceTest {
 		return fieldMapping;
 	}
 
-	private AiUsageAnalyticsRequestDTO generateAiUsageAnalyticsRequestDTO(int numberOfSprintsToInclude,
-			Set<String> basicProjectConfigIds) {
-		AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO = new AiUsageAnalyticsRequestDTO();
-		aiUsageAnalyticsRequestDTO.setNumberOfSprintsToInclude(numberOfSprintsToInclude);
-		aiUsageAnalyticsRequestDTO.setProjectBasicConfigIds(basicProjectConfigIds);
-		return aiUsageAnalyticsRequestDTO;
-	}
-
-	private Set<AccountFilteredData> generateAccountFilteredDataSetByLabelAndLevel(String label, int level) {
-		return IntStream.range(0, 10).mapToObj(accountIndex -> {
-			AccountFilteredData accountFilteredData = new AccountFilteredData();
-			accountFilteredData.setLevel(level);
-			accountFilteredData.setNodeId(TEST_NODE_ID);
-			accountFilteredData.setLabelName(label);
-			return accountFilteredData;
-		}).collect(Collectors.toSet());
-	}
-
-	private Set<AccountFilteredData> generateProjectAccountFilteredData() {
+	private List<AccountFilteredData> generateProjectAccountFilteredData() {
 		return TEST_BASIC_PROJECT_CONFIG_IDS.stream()
 				.map(basicProjectConfigIdAsString -> AccountFilteredData.builder().level(PROJECT_LEVEL)
 						.labelName(PROJECT_LABEL).nodeId(TEST_NODE_ID + basicProjectConfigIdAsString)
 						.basicProjectConfigId(new ObjectId(basicProjectConfigIdAsString)).build())
-				.collect(Collectors.toSet());
+				.toList();
 	}
 }

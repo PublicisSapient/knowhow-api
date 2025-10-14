@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -50,10 +51,11 @@ import com.publicissapient.kpidashboard.common.model.application.OrganizationHie
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
-import com.publicissapient.kpidashboard.common.repository.application.AccountHierarchyRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+
+import jakarta.ws.rs.InternalServerErrorException;
 
 /**
  * Implementation of {@link AccountHierarchyService} to managing all requests to
@@ -65,9 +67,6 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 public class AccountHierarchyServiceImpl
 		implements
 			AccountHierarchyService<List<AccountHierarchyData>, Set<AccountFilteredData>> {
-
-	@Autowired
-	private AccountHierarchyRepository accountHierarchyRepository;
 
 	@Autowired
 	private CacheService cacheService;
@@ -113,6 +112,25 @@ public class AccountHierarchyServiceImpl
 					.collect(Collectors.toList());
 		}
 		return processAccountFilteredResponse(hierarchyDataAll);
+	}
+
+	public List<AccountFilteredData> getHierarchyDataCurrentUserHasAccessTo(String hierarchyLevelId) {
+		Integer hierarchyLevel = filterHelperService.getHierarchyIdLevelMap(false).get(hierarchyLevelId);
+
+		if (hierarchyLevel == null) {
+			throw new InternalServerErrorException(String
+					.format("No level relating to the hierarchyLevelId '%s' " + "could be found", hierarchyLevelId));
+		}
+
+		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
+		accountFilterRequest.setKanban(false);
+		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
+
+		return getFilteredList(accountFilterRequest).stream()
+				.filter(accountFilteredData -> Objects.nonNull(accountFilteredData)
+						&& hierarchyLevel == accountFilteredData.getLevel()
+						&& hierarchyLevelId.equalsIgnoreCase(accountFilteredData.getLabelName()))
+				.toList();
 	}
 
 	private Set<AccountFilteredData> processAccountFilteredResponse(List<AccountHierarchyData> accountHierarchyDataList) {

@@ -20,9 +20,14 @@
 package com.publicissapient.kpidashboard.apis.filter.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -31,9 +36,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +67,7 @@ import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.AccountHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyValue;
@@ -69,6 +78,8 @@ import com.publicissapient.kpidashboard.common.repository.application.AccountHie
 import com.publicissapient.kpidashboard.common.repository.application.GlobalConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
+
+import jakarta.ws.rs.InternalServerErrorException;
 
 /**
  * @author tauakram
@@ -133,20 +144,22 @@ public class AccountHierarchyServiceImplTest {
 		projectBasicConfig.setIsKanban(false);
 
 		List<HierarchyValue> hierarchyList = new ArrayList<>();
-		hierarchyList.add(
-				new HierarchyValue(new HierarchyLevel(1, "bu", "BU", ""), "hierarchyLevelOne_unique_001", "Sample One Value"));
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(2, "ver", "Vertical", ""), "hierarchyLevelTwo_unique_001",
-				"Sample Two Value"));
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(3, "acc", "Account", ""), "hierarchyLevelThree_unique_001",
-				"Sample Three Value"));
+		hierarchyList.add(new HierarchyValue(new HierarchyLevel(1, "bu", "BU", ""), "hierarchyLevelOne_unique_001",
+				"Sample One Value"));
+		hierarchyList.add(new HierarchyValue(new HierarchyLevel(2, "ver", "Vertical", ""),
+				"hierarchyLevelTwo_unique_001", "Sample Two Value"));
+		hierarchyList.add(new HierarchyValue(new HierarchyLevel(3, "acc", "Account", ""),
+				"hierarchyLevelThree_unique_001", "Sample Three Value"));
 		projectBasicConfig.setHierarchy(hierarchyList);
 
 		when(projectBasicConfigService.getAllProjectsBasicConfigs(anyBoolean()))
 				.thenReturn(Arrays.asList(projectBasicConfig));
 
-		OrganizationHierarchyDataFactory organizationHierarchyDataFactory = OrganizationHierarchyDataFactory.newInstance();
+		OrganizationHierarchyDataFactory organizationHierarchyDataFactory = OrganizationHierarchyDataFactory
+				.newInstance();
 		ProjectHierarchyDataFactory projectHierarchyDataFactory = ProjectHierarchyDataFactory.newInstance();
-		List<OrganizationHierarchy> organizationHierarchies = organizationHierarchyDataFactory.getOrganizationHierarchies();
+		List<OrganizationHierarchy> organizationHierarchies = organizationHierarchyDataFactory
+				.getOrganizationHierarchies();
 		when(organizationHierarchyService.findAll()).thenReturn(organizationHierarchies);
 		when(projectHierarchyService.findAllByBasicProjectConfigIds(anyList()))
 				.thenReturn(projectHierarchyDataFactory.getProjectHierarchies());
@@ -208,5 +221,44 @@ public class AccountHierarchyServiceImplTest {
 		List<AccountHierarchyData> accountHierarchies = accountHierarchyServiceImpl.createHierarchyData();
 
 		Assert.assertEquals(3, accountHierarchies.size());
+	}
+
+	@Test
+	public void when_RequestedHierarchyLevelIdIsNotFound_Expect_GettingHierarchyDataCurrentUserHasAccessToThrowsException() {
+		when(filterHelperService.getHierarchyIdLevelMap(false))
+				.thenReturn(Map.of("hierarchyLevelId1", 1, "hierarchyLevelId2", 2));
+
+		assertThrows(InternalServerErrorException.class,
+				() -> accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo("hierarchyLevelId3"));
+	}
+
+	@Test
+	public void when_AccountFilteredDataIsRequestedForASpecificHierarchyLevelId_Expect_DataWillBeReturnedAccordinglyV2() {
+		AccountHierarchyServiceImpl spiedAccountHierarchyServiceImpl = spy(accountHierarchyServiceImpl);
+		when(filterHelperService.getHierarchyIdLevelMap(false))
+				.thenReturn(Map.of("hierarchyLevelId1", 1, "hierarchyLevelId2", 2));
+
+		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
+		accountFilterRequest.setKanban(false);
+		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
+
+		doReturn(Set.of(
+				AccountFilteredData.builder().nodeId("testNodeId1").level(2).labelName("hierarchyLevelId2").build(),
+				AccountFilteredData.builder().nodeId("testNodeId2").level(4).labelName("hierarchyLevelId4").build(),
+				AccountFilteredData.builder().nodeId("testNodeId3").level(6).labelName("hierarchyLevelId6").build())).when(spiedAccountHierarchyServiceImpl).getFilteredList(any());
+
+		String expectedHierarchyLevelId = "hierarchyLevelId2";
+
+		int expectedLevel = 2;
+
+		List<AccountFilteredData> resultedAccountFilteredData = spiedAccountHierarchyServiceImpl
+				.getHierarchyDataCurrentUserHasAccessTo(expectedHierarchyLevelId);
+
+		assertTrue(CollectionUtils.isNotEmpty(resultedAccountFilteredData));
+		assertTrue(resultedAccountFilteredData.stream()
+				.allMatch(accountFilteredData -> Objects.nonNull(accountFilteredData)
+						&& StringUtils.isNotEmpty(accountFilteredData.getLabelName())
+						&& accountFilteredData.getLabelName().equals(expectedHierarchyLevelId)
+						&& accountFilteredData.getLevel() == expectedLevel));
 	}
 }

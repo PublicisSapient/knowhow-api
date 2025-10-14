@@ -16,18 +16,16 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.service;
 
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.shared.utils.AnalyticsValidationUtils.validateBaseAnalyticsComputationRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.ws.rs.InternalServerErrorException;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
@@ -35,14 +33,14 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.util.MapUtils;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsDTO;
-import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsRequestDTO;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsResponseDTO;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.AiUsageAnalyticsSummaryDTO;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.aiusage.dto.ProjectAiUsageMetrics;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.shared.dto.BaseAnalyticsRequestDTO;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.shared.dto.BaseProjectForAnalyticsDTO;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -53,10 +51,8 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 
 import io.micrometer.common.util.StringUtils;
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.ForbiddenException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.InternalServerErrorException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 
-	private static final int HIERARCHY_LEVEL_PROJECT = 5;
 	private static final int PERCENTAGE_MULTIPLIER = 100;
 
 	private static final double TWO_DECIMAL_ROUNDING_COEFFICIENT = 100.0D;
@@ -77,22 +72,13 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 	private final ConfigHelperService configHelperService;
 
 	private final SprintDetailsServiceImpl sprintDetailsService;
-
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
-	@Data
-	@AllArgsConstructor
-	private static class ProjectDTO {
-		private String name;
-
-		private ObjectId projectBasicConfigId;
-	}
-
 	@Override
-	public ServiceResponse computeAiUsageAnalyticsData(@Valid AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
-		List<AccountFilteredData> projectsDataCurrentUserHasAccessTo = getHierarchyDataCurrentUserHasAccessTo(
-				HIERARCHY_LEVEL_PROJECT, CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
-		validateComputeAiUsageAnalyticsRequest(aiUsageAnalyticsRequestDTO, projectsDataCurrentUserHasAccessTo);
+	public ServiceResponse computeAiUsageAnalyticsData(@Valid BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
+		List<AccountFilteredData> projectsDataCurrentUserHasAccessTo = accountHierarchyServiceImpl
+				.getHierarchyDataCurrentUserHasAccessTo(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		validateBaseAnalyticsComputationRequest(aiUsageAnalyticsRequestDTO, projectsDataCurrentUserHasAccessTo);
 
 		ServiceResponse serviceResponse = new ServiceResponse();
 		serviceResponse
@@ -101,10 +87,10 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 		return serviceResponse;
 	}
 
-	private AiUsageAnalyticsResponseDTO computeAiUsageAnalytics(AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO,
+	private AiUsageAnalyticsResponseDTO computeAiUsageAnalytics(BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO,
 			List<AccountFilteredData> projectsDataCurrentUserHasAccessTo) {
-		List<ProjectDTO> projectDTOList = createProjectDTOList(projectsDataCurrentUserHasAccessTo,
-				aiUsageAnalyticsRequestDTO.getProjectBasicConfigIds());
+		List<BaseProjectForAnalyticsDTO> projectDTOList = extractProjectDataForAnalyticsComputation(
+				projectsDataCurrentUserHasAccessTo, aiUsageAnalyticsRequestDTO.getProjectBasicConfigIds());
 
 		if (CollectionUtils.isEmpty(projectDTOList)) {
 			log.error("Could not create the project AI usage analytics computation data list for request {}",
@@ -125,10 +111,10 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 	}
 
 	private Map<String, List<JiraIssue>> createProjectBasicConfigIdAndAssociatedJiraIssuesMap(
-			List<ProjectDTO> projectDTOList, AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
+			List<BaseProjectForAnalyticsDTO> projectDTOList, BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
 		List<SprintDetails> sprintsTakenIntoConsideration = sprintDetailsService
 				.findByBasicProjectConfigIdInByCompletedDateDesc(
-						projectDTOList.stream().map(ProjectDTO::getProjectBasicConfigId).toList(),
+						projectDTOList.stream().map(BaseProjectForAnalyticsDTO::getProjectBasicConfigId).toList(),
 						aiUsageAnalyticsRequestDTO.getNumberOfSprintsToInclude());
 
 		Map<ObjectId, List<SprintDetails>> basicProjectConfigIdSprintDetailsMap = sprintsTakenIntoConsideration.stream()
@@ -136,7 +122,7 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 
 		Set<String> jiraIssueNumbers = new HashSet<>();
 
-		for (ProjectDTO projectDTO : projectDTOList) {
+		for (BaseProjectForAnalyticsDTO projectDTO : projectDTOList) {
 			jiraIssueNumbers.addAll(getJiraIssueNumbersForProject(projectDTO.getProjectBasicConfigId(),
 					basicProjectConfigIdSprintDetailsMap.get(projectDTO.getProjectBasicConfigId())));
 		}
@@ -183,25 +169,11 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 		return projectJiraIssueNumbers;
 	}
 
-	private List<AccountFilteredData> getHierarchyDataCurrentUserHasAccessTo(int level, String label) {
-		if (StringUtils.isEmpty(label)) {
-			throw new IllegalArgumentException("The 'label' parameter is mandatory");
-		}
-		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
-		accountFilterRequest.setKanban(false);
-		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
-
-		return accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
-				.filter(accountFilteredData -> Objects.nonNull(accountFilteredData)
-						&& level == accountFilteredData.getLevel()
-						&& label.equalsIgnoreCase(accountFilteredData.getLabelName()))
-				.toList();
-	}
-
-	private static Map<String, Map<String, ProjectAiUsageMetrics>> createAiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap(
-			List<ProjectDTO> projectDTOList, Map<String, List<JiraIssue>> basicProjectConfigIdAsStringJiraIssuesMap) {
+	private static Map<String, Map<String, ProjectAiUsageMetrics>> groupProjectsByAiUsageTypeAndBasicProjectConfigId(
+			List<BaseProjectForAnalyticsDTO> projectDTOList,
+			Map<String, List<JiraIssue>> basicProjectConfigIdAsStringJiraIssuesMap) {
 		Map<String, Map<String, ProjectAiUsageMetrics>> aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap = new HashMap<>();
-		for (ProjectDTO projectDTO : projectDTOList) {
+		for (BaseProjectForAnalyticsDTO projectDTO : projectDTOList) {
 			if (basicProjectConfigIdAsStringJiraIssuesMap
 					.containsKey(projectDTO.getProjectBasicConfigId().toString())) {
 				basicProjectConfigIdAsStringJiraIssuesMap.get(projectDTO.getProjectBasicConfigId().toString())
@@ -238,12 +210,13 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 		return aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap;
 	}
 
-	private static AiUsageAnalyticsResponseDTO constructAiUsageAnalyticsResponseDTO(List<ProjectDTO> projectDTOList,
+	private static AiUsageAnalyticsResponseDTO constructAiUsageAnalyticsResponseDTO(
+			List<BaseProjectForAnalyticsDTO> projectDTOList,
 			Map<String, List<JiraIssue>> basicProjectConfigIdAsStringJiraIssuesMap) {
 
 		AiUsageAnalyticsSummaryDTO aiUsageAnalyticsSummaryDTO = new AiUsageAnalyticsSummaryDTO();
 
-		Map<String, Map<String, ProjectAiUsageMetrics>> aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap = createAiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap(
+		Map<String, Map<String, ProjectAiUsageMetrics>> aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap = groupProjectsByAiUsageTypeAndBasicProjectConfigId(
 				projectDTOList, basicProjectConfigIdAsStringJiraIssuesMap);
 
 		int aiUsageTypesNumber = aiUsageTypeBasicProjectConfigIdAsStringProjectAiUsageAnalyticsDTOMap.size();
@@ -278,53 +251,22 @@ public class AiUsageAnalyticsServiceImpl implements AiUsageAnalyticsService {
 				.analytics(aiUsageAnalyticsDTOList).build();
 	}
 
-	private static List<ProjectDTO> createProjectDTOList(List<AccountFilteredData> projectsDataCurrentUserHasAccessTo,
-			Set<String> requestedBasicProjectConfigIds) {
-		List<ProjectDTO> projectDTOList;
+	private static List<BaseProjectForAnalyticsDTO> extractProjectDataForAnalyticsComputation(
+			List<AccountFilteredData> projectsDataCurrentUserHasAccessTo, Set<String> requestedBasicProjectConfigIds) {
+		List<BaseProjectForAnalyticsDTO> projectDTOList;
 		if (CollectionUtils.isEmpty(requestedBasicProjectConfigIds)) {
 			projectDTOList = projectsDataCurrentUserHasAccessTo.stream()
-					.map(accountFilteredData -> new ProjectDTO(accountFilteredData.getNodeDisplayName(),
+					.map(accountFilteredData -> new BaseProjectForAnalyticsDTO(accountFilteredData.getNodeDisplayName(),
 							accountFilteredData.getBasicProjectConfigId()))
 					.toList();
 		} else {
 			projectDTOList = projectsDataCurrentUserHasAccessTo.stream()
 					.filter(accountFilteredData -> requestedBasicProjectConfigIds
 							.contains(accountFilteredData.getBasicProjectConfigId().toString()))
-					.map(accountFilteredData -> new ProjectDTO(accountFilteredData.getNodeDisplayName(),
+					.map(accountFilteredData -> new BaseProjectForAnalyticsDTO(accountFilteredData.getNodeDisplayName(),
 							accountFilteredData.getBasicProjectConfigId()))
 					.toList();
 		}
 		return projectDTOList;
-	}
-
-	private static void validateComputeAiUsageAnalyticsRequest(AiUsageAnalyticsRequestDTO aiUsageAnalyticsRequestDTO,
-			List<AccountFilteredData> projectsDataCurrentUserHasAccessTo) {
-		if (Objects.isNull(aiUsageAnalyticsRequestDTO)) {
-			throw new BadRequestException("The AI usage request cannot be null");
-		}
-
-		if (CollectionUtils.isEmpty(projectsDataCurrentUserHasAccessTo)) {
-			throw new ForbiddenException("Current user doesn't have access to any projects");
-		}
-
-		Set<String> projectBasicConfigIds = aiUsageAnalyticsRequestDTO.getProjectBasicConfigIds();
-		if (CollectionUtils.isNotEmpty(projectBasicConfigIds)) {
-			Set<String> basicProjectConfigIdsUserHasAccessTo = projectsDataCurrentUserHasAccessTo.stream()
-					.filter(accountFilteredData -> Objects.nonNull(accountFilteredData.getBasicProjectConfigId())
-							&& projectBasicConfigIds.contains(accountFilteredData.getBasicProjectConfigId().toString()))
-					.map(accountFilteredData -> accountFilteredData.getBasicProjectConfigId().toString())
-					.collect(Collectors.toSet());
-
-			Set<String> invalidProjectBasicConfigIds = projectBasicConfigIds.stream().filter(
-					projectBasicConfigId -> !basicProjectConfigIdsUserHasAccessTo.contains(projectBasicConfigId))
-					.collect(Collectors.toSet());
-
-			if (CollectionUtils.isNotEmpty(invalidProjectBasicConfigIds)) {
-				throw new BadRequestException(String.format(
-						"The current user doesn't have access to the project "
-								+ "basic configs [%s] or they are not related to any project",
-						String.join(",", invalidProjectBasicConfigIds)));
-			}
-		}
 	}
 }
