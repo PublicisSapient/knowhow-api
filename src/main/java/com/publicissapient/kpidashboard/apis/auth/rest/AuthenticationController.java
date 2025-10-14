@@ -209,10 +209,7 @@ public class AuthenticationController {
 	 *
 	 * @return the authentication providers
 	 */
-	@RequestMapping(
-			value = "/authenticationProviders",
-			method = GET,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/authenticationProviders", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public List<AuthType> getAuthenticationProviders() {
 		return authProperties.getAuthenticationProviders();
 	}

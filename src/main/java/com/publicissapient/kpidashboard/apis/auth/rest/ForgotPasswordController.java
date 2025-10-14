@@ -19,7 +19,6 @@
 package com.publicissapient.kpidashboard.apis.auth.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import java.io.File;
@@ -29,11 +28,7 @@ import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
@@ -119,10 +114,7 @@ public class ForgotPasswordController {
 	 *     <tt>UI_ACCOUNT_PATH</tt> incase of invalid token.
 	 * @throws UnknownHostException
 	 */
-	@RequestMapping(
-			value = "/validateEmailToken",
-			method = GET,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/validateEmailToken", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public RedirectView validateToken(
 			HttpServletRequest httpServletRequest, @RequestParam("token") UUID token)
 			throws UnknownHostException {

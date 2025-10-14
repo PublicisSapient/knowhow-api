@@ -28,13 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.service.ProjectToolConfigService;
@@ -57,9 +51,7 @@ public class ProjectToolConfigController {
 	@Autowired private ProjectAccessUtil projectAccessUtil;
 
 	/** Fetch all projectToolConfig */
-	@RequestMapping(
-			value = "/basicconfigs/{basicConfigId}/tools",
-			method = RequestMethod.GET) // NOSONAR
+	@GetMapping(value = "/basicconfigs/{basicConfigId}/tools") // NOSONAR
 	public ResponseEntity<ServiceResponse> getProjectTools(
 			@PathVariable String basicConfigId,
 			@RequestParam(name = "toolType", required = false) String toolType) {
