@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class CalculateProductivityRequestDTO {
+public class ProductivityGainCalculationRequestDTO {
 
     @NotNull(message = "The hierarchy 'level' must be specified")
     private Integer level;
