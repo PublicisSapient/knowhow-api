@@ -4872,30 +4872,6 @@
     "nodeSpecific": false
   },
   {
-    "fieldName": "thresholdValueKPI195",
-    "fieldLabel": "Target KPI Value",
-    "fieldType": "number",
-    "fieldCategory": null,
-    "toggleLabel": null,
-    "section": "Project Level Threshold",
-    "processorCommon": false,
-    "tooltip": {
-      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown",
-      "_class": "com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip"
-    },
-    "options": null,
-    "filterGroup": null,
-    "nestedFields": null,
-    "placeHolderText": null,
-    "fieldDisplayOrder": 1,
-    "toggleLabelLeft": null,
-    "toggleLabelRight": null,
-    "sectionOrder": 6,
-    "mandatory": false,
-    "readOnly": null,
-    "nodeSpecific": false
-  },
-  {
     "fieldName": "aiUsageTypeJiraCustomFieldKPI198",
     "fieldLabel": "AI Usage type",
     "fieldType": "text",
