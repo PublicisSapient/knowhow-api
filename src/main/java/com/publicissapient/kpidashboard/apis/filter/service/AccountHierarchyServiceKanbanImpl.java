@@ -43,7 +43,6 @@ import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.Project
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
-import com.publicissapient.kpidashboard.common.repository.application.KanbanAccountHierarchyRepository;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -58,9 +57,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountHierarchyServiceKanbanImpl // NOPMD
 		implements
 			AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<AccountFilteredData>> {
-
-	@Autowired
-	private KanbanAccountHierarchyRepository accountHierarchyRepository;
 
 	@Autowired
 	private CacheService cacheService;

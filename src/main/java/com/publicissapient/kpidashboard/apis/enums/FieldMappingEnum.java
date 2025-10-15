@@ -352,6 +352,15 @@ public enum FieldMappingEnum {
 					"includedDefectClosureStatusesKPI195",
 					"thresholdValueKPI195"
 			)
+	),
+
+	KPI198("AI Usage Analytics",
+			KPISource.JIRA.name(),
+			List.of(
+					"aiUsageTypeJiraCustomFieldKPI198",
+					"aiEfficiencyGainJiraCustomFieldKPI198",
+					"includedIssueTypesFromTheCompletedIssuesKPI198",
+					"includedStatusesToIdentifyCompletedIssuesKPI198")
 	);
 
 	/** kanban field mapping enums end * */
