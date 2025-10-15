@@ -59,10 +59,10 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig;
-import com.publicissapient.kpidashboard.apis.productivity.dto.CalculateProductivityRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.CategorizedProductivityGain;
 import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendsDTO;
+import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainCalculationRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainDTO;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
@@ -70,6 +70,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.InternalServerErrorException;
@@ -94,8 +95,6 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 	private static final String SPRINT_STATUS_CLOSED = "CLOSED";
 	private static final String SPRINT_STATUS_ACTIVE = "ACTIVE";
-
-	private static final Map<String, Map<String, KPIConfiguration>> CATEGORY_KPI_ID_CONFIGURATION_MAP = constructCategoryKpiIdConfigurationMap();
 
 	@Getter
 	@Builder
@@ -156,17 +155,30 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
+	private Map<String, Map<String, KPIConfiguration>> categoryKpiIdConfigurationMap;
+
+	@PostConstruct
+	private void initializeConfiguration() {
+		categoryKpiIdConfigurationMap = constructCategoryKpiIdConfigurationMap();
+	}
+
 	@Override
-	public ServiceResponse processCalculateProductivityRequest(
-			CalculateProductivityRequestDTO calculateProductivityRequestDTO) {
+	public ServiceResponse processProductivityCalculationRequest(
+			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO) {
+		if (CollectionUtils.isNotEmpty(productivityGainConfig.getConfigValidationIssues())) {
+			log.error("The following config validations errors occurred: {}",
+					String.join(CommonConstant.COMMA, productivityGainConfig.getConfigValidationIssues()));
+			throw new InternalServerErrorException("Could not process the productivity calculation request due to "
+					+ "incorrect service configuration");
+		}
 		Set<String> hierarchyNodeIds = getNodeIdsCurrentUserHasAccessToByHierarchyLevel(
-				calculateProductivityRequestDTO);
+				productivityGainCalculationRequestDTO);
 
 		Map<String, Set<String>> projectNodeIdSprintNodeIdsMap = constructProjectAndSprintNodeIdsMapForIterationKPIProductivityCalculation(
-				calculateProductivityRequestDTO.getParentId());
+				productivityGainCalculationRequestDTO.getParentId());
 
 		Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap = constructProcessorTypeKpiRequestsMapForAllProductivityCalculationMetrics(
-				calculateProductivityRequestDTO.getLevel(), calculateProductivityRequestDTO.getLabel(),
+				productivityGainCalculationRequestDTO.getLevel(), productivityGainCalculationRequestDTO.getLabel(),
 				hierarchyNodeIds, projectNodeIdSprintNodeIdsMap);
 
 		List<KpiElement> kpiElementList = processAllKpiRequests(processorTypeKpiRequestsMap);
@@ -202,17 +214,14 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 					log.error("Processing Bitbucket KPI Requests failed {}", e.getMessage());
 				}
 			});
-			/*
-				The implementation below will be temporarily commented
-			 */
-//			case JIRA_ITERATION -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
-//				try {
-//					kpiElementList
-//							.addAll(cloneKpiElementsFromProcessorResponse(jiraIterationServiceR.process(kpiRequest)));
-//				} catch (EntityNotFoundException e) {
-//					log.error("Processing Jira iteration KPI Requests failed {}", e.getMessage());
-//				}
-//			});
+			case JIRA_ITERATION -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
+				try {
+					kpiElementList
+							.addAll(cloneKpiElementsFromProcessorResponse(jiraIterationServiceR.process(kpiRequest)));
+				} catch (EntityNotFoundException e) {
+					log.error("Processing Jira iteration KPI Requests failed {}", e.getMessage());
+				}
+			});
 			}
 		}
 		return kpiElementList;
@@ -221,7 +230,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	private Map<String, List<KPIGainTrendCalculationData>> constructCategoryBasedKPIGainTrendCalculationDataMap(
 			Map<String, List<KpiElement>> kpiIdKpiElementsMap, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap) {
 		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationDataMap = new HashMap<>();
-		for (String kpiCategory : productivityGainConfig.getAllCategories()) {
+		for (String kpiCategory : productivityGainConfig.getAllConfiguredCategories()) {
 			categoryBasedKPIGainTrendCalculationDataMap.put(kpiCategory,
 					constructGainTrendCalculationDataForAllKPIsInCategory(kpiIdKpiElementsMap,
 							projectNodeIdSprintNodeIdsMap, kpiCategory));
@@ -323,7 +332,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 	@SuppressWarnings("java:S1067")
 	private Set<String> getNodeIdsCurrentUserHasAccessToByHierarchyLevel(
-			CalculateProductivityRequestDTO calculateProductivityRequestDTO) {
+			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
@@ -331,11 +340,11 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = accountHierarchyServiceImpl
 				.getFilteredList(accountFilterRequest);
 
-		int requestedLevel = calculateProductivityRequestDTO.getLevel();
-		String requestedLabel = calculateProductivityRequestDTO.getLabel();
-		String requestedParentId = calculateProductivityRequestDTO.getParentId();
+		int requestedLevel = productivityGainCalculationRequestDTO.getLevel();
+		String requestedLabel = productivityGainCalculationRequestDTO.getLabel();
+		String requestedParentId = productivityGainCalculationRequestDTO.getParentId();
 
-		validateCalculateProductivityRequest(calculateProductivityRequestDTO, hierarchyDataUserHasAccessTo);
+		validateCalculateProductivityRequest(productivityGainCalculationRequestDTO, hierarchyDataUserHasAccessTo);
 
 		if (requestedParentNodeIdCorrespondsToProjectLevel(requestedParentId, hierarchyDataUserHasAccessTo)) {
 			Set<AccountFilteredData> projectSprintsOrderedBySprintStartDateDescending = hierarchyDataUserHasAccessTo
@@ -374,7 +383,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 				.map(AccountFilteredData::getNodeId).collect(Collectors.toUnmodifiableSet());
 	}
 
-	private void validateCalculateProductivityRequest(CalculateProductivityRequestDTO calculateProductivityRequestDTO,
+	private void validateCalculateProductivityRequest(
+			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO,
 			Set<AccountFilteredData> hierarchyDataCurrentUserHasAccessTo) {
 		List<HierarchyLevel> hierarchyLevels = cacheService.getFullHierarchyLevel();
 		if (CollectionUtils.isEmpty(hierarchyLevels)) {
@@ -384,8 +394,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 			throw new ForbiddenException("Current user doesn't have access to any hierarchy data");
 		}
 
-		int level = calculateProductivityRequestDTO.getLevel();
-		String label = calculateProductivityRequestDTO.getLabel();
+		int level = productivityGainCalculationRequestDTO.getLevel();
+		String label = productivityGainCalculationRequestDTO.getLabel();
 
 		Optional<HierarchyLevel> requestedHierarchyLevelOptional = hierarchyLevels.stream()
 				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == level
@@ -401,7 +411,7 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 			throw new BadRequestException(
 					"The 'productivity' calculation supports only hierarchy entries between account and sprint");
 		}
-		String parentId = calculateProductivityRequestDTO.getParentId();
+		String parentId = productivityGainCalculationRequestDTO.getParentId();
 		if (StringUtils.isNotEmpty(parentId)) {
 			boolean requestedLevelAndLabelCorrespondToTheFirstChildLevelOfTheParentId = hierarchyDataCurrentUserHasAccessTo
 					.stream()
@@ -421,8 +431,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 			int hierarchyLevel, String hierarchyLabel, Set<String> hierarchyNodeIds,
 			Map<String, Set<String>> projectNodeIdSprintIdsMap) {
 
-		Set<String> kpiIds = CATEGORY_KPI_ID_CONFIGURATION_MAP.values().stream()
-				.flatMap(value -> value.keySet().stream()).collect(Collectors.toSet());
+		Set<String> kpiIds = categoryKpiIdConfigurationMap.values().stream().flatMap(value -> value.keySet().stream())
+				.collect(Collectors.toSet());
 
 		List<KpiMaster> kpiMasterList = new ArrayList<>();
 
@@ -534,12 +544,12 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	}
 
 	@SuppressWarnings({ "java:S3776", "java:S134" })
-	private static List<KPIGainTrendCalculationData> constructGainTrendCalculationDataForAllKPIsInCategory(
+	private List<KPIGainTrendCalculationData> constructGainTrendCalculationDataForAllKPIsInCategory(
 			Map<String, List<KpiElement>> kpiIdKpiElementsMap, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
 			String categoryName) {
 		List<KPIGainTrendCalculationData> kpiGainTrendCalculationDataList = new ArrayList<>();
 		int kpiWeightParts;
-		for (Map.Entry<String, KPIConfiguration> kpiIdKpiConfigurationMapEntry : CATEGORY_KPI_ID_CONFIGURATION_MAP
+		for (Map.Entry<String, KPIConfiguration> kpiIdKpiConfigurationMapEntry : categoryKpiIdConfigurationMap
 				.get(categoryName).entrySet()) {
 			KPIConfiguration kpiConfiguration = kpiIdKpiConfigurationMapEntry.getValue();
 			List<KpiElement> kpiData = kpiIdKpiElementsMap.get(kpiIdKpiConfigurationMapEntry.getKey());
@@ -584,6 +594,9 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 	private static double calculateCategorizedGain(
 			List<KPIGainTrendCalculationData> kpiGainTrendCalculationDataListForCategory) {
+		if (CollectionUtils.isEmpty(kpiGainTrendCalculationDataListForCategory)) {
+			return 0.0D;
+		}
 		int totalNumberOfParts = 0;
 		double totalWeightSum = 0.0D;
 
@@ -731,8 +744,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		return kpiElement;
 	}
 
-	private static Optional<KPIConfiguration> getKpiConfigurationByKpiId(String kpiId) {
-		return CATEGORY_KPI_ID_CONFIGURATION_MAP.values().stream().filter(value -> value.containsKey(kpiId))
+	private Optional<KPIConfiguration> getKpiConfigurationByKpiId(String kpiId) {
+		return categoryKpiIdConfigurationMap.values().stream().filter(value -> value.containsKey(kpiId))
 				.map(value -> value.get(kpiId)).findFirst();
 	}
 
@@ -847,11 +860,23 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		return FieldMappingEnum.valueOf(kpiId.toUpperCase()).getKpiName();
 	}
 
-	private static Map<String, Map<String, KPIConfiguration>> constructCategoryKpiIdConfigurationMap() {
-		return Map.of(CATEGORY_EFFICIENCY, constructKpiIdKpiConfigurationMapForEfficiencyKpis(), CATEGORY_SPEED,
-				constructKpiIdKpiConfigurationMapForSpeedKpis(), CATEGORY_QUALITY,
-				constructKpiIdKpiConfigurationMapForQualityKpis(), CATEGORY_PRODUCTIVITY,
-				constructKpiIdKpiConfigurationMapForProductivityKpis());
+	private Map<String, Map<String, KPIConfiguration>> constructCategoryKpiIdConfigurationMap() {
+		Map<String, Map<String, KPIConfiguration>> configuredCategoryKpiIdConfigurationMap = new HashMap<>();
+		if (CollectionUtils.isNotEmpty(productivityGainConfig.getAllConfiguredCategories())) {
+			productivityGainConfig.getAllConfiguredCategories().forEach(configuredCategory -> {
+				switch (configuredCategory) {
+				case CATEGORY_EFFICIENCY -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_EFFICIENCY,
+						constructKpiIdKpiConfigurationMapForEfficiencyKpis());
+				case CATEGORY_SPEED -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_SPEED,
+						constructKpiIdKpiConfigurationMapForSpeedKpis());
+				case CATEGORY_PRODUCTIVITY -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_PRODUCTIVITY,
+						constructKpiIdKpiConfigurationMapForProductivityKpis());
+				case CATEGORY_QUALITY -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_QUALITY,
+						constructKpiIdKpiConfigurationMapForQualityKpis());
+				}
+			});
+		}
+		return Collections.unmodifiableMap(configuredCategoryKpiIdConfigurationMap);
 	}
 
 	private static Map<String, KPIConfiguration> constructKpiIdKpiConfigurationMapForSpeedKpis() {

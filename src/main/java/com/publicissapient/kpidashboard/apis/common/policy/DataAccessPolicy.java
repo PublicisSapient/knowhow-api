@@ -14,20 +14,15 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.dto;
+package com.publicissapient.kpidashboard.apis.common.policy;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
-@Data
-public class CalculateProductivityRequestDTO {
+import java.util.List;
 
-    @NotNull(message = "The hierarchy 'level' must be specified")
-    private Integer level;
-
-    @NotEmpty(message = "The hierarchy 'label' must be specified")
-    private String label;
-
-    private String parentId;
+/**
+ * @author gursinh49
+ */
+public interface DataAccessPolicy {
+    List<UserInfo> getAccessibleMembers(String userName);
 }

@@ -20,11 +20,11 @@ import static com.publicissapient.kpidashboard.apis.productivity.config.Producti
 import static com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig.CATEGORY_PRODUCTIVITY;
 import static com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig.CATEGORY_QUALITY;
 import static com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig.CATEGORY_SPEED;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +53,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
@@ -68,10 +69,10 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.productivity.config.ProductivityGainConfig;
-import com.publicissapient.kpidashboard.apis.productivity.dto.CalculateProductivityRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.CategorizedProductivityGain;
 import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.KPITrendsDTO;
+import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainCalculationRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainDTO;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
@@ -130,7 +131,7 @@ class ProductivityGainServiceTest {
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(Collections.emptySet());
 
 		assertThrows(InternalServerErrorException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(2, "test", null)));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(2, "test", null)));
 	}
 
 	@Test
@@ -139,7 +140,7 @@ class ProductivityGainServiceTest {
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(Collections.emptySet());
 
 		assertThrows(ForbiddenException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(2, "test", null)));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(2, "test", null)));
 	}
 
 	@Test
@@ -148,10 +149,10 @@ class ProductivityGainServiceTest {
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(createAccountFilteredData());
 
 		assertThrows(BadRequestException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(1, "test", null)));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(1, "test", null)));
 
 		assertThrows(BadRequestException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(10, "acc", null)));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(10, "acc", null)));
 	}
 
 	@Test
@@ -160,10 +161,10 @@ class ProductivityGainServiceTest {
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(createAccountFilteredData());
 
 		assertThrows(BadRequestException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(1, "bu", null)));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(1, "bu", null)));
 
 		assertThrows(BadRequestException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(7, "squad", null)));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(7, "squad", null)));
 	}
 
 	@Test
@@ -172,13 +173,21 @@ class ProductivityGainServiceTest {
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(createAccountFilteredData());
 
 		assertThrows(BadRequestException.class, () -> productivityGainServiceImpl
-				.processCalculateProductivityRequest(createCalculateProductivityRequest(5, "project", "acc-node-id")));
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(5, "project", "acc-node-id")));
+	}
+
+	@Test
+	public void when_ProductivityGainConfigContainsErrors_Expect_ProcessingProductivityGainRequestThrowsInternalServerErrorException() {
+		when(productivityGainConfig.getConfigValidationIssues()).thenReturn(Set.of("Test config issue"));
+
+		assertThrows(InternalServerErrorException.class, () -> productivityGainServiceImpl
+				.processProductivityCalculationRequest(createCalculateProductivityRequest(7, "squad", null)));
 	}
 
 	@ParameterizedTest
 	@MethodSource("provideTestCalculateProductivityRequest")
 	void when_ProductivityCalculationRequestIsValid_Expect_CategorizedProductivityResultIsReturned(
-			CalculateProductivityRequestDTO calculateProductivityRequestDTO) throws EntityNotFoundException {
+			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO) throws EntityNotFoundException {
 
 		initializeProductivityGainRequestMocks();
 
@@ -221,7 +230,7 @@ class ProductivityGainServiceTest {
 				.build();
 
 		ServiceResponse serviceResponse = productivityGainServiceImpl
-				.processCalculateProductivityRequest(calculateProductivityRequestDTO);
+				.processProductivityCalculationRequest(productivityGainCalculationRequestDTO);
 
 		assertNotNull(serviceResponse);
 		assertNotNull(serviceResponse.getData());
@@ -266,14 +275,11 @@ class ProductivityGainServiceTest {
 					.map(this::getKpiElementResponseBasedOnKpiElementFromKpiRequest).toList();
 		});
 
-		/*
-			The implementation below will be temporarily commented
-		 */
-//		when(jiraIterationServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
-//			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
-//			return invocationArgument.getKpiList().stream()
-//					.map(this::getKpiElementResponseBasedOnKpiElementFromKpiRequest).toList();
-//		});
+		when(jiraIterationServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
+			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
+			return invocationArgument.getKpiList().stream()
+					.map(this::getKpiElementResponseBasedOnKpiElementFromKpiRequest).toList();
+		});
 
 		when(bitBucketServiceR.process(any(KpiRequest.class))).thenAnswer(invocationOnMock -> {
 			KpiRequest invocationArgument = invocationOnMock.getArgument(0);
@@ -282,6 +288,8 @@ class ProductivityGainServiceTest {
 		});
 
 		initializeProductivityConfig();
+
+		ReflectionTestUtils.invokeMethod(productivityGainServiceImpl, "initializeConfiguration");
 	}
 
 	private KpiElement getKpiElementResponseBasedOnKpiElementFromKpiRequest(KpiElement kpiElementFromKpiRequest) {
@@ -297,12 +305,13 @@ class ProductivityGainServiceTest {
 		ProductivityGainConfig.DataPoints dataPoints = new ProductivityGainConfig.DataPoints();
 		dataPoints.setCount(ProductivityGainServiceTest.DEFAULT_DATA_POINTS_NUMBER);
 
+		when(productivityGainConfig.getConfigValidationIssues()).thenReturn(Collections.emptySet());
 		when(productivityGainConfig.getWeightForCategory(CATEGORY_SPEED)).thenReturn(0.3D);
 		when(productivityGainConfig.getWeightForCategory(CATEGORY_QUALITY)).thenReturn(0.3D);
 		when(productivityGainConfig.getWeightForCategory(CATEGORY_EFFICIENCY)).thenReturn(0.25D);
 		when(productivityGainConfig.getWeightForCategory(CATEGORY_PRODUCTIVITY)).thenReturn(0.15D);
 		when(productivityGainConfig.getDataPoints()).thenReturn(dataPoints);
-		when(productivityGainConfig.getAllCategories())
+		when(productivityGainConfig.getAllConfiguredCategories())
 				.thenReturn(Set.of(CATEGORY_SPEED, CATEGORY_QUALITY, CATEGORY_EFFICIENCY, CATEGORY_PRODUCTIVITY));
 	}
 
@@ -373,30 +382,30 @@ class ProductivityGainServiceTest {
 		return issueKpiModalValueSet;
 	}
 
-	private static CalculateProductivityRequestDTO createCalculateProductivityRequest(int level, String label,
-			String parentId) {
-		CalculateProductivityRequestDTO calculateProductivityRequestDTO = new CalculateProductivityRequestDTO();
-		calculateProductivityRequestDTO.setLevel(level);
-		calculateProductivityRequestDTO.setLabel(label);
-		calculateProductivityRequestDTO.setParentId(parentId);
-		return calculateProductivityRequestDTO;
+	private static ProductivityGainCalculationRequestDTO createCalculateProductivityRequest(int level, String label,
+                                                                                            String parentId) {
+		ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO = new ProductivityGainCalculationRequestDTO();
+		productivityGainCalculationRequestDTO.setLevel(level);
+		productivityGainCalculationRequestDTO.setLabel(label);
+		productivityGainCalculationRequestDTO.setParentId(parentId);
+		return productivityGainCalculationRequestDTO;
 	}
 
-	private static List<CalculateProductivityRequestDTO> provideTestCalculateProductivityRequest() {
-		CalculateProductivityRequestDTO calculateProductivityRequestDTO = new CalculateProductivityRequestDTO();
-		calculateProductivityRequestDTO.setLevel(5);
-		calculateProductivityRequestDTO.setLabel("project");
-		calculateProductivityRequestDTO.setParentId(null);
+	private static List<ProductivityGainCalculationRequestDTO> provideTestCalculateProductivityRequest() {
+		ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO = new ProductivityGainCalculationRequestDTO();
+		productivityGainCalculationRequestDTO.setLevel(5);
+		productivityGainCalculationRequestDTO.setLabel("project");
+		productivityGainCalculationRequestDTO.setParentId(null);
 
-		CalculateProductivityRequestDTO calculateProductivityRequestDTO1 = new CalculateProductivityRequestDTO();
-		calculateProductivityRequestDTO1.setLevel(5);
-		calculateProductivityRequestDTO1.setLabel("project");
-		calculateProductivityRequestDTO1.setParentId("port-node-id");
+		ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO1 = new ProductivityGainCalculationRequestDTO();
+		productivityGainCalculationRequestDTO1.setLevel(5);
+		productivityGainCalculationRequestDTO1.setLabel("project");
+		productivityGainCalculationRequestDTO1.setParentId("port-node-id");
 
-		CalculateProductivityRequestDTO calculateProductivityRequestDTO2 = new CalculateProductivityRequestDTO();
-		calculateProductivityRequestDTO2.setLevel(6);
-		calculateProductivityRequestDTO2.setLabel("sprint");
-		calculateProductivityRequestDTO2.setParentId("project-node-id");
+		ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO2 = new ProductivityGainCalculationRequestDTO();
+		productivityGainCalculationRequestDTO2.setLevel(6);
+		productivityGainCalculationRequestDTO2.setLabel("sprint");
+		productivityGainCalculationRequestDTO2.setParentId("project-node-id");
 
 		return List.of(createCalculateProductivityRequest(5, "project", null),
 				createCalculateProductivityRequest(5, "project", "port-node-id"),
