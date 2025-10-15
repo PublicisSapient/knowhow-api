@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.productivity.dto.CalculateProductivityRequestDTO;
+import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainCalculationRequestDTO;
 import com.publicissapient.kpidashboard.apis.productivity.service.ProductivityGainService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,7 +61,7 @@ public class ProductivityController {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error happened") })
 	@PostMapping("/calculate")
 	public ServiceResponse calculateProductivity(
-			@Valid @RequestBody CalculateProductivityRequestDTO calculateProductivityRequestDTO) {
-		return productivityGainService.processCalculateProductivityRequest(calculateProductivityRequestDTO);
+			@Valid @RequestBody ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO) {
+		return productivityGainService.processProductivityCalculationRequest(productivityGainCalculationRequestDTO);
 	}
 }

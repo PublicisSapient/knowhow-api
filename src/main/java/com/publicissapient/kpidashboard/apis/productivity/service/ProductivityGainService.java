@@ -17,10 +17,10 @@
 package com.publicissapient.kpidashboard.apis.productivity.service;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.productivity.dto.CalculateProductivityRequestDTO;
+import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainCalculationRequestDTO;
 
 public interface ProductivityGainService {
-    ServiceResponse processCalculateProductivityRequest(
-            CalculateProductivityRequestDTO calculateProductivityRequestDTO
+    ServiceResponse processProductivityCalculationRequest(
+            ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO
     );
 }
