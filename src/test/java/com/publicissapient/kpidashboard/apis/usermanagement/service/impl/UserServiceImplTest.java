@@ -69,25 +69,18 @@ class UserServiceImplTest {
     @Mock
     private AuthenticationService authenticationService;
 
-    private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> mockHierarchyLevels;
-
     @BeforeEach
     void setUp(){
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
-       // userInfoService = Mockito.mock(UserInfoService.class);
-
     }
 
     @Test
     void testSaveUserInfo_NewUserForProjectAdmin() {
         String username = "testUser";
         SecurityContextHolder.setContext(securityContext);
-        //Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+
         when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
-        /*doReturn(null)
-                .when(userInfoService)
-                .getUserInfo(anyString(), eq(AuthType.SAML));*/
 
         ProjectsAccess access = getProjectAccess("project");
 
@@ -180,7 +173,6 @@ class UserServiceImplTest {
         UserInfo projectAdminUserInfo = new UserInfo();
         projectAdminUserInfo.setUsername("ProjectAdmin");
         projectAdminUserInfo.setProjectsAccess(List.of(access));
-        mockHierarchyLevels = createMockHierarchyLevels();
 
         UserInfo savedUserInfo = new UserInfo();
         savedUserInfo.setUsername(username);
@@ -213,7 +205,6 @@ class UserServiceImplTest {
         UserInfo projectAdminUserInfo = new UserInfo();
         projectAdminUserInfo.setUsername("ProjectAdmin");
         projectAdminUserInfo.setProjectsAccess(List.of(access));
-        mockHierarchyLevels = createMockHierarchyLevels();
 
         UserInfo savedUserInfo = new UserInfo();
         savedUserInfo.setUsername(username);
@@ -301,39 +292,5 @@ class UserServiceImplTest {
     void testSaveUserInfo_EmptyUsername() {
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> userService.saveUserInfo(""));
-    }
-
-    private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> createMockHierarchyLevels() {
-        List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> levels = new ArrayList<>();
-
-        com.publicissapient.kpidashboard.common.model.application.HierarchyLevel buLevel =
-                new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-        buLevel.setHierarchyLevelId("bu");
-        buLevel.setHierarchyLevelName("BU");
-        buLevel.setLevel(1);
-        levels.add(buLevel);
-
-        com.publicissapient.kpidashboard.common.model.application.HierarchyLevel verticalLevel =
-                new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-        verticalLevel.setHierarchyLevelId("ver");
-        verticalLevel.setHierarchyLevelName("VERTICAL");
-        verticalLevel.setLevel(2);
-        levels.add(verticalLevel);
-
-        com.publicissapient.kpidashboard.common.model.application.HierarchyLevel accountLevel =
-                new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-        accountLevel.setHierarchyLevelId("acc");
-        accountLevel.setHierarchyLevelName("ACCOUNT");
-        accountLevel.setLevel(3);
-        levels.add(accountLevel);
-
-        com.publicissapient.kpidashboard.common.model.application.HierarchyLevel portfolioLevel =
-                new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-        portfolioLevel.setHierarchyLevelId("port");
-        portfolioLevel.setHierarchyLevelName("PORTFOLIO");
-        portfolioLevel.setLevel(4);
-        levels.add(portfolioLevel);
-
-        return levels;
     }
 }

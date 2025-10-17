@@ -19,7 +19,6 @@ import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.List;
