@@ -33,6 +33,7 @@ import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationServi
 import com.publicissapient.kpidashboard.apis.common.service.impl.DataAccessService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
 import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardConfigService;
@@ -62,7 +63,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-class UserInfoServiceImplTest {
+public class UserInfoServiceImplTest {
 
 	private static final String ROLE_VIEWER = "ROLE_VIEWER";
 	private static final String ROLE_SUPERADMIN = "ROLE_SUPERADMIN";
@@ -78,6 +79,10 @@ class UserInfoServiceImplTest {
 	TokenAuthenticationService tokenAuthenticationService;
 	@Mock
 	private UserInfoRepository userInfoRepository;
+
+	@Mock
+	private OrganizationHierarchyService organizationHierarchyService;
+
 	@InjectMocks
 	private UserInfoServiceImpl service;
 
@@ -240,35 +245,44 @@ class UserInfoServiceImplTest {
 		assertEquals(authType, result.getAuthType());
 	}
 
+	UserInfo userInfoCreation(){
+		ProjectsAccess pa = new ProjectsAccess();
+		pa.setRole(ROLE_SUPERADMIN);
+		pa.setAccessNodes(new ArrayList<>());
+
+		List<ProjectsAccess> paList = new ArrayList<>();
+		paList.add(pa);
+		UserInfo testUser = new UserInfo();
+		testUser.setUsername("User");
+		testUser.setProjectsAccess(paList);
+
+		List<String> auth = new ArrayList<>();
+		auth.add(ROLE_SUPERADMIN);
+		auth.add(ROLE_VIEWER);
+		testUser.setAuthorities(auth);
+		return testUser;
+	}
+
 	@Test
 	public void getAllUserInfoNoData() {
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-		SecurityContextHolder.setContext(securityContext);
-		List<GrantedAuthority> authorities = List.of(
-				(GrantedAuthority) () -> Constant.ROLE_SUPERADMIN
-		);
 
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
-		List<String> roles = authorities
-				.stream()
-				.map(GrantedAuthority::getAuthority)
-				.toList();
-		List<UserInfo> userInfoList = new ArrayList<>();
-		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
+		UserInfo testUser = userInfoCreation();
+		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
+		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser())).thenReturn(testUser);
+
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(0, ((ArrayList<UserInfo>) result.getData()).size());
 	}
 
+
 	@Test
 	public void getAllUserInfoWithData() {
 
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 		List<GrantedAuthority> authorities = List.of(
 				(GrantedAuthority) () -> Constant.ROLE_SUPERADMIN
 		);
 
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
 		List<String> roles = authorities
 				.stream()
 				.map(GrantedAuthority::getAuthority)
@@ -279,7 +293,11 @@ class UserInfoServiceImplTest {
 		testUser.setAuthorities(List.of(Constant.ROLE_SUPERADMIN));
 		ArrayList<UserInfo> userInfoList = new ArrayList<UserInfo>();
 		userInfoList.add(testUser);
+
+		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
+		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser())).thenReturn(testUser);
 		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
+
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(1, ((ArrayList<UserInfo>) result.getData()).size());
 	}

@@ -19,16 +19,7 @@
 package com.publicissapient.kpidashboard.apis.common.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -162,15 +153,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public Collection<UserInfoDTO> getUsers() {
-		org.springframework.security.core.Authentication authentication =
-				AuthenticationUtil.getAuthentication();
+		Collection<GrantedAuthority> grantedAuthorities = getAuthorities(authenticationService.getLoggedInUser());
+		List<String> roles = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
 
-		List<String> roles = authentication.getAuthorities()
-				.stream()
-				.map(GrantedAuthority::getAuthority)
-				.collect(Collectors.toList());
-
-		List<UserInfo> userInfoList = dataAccessService.getMembersForUser(roles,authentication.getName());
+		List<UserInfo> userInfoList = dataAccessService.getMembersForUser(roles,authenticationService.getLoggedInUser());
 		List<String> userNames = userInfoList.stream().map(UserInfo::getUsername).toList();
 
 		List<Authentication> authentications = authenticationRepository.findByUsernameIn(userNames);
