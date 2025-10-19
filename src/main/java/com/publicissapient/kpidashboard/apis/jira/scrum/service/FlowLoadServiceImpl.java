@@ -297,10 +297,14 @@ public class FlowLoadServiceImpl extends JiraBacklogKPIService<Double, List<Obje
 			if (intervalEndDate.isAfter(endDate)) intervalEndDate = endDate;
 			Pair<LocalDate, LocalDate> intervalRange = Pair.of(intervalStartDate, intervalEndDate);
 			status = status.replace(" ", "-");
-			if (!statusesWithStartAndEndDate.containsKey(status)) {
+			/*if (!statusesWithStartAndEndDate.containsKey(status)) {
 				statusesWithStartAndEndDate.put(status, new ArrayList<>());
-			}
-			statusesWithStartAndEndDate.get(status).add(intervalRange);
+			}*/
+			//statusesWithStartAndEndDate.get(status).add(intervalRange);
+			statusesWithStartAndEndDate
+					.computeIfAbsent(status, key -> new ArrayList<>())
+					.add(intervalRange);
+
 		}
 	}
 
