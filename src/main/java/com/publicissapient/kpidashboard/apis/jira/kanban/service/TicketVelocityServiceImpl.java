@@ -181,7 +181,6 @@ public class TicketVelocityServiceImpl
 		List<KPIExcelData> excelData = new ArrayList<>();
 		leafNodeList.forEach(
 				node -> {
-					String projectNodeId = node.getProjectFilter().getId();
 					String basicProjectConfigId =
 							node.getProjectFilter().getBasicProjectConfigId().toString();
 					Map<String, List<KanbanIssueCustomHistory>> dateWiseStoryMap =

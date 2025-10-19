@@ -34,8 +34,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -83,10 +81,7 @@ public class JiraController {
 	 * @return List of KPIs with trend and aggregated data.
 	 * @throws Exception
 	 */
-	@RequestMapping(
-			value = "/jira/kpi",
-			method = RequestMethod.POST,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/jira/kpi", produces = APPLICATION_JSON_VALUE)
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
 	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
@@ -124,10 +119,7 @@ public class JiraController {
 	 * @return List of KPIs with trend and aggregated data.
 	 * @throws Exception
 	 */
-	@RequestMapping(
-			value = "/jirakanban/kpi",
-			method = RequestMethod.POST,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/jirakanban/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
 	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
@@ -179,10 +171,7 @@ public class JiraController {
 		return response;
 	}
 
-	@RequestMapping(
-			value = "/jira/nonTrend/kpi",
-			method = RequestMethod.POST,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/jira/nonTrend/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 

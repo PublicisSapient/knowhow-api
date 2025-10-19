@@ -51,11 +51,10 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(
+	@PostMapping(
 			path = "/jira",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
-			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+			produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
 	public ResponseEntity<ServiceResponse> validateJiraConnection(
 			@NotNull @RequestBody ConnectionDTO connectionDTO) {
@@ -72,9 +71,8 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(
+	@PostMapping(
 			path = "/sonar",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
@@ -93,9 +91,8 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(
+	@PostMapping(
 			path = "/teamcity",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
@@ -108,9 +105,8 @@ public class TestConnectionController {
 				.body(testConnectionService.validateConnection(connection, Constant.TOOL_TEAMCITY));
 	}
 
-	@RequestMapping(
+	@PostMapping(
 			path = "/zephyr",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
@@ -129,9 +125,8 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(
+	@PostMapping(
 			path = "/bamboo",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
@@ -150,9 +145,8 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(
+	@PostMapping(
 			path = "/jenkins",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
@@ -182,9 +176,8 @@ public class TestConnectionController {
 	 * @param connectionDTO
 	 * @return
 	 */
-	@RequestMapping(
+	@PostMapping(
 			path = "/bitbucket",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")

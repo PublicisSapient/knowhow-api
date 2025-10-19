@@ -180,7 +180,6 @@ public class CodeBuildTimeKanbanServiceImpl
 					Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 					CodeBuildTimeInfo codeBuildTimeInfo = new CodeBuildTimeInfo();
 					List<DataCount> dataCountAggList = new ArrayList<>();
-					String projectNodeId = node.getId();
 					ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
 					List<Build> buildListProjectWise = resultMap.get(basicProjectConfigId);
 

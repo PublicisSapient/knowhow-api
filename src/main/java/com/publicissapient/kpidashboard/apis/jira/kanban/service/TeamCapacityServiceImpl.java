@@ -188,7 +188,6 @@ public class TeamCapacityServiceImpl
 		List<KPIExcelData> excelData = new ArrayList<>();
 		leafNodeList.forEach(
 				node -> {
-					String projectNodeId = node.getProjectFilter().getId();
 					Map<String, List<KanbanCapacity>> dateWiseKanbanCapacity =
 							projectAndDateWiseCapacityMap.get(
 									node.getProjectFilter().getBasicProjectConfigId().toString());
@@ -255,10 +254,7 @@ public class TeamCapacityServiceImpl
 					dateWiseKanbanCapacity.getOrDefault(currentDate.toString(), dummyList));
 		}
 		if (CollectionUtils.isNotEmpty(kanbanCapacityList)) {
-			capacity =
-					kanbanCapacityList.stream()
-							.mapToDouble(kanbanCapacity -> kanbanCapacity.getCapacity())
-							.sum();
+			capacity = kanbanCapacityList.stream().mapToDouble(KanbanCapacity::getCapacity).sum();
 		}
 		return capacity;
 	}

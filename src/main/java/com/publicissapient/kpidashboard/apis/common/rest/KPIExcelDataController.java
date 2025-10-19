@@ -26,11 +26,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.KPIExcelDataService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -62,11 +58,7 @@ public class KPIExcelDataController {
 	 * @param kpiID the kpi id
 	 * @return validation kpi data
 	 */
-	@RequestMapping(
-			value = "/v1/kpi/{kpiID}",
-			method = RequestMethod.POST,
-			produces = APPLICATION_JSON_VALUE)
-	// NOSONAR
+	@PostMapping(value = "/v1/kpi/{kpiID}", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<KPIExcelValidationDataResponse> getValidationKPIData(
 			HttpServletRequest request,
 			@NotNull @RequestBody KpiRequest kpiRequest,

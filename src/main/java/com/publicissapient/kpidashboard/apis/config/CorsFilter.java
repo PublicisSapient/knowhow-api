@@ -70,7 +70,7 @@ public class CorsFilter extends OncePerRequestFilter {
 	 * @return Boolean
 	 * @throws MalformedURLException
 	 */
-	private Boolean isValidCORSRequest(HttpServletRequest request) throws MalformedURLException {
+	private boolean isValidCORSRequest(HttpServletRequest request) throws MalformedURLException {
 		List<String> originWhiteList = apiSettings.getCorsFilterValidOrigin();
 		Boolean result = Boolean.FALSE;
 		String origin = request.getHeader(CORSConstants.HEADER_VALUE_ACCESS_CONTROL_ORIGIN);

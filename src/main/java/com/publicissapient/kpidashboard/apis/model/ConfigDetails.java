@@ -90,7 +90,10 @@ public class ConfigDetails {
 		this.hierarchySelectionCount = hierarchySelectionCount;
 	}
 
-	public void setNoOfDataPoints(int noOfDataPoints) {}
+	public void setNoOfDataPoints(int noOfDataPoints) {
+		// Intentionally left blank —
+		// no action required
+	}
 
 	public void setSprintCountForKpiCalculation(int sprintCountForKpiCalculation) {
 		this.sprintCountForKpiCalculation = sprintCountForKpiCalculation;

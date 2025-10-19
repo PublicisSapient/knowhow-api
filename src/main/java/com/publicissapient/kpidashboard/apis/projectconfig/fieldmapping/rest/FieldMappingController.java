@@ -68,9 +68,8 @@ public class FieldMappingController {
 	/*
 	 * save import functionality
 	 */
-	@RequestMapping(
+	@PostMapping(
 			value = "/tools/{projectToolConfigId}/fieldMapping",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> addFieldMapping(
@@ -158,9 +157,8 @@ public class FieldMappingController {
 	/*
 	 * save kpiwise fieldmapping
 	 */
-	@RequestMapping(
+	@PostMapping(
 			value = "/tools/fieldMapping/{projectToolConfigId}/{kpiId}",
-			method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> getFieldMapping(
 			@PathVariable String projectToolConfigId,
@@ -203,9 +201,8 @@ public class FieldMappingController {
 	/*
 	 * get kpiwise fieldmapping
 	 */
-	@RequestMapping(
+	@PostMapping(
 			value = "/tools/saveMapping/{projectToolConfigId}/{kpiId}",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> saveKpiWiseSpecificFieldmAPPING(

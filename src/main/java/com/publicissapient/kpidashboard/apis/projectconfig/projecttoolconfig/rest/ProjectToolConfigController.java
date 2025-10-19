@@ -83,9 +83,8 @@ public class ProjectToolConfigController {
 	 * @return responseEntity with data,message and status
 	 */
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'SAVE_PROJECT_TOOL')")
-	@RequestMapping(
+	@PostMapping(
 			value = "/basicconfigs/{basicProjectConfigId}/tools",
-			method = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> saveToolDetails(

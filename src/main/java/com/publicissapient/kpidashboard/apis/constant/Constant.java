@@ -162,5 +162,7 @@ public final class Constant {
 	public static final String DSE_4 = "S4";
 	public static final String DSE_5 = "S5";
 
+	public static final String RELEASE = "release";
+
 	private Constant() {}
 }

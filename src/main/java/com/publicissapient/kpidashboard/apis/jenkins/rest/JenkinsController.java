@@ -31,12 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -74,10 +69,7 @@ public class JenkinsController {
 	 * @return the jenkins aggregated metrics
 	 * @throws Exception the exception
 	 */
-	@RequestMapping(
-			value = "/jenkins/kpi",
-			method = RequestMethod.POST,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/jenkins/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
 	public ResponseEntity<List<KpiElement>> getJenkinsAggregatedMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
@@ -114,10 +106,7 @@ public class JenkinsController {
 	 * @return the jenkins kanban aggregated metrics
 	 * @throws Exception the exception
 	 */
-	@RequestMapping(
-			value = "/jenkinskanban/kpi",
-			method = RequestMethod.POST,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/jenkinskanban/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<List<KpiElement>> getJenkinsKanbanAggregatedMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 		MDC.put("JenkinsKanbanKpiRequest", kpiRequest.getRequestTrackerId());

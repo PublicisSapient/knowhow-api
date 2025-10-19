@@ -38,6 +38,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.datamigration.model.HierarchyValueDup;
 import com.publicissapient.kpidashboard.apis.datamigration.model.MigrateData;
 import com.publicissapient.kpidashboard.apis.datamigration.model.MigrationLockLog;
@@ -426,7 +427,7 @@ public class DataMigrationService {
 						.map(AdditionalFilterCategory::getFilterCategoryId)
 						.collect(Collectors.toList());
 		labelNames.add("sprint");
-		labelNames.add("release");
+		labelNames.add(Constant.RELEASE);
 
 		List<AccountHierarchy> accountHierarchyRepositoryAll =
 				accountHierarchyRepository.findByLabelList(labelNames);
@@ -869,12 +870,12 @@ public class DataMigrationService {
 		log.info("Scrum Release Hierarchy Details  Processing Data Started");
 		Map<ObjectId, List<AccountHierarchy>> projectWiseScrumReleases =
 				accountHierarchyRepositoryAll.stream()
-						.filter(label -> label.getLabelName().equalsIgnoreCase("release"))
+						.filter(label -> label.getLabelName().equalsIgnoreCase(Constant.RELEASE))
 						.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
 
 		Map<ObjectId, List<KanbanAccountHierarchy>> projectWiseKanbanReleases =
 				kanbanAccountHierarchyList.stream()
-						.filter(label -> label.getLabelName().equalsIgnoreCase("release"))
+						.filter(label -> label.getLabelName().equalsIgnoreCase(Constant.RELEASE))
 						.collect(Collectors.groupingBy(KanbanAccountHierarchy::getBasicProjectConfigId));
 		// for scrum
 		List<ProjectHierarchy> projectHierarchyList = new ArrayList<>();
