@@ -26,11 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.connection.service.TestConnectionService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -265,10 +261,7 @@ public class TestConnectionController {
 				.body(testConnectionService.validateConnection(connection, Constant.TOOL_ARGOCD));
 	}
 
-	@RequestMapping(
-			value = "/zephyrcloudurl",
-			method = RequestMethod.GET,
-			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/zephyrcloudurl", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getZephyrCloudUrl() {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(testConnectionService.getZephyrCloudUrlDetails());

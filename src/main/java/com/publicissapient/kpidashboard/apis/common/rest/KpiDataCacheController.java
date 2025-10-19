@@ -19,13 +19,12 @@
 package com.publicissapient.kpidashboard.apis.common.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
@@ -46,10 +45,9 @@ public class KpiDataCacheController {
 	 *
 	 * @param kpiId the cache name
 	 */
-	@RequestMapping(
+	@GetMapping(
 			value = "/cache/project/{projectId}/kpi/{kpiId}/clear",
-			method = GET,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+			produces = APPLICATION_JSON_VALUE)
 	public void clearCache(
 			@PathVariable("projectId") String basicProjectConfigId, @PathVariable("kpiId") String kpiId) {
 		service.clearCache(basicProjectConfigId, kpiId);
@@ -60,10 +58,7 @@ public class KpiDataCacheController {
 	 *
 	 * @param basicProjectConfigId the project basic config id
 	 */
-	@RequestMapping(
-			value = "/cache/project/{projectId}/clear",
-			method = GET,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/cache/project/{projectId}/clear", produces = APPLICATION_JSON_VALUE)
 	public void clearCacheForProject(@PathVariable("projectId") String basicProjectConfigId) {
 		List<String> kpiList = service.getKpiBasedOnSource(CommonConstant.ALL_KPI);
 		kpiList.forEach(kpiId -> service.clearCache(basicProjectConfigId, kpiId));
@@ -74,10 +69,9 @@ public class KpiDataCacheController {
 	 *
 	 * @param source kpi source
 	 */
-	@RequestMapping(
+	@GetMapping(
 			value = "/cache/project/{projectId}/source/{source}/clear",
-			method = GET,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+			produces = APPLICATION_JSON_VALUE)
 	public void clearCacheForProjectAndSource(
 			@PathVariable("source") String source, @PathVariable("projectId") String projectId) {
 		List<String> kpiList = service.getKpiBasedOnSource(source);

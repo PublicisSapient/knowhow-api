@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -79,10 +80,7 @@ public class UserTokenDeletionControllerApplication {
 	 *
 	 * @param request the request
 	 */
-	@RequestMapping(
-			value = "/centralUserlogout",
-			method = GET,
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/centralUserlogout", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> deleteUserTokenForCentralAuth(
 			HttpServletRequest request, HttpServletResponse response) {
 		String userName = AuthenticationUtil.getUsernameFromContext();

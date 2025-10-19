@@ -29,11 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.pushdata.model.ExposeApiToken;
@@ -85,10 +81,7 @@ public class PushDataController {
 										buildDeploy, exposeApiToken.getBasicProjectConfigId())));
 	}
 
-	@RequestMapping(
-			value = "/tracelog/{basicConfigId}",
-			method = RequestMethod.GET,
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/tracelog/{basicConfigId}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getTraceLog(@PathVariable String basicConfigId) {
 		List<PushDataTraceLogDTO> allLogs =
 				pushDataTraceLogService.getByProjectConfigId(new ObjectId(basicConfigId));

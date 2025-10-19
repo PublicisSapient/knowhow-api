@@ -25,11 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.rbac.roles.service.RolesHelperService;
@@ -55,9 +51,7 @@ public class RolesController {
 	 *
 	 * @return the roles
 	 */
-	@RequestMapping(
-			method = RequestMethod.GET,
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getAllRoles() {
 		log.info("Fetching all roles");
 		return ResponseEntity.status(HttpStatus.OK).body(rolesHelperService.getAllRoles());
@@ -69,10 +63,7 @@ public class RolesController {
 	 * @param id unique object id already present in the database
 	 * @return responseEntity with data,message and status
 	 */
-	@RequestMapping(
-			value = "/{id}",
-			method = RequestMethod.GET,
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getRoleById(@PathVariable("id") String id) {
 		log.info("Fetching role@{}", id);
 		return ResponseEntity.status(HttpStatus.OK).body(rolesHelperService.getRoleById(id));

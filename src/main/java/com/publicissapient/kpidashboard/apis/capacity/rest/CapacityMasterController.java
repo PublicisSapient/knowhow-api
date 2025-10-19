@@ -9,13 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.abac.ContextAwarePolicyEnforcement;
 import com.publicissapient.kpidashboard.apis.capacity.service.CapacityMasterService;
@@ -76,10 +70,7 @@ public class CapacityMasterController {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
-	@RequestMapping(
-			value = "/assignee",
-			method = RequestMethod.POST,
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/assignee", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveOrUpdateAssignee(
 			@Valid @RequestBody CapacityMaster capacityMaster) {
 		policy.checkPermission(capacityMaster, "SAVE_UPDATE_CAPACITY");
