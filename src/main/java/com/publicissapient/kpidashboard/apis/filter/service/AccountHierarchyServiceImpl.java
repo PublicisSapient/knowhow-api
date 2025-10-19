@@ -356,7 +356,6 @@ public class AccountHierarchyServiceImpl
 
 	private List<String> limitSprints(
 			List<ProjectHierarchy> accountHierarchies, Map<String, SprintDetails> sprintDetailsMap) {
-		// TODO: category check
 		List<ProjectHierarchy> withSprintAAccountHierracchiesList =
 				accountHierarchies.stream()
 						.filter(
@@ -410,7 +409,6 @@ public class AccountHierarchyServiceImpl
 	 * @param accountHierarchy
 	 * @return true if needs to show in filter
 	 */
-	// TODO: category check
 	private boolean showInFilters(
 			List<String> sprintIdListToDisplay, OrganizationHierarchy accountHierarchy) {
 		boolean show = true;
@@ -455,7 +453,6 @@ public class AccountHierarchyServiceImpl
 					.filter(
 							child ->
 									showInFilters(sprintIdListToDisplay.get(hierarchy.getNodeId()), child)
-											// todo remove isParentChildHierarchy
 											&& isCurrentNodeChild(hierarchy, child))
 					.forEach(
 							child -> {
