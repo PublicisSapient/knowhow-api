@@ -441,9 +441,9 @@ public class RefinementRejectionRateServiceImpl
 							+ DateUtil.dateTimeConverter(
 									sunday.toString(), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT);
 			String weekVal = "";
-			for (String week : weekMap.keySet()) {
-				if (weekMap.get(week).equalsIgnoreCase(value)) {
-					weekVal = week;
+			for (Map.Entry<String, String> entry : weekMap.entrySet()) {
+				if (entry.getValue().equalsIgnoreCase(value)) {
+					weekVal = entry.getKey();
 					break;
 				}
 			}
