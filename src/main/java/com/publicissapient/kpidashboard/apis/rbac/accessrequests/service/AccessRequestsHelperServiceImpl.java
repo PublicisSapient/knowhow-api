@@ -18,11 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.rbac.accessrequests.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -34,8 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
@@ -58,8 +53,7 @@ import com.publicissapient.kpidashboard.common.repository.rbac.AccessRequestsRep
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class provides various methods related to operations on
- * AccessRequestsData
+ * This class provides various methods related to operations on AccessRequestsData
  *
  * @author anamital
  */
@@ -67,35 +61,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperService {
 
-	@Autowired
-	CustomApiConfig customApiConfig;
+	@Autowired CustomApiConfig customApiConfig;
 
 	private static final String SUPERADMINROLENAME = "ROLE_SUPERADMIN";
 
 	/** Repeated String used in logging info */
 	private static String infoMandatoryFieldsNotEmpty = "Mandatory fields cannot be empty";
 
-	@Autowired
-	AutoApproveAccessService autoApproveService;
-	@Autowired
-	private AccessRequestsRepository repository;
-	@Autowired
-	private UserInfoServiceImpl userInfoServiceImpl;
-	@Autowired
-	private AuthenticationRepository authenticationRepository;
-	@Autowired
-	private ProjectAccessManager accessManager;
-	@Autowired
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Autowired AutoApproveAccessService autoApproveService;
+	@Autowired private AccessRequestsRepository repository;
+	@Autowired private UserInfoServiceImpl userInfoServiceImpl;
+	@Autowired private AuthenticationRepository authenticationRepository;
+	@Autowired private ProjectAccessManager accessManager;
+	@Autowired private OrganizationHierarchyService organizationHierarchyService;
 
 	/**
 	 * Fetch all access requests data.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
-	@RequestMapping(method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ServiceResponse getAllAccessRequests() {
 		List<AccessRequest> accessRequest = repository.findAll();
 
@@ -112,8 +99,8 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	 * Fetch a access request data by @param id.
 	 *
 	 * @param id
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getAccessRequestById(String id) {
@@ -131,7 +118,8 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 
 		if (accessRequest.isPresent()) {
 			log.info("Successfully Found access request@{}", id);
-			List<AccessRequestDTO> accessRequestDTOList = getAccessRequestDTO(Arrays.asList(accessRequest.orElse(null)));
+			List<AccessRequestDTO> accessRequestDTOList =
+					getAccessRequestDTO(Arrays.asList(accessRequest.orElse(null)));
 			return new ServiceResponse(true, "Found access_request@" + id, accessRequestDTOList);
 		} else {
 			log.info("Db returned null");
@@ -143,8 +131,8 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	 * Fetch all access requests data under the user @param username.
 	 *
 	 * @param username
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getAccessRequestByUsername(String username) {
@@ -158,20 +146,21 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 
 		if (CollectionUtils.isEmpty(accessRequest)) {
 			log.info("No requests under user {}", username);
-			return new ServiceResponse(true, "access_requests do not exist for username " + username, accessRequest);
+			return new ServiceResponse(
+					true, "access_requests do not exist for username " + username, accessRequest);
 		}
 		List<AccessRequestDTO> accessRequestDTOList = getAccessRequestDTO(accessRequest);
 		log.info("Successfully found requests under user {}", username);
-		return new ServiceResponse(true, "Found access_requests under username " + username, accessRequestDTOList);
+		return new ServiceResponse(
+				true, "Found access_requests under username " + username, accessRequestDTOList);
 	}
 
 	/**
 	 * Fetch all access requests data with current status @param status.
 	 *
-	 * @param status
-	 *          status
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param status status
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getAccessRequestByStatus(String status) {
@@ -183,15 +172,15 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 		List<AccessRequestDTO> accessRequest = getAccessRequestBasedonStatusAndRole(status);
 		if (CollectionUtils.isEmpty(accessRequest)) {
 			log.info("No requests with current status {}", status);
-			return new ServiceResponse(true, "access requests do not exist for status " + status, accessRequest);
+			return new ServiceResponse(
+					true, "access requests do not exist for status " + status, accessRequest);
 		}
 		log.info("Successfully found requests with current status {}", status);
 		return new ServiceResponse(true, "Found access_requests for status " + status, accessRequest);
 	}
 
 	/**
-	 * @param status
-	 *          status
+	 * @param status status
 	 * @return list of access Request
 	 */
 	private List<AccessRequestDTO> getAccessRequestBasedonStatusAndRole(String status) {
@@ -211,60 +200,75 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 
 	private List<AccessRequestDTO> getAccessRequestDTO(List<AccessRequest> accessRequest) {
 		if (CollectionUtils.isEmpty(accessRequest)) {
-			return null;
+			return Collections.emptyList();
 		}
 		List<AccessRequestDTO> accessRequestDTOList;
 		ModelMapper mapper = new ModelMapper();
 
-		accessRequestDTOList = accessRequest.stream().map(ar -> mapper.map(ar, AccessRequestDTO.class)).toList();
+		accessRequestDTOList =
+				accessRequest.stream().map(ar -> mapper.map(ar, AccessRequestDTO.class)).toList();
 
 		List<OrganizationHierarchy> organizationHierarchyList = organizationHierarchyService.findAll();
-		Map<String, String> organizationHierarchyMap = organizationHierarchyList.stream()
-				.collect(Collectors.toMap(OrganizationHierarchy::getNodeId, OrganizationHierarchy::getNodeDisplayName));
+		Map<String, String> organizationHierarchyMap =
+				organizationHierarchyList.stream()
+						.collect(
+								Collectors.toMap(
+										OrganizationHierarchy::getNodeId, OrganizationHierarchy::getNodeDisplayName));
 
 		accessRequestDTOList.forEach(
-				accessRequestDTO -> Optional.ofNullable(accessRequestDTO.getAccessNode()).ifPresent(accessNode -> Optional
-						.ofNullable(accessNode.getAccessItems()).ifPresent(accessItemList -> accessItemList.forEach(accessItem -> {
-							String itemName = organizationHierarchyMap.get(accessItem.getItemId());
-							if (itemName != null) {
-								accessItem.setItemName(itemName);
-							}
-						}))));
+				accessRequestDTO ->
+						Optional.ofNullable(accessRequestDTO.getAccessNode())
+								.ifPresent(
+										accessNode ->
+												Optional.ofNullable(accessNode.getAccessItems())
+														.ifPresent(
+																accessItemList ->
+																		accessItemList.forEach(
+																				accessItem -> {
+																					String itemName =
+																							organizationHierarchyMap.get(accessItem.getItemId());
+																					if (itemName != null) {
+																						accessItem.setItemName(itemName);
+																					}
+																				}))));
 		return accessRequestDTOList;
 	}
 
-	private List<AccessRequest> fetchAccessRequestBasedOnUserInfoAndRole(UserInfo user, List<String> roleList,
-			String status) {
+	private List<AccessRequest> fetchAccessRequestBasedOnUserInfoAndRole(
+			UserInfo user, List<String> roleList, String status) {
 		List<String> basicConfigList = accessManager.getProjectBasicOnRoleList(user, roleList);
-		List<AccessRequest> pendingAccessRequest = repository.findByStatusAndAccessLevel(status,
-				CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<AccessRequest> pendingAccessRequest =
+				repository.findByStatusAndAccessLevel(status, CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 		return filterProjectLevelRequest(basicConfigList, pendingAccessRequest);
 	}
 
-	private List<AccessRequest> filterProjectLevelRequest(List<String> basicConfigList,
-			List<AccessRequest> pendingAccessRequest) {
+	private List<AccessRequest> filterProjectLevelRequest(
+			List<String> basicConfigList, List<AccessRequest> pendingAccessRequest) {
 		List<AccessRequest> filteredRequest = new ArrayList<>();
-		if (CollectionUtils.isNotEmpty(basicConfigList) && CollectionUtils.isNotEmpty(pendingAccessRequest)) {
-			pendingAccessRequest.forEach(request -> {
-				if (basicConfigList.contains(request.getAccessNode().getAccessItems().get(0).getItemId())) {
-					filteredRequest.add(request);
-				}
-			});
+		if (CollectionUtils.isNotEmpty(basicConfigList)
+				&& CollectionUtils.isNotEmpty(pendingAccessRequest)) {
+			pendingAccessRequest.forEach(
+					request -> {
+						if (basicConfigList.contains(
+								request.getAccessNode().getAccessItems().get(0).getItemId())) {
+							filteredRequest.add(request);
+						}
+					});
 		}
 		return filteredRequest;
 	}
 
 	/**
-	 * Fetch all access requests data under the user @param username with current
-	 * status @param status.
+	 * Fetch all access requests data under the user @param username with current status @param
+	 * status.
 	 *
-	 * @param username,
-	 *          String
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param username, String
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
-	public ServiceResponse getAccessRequestByUsernameAndStatus(final String username, final String status) {
+	public ServiceResponse getAccessRequestByUsernameAndStatus(
+			final String username, final String status) {
 		if (StringUtils.isEmpty(status) || StringUtils.isEmpty(username)) {
 			log.info("status or username is empty");
 			return new ServiceResponse(false, infoMandatoryFieldsNotEmpty, null);
@@ -274,22 +278,25 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 
 		if (CollectionUtils.isEmpty(accessRequest)) {
 			log.info("No requests under user {} with current status {}", username, status);
-			return new ServiceResponse(true,
-					"access_requests do not exist for username " + username + " and status " + status, accessRequest);
+			return new ServiceResponse(
+					true,
+					"access_requests do not exist for username " + username + " and status " + status,
+					accessRequest);
 		}
 		List<AccessRequestDTO> accessRequestDTOList = getAccessRequestDTO(accessRequest);
 		log.info("Successfully found requests under username {} and status{}", username, status);
-		return new ServiceResponse(true, "Found access_requests under username " + username + " and status " + status,
+		return new ServiceResponse(
+				true,
+				"Found access_requests under username " + username + " and status " + status,
 				accessRequestDTOList);
 	}
 
 	/**
 	 * Fetches access requests count with current status @param status.
 	 *
-	 * @param status
-	 *          status
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param status status
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getNotificationByStatus(String status, boolean centralAuthService) {
@@ -320,12 +327,14 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 				message = "Found Pending Raise Request Count for " + user.getUsername();
 			}
 		}
-		NotificationDataDTO projectAccessNotification = newProjectAccessRequestNotification(accessRequest);
+		NotificationDataDTO projectAccessNotification =
+				newProjectAccessRequestNotification(accessRequest);
 		notificationDataList.add(projectAccessNotification);
 		return new ServiceResponse(true, message, notificationDataList);
 	}
 
-	private NotificationDataDTO newProjectAccessRequestNotification(List<AccessRequest> accessRequest) {
+	private NotificationDataDTO newProjectAccessRequestNotification(
+			List<AccessRequest> accessRequest) {
 		NotificationDataDTO notificationDataDTO = new NotificationDataDTO();
 		notificationDataDTO.setType(NotificationEnum.PROJECT_ACCESS.getValue());
 		if (CollectionUtils.isEmpty(accessRequest)) {
@@ -337,8 +346,8 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	}
 
 	private NotificationDataDTO newUserApprovalRequestNotification() {
-		List<com.publicissapient.kpidashboard.apis.auth.model.Authentication> nonApprovedUserList = authenticationRepository
-				.findByApproved(false);
+		List<com.publicissapient.kpidashboard.apis.auth.model.Authentication> nonApprovedUserList =
+				authenticationRepository.findByApproved(false);
 		NotificationDataDTO notificationDataDTO = new NotificationDataDTO();
 		notificationDataDTO.setType(NotificationEnum.USER_APPROVAL.getValue());
 		if (CollectionUtils.isEmpty(nonApprovedUserList)) {
@@ -350,7 +359,8 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	}
 
 	private NotificationDataDTO newCentralAuthUserApprovalRequestNotification() {
-		List<CentralUserInfoDTO> nonApprovedUserList = userInfoServiceImpl.findAllUnapprovedUsersForCentralAuth();
+		List<CentralUserInfoDTO> nonApprovedUserList =
+				userInfoServiceImpl.findAllUnapprovedUsersForCentralAuth();
 		NotificationDataDTO notificationDataDTO = new NotificationDataDTO();
 		notificationDataDTO.setType(NotificationEnum.USER_APPROVAL.getValue());
 		if (CollectionUtils.isEmpty(nonApprovedUserList)) {
@@ -370,7 +380,8 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	public AccessRequest updateAccessRequest(AccessRequest accessRequestsData) {
 		AccessRequest updatedAccessRequest = null;
 		if (accessRequestsData != null) {
-			AccessRequest existingAccessRequest = repository.findById(accessRequestsData.getId().toHexString());
+			AccessRequest existingAccessRequest =
+					repository.findById(accessRequestsData.getId().toHexString());
 
 			if (existingAccessRequest != null) {
 				updatedAccessRequest = repository.save(accessRequestsData);

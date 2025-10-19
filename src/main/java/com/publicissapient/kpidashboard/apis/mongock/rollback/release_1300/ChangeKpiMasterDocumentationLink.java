@@ -30,10 +30,15 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_change_kpimaster_documentation_link", order = "013002", author = "girpatha", systemVersion = "13.0.0")
+@ChangeUnit(
+		id = "r_change_kpimaster_documentation_link",
+		order = "013002",
+		author = "girpatha",
+		systemVersion = "13.0.0")
 public class ChangeKpiMasterDocumentationLink {
 	private final MongoTemplate mongoTemplate;
-	private final Map<ObjectId, String> oldLinkMap = new HashMap<>(); // In-memory storage for old links
+	private final Map<ObjectId, String> oldLinkMap =
+			new HashMap<>(); // In-memory storage for old links
 	private static final String KPI_DETAILS = "details";
 	private static final String KPI_LINK_DETAIL = "kpiLinkDetail";
 
@@ -54,30 +59,35 @@ public class ChangeKpiMasterDocumentationLink {
 	private void updateLink() {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_master");
 
-		collection.find().forEach(document -> {
-			ObjectId documentId = document.getObjectId("_id");
-			String kpiId = document.getString("kpiId");
-			String kpiName = document.getString("kpiName");
+		collection
+				.find()
+				.forEach(
+						document -> {
+							ObjectId documentId = document.getObjectId("_id");
+							String kpiId = document.getString("kpiId");
+							String kpiName = document.getString("kpiName");
 
-			if (kpiId != null && kpiName != null) {
-				Document kpiInfo = document.get("kpiInfo", Document.class);
+							if (kpiId != null && kpiName != null) {
+								Document kpiInfo = document.get("kpiInfo", Document.class);
 
-				if (kpiInfo != null) {
-					// Store the old link in the map
-					String oldLink = getOldLink(kpiInfo);
-					if (oldLink != null) {
-						oldLinkMap.put(documentId, oldLink);
-					}
+								if (kpiInfo != null) {
+									// Store the old link in the map
+									String oldLink = getOldLink(kpiInfo);
+									if (oldLink != null) {
+										oldLinkMap.put(documentId, oldLink);
+									}
 
-					// Construct and update to the new link
-					String newLink = String.format("https://knowhow.tools.publicis.sapient.com/wiki/%s-%s", kpiId,
-							kpiName.replace(" ", "+").replaceAll("[()%]", ""));
-					updateDetails(kpiInfo, newLink);
-				}
+									// Construct and update to the new link
+									String newLink =
+											String.format(
+													"https://knowhow.tools.publicis.sapient.com/wiki/%s-%s",
+													kpiId, kpiName.replace(" ", "+").replaceAll("[()%]", ""));
+									updateDetails(kpiInfo, newLink);
+								}
 
-				collection.replaceOne(new Document("_id", documentId), document);
-			}
-		});
+								collection.replaceOne(new Document("_id", documentId), document);
+							}
+						});
 	}
 
 	private String getOldLink(Document kpiInfo) {
@@ -116,20 +126,23 @@ public class ChangeKpiMasterDocumentationLink {
 	private void revertLink() {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_master");
 
-		collection.find().forEach(document -> {
-			ObjectId documentId = document.getObjectId("_id");
-			Document kpiInfo = document.get("kpiInfo", Document.class);
+		collection
+				.find()
+				.forEach(
+						document -> {
+							ObjectId documentId = document.getObjectId("_id");
+							Document kpiInfo = document.get("kpiInfo", Document.class);
 
-			if (kpiInfo != null) {
-				// Retrieve the old link from the map
-				String oldLink = oldLinkMap.get(documentId);
-				if (oldLink != null) {
-					revertDetails(kpiInfo, oldLink);
-				}
-			}
+							if (kpiInfo != null) {
+								// Retrieve the old link from the map
+								String oldLink = oldLinkMap.get(documentId);
+								if (oldLink != null) {
+									revertDetails(kpiInfo, oldLink);
+								}
+							}
 
-			collection.replaceOne(new Document("_id", documentId), document);
-		});
+							collection.replaceOne(new Document("_id", documentId), document);
+						});
 	}
 
 	private void revertDetails(Document kpiInfo, String oldLink) {

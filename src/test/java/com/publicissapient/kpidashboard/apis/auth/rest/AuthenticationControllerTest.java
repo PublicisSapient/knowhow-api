@@ -65,28 +65,21 @@ public class AuthenticationControllerTest {
 
 	private AuthType standardAuthType = AuthType.STANDARD;
 
-	@InjectMocks
-	private AuthenticationController authController;
+	@InjectMocks private AuthenticationController authController;
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private AuthProperties authProperties;
+	@Mock private AuthProperties authProperties;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
-	@Mock
-	private AuthenticationResponseService authenticationResponseService;
+	@Mock private AuthenticationResponseService authenticationResponseService;
 
-	@Mock
-	private UserInfoService userInfoService;
+	@Mock private UserInfoService userInfoService;
 
-	@Mock
-	private Authentication authentication;
+	@Mock private Authentication authentication;
 
-	@Mock
-	private SignupManager signupManager;
+	@Mock private SignupManager signupManager;
 
 	@Before
 	public void before() {
@@ -99,7 +92,7 @@ public class AuthenticationControllerTest {
 	}
 
 	@Test
-	public void multipleAuthTypes() throws Exception {
+	public void multipleAuthTypes() {
 		List<AuthType> expectedReturn = new ArrayList<>();
 
 		expectedReturn.add(standardAuthType);
@@ -114,7 +107,7 @@ public class AuthenticationControllerTest {
 	}
 
 	@Test
-	public void zeroTypes() throws Exception {
+	public void zeroTypes() {
 		List<AuthType> expectedReturn = new ArrayList<>();
 
 		when(authProperties.getAuthenticationProviders()).thenReturn(expectedReturn);
@@ -129,7 +122,8 @@ public class AuthenticationControllerTest {
 	@Test
 	public void registerUser_success() throws Exception {
 
-		String request = "{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
+		String request =
+				"{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
 
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("test");
@@ -140,20 +134,30 @@ public class AuthenticationControllerTest {
 		when(authenticationService.isEmailExist(anyString())).thenReturn(false);
 		when(userInfoService.save(any())).thenReturn(userInfo);
 		signupManager.sendUserPreApprovalRequestEmailToAdmin(anyString(), anyString());
-		mockMvc.perform(post("/registerUser").accept(MediaType.APPLICATION_JSON).content(request)
-				.contentType(MediaType.APPLICATION_JSON)).andExpect(status().isAccepted());
+		mockMvc
+				.perform(
+						post("/registerUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.content(request)
+								.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isAccepted());
 	}
 
 	@Test
 	public void registerUser_emailAlreadyExists() throws Exception {
 
-		String request = "{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
+		String request =
+				"{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
 
 		when(authenticationService.isEmailExist(anyString())).thenReturn(true);
 		mockMvc
-				.perform(post("/registerUser").accept(MediaType.APPLICATION_JSON).content(request)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON));
+				.perform(
+						post("/registerUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.content(request)
+								.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 	}
 
 	@Test
@@ -163,36 +167,52 @@ public class AuthenticationControllerTest {
 
 		when(authenticationService.isEmailExist(anyString())).thenReturn(false);
 		mockMvc
-				.perform(post("/registerUser").accept(MediaType.APPLICATION_JSON).content(request)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON));
+				.perform(
+						post("/registerUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.content(request)
+								.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 	}
 
 	@Test
 	public void registerUser_Exception() throws Exception {
 
-		String request = "{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
+		String request =
+				"{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
 
 		when(authenticationService.isEmailExist(anyString())).thenReturn(false);
-		when(authenticationService.create(anyString(), anyString(), anyString())).thenReturn(authentication);
-		doThrow(DuplicateKeyException.class).when(authenticationResponseService).handle(any(HttpServletResponse.class),
-				any(Authentication.class));
+		when(authenticationService.create(anyString(), anyString(), anyString()))
+				.thenReturn(authentication);
+		doThrow(DuplicateKeyException.class)
+				.when(authenticationResponseService)
+				.handle(any(HttpServletResponse.class), any(Authentication.class));
 
 		mockMvc
-				.perform(post("/registerUser").accept(MediaType.APPLICATION_JSON).content(request)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isUnprocessableEntity()).andExpect(content().contentType(MediaType.APPLICATION_JSON));
+				.perform(
+						post("/registerUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.content(request)
+								.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnprocessableEntity())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON));
 	}
 
 	@Test
 	public void updateUser() throws Exception {
 
-		String request = "{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
+		String request =
+				"{\"username\":\"test\",\"password\":\"Test@123\",\"email\":\"test@gmail.com\"}";
 
 		when(authenticationService.update(anyString(), anyString())).thenReturn("User is updated");
 
-		mockMvc.perform(
-				post("/updateUser").accept(MediaType.APPLICATION_JSON).content(request).contentType(MediaType.APPLICATION_JSON))
+		mockMvc
+				.perform(
+						post("/updateUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.content(request)
+								.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk());
 	}
 
@@ -206,21 +226,27 @@ public class AuthenticationControllerTest {
 
 		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
 
-		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication1 = new com.publicissapient.kpidashboard.apis.auth.model.Authentication();
+		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication1 =
+				new com.publicissapient.kpidashboard.apis.auth.model.Authentication();
 		authentication1.setUsername("SUPERADMIN");
 		authentication1.setEmail("test.superadmin@gmail.com");
 
 		when(authenticationService.getAuthentication("SUPERADMIN")).thenReturn(authentication1);
 
-		String expectedResponse = "{'message':'User details','success':true,'data':{'username':'SUPERADMIN','authorities':['ROLE_SUPERADMIN'],'authType':'STANDARD','emailAddress':'test.superadmin@gmail.com'}}";
+		String expectedResponse =
+				"{'message':'User details','success':true,'data':{'username':'SUPERADMIN','authorities':['ROLE_SUPERADMIN'],'authType':'STANDARD','emailAddress':'test.superadmin@gmail.com'}}";
 
 		Principal principal = Mockito.mock(Principal.class);
 		when(principal.getName()).thenReturn("SUPERADMIN");
 
 		mockMvc
-				.perform(get("/users/SUPERADMIN").accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON)
-						.principal(principal))
-				.andExpect(status().isOk()).andExpect(MockMvcResultMatchers.content().json(expectedResponse));
+				.perform(
+						get("/users/SUPERADMIN")
+								.accept(MediaType.APPLICATION_JSON)
+								.contentType(MediaType.APPLICATION_JSON)
+								.principal(principal))
+				.andExpect(status().isOk())
+				.andExpect(MockMvcResultMatchers.content().json(expectedResponse));
 	}
 
 	@Test
@@ -232,9 +258,13 @@ public class AuthenticationControllerTest {
 		when(principal.getName()).thenReturn("SUPERADMIN");
 
 		mockMvc
-				.perform(get("/users/testUser").accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON)
-						.principal(principal))
-				.andExpect(status().isOk()).andExpect(MockMvcResultMatchers.content().json(expectedResponse));
+				.perform(
+						get("/users/testUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.contentType(MediaType.APPLICATION_JSON)
+								.principal(principal))
+				.andExpect(status().isOk())
+				.andExpect(MockMvcResultMatchers.content().json(expectedResponse));
 	}
 
 	@Test
@@ -244,22 +274,29 @@ public class AuthenticationControllerTest {
 
 		when(userInfoService.getUserInfo("testUser")).thenReturn(userInfo);
 
-		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication1 = new com.publicissapient.kpidashboard.apis.auth.model.Authentication();
+		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication1 =
+				new com.publicissapient.kpidashboard.apis.auth.model.Authentication();
 		authentication1.setUsername("testUser");
 		when(authenticationService.getAuthentication("testUser")).thenReturn(authentication1);
 
-		UserInfo loggedInUserInfo = createUserInfo("anotherUser", "ROLE_VIEWER", "anotherUser@gmail.com");
+		UserInfo loggedInUserInfo =
+				createUserInfo("anotherUser", "ROLE_VIEWER", "anotherUser@gmail.com");
 		when(userInfoService.getUserInfo("anotherUser")).thenReturn(loggedInUserInfo);
 
-		String expectedResponse = "{\"message\":\"You are not authorised to get this user's details\",\"success\":false}";
+		String expectedResponse =
+				"{\"message\":\"You are not authorised to get this user's details\",\"success\":false}";
 
 		Principal principal = Mockito.mock(Principal.class);
 		when(principal.getName()).thenReturn("anotherUser");
 
 		mockMvc
-				.perform(get("/users/testUser").accept(MediaType.APPLICATION_JSON).contentType(MediaType.APPLICATION_JSON)
-						.principal(principal))
-				.andExpect(status().isOk()).andExpect(MockMvcResultMatchers.content().json(expectedResponse));
+				.perform(
+						get("/users/testUser")
+								.accept(MediaType.APPLICATION_JSON)
+								.contentType(MediaType.APPLICATION_JSON)
+								.principal(principal))
+				.andExpect(status().isOk())
+				.andExpect(MockMvcResultMatchers.content().json(expectedResponse));
 	}
 
 	private UserInfo createUserInfo(String username, String role, String email) {
@@ -274,9 +311,5 @@ public class AuthenticationControllerTest {
 		}
 
 		return userInfo;
-	}
-
-	private UserInfo createUserInfo(String username, String role) {
-		return createUserInfo(username, role, null);
 	}
 }

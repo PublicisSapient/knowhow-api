@@ -26,12 +26,17 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_argocd_processor_integration", order = "09010", author = "hargupta15", systemVersion = "9.0.0")
+@ChangeUnit(
+		id = "r_argocd_processor_integration",
+		order = "09010",
+		author = "hargupta15",
+		systemVersion = "9.0.0")
 public class ArgocdProcessorIntegration {
 	private final MongoTemplate mongoTemplate;
 	private static final String CLASS_KEY = "_class";
-	Document processorData = createProcessor("ArgoCD", "BUILD",
-			"com.publicissapient.kpidashboard.argocd.model.ArgoCDProcessor");
+	Document processorData =
+			createProcessor(
+					"ArgoCD", "BUILD", "com.publicissapient.kpidashboard.argocd.model.ArgoCDProcessor");
 
 	public ArgocdProcessorIntegration(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
@@ -44,9 +49,14 @@ public class ArgocdProcessorIntegration {
 	}
 
 	private Document createProcessor(String processorName, String processorType, String className) {
-		return new Document().append("processorName", processorName).append("processorType", processorType)
-				.append("isActive", true).append("isOnline", true).append("errors", Collections.emptyList())
-				.append("isLastSuccess", false).append(CLASS_KEY, className);
+		return new Document()
+				.append("processorName", processorName)
+				.append("processorType", processorType)
+				.append("isActive", true)
+				.append("isOnline", true)
+				.append("errors", Collections.emptyList())
+				.append("isLastSuccess", false)
+				.append(CLASS_KEY, className);
 	}
 
 	@RollbackExecution

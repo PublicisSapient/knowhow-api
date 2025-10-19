@@ -23,38 +23,35 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
-import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
-import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
-import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
-import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
-import jakarta.ws.rs.InternalServerErrorException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
+import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
+import com.publicissapient.kpidashboard.apis.errors.AiGatewayServiceException;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import jakarta.ws.rs.InternalServerErrorException;
 
 @ExtendWith(MockitoExtension.class)
 class SearchKpiServiceImplTest {
 
-	@Mock
-	private AiGatewayClient aiGatewayClient;
+	@Mock private AiGatewayClient aiGatewayClient;
 
 	@Mock
 	@Qualifier("SearchParser")
-		private ParserStategy<SearchKpiResponseDTO> parserStategy;
+	private ParserStategy<SearchKpiResponseDTO> parserStategy;
 
-	@Mock
-	private PromptGenerator promptGenerator;
+	@Mock private PromptGenerator promptGenerator;
 
-	@InjectMocks
-	private SearchKpiServiceImpl searchKpiService;
+	@InjectMocks private SearchKpiServiceImpl searchKpiService;
 
 	@Test
 	void testSearchRelatedKpi_validQuery_successfulResponse() throws EntityNotFoundException {
@@ -65,7 +62,8 @@ class SearchKpiServiceImplTest {
 		List<String> parsedResult = List.of("kpi14");
 
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn(generatedPrompt);
-		when(aiGatewayClient.generate(any())).thenReturn(new ChatGenerationResponseDTO(aiResponseContent));
+		when(aiGatewayClient.generate(any()))
+				.thenReturn(new ChatGenerationResponseDTO(aiResponseContent));
 		when(parserStategy.parse(aiResponseContent)).thenReturn(searchKpiResponseDTO);
 		// When
 		SearchKpiResponseDTO result = searchKpiService.searchRelatedKpi(userMessage);
@@ -76,8 +74,9 @@ class SearchKpiServiceImplTest {
 
 	@Test
 	void testSearchRelatedKpi_emptyQuery_throwsException() {
-		InternalServerErrorException exception = assertThrows(InternalServerErrorException.class,
-				() -> searchKpiService.searchRelatedKpi(""));
+		InternalServerErrorException exception =
+				assertThrows(
+						InternalServerErrorException.class, () -> searchKpiService.searchRelatedKpi(""));
 		assertEquals("Could not process the user message to search kpi.", exception.getMessage());
 	}
 
@@ -87,8 +86,9 @@ class SearchKpiServiceImplTest {
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn("prompt");
 		when(aiGatewayClient.generate(any())).thenReturn(null);
 
-		AiGatewayServiceException exception = assertThrows(AiGatewayServiceException.class,
-				() -> searchKpiService.searchRelatedKpi(userMessage));
+		AiGatewayServiceException exception =
+				assertThrows(
+						AiGatewayServiceException.class, () -> searchKpiService.searchRelatedKpi(userMessage));
 		assertEquals("Could not process search kpi.", exception.getMessage());
 	}
 
@@ -98,8 +98,9 @@ class SearchKpiServiceImplTest {
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn("prompt");
 		when(aiGatewayClient.generate(any())).thenReturn(new ChatGenerationResponseDTO(""));
 
-		AiGatewayServiceException exception = assertThrows(AiGatewayServiceException.class,
-				() -> searchKpiService.searchRelatedKpi(userMessage));
+		AiGatewayServiceException exception =
+				assertThrows(
+						AiGatewayServiceException.class, () -> searchKpiService.searchRelatedKpi(userMessage));
 		assertEquals("Could not process search kpi.", exception.getMessage());
 	}
 
@@ -108,12 +109,12 @@ class SearchKpiServiceImplTest {
 		String userMessage = "defect";
 		String responseContent = "Defect Leakage, Defect Density";
 		when(promptGenerator.getKpiSearchPrompt(userMessage)).thenReturn("prompt");
-		when(aiGatewayClient.generate(any())).thenReturn(new ChatGenerationResponseDTO(responseContent));
+		when(aiGatewayClient.generate(any()))
+				.thenReturn(new ChatGenerationResponseDTO(responseContent));
 		when(parserStategy.parse(responseContent)).thenThrow(new RuntimeException("Parser failure"));
 
-		RuntimeException exception = assertThrows(RuntimeException.class,
-				() -> searchKpiService.searchRelatedKpi(userMessage));
+		RuntimeException exception =
+				assertThrows(RuntimeException.class, () -> searchKpiService.searchRelatedKpi(userMessage));
 		assertEquals("Parser failure", exception.getMessage());
 	}
-
 }

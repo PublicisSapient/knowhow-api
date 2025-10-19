@@ -40,8 +40,7 @@ public class MetaDataIdentifierDataFactory {
 	private List<MetadataIdentifier> metadataIdentifierList;
 	private ObjectMapper mapper;
 
-	private MetaDataIdentifierDataFactory() {
-	}
+	private MetaDataIdentifierDataFactory() {}
 
 	public static MetaDataIdentifierDataFactory newInstance(String filePath) {
 
@@ -61,9 +60,10 @@ public class MetaDataIdentifierDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_LIST : filePath;
 
-			metadataIdentifierList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<MetadataIdentifier>>() {
-					});
+			metadataIdentifierList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<MetadataIdentifier>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading from file = " + filePath, e);
 		}

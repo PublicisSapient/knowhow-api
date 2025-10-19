@@ -36,8 +36,9 @@ public class EntityNotFoundException extends Exception {
 	 * @param searchParamsMap
 	 */
 	public EntityNotFoundException(Class clazz, String... searchParamsMap) {
-		super(EntityNotFoundException.generateMessage(clazz.getSimpleName(),
-				toMap(String.class, String.class, searchParamsMap)));
+		super(
+				EntityNotFoundException.generateMessage(
+						clazz.getSimpleName(), toMap(String.class, String.class, searchParamsMap)));
 	}
 
 	/**
@@ -57,15 +58,18 @@ public class EntityNotFoundException extends Exception {
 	 * @param keyType
 	 * @param valueType
 	 * @param entries
-	 * @return sequential ordered {@code IntStream} from {@code startInclusive}
-	 *         (inclusive) to {@code
+	 * @return sequential ordered {@code IntStream} from {@code startInclusive} (inclusive) to {@code
 	 *     endExclusive} (exclusive) by an incremental step of {@code 1}.
 	 */
 	private static <K, V> Map<K, V> toMap(Class<K> keyType, Class<V> valueType, Object... entries) {
 		if (entries.length % 2 == ONE) {
 			throw new IllegalArgumentException("Invalid entries");
 		}
-		return IntStream.range(0, entries.length / 2).map(i -> i * 2).collect(HashMap::new,
-				(m, i) -> m.put(keyType.cast(entries[i]), valueType.cast(entries[i + 1])), Map::putAll);
+		return IntStream.range(0, entries.length / 2)
+				.map(i -> i * 2)
+				.collect(
+						HashMap::new,
+						(m, i) -> m.put(keyType.cast(entries[i]), valueType.cast(entries[i + 1])),
+						Map::putAll);
 	}
 }

@@ -9,8 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +17,9 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -41,28 +41,19 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	private static final String DATE_PATTERN = "\\d{4}-\\d{2}-\\d{2}";
 	private static final String DATE_FORMAT = "yyyy-MM-dd";
 	private static final String SPRINT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-	@Autowired
-	private TestExecutionRepository testExecutionRepository;
-	@Autowired
-	private KanbanTestExecutionRepository kanbanTestExecutionRepo;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private ProjectBasicConfigService projectBasicConfigService;
-	@Autowired
-	private SprintDetailsService sprintDetailsService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
+	@Autowired private TestExecutionRepository testExecutionRepository;
+	@Autowired private KanbanTestExecutionRepository kanbanTestExecutionRepo;
+	@Autowired private CacheService cacheService;
+	@Autowired private ProjectBasicConfigService projectBasicConfigService;
+	@Autowired private SprintDetailsService sprintDetailsService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
 
 	/**
 	 * This method process the test Execution data.
 	 *
-	 * @param testExecutionData
-	 *          testExecution
+	 * @param testExecutionData testExecution
 	 * @return TestExecution object
 	 */
 	public TestExecutionData processTestExecutionData(TestExecutionData testExecutionData) {
@@ -80,7 +71,8 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 
 	@Override
 	public List<TestExecutionData> getTestExecutions(String basicProjectConfigId) {
-		ProjectBasicConfig project = projectBasicConfigService.getProjectBasicConfigs(basicProjectConfigId);
+		ProjectBasicConfig project =
+				projectBasicConfigService.getProjectBasicConfigs(basicProjectConfigId);
 		List<TestExecutionData> testExecutions = new ArrayList<>();
 		if (project != null) {
 			if (project.getIsKanban()) {
@@ -94,15 +86,19 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 
 	private Collection<TestExecutionData> getTestExecutionsForScrum(ProjectBasicConfig project) {
 		List<TestExecutionData> testExecutions = new ArrayList<>();
-		List<SprintDetails> sprintDetails = filterSprints(
-				sprintDetailsService.getSprintDetails(project.getId().toHexString()));
+		List<SprintDetails> sprintDetails =
+				filterSprints(sprintDetailsService.getSprintDetails(project.getId().toHexString()));
 		FieldMapping fieldMapping = configHelperService.getFieldMapping(project.getId());
-		List<String> sprintIds = sprintDetails.stream().map(SprintDetails::getSprintID).collect(Collectors.toList());
+		List<String> sprintIds =
+				sprintDetails.stream().map(SprintDetails::getSprintID).collect(Collectors.toList());
 		List<TestExecution> savedTestExecutions = testExecutionRepository.findBySprintIdIn(sprintIds);
 
 		for (SprintDetails sprint : sprintDetails) {
-			TestExecution savedTestExecution = savedTestExecutions.stream()
-					.filter(capacityData -> capacityData.getSprintId().equals(sprint.getSprintID())).findAny().orElse(null);
+			TestExecution savedTestExecution =
+					savedTestExecutions.stream()
+							.filter(capacityData -> capacityData.getSprintId().equals(sprint.getSprintID()))
+							.findAny()
+							.orElse(null);
 			TestExecutionData testExecutionData = new TestExecutionData();
 
 			boolean isUploadEnable = fieldMapping.isUploadDataKPI42() || fieldMapping.isUploadDataKPI16();
@@ -112,8 +108,10 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 				testExecutionData.setTotalTestCases(savedTestExecution.getTotalTestCases());
 				testExecutionData.setAutomatedTestCases(savedTestExecution.getAutomatedTestCases());
 				testExecutionData.setAutomatableTestCases(savedTestExecution.getAutomatableTestCases());
-				testExecutionData.setAutomatedRegressionTestCases(savedTestExecution.getAutomatedRegressionTestCases());
-				testExecutionData.setTotalRegressionTestCases(savedTestExecution.getTotalRegressionTestCases());
+				testExecutionData.setAutomatedRegressionTestCases(
+						savedTestExecution.getAutomatedRegressionTestCases());
+				testExecutionData.setTotalRegressionTestCases(
+						savedTestExecution.getTotalRegressionTestCases());
 				testExecutionData.setUploadEnable(isUploadEnable);
 
 			} else {
@@ -141,19 +139,34 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	private List<SprintDetails> filterSprints(List<SprintDetails> allSprints) {
 		List<SprintDetails> sprints = new ArrayList<>();
 
-		List<SprintDetails> closedSprints = allSprints.stream()
-				.filter(sprintDetails -> SprintDetails.SPRINT_STATE_CLOSED.equalsIgnoreCase(sprintDetails.getState()))
-				.sorted(Comparator.comparing((SprintDetails sprintDetails) -> LocalDateTime.parse(sprintDetails.getStartDate(),
-						DateTimeFormatter.ofPattern(SPRINT_DATE_FORMAT))).reversed())
-				.limit(customApiConfig.getSprintCountForFilters()).collect(Collectors.toList());
+		List<SprintDetails> closedSprints =
+				allSprints.stream()
+						.filter(
+								sprintDetails ->
+										SprintDetails.SPRINT_STATE_CLOSED.equalsIgnoreCase(sprintDetails.getState()))
+						.sorted(
+								Comparator.comparing(
+												(SprintDetails sprintDetails) ->
+														LocalDateTime.parse(
+																sprintDetails.getStartDate(),
+																DateTimeFormatter.ofPattern(SPRINT_DATE_FORMAT)))
+										.reversed())
+						.limit(customApiConfig.getSprintCountForFilters())
+						.collect(Collectors.toList());
 
-		List<SprintDetails> activeSprints = allSprints.stream()
-				.filter(sprintDetails -> SprintDetails.SPRINT_STATE_ACTIVE.equalsIgnoreCase(sprintDetails.getState()))
-				.collect(Collectors.toList());
+		List<SprintDetails> activeSprints =
+				allSprints.stream()
+						.filter(
+								sprintDetails ->
+										SprintDetails.SPRINT_STATE_ACTIVE.equalsIgnoreCase(sprintDetails.getState()))
+						.collect(Collectors.toList());
 
-		List<SprintDetails> futureSprints = allSprints.stream()
-				.filter(sprintDetails -> SprintDetails.SPRINT_STATE_FUTURE.equalsIgnoreCase(sprintDetails.getState()))
-				.collect(Collectors.toList());
+		List<SprintDetails> futureSprints =
+				allSprints.stream()
+						.filter(
+								sprintDetails ->
+										SprintDetails.SPRINT_STATE_FUTURE.equalsIgnoreCase(sprintDetails.getState()))
+						.collect(Collectors.toList());
 
 		if (CollectionUtils.isNotEmpty(futureSprints)) {
 			sprints.addAll(futureSprints);
@@ -171,19 +184,24 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	private Collection<TestExecutionData> getTestExecutionsForKanban(ProjectBasicConfig project) {
 		List<TestExecutionData> testExecutions = new ArrayList<>();
 
-		List<KanbanTestExecution> testExecutionsAll = kanbanTestExecutionRepo
-				.findByBasicProjectConfigId(project.getId().toHexString());
+		List<KanbanTestExecution> testExecutionsAll =
+				kanbanTestExecutionRepo.findByBasicProjectConfigId(project.getId().toHexString());
 
 		List<LocalDate> datesToShow = datesToShowForKanban();
 
 		for (LocalDate executionDate : datesToShow) {
 			TestExecutionData testExecutionData = new TestExecutionData();
 			if (CollectionUtils.isNotEmpty(testExecutionsAll)) {
-				KanbanTestExecution savedTestExecution = testExecutionsAll.stream()
-						.filter(testExecution -> LocalDate
-								.parse(testExecution.getExecutionDate(), DateTimeFormatter.ofPattern(DATE_FORMAT))
-								.equals(executionDate))
-						.findAny().orElse(null);
+				KanbanTestExecution savedTestExecution =
+						testExecutionsAll.stream()
+								.filter(
+										testExecution ->
+												LocalDate.parse(
+																testExecution.getExecutionDate(),
+																DateTimeFormatter.ofPattern(DATE_FORMAT))
+														.equals(executionDate))
+								.findAny()
+								.orElse(null);
 				if (savedTestExecution != null) {
 					testExecutionData.setExecutedTestCase(savedTestExecution.getExecutedTestCase());
 					testExecutionData.setPassedTestCase(savedTestExecution.getPassedTestCase());
@@ -200,7 +218,8 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 				testExecutionData.setTotalTestCases(0);
 			}
 
-			testExecutionData.setExecutionDate(executionDate.format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
+			testExecutionData.setExecutionDate(
+					executionDate.format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
 
 			setProjectMeta(testExecutionData, project);
 
@@ -242,32 +261,45 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	/**
 	 * process sprint TestExecution data
 	 *
-	 * @param testExecutionData
-	 *          contains data to be saved
+	 * @param testExecutionData contains data to be saved
 	 * @return boolean value
 	 */
 	private boolean processScrumTestExecutionData(TestExecutionData testExecutionData) {
 		boolean processed = false;
 		if (testExecutionIdNullCheck(testExecutionData)) {
-			TestExecution existingTestExecutionData = testExecutionRepository.findBySprintId(testExecutionData.getSprintId());
+			TestExecution existingTestExecutionData =
+					testExecutionRepository.findBySprintId(testExecutionData.getSprintId());
 			TestExecution testExecution = null;
 			if (existingTestExecutionData != null) {
 				testExecution = existingTestExecutionData;
-				testExecution.setTotalTestCases(ObjectUtils.defaultIfNull(testExecutionData.getTotalTestCases(),
-						existingTestExecutionData.getTotalTestCases()));
-				testExecution.setExecutedTestCase(ObjectUtils.defaultIfNull(testExecutionData.getExecutedTestCase(),
-						existingTestExecutionData.getExecutedTestCase()));
-				testExecution.setPassedTestCase(ObjectUtils.defaultIfNull(testExecutionData.getPassedTestCase(),
-						existingTestExecutionData.getPassedTestCase()));
-				testExecution.setAutomatedTestCases(ObjectUtils.defaultIfNull(testExecutionData.getAutomatedTestCases(),
-						existingTestExecutionData.getAutomatedTestCases()));
-				testExecution.setAutomatableTestCases(ObjectUtils.defaultIfNull(testExecutionData.getAutomatableTestCases(),
-						existingTestExecutionData.getAutomatableTestCases()));
+				testExecution.setTotalTestCases(
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getTotalTestCases(),
+								existingTestExecutionData.getTotalTestCases()));
+				testExecution.setExecutedTestCase(
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getExecutedTestCase(),
+								existingTestExecutionData.getExecutedTestCase()));
+				testExecution.setPassedTestCase(
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getPassedTestCase(),
+								existingTestExecutionData.getPassedTestCase()));
+				testExecution.setAutomatedTestCases(
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getAutomatedTestCases(),
+								existingTestExecutionData.getAutomatedTestCases()));
+				testExecution.setAutomatableTestCases(
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getAutomatableTestCases(),
+								existingTestExecutionData.getAutomatableTestCases()));
 				testExecution.setAutomatedRegressionTestCases(
-						ObjectUtils.defaultIfNull(testExecutionData.getAutomatedRegressionTestCases(),
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getAutomatedRegressionTestCases(),
 								existingTestExecutionData.getAutomatedRegressionTestCases()));
-				testExecution.setTotalRegressionTestCases(ObjectUtils.defaultIfNull(
-						testExecutionData.getTotalRegressionTestCases(), existingTestExecutionData.getTotalRegressionTestCases()));
+				testExecution.setTotalRegressionTestCases(
+						ObjectUtils.defaultIfNull(
+								testExecutionData.getTotalRegressionTestCases(),
+								existingTestExecutionData.getTotalRegressionTestCases()));
 			} else {
 				testExecution = createScrumTestExecutionData(testExecutionData);
 			}
@@ -281,14 +313,15 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 
 	private void clearKpiCache(TestExecutionData testExecutionData) {
 		List<String> kpiList = kpiDataCacheService.getKpiBasedOnSource(KPISource.ZEPHYR.name());
-		kpiList.forEach(kpiId -> kpiDataCacheService.clearCache(testExecutionData.getBasicProjectConfigId(), kpiId));
+		kpiList.forEach(
+				kpiId ->
+						kpiDataCacheService.clearCache(testExecutionData.getBasicProjectConfigId(), kpiId));
 	}
 
 	/**
 	 * This method check for mandatory values for test Execution data
 	 *
-	 * @param testExecution
-	 *          contains data for validation
+	 * @param testExecution contains data for validation
 	 * @return boolean value
 	 */
 	private boolean testExecutionIdNullCheck(TestExecutionData testExecution) {
@@ -296,8 +329,9 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 		if (testExecution.isKanban()) {
 			isValid = StringUtils.isNotEmpty(testExecution.getProjectNodeId());
 		} else {
-			isValid = StringUtils.isNotEmpty(testExecution.getProjectNodeId()) &&
-					StringUtils.isNotEmpty(testExecution.getSprintId());
+			isValid =
+					StringUtils.isNotEmpty(testExecution.getProjectNodeId())
+							&& StringUtils.isNotEmpty(testExecution.getSprintId());
 		}
 		return isValid;
 	}
@@ -305,8 +339,7 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	/**
 	 * process kanban testExecutionData data
 	 *
-	 * @param testExecutionData
-	 *          contains data to be saved
+	 * @param testExecutionData contains data to be saved
 	 * @return boolean value
 	 */
 	private boolean processKanbanTestExecutionData(TestExecutionData testExecutionData) {
@@ -315,8 +348,9 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 			throw new IllegalArgumentException("Date Formate should be in yy-mm-dd");
 		}
 		if (testExecutionIdNullCheck(testExecutionData)) {
-			KanbanTestExecution testExecutiondata = kanbanTestExecutionRepo.findByExecutionDateAndProjectNodeId(
-					testExecutionData.getExecutionDate(), testExecutionData.getProjectNodeId());
+			KanbanTestExecution testExecutiondata =
+					kanbanTestExecutionRepo.findByExecutionDateAndProjectNodeId(
+							testExecutionData.getExecutionDate(), testExecutionData.getProjectNodeId());
 			KanbanTestExecution kanbanTestExecutionData = null;
 			if (testExecutiondata != null) {
 				kanbanTestExecutionData = testExecutiondata;
@@ -347,7 +381,8 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 		testExecution.setPassedTestCase(testExecutionData.getPassedTestCase());
 		testExecution.setAutomatedTestCases(testExecutionData.getAutomatedTestCases());
 		testExecution.setAutomatableTestCases(testExecutionData.getAutomatableTestCases());
-		testExecution.setAutomatedRegressionTestCases(testExecutionData.getAutomatedRegressionTestCases());
+		testExecution.setAutomatedRegressionTestCases(
+				testExecutionData.getAutomatedRegressionTestCases());
 		testExecution.setTotalRegressionTestCases(testExecutionData.getTotalRegressionTestCases());
 		testExecution.setBasicProjectConfigId(testExecutionData.getBasicProjectConfigId());
 		return testExecution;
@@ -369,8 +404,7 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	/**
 	 * Clears filter and jira related cache.
 	 *
-	 * @param cacheName
-	 *          cacheName
+	 * @param cacheName cacheName
 	 */
 	private void clearCache(final String cacheName) {
 		cacheService.clearCache(cacheName);
@@ -379,8 +413,7 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	/**
 	 * process kanban DATE testExecutionData
 	 *
-	 * @param value
-	 *          DATE VALUE
+	 * @param value DATE VALUE
 	 * @return boolean date
 	 */
 	public boolean checkDateFormate(String value) {
@@ -395,10 +428,8 @@ public class TestExecutionDataServiceImpl implements TestExecutionService {
 	/**
 	 * delete test execution by basicProjectConfigId
 	 *
-	 * @param isKanban
-	 *          isKanban
-	 * @param basicProjectConfigId
-	 *          basicProjectConfigId
+	 * @param isKanban isKanban
+	 * @param basicProjectConfigId basicProjectConfigId
 	 */
 	public void deleteTestExecutionByProject(boolean isKanban, String basicProjectConfigId) {
 		if (isKanban) {

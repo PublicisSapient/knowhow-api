@@ -16,8 +16,7 @@ import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 @RequestMapping("/hierarchylevels")
 public class HierarchyLevelsController {
 
-	@Autowired
-	private HierarchyLevelService hierarchyLevelService;
+	@Autowired private HierarchyLevelService hierarchyLevelService;
 
 	@GetMapping
 	public ResponseEntity<List<HierarchyLevel>> getHierarchyLevel() {

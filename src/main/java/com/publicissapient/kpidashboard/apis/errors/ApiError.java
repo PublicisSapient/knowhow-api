@@ -95,7 +95,8 @@ public class ApiError {
 		subErrors.add(subError);
 	}
 
-	private void addValidationError(String object, String field, Object rejectedValue, String message) {
+	private void addValidationError(
+			String object, String field, Object rejectedValue, String message) {
 		addSubError(new ApiValidationError(object, field, rejectedValue, message));
 	}
 
@@ -104,7 +105,10 @@ public class ApiError {
 	}
 
 	private void addValidationError(FieldError fieldError) {
-		this.addValidationError(fieldError.getObjectName(), fieldError.getField(), fieldError.getRejectedValue(),
+		this.addValidationError(
+				fieldError.getObjectName(),
+				fieldError.getField(),
+				fieldError.getRejectedValue(),
 				fieldError.getDefaultMessage());
 	}
 

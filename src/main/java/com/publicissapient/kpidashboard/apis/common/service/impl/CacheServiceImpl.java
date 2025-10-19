@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
-import com.publicissapient.kpidashboard.apis.ai.service.prompt.PromptDetailsService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,6 +35,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.support.SimpleValueWrapper;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.apis.ai.service.prompt.PromptDetailsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -65,28 +65,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CacheServiceImpl implements CacheService {
 
-	@Autowired
-	HierarchyLevelService hierarchyLevelService;
-	@Autowired
-	private AccountHierarchyServiceImpl accountHierarchyService;
-	@Autowired
-	private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
+	@Autowired HierarchyLevelService hierarchyLevelService;
+	@Autowired private AccountHierarchyServiceImpl accountHierarchyService;
+	@Autowired private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
 
 	@Autowired
 	@Qualifier("cacheManager")
 	private CacheManager cacheManager;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-	@Autowired
-	private AuthenticationService authNAuthService;
-	@Autowired
-	private ProjectHierarchyService projectHierarchyService;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
+	@Autowired private AuthenticationService authNAuthService;
+	@Autowired private ProjectHierarchyService projectHierarchyService;
 	List<AccountHierarchyData> accountHierarchyDataList;
-	@Autowired
-	private PromptDetailsService promptDetailsService;
+	@Autowired private PromptDetailsService promptDetailsService;
+
 	@Override
 	public void clearCache(String cacheName) {
 		Cache cache = cacheManager.getCache(cacheName);
@@ -114,9 +107,13 @@ public class CacheServiceImpl implements CacheService {
 	@Override
 	public Object cacheSprintLevelData() {
 		return accountHierarchyDataList.stream()
-				.filter(data -> data.getNode().stream()
-						.anyMatch(node -> node.getGroupName().equals(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT) &&
-								node.getProjectHierarchy().getSprintState() != null))
+				.filter(
+						data ->
+								data.getNode().stream()
+										.anyMatch(
+												node ->
+														node.getGroupName().equals(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
+																&& node.getProjectHierarchy().getSprintState() != null))
 				.toList();
 	}
 
@@ -131,8 +128,7 @@ public class CacheServiceImpl implements CacheService {
 	public Object cacheProjectConfigMapData() {
 		log.info("Creating Project Config Cache");
 		configHelperService.loadConfigData();
-		return configHelperService
-				.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
+		return configHelperService.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
 	}
 
 	/**
@@ -169,8 +165,9 @@ public class CacheServiceImpl implements CacheService {
 
 	public Object filterOnHoldProjectBasicConfig() {
 
-		Map<String, ProjectBasicConfig> projectConfigMap = (Map<String, ProjectBasicConfig>) configHelperService
-				.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
+		Map<String, ProjectBasicConfig> projectConfigMap =
+				(Map<String, ProjectBasicConfig>)
+						configHelperService.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP);
 
 		return projectConfigMap == null
 				? Collections.emptyMap()
@@ -213,14 +210,19 @@ public class CacheServiceImpl implements CacheService {
 
 	@Override
 	public void setIntoApplicationCache(String key, String value) {
-		Cache cache = cacheManager.getCache(CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY));
+		Cache cache =
+				cacheManager.getCache(CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY));
 		if (null != cache) {
 			cache.put(key, value);
 		}
 	}
 
 	@Override
-	public void setIntoApplicationCache(String[] keyList, Object value, String kpiSource, Integer groupId,
+	public void setIntoApplicationCache(
+			String[] keyList,
+			Object value,
+			String kpiSource,
+			Integer groupId,
 			List<String> sprintIncluded) {
 
 		Arrays.sort(keyList);
@@ -238,7 +240,8 @@ public class CacheServiceImpl implements CacheService {
 				keyBuilder.append(groupId.toString());
 			}
 			if (CollectionUtils.isNotEmpty(sprintIncluded)) {
-				sprintIncluded = sprintIncluded.stream().map(String::toLowerCase).sorted().collect(Collectors.toList());
+				sprintIncluded =
+						sprintIncluded.stream().map(String::toLowerCase).sorted().collect(Collectors.toList());
 				String sprintKey = String.join("", sprintIncluded);
 				keyBuilder.append(sprintKey);
 			}
@@ -247,8 +250,8 @@ public class CacheServiceImpl implements CacheService {
 	}
 
 	@Override
-	public Object getFromApplicationCache(String[] keyList, String kpiSource, Integer groupId,
-			List<String> sprintIncluded) {
+	public Object getFromApplicationCache(
+			String[] keyList, String kpiSource, Integer groupId, List<String> sprintIncluded) {
 
 		Arrays.sort(keyList);
 		StringBuilder keyBuilder = new StringBuilder();
@@ -263,7 +266,8 @@ public class CacheServiceImpl implements CacheService {
 			keyBuilder.append(groupId.toString());
 		}
 		if (CollectionUtils.isNotEmpty(sprintIncluded)) {
-			sprintIncluded = sprintIncluded.stream().map(String::toLowerCase).sorted().collect(Collectors.toList());
+			sprintIncluded =
+					sprintIncluded.stream().map(String::toLowerCase).sorted().collect(Collectors.toList());
 			String sprintKey = String.join("", sprintIncluded);
 			keyBuilder.append(sprintKey);
 		}
@@ -280,7 +284,8 @@ public class CacheServiceImpl implements CacheService {
 
 	@Override
 	public String getFromApplicationCache(String key) {
-		Cache cache = cacheManager.getCache(CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY));
+		Cache cache =
+				cacheManager.getCache(CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY));
 		if (null != cache) {
 			SimpleValueWrapper s = (SimpleValueWrapper) cache.get(key);
 			if (null != s) {
@@ -311,7 +316,8 @@ public class CacheServiceImpl implements CacheService {
 	@Override
 	public Map<String, HierarchyLevel> getFullHierarchyLevelMap() {
 		log.info("Caching Hierarchy level Map");
-		return getFullHierarchyLevel().stream().collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		return getFullHierarchyLevel().stream()
+				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 	}
 
 	@Cacheable(Constant.CACHE_KANBAN_HIERARCHY_LEVEL_MAP)
@@ -327,7 +333,8 @@ public class CacheServiceImpl implements CacheService {
 	public Map<String, AdditionalFilterCategory> getAdditionalFilterHierarchyLevel() {
 		log.info("Caching Additional Filter Category Map");
 		List<AdditionalFilterCategory> hierarchyLevels = additionalFilterCategoryRepository.findAll();
-		return hierarchyLevels.stream().collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
+		return hierarchyLevels.stream()
+				.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
 	}
 
 	@Cacheable(CommonConstant.CACHE_PROJECT_HIERARCHY)
@@ -342,7 +349,7 @@ public class CacheServiceImpl implements CacheService {
 	public Map<String, PromptDetails> getPromptDetails() {
 		log.info("Caching Prompt Details Map");
 		List<PromptDetails> promptDetailsList = promptDetailsService.getAllPrompts();
-		return promptDetailsList.stream().collect(Collectors.toMap(PromptDetails::getKey, Function.identity()));
+		return promptDetailsList.stream()
+				.collect(Collectors.toMap(PromptDetails::getKey, Function.identity()));
 	}
-
 }

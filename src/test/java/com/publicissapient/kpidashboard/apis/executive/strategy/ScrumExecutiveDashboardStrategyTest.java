@@ -32,8 +32,6 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +43,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiencyService;
 import com.publicissapient.kpidashboard.apis.executive.service.ScrumKpiMaturity;
@@ -61,36 +61,28 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 @RunWith(MockitoJUnitRunner.class)
 public class ScrumExecutiveDashboardStrategyTest {
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private ProjectEfficiencyService projectEfficiencyService;
+	@Mock private ProjectEfficiencyService projectEfficiencyService;
 
-	@Mock
-	private UserBoardConfigService userBoardConfigService;
+	@Mock private UserBoardConfigService userBoardConfigService;
 
-	@Mock
-	private ScrumKpiMaturity scrumKpiMaturity;
+	@Mock private ScrumKpiMaturity scrumKpiMaturity;
 
-	@Mock
-	private KpiCategoryRepository kpiCategoryRepository;
+	@Mock private KpiCategoryRepository kpiCategoryRepository;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private Executor scrumExecutiveTaskExecutor;
+	@Mock private Executor scrumExecutiveTaskExecutor;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@InjectMocks
-	private ScrumExecutiveDashboardStrategy scrumStrategy;
+	@InjectMocks private ScrumExecutiveDashboardStrategy scrumStrategy;
 
 	@Before
 	public void setUp() {
-		ReflectionTestUtils.setField(scrumStrategy, "scrumExecutiveTaskExecutor", Executors.newSingleThreadExecutor());
+		ReflectionTestUtils.setField(
+				scrumStrategy, "scrumExecutiveTaskExecutor", Executors.newSingleThreadExecutor());
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(createUserBoard());
 		when(customApiConfig.getExecutiveTimeoutMinutes()).thenReturn(1);
 		when(customApiConfig.getExecutiveTimeoutMinutes()).thenReturn(1);
@@ -106,7 +98,7 @@ public class ScrumExecutiveDashboardStrategyTest {
 		KpiRequest request = new KpiRequest();
 		request.setIds(Collections.emptyList().toArray(new String[0]));
 		request.setSelectedMap(createSelectedMap());
-		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request));
 	}
 
 	@Test
@@ -119,7 +111,8 @@ public class ScrumExecutiveDashboardStrategyTest {
 		when(scrumKpiMaturity.getKpiElements(any(), any()))
 				.thenReturn(Collections.singletonList(createTestKpiElement("kpi1", "4.5")));
 
-		when(projectEfficiencyService.calculateProjectEfficiency(any())).thenReturn(createTestEfficiencyData());
+		when(projectEfficiencyService.calculateProjectEfficiency(any()))
+				.thenReturn(createTestEfficiencyData());
 
 		// Execute
 		ExecutiveDashboardResponseDTO response = scrumStrategy.fetchDashboardData(request);
@@ -142,9 +135,12 @@ public class ScrumExecutiveDashboardStrategyTest {
 
 		// Mock dependencies
 		when(scrumKpiMaturity.getKpiElements(any(), any()))
-				.thenReturn(Arrays.asList(createTestKpiElement("kpi1", "4.5"), createTestKpiElement("kpi2", "3.5")));
+				.thenReturn(
+						Arrays.asList(
+								createTestKpiElement("kpi1", "4.5"), createTestKpiElement("kpi2", "3.5")));
 
-		when(projectEfficiencyService.calculateProjectEfficiency(any())).thenReturn(createTestEfficiencyData());
+		when(projectEfficiencyService.calculateProjectEfficiency(any()))
+				.thenReturn(createTestEfficiencyData());
 
 		// Execute
 		ExecutiveDashboardResponseDTO response = scrumStrategy.fetchDashboardData(request);
@@ -161,7 +157,7 @@ public class ScrumExecutiveDashboardStrategyTest {
 		KpiRequest request = createTestKpiRequest();
 
 		// Execute and verify exception is handled
-		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request));
 	}
 
 	// Helper methods
@@ -179,7 +175,6 @@ public class ScrumExecutiveDashboardStrategyTest {
 		List<OrganizationHierarchy> hierarchyList = new ArrayList<>();
 		hierarchyList.add(createOrgHierarchy("5c0f32fe00a9b83a7cbc4f0c", "Test Project"));
 		when(configHelperService.loadAllOrganizationHierarchy()).thenReturn(hierarchyList);
-
 	}
 
 	private OrganizationHierarchy createOrgHierarchy(String id, String name) {
@@ -211,20 +206,19 @@ public class ScrumExecutiveDashboardStrategyTest {
 	public void testGetExecutor() {
 		Executor executor = scrumStrategy.getExecutor();
 		assertNotNull(executor);
-
 	}
 
 	@Test
 	public void testFetchDashboardData_EmptyBoards() {
 		KpiRequest request = createTestKpiRequest();
-		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request));
 	}
 
 	@Test
 	public void testFetchDashboardData_NullKpiElements() {
 		KpiRequest request = createTestKpiRequest();
 
-		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> scrumStrategy.fetchDashboardData(request));
 	}
 
 	private static Map<String, List<String>> createSelectedMap() {
@@ -259,7 +253,5 @@ public class ScrumExecutiveDashboardStrategyTest {
 		config.setScrum(List.of(board1));
 
 		return config;
-
 	}
-
 }

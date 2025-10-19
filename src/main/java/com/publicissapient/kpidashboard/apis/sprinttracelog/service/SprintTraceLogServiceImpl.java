@@ -31,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class SprintTraceLogServiceImpl implements SprintTraceLogService {
-	@Autowired
-	SprintTraceLogRepository sprintTraceLogRepository;
+	@Autowired SprintTraceLogRepository sprintTraceLogRepository;
 
 	@Override
 	public ServiceResponse getActiveSprintFetchStatus(String sprintId) {

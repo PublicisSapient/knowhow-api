@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BaseProjectForAnalyticsDTO {
-    private String name;
+	private String name;
 
-    private ObjectId projectBasicConfigId;
+	private ObjectId projectBasicConfigId;
 }

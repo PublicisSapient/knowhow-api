@@ -44,23 +44,17 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.DeleteProject
 @RunWith(MockitoJUnitRunner.class)
 public class DeleteProjectTraceLogServiceImplTest {
 
-	@InjectMocks
-	DeleteProjectTraceLogServiceImpl service;
+	@InjectMocks DeleteProjectTraceLogServiceImpl service;
 
-	@Mock
-	DeleteProjectTraceLogRepository deleteProjectTraceLogRepository;
+	@Mock DeleteProjectTraceLogRepository deleteProjectTraceLogRepository;
 
-	@Mock
-	Authentication authentication;
+	@Mock Authentication authentication;
 
-	@Mock
-	SecurityContext securityContext;
+	@Mock SecurityContext securityContext;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
-	@Captor
-	private ArgumentCaptor<DeleteProjectTraceLog> captor;
+	@Captor private ArgumentCaptor<DeleteProjectTraceLog> captor;
 
 	@Before
 	public void setUp() {

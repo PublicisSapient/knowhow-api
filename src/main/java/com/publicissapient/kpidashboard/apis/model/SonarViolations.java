@@ -44,8 +44,7 @@ public class SonarViolations {
 	/**
 	 * Instantiates a new Sonar violations.
 	 *
-	 * @param value
-	 *          the value
+	 * @param value the value
 	 */
 	public SonarViolations(Long value) {
 		this.info = value;
@@ -59,17 +58,26 @@ public class SonarViolations {
 	 * Overridden method of String's toString()
 	 *
 	 * @return SonarViloations object with
-	 *         <ul>
-	 *         <li>info
-	 *         <li>minor
-	 *         <li>major
-	 *         <li>blocker
-	 *         <li>critical
-	 *         </ul>
-	 *         whenever toString() method is invoked
+	 *     <ul>
+	 *       <li>info
+	 *       <li>minor
+	 *       <li>major
+	 *       <li>blocker
+	 *       <li>critical
+	 *     </ul>
+	 *     whenever toString() method is invoked
 	 */
 	@Override
 	public String toString() {
-		return "info=" + info + "\nminor=" + minor + "\nmajor=" + major + "\nblocker=" + blocker + "\ncritical=" + critical;
+		return "info="
+				+ info
+				+ "\nminor="
+				+ minor
+				+ "\nmajor="
+				+ major
+				+ "\nblocker="
+				+ blocker
+				+ "\ncritical="
+				+ critical;
 	}
 }

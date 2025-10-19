@@ -45,23 +45,17 @@ import com.publicissapient.kpidashboard.common.service.NotificationService;
 @RunWith(MockitoJUnitRunner.class)
 public class ForgotPasswordServiceImplTest {
 
-	@Mock
-	private AuthenticationRepository authenticationRepository;
+	@Mock private AuthenticationRepository authenticationRepository;
 
-	@Mock
-	private ForgotPasswordTokenRepository forgotPasswordTokenRepository;
+	@Mock private ForgotPasswordTokenRepository forgotPasswordTokenRepository;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
-	@Mock
-	private NotificationService notificationService;
+	@Mock private NotificationService notificationService;
 
-	@InjectMocks
-	private ForgotPasswordServiceImpl forgotPasswordService;
+	@InjectMocks private ForgotPasswordServiceImpl forgotPasswordService;
 
 	/** Test processForgotPassword with success result */
 	@Test
@@ -73,7 +67,8 @@ public class ForgotPasswordServiceImplTest {
 		Authentication authentication = new Authentication("abc", "xyz", email);
 		authenticateList.add(authentication);
 
-		Mockito.when(authenticationRepository.findByEmail(Mockito.anyString())).thenReturn(authenticateList);
+		Mockito.when(authenticationRepository.findByEmail(Mockito.anyString()))
+				.thenReturn(authenticateList);
 		Mockito.when(customApiConfig.getForgotPasswordExpiryInterval()).thenReturn("30");
 		Authentication response = forgotPasswordService.processForgotPassword(email, url);
 		Assert.assertNotNull(response);
@@ -101,7 +96,8 @@ public class ForgotPasswordServiceImplTest {
 		String token = "abc-xyz";
 		ForgotPasswordToken forgotPasswordToken = new ForgotPasswordToken();
 		forgotPasswordToken.setExpiryDate(30);
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		ResetPasswordTokenStatusEnum responseEnum = forgotPasswordService.validateEmailToken(token);
 		Assert.assertNotNull(responseEnum);
 		Assert.assertEquals(ResetPasswordTokenStatusEnum.VALID, responseEnum);
@@ -112,7 +108,8 @@ public class ForgotPasswordServiceImplTest {
 	public void validateEmailTokenTestNull() {
 		String token = "abc-xyz";
 		ForgotPasswordToken forgotPasswordToken = null;
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		ResetPasswordTokenStatusEnum responseEnum = forgotPasswordService.validateEmailToken(token);
 		Assert.assertNotNull(responseEnum);
 		Assert.assertEquals(ResetPasswordTokenStatusEnum.INVALID, responseEnum);
@@ -124,7 +121,8 @@ public class ForgotPasswordServiceImplTest {
 		String token = "abc-xyz";
 		ForgotPasswordToken forgotPasswordToken = new ForgotPasswordToken();
 		forgotPasswordToken.setExpiryDate(-30);
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		ResetPasswordTokenStatusEnum responseEnum = forgotPasswordService.validateEmailToken(token);
 		Assert.assertNotNull(responseEnum);
 		Assert.assertEquals(ResetPasswordTokenStatusEnum.EXPIRED, responseEnum);
@@ -145,7 +143,8 @@ public class ForgotPasswordServiceImplTest {
 		List<Authentication> authenticateList = new ArrayList<>();
 		Authentication authentication = new Authentication("abc", "xyz", email);
 		authenticateList.add(authentication);
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		Mockito.when(authenticationRepository.findByUsername("abc")).thenReturn(authentication);
 		Authentication response = forgotPasswordService.resetPassword(updatedPasswordRequest);
 		Assert.assertNotNull(response);
@@ -167,7 +166,8 @@ public class ForgotPasswordServiceImplTest {
 		forgotPasswordToken.setExpiryDate(30);
 		forgotPasswordToken.setUsername("abc");
 
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 
 		Mockito.when(authenticationRepository.findByUsername("abc")).thenReturn(null);
 		forgotPasswordService.resetPassword(resetPasswordRequest);
@@ -205,11 +205,14 @@ public class ForgotPasswordServiceImplTest {
 		List<Authentication> authenticateList = new ArrayList<>();
 		Authentication authentication = new Authentication("abc", "xyz", email);
 		authenticateList.add(authentication);
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		Mockito.when(authenticationRepository.findByUsername("abc")).thenReturn(authentication);
-		Assert.assertThrows(ApplicationException.class, () -> {
-			forgotPasswordService.resetPassword(updatedPasswordRequest);
-		});
+		Assert.assertThrows(
+				ApplicationException.class,
+				() -> {
+					forgotPasswordService.resetPassword(updatedPasswordRequest);
+				});
 	}
 
 	@Test
@@ -224,11 +227,14 @@ public class ForgotPasswordServiceImplTest {
 		List<Authentication> authenticateList = new ArrayList<>();
 		Authentication authentication = new Authentication("abc", "dummyPwd@1", email);
 		authenticateList.add(authentication);
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		Mockito.when(authenticationRepository.findByUsername("abc")).thenReturn(authentication);
-		Assert.assertThrows(ApplicationException.class, () -> {
-			forgotPasswordService.resetPassword(updatedPasswordRequest);
-		});
+		Assert.assertThrows(
+				ApplicationException.class,
+				() -> {
+					forgotPasswordService.resetPassword(updatedPasswordRequest);
+				});
 	}
 
 	@Test
@@ -243,10 +249,13 @@ public class ForgotPasswordServiceImplTest {
 		List<Authentication> authenticateList = new ArrayList<>();
 		Authentication authentication = new Authentication("abc", "dummyPwd@1", email);
 		authenticateList.add(authentication);
-		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any())).thenReturn(forgotPasswordToken);
+		Mockito.when(forgotPasswordTokenRepository.findByToken(Mockito.any()))
+				.thenReturn(forgotPasswordToken);
 		Mockito.when(authenticationRepository.findByUsername("abc")).thenReturn(authentication);
-		Assert.assertThrows(ApplicationException.class, () -> {
-			forgotPasswordService.resetPassword(updatedPasswordRequest);
-		});
+		Assert.assertThrows(
+				ApplicationException.class,
+				() -> {
+					forgotPasswordService.resetPassword(updatedPasswordRequest);
+				});
 	}
 }

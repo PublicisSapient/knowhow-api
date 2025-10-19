@@ -17,19 +17,9 @@
 
 package com.publicissapient.kpidashboard.apis.notification.service.impl;
 
-import com.publicissapient.kpidashboard.apis.common.service.CommonService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
-import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
-import com.publicissapient.kpidashboard.common.service.NotificationService;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,23 +28,30 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.notification.util.NotificationUtility;
+import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
+import com.publicissapient.kpidashboard.common.service.NotificationService;
 
 @ExtendWith(MockitoExtension.class)
 class EmailNotificationServiceImplTest {
 
-	@InjectMocks
-	private EmailNotificationServiceImpl emailNotificationService;
+	@InjectMocks private EmailNotificationServiceImpl emailNotificationService;
 
-	@Mock
-	private NotificationService notificationService;
+	@Mock private NotificationService notificationService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CommonService commonService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
 
 	private EmailRequestPayload createValidPayload() {
 		EmailRequestPayload payload = new EmailRequestPayload();
@@ -77,11 +74,12 @@ class EmailNotificationServiceImplTest {
 		payload.setExpiryTime("expiry");
 		payload.setResetUrl("resetUrl");
 		payload.setPdfAttachment("pdfData");
-		payload.setRecipients(new ArrayList<String>() {
-			{
-				add("recipient@test.com");
-			}
-		});
+		payload.setRecipients(
+				new ArrayList<String>() {
+					{
+						add("recipient@test.com");
+					}
+				});
 		return payload;
 	}
 
@@ -105,13 +103,18 @@ class EmailNotificationServiceImplTest {
 		final Map<String, String> customData = getTemplateDataMap(payload);
 
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
-			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
-			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
+			mockedUtil
+					.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService))
+					.thenReturn(customData);
+			mockedUtil
+					.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
+			ServiceResponse response =
+					emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 
-			verify(notificationService).sendNotificationEvent(eq(payload.getRecipients()), eq(customData), eq(subject)
-					, eq(true), eq(templateName));
+			verify(notificationService)
+					.sendNotificationEvent(
+							eq(payload.getRecipients()), eq(customData), eq(subject), eq(true), eq(templateName));
 			assertTrue(response.getSuccess());
 			assertEquals("Email sent successfully.", response.getMessage());
 		}
@@ -125,7 +128,8 @@ class EmailNotificationServiceImplTest {
 		// Return an empty mail template map so that getTemplateName fails.
 		when(customApiConfig.getMailTemplate()).thenReturn(new HashMap<>());
 
-		ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
+		ServiceResponse response =
+				emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 		assertFalse(response.getSuccess());
 		assertTrue(response.getMessage().contains("No email template found for key"));
 	}
@@ -147,13 +151,17 @@ class EmailNotificationServiceImplTest {
 		customData.put("USER_EMAIL", payload.getUserEmail());
 
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
-			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
+			mockedUtil
+					.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService))
+					.thenReturn(customData);
 			Set<String> requiredVars = new HashSet<>();
 			requiredVars.add("MISSING_VAR");
-			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
+			mockedUtil
+					.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(requiredVars);
 
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
+			ServiceResponse response =
+					emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 			assertFalse(response.getSuccess());
 			assertEquals("Missing required template variable: MISSING_VAR", response.getMessage());
 		}
@@ -179,14 +187,23 @@ class EmailNotificationServiceImplTest {
 		final Map<String, String> customData = getTemplateDataMap(payload);
 
 		try (MockedStatic<NotificationUtility> mockedUtil = mockStatic(NotificationUtility.class)) {
-			mockedUtil.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService)).thenReturn(customData);
-			mockedUtil.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
+			mockedUtil
+					.when(() -> NotificationUtility.toCustomDataMap(payload, customApiConfig, commonService))
+					.thenReturn(customData);
+			mockedUtil
+					.when(() -> NotificationUtility.extractEmailTemplateVariables(templateName))
 					.thenReturn(new HashSet<>());
-			doThrow(new RuntimeException("Notification failure")).when(notificationService).sendNotificationEvent(
-					Collections.singletonList(anyString()), anyMap(), anyString(),
-					anyBoolean(),  anyString());
+			doThrow(new RuntimeException("Notification failure"))
+					.when(notificationService)
+					.sendNotificationEvent(
+							Collections.singletonList(anyString()),
+							anyMap(),
+							anyString(),
+							anyBoolean(),
+							anyString());
 
-			ServiceResponse response = emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
+			ServiceResponse response =
+					emailNotificationService.sendEmail(templateKey, notificationSubjectKey, payload);
 			assertFalse(response.getSuccess());
 			assertTrue(response.getMessage().contains("Failed to send email:"));
 		}

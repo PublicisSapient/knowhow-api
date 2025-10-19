@@ -30,7 +30,6 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -53,6 +52,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,12 +61,9 @@ import lombok.extern.slf4j.Slf4j;
 public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, List<Object>> {
 	public static final String BACKLOG_CUSTOM_HISTORY = "backlogCustomHistory";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
 	// storyType have more than two word the stackChart hover fn break
 	private static String combineType(String storyType) {
@@ -90,22 +87,30 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 
 		if (leafNode != null) {
-			log.info("Flow Distribution kpi -> Requested project : {}", leafNode.getProjectFilter().getName());
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			log.info(
+					"Flow Distribution kpi -> Requested project : {}", leafNode.getProjectFilter().getName());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
 			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
 
 			if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI146())) {
 				jiraIssueCustomHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
-				jiraIssueCustomHistoryList = jiraIssueCustomHistoryList.stream().filter(jiraIssueCustomHistory -> fieldMapping
-						.getJiraIssueTypeNamesKPI146().contains(jiraIssueCustomHistory.getStoryType()))
-						.collect(Collectors.toList());
+				jiraIssueCustomHistoryList =
+						jiraIssueCustomHistoryList.stream()
+								.filter(
+										jiraIssueCustomHistory ->
+												fieldMapping
+														.getJiraIssueTypeNamesKPI146()
+														.contains(jiraIssueCustomHistory.getStoryType()))
+								.collect(Collectors.toList());
 			}
 
 			resultListMap.put(BACKLOG_CUSTOM_HISTORY, new ArrayList<>(jiraIssueCustomHistoryList));
@@ -114,19 +119,19 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	}
 
 	/**
-	 * Populates KPI value to leaf nodes and gives the trend analysis at project
-	 * level.
+	 * Populates KPI value to leaf nodes and gives the trend analysis at project level.
 	 *
 	 * @param leafNode
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Node leafNode, List<DataCount> trendValueList, KpiElement kpiElement,
-			KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Node leafNode, List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
 
 		// this method fetch dates for past history data
-		CustomDateRange dateRange = KpiDataHelper.getMonthsForPastDataHistory(customApiConfig.getFlowKpiMonthCount());
+		CustomDateRange dateRange =
+				KpiDataHelper.getMonthsForPastDataHistory(customApiConfig.getFlowKpiMonthCount());
 
 		// get start and end date in yyyy-mm-dd format
 		String startDate = dateRange.getStartDate().format(DATE_FORMATTER);
@@ -137,38 +142,51 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, startDate, endDate, kpiRequest);
 
-		List<JiraIssueCustomHistory> jiraIssueCustomHistories = (List<JiraIssueCustomHistory>) resultMap
-				.get(BACKLOG_CUSTOM_HISTORY);
+		List<JiraIssueCustomHistory> jiraIssueCustomHistories =
+				(List<JiraIssueCustomHistory>) resultMap.get(BACKLOG_CUSTOM_HISTORY);
 
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
 
-			Map<String, Map<String, Integer>> groupByDateAndTypeCount = jiraIssueCustomHistories.stream()
-					.collect(Collectors.groupingBy(
-							issue -> DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate()).toLocalDate()
-									.toString(),
-							Collectors.groupingBy(issue -> combineType(issue.getStoryType()),
-									Collectors.summingInt(issue -> 1))));
+			Map<String, Map<String, Integer>> groupByDateAndTypeCount =
+					jiraIssueCustomHistories.stream()
+							.collect(
+									Collectors.groupingBy(
+											issue ->
+													DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
+															.toLocalDate()
+															.toString(),
+											Collectors.groupingBy(
+													issue -> combineType(issue.getStoryType()),
+													Collectors.summingInt(issue -> 1))));
 
 			// Sort the groupByDateAndTypeCount map by date in ascending order
-			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap = new TreeMap<>(groupByDateAndTypeCount);
+			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap =
+					new TreeMap<>(groupByDateAndTypeCount);
 
 			// Get the map from the start date or the immediate next date for modal window
-			Map<String, Map<String, Integer>> mapAfterStartDate = sortedByDateTypeCountMap.entrySet().stream()
-					.filter(entry -> entry.getKey().compareTo(startDate) >= 0).findFirst().map(Map.Entry::getKey)
-					.map(sortedByDateTypeCountMap::tailMap).orElse(new TreeMap<>());
+			Map<String, Map<String, Integer>> mapAfterStartDate =
+					sortedByDateTypeCountMap.entrySet().stream()
+							.filter(entry -> entry.getKey().compareTo(startDate) >= 0)
+							.findFirst()
+							.map(Map.Entry::getKey)
+							.map(sortedByDateTypeCountMap::tailMap)
+							.orElse(new TreeMap<>());
 
 			// fetching the start date backlog type count
-			Map<String, Integer> startDateTypeCount = startDateTypeCount(startDate, sortedByDateTypeCountMap);
+			Map<String, Integer> startDateTypeCount =
+					startDateTypeCount(startDate, sortedByDateTypeCountMap);
 
 			// adding start date backlog count for cumulativeAddition
 			addStartDateTypeCount(startDate, sortedByDateTypeCountMap, startDateTypeCount);
 
-			Map<String, Map<String, Integer>> cumulativeAddedCountMap = createCumulativeTypeCount(startDate, endDate,
-					sortedByDateTypeCountMap);
+			Map<String, Map<String, Integer>> cumulativeAddedCountMap =
+					createCumulativeTypeCount(startDate, endDate, sortedByDateTypeCountMap);
 
 			populateTrendValueList(trendValueList, cumulativeAddedCountMap);
 			populateExcelDataObject(requestTrackerId, excelData, mapAfterStartDate);
-			log.info("FlowDistributionServiceImpl -> request id : {} dateWiseCountMap : {}", requestTrackerId,
+			log.info(
+					"FlowDistributionServiceImpl -> request id : {} dateWiseCountMap : {}",
+					requestTrackerId,
 					cumulativeAddedCountMap);
 		}
 		kpiElement.setExcelData(excelData);
@@ -182,12 +200,15 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	 * @param dataList
 	 * @param dateTypeCountMap
 	 */
-	private void populateTrendValueList(List<DataCount> dataList, Map<String, Map<String, Integer>> dateTypeCountMap) {
+	private void populateTrendValueList(
+			List<DataCount> dataList, Map<String, Map<String, Integer>> dateTypeCountMap) {
 		for (Map.Entry<String, Map<String, Integer>> entry : dateTypeCountMap.entrySet()) {
 			String date = entry.getKey();
 			Map<String, Integer> typeCountMap = entry.getValue();
 			DataCount dc = new DataCount();
-			dc.setDate(DateUtil.tranformUTCLocalTimeToZFormat(LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
+			dc.setDate(
+					DateUtil.tranformUTCLocalTimeToZFormat(
+							LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
 			dc.setValue(typeCountMap);
 			dataList.add(dc);
 		}
@@ -200,10 +221,12 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	 * @param excelData
 	 * @param dateTypeCountMap
 	 */
-	private void populateExcelDataObject(String requestTrackerId, List<KPIExcelData> excelData,
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<KPIExcelData> excelData,
 			Map<String, Map<String, Integer>> dateTypeCountMap) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				!Objects.isNull(dateTypeCountMap)) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+				&& !Objects.isNull(dateTypeCountMap)) {
 			KPIExcelUtility.populateFlowKPI(dateTypeCountMap, excelData);
 		}
 	}
@@ -216,7 +239,9 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	 * @param sortedByDateTypeCountMap
 	 * @return
 	 */
-	private Map<String, Map<String, Integer>> createCumulativeTypeCount(String startDate, String endDate,
+	private Map<String, Map<String, Integer>> createCumulativeTypeCount(
+			String startDate,
+			String endDate,
 			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap) {
 
 		Map<String, Map<String, Integer>> cumulativeAddedCountMap = new LinkedHashMap<>();
@@ -227,7 +252,8 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 
 		while (!currentDate.isAfter(lastDate)) {
 			String currentDateString = currentDate.toString();
-			Map<String, Integer> currentMap = sortedByDateTypeCountMap.getOrDefault(currentDateString, new HashMap<>());
+			Map<String, Integer> currentMap =
+					sortedByDateTypeCountMap.getOrDefault(currentDateString, new HashMap<>());
 
 			if (accumulatedMap != null) {
 				for (Map.Entry<String, Integer> entry : currentMap.entrySet()) {
@@ -251,8 +277,8 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	 * @param sortedByDateTypeCountMap
 	 * @return
 	 */
-	private Map<String, Integer> startDateTypeCount(String startDate,
-			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap) {
+	private Map<String, Integer> startDateTypeCount(
+			String startDate, TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap) {
 		Map<String, Integer> startDateTypeCount = new HashMap<>();
 		for (Map.Entry<String, Map<String, Integer>> entry : sortedByDateTypeCountMap.entrySet()) {
 			String date = entry.getKey();
@@ -263,8 +289,9 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 				break;
 			}
 			// Otherwise, add up the type count for this date
-			typeCountMap
-					.forEach((type, count) -> startDateTypeCount.put(type, startDateTypeCount.getOrDefault(type, 0) + count));
+			typeCountMap.forEach(
+					(type, count) ->
+							startDateTypeCount.put(type, startDateTypeCount.getOrDefault(type, 0) + count));
 		}
 		return startDateTypeCount;
 	}
@@ -276,7 +303,9 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	 * @param sortedByDateTypeCountMap
 	 * @param tillStartDateTypeCount
 	 */
-	private void addStartDateTypeCount(String startDate, TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap,
+	private void addStartDateTypeCount(
+			String startDate,
+			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap,
 			Map<String, Integer> tillStartDateTypeCount) {
 		if (sortedByDateTypeCountMap.containsKey(startDate)) {
 			Map<String, Integer> startDateTypeCount = sortedByDateTypeCountMap.get(startDate);

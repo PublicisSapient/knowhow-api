@@ -15,7 +15,7 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.2.0</version>
-    <relativePath />
+    <relativePath/>
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
   <artifactId>customapi</artifactId>
@@ -56,8 +56,7 @@
 			**com/publicissapient/kpidashboard/**/*Configuration.java,
 			**com/publicissapient/kpidashboard/apis/mongock/**/*,
 			**com/publicissapient/kpidashboard/apis/datamigration/**/*,
-            **com/publicissapient/kpidashboard/apis/notification/**/*
-    </sonar.coverage.exclusions>
+            **com/publicissapient/kpidashboard/apis/notification/**/*</sonar.coverage.exclusions>
     <sonar.test.exclusions>**src/test/java/**</sonar.test.exclusions>
     <sonar.exclusions>**src/test/java/**,**/src/main/java/com/publicissapient/kpidashboard/apis/bitbucket/service/scm/**</sonar.exclusions>
     <sonar.cpd.exclusions>**com/publicissapient/kpidashboard/apis/mongock/**/*</sonar.cpd.exclusions>
@@ -496,11 +495,11 @@
       <artifactId>ai-gateway-client</artifactId>
       <version>1.0.0</version>
     </dependency>
-      <dependency>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter-api</artifactId>
-          <scope>test</scope>
-      </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <repositories>
     <repository>
@@ -563,7 +562,7 @@
         <executions>
           <execution>
             <id>build</id>
-            <goals>
+             <goals>
               <goal>build</goal>
             </goals>
             <phase>install</phase>
@@ -591,7 +590,7 @@
             <eclipse>
               <file>${project.basedir}/eclipse-formatter-config.xml</file>
             </eclipse>
-            <googleJavaFormat />
+            <googleJavaFormat/>
             <indent>
               <tabs>true</tabs>
               <spacesPerTab>2</spacesPerTab>
@@ -599,7 +598,7 @@
             <importOrder>
               <order>java|javax,org,com</order>
             </importOrder>
-            <removeUnusedImports />
+            <removeUnusedImports/>
           </java>
           <pom>
             <includes>

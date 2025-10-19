@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author eswbogol
  */
-@ChangeUnit(id = "dir_ftpr_labels_changeLog", order = "8103", author = "eswbogol", systemVersion = "8.1.0")
+@ChangeUnit(
+		id = "dir_ftpr_labels_changeLog",
+		order = "8103",
+		author = "eswbogol",
+		systemVersion = "8.1.0")
 public class DIRFTPRLabelsChangeLog {
 
 	private final MongoTemplate mongoTemplate;
@@ -51,7 +55,8 @@ public class DIRFTPRLabelsChangeLog {
 		document.append("fieldType", "chips");
 		document.append("section", "WorkFlow Status Mapping");
 		Document tooltip = new Document();
-		tooltip.append("definition", "Calculation should only those issues which have defined labels tagged.");
+		tooltip.append(
+				"definition", "Calculation should only those issues which have defined labels tagged.");
 		document.append("tooltip", tooltip);
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(document);
 	}
@@ -63,7 +68,8 @@ public class DIRFTPRLabelsChangeLog {
 		document.append("fieldType", "chips");
 		document.append("section", "WorkFlow Status Mapping");
 		Document tooltip = new Document();
-		tooltip.append("definition", "Calculation should only those issues which have defined labels tagged.");
+		tooltip.append(
+				"definition", "Calculation should only those issues which have defined labels tagged.");
 		document.append("tooltip", tooltip);
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(document);
 	}

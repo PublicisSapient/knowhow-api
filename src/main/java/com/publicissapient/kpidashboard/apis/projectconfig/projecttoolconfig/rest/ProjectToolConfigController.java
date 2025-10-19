@@ -52,28 +52,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProjectToolConfigController {
 
-	@Autowired
-	private ProjectToolConfigService toolService;
+	@Autowired private ProjectToolConfigService toolService;
 
-	@Autowired
-	private ProjectAccessUtil projectAccessUtil;
+	@Autowired private ProjectAccessUtil projectAccessUtil;
 
 	/** Fetch all projectToolConfig */
-	@RequestMapping(value = "/basicconfigs/{basicConfigId}/tools", method = RequestMethod.GET) // NOSONAR
-	public ResponseEntity<ServiceResponse> getProjectTools(@PathVariable String basicConfigId,
+	@RequestMapping(
+			value = "/basicconfigs/{basicConfigId}/tools",
+			method = RequestMethod.GET) // NOSONAR
+	public ResponseEntity<ServiceResponse> getProjectTools(
+			@PathVariable String basicConfigId,
 			@RequestParam(name = "toolType", required = false) String toolType) {
 		ServiceResponse response;
 		boolean hasAccess = projectAccessUtil.configIdHasUserAccess(basicConfigId);
 		if (!hasAccess) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
-					.body(new ServiceResponse(false, "Unauthorized to get the project tools", "Unauthorized"));
+					.body(
+							new ServiceResponse(false, "Unauthorized to get the project tools", "Unauthorized"));
 		}
 		if (StringUtils.isEmpty(StringUtils.trim(toolType))) {
 			log.info("Fetching all tools");
-			response = new ServiceResponse(true, "list of tools", toolService.getProjectToolConfigs(basicConfigId));
+			response =
+					new ServiceResponse(
+							true, "list of tools", toolService.getProjectToolConfigs(basicConfigId));
 		} else {
 			log.info("Fetching toolType ", toolType);
-			response = new ServiceResponse(true, "list of tools", toolService.getProjectToolConfigs(basicConfigId, toolType));
+			response =
+					new ServiceResponse(
+							true, "list of tools", toolService.getProjectToolConfigs(basicConfigId, toolType));
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
@@ -81,37 +87,48 @@ public class ProjectToolConfigController {
 	/**
 	 * save/add ProjectToolConfig details *
 	 *
-	 * @param projectToolDTO
-	 *          request object that is created in the database.
+	 * @param projectToolDTO request object that is created in the database.
 	 * @return responseEntity with data,message and status
 	 */
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'SAVE_PROJECT_TOOL')")
-	@RequestMapping(value = "/basicconfigs/{basicProjectConfigId}/tools", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> saveToolDetails(@PathVariable String basicProjectConfigId,
+	@RequestMapping(
+			value = "/basicconfigs/{basicProjectConfigId}/tools",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> saveToolDetails(
+			@PathVariable String basicProjectConfigId,
 			@Valid @RequestBody ProjectToolConfigDTO projectToolDTO) {
 		final ModelMapper modelMapper = new ModelMapper();
-		final ProjectToolConfig projectToolConfig = modelMapper.map(projectToolDTO, ProjectToolConfig.class);
+		final ProjectToolConfig projectToolConfig =
+				modelMapper.map(projectToolDTO, ProjectToolConfig.class);
 		projectToolConfig.setId(null);
 		projectToolConfig.setBasicProjectConfigId(new ObjectId(basicProjectConfigId));
 		log.info("created and saved new projectToolConfigDTO");
-		return ResponseEntity.status(HttpStatus.OK).body(toolService.saveProjectToolDetails(projectToolConfig));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(toolService.saveProjectToolDetails(projectToolConfig));
 	}
 
 	/**
 	 * Modify/Update a projectToolDTO by projectToolId. *
 	 *
-	 * @param projectToolDTO
-	 *          request object that replaces the project_tool_configs data present
-	 *          at object_id projectToolId.
+	 * @param projectToolDTO request object that replaces the project_tool_configs data present at
+	 *     object_id projectToolId.
 	 * @return responseEntity with data,message and status
 	 */
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'UPDATE_PROJECT_TOOL')")
-	@RequestMapping(value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> modifyConnectionById(@PathVariable String basicProjectConfigId,
-			@PathVariable String projectToolId, @Valid @RequestBody ProjectToolConfigDTO projectToolDTO) {
+	@RequestMapping(
+			value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}",
+			method = RequestMethod.PUT,
+			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> modifyConnectionById(
+			@PathVariable String basicProjectConfigId,
+			@PathVariable String projectToolId,
+			@Valid @RequestBody ProjectToolConfigDTO projectToolDTO) {
 		log.info("projectTool updated", projectToolDTO.getProjectId());
 		final ModelMapper modelMapper = new ModelMapper();
-		final ProjectToolConfig projectToolConfig = modelMapper.map(projectToolDTO, ProjectToolConfig.class);
+		final ProjectToolConfig projectToolConfig =
+				modelMapper.map(projectToolDTO, ProjectToolConfig.class);
 		projectToolConfig.setBasicProjectConfigId(new ObjectId(basicProjectConfigId));
 		projectToolConfig.setId(new ObjectId(projectToolId));
 		return ResponseEntity.status(HttpStatus.OK)
@@ -119,9 +136,11 @@ public class ProjectToolConfigController {
 	}
 
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'DELETE_PROJECT_TOOL')")
-	@RequestMapping(value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}", method = RequestMethod.DELETE)
-	public ResponseEntity<ServiceResponse> deleteTool(@PathVariable String basicProjectConfigId,
-			@PathVariable String projectToolId) {
+	@RequestMapping(
+			value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}",
+			method = RequestMethod.DELETE)
+	public ResponseEntity<ServiceResponse> deleteTool(
+			@PathVariable String basicProjectConfigId, @PathVariable String projectToolId) {
 
 		boolean isDeleted = toolService.deleteTool(basicProjectConfigId, projectToolId);
 		ServiceResponse serviceResponse = null;
@@ -136,8 +155,8 @@ public class ProjectToolConfigController {
 
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'CLEAN_PROJECT_TOOL_DATA')")
 	@DeleteMapping(value = "/basicconfigs/{basicProjectConfigId}/tools/clean/{projectToolId}")
-	public ResponseEntity<ServiceResponse> cleanToolData(@PathVariable String basicProjectConfigId,
-			@PathVariable String projectToolId) {
+	public ResponseEntity<ServiceResponse> cleanToolData(
+			@PathVariable String basicProjectConfigId, @PathVariable String projectToolId) {
 
 		boolean isDeleted = toolService.cleanToolData(basicProjectConfigId, projectToolId);
 		ServiceResponse serviceResponse = null;

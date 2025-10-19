@@ -23,10 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -36,6 +33,7 @@ import org.springframework.stereotype.Component;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.mapper.ExecutiveDashboardMapper;
 import com.publicissapient.kpidashboard.apis.executive.service.KanbanKpiMaturity;
@@ -47,9 +45,7 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Strategy implementation for Kanban executive dashboard.
- */
+/** Strategy implementation for Kanban executive dashboard. */
 @Component
 @Slf4j
 public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStrategy {
@@ -60,12 +56,23 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 	@Qualifier("kanbanExecutiveTaskExecutor")
 	private Executor kanbanExecutiveTaskExecutor;
 
-	public KanbanExecutiveDashboardStrategy(ProjectEfficiencyService projectEfficiencyService,
-			CacheService cacheService, UserBoardConfigService userBoardConfigService,
-			KanbanKpiMaturity kanbanKpiMaturity, KpiCategoryRepository kpiCategoryRepository,
-			ConfigHelperService configHelperService, CustomApiConfig customApiConfig) {
-		super(STRATEGY_TYPE, cacheService, projectEfficiencyService, userBoardConfigService, kanbanKpiMaturity,
-				kpiCategoryRepository, configHelperService, customApiConfig);
+	public KanbanExecutiveDashboardStrategy(
+			ProjectEfficiencyService projectEfficiencyService,
+			CacheService cacheService,
+			UserBoardConfigService userBoardConfigService,
+			KanbanKpiMaturity kanbanKpiMaturity,
+			KpiCategoryRepository kpiCategoryRepository,
+			ConfigHelperService configHelperService,
+			CustomApiConfig customApiConfig) {
+		super(
+				STRATEGY_TYPE,
+				cacheService,
+				projectEfficiencyService,
+				userBoardConfigService,
+				kanbanKpiMaturity,
+				kpiCategoryRepository,
+				configHelperService,
+				customApiConfig);
 	}
 
 	@Override
@@ -85,34 +92,37 @@ public class KanbanExecutiveDashboardStrategy extends BaseExecutiveDashboardStra
 
 		if (CollectionUtils.isEmpty(requiredNodeIds) || CollectionUtils.isEmpty(boards)) {
 			log.warn("ids or boards are empty");
-			throw new ExecutiveDataException("Invalid request parameters, ids or boards are empty",
-					HttpStatus.BAD_REQUEST);
-
+			throw new ExecutiveDataException(
+					"Invalid request parameters, ids or boards are empty", HttpStatus.BAD_REQUEST);
 		}
 		// Batch process project configurations
 		Map<String, OrganizationHierarchy> nodeWiseHierachy = getNodeWiseHierarchy(requiredNodeIds);
 
 		if (nodeWiseHierachy.isEmpty()) {
 			log.warn("No valid project configurations found for the provided IDs");
-			throw new ExecutiveDataException("No valid project configurations found for the provided IDs",
-					HttpStatus.BAD_REQUEST);
+			throw new ExecutiveDataException(
+					"No valid project configurations found for the provided IDs", HttpStatus.BAD_REQUEST);
 		}
-		Map<String, Map<String, String>> finalResults = new ConcurrentHashMap<>(
-				processProjectBatch(requiredNodeIds, kpiRequest, nodeWiseHierachy, boards, true));
-		log.info("Completed processing {} projects in {} ms", requiredNodeIds.size(),
+		Map<String, Map<String, String>> finalResults =
+				new ConcurrentHashMap<>(
+						processProjectBatch(requiredNodeIds, kpiRequest, nodeWiseHierachy, boards, true));
+		log.info(
+				"Completed processing {} projects in {} ms",
+				requiredNodeIds.size(),
 				System.currentTimeMillis() - startTime);
 
 		// Calculate project efficiency for each project
 		Map<String, Map<String, Object>> projectEfficiencies = new HashMap<>();
-		finalResults.forEach((projectId, boardMaturities) -> {
-			Map<String, Object> efficiency = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
-			projectEfficiencies.put(projectId, efficiency);
-			log.info("Project {} efficiency: {}", projectId, efficiency);
-		});
+		finalResults.forEach(
+				(projectId, boardMaturities) -> {
+					Map<String, Object> efficiency =
+							projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
+					projectEfficiencies.put(projectId, efficiency);
+					log.info("Project {} efficiency: {}", projectId, efficiency);
+				});
 
 		// Convert results to DTO with efficiency data
-		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(finalResults, nodeWiseHierachy,
-				projectEfficiencies, kpiRequest.getLevelName());
-
+		return ExecutiveDashboardMapper.toExecutiveDashboardResponse(
+				finalResults, nodeWiseHierachy, projectEfficiencies, kpiRequest.getLevelName());
 	}
 }

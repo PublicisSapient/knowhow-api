@@ -27,7 +27,8 @@ import com.publicissapient.kpidashboard.apis.pushdata.model.ExposeApiToken;
 @Repository
 public interface ExposeApiTokenRepository extends MongoRepository<ExposeApiToken, ObjectId> {
 
-	ExposeApiToken findByUserNameAndBasicProjectConfigId(String userName, ObjectId basicProjectConfigId);
+	ExposeApiToken findByUserNameAndBasicProjectConfigId(
+			String userName, ObjectId basicProjectConfigId);
 
 	ExposeApiToken findByApiToken(String apiToken);
 }

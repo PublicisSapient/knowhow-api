@@ -28,7 +28,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "update_code_violations_filter_type", order = "12105", author = "kunkambl", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "update_code_violations_filter_type",
+		order = "12105",
+		author = "kunkambl",
+		systemVersion = "12.1.0")
 public class CodeViolationsFilterTypeUpdate {
 	private final MongoTemplate mongoTemplate;
 

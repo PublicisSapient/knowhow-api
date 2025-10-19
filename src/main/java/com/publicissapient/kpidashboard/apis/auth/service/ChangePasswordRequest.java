@@ -30,15 +30,11 @@ import lombok.Data;
 @Data
 public class ChangePasswordRequest {
 
-	@NotNull
-	private String email;
+	@NotNull private String email;
 
-	@NotNull
-	private String oldPassword;
+	@NotNull private String oldPassword;
 
-	@NotNull
-	private String password;
+	@NotNull private String password;
 
-	@NotNull
-	private String user;
+	@NotNull private String user;
 }

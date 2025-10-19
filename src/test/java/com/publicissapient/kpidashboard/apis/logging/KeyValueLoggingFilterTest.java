@@ -57,18 +57,12 @@ import jakarta.servlet.http.HttpSession;
 public class KeyValueLoggingFilterTest {
 
 	KeyValueLoggingFilter filter;
-	@Mock
-	private HttpServletRequest request;
-	@Mock
-	private HttpServletResponse response;
-	@Mock
-	private FilterChain chain;
-	@Mock
-	private HttpSession session;
-	@Mock
-	private Appender appender;
-	@Captor
-	private ArgumentCaptor<LoggingEvent> logCaptor;
+	@Mock private HttpServletRequest request;
+	@Mock private HttpServletResponse response;
+	@Mock private FilterChain chain;
+	@Mock private HttpSession session;
+	@Mock private Appender appender;
+	@Captor private ArgumentCaptor<LoggingEvent> logCaptor;
 	private String remoteAddress = "http://127.0.0.1";
 	private String appName = "appName";
 	private String appVersion = "2.0.5-SNAPSHOT";
@@ -96,8 +90,7 @@ public class KeyValueLoggingFilterTest {
 	}
 
 	@Test
-	public void testMethod() {
-	}
+	public void testMethod() {}
 
 	// @Test
 	public void shouldLogSplunkEntryNullSessionAndUser() throws IOException, ServletException {
@@ -107,11 +100,14 @@ public class KeyValueLoggingFilterTest {
 		LoggingEvent loggingEvent = logCaptor.getValue();
 
 		assertEquals(Level.INFO, loggingEvent.getLevel());
-		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.REMOTE_ADDRESS, remoteAddress));
+		assertTrue(
+				verifyLogContains(loggingEvent, KeyValueLoggingFilter.REMOTE_ADDRESS, remoteAddress));
 		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.APPLICATION_NAME, appName));
-		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.APPLICATION_VERSION, appVersion));
+		assertTrue(
+				verifyLogContains(loggingEvent, KeyValueLoggingFilter.APPLICATION_VERSION, appVersion));
 		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.REQUEST_URL, requestUrl));
-		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.REQUEST_METHOD, requestMethod));
+		assertTrue(
+				verifyLogContains(loggingEvent, KeyValueLoggingFilter.REQUEST_METHOD, requestMethod));
 		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.STATUS_CODE, statusCode));
 	}
 
@@ -124,9 +120,10 @@ public class KeyValueLoggingFilterTest {
 		when(request.getSession(false)).thenReturn(session);
 		when(session.getId()).thenReturn(sessionId);
 
-		Collection<? extends GrantedAuthority> authorities = Lists.newArrayList(new SimpleGrantedAuthority("ROLE_ADMIN"));
-		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(principal, "password",
-				authorities);
+		Collection<? extends GrantedAuthority> authorities =
+				Lists.newArrayList(new SimpleGrantedAuthority("ROLE_ADMIN"));
+		UsernamePasswordAuthenticationToken authentication =
+				new UsernamePasswordAuthenticationToken(principal, "password", authorities);
 		authentication.setDetails(userDetails);
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -138,7 +135,8 @@ public class KeyValueLoggingFilterTest {
 		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.SESSION_ID, sessionId));
 		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.USER_NAME, principal));
 		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.USER_DETAILS, userDetails));
-		assertTrue(verifyLogContains(loggingEvent, KeyValueLoggingFilter.USER_AUTHORITIES, "[ROLE_ADMIN]"));
+		assertTrue(
+				verifyLogContains(loggingEvent, KeyValueLoggingFilter.USER_AUTHORITIES, "[ROLE_ADMIN]"));
 	}
 
 	private boolean verifyLogContains(LoggingEvent loggingEvent, String field, Object value) {

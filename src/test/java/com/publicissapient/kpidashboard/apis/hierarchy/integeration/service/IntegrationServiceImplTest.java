@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.IntegrationServiceImpl;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +49,7 @@ import com.publicissapient.kpidashboard.apis.hierarchy.integration.adapter.Organ
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyLevel;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyNode;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.service.IntegrationServiceImpl;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
@@ -58,17 +58,13 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectBas
 @RunWith(MockitoJUnitRunner.class)
 public class IntegrationServiceImplTest {
 
-	@Mock
-	private OrganizationHierarchyAdapter organizationHierarchyAdapter;
+	@Mock private OrganizationHierarchyAdapter organizationHierarchyAdapter;
 
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
 
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
-	@InjectMocks
-	private IntegrationServiceImpl integrationService;
+	@InjectMocks private IntegrationServiceImpl integrationService;
 
 	private List<OrganizationHierarchy> allDbNodes;
 	private Set<OrganizationHierarchy> externalList;
@@ -416,28 +412,32 @@ public class IntegrationServiceImplTest {
 		convertedNode.setModifiedDate(LocalDateTime.now());
 		expectedResult.add(convertedNode);
 
-		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList()))
+		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(
+						any(HierarchyDetails.class), anyList()))
 				.thenReturn(expectedResult);
 
 		// Act
-		Set<OrganizationHierarchy> result = integrationService
-				.convertHieracyResponseToOrganizationHierachy(hierarchyDetails, allDbNodes);
+		Set<OrganizationHierarchy> result =
+				integrationService.convertHieracyResponseToOrganizationHierachy(
+						hierarchyDetails, allDbNodes);
 
 		// Assert
 		assertNotNull(result);
 		assertEquals(expectedResult, result);
-		verify(organizationHierarchyAdapter, times(1)).convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList());
+		verify(organizationHierarchyAdapter, times(1))
+				.convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList());
 	}
 
 	@Test
 	public void testConvertHieracyResponseToOrganizationHierachy_NullHierarchyDetails() {
 		// Arrange
 		Set<OrganizationHierarchy> expectedResult = new HashSet<>();
-		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(any(), anyList())).thenReturn(expectedResult);
+		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(any(), anyList()))
+				.thenReturn(expectedResult);
 
 		// Act
-		Set<OrganizationHierarchy> result = integrationService.convertHieracyResponseToOrganizationHierachy(null,
-				allDbNodes);
+		Set<OrganizationHierarchy> result =
+				integrationService.convertHieracyResponseToOrganizationHierachy(null, allDbNodes);
 
 		// Assert
 		assertNotNull(result);
@@ -451,41 +451,47 @@ public class IntegrationServiceImplTest {
 		List<OrganizationHierarchy> emptyDbNodes = new ArrayList<>();
 		Set<OrganizationHierarchy> expectedResult = new HashSet<>();
 
-		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList()))
+		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(
+						any(HierarchyDetails.class), anyList()))
 				.thenReturn(expectedResult);
 
 		// Act
-		Set<OrganizationHierarchy> result = integrationService
-				.convertHieracyResponseToOrganizationHierachy(hierarchyDetails, emptyDbNodes);
+		Set<OrganizationHierarchy> result =
+				integrationService.convertHieracyResponseToOrganizationHierachy(
+						hierarchyDetails, emptyDbNodes);
 
 		// Assert
 		assertNotNull(result);
 		assertEquals(expectedResult, result);
-		verify(organizationHierarchyAdapter, times(1)).convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList());
+		verify(organizationHierarchyAdapter, times(1))
+				.convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList());
 	}
 
 	@Test
 	public void testConvertHieracyResponseToOrganizationHierachy_EmptyResult() {
 		// Arrange
 		Set<OrganizationHierarchy> emptyResult = new HashSet<>();
-		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList()))
+		when(organizationHierarchyAdapter.convertToOrganizationHierarchy(
+						any(HierarchyDetails.class), anyList()))
 				.thenReturn(emptyResult);
 
 		// Act
-		Set<OrganizationHierarchy> result = integrationService
-				.convertHieracyResponseToOrganizationHierachy(hierarchyDetails, allDbNodes);
+		Set<OrganizationHierarchy> result =
+				integrationService.convertHieracyResponseToOrganizationHierachy(
+						hierarchyDetails, allDbNodes);
 
 		// Assert
 		assertNotNull(result);
 		assertTrue(result.isEmpty());
-		verify(organizationHierarchyAdapter, times(1)).convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList());
+		verify(organizationHierarchyAdapter, times(1))
+				.convertToOrganizationHierarchy(any(HierarchyDetails.class), anyList());
 	}
 
 	@Test
 	public void testSyncOrganizationHierarchy_EmptyExternalNodes() {
 		// Arrange
 		Set<OrganizationHierarchy> emptyExternalNodes = new HashSet<>();
-		
+
 		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
 		when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
 		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);

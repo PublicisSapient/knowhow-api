@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,20 +47,17 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 @Component
 public class NetOpenTicketCountByRCAServiceImpl
-		extends
-			JiraKPIService<Long, List<Object>, Map<String, Map<String, Map<String, Set<String>>>>> {
+		extends JiraKPIService<Long, List<Object>, Map<String, Map<String, Map<String, Set<String>>>>> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(NetOpenTicketCountByRCAServiceImpl.class);
+	private static final Logger LOGGER =
+			LoggerFactory.getLogger(NetOpenTicketCountByRCAServiceImpl.class);
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	private static final String FIELD_RCA = "rca";
 	private static final String JIRA_ISSUE_HISTORY_DATA = "JiraIssueHistoryData";
 	Map<String, Object> resultListMap = new HashMap<>();
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private KpiHelperService kpiHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
 	 * Gets Qualifier Type
@@ -83,30 +79,35 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @throws ApplicationException
 	 */
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		LOGGER.info("NET-OPEN-TICKET-COUNT-BY-RCA {}", kpiRequest.getRequestTrackerId());
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 
 		dateWiseLeafNodeValue(mapTmp, projectList, kpiElement, kpiRequest);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 
 		calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.NET_OPEN_TICKET_COUNT_BY_RCA);
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.NET_OPEN_TICKET_COUNT_BY_RCA);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.NET_OPEN_TICKET_COUNT_BY_RCA);
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		trendValuesMap.forEach((key, dateWiseDataCount) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			dataCountGroup.setFilter(key);
-			dataCountGroup.setValue(dateWiseDataCount);
-			dataCountGroups.add(dataCountGroup);
-		});
+		trendValuesMap.forEach(
+				(key, dateWiseDataCount) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					dataCountGroup.setFilter(key);
+					dataCountGroup.setValue(dateWiseDataCount);
+					dataCountGroups.add(dataCountGroup);
+				});
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		// map aggregation implementation over
@@ -115,7 +116,8 @@ public class NetOpenTicketCountByRCAServiceImpl
 
 		LOGGER.debug(
 				"[NET-OPEN-TICKET-COUNT-BY-RCA-KANBAN-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+				kpiRequest.getRequestTrackerId(),
+				root);
 		return kpiElement;
 	}
 
@@ -128,34 +130,42 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @return resultListMap
 	 */
 	@Override
-	public Map<String, Map<String, Map<String, Set<String>>>> fetchKPIDataFromDb(List<Node> leafNodeList,
-			String startDate, String endDate, KpiRequest kpiRequest) {
+	public Map<String, Map<String, Map<String, Set<String>>>> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<ObjectId, Map<String, Object>> projectWiseMapping = new HashMap<>();
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-			Map<String, Object> fieldWise = new HashMap<>();
-			fieldWise.put("LiveStatus", fieldMapping.getJiraLiveStatusKPI51());
-			fieldWise.put("ClosedStatus", fieldMapping.getJiraTicketClosedStatusKPI51());
-			fieldWise.put("RejectedStatus", fieldMapping.getJiraTicketRejectedStatusKPI151());
-			fieldWise.put("RCA_Count_IssueType", fieldMapping.getKanbanRCACountIssueTypeKPI51());
-			fieldWise.put("StoryFirstStatus", fieldMapping.getStoryFirstStatus());
-			projectWiseMapping.put(basicProjectConfigId, fieldWise);
-		});
-		resultListMap = kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(leafNodeList, startDate, endDate,
-				kpiRequest, FIELD_RCA, projectWiseMapping);
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+					Map<String, Object> fieldWise = new HashMap<>();
+					fieldWise.put("LiveStatus", fieldMapping.getJiraLiveStatusKPI51());
+					fieldWise.put("ClosedStatus", fieldMapping.getJiraTicketClosedStatusKPI51());
+					fieldWise.put("RejectedStatus", fieldMapping.getJiraTicketRejectedStatusKPI151());
+					fieldWise.put("RCA_Count_IssueType", fieldMapping.getKanbanRCACountIssueTypeKPI51());
+					fieldWise.put("StoryFirstStatus", fieldMapping.getStoryFirstStatus());
+					projectWiseMapping.put(basicProjectConfigId, fieldWise);
+				});
+		resultListMap =
+				kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(
+						leafNodeList, startDate, endDate, kpiRequest, FIELD_RCA, projectWiseMapping);
 
-		CustomDateRange dateRangeForCumulative = KpiDataHelper.getStartAndEndDatesForCumulative(kpiRequest);
+		CustomDateRange dateRangeForCumulative =
+				KpiDataHelper.getStartAndEndDatesForCumulative(kpiRequest);
 		String startDateForCumulative = dateRangeForCumulative.getStartDate().format(DATE_FORMATTER);
 
-		Map<String, List<KanbanIssueCustomHistory>> projectWiseNonClosedTickets = kpiHelperService
-				.removeClosedTicketsFromHistoryIssuesData(resultListMap, startDateForCumulative);
+		Map<String, List<KanbanIssueCustomHistory>> projectWiseNonClosedTickets =
+				kpiHelperService.removeClosedTicketsFromHistoryIssuesData(
+						resultListMap, startDateForCumulative);
 
-		return kpiHelperService.computeProjectWiseJiraHistoryByFieldAndDate(projectWiseNonClosedTickets,
-				startDateForCumulative, resultListMap, FIELD_RCA);
+		return kpiHelperService.computeProjectWiseJiraHistoryByFieldAndDate(
+				projectWiseNonClosedTickets, startDateForCumulative, resultListMap, FIELD_RCA);
 	}
 
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 
 		// this method fetch dates for past history data
@@ -166,48 +176,63 @@ public class NetOpenTicketCountByRCAServiceImpl
 		String endDate = dateRange.getEndDate().format(DATE_FORMATTER);
 
 		// past all tickets and given range ticket data fetch from db
-		Map<String, Map<String, Map<String, Set<String>>>> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
+		Map<String, Map<String, Map<String, Set<String>>>> resultMap =
+				fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 
 		kpiWithFilter(resultMap, mapTmp, leafNodeList, kpiElement, kpiRequest);
 	}
 
-	private void kpiWithFilter(Map<String, Map<String, Map<String, Set<String>>>> resultMap, Map<String, Node> mapTmp,
-			List<Node> leafNodeList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void kpiWithFilter(
+			Map<String, Map<String, Map<String, Set<String>>>> resultMap,
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 		List<KPIExcelData> excelData = new ArrayList<>();
 		String requestTrackerId = getKanbanRequestTrackerId();
 
-		leafNodeList.forEach(node -> {
-			Map<String, List<DataCount>> trendValueMap = new HashMap<>();
-			String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
-			Map<String, Map<String, Set<String>>> jiraHistoryRCAAndDateWiseIssueMap = resultMap.getOrDefault(projectNodeId,
-					new HashMap<>());
-			if (MapUtils.isNotEmpty(jiraHistoryRCAAndDateWiseIssueMap)) {
-				Set<String> projectWiseRCAList = new HashSet<>();
-				projectWiseRCAList.addAll(jiraHistoryRCAAndDateWiseIssueMap.keySet());
-				LocalDateTime currentDate = DateUtil.getTodayTime();
-				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
+		leafNodeList.forEach(
+				node -> {
+					Map<String, List<DataCount>> trendValueMap = new HashMap<>();
+					String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
+					Map<String, Map<String, Set<String>>> jiraHistoryRCAAndDateWiseIssueMap =
+							resultMap.getOrDefault(projectNodeId, new HashMap<>());
+					if (MapUtils.isNotEmpty(jiraHistoryRCAAndDateWiseIssueMap)) {
+						Set<String> projectWiseRCAList = new HashSet<>();
+						projectWiseRCAList.addAll(jiraHistoryRCAAndDateWiseIssueMap.keySet());
+						LocalDateTime currentDate = DateUtil.getTodayTime();
+						for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
-							kpiRequest.getDuration());
+							CustomDateRange dateRange =
+									KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+											currentDate, kpiRequest.getDuration());
 
-					Map<String, Long> projectWiseRCACountMap = filterKanbanDataBasedOnDateAndRCAWise(
-							jiraHistoryRCAAndDateWiseIssueMap, projectWiseRCAList, dateRange.getEndDate());
+							Map<String, Long> projectWiseRCACountMap =
+									filterKanbanDataBasedOnDateAndRCAWise(
+											jiraHistoryRCAAndDateWiseIssueMap,
+											projectWiseRCAList,
+											dateRange.getEndDate());
 
-					String date = getRange(dateRange, kpiRequest);
+							String date = getRange(dateRange, kpiRequest);
 
-					populateProjectFilterWiseDataMap(projectWiseRCACountMap, trendValueMap, node.getProjectFilter().getName(),
-							date);
+							populateProjectFilterWiseDataMap(
+									projectWiseRCACountMap, trendValueMap, node.getProjectFilter().getName(), date);
 
-					currentDate = getNextRangeDate(kpiRequest, currentDate);
-				}
-				// Populates data in Excel for validation for tickets created before
-				populateExcelDataObject(requestTrackerId, jiraHistoryRCAAndDateWiseIssueMap, node, projectWiseRCAList,
-						new HashSet<>((List<KanbanIssueCustomHistory>) resultListMap.get(JIRA_ISSUE_HISTORY_DATA)), excelData,
-						kpiRequest);
-				mapTmp.get(node.getId()).setValue(trendValueMap);
-			}
-		});
+							currentDate = getNextRangeDate(kpiRequest, currentDate);
+						}
+						// Populates data in Excel for validation for tickets created before
+						populateExcelDataObject(
+								requestTrackerId,
+								jiraHistoryRCAAndDateWiseIssueMap,
+								node,
+								projectWiseRCAList,
+								new HashSet<>(
+										(List<KanbanIssueCustomHistory>) resultListMap.get(JIRA_ISSUE_HISTORY_DATA)),
+								excelData,
+								kpiRequest);
+						mapTmp.get(node.getId()).setValue(trendValueMap);
+					}
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.NET_OPEN_TICKET_COUNT_BY_RCA.getColumns());
 	}
@@ -219,7 +244,8 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @return Long
 	 */
 	@Override
-	public Long calculateKPIMetrics(Map<String, Map<String, Map<String, Set<String>>>> subCategoryMap) {
+	public Long calculateKPIMetrics(
+			Map<String, Map<String, Map<String, Set<String>>>> subCategoryMap) {
 		return subCategoryMap == null ? 0L : subCategoryMap.size();
 	}
 
@@ -229,18 +255,18 @@ public class NetOpenTicketCountByRCAServiceImpl
 	}
 
 	/**
-	 * Total tickets data as per given date range and type If range is DAYS then
-	 * filter data as consider data is currentDate data. If range Weeks then filter
-	 * data as consider sunday data for given week data and If range Month then
-	 * Filter data as consider last month data for given month data. If range date
-	 * is after than today date then consider as today date for data
+	 * Total tickets data as per given date range and type If range is DAYS then filter data as
+	 * consider data is currentDate data. If range Weeks then filter data as consider sunday data for
+	 * given week data and If range Month then Filter data as consider last month data for given month
+	 * data. If range date is after than today date then consider as today date for data
 	 *
 	 * @param jiraHistoryRCAAndDateWiseIssueMap
 	 * @param rcaList
 	 * @param currentDate
 	 */
 	public Map<String, Long> filterKanbanDataBasedOnDateAndRCAWise(
-			Map<String, Map<String, Set<String>>> jiraHistoryRCAAndDateWiseIssueMap, Set<String> rcaList,
+			Map<String, Map<String, Set<String>>> jiraHistoryRCAAndDateWiseIssueMap,
+			Set<String> rcaList,
 			LocalDate currentDate) {
 		String date;
 		if (currentDate.isAfter(LocalDate.now())) {
@@ -249,11 +275,17 @@ public class NetOpenTicketCountByRCAServiceImpl
 			date = currentDate.toString();
 		}
 		Map<String, Long> projectRCAMap = new HashMap<>();
-		rcaList.forEach(rca -> {
-			Set<String> ids = jiraHistoryRCAAndDateWiseIssueMap.get(rca).getOrDefault(date, new HashSet<>()).stream()
-					.filter(Objects::nonNull).collect(Collectors.toSet());
-			projectRCAMap.put(rca, Long.valueOf(ids.size()));
-		});
+		rcaList.forEach(
+				rca -> {
+					Set<String> ids =
+							jiraHistoryRCAAndDateWiseIssueMap
+									.get(rca)
+									.getOrDefault(date, new HashSet<>())
+									.stream()
+									.filter(Objects::nonNull)
+									.collect(Collectors.toSet());
+					projectRCAMap.put(rca, Long.valueOf(ids.size()));
+				});
 		rcaList.forEach(rca -> projectRCAMap.computeIfAbsent(rca, val -> 0L));
 		return projectRCAMap;
 	}
@@ -266,20 +298,33 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @param projectName
 	 * @param date
 	 */
-	private void populateProjectFilterWiseDataMap(Map<String, Long> projectWiseRCAMap,
-			Map<String, List<DataCount>> projectFilterWiseDataMap, String projectName, String date) {
+	private void populateProjectFilterWiseDataMap(
+			Map<String, Long> projectWiseRCAMap,
+			Map<String, List<DataCount>> projectFilterWiseDataMap,
+			String projectName,
+			String date) {
 
 		Map<String, Object> hoverValueMap = new HashMap<>();
-		projectWiseRCAMap.forEach((key, value) -> {
-			hoverValueMap.put(key, value.intValue());
-			DataCount dcObj = getDataCountObject(value, projectName, date, projectName, key, hoverValueMap);
-			projectFilterWiseDataMap.computeIfAbsent(key, k -> new ArrayList<>()).add(dcObj);
-		});
+		projectWiseRCAMap.forEach(
+				(key, value) -> {
+					hoverValueMap.put(key, value.intValue());
+					DataCount dcObj =
+							getDataCountObject(value, projectName, date, projectName, key, hoverValueMap);
+					projectFilterWiseDataMap.computeIfAbsent(key, k -> new ArrayList<>()).add(dcObj);
+				});
 
 		Long aggLineValue = projectWiseRCAMap.values().stream().mapToLong(p -> p).sum();
 
-		projectFilterWiseDataMap.computeIfAbsent(CommonConstant.OVERALL, k -> new ArrayList<>())
-				.add(getDataCountObject(aggLineValue, projectName, date, projectName, CommonConstant.OVERALL, hoverValueMap));
+		projectFilterWiseDataMap
+				.computeIfAbsent(CommonConstant.OVERALL, k -> new ArrayList<>())
+				.add(
+						getDataCountObject(
+								aggLineValue,
+								projectName,
+								date,
+								projectName,
+								CommonConstant.OVERALL,
+								hoverValueMap));
 	}
 
 	/**
@@ -310,8 +355,10 @@ public class NetOpenTicketCountByRCAServiceImpl
 		String range = null;
 		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
 
-			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
-					+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+			range =
+					DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime())
+							+ " to "
+							+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
 			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
@@ -330,7 +377,12 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @param rca
 	 * @param
 	 */
-	private DataCount getDataCountObject(Long value, String projectName, String date, String projectNodeId, String rca,
+	private DataCount getDataCountObject(
+			Long value,
+			String projectName,
+			String date,
+			String projectNodeId,
+			String rca,
 			Map<String, Object> overAllHoverValueMap) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(value));
@@ -351,8 +403,7 @@ public class NetOpenTicketCountByRCAServiceImpl
 	}
 
 	/**
-	 * Populates Validation Data Object for excel. Only Latest today cumulative data
-	 * export in excel
+	 * Populates Validation Data Object for excel. Only Latest today cumulative data export in excel
 	 *
 	 * @param requestTrackerId
 	 * @param jiraHistoryRCAAndDateWiseIssueMap
@@ -361,23 +412,36 @@ public class NetOpenTicketCountByRCAServiceImpl
 	 * @param kanbanJiraIssues
 	 * @param excelData
 	 */
-	private void populateExcelDataObject(String requestTrackerId,
-			Map<String, Map<String, Set<String>>> jiraHistoryRCAAndDateWiseIssueMap, Node node,
-			Set<String> projectWiseRCAList, Set<KanbanIssueCustomHistory> kanbanJiraIssues, List<KPIExcelData> excelData,
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			Map<String, Map<String, Set<String>>> jiraHistoryRCAAndDateWiseIssueMap,
+			Node node,
+			Set<String> projectWiseRCAList,
+			Set<KanbanIssueCustomHistory> kanbanJiraIssues,
+			List<KPIExcelData> excelData,
 			KpiRequest kpiRequest) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				MapUtils.isNotEmpty(jiraHistoryRCAAndDateWiseIssueMap)) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+				&& MapUtils.isNotEmpty(jiraHistoryRCAAndDateWiseIssueMap)) {
 			String dateProjectKey = node.getProjectHierarchy().getNodeDisplayName();
-			String date = getRange(
-					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(DateUtil.getTodayTime(), kpiRequest.getDuration()), kpiRequest);
-			KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(dateProjectKey, jiraHistoryRCAAndDateWiseIssueMap,
-					projectWiseRCAList, kanbanJiraIssues, excelData, date, KPICode.NET_OPEN_TICKET_COUNT_BY_RCA.getKpiId());
+			String date =
+					getRange(
+							KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+									DateUtil.getTodayTime(), kpiRequest.getDuration()),
+							kpiRequest);
+			KPIExcelUtility.prepareExcelForKanbanCumulativeDataMap(
+					dateProjectKey,
+					jiraHistoryRCAAndDateWiseIssueMap,
+					projectWiseRCAList,
+					kanbanJiraIssues,
+					excelData,
+					date,
+					KPICode.NET_OPEN_TICKET_COUNT_BY_RCA.getKpiId());
 		}
 	}
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI51(),
-				KPICode.NET_OPEN_TICKET_COUNT_BY_RCA.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI51(), KPICode.NET_OPEN_TICKET_COUNT_BY_RCA.getKpiId());
 	}
 }

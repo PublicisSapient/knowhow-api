@@ -55,24 +55,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 public class UserTokenDeletionControllerApplication {
-	@Autowired
-	private AuthProperties authProperties;
+	@Autowired private AuthProperties authProperties;
 
-	@Autowired
-	private CookieUtil cookieUtil;
+	@Autowired private CookieUtil cookieUtil;
 
-	@Autowired
-	private UserInfoService userInfoService;
-	@Autowired
-	private UsersSessionService usersSessionService;
+	@Autowired private UserInfoService userInfoService;
+	@Autowired private UsersSessionService usersSessionService;
 
 	private final UserTokenDeletionService userTokenDeletionService;
 
 	/**
 	 * Instantiates a new User token deletion controller.
 	 *
-	 * @param userTokenDeletionService
-	 *          the user token deletion service
+	 * @param userTokenDeletionService the user token deletion service
 	 */
 	@Autowired
 	public UserTokenDeletionControllerApplication(UserTokenDeletionService userTokenDeletionService) {
@@ -82,12 +77,14 @@ public class UserTokenDeletionControllerApplication {
 	/**
 	 * Logout user from central service.
 	 *
-	 * @param request
-	 *          the request
+	 * @param request the request
 	 */
-	@RequestMapping(value = "/centralUserlogout", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> deleteUserTokenForCentralAuth(HttpServletRequest request,
-			HttpServletResponse response) {
+	@RequestMapping(
+			value = "/centralUserlogout",
+			method = GET,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> deleteUserTokenForCentralAuth(
+			HttpServletRequest request, HttpServletResponse response) {
 		String userName = AuthenticationUtil.getUsernameFromContext();
 		Cookie authCookie = cookieUtil.getAuthCookie(request);
 		String authCookieToken = authCookie.getValue();
@@ -102,7 +99,8 @@ public class UserTokenDeletionControllerApplication {
 		cookieUtil.deleteCookie(request, response, CookieUtil.AUTH_COOKIE);
 		if (cookieClear) {
 			usersSessionService.auditLogout(userName, Status.SUCCESS);
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "Logout Successfully", true));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, "Logout Successfully", true));
 		} else {
 			usersSessionService.auditLogout(userName, Status.FAIL);
 			return ResponseEntity.status(HttpStatus.OK)
@@ -113,11 +111,11 @@ public class UserTokenDeletionControllerApplication {
 	/**
 	 * Logout user from local auth.
 	 *
-	 * @param request
-	 *          the request
+	 * @param request the request
 	 */
 	@RequestMapping(value = "/userlogout", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> deleteUserToken(HttpServletRequest request, HttpServletResponse response) {
+	public ResponseEntity<ServiceResponse> deleteUserToken(
+			HttpServletRequest request, HttpServletResponse response) {
 		String userName = AuthenticationUtil.getUsernameFromContext();
 		log.info("UserTokenDeletionController::deleteUserToken start");
 		String token = StringUtils.removeStart(request.getHeader("Authorization"), "Bearer ");

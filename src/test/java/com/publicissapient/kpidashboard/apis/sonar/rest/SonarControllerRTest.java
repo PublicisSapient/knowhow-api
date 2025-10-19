@@ -50,17 +50,13 @@ public class SonarControllerRTest {
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private SonarServiceR sonarService;
+	@Mock private SonarServiceR sonarService;
 
-	@Mock
-	private SonarServiceKanbanR sonarServiceKanban;
+	@Mock private SonarServiceKanbanR sonarServiceKanban;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@InjectMocks
-	private SonarController sonarController;
+	@InjectMocks private SonarController sonarController;
 
 	@Before
 	public void before() {
@@ -107,7 +103,8 @@ public class SonarControllerRTest {
 		kpiElementList.add(kpiElement);
 
 		when(sonarService.process(Mockito.any())).thenReturn(kpiElementList);
-		mockMvc.perform(post("/sonar/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/sonar/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -125,19 +122,36 @@ public class SonarControllerRTest {
 						+ "}";
 		// @formatter:on
 
-		mockMvc.perform(post("/sonar/kpi").contentType(MediaType.APPLICATION_JSON).content(request)).andDo(print())
+		mockMvc
+				.perform(post("/sonar/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+				.andDo(print())
 				.andExpect(status().isBadRequest());
 	}
 
 	@Test
 	public void getSonarKPIMetricKanbanReturnsValue() throws Exception {
 
-		String request = "{\n" + "  \"level\": 2,\n" + "  \"ids\": [\n" + "    \"PR\",\n" + "    \"10304_PR\"\n" + "  ], " +
-				"  \"kpiList\": [\n" + "    {\n" + "      \"id\": \"5b753628d42937acd035b7ef\",\n" +
-				"      \"kpiId\": \"kpi64\",\n" + "      \"kpiName\": \"Sonar Violations Kanban\",\n" +
-				"      \"isDeleted\": \"False\",\n" + "      \"kpiCategory\": \"Quality\",\n" +
-				"      \"kpiUnit\": \"SQALE Rating\",\n" + "      \"kpiSource\": \"SonarKanban\",\n" +
-				"      \"maxValue\": \"\",\n" + "      \"chartType\": \"gaugeChart\"\n" + "    }\n" + "  ]" + "}";
+		String request =
+				"{\n"
+						+ "  \"level\": 2,\n"
+						+ "  \"ids\": [\n"
+						+ "    \"PR\",\n"
+						+ "    \"10304_PR\"\n"
+						+ "  ], "
+						+ "  \"kpiList\": [\n"
+						+ "    {\n"
+						+ "      \"id\": \"5b753628d42937acd035b7ef\",\n"
+						+ "      \"kpiId\": \"kpi64\",\n"
+						+ "      \"kpiName\": \"Sonar Violations Kanban\",\n"
+						+ "      \"isDeleted\": \"False\",\n"
+						+ "      \"kpiCategory\": \"Quality\",\n"
+						+ "      \"kpiUnit\": \"SQALE Rating\",\n"
+						+ "      \"kpiSource\": \"SonarKanban\",\n"
+						+ "      \"maxValue\": \"\",\n"
+						+ "      \"chartType\": \"gaugeChart\"\n"
+						+ "    }\n"
+						+ "  ]"
+						+ "}";
 
 		KpiRequest req = new KpiRequest();
 		req.setLevel(0);
@@ -150,7 +164,8 @@ public class SonarControllerRTest {
 		kpiElementList.add(kpiElement);
 
 		when(sonarServiceKanban.process(Mockito.any())).thenReturn(kpiElementList);
-		mockMvc.perform(post("/sonarkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+		mockMvc
+				.perform(post("/sonarkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -168,7 +183,9 @@ public class SonarControllerRTest {
 						+ "}";
 		// @formatter:on
 
-		mockMvc.perform(post("/sonarkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request)).andDo(print())
+		mockMvc
+				.perform(post("/sonarkanban/kpi").contentType(MediaType.APPLICATION_JSON).content(request))
+				.andDo(print())
 				.andExpect(status().isBadRequest());
 	}
 }

@@ -36,17 +36,13 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 @ExtendWith(MockitoExtension.class)
 public class ExecutiveDashboardStrategyTest {
 
-	@Mock
-	private ExecutiveDashboardStrategyFactory strategyFactory;
+	@Mock private ExecutiveDashboardStrategyFactory strategyFactory;
 
-	@Mock
-	private KanbanExecutiveDashboardStrategy kanbanStrategy;
+	@Mock private KanbanExecutiveDashboardStrategy kanbanStrategy;
 
-	@Mock
-	private ScrumExecutiveDashboardStrategy scrumStrategy;
+	@Mock private ScrumExecutiveDashboardStrategy scrumStrategy;
 
-	@Mock
-	private KpiRequest kpiRequest;
+	@Mock private KpiRequest kpiRequest;
 
 	@Before
 	public void setUp() {
@@ -57,8 +53,8 @@ public class ExecutiveDashboardStrategyTest {
 
 	@Test
 	public void testKanbanStrategy() {
-		ExecutiveDashboardResponseDTO response = strategyFactory.getStrategy("kanban")
-				.getExecutiveDashboard(kpiRequest);
+		ExecutiveDashboardResponseDTO response =
+				strategyFactory.getStrategy("kanban").getExecutiveDashboard(kpiRequest);
 
 		// Then
 		assertNull(response);
@@ -67,7 +63,8 @@ public class ExecutiveDashboardStrategyTest {
 
 	@Test
 	public void testScrumStrategy() {
-		ExecutiveDashboardResponseDTO response = strategyFactory.getStrategy("scrum").getExecutiveDashboard(kpiRequest);
+		ExecutiveDashboardResponseDTO response =
+				strategyFactory.getStrategy("scrum").getExecutiveDashboard(kpiRequest);
 		assertNull(response);
 		verify(scrumStrategy).getExecutiveDashboard(kpiRequest);
 	}
@@ -80,9 +77,12 @@ public class ExecutiveDashboardStrategyTest {
 				.thenThrow(new IllegalArgumentException("No strategy found for type: " + invalidType));
 
 		// When / Then
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			strategyFactory.getStrategy(invalidType);
-		});
+		Exception exception =
+				assertThrows(
+						IllegalArgumentException.class,
+						() -> {
+							strategyFactory.getStrategy(invalidType);
+						});
 
 		assertEquals("No strategy found for type: " + invalidType, exception.getMessage());
 	}
