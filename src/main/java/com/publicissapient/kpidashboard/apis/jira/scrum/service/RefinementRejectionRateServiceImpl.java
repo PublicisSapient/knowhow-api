@@ -475,9 +475,11 @@ public class RefinementRejectionRateServiceImpl
 	private Map<String, List<Map<String, Object>>> getProjectWiseDataMap(
 			Node node, Map<String, Object> resultMap) {
 		Map<String, List<Map<String, Object>>> dataMap = new HashMap<>();
-		for (String map : resultMap.keySet()) {
+
+		for (Map.Entry<String, Object> entry : resultMap.entrySet()) {
+			String key = entry.getKey();
 			List<JiraIssue> dataList =
-					((List<JiraIssue>) resultMap.get(map))
+					((List<JiraIssue>) entry.getValue())
 							.stream()
 									.filter(
 											f ->
@@ -485,11 +487,10 @@ public class RefinementRejectionRateServiceImpl
 															.equalsIgnoreCase(
 																	node.getProjectFilter().getBasicProjectConfigId().toString()))
 									.collect(Collectors.toList());
+
 			Map<String, Object> subMap = new HashMap<>();
-			subMap.put(map, dataList);
-			if (null == dataMap.get(node.getId())) {
-				dataMap.put(node.getId(), new ArrayList<>());
-			}
+			subMap.put(key, dataList);
+			dataMap.computeIfAbsent(node.getId(), k -> new ArrayList<>());
 			dataMap.get(node.getId()).add(subMap);
 		}
 		return dataMap;
