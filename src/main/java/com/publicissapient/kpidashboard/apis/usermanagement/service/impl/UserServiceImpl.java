@@ -16,9 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.service.impl;
 
-import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
-import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -26,19 +24,22 @@ import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserRes
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
-import com.publicissapient.kpidashboard.common.model.rbac.*;
+import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
+import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
+import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 /**
@@ -91,8 +92,8 @@ public class UserServiceImpl implements UserService {
                 userInfo.setProjectsAccess(Collections.emptyList());
             else if(roles.contains(Constant.ROLE_PROJECT_ADMIN)){
 
-                UserInfo currentUserDoc = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
-                List<ProjectsAccess> mappedProjects = currentUserDoc.getProjectsAccess().stream()
+                UserInfo currentUserInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
+                List<ProjectsAccess> mappedProjects = currentUserInfo.getProjectsAccess().stream()
                         .filter(p -> p.getRole().equals(Constant.ROLE_PROJECT_ADMIN))
                         .map(projectsAccess ->
                         {

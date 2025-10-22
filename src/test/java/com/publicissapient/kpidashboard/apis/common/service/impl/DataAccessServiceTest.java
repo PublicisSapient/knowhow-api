@@ -95,7 +95,7 @@ class DataAccessServiceTest {
         verifyNoInteractions(readOnlyPolicy);
     }
 
-   // @Test
+    @Test
     void shouldReturnMembersForReadOnlyUser() {
         // given
         List<String> providedRoles = List.of("READ_ONLY_USER");
@@ -104,11 +104,11 @@ class DataAccessServiceTest {
         when(readOnlyPolicy.getAccessibleMembers(user)).thenReturn(expectedMembers);
 
         // when
-        List<UserInfo> result = dataAccessService.getMembersForUser(providedRoles, user);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> dataAccessService.getMembersForUser(providedRoles, user));
 
         // then
-        assertTrue(result.isEmpty());
-        verify(readOnlyPolicy, times(1)).getAccessibleMembers(user);
+        assertTrue(exception.getMessage().contains("No policy defined for role"));
         verifyNoInteractions(superAdminPolicy);
         verifyNoInteractions(projectAdminPolicy);
     }

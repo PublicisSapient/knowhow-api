@@ -245,7 +245,7 @@ public class UserInfoServiceImplTest {
 		assertEquals(authType, result.getAuthType());
 	}
 
-	UserInfo userInfoCreation(){
+	UserInfo createUserInfo(){
 		ProjectsAccess pa = new ProjectsAccess();
 		pa.setRole(ROLE_SUPERADMIN);
 		pa.setAccessNodes(new ArrayList<>());
@@ -266,7 +266,7 @@ public class UserInfoServiceImplTest {
 	@Test
 	public void getAllUserInfoNoData() {
 
-		UserInfo testUser = userInfoCreation();
+		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
 		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser())).thenReturn(testUser);
 
