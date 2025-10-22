@@ -22,20 +22,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AzureController {
 
-	@Autowired
-	private AzureToolConfigServiceImpl azureToolConfigService;
+	@Autowired private AzureToolConfigServiceImpl azureToolConfigService;
 
 	/**
-	 * @param connectionId
-	 *          the Azure server connection details
+	 * @param connectionId the Azure server connection details
 	 * @return @{@code ServiceResponse}
 	 */
-	@GetMapping(value = "/azure/pipeline/{connectionId}/{version}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getAzurePipelineNameAndDefinitionIdList(@PathVariable String connectionId,
-			@PathVariable String version) {
+	@GetMapping(
+			value = "/azure/pipeline/{connectionId}/{version}",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getAzurePipelineNameAndDefinitionIdList(
+			@PathVariable String connectionId, @PathVariable String version) {
 		ServiceResponse response;
-		List<AzurePipelinesResponseDTO> pipelinesResponseList = azureToolConfigService
-				.getAzurePipelineNameAndDefinitionIdList(connectionId, version);
+		List<AzurePipelinesResponseDTO> pipelinesResponseList =
+				azureToolConfigService.getAzurePipelineNameAndDefinitionIdList(connectionId, version);
 		if (CollectionUtils.isEmpty(pipelinesResponseList)) {
 			response = new ServiceResponse(false, "No Pipelines details found", null);
 		} else {
@@ -45,19 +45,23 @@ public class AzureController {
 	}
 
 	/**
-	 * @param connectionId
-	 *          the Azure connection details
+	 * @param connectionId the Azure connection details
 	 * @return @{@code ServiceResponse}
 	 */
-	@GetMapping(value = "/azure/release/{connectionId}/6.0", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getAzureReleaseNameAndDefinitionIdList(@PathVariable String connectionId) {
+	@GetMapping(
+			value = "/azure/release/{connectionId}/6.0",
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getAzureReleaseNameAndDefinitionIdList(
+			@PathVariable String connectionId) {
 		ServiceResponse response;
-		List<AzurePipelinesResponseDTO> releasesResponseList = azureToolConfigService
-				.getAzureReleaseNameAndDefinitionIdList(connectionId);
+		List<AzurePipelinesResponseDTO> releasesResponseList =
+				azureToolConfigService.getAzureReleaseNameAndDefinitionIdList(connectionId);
 		if (CollectionUtils.isEmpty(releasesResponseList)) {
 			response = new ServiceResponse(false, "No Release Pipeline details found", null);
 		} else {
-			response = new ServiceResponse(true, "Fetched Release Pipeline details Successfully", releasesResponseList);
+			response =
+					new ServiceResponse(
+							true, "Fetched Release Pipeline details Successfully", releasesResponseList);
 		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}

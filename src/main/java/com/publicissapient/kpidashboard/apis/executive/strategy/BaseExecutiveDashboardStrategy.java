@@ -37,7 +37,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +44,7 @@ import org.springframework.http.HttpStatus;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiencyService;
@@ -63,11 +63,7 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Base abstract class for executive dashboard strategies that provides common
- * functionality.
- */
-
+/** Base abstract class for executive dashboard strategies that provides common functionality. */
 @Slf4j
 @RequiredArgsConstructor
 public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboardStrategy {
@@ -79,7 +75,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	protected final ToolKpiMaturity toolKpiMaturity;
 	protected final KpiCategoryRepository kpiCategoryRepository;
 	protected final ConfigHelperService configHelperService;
-    protected final CustomApiConfig customApiConfig;
+	protected final CustomApiConfig customApiConfig;
 
 	protected abstract Executor getExecutor();
 
@@ -90,16 +86,24 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 
 	public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
 		ExecutorService overallExecutor = Executors.newSingleThreadExecutor();
-		Future<ExecutiveDashboardResponseDTO> future = overallExecutor.submit(() -> fetchDashboardData(request));
+		Future<ExecutiveDashboardResponseDTO> future =
+				overallExecutor.submit(() -> fetchDashboardData(request));
 		try {
-			log.info(">>> About to call future.get() with timeout: {} minutes", customApiConfig.getExecutiveTimeoutMinutes());
-			ExecutiveDashboardResponseDTO dto = future.get(customApiConfig.getExecutiveTimeoutMinutes(), TimeUnit.MINUTES);
+			log.info(
+					">>> About to call future.get() with timeout: {} minutes",
+					customApiConfig.getExecutiveTimeoutMinutes());
+			ExecutiveDashboardResponseDTO dto =
+					future.get(customApiConfig.getExecutiveTimeoutMinutes(), TimeUnit.MINUTES);
 			log.info(">>> Future completed, returning DTO = {}", dto);
 			return dto;
 		} catch (TimeoutException e) {
 			future.cancel(true);
-			throw new ExecutiveDataException("Service taking longer than expected (>" + customApiConfig.getExecutiveTimeoutMinutes() + " min), try again later",
-					HttpStatus.REQUEST_TIMEOUT, e);
+			throw new ExecutiveDataException(
+					"Service taking longer than expected (>"
+							+ customApiConfig.getExecutiveTimeoutMinutes()
+							+ " min), try again later",
+					HttpStatus.REQUEST_TIMEOUT,
+					e);
 		} catch (ExecutionException e) {
 			throw new ExecutiveDataException("Strategy " + strategyType + " failed", e.getCause());
 		} catch (InterruptedException e) {
@@ -111,11 +115,10 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	}
 
 	/**
-	 * Template method to be implemented by concrete strategies. Contains the
-	 * specific logic for fetching dashboard data.
+	 * Template method to be implemented by concrete strategies. Contains the specific logic for
+	 * fetching dashboard data.
 	 *
-	 * @param kpiRequest
-	 *            the KPI request
+	 * @param kpiRequest the KPI request
 	 * @return the executive dashboard response
 	 */
 	protected abstract ExecutiveDashboardResponseDTO fetchDashboardData(KpiRequest kpiRequest);
@@ -123,8 +126,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	/**
 	 * Gets project node IDs from KPI request.
 	 *
-	 * @param kpiRequest
-	 *            the KPI request
+	 * @param kpiRequest the KPI request
 	 * @return list of project node IDs
 	 */
 	protected List<String> getRequiredNodeIds(KpiRequest kpiRequest) {
@@ -135,8 +137,7 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 	/**
 	 * Gets project configurations by node IDs.
 	 *
-	 * @param projectNodeIds
-	 *            list of project node IDs
+	 * @param projectNodeIds list of project node IDs
 	 * @return map of project node ID to project configuration
 	 */
 	@NotNull
@@ -146,23 +147,36 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				.collect(Collectors.toMap(OrganizationHierarchy::getNodeId, config -> config));
 	}
 
-	protected Map<String, Map<String, String>> processProjectBatch(List<String> uniqueIds, KpiRequest kpiRequest,
-			Map<String, OrganizationHierarchy> hierarchyMap, Set<String> boards, boolean isKanban) {
+	protected Map<String, Map<String, String>> processProjectBatch(
+			List<String> uniqueIds,
+			KpiRequest kpiRequest,
+			Map<String, OrganizationHierarchy> hierarchyMap,
+			Set<String> boards,
+			boolean isKanban) {
 
 		Map<String, Map<String, String>> batchResults = new LinkedHashMap<>();
 
 		// Preload all user board configs once per project
-		Map<String, UserBoardConfigDTO> projectBoardConfigs = uniqueIds.stream()
-				.collect(Collectors.toMap(projectId -> projectId, projectId -> {
-					try {
-						ProjectListRequested projectListRequest = new ProjectListRequested();
-						projectListRequest.setBasicProjectConfigIds(Collections.singletonList(""));
-						return userBoardConfigService.getBoardConfig(ConfigLevel.USER, projectListRequest);
-					} catch (NullPointerException e) {
-						log.error("Failed to load board config for project {}: {}", projectId, e.getMessage(), e);
-						return null;
-					}
-				}));
+		Map<String, UserBoardConfigDTO> projectBoardConfigs =
+				uniqueIds.stream()
+						.collect(
+								Collectors.toMap(
+										projectId -> projectId,
+										projectId -> {
+											try {
+												ProjectListRequested projectListRequest = new ProjectListRequested();
+												projectListRequest.setBasicProjectConfigIds(Collections.singletonList(""));
+												return userBoardConfigService.getBoardConfig(
+														ConfigLevel.USER, projectListRequest);
+											} catch (NullPointerException e) {
+												log.error(
+														"Failed to load board config for project {}: {}",
+														projectId,
+														e.getMessage(),
+														e);
+												return null;
+											}
+										}));
 		String uniqueHierarchyId = "";
 		try {
 			for (String uniqueId : uniqueIds) {
@@ -174,14 +188,17 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 				UserBoardConfigDTO config = projectBoardConfigs.get(uniqueId);
 
 				if (config != null) {
-					Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis = getBoardWiseUserBoardConfig(boards,
-							uniqueId, config, isKanban);
+					Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis =
+							getBoardWiseUserBoardConfig(boards, uniqueId, config, isKanban);
 
 					if (toolToBoardKpis != null && !toolToBoardKpis.isEmpty()) {
 						// Process KPIs for this project
-						processKpis(kpiRequest, boards, uniqueId, toolToBoardKpis, batchResults, organizationHierarchy);
+						processKpis(
+								kpiRequest, boards, uniqueId, toolToBoardKpis, batchResults, organizationHierarchy);
 					} else {
-						log.warn("No KPIs to process for project {} - {}", uniqueId,
+						log.warn(
+								"No KPIs to process for project {} - {}",
+								uniqueId,
 								organizationHierarchy.getNodeDisplayName());
 					}
 				} else {
@@ -197,27 +214,37 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		}
 
 		return batchResults;
-
 	}
 
-	private void processKpis(KpiRequest kpiRequest, Set<String> boards, String uniqueId,
-			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Map<String, Map<String, String>> batchResults,
-			OrganizationHierarchy organizationHierarchy) throws InterruptedException {
-		Map<String, String> projectResults = processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
+	private void processKpis(
+			KpiRequest kpiRequest,
+			Set<String> boards,
+			String uniqueId,
+			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis,
+			Map<String, Map<String, String>> batchResults,
+			OrganizationHierarchy organizationHierarchy)
+			throws InterruptedException {
+		Map<String, String> projectResults =
+				processToolKpis(uniqueId, kpiRequest, toolToBoardKpis, boards);
 		checkInterrupted();
 
 		if (!projectResults.isEmpty()) {
 			batchResults.put(uniqueId, projectResults);
-			log.info("Processed project {} successfully - {}", uniqueId, organizationHierarchy.getNodeDisplayName());
+			log.info(
+					"Processed project {} successfully - {}",
+					uniqueId,
+					organizationHierarchy.getNodeDisplayName());
 		} else {
-			log.warn("No KPI results for project {} - {}", uniqueId, organizationHierarchy.getNodeDisplayName());
+			log.warn(
+					"No KPI results for project {} - {}",
+					uniqueId,
+					organizationHierarchy.getNodeDisplayName());
 		}
 	}
 
-	private static Map<String, Map<String, List<KpiMaster>>> getBoardWiseUserBoardConfig(Set<String> boards,
-			String projectNodeId, UserBoardConfigDTO config, boolean isKanban) {
-		if (config == null)
-			return new HashMap<>();
+	private static Map<String, Map<String, List<KpiMaster>>> getBoardWiseUserBoardConfig(
+			Set<String> boards, String projectNodeId, UserBoardConfigDTO config, boolean isKanban) {
+		if (config == null) return new HashMap<>();
 		List<BoardDTO> boardDTOList;
 		if (isKanban) {
 			boardDTOList = config.getKanban();
@@ -230,24 +257,41 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 			return new HashMap<>();
 		}
 
-		return boardDTOList.stream().filter(board -> boards.contains(board.getBoardName().toLowerCase().trim()))
+		return boardDTOList.stream()
+				.filter(board -> boards.contains(board.getBoardName().toLowerCase().trim()))
 				.filter(board -> CollectionUtils.isNotEmpty(board.getKpis()))
-				.flatMap(board -> board.getKpis().stream()
-						.filter(kpi -> kpi.isShown() && kpi.getIsEnabled() && kpi.getKpiDetail() != null
-								&& kpi.getKpiDetail().isCalculateMaturity())
-						.map(kpi -> Map.entry(kpi.getKpiDetail().getKpiSource(), // outer key: KPI source
-								Map.entry(board.getBoardName().trim(), // inner key: board name
-										kpi.getKpiDetail() // value: kpiId
-								)))).collect(Collectors.groupingBy(Map.Entry::getKey, // group by kpiSource
-										Collectors.flatMapping(entry -> Stream.of(entry.getValue()),
-												Collectors.groupingBy(Map.Entry::getKey, // inner map key: boardName
-														Collectors.mapping(Map.Entry::getValue,
-																Collectors.toList())))));
-
+				.flatMap(
+						board ->
+								board.getKpis().stream()
+										.filter(
+												kpi ->
+														kpi.isShown()
+																&& kpi.getIsEnabled()
+																&& kpi.getKpiDetail() != null
+																&& kpi.getKpiDetail().isCalculateMaturity())
+										.map(
+												kpi ->
+														Map.entry(
+																kpi.getKpiDetail().getKpiSource(), // outer key: KPI source
+																Map.entry(
+																		board.getBoardName().trim(), // inner key: board name
+																		kpi.getKpiDetail() // value: kpiId
+																		))))
+				.collect(
+						Collectors.groupingBy(
+								Map.Entry::getKey, // group by kpiSource
+								Collectors.flatMapping(
+										entry -> Stream.of(entry.getValue()),
+										Collectors.groupingBy(
+												Map.Entry::getKey, // inner map key: boardName
+												Collectors.mapping(Map.Entry::getValue, Collectors.toList())))));
 	}
 
-	protected Map<String, String> processToolKpis(String projectNodeId, KpiRequest kpiRequest,
-			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis, Set<String> boards) {
+	protected Map<String, String> processToolKpis(
+			String projectNodeId,
+			KpiRequest kpiRequest,
+			Map<String, Map<String, List<KpiMaster>>> toolToBoardKpis,
+			Set<String> boards) {
 
 		Map<String, String> results = new HashMap<>();
 		Map<String, List<KpiElement>> boardWiseResults = new HashMap<>();
@@ -255,59 +299,90 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 			boardWiseResults.put(board, new ArrayList<>());
 		}
 
-		List<CompletableFuture<Map<String, List<KpiElement>>>> futures = toolToBoardKpis.entrySet().stream()
-				.map(entry -> CompletableFuture.supplyAsync(() -> {
-					try {
-						String tool = entry.getKey();
-						Map<String, List<KpiMaster>> boardKpisForTool = entry.getValue();
+		List<CompletableFuture<Map<String, List<KpiElement>>>> futures =
+				toolToBoardKpis.entrySet().stream()
+						.map(
+								entry ->
+										CompletableFuture.supplyAsync(
+														() -> {
+															try {
+																String tool = entry.getKey();
+																Map<String, List<KpiMaster>> boardKpisForTool = entry.getValue();
 
-						// Merge all boards’ KPIs into one request
-						List<KpiMaster> mergedKpis = boardKpisForTool.values().stream().flatMap(List::stream).toList();
-						Map<String, List<KpiMaster>> sourceWiseKpiMaster = Map.of(tool, mergedKpis);
+																// Merge all boards’ KPIs into one request
+																List<KpiMaster> mergedKpis =
+																		boardKpisForTool.values().stream()
+																				.flatMap(List::stream)
+																				.toList();
+																Map<String, List<KpiMaster>> sourceWiseKpiMaster =
+																		Map.of(tool, mergedKpis);
 
-						// Clone request for thread-safety
-						KpiRequest cloneKpiRequest = new KpiRequest(kpiRequest);
-						createKpiRequest(cloneKpiRequest, projectNodeId);
+																// Clone request for thread-safety
+																KpiRequest cloneKpiRequest = new KpiRequest(kpiRequest);
+																createKpiRequest(cloneKpiRequest, projectNodeId);
 
-						// Compute KPIs
-						List<KpiElement> kpiResults = toolKpiMaturity.getKpiElements(cloneKpiRequest,
-								sourceWiseKpiMaster);
+																// Compute KPIs
+																List<KpiElement> kpiResults =
+																		toolKpiMaturity.getKpiElements(
+																				cloneKpiRequest, sourceWiseKpiMaster);
 
-						// Map results back to boards
-						Map<String, List<KpiElement>> resultsByBoard = new HashMap<>();
-						boardKpisForTool.forEach((boardName, masterList) -> {
-							List<String> kpiList = masterList.stream().map(KpiMaster::getKpiId).toList();
-							List<KpiElement> boardResults = kpiResults.stream()
-									.filter(r -> kpiList.contains(r.getKpiId())).toList();
-							resultsByBoard.put(boardName, boardResults);
-						});
-						return resultsByBoard;
+																// Map results back to boards
+																Map<String, List<KpiElement>> resultsByBoard = new HashMap<>();
+																boardKpisForTool.forEach(
+																		(boardName, masterList) -> {
+																			List<String> kpiList =
+																					masterList.stream().map(KpiMaster::getKpiId).toList();
+																			List<KpiElement> boardResults =
+																					kpiResults.stream()
+																							.filter(r -> kpiList.contains(r.getKpiId()))
+																							.toList();
+																			resultsByBoard.put(boardName, boardResults);
+																		});
+																return resultsByBoard;
 
-					} catch (Exception e) {
-						log.error("Error processing tool {} for project {}: {}", entry.getKey(), projectNodeId,
-								e.getMessage(), e);
-						return Map.<String, List<KpiElement>>of();
-					}
-				}, getExecutor())
-						// Enforce timeout per tool
-						.orTimeout(customApiConfig.getExecutiveTimeoutMinutes(), TimeUnit.MINUTES).exceptionally(ex -> {
-							log.error("Tool computation timed out for project {} tool {}: {}", projectNodeId,
-									entry.getKey(), ex.getMessage());
-							return Map.of();
-						}))
-				.toList();
+															} catch (Exception e) {
+																log.error(
+																		"Error processing tool {} for project {}: {}",
+																		entry.getKey(),
+																		projectNodeId,
+																		e.getMessage(),
+																		e);
+																return Map.<String, List<KpiElement>>of();
+															}
+														},
+														getExecutor())
+												// Enforce timeout per tool
+												.orTimeout(customApiConfig.getExecutiveTimeoutMinutes(), TimeUnit.MINUTES)
+												.exceptionally(
+														ex -> {
+															log.error(
+																	"Tool computation timed out for project {} tool {}: {}",
+																	projectNodeId,
+																	entry.getKey(),
+																	ex.getMessage());
+															return Map.of();
+														}))
+						.toList();
 
 		// Wait for all tool computations
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-		futures.stream().map(CompletableFuture::join).forEach(toolResultMap -> toolResultMap
-				.forEach((board, kpis) -> boardWiseResults.computeIfPresent(board.toLowerCase(), (key, value) -> {
-					value.addAll(kpis);
-					return value;
-				})));
+		futures.stream()
+				.map(CompletableFuture::join)
+				.forEach(
+						toolResultMap ->
+								toolResultMap.forEach(
+										(board, kpis) ->
+												boardWiseResults.computeIfPresent(
+														board.toLowerCase(),
+														(key, value) -> {
+															value.addAll(kpis);
+															return value;
+														})));
 
 		// Compute summary per board
-		boardWiseResults.forEach((board, kpiElements) -> results.put(board, computeBoardSummary(kpiElements)));
+		boardWiseResults.forEach(
+				(board, kpiElements) -> results.put(board, computeBoardSummary(kpiElements)));
 
 		return results;
 	}
@@ -317,7 +392,9 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 		strings[0] = projectNodeId;
 		// Set request parameters
 		kpiRequest.setIds(strings);
-		kpiRequest.getSelectedMap().put(kpiRequest.getLabel(), Collections.singletonList(projectNodeId));
+		kpiRequest
+				.getSelectedMap()
+				.put(kpiRequest.getLabel(), Collections.singletonList(projectNodeId));
 	}
 
 	protected String computeBoardSummary(List<KpiElement> elements) {
@@ -325,16 +402,23 @@ public abstract class BaseExecutiveDashboardStrategy implements ExecutiveDashboa
 			return "NA";
 		}
 
-		return String.valueOf(elements.stream().filter(Objects::nonNull).map(KpiElement::getOverallMaturity)
-				.filter(StringUtils::isNotBlank).mapToDouble(Double::parseDouble).filter(a -> a > 0).average()
-				.orElse(0.0));
+		return String.valueOf(
+				elements.stream()
+						.filter(Objects::nonNull)
+						.map(KpiElement::getOverallMaturity)
+						.filter(StringUtils::isNotBlank)
+						.mapToDouble(Double::parseDouble)
+						.filter(a -> a > 0)
+						.average()
+						.orElse(0.0));
 	}
 
 	@NotNull
 	protected Set<String> getBoards() {
-		Set<String> boards = kpiCategoryRepository.findAll().stream()
-				.map(category -> category.getCategoryName().trim().toLowerCase())
-				.collect(Collectors.toCollection(HashSet::new));
+		Set<String> boards =
+				kpiCategoryRepository.findAll().stream()
+						.map(category -> category.getCategoryName().trim().toLowerCase())
+						.collect(Collectors.toCollection(HashSet::new));
 		boards.add("dora");
 		return boards;
 	}

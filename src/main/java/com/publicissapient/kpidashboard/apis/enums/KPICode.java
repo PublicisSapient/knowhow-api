@@ -117,9 +117,9 @@ public enum KPICode {
 	/** Test execution kpi code. */
 	TEST_EXECUTION_AND_PASS_PERCENTAGE("kpi70", KPISource.ZEPHYR.name()),
 	/** Test execution Time kpi code. */
-	TEST_EXECUTION_TIME("kpi196",KPISource.ZEPHYR.name()),
+	TEST_EXECUTION_TIME("kpi196", KPISource.ZEPHYR.name()),
 	/** Test execution Time Kanban kpi code. */
-	TEST_EXECUTION_TIME_KANBAN("kpi197",KPISource.ZEPHYR.name()),
+	TEST_EXECUTION_TIME_KANBAN("kpi197", KPISource.ZEPHYR.name()),
 	/** Test execution kanban kpi code. */
 	TEST_EXECUTION_KANBAN("kpi71", KPISource.ZEPHYRKANBAN.name()),
 	/** Sprint commitment reliability */
@@ -143,8 +143,8 @@ public enum KPICode {
 	/** Missing workLogs kpi code */
 	MISSING_WORK_LOGS("kpi115", KPISource.JIRA.name()),
 	/**
-	 * ACTUAL vs Remaining - add hygiene kpiId in HYGIENE_KPI_LIST variable defined
-	 * in Constant.java class
+	 * ACTUAL vs Remaining - add hygiene kpiId in HYGIENE_KPI_LIST variable defined in Constant.java
+	 * class
 	 */
 	ACTUAL_VS_REMAINING("kpi78", KPISource.JIRA.name()),
 	/** First time pass rate */
@@ -284,38 +284,31 @@ public enum KPICode {
 	INNOVATION_RATE("kpi185", KPISource.BITBUCKET.name()),
 	/** Defect Rate (Developer) */
 	DEFECT_RATE("kpi186", KPISource.BITBUCKET.name()),
-    /**
-     * Late Refinement (Iteration)
-     */
-    LATE_REFINEMENT("kpi187", KPISource.JIRA.name()),
-    /**
-     * Future Late Refinement (Iteration)
-     */
-    NEXT_SPRINT_LATE_REFINEMENT("kpi188", KPISource.JIRA.name()),
-	/**
-	 * Sprint Goals
-	 */
+	/** Late Refinement (Iteration) */
+	LATE_REFINEMENT("kpi187", KPISource.JIRA.name()),
+	/** Future Late Refinement (Iteration) */
+	NEXT_SPRINT_LATE_REFINEMENT("kpi188", KPISource.JIRA.name()),
+	/** Sprint Goals */
 	SPRINT_GOALS("kpi189", KPISource.JIRA.name()),
 
 	/** Defect reopen rate kpi */
 	DEFECT_REOPEN_RATE_QUALITY("kpi190", KPISource.JIRA.name()),
 
 	// do not remove below codes as they are required for test case
-	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()), TEST_JIRA("TEST_JIRA",
-			KPISource.JIRA.name()), TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name()),
+	TEST_SONAR("TEST_SONAR", KPISource.SONAR.name()),
+	TEST_JIRA("TEST_JIRA", KPISource.JIRA.name()),
+	TEST_ZEPHYR("TEST_ZEPHYR", KPISource.ZEPHYR.name()),
 
 	/** Defect severity index kpi */
 	DEFECT_SEVERITY_INDEX("kpi194", KPISource.JIRA.name()),
 
-	/**
-	 * Defects Breached SLAs (Service Level Agreements)
-	 */
+	/** Defects Breached SLAs (Service Level Agreements) */
 	DEFECTS_BREACHED_SLAS("kpi195", KPISource.JIRA.name()),
 
 	/**
-	 * AI Usage Analytics. This is a dummy KPI created only for enabling the interaction with the field mapping
-	 * endpoints required for setting the project configurations based on which some Jira fields will be extracted
-	 * and used in a display.
+	 * AI Usage Analytics. This is a dummy KPI created only for enabling the interaction with the
+	 * field mapping endpoints required for setting the project configurations based on which some
+	 * Jira fields will be extracted and used in a display.
 	 */
 	AI_USAGE_ANALYTICS("kpi198", KPISource.JIRA.name());
 
@@ -333,13 +326,14 @@ public enum KPICode {
 	/**
 	 * Gets kpi.
 	 *
-	 * @param kpiID
-	 *            the kpi id
+	 * @param kpiID the kpi id
 	 * @return the kpi
 	 */
 	public static KPICode getKPI(String kpiID) {
 
-		return Arrays.asList(KPICode.values()).stream().filter(kpi -> kpi.getKpiId().equalsIgnoreCase(kpiID)).findAny()
+		return Arrays.asList(KPICode.values()).stream()
+				.filter(kpi -> kpi.getKpiId().equalsIgnoreCase(kpiID))
+				.findAny()
 				.orElse(INVALID);
 	}
 

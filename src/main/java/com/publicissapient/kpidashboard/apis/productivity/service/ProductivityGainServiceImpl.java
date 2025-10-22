@@ -118,19 +118,27 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		private SupportedKPIHierarchyLevelAggregation supportedKPIHierarchyLevelAggregation;
 
 		private enum XAxisMeasurement {
-			SPRINTS, WEEKS, ITERATION
+			SPRINTS,
+			WEEKS,
+			ITERATION
 		}
 
 		private enum PositiveGainTrend {
-			ASCENDING, DESCENDING
+			ASCENDING,
+			DESCENDING
 		}
 
 		private enum ProcessorType {
-			JIRA, JENKINS, JIRA_ITERATION, BITBUCKET
+			JIRA,
+			JENKINS,
+			JIRA_ITERATION,
+			BITBUCKET
 		}
 
 		private enum SupportedKPIHierarchyLevelAggregation {
-			ALL, PROJECT, SPRINT
+			ALL,
+			PROJECT,
+			SPRINT
 		}
 	}
 
@@ -166,23 +174,31 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	public ServiceResponse processProductivityCalculationRequest(
 			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO) {
 		if (CollectionUtils.isNotEmpty(productivityGainConfig.getConfigValidationIssues())) {
-			log.error("The following config validations errors occurred: {}",
+			log.error(
+					"The following config validations errors occurred: {}",
 					String.join(CommonConstant.COMMA, productivityGainConfig.getConfigValidationIssues()));
-			throw new InternalServerErrorException("Could not process the productivity calculation request due to "
-					+ "incorrect service configuration");
+			throw new InternalServerErrorException(
+					"Could not process the productivity calculation request due to "
+							+ "incorrect service configuration");
 		}
-		Set<String> hierarchyNodeIds = getNodeIdsCurrentUserHasAccessToByHierarchyLevel(
-				productivityGainCalculationRequestDTO);
+		Set<String> hierarchyNodeIds =
+				getNodeIdsCurrentUserHasAccessToByHierarchyLevel(productivityGainCalculationRequestDTO);
 
-		Map<String, Set<String>> projectNodeIdSprintNodeIdsMap = constructProjectAndSprintNodeIdsMapForIterationKPIProductivityCalculation(
-				productivityGainCalculationRequestDTO.getParentId());
+		Map<String, Set<String>> projectNodeIdSprintNodeIdsMap =
+				constructProjectAndSprintNodeIdsMapForIterationKPIProductivityCalculation(
+						productivityGainCalculationRequestDTO.getParentId());
 
-		Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap = constructProcessorTypeKpiRequestsMapForAllProductivityCalculationMetrics(
-				productivityGainCalculationRequestDTO.getLevel(), productivityGainCalculationRequestDTO.getLabel(),
-				hierarchyNodeIds, projectNodeIdSprintNodeIdsMap);
+		Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap =
+				constructProcessorTypeKpiRequestsMapForAllProductivityCalculationMetrics(
+						productivityGainCalculationRequestDTO.getLevel(),
+						productivityGainCalculationRequestDTO.getLabel(),
+						hierarchyNodeIds,
+						projectNodeIdSprintNodeIdsMap);
 
 		List<KpiElement> kpiElementList = processAllKpiRequests(processorTypeKpiRequestsMap);
-		return new ServiceResponse(true, "Productivity gain was successfully calculated",
+		return new ServiceResponse(
+				true,
+				"Productivity gain was successfully calculated",
 				calculateProductivityGain(projectNodeIdSprintNodeIdsMap, kpiElementList));
 	}
 
@@ -190,83 +206,120 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	private List<KpiElement> processAllKpiRequests(
 			Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap) {
 		List<KpiElement> kpiElementList = new ArrayList<>();
-		for (Map.Entry<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsEntry : processorTypeKpiRequestsMap
-				.entrySet()) {
+		for (Map.Entry<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsEntry :
+				processorTypeKpiRequestsMap.entrySet()) {
 			switch (processorTypeKpiRequestsEntry.getKey()) {
-			case JIRA -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
-				try {
-					kpiElementList.addAll(cloneKpiElementsFromProcessorResponse(jiraServiceR.process(kpiRequest)));
-				} catch (EntityNotFoundException e) {
-					log.error("Processing Jira KPI Requests failed {}", e.getMessage());
-				}
-			});
-			case JENKINS -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
-				try {
-					kpiElementList.addAll(cloneKpiElementsFromProcessorResponse(jenkinsServiceR.process(kpiRequest)));
-				} catch (EntityNotFoundException e) {
-					log.error("Processing Jenkins KPI Requests failed {}", e.getMessage());
-				}
-			});
-			case BITBUCKET -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
-				try {
-					kpiElementList.addAll(cloneKpiElementsFromProcessorResponse(bitBucketServiceR.process(kpiRequest)));
-				} catch (EntityNotFoundException e) {
-					log.error("Processing Bitbucket KPI Requests failed {}", e.getMessage());
-				}
-			});
-			case JIRA_ITERATION -> processorTypeKpiRequestsEntry.getValue().forEach(kpiRequest -> {
-				try {
-					kpiElementList
-							.addAll(cloneKpiElementsFromProcessorResponse(jiraIterationServiceR.process(kpiRequest)));
-				} catch (EntityNotFoundException e) {
-					log.error("Processing Jira iteration KPI Requests failed {}", e.getMessage());
-				}
-			});
+				case JIRA ->
+						processorTypeKpiRequestsEntry
+								.getValue()
+								.forEach(
+										kpiRequest -> {
+											try {
+												kpiElementList.addAll(
+														cloneKpiElementsFromProcessorResponse(
+																jiraServiceR.process(kpiRequest)));
+											} catch (EntityNotFoundException e) {
+												log.error("Processing Jira KPI Requests failed {}", e.getMessage());
+											}
+										});
+				case JENKINS ->
+						processorTypeKpiRequestsEntry
+								.getValue()
+								.forEach(
+										kpiRequest -> {
+											try {
+												kpiElementList.addAll(
+														cloneKpiElementsFromProcessorResponse(
+																jenkinsServiceR.process(kpiRequest)));
+											} catch (EntityNotFoundException e) {
+												log.error("Processing Jenkins KPI Requests failed {}", e.getMessage());
+											}
+										});
+				case BITBUCKET ->
+						processorTypeKpiRequestsEntry
+								.getValue()
+								.forEach(
+										kpiRequest -> {
+											try {
+												kpiElementList.addAll(
+														cloneKpiElementsFromProcessorResponse(
+																bitBucketServiceR.process(kpiRequest)));
+											} catch (EntityNotFoundException e) {
+												log.error("Processing Bitbucket KPI Requests failed {}", e.getMessage());
+											}
+										});
+				case JIRA_ITERATION ->
+						processorTypeKpiRequestsEntry
+								.getValue()
+								.forEach(
+										kpiRequest -> {
+											try {
+												kpiElementList.addAll(
+														cloneKpiElementsFromProcessorResponse(
+																jiraIterationServiceR.process(kpiRequest)));
+											} catch (EntityNotFoundException e) {
+												log.error(
+														"Processing Jira iteration KPI Requests failed {}", e.getMessage());
+											}
+										});
 			}
 		}
 		return kpiElementList;
 	}
 
-	private Map<String, List<KPIGainTrendCalculationData>> constructCategoryBasedKPIGainTrendCalculationDataMap(
-			Map<String, List<KpiElement>> kpiIdKpiElementsMap, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap) {
-		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationDataMap = new HashMap<>();
+	private Map<String, List<KPIGainTrendCalculationData>>
+			constructCategoryBasedKPIGainTrendCalculationDataMap(
+					Map<String, List<KpiElement>> kpiIdKpiElementsMap,
+					Map<String, Set<String>> projectNodeIdSprintNodeIdsMap) {
+		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationDataMap =
+				new HashMap<>();
 		for (String kpiCategory : productivityGainConfig.getAllConfiguredCategories()) {
-			categoryBasedKPIGainTrendCalculationDataMap.put(kpiCategory,
-					constructGainTrendCalculationDataForAllKPIsInCategory(kpiIdKpiElementsMap,
-							projectNodeIdSprintNodeIdsMap, kpiCategory));
+			categoryBasedKPIGainTrendCalculationDataMap.put(
+					kpiCategory,
+					constructGainTrendCalculationDataForAllKPIsInCategory(
+							kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap, kpiCategory));
 		}
 		return categoryBasedKPIGainTrendCalculationDataMap;
 	}
 
-	private ProductivityGainDTO calculateProductivityGain(Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
+	private ProductivityGainDTO calculateProductivityGain(
+			Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
 			List<KpiElement> kpisFromAllCategories) {
-		Map<String, List<KpiElement>> kpiIdKpiElementsMap = kpisFromAllCategories.stream()
-				.collect(Collectors.groupingBy(KpiElement::getKpiId));
+		Map<String, List<KpiElement>> kpiIdKpiElementsMap =
+				kpisFromAllCategories.stream().collect(Collectors.groupingBy(KpiElement::getKpiId));
 
-		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationData = constructCategoryBasedKPIGainTrendCalculationDataMap(
-				kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap);
+		Map<String, List<KPIGainTrendCalculationData>> categoryBasedKPIGainTrendCalculationData =
+				constructCategoryBasedKPIGainTrendCalculationDataMap(
+						kpiIdKpiElementsMap, projectNodeIdSprintNodeIdsMap);
 
-		KPITrendsDTO kpiTrendsDTO = constructKPITrendsByCategoryBasedKPIGainTrendCalculationDataMap(
-				categoryBasedKPIGainTrendCalculationData);
+		KPITrendsDTO kpiTrendsDTO =
+				constructKPITrendsByCategoryBasedKPIGainTrendCalculationDataMap(
+						categoryBasedKPIGainTrendCalculationData);
 
 		ProductivityGainDTO productivityGainDTO = new ProductivityGainDTO();
 
 		productivityGainDTO.setKpiTrends(kpiTrendsDTO);
 
-		double speedGain = calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_SPEED));
-		double qualityGain = calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_QUALITY));
-		double productivityGain = calculateCategorizedGain(
-				categoryBasedKPIGainTrendCalculationData.get(CATEGORY_PRODUCTIVITY));
-		double efficiencyGain = calculateCategorizedGain(
-				categoryBasedKPIGainTrendCalculationData.get(CATEGORY_EFFICIENCY));
+		double speedGain =
+				calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_SPEED));
+		double qualityGain =
+				calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_QUALITY));
+		double productivityGain =
+				calculateCategorizedGain(
+						categoryBasedKPIGainTrendCalculationData.get(CATEGORY_PRODUCTIVITY));
+		double efficiencyGain =
+				calculateCategorizedGain(categoryBasedKPIGainTrendCalculationData.get(CATEGORY_EFFICIENCY));
 
-		double overallGain = (speedGain * productivityGainConfig.getWeightForCategory(CATEGORY_SPEED))
-				+ (qualityGain * productivityGainConfig.getWeightForCategory(CATEGORY_QUALITY))
-				+ (productivityGain * productivityGainConfig.getWeightForCategory(CATEGORY_PRODUCTIVITY))
-				+ (efficiencyGain * productivityGainConfig.getWeightForCategory(CATEGORY_EFFICIENCY));
+		double overallGain =
+				(speedGain * productivityGainConfig.getWeightForCategory(CATEGORY_SPEED))
+						+ (qualityGain * productivityGainConfig.getWeightForCategory(CATEGORY_QUALITY))
+						+ (productivityGain
+								* productivityGainConfig.getWeightForCategory(CATEGORY_PRODUCTIVITY))
+						+ (efficiencyGain * productivityGainConfig.getWeightForCategory(CATEGORY_EFFICIENCY));
 
-		double overallGainRounded = Math.round((overallGain) * TWO_DECIMAL_ROUNDING_COEFFICIENT)
-				/ TWO_DECIMAL_ROUNDING_COEFFICIENT;
+		double overallGainRounded =
+				Math.round((overallGain) * TWO_DECIMAL_ROUNDING_COEFFICIENT)
+						/ TWO_DECIMAL_ROUNDING_COEFFICIENT;
 
 		CategorizedProductivityGain categorizedProductivityGain = new CategorizedProductivityGain();
 		categorizedProductivityGain.setSpeed(speedGain);
@@ -280,52 +333,64 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		return productivityGainDTO;
 	}
 
-	private Map<String, Set<String>> constructProjectAndSprintNodeIdsMapForIterationKPIProductivityCalculation(
-			String parentId) {
+	private Map<String, Set<String>>
+			constructProjectAndSprintNodeIdsMapForIterationKPIProductivityCalculation(String parentId) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = accountHierarchyServiceImpl
-				.getFilteredList(accountFilterRequest);
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo =
+				accountHierarchyServiceImpl.getFilteredList(accountFilterRequest);
 
 		Set<AccountFilteredData> sprintDataSortedBySprintStartDateDescending;
 
 		Map<String, Set<String>> projectNodeIdSprintNodeIdsMap = new HashMap<>();
 
 		if (StringUtils.isEmpty(parentId)) {
-			sprintDataSortedBySprintStartDateDescending = hierarchyDataUserHasAccessTo.stream()
-					.filter(accountFilteredData -> accountFilteredData.getLevel() == HIERARCHY_LEVEL_SPRINT
-							&& CommonConstant.HIERARCHY_LEVEL_ID_SPRINT
-									.equalsIgnoreCase(accountFilteredData.getLabelName())
-							&& StringUtils.isNotEmpty(accountFilteredData.getSprintEndDate())
-							&& StringUtils.isNotEmpty(accountFilteredData.getSprintStartDate()))
-					.filter(sprintFilteredData -> Instant.parse(sprintFilteredData.getSprintEndDate())
-							.isBefore(Instant.now()))
-					.collect(
-							Collectors
-									.toCollection(
-											() -> new TreeSet<>(Comparator
-													.comparing((AccountFilteredData sprintFilteredData) -> Instant
-															.parse(sprintFilteredData.getSprintStartDate()))
-													.reversed())));
+			sprintDataSortedBySprintStartDateDescending =
+					hierarchyDataUserHasAccessTo.stream()
+							.filter(
+									accountFilteredData ->
+											accountFilteredData.getLevel() == HIERARCHY_LEVEL_SPRINT
+													&& CommonConstant.HIERARCHY_LEVEL_ID_SPRINT.equalsIgnoreCase(
+															accountFilteredData.getLabelName())
+													&& StringUtils.isNotEmpty(accountFilteredData.getSprintEndDate())
+													&& StringUtils.isNotEmpty(accountFilteredData.getSprintStartDate()))
+							.filter(
+									sprintFilteredData ->
+											Instant.parse(sprintFilteredData.getSprintEndDate()).isBefore(Instant.now()))
+							.collect(
+									Collectors.toCollection(
+											() ->
+													new TreeSet<>(
+															Comparator.comparing(
+																			(AccountFilteredData sprintFilteredData) ->
+																					Instant.parse(sprintFilteredData.getSprintStartDate()))
+																	.reversed())));
 		} else {
-			sprintDataSortedBySprintStartDateDescending = computeSprintDataSortedBySprintStartDateDescendingBasedOnParentNodeId(
-					parentId, hierarchyDataUserHasAccessTo);
+			sprintDataSortedBySprintStartDateDescending =
+					computeSprintDataSortedBySprintStartDateDescendingBasedOnParentNodeId(
+							parentId, hierarchyDataUserHasAccessTo);
 		}
-		sprintDataSortedBySprintStartDateDescending.forEach(sprintNodeData -> {
-			projectNodeIdSprintNodeIdsMap.computeIfAbsent(sprintNodeData.getParentId(), v -> new LinkedHashSet<>());
+		sprintDataSortedBySprintStartDateDescending.forEach(
+				sprintNodeData -> {
+					projectNodeIdSprintNodeIdsMap.computeIfAbsent(
+							sprintNodeData.getParentId(), v -> new LinkedHashSet<>());
 
-			if (projectNodeIdSprintNodeIdsMap.get(sprintNodeData.getParentId()).size() < productivityGainConfig
-					.getDataPoints().getCount()) {
-				projectNodeIdSprintNodeIdsMap.get(sprintNodeData.getParentId()).add(sprintNodeData.getNodeId());
-			}
-		});
+					if (projectNodeIdSprintNodeIdsMap.get(sprintNodeData.getParentId()).size()
+							< productivityGainConfig.getDataPoints().getCount()) {
+						projectNodeIdSprintNodeIdsMap
+								.get(sprintNodeData.getParentId())
+								.add(sprintNodeData.getNodeId());
+					}
+				});
 
-		projectNodeIdSprintNodeIdsMap.replaceAll((projectNodeId, sprintNodeIdsSortedBySprintStartDateDescending) -> {
-			List<String> sprintNodeIds = new ArrayList<>(sprintNodeIdsSortedBySprintStartDateDescending);
-			Collections.reverse(sprintNodeIds);
-			return new LinkedHashSet<>(sprintNodeIds);
-		});
+		projectNodeIdSprintNodeIdsMap.replaceAll(
+				(projectNodeId, sprintNodeIdsSortedBySprintStartDateDescending) -> {
+					List<String> sprintNodeIds =
+							new ArrayList<>(sprintNodeIdsSortedBySprintStartDateDescending);
+					Collections.reverse(sprintNodeIds);
+					return new LinkedHashSet<>(sprintNodeIds);
+				});
 
 		return projectNodeIdSprintNodeIdsMap;
 	}
@@ -337,33 +402,40 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
 
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = accountHierarchyServiceImpl
-				.getFilteredList(accountFilterRequest);
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo =
+				accountHierarchyServiceImpl.getFilteredList(accountFilterRequest);
 
 		int requestedLevel = productivityGainCalculationRequestDTO.getLevel();
 		String requestedLabel = productivityGainCalculationRequestDTO.getLabel();
 		String requestedParentId = productivityGainCalculationRequestDTO.getParentId();
 
-		validateCalculateProductivityRequest(productivityGainCalculationRequestDTO, hierarchyDataUserHasAccessTo);
+		validateCalculateProductivityRequest(
+				productivityGainCalculationRequestDTO, hierarchyDataUserHasAccessTo);
 
-		if (requestedParentNodeIdCorrespondsToProjectLevel(requestedParentId, hierarchyDataUserHasAccessTo)) {
-			Set<AccountFilteredData> projectSprintsOrderedBySprintStartDateDescending = hierarchyDataUserHasAccessTo
-					.stream()
-					.filter(accountFilteredData -> requestedLevel == accountFilteredData.getLevel()
-							&& requestedLabel.equalsIgnoreCase(accountFilteredData.getLabelName())
-							&& (StringUtils.isEmpty(requestedParentId)
-									|| requestedParentId.equalsIgnoreCase(accountFilteredData.getParentId()))
-							&& StringUtils.isNotEmpty(accountFilteredData.getSprintStartDate())
-							&& StringUtils.isNotEmpty(accountFilteredData.getSprintEndDate()))
-					.filter(sprintFilteredData -> Instant.parse(sprintFilteredData.getSprintEndDate())
-							.isBefore(Instant.now()))
-					.collect(
-							Collectors
-									.toCollection(
-											() -> new TreeSet<>(Comparator
-													.comparing((AccountFilteredData sprintFilteredData) -> Instant
-															.parse(sprintFilteredData.getSprintStartDate()))
-													.reversed())));
+		if (requestedParentNodeIdCorrespondsToProjectLevel(
+				requestedParentId, hierarchyDataUserHasAccessTo)) {
+			Set<AccountFilteredData> projectSprintsOrderedBySprintStartDateDescending =
+					hierarchyDataUserHasAccessTo.stream()
+							.filter(
+									accountFilteredData ->
+											requestedLevel == accountFilteredData.getLevel()
+													&& requestedLabel.equalsIgnoreCase(accountFilteredData.getLabelName())
+													&& (StringUtils.isEmpty(requestedParentId)
+															|| requestedParentId.equalsIgnoreCase(
+																	accountFilteredData.getParentId()))
+													&& StringUtils.isNotEmpty(accountFilteredData.getSprintStartDate())
+													&& StringUtils.isNotEmpty(accountFilteredData.getSprintEndDate()))
+							.filter(
+									sprintFilteredData ->
+											Instant.parse(sprintFilteredData.getSprintEndDate()).isBefore(Instant.now()))
+							.collect(
+									Collectors.toCollection(
+											() ->
+													new TreeSet<>(
+															Comparator.comparing(
+																			(AccountFilteredData sprintFilteredData) ->
+																					Instant.parse(sprintFilteredData.getSprintStartDate()))
+																	.reversed())));
 
 			Set<String> sprintNodeIds = new HashSet<>();
 			for (AccountFilteredData sprintData : projectSprintsOrderedBySprintStartDateDescending) {
@@ -376,11 +448,14 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		}
 
 		return hierarchyDataUserHasAccessTo.stream()
-				.filter(accountFilteredData -> requestedLevel == accountFilteredData.getLevel()
-						&& requestedLabel.equalsIgnoreCase(accountFilteredData.getLabelName())
-						&& (StringUtils.isEmpty(requestedParentId)
-								|| requestedParentId.equalsIgnoreCase(accountFilteredData.getParentId())))
-				.map(AccountFilteredData::getNodeId).collect(Collectors.toUnmodifiableSet());
+				.filter(
+						accountFilteredData ->
+								requestedLevel == accountFilteredData.getLevel()
+										&& requestedLabel.equalsIgnoreCase(accountFilteredData.getLabelName())
+										&& (StringUtils.isEmpty(requestedParentId)
+												|| requestedParentId.equalsIgnoreCase(accountFilteredData.getParentId())))
+				.map(AccountFilteredData::getNodeId)
+				.collect(Collectors.toUnmodifiableSet());
 	}
 
 	private void validateCalculateProductivityRequest(
@@ -397,10 +472,13 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		int level = productivityGainCalculationRequestDTO.getLevel();
 		String label = productivityGainCalculationRequestDTO.getLabel();
 
-		Optional<HierarchyLevel> requestedHierarchyLevelOptional = hierarchyLevels.stream()
-				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == level
-						&& label.equalsIgnoreCase(hierarchyLevel.getHierarchyLevelId()))
-				.findFirst();
+		Optional<HierarchyLevel> requestedHierarchyLevelOptional =
+				hierarchyLevels.stream()
+						.filter(
+								hierarchyLevel ->
+										hierarchyLevel.getLevel() == level
+												&& label.equalsIgnoreCase(hierarchyLevel.getHierarchyLevelId()))
+						.findFirst();
 		if (requestedHierarchyLevelOptional.isEmpty()) {
 			throw new BadRequestException(
 					String.format("No hierarchy entity was found for level %s and label %s", level, label));
@@ -413,11 +491,13 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		}
 		String parentId = productivityGainCalculationRequestDTO.getParentId();
 		if (StringUtils.isNotEmpty(parentId)) {
-			boolean requestedLevelAndLabelCorrespondToTheFirstChildLevelOfTheParentId = hierarchyDataCurrentUserHasAccessTo
-					.stream()
-					.anyMatch(accountFilteredData -> parentId.equalsIgnoreCase(accountFilteredData.getParentId())
-							&& accountFilteredData.getLevel() == level
-							&& label.equalsIgnoreCase(accountFilteredData.getLabelName()));
+			boolean requestedLevelAndLabelCorrespondToTheFirstChildLevelOfTheParentId =
+					hierarchyDataCurrentUserHasAccessTo.stream()
+							.anyMatch(
+									accountFilteredData ->
+											parentId.equalsIgnoreCase(accountFilteredData.getParentId())
+													&& accountFilteredData.getLevel() == level
+													&& label.equalsIgnoreCase(accountFilteredData.getLabelName()));
 			if (Boolean.FALSE.equals(requestedLevelAndLabelCorrespondToTheFirstChildLevelOfTheParentId)) {
 				throw new BadRequestException(
 						"""
@@ -427,12 +507,17 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		}
 	}
 
-	private Map<KPIConfiguration.ProcessorType, List<KpiRequest>> constructProcessorTypeKpiRequestsMapForAllProductivityCalculationMetrics(
-			int hierarchyLevel, String hierarchyLabel, Set<String> hierarchyNodeIds,
-			Map<String, Set<String>> projectNodeIdSprintIdsMap) {
+	private Map<KPIConfiguration.ProcessorType, List<KpiRequest>>
+			constructProcessorTypeKpiRequestsMapForAllProductivityCalculationMetrics(
+					int hierarchyLevel,
+					String hierarchyLabel,
+					Set<String> hierarchyNodeIds,
+					Map<String, Set<String>> projectNodeIdSprintIdsMap) {
 
-		Set<String> kpiIds = categoryKpiIdConfigurationMap.values().stream().flatMap(value -> value.keySet().stream())
-				.collect(Collectors.toSet());
+		Set<String> kpiIds =
+				categoryKpiIdConfigurationMap.values().stream()
+						.flatMap(value -> value.keySet().stream())
+						.collect(Collectors.toSet());
 
 		List<KpiMaster> kpiMasterList = new ArrayList<>();
 
@@ -442,76 +527,117 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 			}
 		}
 
-		Map<Integer, List<KpiMaster>> groupIdKpiMasterMap = kpiMasterList.stream()
-				.collect(Collectors.groupingBy(KpiMaster::getGroupId));
+		Map<Integer, List<KpiMaster>> groupIdKpiMasterMap =
+				kpiMasterList.stream().collect(Collectors.groupingBy(KpiMaster::getGroupId));
 
-		return createProcessorTypeKpiRequestsMap(hierarchyLevel, hierarchyLabel, hierarchyNodeIds, groupIdKpiMasterMap,
+		return createProcessorTypeKpiRequestsMap(
+				hierarchyLevel,
+				hierarchyLabel,
+				hierarchyNodeIds,
+				groupIdKpiMasterMap,
 				projectNodeIdSprintIdsMap);
 	}
 
-	private Map<KPIConfiguration.ProcessorType, List<KpiRequest>> createProcessorTypeKpiRequestsMap(int hierarchyLevel,
-			String hierarchyLabel, Set<String> hierarchyNodeIds, Map<Integer, List<KpiMaster>> groupIdKpiMasterMap,
+	private Map<KPIConfiguration.ProcessorType, List<KpiRequest>> createProcessorTypeKpiRequestsMap(
+			int hierarchyLevel,
+			String hierarchyLabel,
+			Set<String> hierarchyNodeIds,
+			Map<Integer, List<KpiMaster>> groupIdKpiMasterMap,
 			Map<String, Set<String>> projectNodeIdSprintIdsMap) {
-		Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap = new EnumMap<>(
-				KPIConfiguration.ProcessorType.class);
+		Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap =
+				new EnumMap<>(KPIConfiguration.ProcessorType.class);
 		for (Map.Entry<Integer, List<KpiMaster>> entry : groupIdKpiMasterMap.entrySet()) {
-			List<KpiElement> kpiElementList = entry.getValue().stream()
-					.map(ProductivityGainServiceImpl::constructKpiElementFromKpiMaster).toList();
-			Optional<KPIConfiguration> kpiConfigurationOptional = getKpiConfigurationByKpiId(
-					entry.getValue().get(0).getKpiId());
+			List<KpiElement> kpiElementList =
+					entry.getValue().stream()
+							.map(ProductivityGainServiceImpl::constructKpiElementFromKpiMaster)
+							.toList();
+			Optional<KPIConfiguration> kpiConfigurationOptional =
+					getKpiConfigurationByKpiId(entry.getValue().get(0).getKpiId());
 			if (kpiConfigurationOptional.isPresent()) {
-				KPIConfiguration.ProcessorType processorType = kpiConfigurationOptional.get().getProcessorType();
+				KPIConfiguration.ProcessorType processorType =
+						kpiConfigurationOptional.get().getProcessorType();
 				processorTypeKpiRequestsMap.computeIfAbsent(processorType, v -> new ArrayList<>());
-				KPIConfiguration.XAxisMeasurement kpiGroupXAxisMeasurement = kpiConfigurationOptional
-						.get().xAxisMeasurement;
+				KPIConfiguration.XAxisMeasurement kpiGroupXAxisMeasurement =
+						kpiConfigurationOptional.get().xAxisMeasurement;
 				switch (kpiGroupXAxisMeasurement) {
-				case WEEKS -> populateProcessorTypeKpiRequestsMapForWeekBasedKPIs(hierarchyLevel, hierarchyLabel,
-						kpiConfigurationOptional.get(), hierarchyNodeIds, kpiElementList, projectNodeIdSprintIdsMap,
-						processorTypeKpiRequestsMap);
-				case SPRINTS -> {
-					KpiRequest kpiRequest = new KpiRequest();
-					kpiRequest.setSelectedMap(Map.of(hierarchyLabel, hierarchyNodeIds.stream().toList()));
-					kpiRequest.setLevel(hierarchyLevel);
-					kpiRequest.setLabel(hierarchyLabel);
-					kpiRequest.setKpiList(kpiElementList);
-					kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
-					kpiRequest.setIds(hierarchyNodeIds.toArray(new String[] {}));
-					processorTypeKpiRequestsMap.get(processorType).add(kpiRequest);
-				}
-				case ITERATION -> populateProcessorTypeKpiRequestsMapForIterationKPIs(processorType, kpiElementList,
-						projectNodeIdSprintIdsMap, processorTypeKpiRequestsMap);
+					case WEEKS ->
+							populateProcessorTypeKpiRequestsMapForWeekBasedKPIs(
+									hierarchyLevel,
+									hierarchyLabel,
+									kpiConfigurationOptional.get(),
+									hierarchyNodeIds,
+									kpiElementList,
+									projectNodeIdSprintIdsMap,
+									processorTypeKpiRequestsMap);
+					case SPRINTS -> {
+						KpiRequest kpiRequest = new KpiRequest();
+						kpiRequest.setSelectedMap(Map.of(hierarchyLabel, hierarchyNodeIds.stream().toList()));
+						kpiRequest.setLevel(hierarchyLevel);
+						kpiRequest.setLabel(hierarchyLabel);
+						kpiRequest.setKpiList(kpiElementList);
+						kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
+						kpiRequest.setIds(hierarchyNodeIds.toArray(new String[] {}));
+						processorTypeKpiRequestsMap.get(processorType).add(kpiRequest);
+					}
+					case ITERATION ->
+							populateProcessorTypeKpiRequestsMapForIterationKPIs(
+									processorType,
+									kpiElementList,
+									projectNodeIdSprintIdsMap,
+									processorTypeKpiRequestsMap);
 				}
 			}
 		}
 		return processorTypeKpiRequestsMap;
 	}
 
-	private void populateProcessorTypeKpiRequestsMapForWeekBasedKPIs(int hierarchyLevel, String hierarchyLabel,
-			KPIConfiguration kpiConfiguration, Set<String> hierarchyNodeIds, List<KpiElement> kpiElementList,
+	private void populateProcessorTypeKpiRequestsMapForWeekBasedKPIs(
+			int hierarchyLevel,
+			String hierarchyLabel,
+			KPIConfiguration kpiConfiguration,
+			Set<String> hierarchyNodeIds,
+			List<KpiElement> kpiElementList,
 			Map<String, Set<String>> projectNodeIdSprintIdsMap,
 			Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap) {
-		if (kpiConfiguration
-				.getSupportedKPIHierarchyLevelAggregation() == KPIConfiguration.SupportedKPIHierarchyLevelAggregation.PROJECT) {
-			projectNodeIdSprintIdsMap.keySet().forEach(projectNodeId -> {
-				KpiRequest kpiRequest = new KpiRequest();
-				kpiRequest.setSelectedMap(Map.of(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, List.of(projectNodeId),
-						CommonConstant.DATE, List.of("Weeks")));
-				kpiRequest.setLevel(HIERARCHY_LEVEL_PROJECT);
-				kpiRequest.setLabel(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
-				kpiRequest.setKpiList(kpiElementList);
-				kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
-				kpiRequest.setIds(new String[] { String.valueOf(productivityGainConfig.getDataPoints().getCount()) });
-				processorTypeKpiRequestsMap.get(kpiConfiguration.getProcessorType()).add(kpiRequest);
-			});
+		if (kpiConfiguration.getSupportedKPIHierarchyLevelAggregation()
+				== KPIConfiguration.SupportedKPIHierarchyLevelAggregation.PROJECT) {
+			projectNodeIdSprintIdsMap
+					.keySet()
+					.forEach(
+							projectNodeId -> {
+								KpiRequest kpiRequest = new KpiRequest();
+								kpiRequest.setSelectedMap(
+										Map.of(
+												CommonConstant.HIERARCHY_LEVEL_ID_PROJECT,
+												List.of(projectNodeId),
+												CommonConstant.DATE,
+												List.of("Weeks")));
+								kpiRequest.setLevel(HIERARCHY_LEVEL_PROJECT);
+								kpiRequest.setLabel(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+								kpiRequest.setKpiList(kpiElementList);
+								kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
+								kpiRequest.setIds(
+										new String[] {
+											String.valueOf(productivityGainConfig.getDataPoints().getCount())
+										});
+								processorTypeKpiRequestsMap
+										.get(kpiConfiguration.getProcessorType())
+										.add(kpiRequest);
+							});
 		} else {
 			KpiRequest kpiRequest = new KpiRequest();
 			kpiRequest.setSelectedMap(
-					Map.of(hierarchyLabel, hierarchyNodeIds.stream().toList(), CommonConstant.DATE, List.of("Weeks")));
+					Map.of(
+							hierarchyLabel,
+							hierarchyNodeIds.stream().toList(),
+							CommonConstant.DATE,
+							List.of("Weeks")));
 			kpiRequest.setLevel(hierarchyLevel);
 			kpiRequest.setLabel(hierarchyLabel);
 			kpiRequest.setKpiList(kpiElementList);
 			kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED));
-			kpiRequest.setIds(new String[] { String.valueOf(productivityGainConfig.getDataPoints().getCount()) });
+			kpiRequest.setIds(
+					new String[] {String.valueOf(productivityGainConfig.getDataPoints().getCount())});
 			processorTypeKpiRequestsMap.get(kpiConfiguration.getProcessorType()).add(kpiRequest);
 		}
 	}
@@ -522,17 +648,23 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		List<KPITrendDTO> positiveTrends = new ArrayList<>();
 		List<KPITrendDTO> negativeTrends = new ArrayList<>();
 		double trendValue;
-		for (Map.Entry<String, List<KPIGainTrendCalculationData>> categoryBasedKpiGainTrendCalculationDataEntry : categoryBasedKPIGainTrendCalculationData
-				.entrySet()) {
-			for (KPIGainTrendCalculationData kpiGainTrendCalculationData : categoryBasedKpiGainTrendCalculationDataEntry
-					.getValue()) {
-				trendValue = Math
-						.round((kpiGainTrendCalculationData.getDataPointGainWeightSumProduct()
-								/ kpiGainTrendCalculationData.getWeightParts()) * TWO_DECIMAL_ROUNDING_COEFFICIENT)
-						/ TWO_DECIMAL_ROUNDING_COEFFICIENT;
-				KPITrendDTO kpiTrendDTO = KPITrendDTO.builder()
-						.kpiCategory(categoryBasedKpiGainTrendCalculationDataEntry.getKey())
-						.kpiName(kpiGainTrendCalculationData.getKpiName()).trendValue(trendValue).build();
+		for (Map.Entry<String, List<KPIGainTrendCalculationData>>
+				categoryBasedKpiGainTrendCalculationDataEntry :
+						categoryBasedKPIGainTrendCalculationData.entrySet()) {
+			for (KPIGainTrendCalculationData kpiGainTrendCalculationData :
+					categoryBasedKpiGainTrendCalculationDataEntry.getValue()) {
+				trendValue =
+						Math.round(
+										(kpiGainTrendCalculationData.getDataPointGainWeightSumProduct()
+														/ kpiGainTrendCalculationData.getWeightParts())
+												* TWO_DECIMAL_ROUNDING_COEFFICIENT)
+								/ TWO_DECIMAL_ROUNDING_COEFFICIENT;
+				KPITrendDTO kpiTrendDTO =
+						KPITrendDTO.builder()
+								.kpiCategory(categoryBasedKpiGainTrendCalculationDataEntry.getKey())
+								.kpiName(kpiGainTrendCalculationData.getKpiName())
+								.trendValue(trendValue)
+								.build();
 				if (kpiGainTrendCalculationData.getDataPointGainWeightSumProduct() > 0.0) {
 					positiveTrends.add(kpiTrendDTO);
 				} else {
@@ -543,49 +675,70 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		return kpiTrendsDTOBuilder.positive(positiveTrends).negative(negativeTrends).build();
 	}
 
-	@SuppressWarnings({ "java:S3776", "java:S134" })
+	@SuppressWarnings({"java:S3776", "java:S134"})
 	private List<KPIGainTrendCalculationData> constructGainTrendCalculationDataForAllKPIsInCategory(
-			Map<String, List<KpiElement>> kpiIdKpiElementsMap, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
+			Map<String, List<KpiElement>> kpiIdKpiElementsMap,
+			Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
 			String categoryName) {
 		List<KPIGainTrendCalculationData> kpiGainTrendCalculationDataList = new ArrayList<>();
 		int kpiWeightParts;
-		for (Map.Entry<String, KPIConfiguration> kpiIdKpiConfigurationMapEntry : categoryKpiIdConfigurationMap
-				.get(categoryName).entrySet()) {
+		for (Map.Entry<String, KPIConfiguration> kpiIdKpiConfigurationMapEntry :
+				categoryKpiIdConfigurationMap.get(categoryName).entrySet()) {
 			KPIConfiguration kpiConfiguration = kpiIdKpiConfigurationMapEntry.getValue();
 			List<KpiElement> kpiData = kpiIdKpiElementsMap.get(kpiIdKpiConfigurationMapEntry.getKey());
 
-			Map<Integer, List<Double>> kpiValuesByDataPointMap = constructKpiValuesByDataPointMap(kpiConfiguration,
-					kpiData, projectNodeIdSprintNodeIdsMap);
+			Map<Integer, List<Double>> kpiValuesByDataPointMap =
+					constructKpiValuesByDataPointMap(
+							kpiConfiguration, kpiData, projectNodeIdSprintNodeIdsMap);
 
 			if (MapUtils.isNotEmpty(kpiValuesByDataPointMap)) {
-				Optional<Map.Entry<Integer, List<Double>>> entryContainingTheBaseLineValue = kpiValuesByDataPointMap
-						.entrySet().stream()
-						.filter(entrySet -> Double.compare(
-								entrySet.getValue().stream().mapToDouble(Double::doubleValue).average().orElse(0.0D),
-								0.0D) != 0)
-						.findFirst();
+				Optional<Map.Entry<Integer, List<Double>>> entryContainingTheBaseLineValue =
+						kpiValuesByDataPointMap.entrySet().stream()
+								.filter(
+										entrySet ->
+												Double.compare(
+																entrySet.getValue().stream()
+																		.mapToDouble(Double::doubleValue)
+																		.average()
+																		.orElse(0.0D),
+																0.0D)
+														!= 0)
+								.findFirst();
 				if (entryContainingTheBaseLineValue.isPresent()) {
 					double kpiDataPointGainWeightSumProduct = 0.0D;
-					double baseLineValue = entryContainingTheBaseLineValue.get().getValue().stream()
-							.mapToDouble(Double::doubleValue).average().orElse(0.0D);
+					double baseLineValue =
+							entryContainingTheBaseLineValue.get().getValue().stream()
+									.mapToDouble(Double::doubleValue)
+									.average()
+									.orElse(0.0D);
 
-					kpiWeightParts = (int) (kpiValuesByDataPointMap.keySet().size()
-							* kpiConfiguration.weightInProductivityScoreCalculation);
+					kpiWeightParts =
+							(int)
+									(kpiValuesByDataPointMap.keySet().size()
+											* kpiConfiguration.weightInProductivityScoreCalculation);
 
 					for (Map.Entry<Integer, List<Double>> entry : kpiValuesByDataPointMap.entrySet()) {
-						double average = entry.getValue().stream().mapToDouble(Double::doubleValue).average()
-								.orElse(0.0D);
-						if (KPIConfiguration.PositiveGainTrend.ASCENDING == kpiConfiguration.positiveGainTrend) {
-							kpiDataPointGainWeightSumProduct += ((average - baseLineValue) / baseLineValue)
-									* PERCENTAGE_MULTIPLIER * kpiConfiguration.weightInProductivityScoreCalculation;
+						double average =
+								entry.getValue().stream().mapToDouble(Double::doubleValue).average().orElse(0.0D);
+						if (KPIConfiguration.PositiveGainTrend.ASCENDING
+								== kpiConfiguration.positiveGainTrend) {
+							kpiDataPointGainWeightSumProduct +=
+									((average - baseLineValue) / baseLineValue)
+											* PERCENTAGE_MULTIPLIER
+											* kpiConfiguration.weightInProductivityScoreCalculation;
 						} else {
-							kpiDataPointGainWeightSumProduct += ((baseLineValue - average) / baseLineValue)
-									* PERCENTAGE_MULTIPLIER * kpiConfiguration.weightInProductivityScoreCalculation;
+							kpiDataPointGainWeightSumProduct +=
+									((baseLineValue - average) / baseLineValue)
+											* PERCENTAGE_MULTIPLIER
+											* kpiConfiguration.weightInProductivityScoreCalculation;
 						}
 					}
-					kpiGainTrendCalculationDataList.add(KPIGainTrendCalculationData.builder()
-							.dataPointGainWeightSumProduct(kpiDataPointGainWeightSumProduct).weightParts(kpiWeightParts)
-							.kpiName(getKpiNameByKpiId(kpiIdKpiConfigurationMapEntry.getKey())).build());
+					kpiGainTrendCalculationDataList.add(
+							KPIGainTrendCalculationData.builder()
+									.dataPointGainWeightSumProduct(kpiDataPointGainWeightSumProduct)
+									.weightParts(kpiWeightParts)
+									.kpiName(getKpiNameByKpiId(kpiIdKpiConfigurationMapEntry.getKey()))
+									.build());
 				}
 			}
 		}
@@ -600,7 +753,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		int totalNumberOfParts = 0;
 		double totalWeightSum = 0.0D;
 
-		for (KPIGainTrendCalculationData kpiGainTrendCalculationData : kpiGainTrendCalculationDataListForCategory) {
+		for (KPIGainTrendCalculationData kpiGainTrendCalculationData :
+				kpiGainTrendCalculationDataListForCategory) {
 			totalWeightSum += kpiGainTrendCalculationData.getDataPointGainWeightSumProduct();
 			totalNumberOfParts += (int) kpiGainTrendCalculationData.getWeightParts();
 		}
@@ -612,61 +766,86 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		return 0.0D;
 	}
 
-	@SuppressWarnings({ "java:S3776", "java:S134" })
-	private static Map<Integer, List<Double>> constructKpiValuesByDataPointMap(KPIConfiguration kpiConfiguration,
-			List<KpiElement> kpiElementsFromProcessorResponse, Map<String, Set<String>> projectNodeIdSprintNodeIdsMap) {
+	@SuppressWarnings({"java:S3776", "java:S134"})
+	private static Map<Integer, List<Double>> constructKpiValuesByDataPointMap(
+			KPIConfiguration kpiConfiguration,
+			List<KpiElement> kpiElementsFromProcessorResponse,
+			Map<String, Set<String>> projectNodeIdSprintNodeIdsMap) {
 		if (CollectionUtils.isNotEmpty(kpiElementsFromProcessorResponse)) {
 			Map<Integer, List<Double>> kpiValuesByDataPointMap = new HashMap<>();
 
 			if (kpiConfiguration.getXAxisMeasurement() == KPIConfiguration.XAxisMeasurement.ITERATION) {
-				populateKpiValuesByDataPointMapForIterationBasedKpi(kpiValuesByDataPointMap,
-						projectNodeIdSprintNodeIdsMap, kpiElementsFromProcessorResponse,
+				populateKpiValuesByDataPointMapForIterationBasedKpi(
+						kpiValuesByDataPointMap,
+						projectNodeIdSprintNodeIdsMap,
+						kpiElementsFromProcessorResponse,
 						kpiConfiguration.getKpiCode().getKpiId());
 			} else {
-				kpiElementsFromProcessorResponse.forEach(kpiElement -> {
-					Object trendValuesObj = kpiElement.getTrendValueList();
-					if (trendValuesObj instanceof List<?>) {
-						List<?> trendValuesList = (List<?>) kpiElement.getTrendValueList();
-						if (CollectionUtils.isNotEmpty(trendValuesList)) {
-							if (trendValuesList.get(0) instanceof DataCount) {
-								trendValuesList.forEach(trendValue -> {
-									DataCount dataCount = (DataCount) trendValue;
-									List<DataCount> dataValuesOfHierarchyEntity = (List<DataCount>) dataCount
-											.getValue();
-									for (int dataPoint = 0; dataPoint < dataValuesOfHierarchyEntity
-											.size(); dataPoint++) {
-										kpiValuesByDataPointMap.computeIfAbsent(dataPoint, v -> new ArrayList<>());
-										kpiValuesByDataPointMap.get(dataPoint)
-												.add(((Number) dataValuesOfHierarchyEntity.get(dataPoint).getValue())
-														.doubleValue());
+				kpiElementsFromProcessorResponse.forEach(
+						kpiElement -> {
+							Object trendValuesObj = kpiElement.getTrendValueList();
+							if (trendValuesObj instanceof List<?>) {
+								List<?> trendValuesList = (List<?>) kpiElement.getTrendValueList();
+								if (CollectionUtils.isNotEmpty(trendValuesList)) {
+									if (trendValuesList.get(0) instanceof DataCount) {
+										trendValuesList.forEach(
+												trendValue -> {
+													DataCount dataCount = (DataCount) trendValue;
+													List<DataCount> dataValuesOfHierarchyEntity =
+															(List<DataCount>) dataCount.getValue();
+													for (int dataPoint = 0;
+															dataPoint < dataValuesOfHierarchyEntity.size();
+															dataPoint++) {
+														kpiValuesByDataPointMap.computeIfAbsent(
+																dataPoint, v -> new ArrayList<>());
+														kpiValuesByDataPointMap
+																.get(dataPoint)
+																.add(
+																		((Number) dataValuesOfHierarchyEntity.get(dataPoint).getValue())
+																				.doubleValue());
+													}
+												});
+									} else if (trendValuesList.get(0) instanceof DataCountGroup) {
+										List<DataCountGroup> overallDataCountGroups =
+												trendValuesList.stream()
+														.filter(
+																trendValue ->
+																		dataCountGroupMatchesFiltersSetForOverallProductivityGainCalculation(
+																				trendValue, kpiConfiguration))
+														.map(DataCountGroup.class::cast)
+														.toList();
+										if (CollectionUtils.isNotEmpty(overallDataCountGroups)) {
+											overallDataCountGroups.forEach(
+													overallDataCountGroup ->
+															overallDataCountGroup
+																	.getValue()
+																	.forEach(
+																			entityLevelDataCount -> {
+																				List<DataCount> dataValuesOfHierarchyEntity =
+																						(List<DataCount>) entityLevelDataCount.getValue();
+																				for (int dataPoint = 0;
+																						dataPoint < dataValuesOfHierarchyEntity.size();
+																						dataPoint++) {
+																					kpiValuesByDataPointMap.computeIfAbsent(
+																							dataPoint, v -> new ArrayList<>());
+																					kpiValuesByDataPointMap
+																							.get(dataPoint)
+																							.add(
+																									((Number)
+																													dataValuesOfHierarchyEntity
+																															.get(dataPoint)
+																															.getValue())
+																											.doubleValue());
+																				}
+																			}));
+										}
+									} else {
+										log.info(
+												"KPI {} did not have any data ", kpiConfiguration.getKpiCode().getKpiId());
 									}
-								});
-							} else if (trendValuesList.get(0) instanceof DataCountGroup) {
-								List<DataCountGroup> overallDataCountGroups = trendValuesList.stream().filter(
-										trendValue -> dataCountGroupMatchesFiltersSetForOverallProductivityGainCalculation(
-												trendValue, kpiConfiguration))
-										.map(DataCountGroup.class::cast).toList();
-								if (CollectionUtils.isNotEmpty(overallDataCountGroups)) {
-									overallDataCountGroups.forEach(overallDataCountGroup -> overallDataCountGroup
-											.getValue().forEach(entityLevelDataCount -> {
-												List<DataCount> dataValuesOfHierarchyEntity = (List<DataCount>) entityLevelDataCount
-														.getValue();
-												for (int dataPoint = 0; dataPoint < dataValuesOfHierarchyEntity
-														.size(); dataPoint++) {
-													kpiValuesByDataPointMap.computeIfAbsent(dataPoint,
-															v -> new ArrayList<>());
-													kpiValuesByDataPointMap.get(dataPoint)
-															.add(((Number) dataValuesOfHierarchyEntity.get(dataPoint)
-																	.getValue()).doubleValue());
-												}
-											}));
 								}
-							} else {
-								log.info("KPI {} did not have any data ", kpiConfiguration.getKpiCode().getKpiId());
 							}
-						}
-					}
-				});
+						});
 			}
 			return kpiValuesByDataPointMap;
 		}
@@ -676,54 +855,67 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	@SuppressWarnings("java:S3776")
 	private static void populateKpiValuesByDataPointMapForIterationBasedKpi(
 			Map<Integer, List<Double>> dataPointAggregatedKpiSumMap,
-			Map<String, Set<String>> projectNodeIdSprintNodeIdsMap, List<KpiElement> kpiData, String kpiId) {
+			Map<String, Set<String>> projectNodeIdSprintNodeIdsMap,
+			List<KpiElement> kpiData,
+			String kpiId) {
 		Map<String, Double> sprintIdKpiValueMap = new HashMap<>();
-		kpiData.forEach(kpiElement -> {
-			double kpiSprintValue = 0.0D;
-			if (CollectionUtils.isNotEmpty(kpiElement.getIssueData())) {
-				for (IssueKpiModalValue issueKpiModalValue : kpiElement.getIssueData()) {
-					if (KPICode.WASTAGE.getKpiId().equalsIgnoreCase(kpiId)) {
-						kpiSprintValue += (issueKpiModalValue.getIssueBlockedTime()
-								+ issueKpiModalValue.getIssueWaitTime());
+		kpiData.forEach(
+				kpiElement -> {
+					double kpiSprintValue = 0.0D;
+					if (CollectionUtils.isNotEmpty(kpiElement.getIssueData())) {
+						for (IssueKpiModalValue issueKpiModalValue : kpiElement.getIssueData()) {
+							if (KPICode.WASTAGE.getKpiId().equalsIgnoreCase(kpiId)) {
+								kpiSprintValue +=
+										(issueKpiModalValue.getIssueBlockedTime()
+												+ issueKpiModalValue.getIssueWaitTime());
+							}
+							if (KPICode.WORK_STATUS.getKpiId().equalsIgnoreCase(kpiId)
+									&& Objects.nonNull(issueKpiModalValue.getCategoryWiseDelay().get("Planned"))) {
+								kpiSprintValue += (issueKpiModalValue.getCategoryWiseDelay().get("Planned"));
+							}
+						}
 					}
-					if (KPICode.WORK_STATUS.getKpiId().equalsIgnoreCase(kpiId)
-							&& Objects.nonNull(issueKpiModalValue.getCategoryWiseDelay().get("Planned"))) {
-						kpiSprintValue += (issueKpiModalValue.getCategoryWiseDelay().get("Planned"));
-					}
-				}
-			}
-			sprintIdKpiValueMap.put(kpiElement.getSprintId(), kpiSprintValue);
-		});
+					sprintIdKpiValueMap.put(kpiElement.getSprintId(), kpiSprintValue);
+				});
 
-		for (Map.Entry<String, Set<String>> projectNodeIdSprintNodeIdsEntry : projectNodeIdSprintNodeIdsMap
-				.entrySet()) {
+		for (Map.Entry<String, Set<String>> projectNodeIdSprintNodeIdsEntry :
+				projectNodeIdSprintNodeIdsMap.entrySet()) {
 			List<String> sprintNodeIdsList = new ArrayList<>(projectNodeIdSprintNodeIdsEntry.getValue());
 
 			for (int dataPoint = 0; dataPoint < sprintNodeIdsList.size(); dataPoint++) {
 				dataPointAggregatedKpiSumMap.computeIfAbsent(dataPoint, v -> new ArrayList<>());
-				dataPointAggregatedKpiSumMap.get(dataPoint)
+				dataPointAggregatedKpiSumMap
+						.get(dataPoint)
 						.add(sprintIdKpiValueMap.getOrDefault(sprintNodeIdsList.get(dataPoint), 0.0D));
 			}
 		}
 	}
 
 	private static void populateProcessorTypeKpiRequestsMapForIterationKPIs(
-			KPIConfiguration.ProcessorType processorType, List<KpiElement> kpiElementList,
+			KPIConfiguration.ProcessorType processorType,
+			List<KpiElement> kpiElementList,
 			Map<String, Set<String>> projectNodeIdSprintIdsMap,
 			Map<KPIConfiguration.ProcessorType, List<KpiRequest>> processorTypeKpiRequestsMap) {
-		for (Map.Entry<String, Set<String>> projectNodeIdSprintIdsEntry : projectNodeIdSprintIdsMap.entrySet()) {
-			projectNodeIdSprintIdsEntry.getValue().forEach(sprintNodeId -> {
-				KpiRequest kpiRequest = new KpiRequest();
-				kpiRequest.setSelectedMap(
-						Map.of(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, List.of(projectNodeIdSprintIdsEntry.getKey()),
-								CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, List.of(sprintNodeId)));
-				kpiRequest.setLevel(HIERARCHY_LEVEL_SPRINT);
-				kpiRequest.setLabel(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT);
-				kpiRequest.setKpiList(kpiElementList);
-				kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED, SPRINT_STATUS_ACTIVE));
-				kpiRequest.setIds(new String[] { sprintNodeId });
-				processorTypeKpiRequestsMap.get(processorType).add(kpiRequest);
-			});
+		for (Map.Entry<String, Set<String>> projectNodeIdSprintIdsEntry :
+				projectNodeIdSprintIdsMap.entrySet()) {
+			projectNodeIdSprintIdsEntry
+					.getValue()
+					.forEach(
+							sprintNodeId -> {
+								KpiRequest kpiRequest = new KpiRequest();
+								kpiRequest.setSelectedMap(
+										Map.of(
+												CommonConstant.HIERARCHY_LEVEL_ID_PROJECT,
+												List.of(projectNodeIdSprintIdsEntry.getKey()),
+												CommonConstant.HIERARCHY_LEVEL_ID_SPRINT,
+												List.of(sprintNodeId)));
+								kpiRequest.setLevel(HIERARCHY_LEVEL_SPRINT);
+								kpiRequest.setLabel(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT);
+								kpiRequest.setKpiList(kpiElementList);
+								kpiRequest.setSprintIncluded(List.of(SPRINT_STATUS_CLOSED, SPRINT_STATUS_ACTIVE));
+								kpiRequest.setIds(new String[] {sprintNodeId});
+								processorTypeKpiRequestsMap.get(processorType).add(kpiRequest);
+							});
 		}
 	}
 
@@ -745,19 +937,24 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	}
 
 	private Optional<KPIConfiguration> getKpiConfigurationByKpiId(String kpiId) {
-		return categoryKpiIdConfigurationMap.values().stream().filter(value -> value.containsKey(kpiId))
-				.map(value -> value.get(kpiId)).findFirst();
+		return categoryKpiIdConfigurationMap.values().stream()
+				.filter(value -> value.containsKey(kpiId))
+				.map(value -> value.get(kpiId))
+				.findFirst();
 	}
 
-	private static boolean requestedParentNodeIdCorrespondsToProjectLevel(String parentNodeId,
-			Set<AccountFilteredData> accountFilteredData) {
-		return StringUtils.isNotEmpty(parentNodeId) && accountFilteredData.stream()
-				.anyMatch(accountFilteredData1 -> parentNodeId.equalsIgnoreCase(accountFilteredData1.getNodeId())
-						&& accountFilteredData1.getLevel() == HIERARCHY_LEVEL_PROJECT);
+	private static boolean requestedParentNodeIdCorrespondsToProjectLevel(
+			String parentNodeId, Set<AccountFilteredData> accountFilteredData) {
+		return StringUtils.isNotEmpty(parentNodeId)
+				&& accountFilteredData.stream()
+						.anyMatch(
+								accountFilteredData1 ->
+										parentNodeId.equalsIgnoreCase(accountFilteredData1.getNodeId())
+												&& accountFilteredData1.getLevel() == HIERARCHY_LEVEL_PROJECT);
 	}
 
-	private static boolean dataCountGroupMatchesFiltersSetForOverallProductivityGainCalculation(Object trendValue,
-			KPIConfiguration kpiConfiguration) {
+	private static boolean dataCountGroupMatchesFiltersSetForOverallProductivityGainCalculation(
+			Object trendValue, KPIConfiguration kpiConfiguration) {
 		DataCountGroup dataCountGroup = (DataCountGroup) trendValue;
 		String dataCountGroupFilter = kpiConfiguration.getDataCountGroupFilterUsedForCalculation();
 		String dataCountGroupFilter1 = kpiConfiguration.getDataCountGroupFilter1UsedForCalculation();
@@ -766,15 +963,18 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 		boolean matchesAllKpiConfigurationFilters = false;
 
 		if (StringUtils.isNotEmpty(dataCountGroupFilter)) {
-			matchesAllKpiConfigurationFilters = dataCountGroupFilter.equalsIgnoreCase(dataCountGroup.getFilter());
+			matchesAllKpiConfigurationFilters =
+					dataCountGroupFilter.equalsIgnoreCase(dataCountGroup.getFilter());
 		}
 
 		if (StringUtils.isNotEmpty(dataCountGroupFilter1)) {
-			matchesAllKpiConfigurationFilters = dataCountGroupFilter1.equalsIgnoreCase(dataCountGroup.getFilter1());
+			matchesAllKpiConfigurationFilters =
+					dataCountGroupFilter1.equalsIgnoreCase(dataCountGroup.getFilter1());
 		}
 
 		if (StringUtils.isNotEmpty(dataCountGroupFilter2)) {
-			matchesAllKpiConfigurationFilters = dataCountGroupFilter2.equalsIgnoreCase(dataCountGroup.getFilter2());
+			matchesAllKpiConfigurationFilters =
+					dataCountGroupFilter2.equalsIgnoreCase(dataCountGroup.getFilter2());
 		}
 
 		return matchesAllKpiConfigurationFilters;
@@ -782,72 +982,107 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 
 	private static List<KpiElement> cloneKpiElementsFromProcessorResponse(
 			List<KpiElement> kpiElementsFromProcessorResponse) {
-		return kpiElementsFromProcessorResponse.stream().map(kpiElementFromProcessorResponse -> {
-			KpiElement kpiElement = new KpiElement(kpiElementFromProcessorResponse);
-			kpiElement.setSprintId(kpiElementFromProcessorResponse.getSprintId());
-			kpiElement.setIssueData(kpiElementFromProcessorResponse.getIssueData());
-			kpiElement.setTrendValueList(kpiElementFromProcessorResponse.getTrendValueList());
-			return kpiElement;
-		}).toList();
+		return kpiElementsFromProcessorResponse.stream()
+				.map(
+						kpiElementFromProcessorResponse -> {
+							KpiElement kpiElement = new KpiElement(kpiElementFromProcessorResponse);
+							kpiElement.setSprintId(kpiElementFromProcessorResponse.getSprintId());
+							kpiElement.setIssueData(kpiElementFromProcessorResponse.getIssueData());
+							kpiElement.setTrendValueList(kpiElementFromProcessorResponse.getTrendValueList());
+							return kpiElement;
+						})
+				.toList();
 	}
 
-	@SuppressWarnings({ "java:S3776", "java:S134" })
-	private static Set<AccountFilteredData> computeSprintDataSortedBySprintStartDateDescendingBasedOnParentNodeId(
-			String parentNodeId, Set<AccountFilteredData> hierarchyDataUserHasAccessTo) {
+	@SuppressWarnings({"java:S3776", "java:S134"})
+	private static Set<AccountFilteredData>
+			computeSprintDataSortedBySprintStartDateDescendingBasedOnParentNodeId(
+					String parentNodeId, Set<AccountFilteredData> hierarchyDataUserHasAccessTo) {
 		Set<AccountFilteredData> sprintDataSortedBySprintStartDateDescending = new LinkedHashSet<>();
-		Optional<AccountFilteredData> parentAccountFilteredDataOptional = hierarchyDataUserHasAccessTo.stream()
-				.filter(accountFilteredData -> accountFilteredData.getNodeId().equalsIgnoreCase(parentNodeId))
-				.findFirst();
+		Optional<AccountFilteredData> parentAccountFilteredDataOptional =
+				hierarchyDataUserHasAccessTo.stream()
+						.filter(
+								accountFilteredData ->
+										accountFilteredData.getNodeId().equalsIgnoreCase(parentNodeId))
+						.findFirst();
 
 		if (parentAccountFilteredDataOptional.isPresent()) {
 			AccountFilteredData parentAccountFilteredData = parentAccountFilteredDataOptional.get();
 			if (parentAccountFilteredData.getLevel() == HIERARCHY_LEVEL_PROJECT) {
-				sprintDataSortedBySprintStartDateDescending = hierarchyDataUserHasAccessTo.stream()
-						.filter(accountFilteredData -> accountFilteredData.getLevel() == HIERARCHY_LEVEL_SPRINT
-								&& CommonConstant.HIERARCHY_LEVEL_ID_SPRINT
-										.equalsIgnoreCase(accountFilteredData.getLabelName())
-								&& (StringUtils.isEmpty(parentNodeId)
-										|| accountFilteredData.getParentId().equalsIgnoreCase(parentNodeId)))
-						.filter(sprintFilteredData -> Instant.parse(sprintFilteredData.getSprintEndDate())
-								.isBefore(Instant.now()))
-						.collect(
-								Collectors
-										.toCollection(
-												() -> new TreeSet<>(Comparator
-														.comparing((AccountFilteredData sprintFilteredData) -> Instant
-																.parse(sprintFilteredData.getSprintStartDate()))
-														.reversed())));
+				sprintDataSortedBySprintStartDateDescending =
+						hierarchyDataUserHasAccessTo.stream()
+								.filter(
+										accountFilteredData ->
+												accountFilteredData.getLevel() == HIERARCHY_LEVEL_SPRINT
+														&& CommonConstant.HIERARCHY_LEVEL_ID_SPRINT.equalsIgnoreCase(
+																accountFilteredData.getLabelName())
+														&& (StringUtils.isEmpty(parentNodeId)
+																|| accountFilteredData
+																		.getParentId()
+																		.equalsIgnoreCase(parentNodeId)))
+								.filter(
+										sprintFilteredData ->
+												Instant.parse(sprintFilteredData.getSprintEndDate())
+														.isBefore(Instant.now()))
+								.collect(
+										Collectors.toCollection(
+												() ->
+														new TreeSet<>(
+																Comparator.comparing(
+																				(AccountFilteredData sprintFilteredData) ->
+																						Instant.parse(sprintFilteredData.getSprintStartDate()))
+																		.reversed())));
 			} else {
 				Map<Integer, Set<String>> hierarchyLevelNodeIdsMap = new HashMap<>();
-				for (int level = parentAccountFilteredData.getLevel(); level <= HIERARCHY_LEVEL_SPRINT; level++) {
+				for (int level = parentAccountFilteredData.getLevel();
+						level <= HIERARCHY_LEVEL_SPRINT;
+						level++) {
 					if (level == HIERARCHY_LEVEL_SPRINT) {
 						int currentLevel = level;
-						sprintDataSortedBySprintStartDateDescending = hierarchyDataUserHasAccessTo.stream()
-								.filter(accountFilteredData -> accountFilteredData.getLevel() == currentLevel
-										&& CommonConstant.HIERARCHY_LEVEL_ID_SPRINT
-												.equalsIgnoreCase(accountFilteredData.getLabelName())
-										&& hierarchyLevelNodeIdsMap.get(currentLevel - 1)
-												.contains(accountFilteredData.getParentId()))
-								.filter(sprintFilteredData -> Instant.parse(sprintFilteredData.getSprintEndDate())
-										.isBefore(Instant.now()))
-								.collect(
-										Collectors
-												.toCollection(() -> new TreeSet<>(Comparator
-														.comparing((AccountFilteredData sprintFilteredData) -> Instant
-																.parse(sprintFilteredData.getSprintStartDate()))
-														.reversed())));
+						sprintDataSortedBySprintStartDateDescending =
+								hierarchyDataUserHasAccessTo.stream()
+										.filter(
+												accountFilteredData ->
+														accountFilteredData.getLevel() == currentLevel
+																&& CommonConstant.HIERARCHY_LEVEL_ID_SPRINT.equalsIgnoreCase(
+																		accountFilteredData.getLabelName())
+																&& hierarchyLevelNodeIdsMap
+																		.get(currentLevel - 1)
+																		.contains(accountFilteredData.getParentId()))
+										.filter(
+												sprintFilteredData ->
+														Instant.parse(sprintFilteredData.getSprintEndDate())
+																.isBefore(Instant.now()))
+										.collect(
+												Collectors.toCollection(
+														() ->
+																new TreeSet<>(
+																		Comparator.comparing(
+																						(AccountFilteredData sprintFilteredData) ->
+																								Instant.parse(
+																										sprintFilteredData.getSprintStartDate()))
+																				.reversed())));
 					} else {
 						if (MapUtils.isEmpty(hierarchyLevelNodeIdsMap)) {
-							hierarchyLevelNodeIdsMap.put(parentAccountFilteredData.getLevel(),
-									hierarchyDataUserHasAccessTo.stream().map(AccountFilteredData::getNodeId)
-											.filter(parentNodeId::equalsIgnoreCase).collect(Collectors.toSet()));
+							hierarchyLevelNodeIdsMap.put(
+									parentAccountFilteredData.getLevel(),
+									hierarchyDataUserHasAccessTo.stream()
+											.map(AccountFilteredData::getNodeId)
+											.filter(parentNodeId::equalsIgnoreCase)
+											.collect(Collectors.toSet()));
 						} else {
 							int currentLevel = level;
-							hierarchyLevelNodeIdsMap.put(level, hierarchyDataUserHasAccessTo.stream()
-									.filter(accountFilteredData -> accountFilteredData.getLevel() == currentLevel
-											&& hierarchyLevelNodeIdsMap.get((accountFilteredData.getLevel() - 1))
-													.contains(accountFilteredData.getParentId()))
-									.map(AccountFilteredData::getNodeId).collect(Collectors.toSet()));
+							hierarchyLevelNodeIdsMap.put(
+									level,
+									hierarchyDataUserHasAccessTo.stream()
+											.filter(
+													accountFilteredData ->
+															accountFilteredData.getLevel() == currentLevel
+																	&& hierarchyLevelNodeIdsMap
+																			.get((accountFilteredData.getLevel() - 1))
+																			.contains(accountFilteredData.getParentId()))
+											.map(AccountFilteredData::getNodeId)
+											.collect(Collectors.toSet()));
 						}
 					}
 				}
@@ -861,27 +1096,39 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	}
 
 	private Map<String, Map<String, KPIConfiguration>> constructCategoryKpiIdConfigurationMap() {
-		Map<String, Map<String, KPIConfiguration>> configuredCategoryKpiIdConfigurationMap = new HashMap<>();
+		Map<String, Map<String, KPIConfiguration>> configuredCategoryKpiIdConfigurationMap =
+				new HashMap<>();
 		if (CollectionUtils.isNotEmpty(productivityGainConfig.getAllConfiguredCategories())) {
-			productivityGainConfig.getAllConfiguredCategories().forEach(configuredCategory -> {
-				switch (configuredCategory) {
-				case CATEGORY_EFFICIENCY -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_EFFICIENCY,
-						constructKpiIdKpiConfigurationMapForEfficiencyKpis());
-				case CATEGORY_SPEED -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_SPEED,
-						constructKpiIdKpiConfigurationMapForSpeedKpis());
-				case CATEGORY_PRODUCTIVITY -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_PRODUCTIVITY,
-						constructKpiIdKpiConfigurationMapForProductivityKpis());
-				case CATEGORY_QUALITY -> configuredCategoryKpiIdConfigurationMap.put(CATEGORY_QUALITY,
-						constructKpiIdKpiConfigurationMapForQualityKpis());
-				}
-			});
+			productivityGainConfig
+					.getAllConfiguredCategories()
+					.forEach(
+							configuredCategory -> {
+								switch (configuredCategory) {
+									case CATEGORY_EFFICIENCY ->
+											configuredCategoryKpiIdConfigurationMap.put(
+													CATEGORY_EFFICIENCY,
+													constructKpiIdKpiConfigurationMapForEfficiencyKpis());
+									case CATEGORY_SPEED ->
+											configuredCategoryKpiIdConfigurationMap.put(
+													CATEGORY_SPEED, constructKpiIdKpiConfigurationMapForSpeedKpis());
+									case CATEGORY_PRODUCTIVITY ->
+											configuredCategoryKpiIdConfigurationMap.put(
+													CATEGORY_PRODUCTIVITY,
+													constructKpiIdKpiConfigurationMapForProductivityKpis());
+									case CATEGORY_QUALITY ->
+											configuredCategoryKpiIdConfigurationMap.put(
+													CATEGORY_QUALITY, constructKpiIdKpiConfigurationMapForQualityKpis());
+								}
+							});
 		}
 		return Collections.unmodifiableMap(configuredCategoryKpiIdConfigurationMap);
 	}
 
 	private static Map<String, KPIConfiguration> constructKpiIdKpiConfigurationMapForSpeedKpis() {
-		return Map.of(KPICode.SPRINT_VELOCITY.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.SPRINT_VELOCITY)
+		return Map.of(
+				KPICode.SPRINT_VELOCITY.getKpiId(),
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.SPRINT_VELOCITY)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
 						.positiveGainTrend(KPIConfiguration.PositiveGainTrend.ASCENDING)
@@ -890,7 +1137,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.MEAN_TIME_TO_MERGE)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.MEAN_TIME_TO_MERGE)
 						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.BITBUCKET)
@@ -900,7 +1148,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.PROJECT)
 						.build(),
 				KPICode.CODE_BUILD_TIME.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.CODE_BUILD_TIME)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.CODE_BUILD_TIME)
 						.dataCountGroupFilterUsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JENKINS)
@@ -910,7 +1159,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.PICKUP_TIME.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.PICKUP_TIME)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.PICKUP_TIME)
 						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.BITBUCKET)
@@ -920,7 +1170,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.PROJECT)
 						.build(),
 				KPICode.SCOPE_CHURN.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.SCOPE_CHURN)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.SCOPE_CHURN)
 						.dataCountGroupFilterUsedForCalculation("Story Points")
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
@@ -932,8 +1183,10 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 	}
 
 	private static Map<String, KPIConfiguration> constructKpiIdKpiConfigurationMapForQualityKpis() {
-		return Map.of(KPICode.DEFECT_DENSITY.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.DEFECT_DENSITY)
+		return Map.of(
+				KPICode.DEFECT_DENSITY.getKpiId(),
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.DEFECT_DENSITY)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
 						.positiveGainTrend(KPIConfiguration.PositiveGainTrend.DESCENDING)
@@ -942,7 +1195,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.DEFECT_SEEPAGE_RATE.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.DEFECT_SEEPAGE_RATE)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.DEFECT_SEEPAGE_RATE)
 						.dataCountGroupFilterUsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
@@ -952,7 +1206,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.DEFECT_SEVERITY_INDEX.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.DEFECT_SEVERITY_INDEX)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.DEFECT_SEVERITY_INDEX)
 						.dataCountGroupFilterUsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
@@ -962,7 +1217,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.DEFECT_REOPEN_RATE_QUALITY.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.DEFECT_REOPEN_RATE)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.DEFECT_REOPEN_RATE)
 						.dataCountGroupFilterUsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
@@ -973,9 +1229,12 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 						.build());
 	}
 
-	private static Map<String, KPIConfiguration> constructKpiIdKpiConfigurationMapForEfficiencyKpis() {
-		return Map.of(KPICode.SPRINT_CAPACITY_UTILIZATION.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.SPRINT_CAPACITY_UTILIZATION)
+	private static Map<String, KPIConfiguration>
+			constructKpiIdKpiConfigurationMapForEfficiencyKpis() {
+		return Map.of(
+				KPICode.SPRINT_CAPACITY_UTILIZATION.getKpiId(),
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.SPRINT_CAPACITY_UTILIZATION)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA)
 						.positiveGainTrend(KPIConfiguration.PositiveGainTrend.ASCENDING)
@@ -984,7 +1243,9 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.WASTAGE.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.WASTAGE).weightInProductivityScoreCalculation(SPRINT_WEIGHT)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.WASTAGE)
+						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA_ITERATION)
 						.positiveGainTrend(KPIConfiguration.PositiveGainTrend.DESCENDING)
 						.xAxisMeasurement(KPIConfiguration.XAxisMeasurement.ITERATION)
@@ -992,7 +1253,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.SPRINT)
 						.build(),
 				KPICode.WORK_STATUS.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.WORK_STATUS)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.WORK_STATUS)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.JIRA_ITERATION)
 						.positiveGainTrend(KPIConfiguration.PositiveGainTrend.DESCENDING)
@@ -1002,9 +1264,12 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 						.build());
 	}
 
-	private static Map<String, KPIConfiguration> constructKpiIdKpiConfigurationMapForProductivityKpis() {
-		return Map.of(KPICode.COMMITMENT_RELIABILITY.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.COMMITMENT_RELIABILITY)
+	private static Map<String, KPIConfiguration>
+			constructKpiIdKpiConfigurationMapForProductivityKpis() {
+		return Map.of(
+				KPICode.COMMITMENT_RELIABILITY.getKpiId(),
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.COMMITMENT_RELIABILITY)
 						.dataCountGroupFilter1UsedForCalculation("Final Scope (Count)")
 						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
@@ -1015,7 +1280,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.ALL)
 						.build(),
 				KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.REPO_TOOL_CODE_COMMIT)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.REPO_TOOL_CODE_COMMIT)
 						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.BITBUCKET)
@@ -1025,7 +1291,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.PROJECT)
 						.build(),
 				KPICode.PR_SUCCESS_RATE.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.PR_SUCCESS_RATE)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.PR_SUCCESS_RATE)
 						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(WEEK_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.BITBUCKET)
@@ -1035,7 +1302,8 @@ public class ProductivityGainServiceImpl implements ProductivityGainService {
 								KPIConfiguration.SupportedKPIHierarchyLevelAggregation.PROJECT)
 						.build(),
 				KPICode.REVERT_RATE.getKpiId(),
-				KPIConfiguration.builder().kpiCode(KPICode.REVERT_RATE)
+				KPIConfiguration.builder()
+						.kpiCode(KPICode.REVERT_RATE)
 						.dataCountGroupFilter2UsedForCalculation(CommonConstant.OVERALL)
 						.weightInProductivityScoreCalculation(SPRINT_WEIGHT)
 						.processorType(KPIConfiguration.ProcessorType.BITBUCKET)

@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author eswbogol
  */
-@ChangeUnit(id = "r_ftpr_iteration_labels_changeLog", order = "08203", author = "eswbogol", systemVersion = "8.2.0")
+@ChangeUnit(
+		id = "r_ftpr_iteration_labels_changeLog",
+		order = "08203",
+		author = "eswbogol",
+		systemVersion = "8.2.0")
 public class FTPRIterationLabelsChangeLog {
 
 	private final MongoTemplate mongoTemplate;
@@ -45,7 +49,9 @@ public class FTPRIterationLabelsChangeLog {
 	}
 
 	public void deleteFieldMappingStructure() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteOne(Filters.eq(FIELD_NAME, "jiraLabelsKPI135"));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.deleteOne(Filters.eq(FIELD_NAME, "jiraLabelsKPI135"));
 	}
 
 	@RollbackExecution

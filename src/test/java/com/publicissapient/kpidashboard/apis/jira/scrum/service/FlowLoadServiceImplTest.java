@@ -62,19 +62,14 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus
 @RunWith(MockitoJUnitRunner.class)
 public class FlowLoadServiceImplTest {
 	private static final String ISSUE_BACKLOG_HISTORY = "Issue Backlog History";
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraBacklogServiceR jiraService;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock CacheService cacheService;
+	@Mock private JiraBacklogServiceR jiraService;
+	@Mock private CustomApiConfig customApiConfig;
 	List<Node> leafNodeList = new ArrayList<>();
 	TreeAggregatorDetail treeAggregatorDetail;
 	List<JiraIssueCustomHistory> issueBacklogHistoryDataList = new ArrayList<>();
-	@InjectMocks
-	private FlowLoadServiceImpl flowLoadService;
-	@Mock
-	private ConfigHelperService configHelperService;
+	@InjectMocks private FlowLoadServiceImpl flowLoadService;
+	@Mock private ConfigHelperService configHelperService;
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private KpiRequest kpiRequest;
 
@@ -85,25 +80,31 @@ public class FlowLoadServiceImplTest {
 
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi148");
 		kpiRequest.setLabel("PROJECT");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(new ObjectId("6335363749794a18e8a4479b"), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 
 		leafNodeList = new ArrayList<>();
-		treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, accountHierarchyDataList,
-				new ArrayList<>(), "hierarchyLevelOne", 4);
-		treeAggregatorDetail.getMapOfListOfProjectNodes().forEach((k, v) -> {
-			leafNodeList.addAll(v);
-		});
+		treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
+		treeAggregatorDetail
+				.getMapOfListOfProjectNodes()
+				.forEach(
+						(k, v) -> {
+							leafNodeList.addAll(v);
+						});
 
-		issueBacklogHistoryDataList = JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(issueBacklogHistoryDataList);
+		issueBacklogHistoryDataList =
+				JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(issueBacklogHistoryDataList);
 		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(new JiraIssueReleaseStatus());
 	}
 

@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "r_backlog_sub_tab_name_change", order = "08113", author = "shunaray", systemVersion = "8.1.0")
+@ChangeUnit(
+		id = "r_backlog_sub_tab_name_change",
+		order = "08113",
+		author = "shunaray",
+		systemVersion = "8.1.0")
 public class BacklogSubTabNameChange {
 	private final MongoTemplate mongoTemplate;
 

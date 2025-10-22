@@ -40,21 +40,19 @@ public interface TokenAuthenticationService {
 	/**
 	 * Add authentication.
 	 *
-	 * @param response
-	 *          the response
-	 * @param authentication
-	 *          the authentication
+	 * @param response the response
+	 * @param authentication the authentication
 	 */
 	void addAuthentication(HttpServletResponse response, Authentication authentication);
 
 	/**
 	 * Gets authentication.
 	 *
-	 * @param httpServletRequest
-	 *          the request
+	 * @param httpServletRequest the request
 	 * @return the authentication
 	 */
-	Authentication getAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse response);
+	Authentication getAuthentication(
+			HttpServletRequest httpServletRequest, HttpServletResponse response);
 
 	/**
 	 * @param jwtToken
@@ -81,7 +79,8 @@ public interface TokenAuthenticationService {
 	 * @param response
 	 * @return
 	 */
-	Authentication validateAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse response);
+	Authentication validateAuthentication(
+			HttpServletRequest httpServletRequest, HttpServletResponse response);
 
 	/**
 	 * This method returns Projects related to user
@@ -104,8 +103,7 @@ public interface TokenAuthenticationService {
 	/**
 	 * Invalidate(Remove) auth tokens for provided users
 	 *
-	 * @param users
-	 *          list of users (usernames)
+	 * @param users list of users (usernames)
 	 */
 	void invalidateAuthToken(List<String> users);
 

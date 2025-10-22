@@ -31,20 +31,15 @@ public class FeedbackServiceImpl implements FeedbackService {
 
 	private static final String NOTIFICATION_KEY = "Submit_Feedback";
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private CommonService commonService;
+	@Autowired private CommonService commonService;
 
-	@Autowired
-	private UserInfoService userInfoService;
+	@Autowired private UserInfoService userInfoService;
 
-	@Autowired
-	private GlobalConfigRepository globalConfigRepository;
+	@Autowired private GlobalConfigRepository globalConfigRepository;
 
-	@Autowired
-	private NotificationService notificationService;
+	@Autowired private NotificationService notificationService;
 
 	@Override
 	public boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserName) {
@@ -52,38 +47,48 @@ public class FeedbackServiceImpl implements FeedbackService {
 		List<String> emailAddresses = null;
 
 		List<GlobalConfig> globalConfigs = globalConfigRepository.findAll();
-		GlobalConfig globalConfig = CollectionUtils.isEmpty(globalConfigs) ? null : globalConfigs.get(0);
-		EmailServerDetail emailServerDetail = globalConfig == null ? null : globalConfig.getEmailServerDetail();
+		GlobalConfig globalConfig =
+				CollectionUtils.isEmpty(globalConfigs) ? null : globalConfigs.get(0);
+		EmailServerDetail emailServerDetail =
+				globalConfig == null ? null : globalConfig.getEmailServerDetail();
 		if (emailServerDetail != null) {
 			emailAddresses = emailServerDetail.getFeedbackEmailIds();
 		} else {
 			log.error("Notification Event not sent : notification emailServer Details not found in db");
 		}
 		String feedbackNotificationSubjects = customApiConfig.getFeedbackEmailSubject();
-		if (CollectionUtils.isNotEmpty(emailAddresses) && (!(feedbackNotificationSubjects.isEmpty()))
+		if (CollectionUtils.isNotEmpty(emailAddresses)
+				&& (!(feedbackNotificationSubjects.isEmpty()))
 				&& (!feedback.getFeedback().isEmpty())) {
 			String serverPath = "";
 			try {
 				serverPath = commonService.getApiHost();
 			} catch (UnknownHostException e) {
 				status = false;
-				log.error("SubmitFeedbackController: Server Host name is not bind with submit feedback Request mail ");
+				log.error(
+						"SubmitFeedbackController: Server Host name is not bind with submit feedback Request mail ");
 			}
 			Map<String, String> customData = createCustomData(feedback, serverPath, loggedUserName);
 			log.info("Notification message sent with key : {}", NOTIFICATION_KEY);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
-			notificationService.sendNotificationEvent(emailAddresses, customData, feedbackNotificationSubjects,
-					customApiConfig.isNotificationSwitch(), templateKey);
+			notificationService.sendNotificationEvent(
+					emailAddresses,
+					customData,
+					feedbackNotificationSubjects,
+					customApiConfig.isNotificationSwitch(),
+					templateKey);
 		} else {
 			status = false;
-			log.error("Notification Event not sent : No email address "
-					+ "or Property - notificationSubject.accessRequest not set in property file ");
+			log.error(
+					"Notification Event not sent : No email address "
+							+ "or Property - notificationSubject.accessRequest not set in property file ");
 		}
 
 		return status;
 	}
 
-	private Map<String, String> createCustomData(FeedbackSubmitDTO feedback, String serverPath, String loggedUserName) {
+	private Map<String, String> createCustomData(
+			FeedbackSubmitDTO feedback, String serverPath, String loggedUserName) {
 		Map<String, String> customData = new HashMap<>();
 		UserInfo userInfo = userInfoService.getUserInfo(loggedUserName);
 		if (userInfo != null) {

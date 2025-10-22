@@ -25,9 +25,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- * Factory class to provide the appropriate executive dashboard strategy.
- */
+/** Factory class to provide the appropriate executive dashboard strategy. */
 @Component
 public class ExecutiveDashboardStrategyFactory {
 
@@ -35,18 +33,18 @@ public class ExecutiveDashboardStrategyFactory {
 
 	@Autowired
 	public ExecutiveDashboardStrategyFactory(List<ExecutiveDashboardStrategy> strategies) {
-		this.strategyMap = strategies.stream()
-				.collect(Collectors.toMap(ExecutiveDashboardStrategy::getStrategyType, Function.identity()));
+		this.strategyMap =
+				strategies.stream()
+						.collect(
+								Collectors.toMap(ExecutiveDashboardStrategy::getStrategyType, Function.identity()));
 	}
 
 	/**
 	 * Gets the appropriate strategy based on the type.
 	 *
-	 * @param type
-	 *            the type of strategy (e.g., "kanban", "scrum")
+	 * @param type the type of strategy (e.g., "kanban", "scrum")
 	 * @return the strategy implementation
-	 * @throws IllegalArgumentException
-	 *             if no strategy is found for the given type
+	 * @throws IllegalArgumentException if no strategy is found for the given type
 	 */
 	public ExecutiveDashboardStrategy getStrategy(String type) {
 		ExecutiveDashboardStrategy strategy = strategyMap.get(type.toLowerCase());

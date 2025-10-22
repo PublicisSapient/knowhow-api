@@ -29,6 +29,7 @@ import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
 import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelServiceImpl;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -46,6 +47,7 @@ import java.util.stream.IntStream;
  * Implementation of UserService for handling user operations
  */
 
+/** Implementation of UserService for handling user operations */
 @AllArgsConstructor
 @Service
 @Slf4j

@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "r_issue_count_fm", order = "010106", author = "shunaray", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "r_issue_count_fm",
+		order = "010106",
+		author = "shunaray",
+		systemVersion = "10.1.0")
 public class IssueCountEnhc {
 
 	public static final String JIRA_STORY_CATEGORY_KPI_40 = "jiraStoryCategoryKpi40";
@@ -65,9 +69,12 @@ public class IssueCountEnhc {
 	}
 
 	public void rollbackMetadataIdentifier() {
-		mongoTemplate.getCollection("metadata_identifier").updateMany(
-				new Document("templateCode", new Document("$in", Arrays.asList("7"))),
-				new Document("$pull", new Document("issues", new Document("type", JIRA_STORY_CATEGORY_KPI_40))));
+		mongoTemplate
+				.getCollection("metadata_identifier")
+				.updateMany(
+						new Document("templateCode", new Document("$in", Arrays.asList("7"))),
+						new Document(
+								"$pull", new Document("issues", new Document("type", JIRA_STORY_CATEGORY_KPI_40))));
 	}
 
 	@RollbackExecution
@@ -78,11 +85,17 @@ public class IssueCountEnhc {
 	}
 
 	public void insertFieldMappingStructure() {
-		Document newFieldMapping = new Document().append("fieldName", JIRA_STORY_CATEGORY_KPI_40)
-				.append("fieldLabel", "Issue type to identify Story category").append("fieldType", "chips")
-				.append("fieldCategory", "Issue_Type").append("section", "Issue Types Mapping")
-				.append("tooltip", new Document("definition", "All issue types that are used as/equivalent to Story."))
-				.append("mandatory", true);
+		Document newFieldMapping =
+				new Document()
+						.append("fieldName", JIRA_STORY_CATEGORY_KPI_40)
+						.append("fieldLabel", "Issue type to identify Story category")
+						.append("fieldType", "chips")
+						.append("fieldCategory", "Issue_Type")
+						.append("section", "Issue Types Mapping")
+						.append(
+								"tooltip",
+								new Document("definition", "All issue types that are used as/equivalent to Story."))
+						.append("mandatory", true);
 
 		mongoTemplate.getCollection("field_mapping_structure").insertOne(newFieldMapping);
 	}
@@ -92,7 +105,8 @@ public class IssueCountEnhc {
 
 		// Define the new values
 		var newValues = new Document();
-		newValues.append(JIRA_STORY_CATEGORY_KPI_40, List.of("Story", "User Story", "Enabler Story", "Feature"));
+		newValues.append(
+				JIRA_STORY_CATEGORY_KPI_40, List.of("Story", "User Story", "Enabler Story", "Feature"));
 
 		// Define the update operation
 		var update = new Document();
@@ -103,9 +117,17 @@ public class IssueCountEnhc {
 	}
 
 	public void updateMetadataIdentifier() {
-		mongoTemplate.getCollection("metadata_identifier").updateMany(
-				new Document("templateCode", new Document("$in", Arrays.asList("7"))),
-				new Document("$push", new Document("issues", new Document("type", JIRA_STORY_CATEGORY_KPI_40).append("value",
-						Arrays.asList("Story", "User Story", "Enabler Story", "Feature")))));
+		mongoTemplate
+				.getCollection("metadata_identifier")
+				.updateMany(
+						new Document("templateCode", new Document("$in", Arrays.asList("7"))),
+						new Document(
+								"$push",
+								new Document(
+										"issues",
+										new Document("type", JIRA_STORY_CATEGORY_KPI_40)
+												.append(
+														"value",
+														Arrays.asList("Story", "User Story", "Enabler Story", "Feature")))));
 	}
 }

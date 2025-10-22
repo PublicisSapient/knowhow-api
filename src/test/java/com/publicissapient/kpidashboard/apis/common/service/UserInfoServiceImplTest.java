@@ -18,6 +18,24 @@
 
 package com.publicissapient.kpidashboard.apis.common.service;
 
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
+
+import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
@@ -42,25 +60,9 @@ import com.publicissapient.kpidashboard.common.model.rbac.*;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoCustomRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserInfoServiceImplTest {
@@ -115,7 +117,7 @@ public class UserInfoServiceImplTest {
 	private org.springframework.security.core.Authentication authentication;
 
 	@BeforeEach
-	void setUp(){
+	void setUp() {
 		authentication = Mockito.mock(org.springframework.security.core.Authentication.class);
 		securityContext = Mockito.mock(SecurityContext.class);
 	}
@@ -146,7 +148,8 @@ public class UserInfoServiceImplTest {
 		String username = "user";
 		AuthType authType = AuthType.STANDARD;
 		List<UserInfo> users = Lists.newArrayList(new UserInfo(), new UserInfo());
-		when(userInfoRepository.findByAuthoritiesIn(List.of(Constant.ROLE_SUPERADMIN))).thenReturn(users);
+		when(userInfoRepository.findByAuthoritiesIn(List.of(Constant.ROLE_SUPERADMIN)))
+				.thenReturn(users);
 		when(userInfoRepository.findByUsernameAndAuthType(username, authType)).thenReturn(null);
 
 		service.demoteFromAdmin(username, authType);
@@ -165,7 +168,8 @@ public class UserInfoServiceImplTest {
 		auth.add("ROLE_VIEWER");
 		user.setAuthorities(auth);
 		List<UserInfo> users = Lists.newArrayList(new UserInfo(), new UserInfo());
-		when(userInfoRepository.findByAuthoritiesIn(List.of(Constant.ROLE_SUPERADMIN))).thenReturn(users);
+		when(userInfoRepository.findByAuthoritiesIn(List.of(Constant.ROLE_SUPERADMIN)))
+				.thenReturn(users);
 		when(userInfoRepository.findByUsernameAndAuthType(username, authType)).thenReturn(user);
 		when(userInfoRepository.save(isA(UserInfo.class))).thenReturn(user);
 
@@ -176,9 +180,7 @@ public class UserInfoServiceImplTest {
 		verify(userInfoRepository).save(user);
 	}
 
-	/**
-	 * 1. if username present in the db then update it with new one else return null
-	 */
+	/** 1. if username present in the db then update it with new one else return null */
 	@Test
 	public void updateUserTest() {
 
@@ -279,9 +281,7 @@ public class UserInfoServiceImplTest {
 	public void getAllUserInfoWithData() {
 
 		SecurityContextHolder.setContext(securityContext);
-		List<GrantedAuthority> authorities = List.of(
-				(GrantedAuthority) () -> Constant.ROLE_SUPERADMIN
-		);
+		List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Constant.ROLE_SUPERADMIN);
 
 		List<String> roles = authorities
 				.stream()
@@ -335,7 +335,8 @@ public class UserInfoServiceImplTest {
 		userInfoDTO.setProjectsAccess(paList);
 
 		when(userInfoRepository.findByUsername("User")).thenReturn(testUser);
-		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class))).thenReturn(testUser);
+		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
+				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", userInfoDTO);
 		assertTrue(result.getSuccess());
 	}
@@ -364,7 +365,8 @@ public class UserInfoServiceImplTest {
 		u.setProjectsAccess(paList);
 
 		when(userInfoRepository.findByUsername("User")).thenReturn(testUser);
-		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class))).thenReturn(testUser);
+		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
+				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", u);
 		assertTrue(result.getSuccess());
 	}
@@ -391,7 +393,8 @@ public class UserInfoServiceImplTest {
 		u.setEmailAddress("testEmail@test.com");
 		when(userInfoRepository.findByUsername("User")).thenReturn(null);
 		when(userInfoRepository.save(any())).thenReturn(testUser);
-		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class))).thenReturn(testUser);
+		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
+				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", u);
 		assertTrue(result.getSuccess());
 	}
@@ -399,8 +402,7 @@ public class UserInfoServiceImplTest {
 	/**
 	 * method to test deleteUser() ;
 	 *
-	 * <p>
-	 * Delete User
+	 * <p>Delete User
 	 */
 	@Test
 	public void deleteUserTest() {
@@ -419,7 +421,10 @@ public class UserInfoServiceImplTest {
 	public void getUserDetailsByToken() {
 		UserInfo user = new UserInfo();
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class)))
-				.thenReturn(new Cookie("authCookie", AuthenticationFixture.getJwtToken("dummyUser", "dummyData", 100000L)));
+				.thenReturn(
+						new Cookie(
+								"authCookie",
+								AuthenticationFixture.getJwtToken("dummyUser", "dummyData", 100000L)));
 		when(userTokenReopository.findByUserToken(anyString()))
 				.thenReturn(new UserTokenData("dummyUser", "dummyToken", null));
 		when(authenticationRepository.findByUsername(anyString())).thenReturn(new Authentication());
@@ -437,7 +442,8 @@ public class UserInfoServiceImplTest {
 
 		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
 		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(null);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString())).thenReturn(roleWiseProjects);
+		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
+				.thenReturn(roleWiseProjects);
 
 		UserDetailsResponseDTO userDetailsResponseDTO = service.getUserInfoByToken(httpServletRequest);
 		assertNotNull(userDetailsResponseDTO);

@@ -66,17 +66,13 @@ public class KPIHelperUtilTest {
 	String P2 = "p2, critical, p2-critical, 2";
 	String P3 = "p3, p3-major, major, 3";
 	String P4 = "p4, p4-minor, minor, 4, p5-trivial, 5,trivial";
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock KanbanJiraIssueRepository kanbanJiraIssueRepository;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
-	@InjectMocks
-	private KPIHelperUtil kpiHelperUtil;
+	@InjectMocks private KPIHelperUtil kpiHelperUtil;
 	private KpiRequest kpiRequestScrum;
 	private KpiRequest kpiRequestKanban;
 
@@ -90,50 +86,63 @@ public class KPIHelperUtilTest {
 		kpiRequestKanban = kpiRequestFactory.findKpiRequest("kpi119");
 		kpiRequestKanban.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
-		accountHierarchyKanbanDataList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
+		accountHierarchyKanbanDataList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory = KanbanJiraIssueDataFactory.newInstance();
-		kanbanJiraIssueDataList = kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeName(Arrays.asList("Story"));
+		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory =
+				KanbanJiraIssueDataFactory.newInstance();
+		kanbanJiraIssueDataList =
+				kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeName(Arrays.asList("Story"));
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssueList = jiraIssueDataFactory.findIssueInTypeNames(Arrays.asList("Bug"));
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		filterLevelMap = hierachyLevelFactory.getHierarchyLevels().stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		filterLevelMap =
+				hierachyLevelFactory.getHierarchyLevels().stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 	}
 
 	@Test
 	public void TestGetTreeLeafNodesGroupedByFilter() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequestScrum,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequestScrum, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		assertThat("Root is", treeAggregatorDetail.getRoot().getGroupName(), equalTo(Filters.ROOT.name()));
+		assertThat(
+				"Root is", treeAggregatorDetail.getRoot().getGroupName(), equalTo(Filters.ROOT.name()));
 
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((filter, leafNodeList) -> {
-			Filters filters = Filters.getFilter(filter);
-			switch (filters) {
-				case SPRINT :
-					assertThat("Number of leaf nodes at sprint level", leafNodeList.size(), equalTo(5));
-					break;
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(filter, leafNodeList) -> {
+							Filters filters = Filters.getFilter(filter);
+							switch (filters) {
+								case SPRINT:
+									assertThat(
+											"Number of leaf nodes at sprint level", leafNodeList.size(), equalTo(5));
+									break;
 
-				default :
-					break;
-			}
-		});
+								default:
+									break;
+							}
+						});
 	}
 
 	@Test
 	public void testGetLeafNodes() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequestScrum,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequestScrum, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
@@ -172,6 +181,5 @@ public class KPIHelperUtilTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 }

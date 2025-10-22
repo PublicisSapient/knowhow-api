@@ -23,7 +23,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmUserService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +30,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmUserService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
@@ -58,35 +53,29 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 public class BitBucketController {
 
-	@Autowired
-	private BitBucketServiceR bitbucketService;
+	@Autowired private BitBucketServiceR bitbucketService;
 
-	@Autowired
-	private BitBucketServiceKanbanR bitbucketServiceKanban;
+	@Autowired private BitBucketServiceKanbanR bitbucketServiceKanban;
 
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private ScmUserService scmUserService;
-
+	@Autowired private CacheService cacheService;
+	@Autowired private ScmUserService scmUserService;
 
 	/**
 	 * Gets bit bucket aggregated metrics.
 	 *
-	 * @param kpiRequest
-	 *          the kpi request
+	 * @param kpiRequest the kpi request
 	 * @return the bit bucket aggregated metrics
-	 * @throws Exception
-	 *           the exception
+	 * @throws Exception the exception
 	 */
-	@RequestMapping(value = "/bitbucket/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<List<KpiElement>> getBitBucketAggregatedMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	@PostMapping(value = "/bitbucket/kpi", produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<KpiElement>> getBitBucketAggregatedMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 		MDC.put("BitbucketKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info("Received BitBucket KPI request {}", kpiRequest);
 		long bitbucketRequestStartTime = System.currentTimeMillis();
 		MDC.put("BitbucketRequestStartTime", String.valueOf(bitbucketRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -94,7 +83,9 @@ public class BitBucketController {
 		}
 
 		List<KpiElement> responseList = bitbucketService.process(kpiRequest);
-		MDC.put("TotalBitbucketRequestTime", String.valueOf(System.currentTimeMillis() - bitbucketRequestStartTime));
+		MDC.put(
+				"TotalBitbucketRequestTime",
+				String.valueOf(System.currentTimeMillis() - bitbucketRequestStartTime));
 
 		log.info("");
 		MDC.clear();
@@ -107,20 +98,19 @@ public class BitBucketController {
 	/**
 	 * Gets bit bucket kanban aggregated metrics.
 	 *
-	 * @param kpiRequest
-	 *          the kpi request
+	 * @param kpiRequest the kpi request
 	 * @return the bit bucket kanban aggregated metrics
-	 * @throws Exception
-	 *           the exception
+	 * @throws Exception the exception
 	 */
-	@RequestMapping(value = "/bitbucketkanban/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/bitbucketkanban/kpi", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<KpiElement>> getBitBucketKanbanAggregatedMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception {
 		MDC.put("BitbucketKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info(" Received BitBucket KPI request {}", kpiRequest);
 		long bitbucketKanbanRequestStartTime = System.currentTimeMillis();
 		MDC.put("BitbucketKanbanRequestStartTime", String.valueOf(bitbucketKanbanRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -128,7 +118,8 @@ public class BitBucketController {
 		}
 
 		List<KpiElement> responseList = bitbucketServiceKanban.process(kpiRequest);
-		MDC.put("TotalBitbucketKanbanRequestTime",
+		MDC.put(
+				"TotalBitbucketKanbanRequestTime",
 				String.valueOf(System.currentTimeMillis() - bitbucketKanbanRequestStartTime));
 
 		log.info("");
@@ -142,13 +133,14 @@ public class BitBucketController {
 	/**
 	 * get all repo members from repo tool
 	 *
-	 * @param projectConfigId
-	 *          basic project config ig
+	 * @param projectConfigId basic project config ig
 	 * @return list of members email
 	 */
 	@GetMapping(value = "repotool/assignees/email/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getRepoToolProjectMembers(@PathVariable("id") String projectConfigId) {
+	public ResponseEntity<ServiceResponse> getRepoToolProjectMembers(
+			@PathVariable("id") String projectConfigId) {
 		return ResponseEntity.status(HttpStatus.OK)
-				.body(new ServiceResponse(true, "", scmUserService.getScmToolUsersMailList(projectConfigId)));
+				.body(
+						new ServiceResponse(true, "", scmUserService.getScmToolUsersMailList(projectConfigId)));
 	}
 }

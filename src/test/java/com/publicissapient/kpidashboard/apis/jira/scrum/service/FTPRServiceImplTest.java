@@ -67,32 +67,21 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FTPRServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
-	@Mock
-	private CustomApiConfig customApiSetting;
+	@Mock private CustomApiConfig customApiSetting;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@InjectMocks
-	private FTPRServiceImpl ftprService;
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private KpiHelperService kpiHelperService;
+	@InjectMocks private FTPRServiceImpl ftprService;
+	@Mock private JiraIterationServiceR jiraService;
 
-	@Mock
-	private SprintRepository sprintRepository;
+	@Mock private SprintRepository sprintRepository;
 	private SprintDetails sprintDetails = new SprintDetails();
 	private KpiRequest kpiRequest;
 	private List<JiraIssue> storyList = new ArrayList<>();
@@ -107,30 +96,40 @@ public class FTPRServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi133");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
 
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
-		jiraIssueCustomHistories = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory().stream()
-				.filter(history -> storyList.contains(history.getStoryID())).collect(Collectors.toList());
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
+		jiraIssueCustomHistories =
+				jiraIssueHistoryDataFactory.getJiraIssueCustomHistory().stream()
+						.filter(history -> storyList.contains(history.getStoryID()))
+						.collect(Collectors.toList());
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping.setIncludeRCAForKPI135(Arrays.asList("coding"));
 		fieldMapping.setJiraKPI82StoryIdentification(Arrays.asList("Story"));
 		fieldMapping.setJiraDefectRejectionStatusKPI135("");
-		fieldMapping.setResolutionTypeForRejectionKPI135(Arrays.asList("Invalid", "Duplicate", "Unrequired"));
+		fieldMapping.setResolutionTypeForRejectionKPI135(
+				Arrays.asList("Invalid", "Duplicate", "Unrequired"));
 		fieldMapping.setJiraIssueDeliverdStatusKPI82(Arrays.asList("Closed"));
-		fieldMapping.setDefectPriorityKPI135(Arrays.asList(new LabelCount("p2", 1), new LabelCount("p1", 3)));
+		fieldMapping.setDefectPriorityKPI135(
+				Arrays.asList(new LabelCount("p2", 1), new LabelCount("p1", 3)));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 	}
@@ -144,34 +143,46 @@ public class FTPRServiceImplTest {
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(sprintRepository.findBySprintID(any())).thenReturn(sprintDetails);
-		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(any(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(any(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(jiraIssueCustomHistories);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(ftprService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
 		Map<String, List<String>> priorityMap = new HashMap<>();
-		priorityMap.put(P1,
-				Stream.of("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "urgent").collect(Collectors.toList()));
-		priorityMap.put(P2, Stream.of("p2", "critical", "P2 - Critical", "2", "high").collect(Collectors.toList()));
-		priorityMap.put(P3, Stream.of("p3", "p3-major", "major", "3", "medium").collect(Collectors.toList()));
-		priorityMap.put(P4, Stream.of("p4", "p4 - minor", "minor", "4", "low").collect(Collectors.toList()));
+		priorityMap.put(
+				P1,
+				Stream.of("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "urgent")
+						.collect(Collectors.toList()));
+		priorityMap.put(
+				P2, Stream.of("p2", "critical", "P2 - Critical", "2", "high").collect(Collectors.toList()));
+		priorityMap.put(
+				P3, Stream.of("p3", "p3-major", "major", "3", "medium").collect(Collectors.toList()));
+		priorityMap.put(
+				P4, Stream.of("p4", "p4 - minor", "minor", "4", "low").collect(Collectors.toList()));
 		priorityMap.put(P5, Stream.of("p5 - trivial", "5", "trivial").collect(Collectors.toList()));
 
 		when(customApiSetting.getPriority()).thenReturn(priorityMap);
 
 		try {
-			KpiElement kpiElement = ftprService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					ftprService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {

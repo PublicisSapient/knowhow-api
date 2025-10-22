@@ -27,7 +27,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +41,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -53,6 +51,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Hours;
 
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
@@ -90,8 +89,7 @@ public final class KpiDataHelper {
 	private static final String CLOSED = "closed";
 	private static final DecimalFormat df = new DecimalFormat(".##");
 
-	private KpiDataHelper() {
-	}
+	private KpiDataHelper() {}
 
 	/**
 	 * Creates condition map for additional filters
@@ -102,23 +100,31 @@ public final class KpiDataHelper {
 	 * @param individualDevOrQa
 	 * @return sub group category as String
 	 */
-	public static String createAdditionalFilterMap(KpiRequest kpiRequest, Map<String, List<String>> mapOfFilters,
-			String methodology, String individualDevOrQa, FilterHelperService flterHelperService) {
+	public static String createAdditionalFilterMap(
+			KpiRequest kpiRequest,
+			Map<String, List<String>> mapOfFilters,
+			String methodology,
+			String individualDevOrQa,
+			FilterHelperService flterHelperService) {
 		String subGroupCategory = Constant.SPRINT;
 		if (methodology.equals(Constant.KANBAN)) {
 			subGroupCategory = Constant.DATE;
 		}
-		Map<String, AdditionalFilterCategory> addFilterCat = flterHelperService.getAdditionalFilterHierarchyLevel();
-		Map<String, AdditionalFilterCategory> addFilterCategory = addFilterCat.entrySet().stream()
-				.collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
+		Map<String, AdditionalFilterCategory> addFilterCat =
+				flterHelperService.getAdditionalFilterHierarchyLevel();
+		Map<String, AdditionalFilterCategory> addFilterCategory =
+				addFilterCat.entrySet().stream()
+						.collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
 
 		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap())) {
 			for (Map.Entry<String, List<String>> entry : kpiRequest.getSelectedMap().entrySet()) {
-				if (CollectionUtils.isNotEmpty(entry.getValue()) &&
-						null != addFilterCategory.get(entry.getKey().toUpperCase())) {
-					mapOfFilters.put(JiraFeature.ADDITIONAL_FILTERS_FILTERID.getFieldValueInFeature(),
+				if (CollectionUtils.isNotEmpty(entry.getValue())
+						&& null != addFilterCategory.get(entry.getKey().toUpperCase())) {
+					mapOfFilters.put(
+							JiraFeature.ADDITIONAL_FILTERS_FILTERID.getFieldValueInFeature(),
 							Arrays.asList(entry.getKey()));
-					mapOfFilters.put(JiraFeature.ADDITIONAL_FILTERS_FILTERVALUES_VALUEID.getFieldValueInFeature(),
+					mapOfFilters.put(
+							JiraFeature.ADDITIONAL_FILTERS_FILTERVALUES_VALUEID.getFieldValueInFeature(),
 							entry.getValue());
 					subGroupCategory = entry.getKey();
 				}
@@ -128,24 +134,25 @@ public final class KpiDataHelper {
 	}
 
 	/**
-	 * Populates a map of filters for capacity based on the given KPI request and
-	 * filter helper service.
+	 * Populates a map of filters for capacity based on the given KPI request and filter helper
+	 * service.
 	 *
-	 * @param kpiRequest
-	 *          the KPI request containing selected filters
-	 * @param mapOfFilters
-	 *          the map to populate with additional filter criteria
-	 * @param filterHelperService
-	 *          the service providing additional filter hierarchy levels
+	 * @param kpiRequest the KPI request containing selected filters
+	 * @param mapOfFilters the map to populate with additional filter criteria
+	 * @param filterHelperService the service providing additional filter hierarchy levels
 	 */
-	public static void createAdditionalFilterMapForCapacity(KpiRequest kpiRequest, Map<String, Object> mapOfFilters,
+	public static void createAdditionalFilterMapForCapacity(
+			KpiRequest kpiRequest,
+			Map<String, Object> mapOfFilters,
 			FilterHelperService filterHelperService) {
 
 		// Retrieve the additional filter hierarchy levels and convert keys to uppercase
 		// for case-insensitive matching
-		Map<String, AdditionalFilterCategory> addFilterCat = filterHelperService.getAdditionalFilterHierarchyLevel();
-		Map<String, AdditionalFilterCategory> addFilterCategory = addFilterCat.entrySet().stream()
-				.collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
+		Map<String, AdditionalFilterCategory> addFilterCat =
+				filterHelperService.getAdditionalFilterHierarchyLevel();
+		Map<String, AdditionalFilterCategory> addFilterCategory =
+				addFilterCat.entrySet().stream()
+						.collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
 
 		// Check if the selected map in KPI request is not empty
 		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap())) {
@@ -153,11 +160,12 @@ public final class KpiDataHelper {
 			for (Map.Entry<String, List<String>> entry : kpiRequest.getSelectedMap().entrySet()) {
 				// Check if the filter has a non-empty value list and exists in the additional
 				// filter categories
-				if (CollectionUtils.isNotEmpty(entry.getValue()) &&
-						addFilterCategory.get(entry.getKey().toUpperCase()) != null) {
+				if (CollectionUtils.isNotEmpty(entry.getValue())
+						&& addFilterCategory.get(entry.getKey().toUpperCase()) != null) {
 					// Add filter criteria to the map of filters
 					mapOfFilters.put("additionalFilterCapacityList.filterId", Arrays.asList(entry.getKey()));
-					mapOfFilters.put("additionalFilterCapacityList.nodeCapacityList.additionalFilterId", entry.getValue());
+					mapOfFilters.put(
+							"additionalFilterCapacityList.nodeCapacityList.additionalFilterId", entry.getValue());
 				}
 			}
 		}
@@ -168,25 +176,36 @@ public final class KpiDataHelper {
 	 *
 	 * @param subGroupCategory
 	 * @param sprintWiseStoryList
-	 * @return {@code Map<String , Map <String , List <String>>>} Map of sprint and
-	 *         subcategory wise list of featureId
+	 * @return {@code Map<String , Map <String , List <String>>>} Map of sprint and subcategory wise
+	 *     list of featureId
 	 */
-	public static Map<Pair<String, String>, Map<String, List<String>>> createSubCategoryWiseMap(String subGroupCategory,
-			List<SprintWiseStory> sprintWiseStoryList, String filterToShowOnTrend) {
+	public static Map<Pair<String, String>, Map<String, List<String>>> createSubCategoryWiseMap(
+			String subGroupCategory,
+			List<SprintWiseStory> sprintWiseStoryList,
+			String filterToShowOnTrend) {
 
 		Map<Pair<String, String>, Map<String, List<String>>> sprintWiseStoryMap = new HashMap<>();
 
-		Map<Pair<String, String>, List<SprintWiseStory>> sprintAndFilterDataMap = sprintWiseStoryList.stream()
-				.collect(Collectors.groupingBy(sws -> Pair.of(sws.getProjectID(), sws.getSprint()), Collectors.toList()));
+		Map<Pair<String, String>, List<SprintWiseStory>> sprintAndFilterDataMap =
+				sprintWiseStoryList.stream()
+						.collect(
+								Collectors.groupingBy(
+										sws -> Pair.of(sws.getProjectID(), sws.getSprint()), Collectors.toList()));
 
-		sprintAndFilterDataMap.entrySet().forEach(data -> {
-			Map<String, List<String>> subCategoryDataMap = new HashMap<>();
-			if (Constant.SPRINT.equals(subGroupCategory)) {
-				subCategoryDataMap = data.getValue().stream()
-						.collect(Collectors.toMap(SprintWiseStory::getSprint, SprintWiseStory::getStoryList));
-			}
-			sprintWiseStoryMap.put(data.getKey(), subCategoryDataMap);
-		});
+		sprintAndFilterDataMap
+				.entrySet()
+				.forEach(
+						data -> {
+							Map<String, List<String>> subCategoryDataMap = new HashMap<>();
+							if (Constant.SPRINT.equals(subGroupCategory)) {
+								subCategoryDataMap =
+										data.getValue().stream()
+												.collect(
+														Collectors.toMap(
+																SprintWiseStory::getSprint, SprintWiseStory::getStoryList));
+							}
+							sprintWiseStoryMap.put(data.getKey(), subCategoryDataMap);
+						});
 
 		return sprintWiseStoryMap;
 	}
@@ -199,14 +218,19 @@ public final class KpiDataHelper {
 	 * @param flterHelperService
 	 * @return
 	 */
-	public static Map<String, List<KanbanJiraIssue>> createProjectWiseMapKanban(List<KanbanJiraIssue> ticketList,
-			String subGroupCategory, FilterHelperService flterHelperService) {
+	public static Map<String, List<KanbanJiraIssue>> createProjectWiseMapKanban(
+			List<KanbanJiraIssue> ticketList,
+			String subGroupCategory,
+			FilterHelperService flterHelperService) {
 		Map<String, List<KanbanJiraIssue>> projectAndDateWiseTicketMap = new HashMap<>();
-		Map<String, AdditionalFilterCategory> addFilterCat = flterHelperService.getAdditionalFilterHierarchyLevel();
+		Map<String, AdditionalFilterCategory> addFilterCat =
+				flterHelperService.getAdditionalFilterHierarchyLevel();
 		List<String> addFilterCategoryList = new ArrayList<>(addFilterCat.keySet());
-		if (Constant.DATE.equals(subGroupCategory) || addFilterCategoryList.contains(subGroupCategory)) {
-			projectAndDateWiseTicketMap = ticketList.stream()
-					.collect(Collectors.groupingBy(KanbanJiraIssue::getBasicProjectConfigId));
+		if (Constant.DATE.equals(subGroupCategory)
+				|| addFilterCategoryList.contains(subGroupCategory)) {
+			projectAndDateWiseTicketMap =
+					ticketList.stream()
+							.collect(Collectors.groupingBy(KanbanJiraIssue::getBasicProjectConfigId));
 		}
 
 		return projectAndDateWiseTicketMap;
@@ -221,13 +245,18 @@ public final class KpiDataHelper {
 	 * @return
 	 */
 	public static Map<String, List<KanbanIssueCustomHistory>> createProjectWiseMapKanbanHistory(
-			List<KanbanIssueCustomHistory> ticketList, String subGroupCategory, FilterHelperService flterHelperService) {
+			List<KanbanIssueCustomHistory> ticketList,
+			String subGroupCategory,
+			FilterHelperService flterHelperService) {
 		Map<String, List<KanbanIssueCustomHistory>> projectAndDateWiseTicketMap = new HashMap<>();
-		Map<String, AdditionalFilterCategory> addFilterCat = flterHelperService.getAdditionalFilterHierarchyLevel();
+		Map<String, AdditionalFilterCategory> addFilterCat =
+				flterHelperService.getAdditionalFilterHierarchyLevel();
 		List<String> addFilterCategoryList = new ArrayList<>(addFilterCat.keySet());
-		if (Constant.DATE.equals(subGroupCategory) || addFilterCategoryList.contains(subGroupCategory)) {
-			projectAndDateWiseTicketMap = ticketList.stream()
-					.collect(Collectors.groupingBy(KanbanIssueCustomHistory::getBasicProjectConfigId));
+		if (Constant.DATE.equals(subGroupCategory)
+				|| addFilterCategoryList.contains(subGroupCategory)) {
+			projectAndDateWiseTicketMap =
+					ticketList.stream()
+							.collect(Collectors.groupingBy(KanbanIssueCustomHistory::getBasicProjectConfigId));
 		}
 
 		return projectAndDateWiseTicketMap;
@@ -241,26 +270,37 @@ public final class KpiDataHelper {
 	 * @param flterHelperService
 	 */
 	public static Map<String, Map<String, List<KanbanCapacity>>> createDateWiseCapacityMap(
-			List<KanbanCapacity> ticketList, String subGroupCategory, FilterHelperService flterHelperService) {
-		Map<String, AdditionalFilterCategory> addFilterCat = flterHelperService.getAdditionalFilterHierarchyLevel();
+			List<KanbanCapacity> ticketList,
+			String subGroupCategory,
+			FilterHelperService flterHelperService) {
+		Map<String, AdditionalFilterCategory> addFilterCat =
+				flterHelperService.getAdditionalFilterHierarchyLevel();
 		List<String> addFilterCategoryList = new ArrayList<>(addFilterCat.keySet());
 		Map<String, Map<String, List<KanbanCapacity>>> projectAndDateWiseCapacityMap = new HashMap<>();
-		if (Constant.DATE.equals(subGroupCategory) || addFilterCategoryList.contains(subGroupCategory)) {
-			Map<String, List<KanbanCapacity>> projectWiseCapacityMap = ticketList.stream()
-					.collect(Collectors.groupingBy(ticket -> ticket.getBasicProjectConfigId().toString(), Collectors.toList()));
-			projectWiseCapacityMap.forEach((project, capacityList) -> {
-				Map<String, List<KanbanCapacity>> dateWiseCapacityMap = new HashMap<>();
-				capacityList.forEach(kanbanCapacity -> {
-					for (LocalDate date = kanbanCapacity.getStartDate(); (date.isBefore(kanbanCapacity.getEndDate()) ||
-							date.isEqual(kanbanCapacity.getEndDate())) &&
-							!(date.getDayOfWeek().equals(DayOfWeek.SUNDAY) ||
-									date.getDayOfWeek().equals(DayOfWeek.SATURDAY)); date = date.plusDays(1)) {
-						dateWiseCapacityMap.putIfAbsent(date.toString(), new ArrayList<>());
-						dateWiseCapacityMap.get(date.toString()).add(kanbanCapacity);
-					}
-				});
-				projectAndDateWiseCapacityMap.put(project, dateWiseCapacityMap);
-			});
+		if (Constant.DATE.equals(subGroupCategory)
+				|| addFilterCategoryList.contains(subGroupCategory)) {
+			Map<String, List<KanbanCapacity>> projectWiseCapacityMap =
+					ticketList.stream()
+							.collect(
+									Collectors.groupingBy(
+											ticket -> ticket.getBasicProjectConfigId().toString(), Collectors.toList()));
+			projectWiseCapacityMap.forEach(
+					(project, capacityList) -> {
+						Map<String, List<KanbanCapacity>> dateWiseCapacityMap = new HashMap<>();
+						capacityList.forEach(
+								kanbanCapacity -> {
+									for (LocalDate date = kanbanCapacity.getStartDate();
+											(date.isBefore(kanbanCapacity.getEndDate())
+															|| date.isEqual(kanbanCapacity.getEndDate()))
+													&& !(date.getDayOfWeek().equals(DayOfWeek.SUNDAY)
+															|| date.getDayOfWeek().equals(DayOfWeek.SATURDAY));
+											date = date.plusDays(1)) {
+										dateWiseCapacityMap.putIfAbsent(date.toString(), new ArrayList<>());
+										dateWiseCapacityMap.get(date.toString()).add(kanbanCapacity);
+									}
+								});
+						projectAndDateWiseCapacityMap.put(project, dateWiseCapacityMap);
+					});
 		}
 		return projectAndDateWiseCapacityMap;
 	}
@@ -313,7 +353,8 @@ public final class KpiDataHelper {
 		return dateRange;
 	}
 
-	public static CustomDateRange getStartAndEndDateTimeForDataFiltering(LocalDateTime date, String period) {
+	public static CustomDateRange getStartAndEndDateTimeForDataFiltering(
+			LocalDateTime date, String period) {
 		CustomDateRange dateRange = new CustomDateRange();
 		LocalDateTime startDate = null;
 		LocalDateTime endDate = null;
@@ -333,8 +374,8 @@ public final class KpiDataHelper {
 			startDate = month.atDay(1).atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
 			endDate = month.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
 		} else {
-            startDate = date.toLocalDate().atStartOfDay();
-            endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
+			startDate = date.toLocalDate().atStartOfDay();
+			endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
 		}
 		dateRange.setStartDate(startDate.toLocalDate());
 		dateRange.setEndDate(endDate.toLocalDate());
@@ -344,8 +385,8 @@ public final class KpiDataHelper {
 	}
 
 	/**
-	 * CustomDateRange calculation for Cumulative data and start date is always
-	 * monday for week and or 1st day of month for months calculation.
+	 * CustomDateRange calculation for Cumulative data and start date is always monday for week and or
+	 * 1st day of month for months calculation.
 	 *
 	 * @param kpiRequest
 	 * @return CustomDateRange
@@ -374,8 +415,7 @@ public final class KpiDataHelper {
 	}
 
 	/**
-	 * months calculation for how many months past data is measure Data for
-	 * Cumulative
+	 * months calculation for how many months past data is measure Data for Cumulative
 	 *
 	 * @param pastMonthsCount
 	 * @return startDate
@@ -401,42 +441,60 @@ public final class KpiDataHelper {
 	}
 
 	/**
-	 * Based on sprint details type converted sprint issue objects to jira issue
-	 * number ids list
+	 * Based on sprint details type converted sprint issue objects to jira issue number ids list
 	 *
 	 * @param sprintDetails
 	 * @param issueType
 	 * @return
 	 */
-	public static List<String> getIssuesIdListBasedOnTypeFromSprintDetails(SprintDetails sprintDetails,
-			String issueType) {
+	public static List<String> getIssuesIdListBasedOnTypeFromSprintDetails(
+			SprintDetails sprintDetails, String issueType) {
 		if (issueType.equalsIgnoreCase(CommonConstant.COMPLETED_ISSUES)) {
-			return CollectionUtils.emptyIfNull(sprintDetails.getCompletedIssues()).stream().filter(Objects::nonNull)
-					.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+			return CollectionUtils.emptyIfNull(sprintDetails.getCompletedIssues()).stream()
+					.filter(Objects::nonNull)
+					.map(SprintIssue::getNumber)
+					.distinct()
+					.collect(Collectors.toList());
 		} else if (issueType.equalsIgnoreCase(CommonConstant.NOT_COMPLETED_ISSUES)) {
-			return CollectionUtils.emptyIfNull(sprintDetails.getNotCompletedIssues()).stream().filter(Objects::nonNull)
-					.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+			return CollectionUtils.emptyIfNull(sprintDetails.getNotCompletedIssues()).stream()
+					.filter(Objects::nonNull)
+					.map(SprintIssue::getNumber)
+					.distinct()
+					.collect(Collectors.toList());
 		} else if (issueType.equalsIgnoreCase(CommonConstant.PUNTED_ISSUES)) {
-			return CollectionUtils.emptyIfNull(sprintDetails.getPuntedIssues()).stream().filter(Objects::nonNull)
-					.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+			return CollectionUtils.emptyIfNull(sprintDetails.getPuntedIssues()).stream()
+					.filter(Objects::nonNull)
+					.map(SprintIssue::getNumber)
+					.distinct()
+					.collect(Collectors.toList());
 		} else if (issueType.equalsIgnoreCase(CommonConstant.COMPLETED_ISSUES_ANOTHER_SPRINT)) {
 			return CollectionUtils.emptyIfNull(sprintDetails.getCompletedIssuesAnotherSprint()).stream()
-					.filter(Objects::nonNull).map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+					.filter(Objects::nonNull)
+					.map(SprintIssue::getNumber)
+					.distinct()
+					.collect(Collectors.toList());
 		} else if (issueType.equalsIgnoreCase(CommonConstant.TOTAL_ISSUES)) {
-			return CollectionUtils.emptyIfNull(sprintDetails.getTotalIssues()).stream().filter(Objects::nonNull)
-					.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+			return CollectionUtils.emptyIfNull(sprintDetails.getTotalIssues()).stream()
+					.filter(Objects::nonNull)
+					.map(SprintIssue::getNumber)
+					.distinct()
+					.collect(Collectors.toList());
 		} else if (issueType.equalsIgnoreCase(CommonConstant.ADDED_ISSUES)) {
-			return CollectionUtils.emptyIfNull(sprintDetails.getAddedIssues()).stream().filter(Objects::nonNull)
+			return CollectionUtils.emptyIfNull(sprintDetails.getAddedIssues()).stream()
+					.filter(Objects::nonNull)
 					.collect(Collectors.toList());
 		} else {
 			return new ArrayList<>();
 		}
 	}
 
-	public static void prepareFieldMappingDefectTypeTransformation(Map<String, Object> mapOfProjectFilters,
-			List<String> defectType, List<String> kpiWiseDefectsFieldMapping, String key) {
-		if (Optional.ofNullable(defectType).isPresent() &&
-				CollectionUtils.containsAny(kpiWiseDefectsFieldMapping, defectType)) {
+	public static void prepareFieldMappingDefectTypeTransformation(
+			Map<String, Object> mapOfProjectFilters,
+			List<String> defectType,
+			List<String> kpiWiseDefectsFieldMapping,
+			String key) {
+		if (Optional.ofNullable(defectType).isPresent()
+				&& CollectionUtils.containsAny(kpiWiseDefectsFieldMapping, defectType)) {
 			kpiWiseDefectsFieldMapping.removeIf(x -> defectType.contains(x));
 			kpiWiseDefectsFieldMapping.add(NormalizedJira.DEFECT_TYPE.getValue());
 		}
@@ -451,113 +509,145 @@ public final class KpiDataHelper {
 	 * @param allJiraIssue
 	 * @return
 	 */
-	public static Set<JiraIssue> getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(SprintDetails sprintDetails,
-			Set<SprintIssue> sprintIssues, List<JiraIssue> allJiraIssue) {
+	public static Set<JiraIssue> getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
+			SprintDetails sprintDetails, Set<SprintIssue> sprintIssues, List<JiraIssue> allJiraIssue) {
 		Set<JiraIssue> filteredIssues = new HashSet<>();
 		Map<String, SprintIssue> issueKeyWiseSprintIssue = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(sprintIssues)) {
-			sprintIssues.stream().forEach(sprintIssue -> issueKeyWiseSprintIssue.put(sprintIssue.getNumber(), sprintIssue));
+			sprintIssues.stream()
+					.forEach(
+							sprintIssue -> issueKeyWiseSprintIssue.put(sprintIssue.getNumber(), sprintIssue));
 		} else {
 			CollectionUtils.emptyIfNull(sprintDetails.getTotalIssues()).stream()
-					.forEach(sprintIssue -> issueKeyWiseSprintIssue.put(sprintIssue.getNumber(), sprintIssue));
+					.forEach(
+							sprintIssue -> issueKeyWiseSprintIssue.put(sprintIssue.getNumber(), sprintIssue));
 			CollectionUtils.emptyIfNull(sprintDetails.getPuntedIssues()).stream()
-					.forEach(sprintIssue -> issueKeyWiseSprintIssue.put(sprintIssue.getNumber(), sprintIssue));
+					.forEach(
+							sprintIssue -> issueKeyWiseSprintIssue.put(sprintIssue.getNumber(), sprintIssue));
 		}
-		allJiraIssue.stream().forEach(jiraIssue -> {
-			if (Objects.nonNull(issueKeyWiseSprintIssue.get(jiraIssue.getNumber()))) {
-				JiraIssue filterJiraIssue = null;
-				try {
-					filterJiraIssue = (JiraIssue) jiraIssue.clone();
-				} catch (CloneNotSupportedException e) {
-					filterJiraIssue = jiraIssue;
-					log.error("[KPIDataHelper]. exception while clone ing object jira issue{}", e);
-				}
-				SprintIssue sprintIssue = issueKeyWiseSprintIssue.get(jiraIssue.getNumber());
-				filterJiraIssue.setStoryPoints(sprintIssue.getStoryPoints());
-				filterJiraIssue.setPriority(sprintIssue.getPriority());
-				filterJiraIssue.setStatus(sprintIssue.getStatus());
-				filterJiraIssue.setTypeName(sprintIssue.getTypeName());
-				if (null != filterJiraIssue.getAggregateTimeRemainingEstimateMinutes()) {
-					filterJiraIssue.setRemainingEstimateMinutes((filterJiraIssue.getAggregateTimeRemainingEstimateMinutes()));
-				} else if (Objects.nonNull(sprintIssue.getRemainingEstimate())) {
-					Double remainingEst = (sprintIssue.getRemainingEstimate()) / 60;
-					filterJiraIssue.setRemainingEstimateMinutes(remainingEst.intValue());
-				}
-				if (null != filterJiraIssue.getAggregateTimeOriginalEstimateMinutes()) {
-					filterJiraIssue.setOriginalEstimateMinutes((filterJiraIssue.getAggregateTimeOriginalEstimateMinutes()));
-				}
-				filteredIssues.add(filterJiraIssue);
-			}
-		});
+		allJiraIssue.stream()
+				.forEach(
+						jiraIssue -> {
+							if (Objects.nonNull(issueKeyWiseSprintIssue.get(jiraIssue.getNumber()))) {
+								JiraIssue filterJiraIssue = null;
+								try {
+									filterJiraIssue = (JiraIssue) jiraIssue.clone();
+								} catch (CloneNotSupportedException e) {
+									filterJiraIssue = jiraIssue;
+									log.error("[KPIDataHelper]. exception while clone ing object jira issue{}", e);
+								}
+								SprintIssue sprintIssue = issueKeyWiseSprintIssue.get(jiraIssue.getNumber());
+								filterJiraIssue.setStoryPoints(sprintIssue.getStoryPoints());
+								filterJiraIssue.setPriority(sprintIssue.getPriority());
+								filterJiraIssue.setStatus(sprintIssue.getStatus());
+								filterJiraIssue.setTypeName(sprintIssue.getTypeName());
+								if (null != filterJiraIssue.getAggregateTimeRemainingEstimateMinutes()) {
+									filterJiraIssue.setRemainingEstimateMinutes(
+											(filterJiraIssue.getAggregateTimeRemainingEstimateMinutes()));
+								} else if (Objects.nonNull(sprintIssue.getRemainingEstimate())) {
+									Double remainingEst = (sprintIssue.getRemainingEstimate()) / 60;
+									filterJiraIssue.setRemainingEstimateMinutes(remainingEst.intValue());
+								}
+								if (null != filterJiraIssue.getAggregateTimeOriginalEstimateMinutes()) {
+									filterJiraIssue.setOriginalEstimateMinutes(
+											(filterJiraIssue.getAggregateTimeOriginalEstimateMinutes()));
+								}
+								filteredIssues.add(filterJiraIssue);
+							}
+						});
 		return filteredIssues;
 	}
 
-	public static List<IterationPotentialDelay> sprintWiseDelayCalculation(List<JiraIssue> inProgressIssuesJiraIssueList,
-			List<JiraIssue> openIssuesJiraIssueList, SprintDetails sprintDetails) {
+	public static List<IterationPotentialDelay> sprintWiseDelayCalculation(
+			List<JiraIssue> inProgressIssuesJiraIssueList,
+			List<JiraIssue> openIssuesJiraIssueList,
+			SprintDetails sprintDetails) {
 		List<IterationPotentialDelay> iterationPotentialDelayList = new ArrayList<>();
 		LocalDateTime pivotPCD = null;
-		Map<LocalDateTime, List<JiraIssue>> dueDateWiseInProgressJiraIssue = createDueDateWiseMap(
-				inProgressIssuesJiraIssueList);
-		Map<LocalDateTime, List<JiraIssue>> dueDateWiseOpenJiraIssue = createDueDateWiseMap(openIssuesJiraIssueList);
+		Map<LocalDateTime, List<JiraIssue>> dueDateWiseInProgressJiraIssue =
+				createDueDateWiseMap(inProgressIssuesJiraIssueList);
+		Map<LocalDateTime, List<JiraIssue>> dueDateWiseOpenJiraIssue =
+				createDueDateWiseMap(openIssuesJiraIssueList);
 		if (MapUtils.isNotEmpty(dueDateWiseInProgressJiraIssue)) {
-			for (Map.Entry<LocalDateTime, List<JiraIssue>> entry : dueDateWiseInProgressJiraIssue.entrySet()) {
-				pivotPCD = getNextPotentialClosedDate(sprintDetails, iterationPotentialDelayList, pivotPCD, entry);
+			for (Map.Entry<LocalDateTime, List<JiraIssue>> entry :
+					dueDateWiseInProgressJiraIssue.entrySet()) {
+				pivotPCD =
+						getNextPotentialClosedDate(sprintDetails, iterationPotentialDelayList, pivotPCD, entry);
 			}
 		}
 		if (MapUtils.isNotEmpty(dueDateWiseOpenJiraIssue)) {
 			for (Map.Entry<LocalDateTime, List<JiraIssue>> entry : dueDateWiseOpenJiraIssue.entrySet()) {
-				pivotPCD = getNextPotentialClosedDate(sprintDetails, iterationPotentialDelayList, pivotPCD, entry);
+				pivotPCD =
+						getNextPotentialClosedDate(sprintDetails, iterationPotentialDelayList, pivotPCD, entry);
 			}
 		}
 		return iterationPotentialDelayList;
 	}
 
-	private static LocalDateTime getNextPotentialClosedDate(SprintDetails sprintDetails,
-			List<IterationPotentialDelay> iterationPotentialDelayList, LocalDateTime pivotPCD,
+	private static LocalDateTime getNextPotentialClosedDate(
+			SprintDetails sprintDetails,
+			List<IterationPotentialDelay> iterationPotentialDelayList,
+			LocalDateTime pivotPCD,
 			Map.Entry<LocalDateTime, List<JiraIssue>> entry) {
 		LocalDateTime pivotPCDLocal = null;
 		for (JiraIssue issue : entry.getValue()) {
 			int remainingEstimateTime = getRemainingEstimateTime(issue);
-			LocalDateTime potentialClosedDate = getPotentialClosedDate(sprintDetails, pivotPCD, remainingEstimateTime);
-			int potentialDelay = getPotentialDelay(entry.getKey().toLocalDate(), potentialClosedDate.toLocalDate());
-			iterationPotentialDelayList.add(createIterationPotentialDelay(potentialClosedDate, potentialDelay,
-					remainingEstimateTime, issue, sprintDetails.getState().equalsIgnoreCase(CLOSED), entry.getKey()));
-			pivotPCDLocal = checkPivotPCD(sprintDetails, potentialClosedDate, remainingEstimateTime, pivotPCDLocal);
+			LocalDateTime potentialClosedDate =
+					getPotentialClosedDate(sprintDetails, pivotPCD, remainingEstimateTime);
+			int potentialDelay =
+					getPotentialDelay(entry.getKey().toLocalDate(), potentialClosedDate.toLocalDate());
+			iterationPotentialDelayList.add(
+					createIterationPotentialDelay(
+							potentialClosedDate,
+							potentialDelay,
+							remainingEstimateTime,
+							issue,
+							sprintDetails.getState().equalsIgnoreCase(CLOSED),
+							entry.getKey()));
+			pivotPCDLocal =
+					checkPivotPCD(sprintDetails, potentialClosedDate, remainingEstimateTime, pivotPCDLocal);
 		}
 		pivotPCD = pivotPCDLocal == null ? pivotPCD : pivotPCDLocal;
 		return pivotPCD;
 	}
 
 	/**
-	 * if remaining time is 0 and sprint is closed, then PCD is sprint end time
-	 * otherwise will create PCD
+	 * if remaining time is 0 and sprint is closed, then PCD is sprint end time otherwise will create
+	 * PCD
 	 *
 	 * @param sprintDetails
 	 * @param pivotPCD
 	 * @param estimatedTime
 	 * @return
 	 */
-	private static LocalDateTime getPotentialClosedDate(SprintDetails sprintDetails, LocalDateTime pivotPCD, int estimatedTime) {
+	private static LocalDateTime getPotentialClosedDate(
+			SprintDetails sprintDetails, LocalDateTime pivotPCD, int estimatedTime) {
 		return (estimatedTime == 0 && sprintDetails.getState().equalsIgnoreCase(CLOSED))
 				? DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
 				: createPotentialClosedDate(sprintDetails, estimatedTime, pivotPCD);
 	}
 
-	private static IterationPotentialDelay createIterationPotentialDelay(LocalDateTime potentialClosedDate,
-			int potentialDelay, int remainingEstimateTime, JiraIssue issue, boolean sprintClosed, LocalDateTime dueDate) {
+	private static IterationPotentialDelay createIterationPotentialDelay(
+			LocalDateTime potentialClosedDate,
+			int potentialDelay,
+			int remainingEstimateTime,
+			JiraIssue issue,
+			boolean sprintClosed,
+			LocalDateTime dueDate) {
 		IterationPotentialDelay iterationPotentialDelay = new IterationPotentialDelay();
 		iterationPotentialDelay.setIssueId(issue.getNumber());
-		iterationPotentialDelay.setPotentialDelay((sprintClosed && remainingEstimateTime == 0) ? 0 : potentialDelay);
+		iterationPotentialDelay.setPotentialDelay(
+				(sprintClosed && remainingEstimateTime == 0) ? 0 : potentialDelay);
 		iterationPotentialDelay.setDueDate(DateUtil.tranformUTCLocalTimeToZFormat(dueDate));
-		iterationPotentialDelay.setPredictedCompletedDate(DateUtil.tranformUTCLocalTimeToZFormat(potentialClosedDate));
+		iterationPotentialDelay.setPredictedCompletedDate(
+				DateUtil.tranformUTCLocalTimeToZFormat(potentialClosedDate));
 		iterationPotentialDelay.setAssigneeId(issue.getAssigneeId());
 		iterationPotentialDelay.setStatus(issue.getStatus());
 		return iterationPotentialDelay;
 	}
 
 	/**
-	 * if due date is less than potential closed date, then potential delay will be
-	 * negative
+	 * if due date is less than potential closed date, then potential delay will be negative
 	 *
 	 * @param dueDate
 	 * @param potentialClosedDate
@@ -569,9 +659,9 @@ public final class KpiDataHelper {
 	}
 
 	/**
-	 * In closed sprint if a Remaining Estimate is 0, then the potential closing
-	 * date will be same as sprint' end date, whose potential closing date will not
-	 * be taken into account for further storie's delay calculation
+	 * In closed sprint if a Remaining Estimate is 0, then the potential closing date will be same as
+	 * sprint' end date, whose potential closing date will not be taken into account for further
+	 * storie's delay calculation
 	 *
 	 * @param sprintDetails
 	 * @param potentialClosedDate
@@ -579,11 +669,14 @@ public final class KpiDataHelper {
 	 * @param pivotPCDLocal
 	 * @return
 	 */
-	private static LocalDateTime checkPivotPCD(SprintDetails sprintDetails, LocalDateTime potentialClosedDate,
-			int remainingEstimateTime, LocalDateTime pivotPCDLocal) {
-		if ((pivotPCDLocal == null || pivotPCDLocal.isBefore(potentialClosedDate)) &&
-				(!sprintDetails.getState().equalsIgnoreCase(CLOSED) ||
-						(sprintDetails.getState().equalsIgnoreCase(CLOSED) && remainingEstimateTime != 0))) {
+	private static LocalDateTime checkPivotPCD(
+			SprintDetails sprintDetails,
+			LocalDateTime potentialClosedDate,
+			int remainingEstimateTime,
+			LocalDateTime pivotPCDLocal) {
+		if ((pivotPCDLocal == null || pivotPCDLocal.isBefore(potentialClosedDate))
+				&& (!sprintDetails.getState().equalsIgnoreCase(CLOSED)
+						|| (sprintDetails.getState().equalsIgnoreCase(CLOSED) && remainingEstimateTime != 0))) {
 			pivotPCDLocal = potentialClosedDate;
 		}
 		return pivotPCDLocal;
@@ -595,21 +688,29 @@ public final class KpiDataHelper {
 	 * @param arrangeJiraIssueList
 	 * @return
 	 */
-	private static Map<LocalDateTime, List<JiraIssue>> createDueDateWiseMap(List<JiraIssue> arrangeJiraIssueList) {
+	private static Map<LocalDateTime, List<JiraIssue>> createDueDateWiseMap(
+			List<JiraIssue> arrangeJiraIssueList) {
 		TreeMap<LocalDateTime, List<JiraIssue>> localDateListMap = new TreeMap<>();
 		if (CollectionUtils.isNotEmpty(arrangeJiraIssueList)) {
-			arrangeJiraIssueList.forEach(jiraIssue -> {
-				LocalDateTime dueDate = DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-				localDateListMap.computeIfPresent(dueDate, (date, issue) -> {
-					issue.add(jiraIssue);
-					return issue;
-				});
-				localDateListMap.computeIfAbsent(dueDate, value -> {
-					List<JiraIssue> issues = new ArrayList<>();
-					issues.add(jiraIssue);
-					return issues;
-				});
-			});
+			arrangeJiraIssueList.forEach(
+					jiraIssue -> {
+						LocalDateTime dueDate =
+								DateUtil.stringToLocalDateTime(
+										jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+						localDateListMap.computeIfPresent(
+								dueDate,
+								(date, issue) -> {
+									issue.add(jiraIssue);
+									return issue;
+								});
+						localDateListMap.computeIfAbsent(
+								dueDate,
+								value -> {
+									List<JiraIssue> issues = new ArrayList<>();
+									issues.add(jiraIssue);
+									return issues;
+								});
+					});
 		}
 		return localDateListMap;
 	}
@@ -617,14 +718,16 @@ public final class KpiDataHelper {
 	/*
 	 * add remaining estimates to the PCD calculated from the previous stories
 	 */
-	private static LocalDateTime createPotentialClosedDate(SprintDetails sprintDetails, int remainingEstimateTime,
-													   LocalDateTime pivotPCD) {
+	private static LocalDateTime createPotentialClosedDate(
+			SprintDetails sprintDetails, int remainingEstimateTime, LocalDateTime pivotPCD) {
 		LocalDateTime pcd = null;
 		if (pivotPCD == null) {
 			// for the first calculation
-			LocalDateTime startDate = sprintDetails.getState().equalsIgnoreCase(CLOSED)
-					? DateUtil.stringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					: DateUtil.getTodayTime();
+			LocalDateTime startDate =
+					sprintDetails.getState().equalsIgnoreCase(CLOSED)
+							? DateUtil.stringToLocalDateTime(
+									sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+							: DateUtil.getTodayTime();
 
 			pcd = CommonUtils.getWorkingDayAfterAdditionofDays(startDate, remainingEstimateTime);
 		} else {
@@ -649,11 +752,12 @@ public final class KpiDataHelper {
 	 * @param jiraIssue
 	 * @return
 	 */
-	public static Double getOriginalEstimate(List<Double> overAllOriginalEstimate, Double originalEstimate,
-			JiraIssue jiraIssue) {
+	public static Double getOriginalEstimate(
+			List<Double> overAllOriginalEstimate, Double originalEstimate, JiraIssue jiraIssue) {
 		if (null != jiraIssue.getOriginalEstimateMinutes()) {
 			originalEstimate = originalEstimate + jiraIssue.getOriginalEstimateMinutes();
-			overAllOriginalEstimate.set(0, overAllOriginalEstimate.get(0) + jiraIssue.getOriginalEstimateMinutes());
+			overAllOriginalEstimate.set(
+					0, overAllOriginalEstimate.get(0) + jiraIssue.getOriginalEstimateMinutes());
 		}
 		return originalEstimate;
 	}
@@ -666,7 +770,8 @@ public final class KpiDataHelper {
 	 * @param jiraIssue
 	 * @return
 	 */
-	public static Double getStoryPoint(List<Double> overAllStoryPoints, Double storyPoint, JiraIssue jiraIssue) {
+	public static Double getStoryPoint(
+			List<Double> overAllStoryPoints, Double storyPoint, JiraIssue jiraIssue) {
 		if (null != jiraIssue.getStoryPoints()) {
 			storyPoint = storyPoint + jiraIssue.getStoryPoints();
 			overAllStoryPoints.set(0, overAllStoryPoints.get(0) + jiraIssue.getStoryPoints());
@@ -683,14 +788,20 @@ public final class KpiDataHelper {
 	 * @param overallPotentialDelay
 	 * @return
 	 */
-	public static int checkDelay(JiraIssue jiraIssue, Map<String, IterationPotentialDelay> issueWiseDelay,
-			int potentialDelay, List<Integer> overallPotentialDelay) {
+	public static int checkDelay(
+			JiraIssue jiraIssue,
+			Map<String, IterationPotentialDelay> issueWiseDelay,
+			int potentialDelay,
+			List<Integer> overallPotentialDelay) {
 		int finalDelay = 0;
-		if (issueWiseDelay.containsKey(jiraIssue.getNumber()) && issueWiseDelay.get(jiraIssue.getNumber()).isMaxMarker()) {
+		if (issueWiseDelay.containsKey(jiraIssue.getNumber())
+				&& issueWiseDelay.get(jiraIssue.getNumber()).isMaxMarker()) {
 			IterationPotentialDelay iterationPotentialDelay = issueWiseDelay.get(jiraIssue.getNumber());
 			finalDelay = potentialDelay + getDelayInMinutes(iterationPotentialDelay.getPotentialDelay());
-			overallPotentialDelay.set(0,
-					overallPotentialDelay.get(0) + getDelayInMinutes(iterationPotentialDelay.getPotentialDelay()));
+			overallPotentialDelay.set(
+					0,
+					overallPotentialDelay.get(0)
+							+ getDelayInMinutes(iterationPotentialDelay.getPotentialDelay()));
 		} else {
 			finalDelay = potentialDelay + finalDelay;
 		}
@@ -707,7 +818,8 @@ public final class KpiDataHelper {
 	 * @param jiraIssueList
 	 * @return
 	 */
-	public static Map<String, IterationKpiModalValue> createMapOfModalObject(List<JiraIssue> jiraIssueList) {
+	public static Map<String, IterationKpiModalValue> createMapOfModalObject(
+			List<JiraIssue> jiraIssueList) {
 		return jiraIssueList.stream()
 				.collect(Collectors.toMap(JiraIssue::getNumber, issue -> new IterationKpiModalValue()));
 	}
@@ -718,31 +830,42 @@ public final class KpiDataHelper {
 	 * @param jiraIssueList
 	 * @return
 	 */
-	public static Map<String, IssueKpiModalValue> createMapOfIssueModal(List<JiraIssue> jiraIssueList) {
-		return jiraIssueList.stream().collect(Collectors.toMap(JiraIssue::getNumber, issue -> new IssueKpiModalValue()));
+	public static Map<String, IssueKpiModalValue> createMapOfIssueModal(
+			List<JiraIssue> jiraIssueList) {
+		return jiraIssueList.stream()
+				.collect(Collectors.toMap(JiraIssue::getNumber, issue -> new IssueKpiModalValue()));
 	}
 
-	public static SprintDetails processSprintBasedOnFieldMappings(SprintDetails dbSprintDetail,
-			List<String> fieldMappingCompletionType, List<String> fieldMappingCompletionStatus,
+	public static SprintDetails processSprintBasedOnFieldMappings(
+			SprintDetails dbSprintDetail,
+			List<String> fieldMappingCompletionType,
+			List<String> fieldMappingCompletionStatus,
 			Map<ObjectId, Map<String, List<LocalDateTime>>> projectWiseDuplicateIssuesWithMinCloseDate) {
-		if ((CollectionUtils.isNotEmpty(fieldMappingCompletionType) ||
-				CollectionUtils.isNotEmpty(fieldMappingCompletionStatus))) {
-			dbSprintDetail.setCompletedIssues(CollectionUtils.isEmpty(dbSprintDetail.getCompletedIssues())
-					? new HashSet<>()
-					: dbSprintDetail.getCompletedIssues());
-			dbSprintDetail.setNotCompletedIssues(CollectionUtils.isEmpty(dbSprintDetail.getNotCompletedIssues())
-					? new HashSet<>()
-					: dbSprintDetail.getNotCompletedIssues());
-			Set<SprintIssue> newCompletedSet = filteringByFieldMapping(dbSprintDetail, fieldMappingCompletionType,
-					fieldMappingCompletionStatus);
+		if ((CollectionUtils.isNotEmpty(fieldMappingCompletionType)
+				|| CollectionUtils.isNotEmpty(fieldMappingCompletionStatus))) {
+			dbSprintDetail.setCompletedIssues(
+					CollectionUtils.isEmpty(dbSprintDetail.getCompletedIssues())
+							? new HashSet<>()
+							: dbSprintDetail.getCompletedIssues());
+			dbSprintDetail.setNotCompletedIssues(
+					CollectionUtils.isEmpty(dbSprintDetail.getNotCompletedIssues())
+							? new HashSet<>()
+							: dbSprintDetail.getNotCompletedIssues());
+			Set<SprintIssue> newCompletedSet =
+					filteringByFieldMapping(
+							dbSprintDetail, fieldMappingCompletionType, fieldMappingCompletionStatus);
 			dbSprintDetail.getNotCompletedIssues().removeAll(newCompletedSet);
 			// filtering by minimum closed date, if an issue is originally in RFT in jira
 			// report, and spilled in the same status through fieldmapping we changed RFT as
 			// closed, then the first sprint in which it appeared in RFT should be
 			// considered as the only sprint when it was closed, and not in further sprint,
 			// as it changes the velocity of each sprint
-			newCompletedSet = changeSprintDetails(dbSprintDetail, newCompletedSet, fieldMappingCompletionStatus,
-					projectWiseDuplicateIssuesWithMinCloseDate);
+			newCompletedSet =
+					changeSprintDetails(
+							dbSprintDetail,
+							newCompletedSet,
+							fieldMappingCompletionStatus,
+							projectWiseDuplicateIssuesWithMinCloseDate);
 			dbSprintDetail.setCompletedIssues(newCompletedSet);
 			dbSprintDetail.getNotCompletedIssues().removeAll(newCompletedSet);
 			Set<SprintIssue> totalIssue = new HashSet<>();
@@ -753,58 +876,87 @@ public final class KpiDataHelper {
 		return dbSprintDetail;
 	}
 
-	public static Set<SprintIssue> changeSprintDetails(SprintDetails sprintDetail, Set<SprintIssue> completedIssues,
-			List<String> customCompleteStatus, Map<ObjectId, Map<String, List<LocalDateTime>>> issueWiseMinimumDates) {
-		if (CollectionUtils.isNotEmpty(customCompleteStatus) && CollectionUtils.isNotEmpty(completedIssues) &&
-				MapUtils.isNotEmpty(issueWiseMinimumDates)) {
+	public static Set<SprintIssue> changeSprintDetails(
+			SprintDetails sprintDetail,
+			Set<SprintIssue> completedIssues,
+			List<String> customCompleteStatus,
+			Map<ObjectId, Map<String, List<LocalDateTime>>> issueWiseMinimumDates) {
+		if (CollectionUtils.isNotEmpty(customCompleteStatus)
+				&& CollectionUtils.isNotEmpty(completedIssues)
+				&& MapUtils.isNotEmpty(issueWiseMinimumDates)) {
 			ObjectId projectId = sprintDetail.getBasicProjectConfigId();
 			Map<String, List<LocalDateTime>> stringListMap = issueWiseMinimumDates.get(projectId);
 			if (MapUtils.isNotEmpty(stringListMap)) {
-				LocalDateTime endLocalDate = sprintDetail.getState().equalsIgnoreCase(SprintDetails.SPRINT_STATE_ACTIVE)
-                        ? DateUtil.getTodayTime()
-                        : DateUtil.stringToLocalDateTime(sprintDetail.getCompleteDate(), DateUtil.TIME_FORMAT_WITH_SEC);
-				return completedIssues.stream().filter(completedIssue -> {
-					List<LocalDateTime> issueDateMap = stringListMap.get(completedIssue.getNumber());
-					if (CollectionUtils.isNotEmpty(issueDateMap)) {
-						return issueDateMap.stream()
-								.anyMatch(dateTime -> DateUtil.isWithinDateTimeRange(dateTime,
-                                        DateUtil.stringToLocalDateTime(sprintDetail.getStartDate(),
-                                                DateUtil.TIME_FORMAT_WITH_SEC),
-										endLocalDate));
-					} else {
-						return false; // Don't save completedIssue if issueDateMap is empty
-					}
-				}).collect(Collectors.toSet());
+				LocalDateTime endLocalDate =
+						sprintDetail.getState().equalsIgnoreCase(SprintDetails.SPRINT_STATE_ACTIVE)
+								? DateUtil.getTodayTime()
+								: DateUtil.stringToLocalDateTime(
+										sprintDetail.getCompleteDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+				return completedIssues.stream()
+						.filter(
+								completedIssue -> {
+									List<LocalDateTime> issueDateMap = stringListMap.get(completedIssue.getNumber());
+									if (CollectionUtils.isNotEmpty(issueDateMap)) {
+										return issueDateMap.stream()
+												.anyMatch(
+														dateTime ->
+																DateUtil.isWithinDateTimeRange(
+																		dateTime,
+																		DateUtil.stringToLocalDateTime(
+																				sprintDetail.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC),
+																		endLocalDate));
+									} else {
+										return false; // Don't save completedIssue if issueDateMap is empty
+									}
+								})
+						.collect(Collectors.toSet());
 			}
 		}
 		return completedIssues;
 	}
 
-	private static Set<SprintIssue> filteringByFieldMapping(SprintDetails dbSprintDetail,
-			List<String> fieldMapingCompletionType, List<String> fieldMappingCompletionStatus) {
+	private static Set<SprintIssue> filteringByFieldMapping(
+			SprintDetails dbSprintDetail,
+			List<String> fieldMapingCompletionType,
+			List<String> fieldMappingCompletionStatus) {
 		Set<SprintIssue> typeWiseIssues = new HashSet<>();
 		Set<SprintIssue> statusWiseIssues = new HashSet<>();
 		Set<SprintIssue> newCompletedSet = null;
-		if (CollectionUtils.isNotEmpty(fieldMappingCompletionStatus) &&
-				CollectionUtils.isNotEmpty(fieldMapingCompletionType)) {
-			statusWiseIssues.addAll(dbSprintDetail.getCompletedIssues().stream()
-					.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus())).collect(Collectors.toSet()));
-			statusWiseIssues.addAll(dbSprintDetail.getNotCompletedIssues().stream()
-					.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus())).collect(Collectors.toSet()));
-			typeWiseIssues.addAll(dbSprintDetail.getCompletedIssues().stream()
-					.filter(issue -> fieldMapingCompletionType.contains(issue.getTypeName())).collect(Collectors.toSet()));
-			typeWiseIssues.addAll(dbSprintDetail.getNotCompletedIssues().stream()
-					.filter(issue -> fieldMapingCompletionType.contains(issue.getTypeName())).collect(Collectors.toSet()));
-			newCompletedSet = new HashSet<>(CollectionUtils.intersection(typeWiseIssues, statusWiseIssues));
+		if (CollectionUtils.isNotEmpty(fieldMappingCompletionStatus)
+				&& CollectionUtils.isNotEmpty(fieldMapingCompletionType)) {
+			statusWiseIssues.addAll(
+					dbSprintDetail.getCompletedIssues().stream()
+							.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus()))
+							.collect(Collectors.toSet()));
+			statusWiseIssues.addAll(
+					dbSprintDetail.getNotCompletedIssues().stream()
+							.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus()))
+							.collect(Collectors.toSet()));
+			typeWiseIssues.addAll(
+					dbSprintDetail.getCompletedIssues().stream()
+							.filter(issue -> fieldMapingCompletionType.contains(issue.getTypeName()))
+							.collect(Collectors.toSet()));
+			typeWiseIssues.addAll(
+					dbSprintDetail.getNotCompletedIssues().stream()
+							.filter(issue -> fieldMapingCompletionType.contains(issue.getTypeName()))
+							.collect(Collectors.toSet()));
+			newCompletedSet =
+					new HashSet<>(CollectionUtils.intersection(typeWiseIssues, statusWiseIssues));
 		} else if (CollectionUtils.isNotEmpty(fieldMappingCompletionStatus)) {
-			statusWiseIssues.addAll(dbSprintDetail.getCompletedIssues().stream()
-					.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus())).collect(Collectors.toSet()));
-			statusWiseIssues.addAll(dbSprintDetail.getNotCompletedIssues().stream()
-					.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus())).collect(Collectors.toSet()));
+			statusWiseIssues.addAll(
+					dbSprintDetail.getCompletedIssues().stream()
+							.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus()))
+							.collect(Collectors.toSet()));
+			statusWiseIssues.addAll(
+					dbSprintDetail.getNotCompletedIssues().stream()
+							.filter(issue -> fieldMappingCompletionStatus.contains(issue.getStatus()))
+							.collect(Collectors.toSet()));
 			newCompletedSet = statusWiseIssues;
 		} else if (CollectionUtils.isNotEmpty(fieldMapingCompletionType)) {
-			typeWiseIssues.addAll(dbSprintDetail.getCompletedIssues().stream()
-					.filter(issue -> fieldMapingCompletionType.contains(issue.getTypeName())).collect(Collectors.toSet()));
+			typeWiseIssues.addAll(
+					dbSprintDetail.getCompletedIssues().stream()
+							.filter(issue -> fieldMapingCompletionType.contains(issue.getTypeName()))
+							.collect(Collectors.toSet()));
 			newCompletedSet = typeWiseIssues;
 		}
 		return newCompletedSet;
@@ -818,11 +970,14 @@ public final class KpiDataHelper {
 	 * @return
 	 */
 	public static Map<String, IterationKpiModalValue> createMapOfModalObjectFromJiraHistory(
-			List<JiraIssueCustomHistory> jiraIssueCustomHistories, List<CycleTimeValidationData> cycleTimeList) {
+			List<JiraIssueCustomHistory> jiraIssueCustomHistories,
+			List<CycleTimeValidationData> cycleTimeList) {
 		Map<String, IterationKpiModalValue> dataMap = new HashMap<>();
 		for (JiraIssueCustomHistory customHistory : jiraIssueCustomHistories) {
-			Optional<CycleTimeValidationData> cycleTimeValidationDataOptional = cycleTimeList.stream()
-					.filter(cyc -> cyc.getIssueNumber().equalsIgnoreCase(customHistory.getStoryID())).findFirst();
+			Optional<CycleTimeValidationData> cycleTimeValidationDataOptional =
+					cycleTimeList.stream()
+							.filter(cyc -> cyc.getIssueNumber().equalsIgnoreCase(customHistory.getStoryID()))
+							.findFirst();
 			if (cycleTimeValidationDataOptional.isPresent()) {
 				CycleTimeValidationData cycleTimeValidationData = cycleTimeValidationDataOptional.get();
 				IterationKpiModalValue iterationKpiModalValue = new IterationKpiModalValue();
@@ -831,28 +986,35 @@ public final class KpiDataHelper {
 				iterationKpiModalValue.setIssueURL(customHistory.getUrl());
 				iterationKpiModalValue.setDescription(customHistory.getDescription());
 				if (isNotEmpty(cycleTimeValidationData.getIntakeTime())) {
-					iterationKpiModalValue
-							.setIntakeToDOR(CommonUtils.convertIntoDays(Math.toIntExact(cycleTimeValidationData.getIntakeTime())));
-					iterationKpiModalValue.setDorDate(DateUtil.tranformUTCLocalTimeToZFormat(
-							DateUtil.convertJodaDateTimeToLocalDateTime(cycleTimeValidationData.getDorDate())));
+					iterationKpiModalValue.setIntakeToDOR(
+							CommonUtils.convertIntoDays(
+									Math.toIntExact(cycleTimeValidationData.getIntakeTime())));
+					iterationKpiModalValue.setDorDate(
+							DateUtil.tranformUTCLocalTimeToZFormat(
+									DateUtil.convertJodaDateTimeToLocalDateTime(
+											cycleTimeValidationData.getDorDate())));
 				} else {
 					iterationKpiModalValue.setIntakeToDOR(Constant.NOT_AVAILABLE);
 					iterationKpiModalValue.setDorDate(Constant.NOT_AVAILABLE);
 				}
 				if (isNotEmpty(cycleTimeValidationData.getDorTime())) {
-					iterationKpiModalValue.setDodDate(DateUtil.tranformUTCLocalTimeToZFormat(
-							DateUtil.convertJodaDateTimeToLocalDateTime(cycleTimeValidationData.getDodDate())));
-					iterationKpiModalValue
-							.setDorToDod(CommonUtils.convertIntoDays(Math.toIntExact(cycleTimeValidationData.getDorTime())));
+					iterationKpiModalValue.setDodDate(
+							DateUtil.tranformUTCLocalTimeToZFormat(
+									DateUtil.convertJodaDateTimeToLocalDateTime(
+											cycleTimeValidationData.getDodDate())));
+					iterationKpiModalValue.setDorToDod(
+							CommonUtils.convertIntoDays(Math.toIntExact(cycleTimeValidationData.getDorTime())));
 				} else {
 					iterationKpiModalValue.setDodDate(Constant.NOT_AVAILABLE);
 					iterationKpiModalValue.setDorToDod(Constant.NOT_AVAILABLE);
 				}
 				if (isNotEmpty(cycleTimeValidationData.getDodTime())) {
-					iterationKpiModalValue.setLiveDate(DateUtil.tranformUTCLocalTimeToZFormat(
-							DateUtil.convertJodaDateTimeToLocalDateTime(cycleTimeValidationData.getLiveDate())));
-					iterationKpiModalValue
-							.setDodToLive(CommonUtils.convertIntoDays(Math.toIntExact(cycleTimeValidationData.getDodTime())));
+					iterationKpiModalValue.setLiveDate(
+							DateUtil.tranformUTCLocalTimeToZFormat(
+									DateUtil.convertJodaDateTimeToLocalDateTime(
+											cycleTimeValidationData.getLiveDate())));
+					iterationKpiModalValue.setDodToLive(
+							CommonUtils.convertIntoDays(Math.toIntExact(cycleTimeValidationData.getDodTime())));
 				} else {
 					iterationKpiModalValue.setLiveDate(Constant.NOT_AVAILABLE);
 					iterationKpiModalValue.setDodToLive(Constant.NOT_AVAILABLE);
@@ -878,11 +1040,12 @@ public final class KpiDataHelper {
 	 * @param endDateTime
 	 * @return
 	 */
-    public static double calWeekDaysExcludingWeekends(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        if (startDateTime != null && endDateTime != null && !startDateTime.isAfter(endDateTime)) {
+	public static double calWeekDaysExcludingWeekends(
+			LocalDateTime startDateTime, LocalDateTime endDateTime) {
+		if (startDateTime != null && endDateTime != null && !startDateTime.isAfter(endDateTime)) {
 
-            long totalMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
-            double totalDays = (double) totalMinutes / 60 / 24;
+			long totalMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+			double totalDays = (double) totalMinutes / 60 / 24;
 			int weekendDays = countSaturdaysAndSundays(startDateTime, endDateTime);
 
 			String formattedValue = df.format(totalDays);
@@ -920,11 +1083,13 @@ public final class KpiDataHelper {
 		}
 		return count;
 	}
+
 	public static int countSaturdaysAndSundays(DateTime startDateTime, DateTime endDateTime) {
 		int count = 0;
 		DateTime current = startDateTime;
 		while (current.isBefore(endDateTime)) {
-			if (current.getDayOfWeek() == DateTimeConstants.SATURDAY || current.getDayOfWeek() == DateTimeConstants.SUNDAY) {
+			if (current.getDayOfWeek() == DateTimeConstants.SATURDAY
+					|| current.getDayOfWeek() == DateTimeConstants.SUNDAY) {
 				count++;
 			}
 			current = current.plusDays(1);
@@ -942,29 +1107,46 @@ public final class KpiDataHelper {
 	 * @param issueWiseDeliveredStatus
 	 * @return list of jiraIssues
 	 */
-	public static List<JiraIssue> getCompletedSubTasksByHistory(List<JiraIssue> totalSubTask,
-			List<JiraIssueCustomHistory> subTaskHistory, SprintDetails sprintDetail, List<String> fieldMappingDoneStatus,
+	public static List<JiraIssue> getCompletedSubTasksByHistory(
+			List<JiraIssue> totalSubTask,
+			List<JiraIssueCustomHistory> subTaskHistory,
+			SprintDetails sprintDetail,
+			List<String> fieldMappingDoneStatus,
 			Map<String, String> issueWiseDeliveredStatus) {
 		List<JiraIssue> resolvedSubtaskForSprint = new ArrayList<>();
 		// <Number>,PAIR<JiraIssue,Status>>
-		LocalDateTime sprintEndDateTime = KpiHelperService.getParseDateFromSprint(sprintDetail.getCompleteDate(),
-				sprintDetail.getEndDate());
-		LocalDateTime sprintStartDateTime = KpiHelperService.getParseDateFromSprint(sprintDetail.getActivatedDate(),
-				sprintDetail.getStartDate());
+		LocalDateTime sprintEndDateTime =
+				KpiHelperService.getParseDateFromSprint(
+						sprintDetail.getCompleteDate(), sprintDetail.getEndDate());
+		LocalDateTime sprintStartDateTime =
+				KpiHelperService.getParseDateFromSprint(
+						sprintDetail.getActivatedDate(), sprintDetail.getStartDate());
 
-		totalSubTask.forEach(jiraIssue -> {
-			JiraIssueCustomHistory jiraIssueCustomHistory = subTaskHistory.stream()
-					.filter(issueCustomHistory -> issueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
-					.findFirst().orElse(new JiraIssueCustomHistory());
-			Optional<JiraHistoryChangeLog> issueSprint = jiraIssueCustomHistory
-					.getStatusUpdationLog().stream().filter(jiraIssueSprint -> DateUtil
-							.isWithinDateTimeRange(jiraIssueSprint.getUpdatedOn(), sprintStartDateTime, sprintEndDateTime))
-					.reduce((a, b) -> b);
-			if (issueSprint.isPresent() && fieldMappingDoneStatus.contains(issueSprint.get().getChangedTo().toLowerCase())) {
-				issueWiseDeliveredStatus.putIfAbsent(jiraIssue.getNumber(), issueSprint.get().getChangedTo().toLowerCase());
-				resolvedSubtaskForSprint.add(jiraIssue);
-			}
-		});
+		totalSubTask.forEach(
+				jiraIssue -> {
+					JiraIssueCustomHistory jiraIssueCustomHistory =
+							subTaskHistory.stream()
+									.filter(
+											issueCustomHistory ->
+													issueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
+									.findFirst()
+									.orElse(new JiraIssueCustomHistory());
+					Optional<JiraHistoryChangeLog> issueSprint =
+							jiraIssueCustomHistory.getStatusUpdationLog().stream()
+									.filter(
+											jiraIssueSprint ->
+													DateUtil.isWithinDateTimeRange(
+															jiraIssueSprint.getUpdatedOn(),
+															sprintStartDateTime,
+															sprintEndDateTime))
+									.reduce((a, b) -> b);
+					if (issueSprint.isPresent()
+							&& fieldMappingDoneStatus.contains(issueSprint.get().getChangedTo().toLowerCase())) {
+						issueWiseDeliveredStatus.putIfAbsent(
+								jiraIssue.getNumber(), issueSprint.get().getChangedTo().toLowerCase());
+						resolvedSubtaskForSprint.add(jiraIssue);
+					}
+				});
 		return resolvedSubtaskForSprint;
 	}
 
@@ -977,26 +1159,40 @@ public final class KpiDataHelper {
 	 * @param fieldMappingDoneStatus
 	 * @return
 	 */
-	public static List<JiraIssue> getTotalSprintSubTasks(List<JiraIssue> allSubTasks, SprintDetails sprintDetails,
-			List<JiraIssueCustomHistory> subTaskHistory, List<String> fieldMappingDoneStatus) {
-		LocalDateTime sprintEndDate = KpiHelperService.getParseDateFromSprint(sprintDetails.getCompleteDate(),
-				sprintDetails.getEndDate());
-		LocalDateTime sprintStartDate = KpiHelperService.getParseDateFromSprint(sprintDetails.getActivatedDate(),
-				sprintDetails.getStartDate());
+	public static List<JiraIssue> getTotalSprintSubTasks(
+			List<JiraIssue> allSubTasks,
+			SprintDetails sprintDetails,
+			List<JiraIssueCustomHistory> subTaskHistory,
+			List<String> fieldMappingDoneStatus) {
+		LocalDateTime sprintEndDate =
+				KpiHelperService.getParseDateFromSprint(
+						sprintDetails.getCompleteDate(), sprintDetails.getEndDate());
+		LocalDateTime sprintStartDate =
+				KpiHelperService.getParseDateFromSprint(
+						sprintDetails.getActivatedDate(), sprintDetails.getStartDate());
 		List<JiraIssue> subTaskTaggedWithSprint = new ArrayList<>();
 
-		allSubTasks.forEach(jiraIssue -> {
-			JiraIssueCustomHistory jiraIssueCustomHistory = subTaskHistory.stream()
-					.filter(issueCustomHistory -> issueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
-					.findFirst().orElse(new JiraIssueCustomHistory());
-			Optional<JiraHistoryChangeLog> jiraHistoryChangeLog = jiraIssueCustomHistory.getStatusUpdationLog().stream()
-					.filter(changeLog -> fieldMappingDoneStatus.contains(changeLog.getChangedTo().toLowerCase()) &&
-							changeLog.getUpdatedOn().isAfter(sprintStartDate))
-					.findFirst();
-			if (jiraHistoryChangeLog.isPresent() &&
-					sprintEndDate.isAfter(DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate())))
-				subTaskTaggedWithSprint.add(jiraIssue);
-		});
+		allSubTasks.forEach(
+				jiraIssue -> {
+					JiraIssueCustomHistory jiraIssueCustomHistory =
+							subTaskHistory.stream()
+									.filter(
+											issueCustomHistory ->
+													issueCustomHistory.getStoryID().equalsIgnoreCase(jiraIssue.getNumber()))
+									.findFirst()
+									.orElse(new JiraIssueCustomHistory());
+					Optional<JiraHistoryChangeLog> jiraHistoryChangeLog =
+							jiraIssueCustomHistory.getStatusUpdationLog().stream()
+									.filter(
+											changeLog ->
+													fieldMappingDoneStatus.contains(changeLog.getChangedTo().toLowerCase())
+															&& changeLog.getUpdatedOn().isAfter(sprintStartDate))
+									.findFirst();
+					if (jiraHistoryChangeLog.isPresent()
+							&& sprintEndDate.isAfter(
+									DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate())))
+						subTaskTaggedWithSprint.add(jiraIssue);
+				});
 		return subTaskTaggedWithSprint;
 	}
 
@@ -1007,7 +1203,8 @@ public final class KpiDataHelper {
 	 * @return
 	 */
 	public static Map<String, Object> getDurationFilter(KpiElement kpiElement) {
-		LinkedHashMap<String, Object> filterDuration = (LinkedHashMap<String, Object>) kpiElement.getFilterDuration();
+		LinkedHashMap<String, Object> filterDuration =
+				(LinkedHashMap<String, Object>) kpiElement.getFilterDuration();
 		int value = 8; // Default value for 'value'
 		String duration = CommonConstant.WEEK; // Default value for 'duration'
 		LocalDateTime startDateTime = null;
@@ -1020,7 +1217,7 @@ public final class KpiDataHelper {
 		if (duration.equalsIgnoreCase(CommonConstant.WEEK)) {
 			startDateTime = DateUtil.getTodayTime().minusWeeks(value);
 		} else if (duration.equalsIgnoreCase(CommonConstant.MONTH)) {
-			startDateTime =DateUtil.getTodayTime().minusMonths(value);
+			startDateTime = DateUtil.getTodayTime().minusMonths(value);
 		}
 
 		Map<String, Object> resultMap = new HashMap<>();
@@ -1030,8 +1227,10 @@ public final class KpiDataHelper {
 		return resultMap;
 	}
 
-	public static void getMiniDateOfCompleteCycle(List<String> completionStatus,
-			List<JiraHistoryChangeLog> statusUpdationLog, Map<String, LocalDateTime> minimumCompletedStatusWiseMap,
+	public static void getMiniDateOfCompleteCycle(
+			List<String> completionStatus,
+			List<JiraHistoryChangeLog> statusUpdationLog,
+			Map<String, LocalDateTime> minimumCompletedStatusWiseMap,
 			List<LocalDateTime> minimumDate) {
 		for (JiraHistoryChangeLog log : statusUpdationLog) {
 			String changedTo = log.getChangedTo();
@@ -1041,8 +1240,10 @@ public final class KpiDataHelper {
 			} else if (!minimumCompletedStatusWiseMap.isEmpty()) {
 				// if found a status which is not among closed statuses, then save the minimum
 				// date and clear the map
-				LocalDateTime minDate = minimumCompletedStatusWiseMap.values().stream().min(LocalDateTime::compareTo)
-						.orElse(null);
+				LocalDateTime minDate =
+						minimumCompletedStatusWiseMap.values().stream()
+								.min(LocalDateTime::compareTo)
+								.orElse(null);
 				if (minDate != null) {
 					minimumDate.add(minDate);
 					minimumCompletedStatusWiseMap.clear();
@@ -1054,54 +1255,66 @@ public final class KpiDataHelper {
 	/**
 	 * Calculate sum of storyPoint/OriginalEstimate for list of JiraIssue
 	 *
-	 * @param jiraIssueList
-	 *          list of Jira Issue
-	 * @param fieldMapping
-	 *          fieldMapping
+	 * @param jiraIssueList list of Jira Issue
+	 * @param fieldMapping fieldMapping
 	 * @return sum of storyPoint/OriginalEstimate
 	 */
-	public static double calculateStoryPoints(List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
-		boolean isStoryPoint = StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria()) &&
-				fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT);
-		return jiraIssueList.stream().mapToDouble(jiraIssue -> {
-			if (isStoryPoint) {
-				return Optional.ofNullable(jiraIssue.getStoryPoints()).orElse(0.0d);
-			} else {
-				Integer timeInMin = Optional.ofNullable(jiraIssue.getAggregateTimeOriginalEstimateMinutes()).orElse(0);
-				int inHours = timeInMin / 60;
-				return inHours / fieldMapping.getStoryPointToHourMapping();
-			}
-		}).sum();
+	public static double calculateStoryPoints(
+			List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
+		boolean isStoryPoint =
+				StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
+						&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT);
+		return jiraIssueList.stream()
+				.mapToDouble(
+						jiraIssue -> {
+							if (isStoryPoint) {
+								return Optional.ofNullable(jiraIssue.getStoryPoints()).orElse(0.0d);
+							} else {
+								Integer timeInMin =
+										Optional.ofNullable(jiraIssue.getAggregateTimeOriginalEstimateMinutes())
+												.orElse(0);
+								int inHours = timeInMin / 60;
+								return inHours / fieldMapping.getStoryPointToHourMapping();
+							}
+						})
+				.sum();
 	}
 
 	/**
 	 * To calculate the added/removed date of sprint change for JiraIssues
 	 *
-	 * @param issues
-	 *          list of jiraIssue
-	 * @param sprint
-	 *          name of sprint
-	 * @param issueWiseHistoryMap
-	 *          Map of issueKey vs sprintUpdateLog
-	 * @param changeType
-	 *          add/remove
+	 * @param issues list of jiraIssue
+	 * @param sprint name of sprint
+	 * @param issueWiseHistoryMap Map of issueKey vs sprintUpdateLog
+	 * @param changeType add/remove
 	 * @return Map<issueKey, Date>
 	 */
-	public static Map<String, String> processSprintIssues(List<JiraIssue> issues, String sprint,
-			Map<String, List<JiraHistoryChangeLog>> issueWiseHistoryMap, String changeType) {
+	public static Map<String, String> processSprintIssues(
+			List<JiraIssue> issues,
+			String sprint,
+			Map<String, List<JiraHistoryChangeLog>> issueWiseHistoryMap,
+			String changeType) {
 		Map<String, String> issueDateMap = new HashMap<>();
 
-		issues.stream().map(JiraIssue::getNumber).forEach(issueKey -> {
-			List<JiraHistoryChangeLog> sprintUpdateLog = issueWiseHistoryMap.get(issueKey);
+		issues.stream()
+				.map(JiraIssue::getNumber)
+				.forEach(
+						issueKey -> {
+							List<JiraHistoryChangeLog> sprintUpdateLog = issueWiseHistoryMap.get(issueKey);
 
-			sprintUpdateLog.stream()
-					.filter(sprintUpdate -> changeType.equals(CommonConstant.ADDED)
-							? sprintUpdate.getChangedTo().equalsIgnoreCase(sprint)
-							: changeType.equals(CommonConstant.REMOVED)
-									&& sprintUpdate.getChangedFrom().equalsIgnoreCase(sprint))
-					.forEach(sprintUpdate -> issueDateMap.put(issueKey,
-							DateUtil.tranformUTCLocalTimeToZFormat(sprintUpdate.getUpdatedOn())));
-		});
+							sprintUpdateLog.stream()
+									.filter(
+											sprintUpdate ->
+													changeType.equals(CommonConstant.ADDED)
+															? sprintUpdate.getChangedTo().equalsIgnoreCase(sprint)
+															: changeType.equals(CommonConstant.REMOVED)
+																	&& sprintUpdate.getChangedFrom().equalsIgnoreCase(sprint))
+									.forEach(
+											sprintUpdate ->
+													issueDateMap.put(
+															issueKey,
+															DateUtil.tranformUTCLocalTimeToZFormat(sprintUpdate.getUpdatedOn())));
+						});
 
 		return issueDateMap;
 	}
@@ -1109,48 +1322,53 @@ public final class KpiDataHelper {
 	/**
 	 * Calculates the total work logs within a specified sprint date range.
 	 *
-	 * @param worklogHistory
-	 *          A list of {@link JiraHistoryChangeLog} objects representing the work
-	 *          log history.
-	 * @param sprintStartDate
-	 *          The start date of the sprint in ISO-8601 format (e.g.,
-	 *          "yyyy-MM-dd'T'HH:mm:ss").
-	 * @param sprintEndDate
-	 *          The end date of the sprint in ISO-8601 format (e.g.,
-	 *          "yyyy-MM-dd'T'HH:mm:ss").
-	 * @return The total work logs within the specified date range as a
-	 *         {@link Double}. Returns 0.0 if no logs are found.
+	 * @param worklogHistory A list of {@link JiraHistoryChangeLog} objects representing the work log
+	 *     history.
+	 * @param sprintStartDate The start date of the sprint in ISO-8601 format (e.g.,
+	 *     "yyyy-MM-dd'T'HH:mm:ss").
+	 * @param sprintEndDate The end date of the sprint in ISO-8601 format (e.g.,
+	 *     "yyyy-MM-dd'T'HH:mm:ss").
+	 * @return The total work logs within the specified date range as a {@link Double}. Returns 0.0 if
+	 *     no logs are found.
 	 */
-	public static Double getWorkLogs(List<JiraHistoryChangeLog> worklogHistory, String sprintStartDate,
-			String sprintEndDate) {
+	public static Double getWorkLogs(
+			List<JiraHistoryChangeLog> worklogHistory, String sprintStartDate, String sprintEndDate) {
 		List<JiraHistoryChangeLog> filterStatusUpdationLogs = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(worklogHistory)) {
-			filterStatusUpdationLogs = worklogHistory.stream()
-					.filter(jiraIssueSprint -> DateUtil.isWithinDateRange(jiraIssueSprint.getUpdatedOn().toLocalDate(),
-							DateUtil.stringToLocalDateTime(sprintStartDate,DateUtil.TIME_FORMAT_WITH_SEC).toLocalDate(),
-							DateUtil.stringToLocalDateTime(sprintEndDate,DateUtil.TIME_FORMAT_WITH_SEC).toLocalDate()))
-					.collect(Collectors.toList());
+			filterStatusUpdationLogs =
+					worklogHistory.stream()
+							.filter(
+									jiraIssueSprint ->
+											DateUtil.isWithinDateRange(
+													jiraIssueSprint.getUpdatedOn().toLocalDate(),
+													DateUtil.stringToLocalDateTime(
+																	sprintStartDate, DateUtil.TIME_FORMAT_WITH_SEC)
+															.toLocalDate(),
+													DateUtil.stringToLocalDateTime(
+																	sprintEndDate, DateUtil.TIME_FORMAT_WITH_SEC)
+															.toLocalDate()))
+							.collect(Collectors.toList());
 		}
 
 		if (CollectionUtils.isNotEmpty(filterStatusUpdationLogs)) {
-			String firstChangedFrom = StringUtils.isEmpty(filterStatusUpdationLogs.get(0).getChangedFrom())
-					? "0"
-					: filterStatusUpdationLogs.get(0).getChangedFrom();
-			String lastChangedTo = filterStatusUpdationLogs.get(filterStatusUpdationLogs.size() - 1).getChangedTo();
+			String firstChangedFrom =
+					StringUtils.isEmpty(filterStatusUpdationLogs.get(0).getChangedFrom())
+							? "0"
+							: filterStatusUpdationLogs.get(0).getChangedFrom();
+			String lastChangedTo =
+					filterStatusUpdationLogs.get(filterStatusUpdationLogs.size() - 1).getChangedTo();
 			return Double.parseDouble(lastChangedTo) - Double.parseDouble(firstChangedFrom);
 		}
 		return 0D;
 	}
 
 	/**
-	 * Generates a map that maps a pair of (basicConfigId, parentID) to a set of
-	 * children (Jira issue numbers). This allows quick lookup of child issues based
-	 * on their parent and configuration ID.
+	 * Generates a map that maps a pair of (basicConfigId, parentID) to a set of children (Jira issue
+	 * numbers). This allows quick lookup of child issues based on their parent and configuration ID.
 	 *
-	 * @param allJiraIssue
-	 *          A list of all Jira issues.
-	 * @return A map where each key is a pair of (basicConfigId, parentID) and the
-	 *         value is a set of child Jira issue numbers.
+	 * @param allJiraIssue A list of all Jira issues.
+	 * @return A map where each key is a pair of (basicConfigId, parentID) and the value is a set of
+	 *     child Jira issue numbers.
 	 */
 	public static Map<Pair<String, String>, Set<String>> getBasicConfigIdAndParentIdWiseChildrenMap(
 			List<JiraIssue> allJiraIssue) {
@@ -1159,9 +1377,16 @@ public final class KpiDataHelper {
 		// lookup
 		return allJiraIssue.stream()
 				.filter(issue -> issue.getParentStoryId() != null && !issue.getParentStoryId().isEmpty())
-				.flatMap(issue -> issue.getParentStoryId().stream()
-						.map(parentId -> new AbstractMap.SimpleEntry<>(Pair.of(issue.getBasicProjectConfigId(), parentId),
-								issue.getNumber())))
-				.collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toSet())));
+				.flatMap(
+						issue ->
+								issue.getParentStoryId().stream()
+										.map(
+												parentId ->
+														new AbstractMap.SimpleEntry<>(
+																Pair.of(issue.getBasicProjectConfigId(), parentId),
+																issue.getNumber())))
+				.collect(
+						Collectors.groupingBy(
+								Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toSet())));
 	}
 }

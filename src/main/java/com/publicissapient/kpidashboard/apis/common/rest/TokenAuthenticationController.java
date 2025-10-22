@@ -36,30 +36,28 @@ import jakarta.servlet.http.HttpServletResponse;
 /** aksshriv1 */
 @RestController
 public class TokenAuthenticationController {
-	@Autowired
-	private TokenAuthenticationService tokenAuthenticationService;
-	@Autowired
-	private CustomAnalyticsService customAnalyticsService;
+	@Autowired private TokenAuthenticationService tokenAuthenticationService;
+	@Autowired private CustomAnalyticsService customAnalyticsService;
 
 	/**
-	 * Fetch user details from the Central Auth on the first login and save them
-	 * into the KnowHow database. For subsequent logins, retrieve user details from
-	 * the KnowHow database
+	 * Fetch user details from the Central Auth on the first login and save them into the KnowHow
+	 * database. For subsequent logins, retrieve user details from the KnowHow database
 	 *
 	 * @param httpServletRequest
 	 * @param httpServletResponse
 	 * @return
 	 */
 	@GetMapping(value = "/fetchUserDetails")
-	public ResponseEntity<ServiceResponse> fetchUserDetails(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse) {
+	public ResponseEntity<ServiceResponse> fetchUserDetails(
+			HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
 
 		String authToken = tokenAuthenticationService.getAuthToken(httpServletRequest);
 		String userName = tokenAuthenticationService.getUserNameFromToken(authToken);
 		ServiceResponse serviceResponse;
 		if (null != authToken) {
-			Map<String, Object> userMap = customAnalyticsService.addAnalyticsDataAndSaveCentralUser(httpServletResponse,
-					userName, authToken);
+			Map<String, Object> userMap =
+					customAnalyticsService.addAnalyticsDataAndSaveCentralUser(
+							httpServletResponse, userName, authToken);
 			serviceResponse = new ServiceResponse(true, "User Details fetched successfully", userMap);
 			return ResponseEntity.status(HttpStatus.OK).body(serviceResponse);
 		} else {

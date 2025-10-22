@@ -53,53 +53,55 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SonarServiceKanbanR {
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
 
-	@Autowired
-	private FilterHelperService filterHelperService;
+	@Autowired private FilterHelperService filterHelperService;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Autowired private UserAuthorizedProjectsService authorizedProjectsService;
 
 	/**
 	 * Process Sonar KPI request
 	 *
-	 * @param kpiRequest
-	 *          kpiRequest
+	 * @param kpiRequest kpiRequest
 	 * @return {@code List<KpiElement>}
 	 */
 	@SuppressWarnings({"unchecked", "PMD.AvoidCatchingGenericException"})
 	public List<KpiElement> process(KpiRequest kpiRequest) {
 
-		log.info("[SONAR KANBAN][{}]. Processing KPI calculation for data {}", kpiRequest.getRequestTrackerId(),
+		log.info(
+				"[SONAR KANBAN][{}]. Processing KPI calculation for data {}",
+				kpiRequest.getRequestTrackerId(),
 				kpiRequest.getKpiList());
 		List<KpiElement> responseList = new ArrayList<>();
 		String[] kanbanProjectKeyCache = null;
 		try {
-			String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(), true);
+			String groupName =
+					filterHelperService.getHierarachyLevelId(
+							kpiRequest.getLevel(), kpiRequest.getLabel(), true);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
 			} else {
 				log.error("label name for selected hierarchy not found");
 			}
-			List<AccountHierarchyDataKanban> filteredAccountDataList = filterHelperService.getFilteredBuildsKanban(kpiRequest,
-					groupName);
+			List<AccountHierarchyDataKanban> filteredAccountDataList =
+					filterHelperService.getFilteredBuildsKanban(kpiRequest, groupName);
 
 			kpiHelperService.kpiResolution(kpiRequest.getKpiList());
 			if (!authorizedProjectsService.ifSuperAdminUser()) {
-				kanbanProjectKeyCache = authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
+				kanbanProjectKeyCache =
+						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 
-				filteredAccountDataList = authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
+				filteredAccountDataList =
+						authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
 
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
 			} else {
-				kanbanProjectKeyCache = authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
+				kanbanProjectKeyCache =
+						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 			}
 
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
@@ -110,20 +112,30 @@ public class SonarServiceKanbanR {
 				return cachedData;
 			}
 
-			TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, null,
-					filteredAccountDataList, filterHelperService.getFirstHierarachyLevel(),
-					filterHelperService.getHierarchyIdLevelMap(false).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
+			TreeAggregatorDetail treeAggregatorDetail =
+					KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+							kpiRequest,
+							null,
+							filteredAccountDataList,
+							filterHelperService.getFirstHierarachyLevel(),
+							filterHelperService
+									.getHierarchyIdLevelMap(false)
+									.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
 			for (KpiElement kpiEle : kpiRequest.getKpiList()) {
 
-				responseList.add(calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
+				responseList.add(
+						calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
 			}
 
 			setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
 
 		} catch (EntityNotFoundException | ApplicationException enfe) {
 
-			log.error("[SONAR KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
-					kpiRequest.getRequestTrackerId(), kpiRequest.getKpiList(), enfe);
+			log.error(
+					"[SONAR KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					enfe);
 		}
 		return responseList;
 	}
@@ -131,16 +143,13 @@ public class SonarServiceKanbanR {
 	/**
 	 * Calculates all KPI aggregated metrics
 	 *
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param treeAggregatorDetail
-	 *          treeAggregatorDetail
+	 * @param kpiRequest kpiRequest
+	 * @param kpiElement kpiElement
+	 * @param treeAggregatorDetail treeAggregatorDetail
 	 * @return kpielement
 	 */
-	private KpiElement calculateAllKPIAggregatedMetrics(KpiRequest kpiRequest, KpiElement kpiElement,
-			TreeAggregatorDetail treeAggregatorDetail) {
+	private KpiElement calculateAllKPIAggregatedMetrics(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail) {
 		long startTime;
 		try {
 			KPICode kpi = KPICode.getKPI(kpiElement.getKpiId());
@@ -150,13 +159,16 @@ public class SonarServiceKanbanR {
 
 			startTime = System.currentTimeMillis();
 
-			TreeAggregatorDetail treeAggregatorDetailClone = (TreeAggregatorDetail) SerializationUtils
-					.clone(treeAggregatorDetail);
-			List<Node> projectNodes = treeAggregatorDetailClone.getMapOfListOfProjectNodes()
-					.get(CommonConstant.PROJECT.toLowerCase());
+			TreeAggregatorDetail treeAggregatorDetailClone =
+					(TreeAggregatorDetail) SerializationUtils.clone(treeAggregatorDetail);
+			List<Node> projectNodes =
+					treeAggregatorDetailClone
+							.getMapOfListOfProjectNodes()
+							.get(CommonConstant.PROJECT.toLowerCase());
 
-			if (!projectNodes.isEmpty() &&
-					(projectNodes.size() > 1 || kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
+			if (!projectNodes.isEmpty()
+					&& (projectNodes.size() > 1
+							|| kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
 				kpiElement = sonarKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
 				kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 				if (projectNodes.size() == 1) {
@@ -164,13 +176,19 @@ public class SonarServiceKanbanR {
 				}
 			}
 			if (log.isInfoEnabled()) {
-				log.info("[SONAR-KANBAN-{}-TIME][{}]. CODEQUALITY took {} ms", kpi.name(), kpiRequest.getRequestTrackerId(),
+				log.info(
+						"[SONAR-KANBAN-{}-TIME][{}]. CODEQUALITY took {} ms",
+						kpi.name(),
+						kpiRequest.getRequestTrackerId(),
 						System.currentTimeMillis() - startTime);
 			}
 		} catch (ApplicationException exception) {
 			kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
-			log.error("[SONAR][{}]. Error while KPI calculation for data. No data found {} {}",
-					kpiRequest.getRequestTrackerId(), kpiRequest.getKpiList(), exception.getStackTrace());
+			log.error(
+					"[SONAR][{}]. Error while KPI calculation for data. No data found {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					exception.getStackTrace());
 		} catch (Exception exception) {
 			kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
 			log.error("[PARALLEL_JIRA_SERVICE].Exception occurred", exception);
@@ -182,32 +200,43 @@ public class SonarServiceKanbanR {
 	/**
 	 * Sets KPI reponse List into application Cache
 	 *
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param responseList
-	 *          responseList
-	 * @param groupId
-	 *          groupId
-	 * @param kanbanProjectKeyCache
-	 *          kanbanProjectKeyCache
+	 * @param kpiRequest kpiRequest
+	 * @param responseList responseList
+	 * @param groupId groupId
+	 * @param kanbanProjectKeyCache kanbanProjectKeyCache
 	 */
-	private void setIntoApplicationCache(KpiRequest kpiRequest, List<KpiElement> responseList, Integer groupId,
+	private void setIntoApplicationCache(
+			KpiRequest kpiRequest,
+			List<KpiElement> responseList,
+			Integer groupId,
 			String[] kanbanProjectKeyCache) {
-		Integer projectLevel = filterHelperService.getHierarchyIdLevelMap(true)
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				projectLevel >= kpiRequest.getLevel()) {
-			cacheService.setIntoApplicationCache(kanbanProjectKeyCache, responseList, KPISource.SONARKANBAN.name(), groupId,
-					null);
+		Integer projectLevel =
+				filterHelperService
+						.getHierarchyIdLevelMap(true)
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+				&& projectLevel >= kpiRequest.getLevel()) {
+			cacheService.setIntoApplicationCache(
+					kanbanProjectKeyCache, responseList, KPISource.SONARKANBAN.name(), groupId, null);
 		}
 	}
 
-	private List<KpiElement> getCachedData(KpiRequest kpiRequest, String[] kanbanProjectKeyCache, Integer groupId) {
-		Object cachedData = cacheService.getFromApplicationCache(kanbanProjectKeyCache, KPISource.SONARKANBAN.name(),
-				groupId, null);
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				null != cachedData) {
-			log.info("[SONAR KANBAN][{}]. Fetching value from cache for {}", kpiRequest.getRequestTrackerId(),
+	private List<KpiElement> getCachedData(
+			KpiRequest kpiRequest, String[] kanbanProjectKeyCache, Integer groupId) {
+		Object cachedData =
+				cacheService.getFromApplicationCache(
+						kanbanProjectKeyCache, KPISource.SONARKANBAN.name(), groupId, null);
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+				&& null != cachedData) {
+			log.info(
+					"[SONAR KANBAN][{}]. Fetching value from cache for {}",
+					kpiRequest.getRequestTrackerId(),
 					kpiRequest.getIds());
 			return (List<KpiElement>) cachedData;
 		}

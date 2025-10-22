@@ -41,7 +41,8 @@ public class KpiDefaultConfiguration {
 
 	public KpiDefaultConfiguration(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
-		MetaDataIdentifierDataFactory metaDataIdentifierDataFactory = MetaDataIdentifierDataFactory.newInstance();
+		MetaDataIdentifierDataFactory metaDataIdentifierDataFactory =
+				MetaDataIdentifierDataFactory.newInstance();
 		metadataIdentifierList = metaDataIdentifierDataFactory.getMetadataIdentifierList();
 	}
 

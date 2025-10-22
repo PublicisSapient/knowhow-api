@@ -12,5 +12,6 @@ public interface SprintDetailsService {
 
 	List<SprintDetails> getSprintDetailsByIds(List<String> sprintIds);
 
-	List<SprintDetails> findByBasicProjectConfigIdInByCompletedDateDesc(List<ObjectId> basicProjectConfigIds, int limit);
+	List<SprintDetails> findByBasicProjectConfigIdInByCompletedDateDesc(
+			List<ObjectId> basicProjectConfigIds, int limit);
 }

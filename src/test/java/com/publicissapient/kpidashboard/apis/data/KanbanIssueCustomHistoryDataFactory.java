@@ -41,8 +41,7 @@ public class KanbanIssueCustomHistoryDataFactory {
 	private List<KanbanIssueCustomHistory> KanbanIssueCustomHistoryDataFactory;
 	private ObjectMapper mapper = null;
 
-	private KanbanIssueCustomHistoryDataFactory() {
-	}
+	private KanbanIssueCustomHistoryDataFactory() {}
 
 	public static KanbanIssueCustomHistoryDataFactory newInstance() {
 		return newInstance(null);
@@ -50,7 +49,8 @@ public class KanbanIssueCustomHistoryDataFactory {
 
 	public static KanbanIssueCustomHistoryDataFactory newInstance(String filePath) {
 
-		KanbanIssueCustomHistoryDataFactory KanbanIssueCustomHistoryDataFactory = new KanbanIssueCustomHistoryDataFactory();
+		KanbanIssueCustomHistoryDataFactory KanbanIssueCustomHistoryDataFactory =
+				new KanbanIssueCustomHistoryDataFactory();
 		KanbanIssueCustomHistoryDataFactory.createObjectMapper();
 		KanbanIssueCustomHistoryDataFactory.init(filePath);
 		return KanbanIssueCustomHistoryDataFactory;
@@ -61,9 +61,10 @@ public class KanbanIssueCustomHistoryDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH : filePath;
 
-			KanbanIssueCustomHistoryDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KanbanIssueCustomHistory>>() {
-					});
+			KanbanIssueCustomHistoryDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KanbanIssueCustomHistory>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}
@@ -85,8 +86,10 @@ public class KanbanIssueCustomHistoryDataFactory {
 		return KanbanIssueCustomHistoryDataFactory;
 	}
 
-	public List<KanbanIssueCustomHistory> getKanbanIssueCustomHistoryDataListByTypeName(List<String> typeName) {
-		return KanbanIssueCustomHistoryDataFactory.stream().filter(f -> typeName.contains(f.getStoryType()))
+	public List<KanbanIssueCustomHistory> getKanbanIssueCustomHistoryDataListByTypeName(
+			List<String> typeName) {
+		return KanbanIssueCustomHistoryDataFactory.stream()
+				.filter(f -> typeName.contains(f.getStoryType()))
 				.collect(Collectors.toList());
 	}
 }

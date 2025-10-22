@@ -26,7 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
-import com.publicissapient.kpidashboard.common.repository.rbac.AccessRequestsRepository;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +50,7 @@ import com.publicissapient.kpidashboard.common.model.rbac.Permissions;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleData;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
+import com.publicissapient.kpidashboard.common.repository.rbac.AccessRequestsRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
 /**
@@ -61,36 +61,26 @@ public class UserInfoControlllerTest {
 
 	private MockMvc mockMvc;
 	private RoleData testRoleData;
-	@Mock
-	private UserInfo userInfo;
+	@Mock private UserInfo userInfo;
 
-	@Mock
-	UserNameRequest userNameRequest;
+	@Mock UserNameRequest userNameRequest;
 
-	@Mock
-	private UserInfoDTO userInfoDTO;
+	@Mock private UserInfoDTO userInfoDTO;
 
 	private List<String> authorities;
 
-	@InjectMocks
-	private UserInfoController userInfoController;
+	@InjectMocks private UserInfoController userInfoController;
 
-	@Mock
-	private UserInfoService userInfoService;
+	@Mock private UserInfoService userInfoService;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
-	@Mock
-	private UserInfoRepository userInfoRepository;
-	@Mock
-	private AccessRequestsRepository accessRequestsRepository;
+	@Mock private UserInfoRepository userInfoRepository;
+	@Mock private AccessRequestsRepository accessRequestsRepository;
 
-	@Mock
-	private UserTokenDeletionService userTokenDeletionService;
+	@Mock private UserTokenDeletionService userTokenDeletionService;
 
-	@Mock
-	AuthProperties authProperties;
+	@Mock AuthProperties authProperties;
 
 	/** method includes preprocesses for test cases */
 	@Before
@@ -132,30 +122,32 @@ public class UserInfoControlllerTest {
 	/**
 	 * method to test /userinfo restPoint ;
 	 *
-	 * <p>
-	 * Get all userinfo
+	 * <p>Get all userinfo
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAllUserInfo() throws Exception {
-		this.mockMvc.perform(MockMvcRequestBuilders.get("/userinfo").contentType(MediaType.APPLICATION_JSON_VALUE))
+		this.mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/userinfo").contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	/**
 	 * method to test /updateAccessOfUserInfo restPoint ;
 	 *
-	 * <p>
-	 * update the user role
+	 * <p>update the user role
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testupdateUserRole() throws Exception {
 		mockMvc
-				.perform(MockMvcRequestBuilders.post("/userinfo/updateUserRole")
-						.content(TestUtil.convertObjectToJsonBytes(testRoleData)).contentType(MediaType.APPLICATION_JSON_VALUE))
+				.perform(
+						MockMvcRequestBuilders.post("/userinfo/updateUserRole")
+								.content(TestUtil.convertObjectToJsonBytes(testRoleData))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 

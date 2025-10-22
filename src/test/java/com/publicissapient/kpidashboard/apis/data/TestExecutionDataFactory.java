@@ -40,8 +40,7 @@ public class TestExecutionDataFactory {
 	private List<TestExecution> testExecutionList;
 	private ObjectMapper mapper = null;
 
-	private TestExecutionDataFactory() {
-	}
+	private TestExecutionDataFactory() {}
 
 	public static TestExecutionDataFactory newInstance(String filePath) {
 		TestExecutionDataFactory factory = new TestExecutionDataFactory();
@@ -57,9 +56,10 @@ public class TestExecutionDataFactory {
 	private void init(String filePath) {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_TEST_CASE_DETAILS : filePath;
-			testExecutionList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<TestExecution>>() {
-					});
+			testExecutionList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<TestExecution>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

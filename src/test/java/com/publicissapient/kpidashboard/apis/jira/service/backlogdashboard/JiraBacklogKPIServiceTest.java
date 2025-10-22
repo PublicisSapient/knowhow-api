@@ -46,15 +46,12 @@ import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 @ExtendWith(SpringExtension.class)
 public class JiraBacklogKPIServiceTest {
 
-	@InjectMocks
-	JiraBacklogKPIServiceTestImpl jiraKPIService;
+	@InjectMocks JiraBacklogKPIServiceTestImpl jiraKPIService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	private Map<String, String> aggregationCriteriaMap;
-	@Mock
-	private JiraBacklogServiceR jiraService;
+	@Mock private JiraBacklogServiceR jiraService;
 
 	private static List<JiraIssueCustomHistory> getJiraIssueCustomHistories() {
 		JiraIssueCustomHistory issueCustomHistory = new JiraIssueCustomHistory();
@@ -107,7 +104,8 @@ public class JiraBacklogKPIServiceTest {
 	@Test
 	public void testGetJiraIssuesCustomHistoryFromBaseClass_WithNoParam() {
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = getJiraIssueCustomHistories();
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistories);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(jiraIssueCustomHistories);
 		assertNotNull(jiraKPIService.getJiraIssuesCustomHistoryFromBaseClass());
 	}
 
@@ -154,8 +152,8 @@ public class JiraBacklogKPIServiceTest {
 		}
 
 		@Override
-		public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-				KpiRequest kpiRequest) {
+		public Map<String, Object> fetchKPIDataFromDb(
+				Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 			return null;
 		}
 	}

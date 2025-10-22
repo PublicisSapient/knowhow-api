@@ -24,8 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 class DataAccessServiceTest {
 
@@ -125,4 +128,3 @@ class DataAccessServiceTest {
         verifyNoInteractions(superAdminPolicy, projectAdminPolicy, readOnlyPolicy);
     }
 }
-

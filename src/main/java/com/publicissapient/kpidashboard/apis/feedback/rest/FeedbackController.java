@@ -29,11 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 public class FeedbackController {
 
 	/** Instantiates the SubmitFeedbackService */
-	@Autowired
-	private FeedbackService submitFeedbackService;
+	@Autowired private FeedbackService submitFeedbackService;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
 	/**
 	 * @return feedback categories
@@ -52,8 +50,8 @@ public class FeedbackController {
 	 * @return responseEntity with message and status
 	 */
 	@PostMapping("/submitfeedback")
-	public ResponseEntity<ServiceResponse> submitFeedback(@Valid @RequestBody FeedbackSubmitDTO feedback,
-			HttpServletRequest httpServletRequest) {
+	public ResponseEntity<ServiceResponse> submitFeedback(
+			@Valid @RequestBody FeedbackSubmitDTO feedback, HttpServletRequest httpServletRequest) {
 		log.info("creating new request");
 		String loggedUserName = authenticationService.getLoggedInUser();
 		if (loggedUserName != null) {
@@ -62,8 +60,12 @@ public class FeedbackController {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(new ServiceResponse(responseStatus, "Your request has been submitted", feedback));
 			} else {
-				return ResponseEntity.status(HttpStatus.OK).body(
-						new ServiceResponse(responseStatus, "Email Not Sent ,check emailId and Subject configuration ", feedback));
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(
+								new ServiceResponse(
+										responseStatus,
+										"Email Not Sent ,check emailId and Subject configuration ",
+										feedback));
 			}
 		}
 		return ResponseEntity.status(HttpStatus.OK)

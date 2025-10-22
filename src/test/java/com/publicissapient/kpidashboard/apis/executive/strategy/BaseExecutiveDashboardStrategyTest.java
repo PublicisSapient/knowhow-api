@@ -66,28 +66,28 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 @RunWith(MockitoJUnitRunner.class)
 public class BaseExecutiveDashboardStrategyTest {
 
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private ProjectEfficiencyService projectEfficiencyService;
-	@Mock
-	private UserBoardConfigService userBoardConfigService;
-	@Mock
-	private ToolKpiMaturity toolKpiMaturity;
-	@Mock
-	private KpiCategoryRepository kpiCategoryRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CacheService cacheService;
+	@Mock private ProjectEfficiencyService projectEfficiencyService;
+	@Mock private UserBoardConfigService userBoardConfigService;
+	@Mock private ToolKpiMaturity toolKpiMaturity;
+	@Mock private KpiCategoryRepository kpiCategoryRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private CustomApiConfig customApiConfig;
 
 	private DummyStrategy testStrategy;
 
 	@Before
 	public void setUp() {
 		MockitoAnnotations.openMocks(this);
-		testStrategy = new DummyStrategy(projectEfficiencyService, cacheService, userBoardConfigService,
-				toolKpiMaturity, kpiCategoryRepository, configHelperService, customApiConfig);
+		testStrategy =
+				new DummyStrategy(
+						projectEfficiencyService,
+						cacheService,
+						userBoardConfigService,
+						toolKpiMaturity,
+						kpiCategoryRepository,
+						configHelperService,
+						customApiConfig);
 		when(customApiConfig.getExecutiveTimeoutMinutes()).thenReturn(1); // or 3, as needed
 	}
 
@@ -95,11 +95,23 @@ public class BaseExecutiveDashboardStrategyTest {
 		private final Executor executor = Executors.newSingleThreadExecutor();
 		private boolean shouldSleep = false;
 
-		public DummyStrategy(ProjectEfficiencyService projectEfficiencyService, CacheService cacheService,
-				UserBoardConfigService userBoardConfigService, ToolKpiMaturity toolKpiMaturity,
-				KpiCategoryRepository kpiCategoryRepository, ConfigHelperService configHelperService, CustomApiConfig customApiConfig) {
-			super("dummy", cacheService, projectEfficiencyService, userBoardConfigService, toolKpiMaturity,
-					kpiCategoryRepository, configHelperService, customApiConfig);
+		public DummyStrategy(
+				ProjectEfficiencyService projectEfficiencyService,
+				CacheService cacheService,
+				UserBoardConfigService userBoardConfigService,
+				ToolKpiMaturity toolKpiMaturity,
+				KpiCategoryRepository kpiCategoryRepository,
+				ConfigHelperService configHelperService,
+				CustomApiConfig customApiConfig) {
+			super(
+					"dummy",
+					cacheService,
+					projectEfficiencyService,
+					userBoardConfigService,
+					toolKpiMaturity,
+					kpiCategoryRepository,
+					configHelperService,
+					customApiConfig);
 		}
 
 		@Override
@@ -116,7 +128,9 @@ public class BaseExecutiveDashboardStrategyTest {
 					Thread.currentThread().interrupt();
 				}
 			}
-			return ExecutiveDashboardResponseDTO.builder().data(ExecutiveDashboardDataDTO.builder().build()).build();
+			return ExecutiveDashboardResponseDTO.builder()
+					.data(ExecutiveDashboardDataDTO.builder().build())
+					.build();
 		}
 
 		public void setShouldSleep(boolean shouldSleep) {
@@ -138,22 +152,31 @@ public class BaseExecutiveDashboardStrategyTest {
 
 		// Reduce timeout for testing purposes by creating a new instance with a faster
 		// timeout
-		DummyStrategy fastTimeoutStrategy = new DummyStrategy(projectEfficiencyService, cacheService,
-				userBoardConfigService, toolKpiMaturity, kpiCategoryRepository, configHelperService, customApiConfig) {
-			@Override
-			public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
-				// Override with a much shorter timeout for the test
-				try {
-					return Executors.newSingleThreadExecutor().submit(() -> fetchDashboardData(request)).get(1,
-							TimeUnit.SECONDS);
-				} catch (Exception e) {
-					throw new ExecutiveDataException("Timeout", e);
-				}
-			}
-		};
+		DummyStrategy fastTimeoutStrategy =
+				new DummyStrategy(
+						projectEfficiencyService,
+						cacheService,
+						userBoardConfigService,
+						toolKpiMaturity,
+						kpiCategoryRepository,
+						configHelperService,
+						customApiConfig) {
+					@Override
+					public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
+						// Override with a much shorter timeout for the test
+						try {
+							return Executors.newSingleThreadExecutor()
+									.submit(() -> fetchDashboardData(request))
+									.get(1, TimeUnit.SECONDS);
+						} catch (Exception e) {
+							throw new ExecutiveDataException("Timeout", e);
+						}
+					}
+				};
 		fastTimeoutStrategy.setShouldSleep(true);
 
-		assertThrows(ExecutiveDataException.class, () -> fastTimeoutStrategy.getExecutiveDashboard(request));
+		assertThrows(
+				ExecutiveDataException.class, () -> fastTimeoutStrategy.getExecutiveDashboard(request));
 	}
 
 	@Test
@@ -164,19 +187,24 @@ public class BaseExecutiveDashboardStrategyTest {
 		hierarchyMap.put(projectId, new OrganizationHierarchy());
 
 		UserBoardConfigDTO config = new UserBoardConfigDTO();
-		config.setScrum(List.of(new com.publicissapient.kpidashboard.common.model.userboardconfig.BoardDTO())); // Make
-																												// it
-																												// not
-																												// empty
+		config.setScrum(
+				List.of(
+						new com.publicissapient.kpidashboard.common.model.userboardconfig.BoardDTO())); // Make
+		// it
+		// not
+		// empty
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(config);
 
 		// Simulate a delay so we have time to interrupt
 
 		final Map<String, Map<String, String>>[] result = new Map[1];
-		Thread testThread = new Thread(() -> {
-			result[0] = testStrategy.processProjectBatch(ids, new KpiRequest(), hierarchyMap,
-					Collections.singleton("dora"), false);
-		});
+		Thread testThread =
+				new Thread(
+						() -> {
+							result[0] =
+									testStrategy.processProjectBatch(
+											ids, new KpiRequest(), hierarchyMap, Collections.singleton("dora"), false);
+						});
 
 		testThread.start();
 		Thread.sleep(500); // Give it time to start processing
@@ -195,8 +223,9 @@ public class BaseExecutiveDashboardStrategyTest {
 
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(new UserBoardConfigDTO());
 
-		Map<String, Map<String, String>> result = testStrategy.processProjectBatch(ids, new KpiRequest(), hierarchyMap,
-				Collections.emptySet(), false);
+		Map<String, Map<String, String>> result =
+				testStrategy.processProjectBatch(
+						ids, new KpiRequest(), hierarchyMap, Collections.emptySet(), false);
 
 		assertTrue(result.isEmpty());
 	}
@@ -214,8 +243,9 @@ public class BaseExecutiveDashboardStrategyTest {
 		config.setScrum(Collections.emptyList());
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(config);
 
-		Map<String, Map<String, String>> result = testStrategy.processProjectBatch(ids, new KpiRequest(), hierarchyMap,
-				Collections.singleton("dora"), false);
+		Map<String, Map<String, String>> result =
+				testStrategy.processProjectBatch(
+						ids, new KpiRequest(), hierarchyMap, Collections.singleton("dora"), false);
 
 		assertTrue(result.isEmpty());
 	}
@@ -236,10 +266,12 @@ public class BaseExecutiveDashboardStrategyTest {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi1");
 		kpiElement.setOverallMaturity("4.5");
-		when(toolKpiMaturity.getKpiElements(any(), any())).thenReturn(Collections.singletonList(kpiElement));
+		when(toolKpiMaturity.getKpiElements(any(), any()))
+				.thenReturn(Collections.singletonList(kpiElement));
 
-		Map<String, String> result = testStrategy.processToolKpis(projectId, request, toolToBoardKpis,
-				Collections.singleton("dora"));
+		Map<String, String> result =
+				testStrategy.processToolKpis(
+						projectId, request, toolToBoardKpis, Collections.singleton("dora"));
 
 		assertEquals(1, result.size());
 		assertEquals("4.5", result.get("dora"));
@@ -261,16 +293,24 @@ public class BaseExecutiveDashboardStrategyTest {
 	@Test
 	public void testGetExecutiveDashboard_ExecutionException() {
 		// Test handling of ExecutionException
-		testStrategy = new DummyStrategy(projectEfficiencyService, cacheService, userBoardConfigService,
-				toolKpiMaturity, kpiCategoryRepository, configHelperService, customApiConfig) {
-			@Override
-			public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
-				throw new ExecutiveDataException("Test exception",
-						new ExecutionException(new RuntimeException("Test")));
-			}
-		};
+		testStrategy =
+				new DummyStrategy(
+						projectEfficiencyService,
+						cacheService,
+						userBoardConfigService,
+						toolKpiMaturity,
+						kpiCategoryRepository,
+						configHelperService,
+						customApiConfig) {
+					@Override
+					public ExecutiveDashboardResponseDTO getExecutiveDashboard(KpiRequest request) {
+						throw new ExecutiveDataException(
+								"Test exception", new ExecutionException(new RuntimeException("Test")));
+					}
+				};
 
-		assertThrows(ExecutiveDataException.class, () -> testStrategy.getExecutiveDashboard(new KpiRequest()));
+		assertThrows(
+				ExecutiveDataException.class, () -> testStrategy.getExecutiveDashboard(new KpiRequest()));
 	}
 
 	@Test
@@ -284,9 +324,11 @@ public class BaseExecutiveDashboardStrategyTest {
 		boardKpis.put("dora", List.of(new KpiMaster()));
 		toolToBoardKpis.put("jira", boardKpis);
 
-		when(toolKpiMaturity.getKpiElements(any(), any())).thenThrow(new RuntimeException("Test exception"));
+		when(toolKpiMaturity.getKpiElements(any(), any()))
+				.thenThrow(new RuntimeException("Test exception"));
 
-		Map<String, String> result = testStrategy.processToolKpis(projectId, request, toolToBoardKpis, Set.of("dora"));
+		Map<String, String> result =
+				testStrategy.processToolKpis(projectId, request, toolToBoardKpis, Set.of("dora"));
 
 		assertFalse(result.isEmpty());
 	}
@@ -319,10 +361,11 @@ public class BaseExecutiveDashboardStrategyTest {
 		kpiElement2.setKpiId("kpi2");
 		kpiElement2.setOverallMaturity("3.5");
 
-		when(toolKpiMaturity.getKpiElements(any(), any())).thenReturn(List.of(kpiElement1, kpiElement2));
+		when(toolKpiMaturity.getKpiElements(any(), any()))
+				.thenReturn(List.of(kpiElement1, kpiElement2));
 
-		Map<String, String> result = testStrategy.processToolKpis(projectId, request, toolToBoardKpis,
-				Set.of("dora", "dora2"));
+		Map<String, String> result =
+				testStrategy.processToolKpis(projectId, request, toolToBoardKpis, Set.of("dora", "dora2"));
 
 		assertEquals(2, result.size());
 		assertEquals("4.5", result.get("dora"));
@@ -357,19 +400,21 @@ public class BaseExecutiveDashboardStrategyTest {
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(config);
 
 		// Return different KPIs for different project IDs
-		when(toolKpiMaturity.getKpiElements(any(), any())).thenAnswer(invocation -> {
-			String projectId = invocation.getArgument(0);
-			KpiElement kpi = new KpiElement();
-			kpi.setKpiId("kpi-" + projectId);
-			kpi.setOverallMaturity(projectId.equals("p1") ? "4.5" : "3.5");
-			return List.of(kpi);
-		});
+		when(toolKpiMaturity.getKpiElements(any(), any()))
+				.thenAnswer(
+						invocation -> {
+							String projectId = invocation.getArgument(0);
+							KpiElement kpi = new KpiElement();
+							kpi.setKpiId("kpi-" + projectId);
+							kpi.setOverallMaturity(projectId.equals("p1") ? "4.5" : "3.5");
+							return List.of(kpi);
+						});
 
 		KpiRequest kpiRequest = new KpiRequest();
 		kpiRequest.setSelectedMap(createSelectedMap());
 
-		Map<String, Map<String, String>> result = testStrategy.processProjectBatch(ids, kpiRequest, hierarchyMap,
-				Set.of("dora"), false);
+		Map<String, Map<String, String>> result =
+				testStrategy.processProjectBatch(ids, kpiRequest, hierarchyMap, Set.of("dora"), false);
 
 		assertEquals(2, result.size());
 		assertEquals("NA", result.get("p1").get("dora"));

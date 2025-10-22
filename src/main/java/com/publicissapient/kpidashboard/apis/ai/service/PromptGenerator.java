@@ -16,15 +16,17 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service;
 
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.stereotype.Component;
+
 import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.Optional;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @Component
@@ -41,18 +43,19 @@ public class PromptGenerator {
 		PromptDetails analysisReport = getPromptDetails(PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT);
 		PromptDetails kpiRecommendationPrompt = getPromptDetails(PromptKeys.KPI_RECOMMENDATION_PROMPT);
 
-		return kpiRecommendationPrompt.toString().replace("ANALYSIS_REPORT_PLACEHOLDER", analysisReport.toString())
+		return kpiRecommendationPrompt
+				.toString()
+				.replace("ANALYSIS_REPORT_PLACEHOLDER", analysisReport.toString())
 				.replace("KPI_DATA_BY_PROJECT_PLACEHOLDER", kpiDataByProject.toString())
 				.replace("USER_ROLE_PLACEHOLDER", userRole);
-
 	}
 
-	public String getKpiSearchPrompt( String userQuery)
-			throws EntityNotFoundException {
+	public String getKpiSearchPrompt(String userQuery) throws EntityNotFoundException {
 		PromptDetails kpiData = getPromptDetails(PromptKeys.KPI_DATA);
 		PromptDetails searchBase = getPromptDetails(PromptKeys.KPI_SEARCH);
-		return searchBase.toString().replace("KPI_DATA", kpiData.toString())
+		return searchBase
+				.toString()
+				.replace("KPI_DATA", kpiData.toString())
 				.replace("USER_QUERY", userQuery);
-
 	}
 }

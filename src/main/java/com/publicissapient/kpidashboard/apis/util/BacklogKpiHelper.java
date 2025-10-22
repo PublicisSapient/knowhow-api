@@ -55,94 +55,116 @@ public final class BacklogKpiHelper {
 	private static final String DOR_TO_DOD = "DOR to DOD";
 	private static final String DOD_TO_LIVE = "DOD to Live";
 	private static final String LEAD_TIME = "LEAD TIME";
-	public static final String STATUS_UPDATION_LOG_STORY_CHANGED_TO = "statusUpdationLog.story.changedTo";
+	public static final String STATUS_UPDATION_LOG_STORY_CHANGED_TO =
+			"statusUpdationLog.story.changedTo";
 
-	private BacklogKpiHelper() {
-	}
+	private BacklogKpiHelper() {}
 
 	/**
 	 * create x-axis range map with duration
 	 *
-	 * @param rangeWiseJiraIssuesMap
-	 *          map of jira issues by data points
-	 * @param xAxisRange
-	 *          x axis data points
-	 * @param monthRangeMap
-	 *          days and range map
+	 * @param rangeWiseJiraIssuesMap map of jira issues by data points
+	 * @param xAxisRange x axis data points
+	 * @param monthRangeMap days and range map
 	 */
 	public static void initializeRangeMapForProjects(
-			Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeWiseJiraIssuesMap, List<String> xAxisRange,
+			Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeWiseJiraIssuesMap,
+			List<String> xAxisRange,
 			Map<Long, String> monthRangeMap) {
 		LocalDateTime currentDate = LocalDateTime.now();
-		xAxisRange.forEach(range -> {
-			String[] rangeSplit = range.trim().split(" ");
-			if (rangeSplit[2].contains(MONTH)) {
-				monthRangeMap.put(DAYS.between(currentDate.minusMonths(Integer.parseInt(rangeSplit[1])), currentDate), range);
-			} else {
-				monthRangeMap.put(DAYS.between(currentDate.minusWeeks(Integer.parseInt(rangeSplit[1])), currentDate), range);
-			}
-			rangeWiseJiraIssuesMap.put(range, new HashMap<>());
-		});
+		xAxisRange.forEach(
+				range -> {
+					String[] rangeSplit = range.trim().split(" ");
+					if (rangeSplit[2].contains(MONTH)) {
+						monthRangeMap.put(
+								DAYS.between(currentDate.minusMonths(Integer.parseInt(rangeSplit[1])), currentDate),
+								range);
+					} else {
+						monthRangeMap.put(
+								DAYS.between(currentDate.minusWeeks(Integer.parseInt(rangeSplit[1])), currentDate),
+								range);
+					}
+					rangeWiseJiraIssuesMap.put(range, new HashMap<>());
+				});
 	}
 
 	/**
 	 * sets jira issue by closed date and issue type
 	 *
-	 * @param rangeWiseJiraIssuesMap
-	 *          map of jira issues by data points
-	 * @param issueCustomHistory
-	 *          jira issue custom history
-	 * @param closedDate
-	 *          closed date of jira issue
+	 * @param rangeWiseJiraIssuesMap map of jira issues by data points
+	 * @param issueCustomHistory jira issue custom history
+	 * @param closedDate closed date of jira issue
 	 * @param monthRangeMap
 	 * @return
 	 */
 	public static boolean setRangeWiseJiraIssuesMap(
 			Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeWiseJiraIssuesMap,
-			JiraIssueCustomHistory issueCustomHistory, LocalDateTime closedDate, Map<Long, String> monthRangeMap) {
+			JiraIssueCustomHistory issueCustomHistory,
+			LocalDateTime closedDate,
+			Map<Long, String> monthRangeMap) {
 		AtomicBoolean addedToMap = new AtomicBoolean(false);
 		if (ObjectUtils.isNotEmpty(closedDate)) {
-			long daysBetween = DAYS.between(KpiDataHelper.convertStringToDate(closedDate.toString()), LocalDate.now());
-			monthRangeMap.forEach((noOfDay, range) -> {
-				if (noOfDay > daysBetween) {
-					addedToMap.set(true);
-					rangeWiseJiraIssuesMap.computeIfAbsent(range, k -> new HashMap<>())
-							.computeIfAbsent(issueCustomHistory.getStoryType(), k -> new ArrayList<>()).add(issueCustomHistory);
-				}
-			});
+			long daysBetween =
+					DAYS.between(KpiDataHelper.convertStringToDate(closedDate.toString()), LocalDate.now());
+			monthRangeMap.forEach(
+					(noOfDay, range) -> {
+						if (noOfDay > daysBetween) {
+							addedToMap.set(true);
+							rangeWiseJiraIssuesMap
+									.computeIfAbsent(range, k -> new HashMap<>())
+									.computeIfAbsent(issueCustomHistory.getStoryType(), k -> new ArrayList<>())
+									.add(issueCustomHistory);
+						}
+					});
 		}
 		return addedToMap.get();
 	}
 
-	public static void setLiveTime(CycleTimeValidationData cycleTimeValidationData, CycleTime cycleTime,
-			JiraHistoryChangeLog statusUpdateLog, DateTime updatedOn, List<String> liveStatus) {
-		if (cycleTime.getLiveTime() == null && CollectionUtils.isNotEmpty(liveStatus) &&
-				liveStatus.contains(statusUpdateLog.getChangedTo().toLowerCase())) {
+	public static void setLiveTime(
+			CycleTimeValidationData cycleTimeValidationData,
+			CycleTime cycleTime,
+			JiraHistoryChangeLog statusUpdateLog,
+			DateTime updatedOn,
+			List<String> liveStatus) {
+		if (cycleTime.getLiveTime() == null
+				&& CollectionUtils.isNotEmpty(liveStatus)
+				&& liveStatus.contains(statusUpdateLog.getChangedTo().toLowerCase())) {
 			cycleTime.setLiveLocalDateTime(statusUpdateLog.getUpdatedOn());
 			cycleTime.setLiveTime(updatedOn);
 			cycleTimeValidationData.setLiveDate(updatedOn);
 		}
 	}
 
-	public static void setReadyTime(CycleTimeValidationData cycleTimeValidationData, CycleTime cycleTime,
-			JiraHistoryChangeLog statusUpdateLog, DateTime updatedOn, List<String> dorStatus) {
-		if (cycleTime.getReadyTime() == null && CollectionUtils.isNotEmpty(dorStatus) &&
-				dorStatus.contains(statusUpdateLog.getChangedTo().toLowerCase())) {
+	public static void setReadyTime(
+			CycleTimeValidationData cycleTimeValidationData,
+			CycleTime cycleTime,
+			JiraHistoryChangeLog statusUpdateLog,
+			DateTime updatedOn,
+			List<String> dorStatus) {
+		if (cycleTime.getReadyTime() == null
+				&& CollectionUtils.isNotEmpty(dorStatus)
+				&& dorStatus.contains(statusUpdateLog.getChangedTo().toLowerCase())) {
 			cycleTime.setReadyLocalDateTime(statusUpdateLog.getUpdatedOn());
 			cycleTime.setReadyTime(updatedOn);
 			cycleTimeValidationData.setDorDate(updatedOn);
 		}
 	}
 
-	public static void setDODTime(JiraHistoryChangeLog statusUpdateLog, DateTime updatedOn, List<String> dodStatus,
-			String storyFirstStatus, Map<String, DateTime> dodStatusDateMap) {
+	public static void setDODTime(
+			JiraHistoryChangeLog statusUpdateLog,
+			DateTime updatedOn,
+			List<String> dodStatus,
+			String storyFirstStatus,
+			Map<String, DateTime> dodStatusDateMap) {
 		// reopen sceneario
-		if (CollectionUtils.isNotEmpty(dodStatus) && statusUpdateLog.getChangedFrom() != null &&
-				dodStatus.contains(statusUpdateLog.getChangedFrom().toLowerCase()) &&
-				storyFirstStatus.equalsIgnoreCase(statusUpdateLog.getChangedTo())) {
+		if (CollectionUtils.isNotEmpty(dodStatus)
+				&& statusUpdateLog.getChangedFrom() != null
+				&& dodStatus.contains(statusUpdateLog.getChangedFrom().toLowerCase())
+				&& storyFirstStatus.equalsIgnoreCase(statusUpdateLog.getChangedTo())) {
 			dodStatusDateMap.clear();
 		} // taking the delivery date of first closed status date of last closed cycle
-		if (CollectionUtils.isNotEmpty(dodStatus) && dodStatus.contains(statusUpdateLog.getChangedTo().toLowerCase())) {
+		if (CollectionUtils.isNotEmpty(dodStatus)
+				&& dodStatus.contains(statusUpdateLog.getChangedTo().toLowerCase())) {
 			if (dodStatusDateMap.containsKey(statusUpdateLog.getChangedTo().toLowerCase())) {
 				dodStatusDateMap.clear();
 			}
@@ -150,31 +172,34 @@ public final class BacklogKpiHelper {
 		}
 	}
 
-	public static String setValueInCycleTime(DateTime startTime, DateTime endTime, String level,
-			CycleTimeValidationData cycleTimeValidationData, Set<String> issueTypes) {
+	public static String setValueInCycleTime(
+			DateTime startTime,
+			DateTime endTime,
+			String level,
+			CycleTimeValidationData cycleTimeValidationData,
+			Set<String> issueTypes) {
 		String weekHours = KpiDataHelper.calWeekHours(startTime, endTime);
 		if (!weekHours.equalsIgnoreCase(Constant.NOT_AVAILABLE)) {
-			if (issueTypes != null)
-				issueTypes.add(cycleTimeValidationData.getIssueType());
+			if (issueTypes != null) issueTypes.add(cycleTimeValidationData.getIssueType());
 			long timeInDays = KpiDataHelper.calculateTimeInDays(Long.parseLong(weekHours));
 			switch (level) {
-				case INTAKE_TO_DOR :
+				case INTAKE_TO_DOR:
 					cycleTimeValidationData.setIntakeTime(timeInDays);
 					break;
 
-				case DOR_TO_DOD :
+				case DOR_TO_DOD:
 					cycleTimeValidationData.setDorTime(timeInDays);
 					break;
 
-				case DOD_TO_LIVE :
+				case DOD_TO_LIVE:
 					cycleTimeValidationData.setDodTime(timeInDays);
 					break;
 
-				case LEAD_TIME :
+				case LEAD_TIME:
 					cycleTimeValidationData.setLeadTime(timeInDays);
 					break;
 
-				default :
+				default:
 			}
 		}
 		return weekHours;
@@ -182,42 +207,55 @@ public final class BacklogKpiHelper {
 
 	/**
 	 * Filter Project Issue History based on uniqueProjectMap and date Range
-	 * 
-	 * @param projectHistories
-	 *            getJiraIssuesCustomHistoryFromBaseClass()
-	 * @param uniqueProjectMap
-	 *            getUniqueProjectMap
-	 * @param startDate
-	 *            startDate
-	 * @param endDate
-	 *            endDate
+	 *
+	 * @param projectHistories getJiraIssuesCustomHistoryFromBaseClass()
+	 * @param uniqueProjectMap getUniqueProjectMap
+	 * @param startDate startDate
+	 * @param endDate endDate
 	 * @return filtered project histories
 	 */
 	@SuppressWarnings("unchecked")
-	public static List<JiraIssueCustomHistory> filterProjectHistories(List<JiraIssueCustomHistory> projectHistories,
-			Map<String, Map<String, Object>> uniqueProjectMap, String startDate, String endDate) {
+	public static List<JiraIssueCustomHistory> filterProjectHistories(
+			List<JiraIssueCustomHistory> projectHistories,
+			Map<String, Map<String, Object>> uniqueProjectMap,
+			String startDate,
+			String endDate) {
 
-		LocalDateTime startDateTime = DateUtil.localDateTimeToUTC(java.time.LocalDate.parse(startDate).atStartOfDay());
-		LocalDateTime endDateTime = DateUtil.localDateTimeToUTC(java.time.LocalDate.parse(endDate).atTime(23, 59, 59));
-		return projectHistories.stream().filter(history -> {
-			Map<String, Object> filters = uniqueProjectMap.get(history.getBasicProjectConfigId());
-			if (filters == null) {
-				return false;
-			}
-			// Check storyType if provided
-			if (filters.containsKey("storyType") && ((List<Pattern>) filters.get("storyType")).stream()
-					.noneMatch(p -> p.matcher(history.getStoryType()).matches())) {
-				return false;
-			}
-			// Evaluate statusUpdationLog conditions
-			boolean changedToOk = !filters.containsKey(STATUS_UPDATION_LOG_STORY_CHANGED_TO)
-					|| history.getStatusUpdationLog().stream()
-							.anyMatch(log -> ((List<Pattern>) filters.get(STATUS_UPDATION_LOG_STORY_CHANGED_TO))
-									.stream().anyMatch(p -> p.matcher(log.getChangedTo()).matches()));
-			boolean updatedOnOk = history.getStatusUpdationLog().stream()
-					.anyMatch(log -> DateUtil.isWithinDateTimeRange(log.getUpdatedOn(), startDateTime, endDateTime));
-			return changedToOk && updatedOnOk;
-		}).toList();
+		LocalDateTime startDateTime =
+				DateUtil.localDateTimeToUTC(java.time.LocalDate.parse(startDate).atStartOfDay());
+		LocalDateTime endDateTime =
+				DateUtil.localDateTimeToUTC(java.time.LocalDate.parse(endDate).atTime(23, 59, 59));
+		return projectHistories.stream()
+				.filter(
+						history -> {
+							Map<String, Object> filters = uniqueProjectMap.get(history.getBasicProjectConfigId());
+							if (filters == null) {
+								return false;
+							}
+							// Check storyType if provided
+							if (filters.containsKey("storyType")
+									&& ((List<Pattern>) filters.get("storyType"))
+											.stream().noneMatch(p -> p.matcher(history.getStoryType()).matches())) {
+								return false;
+							}
+							// Evaluate statusUpdationLog conditions
+							boolean changedToOk =
+									!filters.containsKey(STATUS_UPDATION_LOG_STORY_CHANGED_TO)
+											|| history.getStatusUpdationLog().stream()
+													.anyMatch(
+															log ->
+																	((List<Pattern>)
+																					filters.get(STATUS_UPDATION_LOG_STORY_CHANGED_TO))
+																			.stream()
+																					.anyMatch(p -> p.matcher(log.getChangedTo()).matches()));
+							boolean updatedOnOk =
+									history.getStatusUpdationLog().stream()
+											.anyMatch(
+													log ->
+															DateUtil.isWithinDateTimeRange(
+																	log.getUpdatedOn(), startDateTime, endDateTime));
+							return changedToOk && updatedOnOk;
+						})
+				.toList();
 	}
-
 }

@@ -54,6 +54,7 @@ public class KpiRequest implements Serializable {
 	private String hierarchyName;
 	private String hierarchyId;
 	private String levelName;
+
 	/**
 	 * Gets kpi list.
 	 *
@@ -66,8 +67,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets kpi list.
 	 *
-	 * @param kpiList
-	 *          the kpi list
+	 * @param kpiList the kpi list
 	 */
 	public void setKpiList(List<KpiElement> kpiList) {
 		this.kpiList = kpiList;
@@ -86,8 +86,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets hierarchy name.
 	 *
-	 * @param hierarchyName
-	 *          hierarchy name
+	 * @param hierarchyName hierarchy name
 	 */
 	public void setHierarchyName(String hierarchyName) {
 		this.hierarchyName = hierarchyName;
@@ -105,8 +104,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets hierarchy id.
 	 *
-	 * @param hierarchyId
-	 *          hierarchy id
+	 * @param hierarchyId hierarchy id
 	 */
 	public void setHierarchyId(String hierarchyId) {
 		this.hierarchyId = hierarchyId;
@@ -124,8 +122,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets kpi list.
 	 *
-	 * @param kpiIdList
-	 *          the kpi list
+	 * @param kpiIdList the kpi list
 	 */
 	public void setKpiIdList(List<String> kpiIdList) {
 		this.kpiIdList = kpiIdList;
@@ -143,8 +140,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets level.
 	 *
-	 * @param level
-	 *          the level
+	 * @param level the level
 	 */
 	public void setLevel(int level) {
 		this.level = level;
@@ -162,8 +158,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets ids.
 	 *
-	 * @param ids
-	 *          the ids
+	 * @param ids the ids
 	 */
 	public void setIds(String[] ids) {
 		this.ids = ids == null ? null : ids.clone();
@@ -181,8 +176,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets externalIDs.
 	 *
-	 * @param externalIDs
-	 *          the CH Ids
+	 * @param externalIDs the CH Ids
 	 */
 	public void setExternalIDs(List<String> externalIDs) {
 		this.externalIDs = externalIDs;
@@ -200,8 +194,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets platform ids.
 	 *
-	 * @param platformIds
-	 *          the platform ids
+	 * @param platformIds the platform ids
 	 */
 	public void setPlatformIds(String[] platformIds) {
 		this.platformIds = platformIds == null ? null : platformIds.clone();
@@ -237,8 +230,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets label.
 	 *
-	 * @param label
-	 *          the label
+	 * @param label the label
 	 */
 	public void setLabel(String label) {
 		this.label = label;
@@ -256,8 +248,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets selected map.
 	 *
-	 * @param selectedMap
-	 *          the selected map
+	 * @param selectedMap the selected map
 	 */
 	public void setSelectedMap(Map<String, List<String>> selectedMap) {
 		this.selectedMap = selectedMap;
@@ -275,8 +266,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets start date.
 	 *
-	 * @param startDate
-	 *          the start date
+	 * @param startDate the start date
 	 */
 	public void setStartDate(String startDate) {
 		this.startDate = startDate;
@@ -294,8 +284,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets end date.
 	 *
-	 * @param endDate
-	 *          the end date
+	 * @param endDate the end date
 	 */
 	public void setEndDate(String endDate) {
 		this.endDate = endDate;
@@ -313,8 +302,7 @@ public class KpiRequest implements Serializable {
 	/**
 	 * Sets filter to show on trend.
 	 *
-	 * @param filterToShowOnTrend
-	 *          the filter to show on trend
+	 * @param filterToShowOnTrend the filter to show on trend
 	 */
 	public void setFilterToShowOnTrend(String filterToShowOnTrend) {
 		this.filterToShowOnTrend = filterToShowOnTrend;
@@ -328,8 +316,7 @@ public class KpiRequest implements Serializable {
 	}
 
 	/**
-	 * @param selecedHierarchyLabel
-	 *          selecedHierarchyLabel
+	 * @param selecedHierarchyLabel selecedHierarchyLabel
 	 */
 	public void setSelecedHierarchyLabel(String selecedHierarchyLabel) {
 		this.selecedHierarchyLabel = selecedHierarchyLabel;
@@ -343,8 +330,7 @@ public class KpiRequest implements Serializable {
 	}
 
 	/**
-	 * @param sprintIncluded
-	 *          sprintIncluded
+	 * @param sprintIncluded sprintIncluded
 	 */
 	public void setSprintIncluded(List<String> sprintIncluded) {
 		this.sprintIncluded = sprintIncluded;
@@ -374,14 +360,22 @@ public class KpiRequest implements Serializable {
 		this.duration = duration;
 	}
 
-
 	@Override
 	public String toString() {
-		return "KpiRequest [requestTrackerId=" + requestTrackerId + ", level=" + level + ", ids=" + Arrays.toString(ids) +
-				", platformIds=" + Arrays.toString(platformIds) + ", kpiList=" + kpiList + "]" + "sprintIncluded " +
-				sprintIncluded;
+		return "KpiRequest [requestTrackerId="
+				+ requestTrackerId
+				+ ", level="
+				+ level
+				+ ", ids="
+				+ Arrays.toString(ids)
+				+ ", platformIds="
+				+ Arrays.toString(platformIds)
+				+ ", kpiList="
+				+ kpiList
+				+ "]"
+				+ "sprintIncluded "
+				+ sprintIncluded;
 	}
-
 
 	public String getLevelName() {
 		return levelName;
@@ -398,22 +392,24 @@ public class KpiRequest implements Serializable {
 	 *
 	 * @param original the KpiRequest to copy
 	 */
-
 	public KpiRequest(KpiRequest original) {
 		if (original != null) {
 			this.requestTrackerId = original.requestTrackerId;
 			this.level = original.level;
 			this.label = original.label;
 			this.ids = original.ids != null ? original.ids.clone() : null;
-			this.externalIDs = original.externalIDs != null ? new ArrayList<>(original.externalIDs) : null;
+			this.externalIDs =
+					original.externalIDs != null ? new ArrayList<>(original.externalIDs) : null;
 			this.platformIds = original.platformIds != null ? original.platformIds.clone() : null;
-			this.kpiList = original.kpiList != null ? original.kpiList.stream().map(KpiElement::new).toList() : null;
+			this.kpiList =
+					original.kpiList != null ? original.kpiList.stream().map(KpiElement::new).toList() : null;
 			this.kpiIdList = original.kpiIdList != null ? new ArrayList<>(original.kpiIdList) : null;
 			this.selectedMap = original.selectedMap != null ? new HashMap<>(original.selectedMap) : null;
 			this.startDate = original.startDate;
 			this.endDate = original.endDate;
 			this.filterToShowOnTrend = original.filterToShowOnTrend;
-			this.sprintIncluded = original.sprintIncluded != null ? new ArrayList<>(original.sprintIncluded) : null;
+			this.sprintIncluded =
+					original.sprintIncluded != null ? new ArrayList<>(original.sprintIncluded) : null;
 			this.selecedHierarchyLabel = original.selecedHierarchyLabel;
 			this.kanbanXaxisDataPoints = original.kanbanXaxisDataPoints;
 			this.xAxisDataPoints = original.xAxisDataPoints;

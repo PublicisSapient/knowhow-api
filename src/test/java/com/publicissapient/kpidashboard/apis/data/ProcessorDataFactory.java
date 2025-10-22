@@ -38,8 +38,7 @@ public class ProcessorDataFactory {
 	private List<Processor> processorDataFactory;
 	private ObjectMapper mapper;
 
-	private ProcessorDataFactory() {
-	}
+	private ProcessorDataFactory() {}
 
 	public static ProcessorDataFactory newInstance(String filePath) {
 
@@ -59,9 +58,10 @@ public class ProcessorDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_PROCESSOR_ITEMS_DATA : filePath;
 
-			processorDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<Processor>>() {
-					});
+			processorDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<Processor>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

@@ -54,22 +54,16 @@ import jakarta.servlet.http.HttpServletRequest;
 @RunWith(MockitoJUnitRunner.class)
 public class UsersSessionServiceImplTest {
 
-	@Mock
-	private UsersSessionRepository usersSessionRepository;
+	@Mock private UsersSessionRepository usersSessionRepository;
 
-	@InjectMocks
-	private UsersSessionServiceImpl usersSessionService;
+	@InjectMocks private UsersSessionServiceImpl usersSessionService;
 
-	@Mock
-	private HttpServletRequest request;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private HttpServletRequest request;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private UserInfoRepository userInfoRepository;
+	@Mock private UserInfoRepository userInfoRepository;
 
-	@Mock
-	private Authentication authentication;
+	@Mock private Authentication authentication;
 
 	@Before
 	public void setUp() {
@@ -87,8 +81,9 @@ public class UsersSessionServiceImplTest {
 
 		when(usersSessionRepository.save(any(UsersSession.class))).thenReturn(new UsersSession());
 
-		UsersSession result = usersSessionService.createUsersSessionInfo(userInfo, AuthenticationEvent.LOGIN,
-				Status.SUCCESS);
+		UsersSession result =
+				usersSessionService.createUsersSessionInfo(
+						userInfo, AuthenticationEvent.LOGIN, Status.SUCCESS);
 
 		assertNotNull(result);
 	}
@@ -99,8 +94,9 @@ public class UsersSessionServiceImplTest {
 		UsersSession lastLogout = new UsersSession();
 		lastLogout.setTimeStamp(expectedLogoutTime);
 
-		when(usersSessionRepository.findTopByUserNameAndEventOrderByTimeStampDesc(anyString(),
-				any(AuthenticationEvent.class))).thenReturn(lastLogout);
+		when(usersSessionRepository.findTopByUserNameAndEventOrderByTimeStampDesc(
+						anyString(), any(AuthenticationEvent.class)))
+				.thenReturn(lastLogout);
 
 		LocalDateTime actualLogoutTime = usersSessionService.getLastLogoutTimeOfUser("username");
 

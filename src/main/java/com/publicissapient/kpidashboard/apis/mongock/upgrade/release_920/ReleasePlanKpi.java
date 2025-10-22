@@ -53,19 +53,48 @@ public class ReleasePlanKpi {
 
 	public void addToKpiMaster() {
 
-		Document kpiDocument = new Document().append(KPI_ID, "kpi179").append("kpiName", "Release Plan")
-				.append("maxValue", "").append("kpiUnit", "Count").append("isDeleted", "False").append("defaultOrder", 1)
-				.append("kpiCategory", "Release").append("kpiSource", "Jira").append("combinedKpiSource", "Jira/Azure")
-				.append("isPositiveTrend", true).append("showTrend", false).append("groupId", 9).append("thresholdValue", "")
-				.append("kanban", false).append("chartType", "CumulativeMultilineChart").append("yAxisLabel", "Count")
-				.append("xAxisLabel", "").append("isAdditionalfFilterSupport", false).append("kpiFilter", "")
-				.append("calculateMaturity", false)
-				.append("kpiInfo", new Document().append(DEFINITION,
-						"Displays the cumulative daily planned dues of the release based on the due dates of work items within the release scope.\n\nAdditionally, it provides an overview of the entire release scope.")
-						.append("details", Collections.singletonList(new Document("type", "link").append("kpiLinkDetail",
-								new Document().append("text", "Detailed Information at").append("link",
-										"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/147652609/Release+Release+Plan")))))
-				.append("kpiSubCategory", "Speed").append("kpiWidth", 100).append("boxType", "chart");
+		Document kpiDocument =
+				new Document()
+						.append(KPI_ID, "kpi179")
+						.append("kpiName", "Release Plan")
+						.append("maxValue", "")
+						.append("kpiUnit", "Count")
+						.append("isDeleted", "False")
+						.append("defaultOrder", 1)
+						.append("kpiCategory", "Release")
+						.append("kpiSource", "Jira")
+						.append("combinedKpiSource", "Jira/Azure")
+						.append("isPositiveTrend", true)
+						.append("showTrend", false)
+						.append("groupId", 9)
+						.append("thresholdValue", "")
+						.append("kanban", false)
+						.append("chartType", "CumulativeMultilineChart")
+						.append("yAxisLabel", "Count")
+						.append("xAxisLabel", "")
+						.append("isAdditionalfFilterSupport", false)
+						.append("kpiFilter", "")
+						.append("calculateMaturity", false)
+						.append(
+								"kpiInfo",
+								new Document()
+										.append(
+												DEFINITION,
+												"Displays the cumulative daily planned dues of the release based on the due dates of work items within the release scope.\n\nAdditionally, it provides an overview of the entire release scope.")
+										.append(
+												"details",
+												Collections.singletonList(
+														new Document("type", "link")
+																.append(
+																		"kpiLinkDetail",
+																		new Document()
+																				.append("text", "Detailed Information at")
+																				.append(
+																						"link",
+																						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/147652609/Release+Release+Plan")))))
+						.append("kpiSubCategory", "Speed")
+						.append("kpiWidth", 100)
+						.append("boxType", "chart");
 		// Insert the document into the collection
 		mongoTemplate.getCollection(KPI_MASTER).insertOne(kpiDocument);
 	}

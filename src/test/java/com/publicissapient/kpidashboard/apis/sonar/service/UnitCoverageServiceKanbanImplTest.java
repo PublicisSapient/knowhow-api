@@ -80,18 +80,12 @@ public class UnitCoverageServiceKanbanImplTest {
 	private static Tool tool2;
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	UnitCoverageKanbanServiceimpl stdServiceImpl;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private SonarHistoryRepository sonarHistoryRepository;
-	@Mock
-	private CommonService commonService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks UnitCoverageKanbanServiceimpl stdServiceImpl;
+	@Mock CacheService cacheService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private SonarHistoryRepository sonarHistoryRepository;
+	@Mock private CommonService commonService;
 	private List<AccountHierarchyDataKanban> ahdList = new ArrayList<>();
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
@@ -107,35 +101,42 @@ public class UnitCoverageServiceKanbanImplTest {
 	@Before
 	public void setup() {
 
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi64");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		KanbanIssueCustomHistoryDataFactory issueHistoryFactory = KanbanIssueCustomHistoryDataFactory.newInstance();
-		jiraIssueCustomHistories = issueHistoryFactory
-				.getKanbanIssueCustomHistoryDataListByTypeName(Arrays.asList("Story", "Defect", "Issue"));
+		KanbanIssueCustomHistoryDataFactory issueHistoryFactory =
+				KanbanIssueCustomHistoryDataFactory.newInstance();
+		jiraIssueCustomHistories =
+				issueHistoryFactory.getKanbanIssueCustomHistoryDataListByTypeName(
+						Arrays.asList("Story", "Defect", "Issue"));
 
 		SonarHistoryDataFactory sonarHistoryDataFactory = SonarHistoryDataFactory.newInstance();
 		sonarHistoryData = sonarHistoryDataFactory.getSonarHistoryList();
 
 		DateTime date = new DateTime("2018-07-19", DateTimeZone.UTC);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		setToolMap();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 	}
 
 	private void setToolMap() {
@@ -164,7 +165,12 @@ public class UnitCoverageServiceKanbanImplTest {
 		toolMap.put(new ObjectId("6335368249794a18e8a4479f"), toolGroup);
 	}
 
-	private Tool createTool(String key, String url, String toolType, String username, String password,
+	private Tool createTool(
+			String key,
+			String url,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> processorItems) {
 		Tool tool = new Tool();
 		tool.setTool(toolType);
@@ -181,28 +187,33 @@ public class UnitCoverageServiceKanbanImplTest {
 	@Test
 	public void testUnitCoverage() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(data -> {
-				String projectName = data.getFilter();
-				switch (projectName) {
-					case "Overall" :
-						assertThat("Coverage:", data.getValue().size(), equalTo(1));
-						break;
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							data -> {
+								String projectName = data.getFilter();
+								switch (projectName) {
+									case "Overall":
+										assertThat("Coverage:", data.getValue().size(), equalTo(1));
+										break;
 
-					case "ENGINEERING.KPIDASHBOARD.PROCESSORS->origin/develop->DA_10304" :
-						assertThat("Coverage:", data.getValue().size(), equalTo(1));
-						break;
-				}
-			});
+									case "ENGINEERING.KPIDASHBOARD.PROCESSORS->origin/develop->DA_10304":
+										assertThat("Coverage:", data.getValue().size(), equalTo(1));
+										break;
+								}
+							});
 		} catch (Exception enfe) {
 
 		}
@@ -211,8 +222,9 @@ public class UnitCoverageServiceKanbanImplTest {
 	@Test
 	public void testCoverageEmptyCollectorItem() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
 		// when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
@@ -225,9 +237,11 @@ public class UnitCoverageServiceKanbanImplTest {
 		// .thenReturn(sonarHistoryData);
 
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long coverage = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long coverage =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertThat("Coverage :", coverage, equalTo(null));
 		} catch (Exception enfe) {
 
@@ -237,8 +251,9 @@ public class UnitCoverageServiceKanbanImplTest {
 	@Test
 	public void testCoverage1() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
 		// when(customApiConfig.getSonarWeekCount()).thenReturn(5);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
@@ -251,9 +266,11 @@ public class UnitCoverageServiceKanbanImplTest {
 		// .thenReturn(sonarHistoryData);
 
 		try {
-			KpiElement kpiElement = stdServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			Long coverage = (Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
+			KpiElement kpiElement =
+					stdServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			Long coverage =
+					(Long) ((Map<String, Object>) kpiElement.getValue()).get(Constant.AGGREGATED_VALUE);
 			assertNull(coverage);
 		} catch (Exception enfe) {
 
@@ -262,14 +279,16 @@ public class UnitCoverageServiceKanbanImplTest {
 
 	@Test
 	public void getQualifierType() {
-		assertThat(KPICode.UNIT_TEST_COVERAGE_KANBAN.name(), equalTo(stdServiceImpl.getQualifierType()));
+		assertThat(
+				KPICode.UNIT_TEST_COVERAGE_KANBAN.name(), equalTo(stdServiceImpl.getQualifierType()));
 	}
 
 	@Test()
 	public void testCoverageNoData() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);

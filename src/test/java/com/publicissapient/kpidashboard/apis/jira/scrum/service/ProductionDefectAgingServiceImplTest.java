@@ -81,31 +81,21 @@ public class ProductionDefectAgingServiceImplTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> totalIssueBacklogList = new ArrayList<>();
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	JiraBacklogServiceR jiraService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	ProductionDefectAgingServiceImpl productionIssuesByPriorityAndAgingService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock JiraBacklogServiceR jiraService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks ProductionDefectAgingServiceImpl productionIssuesByPriorityAndAgingService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
@@ -119,8 +109,8 @@ public class ProductionDefectAgingServiceImplTest {
 		projectConfig.setProjectNodeId("Scrum Project_6335368249794a18e8a4479f");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -131,12 +121,13 @@ public class ProductionDefectAgingServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi127");
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		totalIssueBacklogList = JiraIssueDataFactory.newInstance().getJiraIssues();
-		when(jiraIssueRepository.findIssuesByDateAndTypeAndStatus(anyMap(), anyMap(), anyString(), anyString(), anyString(),
-				anyString(), anyBoolean())).thenReturn(totalIssueBacklogList);
+		when(jiraIssueRepository.findIssuesByDateAndTypeAndStatus(
+						anyMap(), anyMap(), anyString(), anyString(), anyString(), anyString(), anyBoolean()))
+				.thenReturn(totalIssueBacklogList);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(totalIssueBacklogList);
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 	}
@@ -144,8 +135,9 @@ public class ProductionDefectAgingServiceImplTest {
 	@Test
 	public void testGetProductionDefectsAgingByPriority() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<String> xAxisRange = new ArrayList<>(Arrays.asList("0-1", "1-3", "3-6", "6-12", ">12"));
 		when(customApiConfig.getTotalDefectCountAgingXAxisRange()).thenReturn(xAxisRange);
 
@@ -154,38 +146,60 @@ public class ProductionDefectAgingServiceImplTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(P3);
 		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(productionIssuesByPriorityAndAgingService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(productionIssuesByPriorityAndAgingService.getRequestTrackerId())
+				.thenReturn(kpiRequestTrackerId);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		try {
-			KpiElement kpiElement = productionIssuesByPriorityAndAgingService.getKpiData(kpiRequest,
-					kpiRequest.getKpiList().get(0), treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					productionIssuesByPriorityAndAgingService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String priority = dc.getFilter();
-				switch (priority) {
-					case "P1" :
-						assertThat("Production Defect Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P2" :
-						assertThat("Production Defect  Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P3" :
-						assertThat("Production Defect  Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P4" :
-						assertThat("Production Defect  Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "MISC" :
-						assertThat("Production Defect  Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String priority = dc.getFilter();
+								switch (priority) {
+									case "P1":
+										assertThat(
+												"Production Defect Priority Count Value :",
+												dc.getValue().size(),
+												equalTo(1));
+										break;
+									case "P2":
+										assertThat(
+												"Production Defect  Priority Count Value :",
+												dc.getValue().size(),
+												equalTo(1));
+										break;
+									case "P3":
+										assertThat(
+												"Production Defect  Priority Count Value :",
+												dc.getValue().size(),
+												equalTo(1));
+										break;
+									case "P4":
+										assertThat(
+												"Production Defect  Priority Count Value :",
+												dc.getValue().size(),
+												equalTo(1));
+										break;
+									case "MISC":
+										assertThat(
+												"Production Defect  Priority Count Value :",
+												dc.getValue().size(),
+												equalTo(1));
+										break;
 
-					default :
-						break;
-				}
-			});
+									default:
+										break;
+								}
+							});
 
 		} catch (ApplicationException applicationException) {
 
@@ -196,25 +210,37 @@ public class ProductionDefectAgingServiceImplTest {
 	@Test
 	public void testFetchKPIDataFromDb() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> defectDataListMap = productionIssuesByPriorityAndAgingService
-				.fetchKPIDataFromDb(leafNodeList.get(0), LocalDate.of(2022, 1, 1).toString(), LocalDate.of(2022, 12, 31).toString(), kpiRequest);
+		Map<String, Object> defectDataListMap =
+				productionIssuesByPriorityAndAgingService.fetchKPIDataFromDb(
+						leafNodeList.get(0),
+						LocalDate.of(2022, 1, 1).toString(),
+						LocalDate.of(2022, 12, 31).toString(),
+						kpiRequest);
 
-		assertThat("Total Defects issue list :", ((List<JiraIssue>) defectDataListMap.get(RANGE_TICKET_LIST)).size(),
+		assertThat(
+				"Total Defects issue list :",
+				((List<JiraIssue>) defectDataListMap.get(RANGE_TICKET_LIST)).size(),
 				equalTo(1));
 	}
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", productionIssuesByPriorityAndAgingService.getQualifierType(),
+		assertThat(
+				"Kpi Name :",
+				productionIssuesByPriorityAndAgingService.getQualifierType(),
 				equalTo("PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING"));
 	}
 
@@ -232,7 +258,8 @@ public class ProductionDefectAgingServiceImplTest {
 		trendValueMap.put(P4, trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);

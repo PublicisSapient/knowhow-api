@@ -63,32 +63,23 @@ import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 @RunWith(MockitoJUnitRunner.class)
 public class CacheServiceImplTest {
 
-	@Mock
-	private HierarchyLevelService hierarchyLevelService;
+	@Mock private HierarchyLevelService hierarchyLevelService;
 
-	@Mock
-	private AccountHierarchyServiceImpl accountHierarchyService;
+	@Mock private AccountHierarchyServiceImpl accountHierarchyService;
 
-	@Mock
-	private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
+	@Mock private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
 
-	@Mock
-	private CacheManager cacheManager;
+	@Mock private CacheManager cacheManager;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
+	@Mock private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
 
-	@InjectMocks
-	private CacheServiceImpl cacheService;
+	@InjectMocks private CacheServiceImpl cacheService;
 
-	@Mock
-	private ProjectHierarchyService projectHierarchyService;
+	@Mock private ProjectHierarchyService projectHierarchyService;
 
-	@Mock
-	private Cache cache;
+	@Mock private Cache cache;
 
 	@Test
 	public void testClearCache_ValidCacheName_CacheCleared() {
@@ -111,10 +102,12 @@ public class CacheServiceImplTest {
 
 	@Test
 	public void testCacheSprintHierarchyData_ValidInput_ReturnsData() {
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		List<AccountHierarchyData> accountHierarchyDataList;
-		cacheService.accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
+		cacheService.accountHierarchyDataList =
+				accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		Object result = cacheService.cacheSprintLevelData();
 		assertNotNull(result);
 	}
@@ -147,7 +140,8 @@ public class CacheServiceImplTest {
 		when(cacheManager.getCache("jiraKpiCache")).thenReturn(cache);
 		when(cache.get(any(String.class))).thenReturn(new SimpleValueWrapper("jira"));
 
-		Object result = cacheService.getFromApplicationCache(keyList, kpiSource, groupId, sprintIncluded);
+		Object result =
+				cacheService.getFromApplicationCache(keyList, kpiSource, groupId, sprintIncluded);
 
 		assertNotNull(result);
 	}
@@ -291,7 +285,9 @@ public class CacheServiceImplTest {
 
 		// Mock CommonUtils.getCacheName
 		try (var mockedStatic = mockStatic(CommonUtils.class)) {
-			mockedStatic.when(() -> CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY)).thenReturn(cacheName);
+			mockedStatic
+					.when(() -> CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY))
+					.thenReturn(cacheName);
 
 			// Call the method
 			String actualValue = cacheService.getFromApplicationCache(key);
@@ -315,7 +311,9 @@ public class CacheServiceImplTest {
 
 		// Mock CommonUtils.getCacheName
 		try (var mockedStatic = mockStatic(CommonUtils.class)) {
-			mockedStatic.when(() -> CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY)).thenReturn(cacheName);
+			mockedStatic
+					.when(() -> CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY))
+					.thenReturn(cacheName);
 
 			// Call the method
 			String actualValue = cacheService.getFromApplicationCache(key);
@@ -338,7 +336,9 @@ public class CacheServiceImplTest {
 
 		// Mock CommonUtils.getCacheName
 		try (var mockedStatic = mockStatic(CommonUtils.class)) {
-			mockedStatic.when(() -> CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY)).thenReturn(cacheName);
+			mockedStatic
+					.when(() -> CommonUtils.getCacheName(Constant.KPI_REQUEST_TRACKER_ID_KEY))
+					.thenReturn(cacheName);
 
 			// Call the method
 			String actualValue = cacheService.getFromApplicationCache(key);

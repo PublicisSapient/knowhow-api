@@ -16,11 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.ai.parser;
 
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 @Component("AiRecommendation")
 @Slf4j
@@ -29,11 +31,9 @@ public class AiRecommendation implements ParserStategy<Object> {
 	/**
 	 * Parses a JSON string and converts it into a JSON object.
 	 *
-	 * @param jsonString
-	 *            The JSON string to be parsed. It is expected to contain a valid
-	 *            JSON object.
-	 * @return A {@link JsonNode} representing the parsed JSON object, or an empty
-	 *         {@link Object} if parsing fails.
+	 * @param jsonString The JSON string to be parsed. It is expected to contain a valid JSON object.
+	 * @return A {@link JsonNode} representing the parsed JSON object, or an empty {@link Object} if
+	 *     parsing fails.
 	 */
 	@Override
 	public Object parse(String jsonString) {
@@ -45,5 +45,4 @@ public class AiRecommendation implements ParserStategy<Object> {
 			return new Object();
 		}
 	}
-
 }

@@ -36,8 +36,7 @@ import lombok.Builder;
 public class SonarKPIServiceFactory {
 
 	private static final Map<String, SonarKPIService<?, ?, ?>> SONAR_SERVICE_CACHE = new HashMap<>();
-	@Autowired
-	private List<SonarKPIService<?, ?, ?>> services;
+	@Autowired private List<SonarKPIService<?, ?, ?>> services;
 
 	/**
 	 * Gets sonar KPI service
@@ -50,7 +49,8 @@ public class SonarKPIServiceFactory {
 	public static SonarKPIService getSonarKPIService(String type) throws ApplicationException {
 		SonarKPIService<?, ?, ?> service = SONAR_SERVICE_CACHE.get(type);
 		if (service == null) {
-			throw new ApplicationException(SonarKPIServiceFactory.class, "Sonar KPI Service Factory not initalized");
+			throw new ApplicationException(
+					SonarKPIServiceFactory.class, "Sonar KPI Service Factory not initalized");
 		}
 		return service;
 	}

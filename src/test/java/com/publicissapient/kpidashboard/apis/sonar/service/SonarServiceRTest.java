@@ -75,32 +75,20 @@ public class SonarServiceRTest {
 
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	private SonarServiceR sonarService;
-	@Mock
-	private CustomApiConfig customApiSetting;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks private SonarServiceR sonarService;
+	@Mock private CustomApiConfig customApiSetting;
+	@Mock private CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	private TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	private List<SonarKPIService> services;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private TokenAuthenticationService tokenAuthenticationService;
+	@Mock private List<SonarKPIService> services;
 
-	@Mock
-	private Logger logger;
+	@Mock private Logger logger;
 
 	private Map<String, Object> filterLevelMap;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
@@ -111,11 +99,9 @@ public class SonarServiceRTest {
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
 
 	private SonarKPIServiceFactory sonarKPIServiceFactory;
-	@Mock
-	private SonarKPIService<?, ?, ?> sonarKPIService;
+	@Mock private SonarKPIService<?, ?, ?> sonarKPIService;
 
-	@Mock
-	TestService service;
+	@Mock TestService service;
 
 	@Before
 	public void setup() throws IllegalAccessException, ApplicationException {
@@ -132,8 +118,8 @@ public class SonarServiceRTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		sonarKPIServiceFactory.initMyServiceCache();
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
@@ -142,13 +128,15 @@ public class SonarServiceRTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
@@ -201,18 +189,22 @@ public class SonarServiceRTest {
 
 	private void initialization() {
 		String[] exampleStringList = {"exampleElement", "exampleElement"};
-		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest)).thenReturn(exampleStringList);
-		when(filterHelperService.getHierarachyLevelId(Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
+		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
+				.thenReturn(exampleStringList);
+		when(filterHelperService.getHierarachyLevelId(
+						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(filterHelperService.getFilteredBuilds(ArgumentMatchers.any(), Mockito.anyString()))
 				.thenReturn(accountHierarchyDataList);
-		when(authorizedProjectsService.filterProjects(accountHierarchyDataList)).thenReturn(accountHierarchyDataList);
+		when(authorizedProjectsService.filterProjects(accountHierarchyDataList))
+				.thenReturn(accountHierarchyDataList);
 		// Create a mock SonarKPIService
 	}
 
@@ -220,18 +212,22 @@ public class SonarServiceRTest {
 	public void sonarViolationsTestProcess_Excel() {
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
 		String[] exampleStringList = {"exampleElement", "exampleElement"};
-		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest)).thenReturn(exampleStringList);
-		when(filterHelperService.getHierarachyLevelId(Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
+		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
+				.thenReturn(exampleStringList);
+		when(filterHelperService.getHierarachyLevelId(
+						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(filterHelperService.getFilteredBuilds(ArgumentMatchers.any(), Mockito.anyString()))
 				.thenReturn(accountHierarchyDataList);
-		when(authorizedProjectsService.filterProjects(accountHierarchyDataList)).thenReturn(accountHierarchyDataList);
+		when(authorizedProjectsService.filterProjects(accountHierarchyDataList))
+				.thenReturn(accountHierarchyDataList);
 		// when(cacheService.getFromApplicationCache(eq(exampleStringList),
 		// eq(KPISource.ZEPHYRKANBAN.name()), eq(1), isNull()))
 		// .thenReturn(new ArrayList<KpiElement>());
@@ -262,12 +258,17 @@ public class SonarServiceRTest {
 		List<KpiElement> kpiList = new ArrayList<>();
 		addKpiElement(kpiList, TESTSONAR, TESTSONAR, "TechDebt", "", source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"Scrum Project_6335363749794a18e8a4479b"});
+		kpiRequest.setIds(new String[] {"Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);

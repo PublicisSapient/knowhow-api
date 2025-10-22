@@ -39,8 +39,8 @@ public class ProductivityGainConfig {
 	public static final String CATEGORY_EFFICIENCY = "efficiency";
 	public static final String CATEGORY_PRODUCTIVITY = "productivity";
 
-	private static final Set<String> PREDEFINED_CATEGORIES = Set.of(CATEGORY_SPEED, CATEGORY_QUALITY,
-			CATEGORY_EFFICIENCY, CATEGORY_PRODUCTIVITY);
+	private static final Set<String> PREDEFINED_CATEGORIES =
+			Set.of(CATEGORY_SPEED, CATEGORY_QUALITY, CATEGORY_EFFICIENCY, CATEGORY_PRODUCTIVITY);
 
 	private Set<String> configValidationIssues;
 
@@ -61,19 +61,22 @@ public class ProductivityGainConfig {
 		}
 		for (Map.Entry<String, Double> categoryIdWeightEntry : weights.entrySet()) {
 			if (!PREDEFINED_CATEGORIES.contains(categoryIdWeightEntry.getKey())) {
-				configValidationIssues.add(String.format(
-						"Category '%s' is invalid. The only allowed categories are %s", categoryIdWeightEntry.getKey(),
-						String.join(CommonConstant.COMMA, PREDEFINED_CATEGORIES)));
+				configValidationIssues.add(
+						String.format(
+								"Category '%s' is invalid. The only allowed categories are %s",
+								categoryIdWeightEntry.getKey(),
+								String.join(CommonConstant.COMMA, PREDEFINED_CATEGORIES)));
 			}
 			if (categoryIdWeightEntry.getValue() < 0.0D) {
-				configValidationIssues.add(String.format(
-						"A productivity gain category weight must be higher or equal "
-								+ "to zero. Invalid category '%s' was found with a weight of '%s'",
-						categoryIdWeightEntry.getKey(), categoryIdWeightEntry.getValue()));
+				configValidationIssues.add(
+						String.format(
+								"A productivity gain category weight must be higher or equal "
+										+ "to zero. Invalid category '%s' was found with a weight of '%s'",
+								categoryIdWeightEntry.getKey(), categoryIdWeightEntry.getValue()));
 			}
 		}
 		double weightagesSum = weights.values().stream().mapToDouble(Double::doubleValue).sum();
-		if(Double.compare(1.0D, weightagesSum) != 0) {
+		if (Double.compare(1.0D, weightagesSum) != 0) {
 			configValidationIssues.add("The sum of all category weightages must be 1");
 		}
 	}

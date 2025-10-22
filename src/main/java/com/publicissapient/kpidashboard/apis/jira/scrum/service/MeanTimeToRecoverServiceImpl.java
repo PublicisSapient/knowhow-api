@@ -30,14 +30,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.model.LeadTimeChangeData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
-import org.joda.time.DateTime;
-import org.joda.time.Hours;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -71,23 +68,20 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This service for managing Mean Time to Recover kpi for dora tab.
- * {@link JiraKPIService}
+ * This service for managing Mean Time to Recover kpi for dora tab. {@link JiraKPIService}
  *
  * @author shubh
  */
 @Component
 @Slf4j
-public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class MeanTimeToRecoverServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
 
-	@Autowired
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
 	private static final String JIRA_HISTORY_DATA = "jiraIssueHistoryData";
 	private static final String STORY_ID = "storyID";
@@ -95,21 +89,26 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 
 	/** {@inheritDoc} */
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
 
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
 		projectWiseLeafNodeValue(mapTmp, projectList, kpiElement);
 
-		log.debug("[MEAN-TIME-TO-RECOVER-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[MEAN-TIME-TO-RECOVER-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.MEAN_TIME_TO_RECOVER);
-		List<DataCount> trendValues = getAggregateTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.MEAN_TIME_TO_RECOVER);
+		List<DataCount> trendValues =
+				getAggregateTrendValues(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.MEAN_TIME_TO_RECOVER);
 		kpiElement.setTrendValueList(trendValues);
 
 		return kpiElement;
@@ -117,8 +116,8 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 
 	/** {@inheritDoc} */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		List<String> projectBasicConfigIdList = new ArrayList<>();
 		List<String> projectProdIncidentIdentifier = new ArrayList<>();
 		Map<String, Object> resultListMap = new HashMap<>();
@@ -126,56 +125,67 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 		Map<String, List<String>> mapOfFiltersFH = new LinkedHashMap<>();
 		Map<String, Map<String, Object>> uniqueProjectMapFH = new HashMap<>();
 
-		leafNodeList.forEach(leafNode -> {
-			ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
-			Map<String, Object> mapOfProjectFiltersFH = new LinkedHashMap<>();
+		leafNodeList.forEach(
+				leafNode -> {
+					ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
+					Map<String, Object> mapOfProjectFiltersFH = new LinkedHashMap<>();
 
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
-			if (CollectionUtils.isNotEmpty(fieldMapping.getJiraStoryIdentificationKPI166())) {
-				mapOfProjectFiltersFH.put(JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature(),
-						CommonUtils.convertToPatternList(fieldMapping.getJiraStoryIdentificationKPI166()));
-			} // project for which prod incident is configured via custom or label
-			String jiraProductionIncidentIdentification = ObjectUtils
-					.defaultIfNull(fieldMapping.getJiraProductionIncidentIdentification(), "");
-			if (jiraProductionIncidentIdentification.equalsIgnoreCase(CommonConstant.CUSTOM_FIELD) ||
-					jiraProductionIncidentIdentification.equalsIgnoreCase(CommonConstant.LABELS)) {
-				projectProdIncidentIdentifier.add(basicProjectConfigId.toString());
-			}
-			uniqueProjectMapFH.put(basicProjectConfigId.toString(), mapOfProjectFiltersFH);
-			projectBasicConfigIdList.add(basicProjectConfigId.toString());
-		});
+					if (CollectionUtils.isNotEmpty(fieldMapping.getJiraStoryIdentificationKPI166())) {
+						mapOfProjectFiltersFH.put(
+								JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature(),
+								CommonUtils.convertToPatternList(fieldMapping.getJiraStoryIdentificationKPI166()));
+					} // project for which prod incident is configured via custom or label
+					String jiraProductionIncidentIdentification =
+							ObjectUtils.defaultIfNull(fieldMapping.getJiraProductionIncidentIdentification(), "");
+					if (jiraProductionIncidentIdentification.equalsIgnoreCase(CommonConstant.CUSTOM_FIELD)
+							|| jiraProductionIncidentIdentification.equalsIgnoreCase(CommonConstant.LABELS)) {
+						projectProdIncidentIdentifier.add(basicProjectConfigId.toString());
+					}
+					uniqueProjectMapFH.put(basicProjectConfigId.toString(), mapOfProjectFiltersFH);
+					projectBasicConfigIdList.add(basicProjectConfigId.toString());
+				});
 
-		List<String> distinctProjBasicConfig = projectBasicConfigIdList.stream().distinct().collect(Collectors.toList());
-		List<String> distinctProjConfigIncidentList = projectProdIncidentIdentifier.stream().distinct()
-				.collect(Collectors.toList());
+		List<String> distinctProjBasicConfig =
+				projectBasicConfigIdList.stream().distinct().collect(Collectors.toList());
+		List<String> distinctProjConfigIncidentList =
+				projectProdIncidentIdentifier.stream().distinct().collect(Collectors.toList());
 		// creating map of only prod incident configured proj for query
 		if (CollectionUtils.isNotEmpty(distinctProjConfigIncidentList)) {
-			mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), distinctProjConfigIncidentList);
+			mapOfFilters.put(
+					JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+					distinctProjConfigIncidentList);
 		}
 
-		mapOfFiltersFH.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), distinctProjBasicConfig);
+		mapOfFiltersFH.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), distinctProjBasicConfig);
 
 		List<JiraIssueCustomHistory> historyDataList = new ArrayList<>();
 		List<JiraIssue> jiraIssueList = new ArrayList<>();
 		// only call this when mapOfFilters is not empty.
 		if (MapUtils.isNotEmpty(mapOfFilters)) {
-			jiraIssueList = jiraIssueRepository.findIssuesWithBoolean(mapOfFilters, PRODUCTION_INCIDENT, Boolean.TRUE,
-					startDate, endDate);
+			jiraIssueList =
+					jiraIssueRepository.findIssuesWithBoolean(
+							mapOfFilters, PRODUCTION_INCIDENT, Boolean.TRUE, startDate, endDate);
 		}
 
 		if (CollectionUtils.isEmpty(jiraIssueList)) {
 			// fetching history for selected story type
-			historyDataList = jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(mapOfFiltersFH,
-					uniqueProjectMapFH, startDate, endDate);
+			historyDataList =
+					jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+							mapOfFiltersFH, uniqueProjectMapFH, startDate, endDate);
 		}
 		if (CollectionUtils.isNotEmpty(jiraIssueList)) {
-			List<String> issueIdList = jiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
+			List<String> issueIdList =
+					jiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
 
 			mapOfFiltersFH.put(STORY_ID, issueIdList);
 			// fetching history for the production incident tickets
-			historyDataList = jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(mapOfFiltersFH,
-					uniqueProjectMapFH, startDate, endDate);
+			historyDataList =
+					jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
+							mapOfFiltersFH, uniqueProjectMapFH, startDate, endDate);
 		}
 		resultListMap.put(JIRA_HISTORY_DATA, historyDataList);
 		return resultListMap;
@@ -184,60 +194,71 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	/**
 	 * calculate and set project wise leaf node value
 	 *
-	 * @param mapTmp
-	 *          map tmp data
-	 * @param projectLeafNodeList
-	 *          projectLeafNodeList
-	 * @param kpiElement
-	 *          kpiElement
+	 * @param mapTmp map tmp data
+	 * @param projectLeafNodeList projectLeafNodeList
+	 * @param kpiElement kpiElement
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> projectLeafNodeList,
-			KpiElement kpiElement) {
+	private void projectWiseLeafNodeValue(
+			Map<String, Node> mapTmp, List<Node> projectLeafNodeList, KpiElement kpiElement) {
 		Map<String, Object> durationFilter = KpiDataHelper.getDurationFilter(kpiElement);
 		LocalDateTime localStartDate = (LocalDateTime) durationFilter.get(Constant.DATE);
 		String startDate = localStartDate.toLocalDate().toString();
 		String endDate = DateUtil.getTodayDate().toString();
 
 		List<KPIExcelData> excelData = new ArrayList<>();
-		Map<String, Object> resultMap = fetchKPIDataFromDb(projectLeafNodeList, startDate, endDate, null);
+		Map<String, Object> resultMap =
+				fetchKPIDataFromDb(projectLeafNodeList, startDate, endDate, null);
 
 		if (MapUtils.isNotEmpty(resultMap)) {
 			String requestTrackerId = getRequestTrackerId();
 
-			List<JiraIssueCustomHistory> historyDataList = (List<JiraIssueCustomHistory>) resultMap.get(JIRA_HISTORY_DATA);
+			List<JiraIssueCustomHistory> historyDataList =
+					(List<JiraIssueCustomHistory>) resultMap.get(JIRA_HISTORY_DATA);
 
-			Map<String, List<JiraIssueCustomHistory>> projectWiseJiraIssueHistoryDataList = historyDataList.stream()
-					.collect(Collectors.groupingBy(JiraIssueCustomHistory::getBasicProjectConfigId));
+			Map<String, List<JiraIssueCustomHistory>> projectWiseJiraIssueHistoryDataList =
+					historyDataList.stream()
+							.collect(Collectors.groupingBy(JiraIssueCustomHistory::getBasicProjectConfigId));
 
-			projectLeafNodeList.forEach(node -> {
-				String trendLineName = node.getProjectFilter().getName();
-				String basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId().toString();
-				FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-						.get(node.getProjectFilter().getBasicProjectConfigId());
-				List<JiraIssueCustomHistory> jiraIssueHistoryDataList = projectWiseJiraIssueHistoryDataList
-						.get(basicProjectConfigId);
+			projectLeafNodeList.forEach(
+					node -> {
+						String trendLineName = node.getProjectFilter().getName();
+						String basicProjectConfigId =
+								node.getProjectFilter().getBasicProjectConfigId().toString();
+						FieldMapping fieldMapping =
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId());
+						List<JiraIssueCustomHistory> jiraIssueHistoryDataList =
+								projectWiseJiraIssueHistoryDataList.get(basicProjectConfigId);
 
-				String weekOrMonth = (String) durationFilter.getOrDefault(Constant.DURATION, CommonConstant.WEEK);
-				int previousTimeCount = (int) durationFilter.getOrDefault(Constant.COUNT, 8);
+						String weekOrMonth =
+								(String) durationFilter.getOrDefault(Constant.DURATION, CommonConstant.WEEK);
+						int previousTimeCount = (int) durationFilter.getOrDefault(Constant.COUNT, 8);
 
-				Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise = weekOrMonth.equalsIgnoreCase(
-						CommonConstant.WEEK) ? getLastNWeek(previousTimeCount) : getLastNMonthCount(previousTimeCount);
-				if (CollectionUtils.isNotEmpty(jiraIssueHistoryDataList)) {
-					List<DataCount> dataCountList = new ArrayList<>();
+						Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise =
+								weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)
+										? getLastNWeek(previousTimeCount)
+										: getLastNMonthCount(previousTimeCount);
+						if (CollectionUtils.isNotEmpty(jiraIssueHistoryDataList)) {
+							List<DataCount> dataCountList = new ArrayList<>();
 
-					findMeanTimeToRecover(jiraIssueHistoryDataList, weekOrMonth, meanTimeRecoverMapTimeWise, fieldMapping);
+							findMeanTimeToRecover(
+									jiraIssueHistoryDataList, weekOrMonth, meanTimeRecoverMapTimeWise, fieldMapping);
 
-					meanTimeRecoverMapTimeWise.forEach((weekOrMonthName, meanTimeRecoverListCurrentTime) -> {
-						DataCount dataCount = createDataCount(trendLineName, weekOrMonthName,
-                                meanTimeRecoverListCurrentTime);
-						dataCountList.add(dataCount);
+							meanTimeRecoverMapTimeWise.forEach(
+									(weekOrMonthName, meanTimeRecoverListCurrentTime) -> {
+										DataCount dataCount =
+												createDataCount(
+														trendLineName, weekOrMonthName, meanTimeRecoverListCurrentTime);
+										dataCountList.add(dataCount);
+									});
+							populateMeanTimeRecoverExcelData(
+									excelData, requestTrackerId, trendLineName, meanTimeRecoverMapTimeWise);
+
+							mapTmp.get(node.getId()).setValue(dataCountList);
+						}
 					});
-					populateMeanTimeRecoverExcelData(excelData, requestTrackerId, trendLineName, meanTimeRecoverMapTimeWise);
-
-					mapTmp.get(node.getId()).setValue(dataCountList);
-				}
-			});
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.MEAN_TIME_TO_RECOVER.getColumns());
 		}
@@ -246,35 +267,43 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	/**
 	 * populate excel data
 	 *
-	 * @param excelData
-	 *          excel data
-	 * @param requestTrackerId
-	 *          tracker id for cache
-	 * @param trendLineName
-	 *          project name
-	 * @param meanTimeRecoverMapTimeWise
-	 *          lead time in hours
+	 * @param excelData excel data
+	 * @param requestTrackerId tracker id for cache
+	 * @param trendLineName project name
+	 * @param meanTimeRecoverMapTimeWise lead time in hours
 	 */
-	private void populateMeanTimeRecoverExcelData(List<KPIExcelData> excelData, String requestTrackerId,
-			String trendLineName, Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise) {
+	private void populateMeanTimeRecoverExcelData(
+			List<KPIExcelData> excelData,
+			String requestTrackerId,
+			String trendLineName,
+			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateMeanTimeToRecoverExcelData(trendLineName, meanTimeRecoverMapTimeWise, excelData);
+			KPIExcelUtility.populateMeanTimeToRecoverExcelData(
+					trendLineName, meanTimeRecoverMapTimeWise, excelData);
 		}
 	}
 
 	/**
 	 * set data count
 	 *
-     * @param trendLineName                     project name
-     * @param weekOrMonthName                   date
-     * @param meanTimeRecoverListCurrentTime    meantime list
+	 * @param trendLineName project name
+	 * @param weekOrMonthName date
+	 * @param meanTimeRecoverListCurrentTime meantime list
 	 * @return data count
 	 */
-	private DataCount createDataCount(String trendLineName, String weekOrMonthName,
-									  List<MeanTimeRecoverData> meanTimeRecoverListCurrentTime) {
-		double timeToRecover = meanTimeRecoverListCurrentTime.stream().filter(data -> data.getTimeToRecover() != null)
-				.mapToDouble(data -> Double.parseDouble(data.getTimeToRecover())).sum();
-		long count = meanTimeRecoverListCurrentTime.stream().filter(data -> data.getTimeToRecover() != null).count();
+	private DataCount createDataCount(
+			String trendLineName,
+			String weekOrMonthName,
+			List<MeanTimeRecoverData> meanTimeRecoverListCurrentTime) {
+		double timeToRecover =
+				meanTimeRecoverListCurrentTime.stream()
+						.filter(data -> data.getTimeToRecover() != null)
+						.mapToDouble(data -> Double.parseDouble(data.getTimeToRecover()))
+						.sum();
+		long count =
+				meanTimeRecoverListCurrentTime.stream()
+						.filter(data -> data.getTimeToRecover() != null)
+						.count();
 		double meanTime = 0.0;
 		if (count != 0) {
 			meanTime = timeToRecover / count;
@@ -293,66 +322,82 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	}
 
 	/**
-	 * find Mean time to recover differences between closed ticket date and created
-	 * date
+	 * find Mean time to recover differences between closed ticket date and created date
 	 *
-	 * @param jiraIssueHistoryDataList
-	 *          history data list
-	 * @param weekOrMonth
-	 *          date of x axis
-	 * @param meanTimeRecoverMapTimeWise
-	 *          meantime in days
+	 * @param jiraIssueHistoryDataList history data list
+	 * @param weekOrMonth date of x axis
+	 * @param meanTimeRecoverMapTimeWise meantime in days
 	 */
-	private void findMeanTimeToRecover(List<JiraIssueCustomHistory> jiraIssueHistoryDataList, String weekOrMonth,
-			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise, FieldMapping fieldMapping) {
-		List<String> jiraDodKPI166 = ObjectUtils.defaultIfNull(fieldMapping.getJiraDodKPI166(), new ArrayList<>());
+	private void findMeanTimeToRecover(
+			List<JiraIssueCustomHistory> jiraIssueHistoryDataList,
+			String weekOrMonth,
+			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
+			FieldMapping fieldMapping) {
+		List<String> jiraDodKPI166 =
+				ObjectUtils.defaultIfNull(fieldMapping.getJiraDodKPI166(), new ArrayList<>());
 		String storyFirstStatus = ObjectUtils.defaultIfNull(fieldMapping.getStoryFirstStatus(), "");
-		List<String> dodStatus = jiraDodKPI166.stream().map(String::toLowerCase).collect(Collectors.toList());
-		jiraIssueHistoryDataList.forEach(jiraIssueHistoryData -> {
-			LocalDateTime ticketClosedDate;
-			LocalDateTime ticketCreatedDate =DateUtil.localDateTimeToUTC(DateUtil.convertDateTimeToLocalDateTime(jiraIssueHistoryData.getCreatedDate()));
-			Map<String, LocalDateTime> closedStatusDateMap = new HashMap<>();
+		List<String> dodStatus =
+				jiraDodKPI166.stream().map(String::toLowerCase).collect(Collectors.toList());
+		jiraIssueHistoryDataList.forEach(
+				jiraIssueHistoryData -> {
+					LocalDateTime ticketClosedDate;
+					LocalDateTime ticketCreatedDate =
+							DateUtil.localDateTimeToUTC(
+									DateUtil.convertDateTimeToLocalDateTime(jiraIssueHistoryData.getCreatedDate()));
+					Map<String, LocalDateTime> closedStatusDateMap = new HashMap<>();
 
-			jiraIssueHistoryData.getStatusUpdationLog().forEach(statusChangeLog -> {
-				// reopened scenario
-				if (CollectionUtils.isNotEmpty(dodStatus) &&
-						dodStatus.contains(statusChangeLog.getChangedFrom().toLowerCase()) &&
-						statusChangeLog.getChangedTo().equalsIgnoreCase(storyFirstStatus)) {
-					closedStatusDateMap.clear();
-				}
-				// fist close date of last close cycle
-				if (CollectionUtils.isNotEmpty(dodStatus) && dodStatus.contains(statusChangeLog.getChangedTo().toLowerCase())) {
-					if (closedStatusDateMap.containsKey(statusChangeLog.getChangedTo())) {
-						closedStatusDateMap.clear();
+					jiraIssueHistoryData
+							.getStatusUpdationLog()
+							.forEach(
+									statusChangeLog -> {
+										// reopened scenario
+										if (CollectionUtils.isNotEmpty(dodStatus)
+												&& dodStatus.contains(statusChangeLog.getChangedFrom().toLowerCase())
+												&& statusChangeLog.getChangedTo().equalsIgnoreCase(storyFirstStatus)) {
+											closedStatusDateMap.clear();
+										}
+										// fist close date of last close cycle
+										if (CollectionUtils.isNotEmpty(dodStatus)
+												&& dodStatus.contains(statusChangeLog.getChangedTo().toLowerCase())) {
+											if (closedStatusDateMap.containsKey(statusChangeLog.getChangedTo())) {
+												closedStatusDateMap.clear();
+											}
+											closedStatusDateMap.put(
+													statusChangeLog.getChangedTo(), statusChangeLog.getUpdatedOn());
+										}
+									});
+					// Getting the min date of closed status.
+					ticketClosedDate =
+							closedStatusDateMap.values().stream()
+									.filter(Objects::nonNull)
+									.min(LocalDateTime::compareTo)
+									.orElse(null);
+
+					double meanTimeToRecoverInHrs = 0;
+					if (ticketClosedDate != null && ticketCreatedDate != null) {
+
+						ticketClosedDate = DateUtil.localDateTimeToUTC(ticketClosedDate);
+						meanTimeToRecoverInHrs =
+								Duration.between(ticketCreatedDate, ticketClosedDate).toHours();
 					}
-					closedStatusDateMap.put(statusChangeLog.getChangedTo(), statusChangeLog.getUpdatedOn());
-				}
-			});
-			// Getting the min date of closed status.
-			ticketClosedDate = closedStatusDateMap.values().stream().filter(Objects::nonNull).min(LocalDateTime::compareTo)
-					.orElse(null);
 
-			double meanTimeToRecoverInHrs = 0;
-			if (ticketClosedDate != null && ticketCreatedDate != null) {
+					String weekOrMonthName = getDateFormatted(weekOrMonth, ticketCreatedDate);
 
-				ticketClosedDate = DateUtil.localDateTimeToUTC(ticketClosedDate);
-                meanTimeToRecoverInHrs= Duration.between(ticketCreatedDate, ticketClosedDate).toHours();
-			}
-
-			 String weekOrMonthName = getDateFormatted(weekOrMonth, ticketCreatedDate);
-
-			setMeanTimeForRecoverData(meanTimeRecoverMapTimeWise, jiraIssueHistoryData, ticketClosedDate, ticketCreatedDate,
-					meanTimeToRecoverInHrs, weekOrMonthName);
-		});
+					setMeanTimeForRecoverData(
+							meanTimeRecoverMapTimeWise,
+							jiraIssueHistoryData,
+							ticketClosedDate,
+							ticketCreatedDate,
+							meanTimeToRecoverInHrs,
+							weekOrMonthName);
+				});
 	}
 
 	/**
 	 * To get the formatted date for x-axis representation
 	 *
-	 * @param weekOrMonth
-	 *          date of x axis
-	 * @param currentDate
-	 *          current date
+	 * @param weekOrMonth date of x axis
+	 * @param currentDate current date
 	 * @return formatted date
 	 */
 	private String getDateFormatted(String weekOrMonth, LocalDateTime currentDate) {
@@ -366,22 +411,20 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	/**
 	 * Setting the mean time to recover data
 	 *
-	 * @param meanTimeRecoverMapTimeWise
-	 *          meantime list
-	 * @param jiraIssueHistoryData
-	 *          history data
-	 * @param ticketClosedDate
-	 *          ticket closed date
-	 * @param ticketCreatedDate
-	 *          ticket created date
-	 * @param meanTimeToRecoverInHrs
-	 *          meantime to recover
-	 * @param weekOrMonthName
-	 *          date
+	 * @param meanTimeRecoverMapTimeWise meantime list
+	 * @param jiraIssueHistoryData history data
+	 * @param ticketClosedDate ticket closed date
+	 * @param ticketCreatedDate ticket created date
+	 * @param meanTimeToRecoverInHrs meantime to recover
+	 * @param weekOrMonthName date
 	 */
-	private void setMeanTimeForRecoverData(Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
-			JiraIssueCustomHistory jiraIssueHistoryData, LocalDateTime ticketClosedDate, LocalDateTime ticketCreatedDate,
-			double meanTimeToRecoverInHrs, String weekOrMonthName) {
+	private void setMeanTimeForRecoverData(
+			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
+			JiraIssueCustomHistory jiraIssueHistoryData,
+			LocalDateTime ticketClosedDate,
+			LocalDateTime ticketCreatedDate,
+			double meanTimeToRecoverInHrs,
+			String weekOrMonthName) {
 		MeanTimeRecoverData meanTimeRecoverData = new MeanTimeRecoverData();
 		meanTimeRecoverData.setStoryID(jiraIssueHistoryData.getStoryID());
 		meanTimeRecoverData.setUrl(jiraIssueHistoryData.getUrl());
@@ -393,17 +436,18 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 		}
 		meanTimeRecoverData.setCreatedDate(DateUtil.tranformUTCLocalTimeToZFormat(ticketCreatedDate));
 		meanTimeRecoverData.setDate(weekOrMonthName);
-		meanTimeRecoverMapTimeWise.computeIfPresent(weekOrMonthName, (key, meanTimeToRecoverListCurrentTime) -> {
-			meanTimeToRecoverListCurrentTime.add(meanTimeRecoverData);
-			return meanTimeToRecoverListCurrentTime;
-		});
+		meanTimeRecoverMapTimeWise.computeIfPresent(
+				weekOrMonthName,
+				(key, meanTimeToRecoverListCurrentTime) -> {
+					meanTimeToRecoverListCurrentTime.add(meanTimeRecoverData);
+					return meanTimeToRecoverListCurrentTime;
+				});
 	}
 
 	/**
 	 * get last N weeks
 	 *
-	 * @param count
-	 *          count
+	 * @param count count
 	 * @return map of list of MeanTimeRecoverData
 	 */
 	private Map<String, List<MeanTimeRecoverData>> getLastNWeek(int count) {
@@ -420,8 +464,7 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 	/**
 	 * get last N months
 	 *
-	 * @param count
-	 *          count
+	 * @param count count
 	 * @return map of list of MeanTimeRecoverData
 	 */
 	private Map<String, List<MeanTimeRecoverData>> getLastNMonthCount(int count) {
@@ -458,6 +501,7 @@ public class MeanTimeToRecoverServiceImpl extends JiraKPIService<Double, List<Ob
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI166(), KPICode.MEAN_TIME_TO_RECOVER.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI166(), KPICode.MEAN_TIME_TO_RECOVER.getKpiId());
 	}
 }

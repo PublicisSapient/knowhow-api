@@ -77,67 +77,49 @@ import com.publicissapient.kpidashboard.common.service.NotificationService;
 @RunWith(MockitoJUnitRunner.class)
 public class ProjectAccessManagerTest {
 
-	@InjectMocks
-	ProjectAccessManager projectAccessManager;
-	@Mock
-	AccessRequestsRepository accessRequestsRepository;
-	@Mock
-	UserInfoRepository userInfoRepository;
-	@Mock
-	ProjectBasicConfigService projectBasicConfigService;
-	@Mock
-	AccessRequestListener accessRequestListener;
-	@Mock
-	RejectAccessListener rejectAccessListener;
-	@Mock
-	AutoApproveAccessService autoApproveAccessService;
-	@Mock
-	UserTokenDeletionService userTokenDeletionService;
-	@Mock
-	CommonService commonService;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	RolesRepository rolesRepository;
-	@Mock
-	AuthenticationRepository authenticationRepository;
-	@Mock
-	ProjectBasicConfigRepository projectBasicConfigRepository;
-	@Mock
-	AuthenticationService authenticationService;
-	@Mock
-	UserInfoCustomRepository userInfoCustomRepository;
-	@Mock
-	HierarchyLevelService hierarchyLevelService;
-	@Mock
-	TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	NotificationService notificationService;
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@InjectMocks ProjectAccessManager projectAccessManager;
+	@Mock AccessRequestsRepository accessRequestsRepository;
+	@Mock UserInfoRepository userInfoRepository;
+	@Mock ProjectBasicConfigService projectBasicConfigService;
+	@Mock AccessRequestListener accessRequestListener;
+	@Mock RejectAccessListener rejectAccessListener;
+	@Mock AutoApproveAccessService autoApproveAccessService;
+	@Mock UserTokenDeletionService userTokenDeletionService;
+	@Mock CommonService commonService;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock RolesRepository rolesRepository;
+	@Mock AuthenticationRepository authenticationRepository;
+	@Mock ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Mock AuthenticationService authenticationService;
+	@Mock UserInfoCustomRepository userInfoCustomRepository;
+	@Mock HierarchyLevelService hierarchyLevelService;
+	@Mock TokenAuthenticationService tokenAuthenticationService;
+	@Mock NotificationService notificationService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
 	@Test
 	public void testCreateAccessRequest_hasPendingAccessRequest() {
 		// Setup - Create a pending request for a different access
-		AccessRequest existingRequest = accessRequestObj(
-				Constant.ROLE_PROJECT_ADMIN,  // Same role as new request
-				Constant.ACCESS_REQUEST_STATUS_PENDING,
-				"hierarchyLevel4Id",
-				"project1");
-		
+		AccessRequest existingRequest =
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN, // Same role as new request
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel4Id",
+						"project1");
+
 		// New request for hierarchyLevel3Id
-		AccessRequest newRequest = accessRequestObj(
-				Constant.ROLE_PROJECT_ADMIN,  // Same role as existing request
-				Constant.ACCESS_REQUEST_STATUS_PENDING,
-				"hierarchyLevel3Id",
-				"project2");
+		AccessRequest newRequest =
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN, // Same role as existing request
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id",
+						"project2");
 
 		when(accessRequestsRepository.findByUsername("user"))
 				.thenReturn(Lists.newArrayList(existingRequest));
 
 		// Execute
 		projectAccessManager.createAccessRequest(newRequest, accessRequestListener);
-
 	}
 
 	@Test
@@ -153,15 +135,27 @@ public class ProjectAccessManagerTest {
 		Authentication authentication = new Authentication();
 		authentication.setEmail("email@email.com");
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(), ArgumentMatchers.any()))
+		when(accessRequestsRepository.findByUsernameAndStatus(
+						ArgumentMatchers.any(), ArgumentMatchers.any()))
 				.thenReturn(null);
 		when(accessRequestsRepository.saveAll(
-				getAccessRequestList(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id")))
-				.thenReturn(getAccessRequestList(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING,
-						"hierarchyLevel3Id"));
-		when(autoApproveAccessService.isAutoApproveEnabled(ArgumentMatchers.anyString())).thenReturn(true);
-		when(accessRequestsRepository.findById(ArgumentMatchers.anyString())).thenReturn(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_ADMIN,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id")))
+				.thenReturn(
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_ADMIN,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id"));
+		when(autoApproveAccessService.isAutoApproveEnabled(ArgumentMatchers.anyString()))
+				.thenReturn(true);
+		when(accessRequestsRepository.findById(ArgumentMatchers.anyString()))
+				.thenReturn(
+						accessRequestObj(
+								Constant.ROLE_PROJECT_ADMIN,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id"));
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(createProjectBasicConfigNode());
 		userTokenDeletionService.invalidateSession(ArgumentMatchers.anyString());
 		when(commonService.getEmailAddressBasedOnRoles(Arrays.asList(Constant.ROLE_SUPERADMIN)))
@@ -170,10 +164,16 @@ public class ProjectAccessManagerTest {
 		when(commonService.getApiHost()).thenReturn("serverPath");
 		when(rolesRepository.findByRoleName(Constant.ROLE_PROJECT_ADMIN)).thenReturn(roleDataObj());
 		projectAccessManager.createAccessRequest(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"),
 				accessRequestListener);
 		assertNotNull(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"));
 	}
 
 	@Test
@@ -183,13 +183,17 @@ public class ProjectAccessManagerTest {
 		userInfo.setId(new ObjectId("61e4f7852747353d4405c762"));
 		userInfo.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
 		userInfo.setProjectsAccess(Lists.newArrayList());
-/*		when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(), ArgumentMatchers.any()))
-				.thenReturn(null);*/
+		/*
+		 * when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(),
+		 * ArgumentMatchers.any())) .thenReturn(null);
+		 */
 		projectAccessManager.createAccessRequest(
-				accessRequestObj(Constant.ROLE_SUPERADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
+				accessRequestObj(
+						Constant.ROLE_SUPERADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
 				accessRequestListener);
 		assertNotNull(
-				accessRequestObj(Constant.ROLE_SUPERADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+				accessRequestObj(
+						Constant.ROLE_SUPERADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
 	}
 
 	@Test
@@ -209,7 +213,8 @@ public class ProjectAccessManagerTest {
 		userInfo.setProjectsAccess(Lists.newArrayList(projectsAccess));
 
 		projectAccessManager.createAccessRequest(
-				accessRequestObj(Constant.ROLE_SUPERADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
+				accessRequestObj(
+						Constant.ROLE_SUPERADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
 				accessRequestListener);
 		verify(accessRequestListener, atLeastOnce()).onFailure(ArgumentMatchers.anyString());
 	}
@@ -230,20 +235,38 @@ public class ProjectAccessManagerTest {
 		projectsAccess.setAccessNodes(Lists.newArrayList(accessNode));
 		userInfo.setProjectsAccess(Lists.newArrayList(projectsAccess));
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(), ArgumentMatchers.any()))
+		when(accessRequestsRepository.findByUsernameAndStatus(
+						ArgumentMatchers.any(), ArgumentMatchers.any()))
 				.thenReturn(null);
 		when(accessRequestsRepository.saveAll(
-				getAccessRequestList(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id")))
-				.thenReturn(getAccessRequestList(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING,
-						"hierarchyLevel3Id"));
-		when(autoApproveAccessService.isAutoApproveEnabled(ArgumentMatchers.anyString())).thenReturn(true);
-		when(accessRequestsRepository.findById(ArgumentMatchers.anyString())).thenReturn(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_ADMIN,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id")))
+				.thenReturn(
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_ADMIN,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id"));
+		when(autoApproveAccessService.isAutoApproveEnabled(ArgumentMatchers.anyString()))
+				.thenReturn(true);
+		when(accessRequestsRepository.findById(ArgumentMatchers.anyString()))
+				.thenReturn(
+						accessRequestObj(
+								Constant.ROLE_PROJECT_ADMIN,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id"));
 		projectAccessManager.createAccessRequest(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"),
 				accessRequestListener);
 		assertNotNull(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"));
 	}
 
 	@Test
@@ -276,32 +299,46 @@ public class ProjectAccessManagerTest {
 		userInfo.setAuthorities(Lists.newArrayList());
 		userInfo.setProjectsAccess(Lists.newArrayList());
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-/*		when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(), ArgumentMatchers.any()))
-				.thenReturn(null);*/
-		when(accessRequestsRepository.saveAll(getAccessRequestList(Constant.ROLE_PROJECT_VIEWER,
-				Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id")))
-				.thenReturn(getAccessRequestList(Constant.ROLE_PROJECT_VIEWER, Constant.ACCESS_REQUEST_STATUS_PENDING,
-						"hierarchyLevel3Id"));
+		/*
+		 * when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(),
+		 * ArgumentMatchers.any())) .thenReturn(null);
+		 */
+		when(accessRequestsRepository.saveAll(
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_VIEWER,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id")))
+				.thenReturn(
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_VIEWER,
+								Constant.ACCESS_REQUEST_STATUS_PENDING,
+								"hierarchyLevel3Id"));
 		projectAccessManager.createAccessRequest(
-				accessRequestObj(Constant.ROLE_PROJECT_VIEWER, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"),
+				accessRequestObj(
+						Constant.ROLE_PROJECT_VIEWER,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"),
 				accessRequestListener);
 		assertNotNull(
-				accessRequestObj(Constant.ROLE_PROJECT_VIEWER, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+				accessRequestObj(
+						Constant.ROLE_PROJECT_VIEWER,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"));
 	}
 
 	@Test
 	public void testUpdateAccessOfUserInfo_makeItDefaultNewUser() {
 
-		projectAccessManager.updateAccessOfUserInfo(userInfoObj(Constant.ROLE_PROJECT_ADMIN),
-				userInfoObj(Constant.ROLE_PROJECT_ADMIN));
+		projectAccessManager.updateAccessOfUserInfo(
+				userInfoObj(Constant.ROLE_PROJECT_ADMIN), userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 		assertNotNull(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 	}
 
 	@Test
 	public void testUpdateAccessOfUserInfo_makeItSuperAdmin() {
 
-		projectAccessManager.updateAccessOfUserInfo(userInfoObj(Constant.ROLE_SUPERADMIN),
-				userInfoObj(Constant.ROLE_SUPERADMIN));
+		projectAccessManager.updateAccessOfUserInfo(
+				userInfoObj(Constant.ROLE_SUPERADMIN), userInfoObj(Constant.ROLE_SUPERADMIN));
 		assertNotNull(userInfoObj(Constant.ROLE_SUPERADMIN));
 	}
 
@@ -407,7 +444,8 @@ public class ProjectAccessManagerTest {
 		userInfo.setUsername("user");
 		userInfo.setAuthorities(Lists.newArrayList(Constant.ROLE_SUPERADMIN));
 		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString())).thenReturn(userInfo);
-		assertTrue(projectAccessManager.hasProjectEditPermission(new ObjectId(), userInfo.getUsername()));
+		assertTrue(
+				projectAccessManager.hasProjectEditPermission(new ObjectId(), userInfo.getUsername()));
 	}
 
 	@Test
@@ -417,7 +455,8 @@ public class ProjectAccessManagerTest {
 		userInfo.setAuthorities(Lists.newArrayList(Constant.ROLE_PROJECT_ADMIN));
 		userInfo.setProjectsAccess(Lists.newArrayList());
 		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString())).thenReturn(userInfo);
-		assertFalse(projectAccessManager.hasProjectEditPermission(new ObjectId(), userInfo.getUsername()));
+		assertFalse(
+				projectAccessManager.hasProjectEditPermission(new ObjectId(), userInfo.getUsername()));
 	}
 
 	@Test
@@ -482,8 +521,7 @@ public class ProjectAccessManagerTest {
 	/**
 	 * project level conditions check
 	 *
-	 * @throws UnknownHostException
-	 *           exception
+	 * @throws UnknownHostException exception
 	 */
 	@Test
 	public void testCreateAccessRequest_isNewUser_project() throws UnknownHostException {
@@ -500,13 +538,19 @@ public class ProjectAccessManagerTest {
 		Authentication authentication = new Authentication();
 		authentication.setEmail("email@email.com");
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		when(accessRequestsRepository.findByUsernameAndStatus(ArgumentMatchers.any(), ArgumentMatchers.any()))
+		when(accessRequestsRepository.findByUsernameAndStatus(
+						ArgumentMatchers.any(), ArgumentMatchers.any()))
 				.thenReturn(null);
-		when(accessRequestsRepository.saveAll(ArgumentMatchers.any())).thenReturn(
-				getAccessRequestList(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
-		when(autoApproveAccessService.isAutoApproveEnabled(ArgumentMatchers.anyString())).thenReturn(true);
+		when(accessRequestsRepository.saveAll(ArgumentMatchers.any()))
+				.thenReturn(
+						getAccessRequestList(
+								Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
+		when(autoApproveAccessService.isAutoApproveEnabled(ArgumentMatchers.anyString()))
+				.thenReturn(true);
 		when(accessRequestsRepository.findById(ArgumentMatchers.anyString()))
-				.thenReturn(accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
+				.thenReturn(
+						accessRequestObj(
+								Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(createProjectBasicConfigNode());
 		userTokenDeletionService.invalidateSession(ArgumentMatchers.anyString());
 		when(commonService.getEmailAddressBasedOnRoles(Arrays.asList(Constant.ROLE_SUPERADMIN)))
@@ -516,9 +560,12 @@ public class ProjectAccessManagerTest {
 		when(commonService.getApiHost()).thenReturn("serverPath");
 		when(rolesRepository.findByRoleName(Constant.ROLE_PROJECT_ADMIN)).thenReturn(roleDataObj());
 		projectAccessManager.createAccessRequest(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"),
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"),
 				accessRequestListener);
-		assertNotNull(accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
+		assertNotNull(
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
 	}
 
 	@Test
@@ -543,14 +590,18 @@ public class ProjectAccessManagerTest {
 		projectAccesses.add(pa);
 		userInfo.setProjectsAccess(projectAccesses);
 
-		List<String> list = projectAccessManager.getProjectBasicOnRoleList(userInfo,
-				Lists.newArrayList(Constant.ROLE_PROJECT_ADMIN));
+		List<String> list =
+				projectAccessManager.getProjectBasicOnRoleList(
+						userInfo, Lists.newArrayList(Constant.ROLE_PROJECT_ADMIN));
 		assertEquals(list.size(), 0);
 	}
 
 	ProjectBasicConfig projectBasicConfigObj() {
-		ProjectBasicConfig basicConfig = ProjectBasicConfigDataFactory
-				.newInstance("/json/basicConfig/project_basic_config_request.json").getProjectBasicConfigs().get(0);
+		ProjectBasicConfig basicConfig =
+				ProjectBasicConfigDataFactory.newInstance(
+								"/json/basicConfig/project_basic_config_request.json")
+						.getProjectBasicConfigs()
+						.get(0);
 		basicConfig.setId(new ObjectId("61e4f7852747353d4405c765"));
 		return basicConfig;
 	}
@@ -642,7 +693,8 @@ public class ProjectAccessManagerTest {
 		projectBasicConfigIds.add("61d6d4235c76563333369f02");
 		projectBasicConfigIds.add("61d6d4235c76563333369f01");
 
-		boolean result = projectAccessManager.canTriggerProcessorFor(projectBasicConfigIds, userInfo.getUsername());
+		boolean result =
+				projectAccessManager.canTriggerProcessorFor(projectBasicConfigIds, userInfo.getUsername());
 		assertTrue(result);
 	}
 
@@ -683,17 +735,16 @@ public class ProjectAccessManagerTest {
 
 	@Test
 	public void testCreateAccessRequest_hasAccessOfRequestedLevel() throws UnknownHostException {
-/*		when(accessRequestsRepository.findByUsernameAndStatus(
-						"user", Constant.ACCESS_REQUEST_STATUS_PENDING))
-				.thenReturn(null);*/
-/*		when(accessRequestsRepository.findByUsernameAndStatus(
-						"user", Constant.ACCESS_REQUEST_STATUS_APPROVED))
-				.thenReturn(
-						List.of(
-								accessRequestObj(
-										Constant.ROLE_PROJECT_ADMIN,
-										Constant.ACCESS_REQUEST_STATUS_APPROVED,
-										"hierarchyLevel3Id")));*/
+		/*
+		 * when(accessRequestsRepository.findByUsernameAndStatus( "user",
+		 * Constant.ACCESS_REQUEST_STATUS_PENDING)) .thenReturn(null);
+		 */
+		/*
+		 * when(accessRequestsRepository.findByUsernameAndStatus( "user",
+		 * Constant.ACCESS_REQUEST_STATUS_APPROVED)) .thenReturn( List.of(
+		 * accessRequestObj( Constant.ROLE_PROJECT_ADMIN,
+		 * Constant.ACCESS_REQUEST_STATUS_APPROVED, "hierarchyLevel3Id")));
+		 */
 		projectAccessManager.createAccessRequest(
 				accessRequestObj(
 						Constant.ROLE_PROJECT_ADMIN,
@@ -724,14 +775,25 @@ public class ProjectAccessManagerTest {
 		projectsAccess.setAccessNodes(Lists.newArrayList(accessNode));
 		userInfo.setProjectsAccess(Lists.newArrayList(projectsAccess));
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		/*when(accessRequestsRepository.findByUsernameAndStatus("user", Constant.ACCESS_REQUEST_STATUS_PENDING))
-				.thenReturn(null);
-		when(accessRequestsRepository.findByUsernameAndStatus("user", Constant.ACCESS_REQUEST_STATUS_APPROVED))
-				.thenReturn(List.of(accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_APPROVED,
-						"hierarchyLevel3Id")));*/
-		projectAccessManager.createAccessRequest(accessRequestObj(Constant.ROLE_PROJECT_ADMIN,
-				Constant.ACCESS_REQUEST_STATUS_APPROVED, "hierarchyLevel3Id", "hierarchyLevel4Value"), accessRequestListener);
+		/*
+		 * when(accessRequestsRepository.findByUsernameAndStatus("user",
+		 * Constant.ACCESS_REQUEST_STATUS_PENDING)) .thenReturn(null);
+		 * when(accessRequestsRepository.findByUsernameAndStatus("user",
+		 * Constant.ACCESS_REQUEST_STATUS_APPROVED))
+		 * .thenReturn(List.of(accessRequestObj(Constant.ROLE_PROJECT_ADMIN,
+		 * Constant.ACCESS_REQUEST_STATUS_APPROVED, "hierarchyLevel3Id")));
+		 */
+		projectAccessManager.createAccessRequest(
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN,
+						Constant.ACCESS_REQUEST_STATUS_APPROVED,
+						"hierarchyLevel3Id",
+						"hierarchyLevel4Value"),
+				accessRequestListener);
 		assertNotNull(
-				accessRequestObj(Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "hierarchyLevel3Id"));
+				accessRequestObj(
+						Constant.ROLE_PROJECT_ADMIN,
+						Constant.ACCESS_REQUEST_STATUS_PENDING,
+						"hierarchyLevel3Id"));
 	}
 }

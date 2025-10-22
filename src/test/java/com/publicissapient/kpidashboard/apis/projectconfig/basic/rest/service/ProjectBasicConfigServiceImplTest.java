@@ -41,10 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.publicissapient.kpidashboard.apis.data.OrganizationHierarchyDataFactory;
-import com.publicissapient.kpidashboard.apis.data.ProjectHierarchyDataFactory;
-import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
-import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -93,6 +89,7 @@ import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.model.ProcessorExecutionTraceLog;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyValue;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
@@ -129,80 +126,45 @@ public class ProjectBasicConfigServiceImplTest {
 
 	List<HierarchyValue> hierarchyValueDTOList = new ArrayList<>();
 	private MockMvc mockMvc;
-	@InjectMocks
-	private ProjectBasicConfigServiceImpl projectBasicConfigServiceImpl;
+	@InjectMocks private ProjectBasicConfigServiceImpl projectBasicConfigServiceImpl;
 
-	@Mock
-	private ContextAwarePolicyEnforcement policy;
-	@Mock
-	private ProjectBasicConfigRepository basicConfigRepository;
-	@Mock
-	private SecurityContext securityContext;
-	@Mock
-	private Authentication authentication;
-	@Mock
-	private UserInfoService userInfoService;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private AccountHierarchyRepository accountHierarchyRepository;
-	@Mock
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
-	@Mock
-	private UserAuthorizedProjectsService userAuthorizedProjectsService;
-	@Mock
-	private TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	private FieldMappingService fieldMappingService;
-	@Mock
-	private ProjectToolConfigRepository toolRepository;
-	@Mock
-	private ToolDataCleanUpServiceFactory dataCleanUpServiceFactory;
-	@Mock
-	private DeleteProjectTraceLogService deleteProjectTraceLogService;
-	@Mock
-	private AgileDataCleanUpService agileDataCleanUpService;
+	@Mock private ContextAwarePolicyEnforcement policy;
+	@Mock private ProjectBasicConfigRepository basicConfigRepository;
+	@Mock private SecurityContext securityContext;
+	@Mock private Authentication authentication;
+	@Mock private UserInfoService userInfoService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private CacheService cacheService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
+	@Mock private AccountHierarchyRepository accountHierarchyRepository;
+	@Mock private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
+	@Mock private UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Mock private TokenAuthenticationService tokenAuthenticationService;
+	@Mock private FieldMappingService fieldMappingService;
+	@Mock private ProjectToolConfigRepository toolRepository;
+	@Mock private ToolDataCleanUpServiceFactory dataCleanUpServiceFactory;
+	@Mock private DeleteProjectTraceLogService deleteProjectTraceLogService;
+	@Mock private AgileDataCleanUpService agileDataCleanUpService;
 
-	@Mock
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Mock private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private AccessRequestsHelperService accessRequestsHelperService;
-	@Mock
-	private ProjectAccessManager projectAccessManager;
-	@Mock
-	private AuthenticationService authenticationService;
-	@Mock
-	private ProjectBasicConfigDTO basicConfigDTO;
-	@Mock
-	private SprintRepository sprintRepository;
-	@Mock
-	private AssigneeDetailsRepository assigneeDetailsRepository;
-	@Mock
-	private BoardMetadataRepository boardMetadataRepository;
-	@Mock
-	private CapacityMasterService capacityMasterService;
-	@Mock
-	private TestExecutionService testExecutionService;
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
-	@Mock
-	private ProjectHierarchyRepository projectHierarchyRepository;
-	@Mock
-	private OrganizationHierarchyRepository organizationHierarchyRepository;
-	@Mock
-	private HierarchyLevelRepository hierarchyLevelRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private AccessRequestsHelperService accessRequestsHelperService;
+	@Mock private ProjectAccessManager projectAccessManager;
+	@Mock private AuthenticationService authenticationService;
+	@Mock private ProjectBasicConfigDTO basicConfigDTO;
+	@Mock private SprintRepository sprintRepository;
+	@Mock private AssigneeDetailsRepository assigneeDetailsRepository;
+	@Mock private BoardMetadataRepository boardMetadataRepository;
+	@Mock private CapacityMasterService capacityMasterService;
+	@Mock private TestExecutionService testExecutionService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private ProjectHierarchyRepository projectHierarchyRepository;
+	@Mock private OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Mock private HierarchyLevelRepository hierarchyLevelRepository;
 
-	@Mock
-	private UserBoardConfigService userBoardConfigService;
-	@Mock
-	private ProjectToolConfigServiceImpl projectToolConfigService;
+	@Mock private UserBoardConfigService userBoardConfigService;
+	@Mock private ProjectToolConfigServiceImpl projectToolConfigService;
 	private ProjectBasicConfig basicConfig;
 	private Optional<ProjectBasicConfig> basicConfigOpt = Optional.empty();
 	private ProjectBasicConfig diffbasicConfig;
@@ -212,11 +174,9 @@ public class ProjectBasicConfigServiceImplTest {
 
 	private ModelMapper modelMapper = new ModelMapper();
 
-	@Mock
-	private HappinessKpiDataRepository happinessKpiDataRepository;
+	@Mock private HappinessKpiDataRepository happinessKpiDataRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
 	ProjectToolConfig listProjectTool = new ProjectToolConfig();
 	FieldMapping fieldMapping;
@@ -227,14 +187,18 @@ public class ProjectBasicConfigServiceImplTest {
 	public void before() {
 		mockMvc = MockMvcBuilders.standaloneSetup(projectBasicConfigServiceImpl).build();
 		basicConfigDTO = new ProjectBasicConfigDTO();
-		basicConfig = ProjectBasicConfigDataFactory.newInstance("/json/basicConfig/project_basic_config_request.json")
-				.getProjectBasicConfigs().get(0);
+		basicConfig =
+				ProjectBasicConfigDataFactory.newInstance(
+								"/json/basicConfig/project_basic_config_request.json")
+						.getProjectBasicConfigs()
+						.get(0);
 		boardMetadata = new BoardMetadata();
 		boardMetadata.setProjectBasicConfigId(new ObjectId("5fa0023dbb5fa781ccd5ac2c"));
 		boardMetadata.setProjectToolConfigId(new ObjectId("5fa0023dbb5fa781ccd5ac2c"));
 		boardMetadata.setMetadataTemplateCode("10");
 		basicConfig.setId(new ObjectId("5f855dec29cf840345f2d111"));
-		basicConfig.setHierarchy(List.of(new HierarchyValue(new HierarchyLevel(1,"bu","bu","bu"),"bu","bu")));
+		basicConfig.setHierarchy(
+				List.of(new HierarchyValue(new HierarchyLevel(1, "bu", "bu", "bu"), "bu", "bu")));
 		basicConfigDTO = modelMapper.map(basicConfig, ProjectBasicConfigDTO.class);
 		listProjectTool.setId(new ObjectId("5fa0023dbb5fa781ccd5ac2c"));
 		listProjectTool.setToolName("Jira");
@@ -243,13 +207,18 @@ public class ProjectBasicConfigServiceImplTest {
 		listProjectTool.setBranch("test1");
 		listProjectTool.setJobName("testing1");
 
-		fieldMapping = FieldMappingDataFactory.newInstance("/json/default/project_field_mappings.json").getFieldMappings()
-				.get(0);
+		fieldMapping =
+				FieldMappingDataFactory.newInstance("/json/default/project_field_mappings.json")
+						.getFieldMappings()
+						.get(0);
 
 		basicConfigOpt = Optional.of(basicConfig);
 
-		diffbasicConfig = ProjectBasicConfigDataFactory.newInstance("/json/basicConfig/project_basic_config_request.json")
-				.getProjectBasicConfigs().get(0);
+		diffbasicConfig =
+				ProjectBasicConfigDataFactory.newInstance(
+								"/json/basicConfig/project_basic_config_request.json")
+						.getProjectBasicConfigs()
+						.get(0);
 		diffbasicConfig.setId(new ObjectId("5f855dec29cf840345f2d222"));
 		diffbasicConfig.setProjectName("project2");
 
@@ -367,8 +336,10 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
-		when(projectToolConfigService.getProjectToolConfigsByProjectId(any())).thenReturn(Arrays.asList(listProjectTool));
-		when(projectToolConfigService.saveProjectToolConfigs(any())).thenReturn(Arrays.asList(listProjectTool));
+		when(projectToolConfigService.getProjectToolConfigsByProjectId(any()))
+				.thenReturn(Arrays.asList(listProjectTool));
+		when(projectToolConfigService.saveProjectToolConfigs(any()))
+				.thenReturn(Arrays.asList(listProjectTool));
 		when(fieldMappingService.getFieldMappingByBasicconfigId(anyString())).thenReturn(fieldMapping);
 		when(boardMetadataRepository.findByProjectBasicConfigId(any())).thenReturn(boardMetadata);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
@@ -422,11 +393,13 @@ public class ProjectBasicConfigServiceImplTest {
 		projectHierarchy.setNodeName("ABCD");
 		projectHierarchy.setNodeDisplayName("ABCD");
 		ph.add(projectHierarchy);
-		when(processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(anyString(), anyList()))
+		when(processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
+						anyString(), anyList()))
 				.thenReturn(traceLogs);
-		when(assigneeDetailsRepository.findByBasicProjectConfigId(any())).thenReturn(new AssigneeDetails());
-		ServiceResponse response = projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef",
-				basicConfigDTO);
+		when(assigneeDetailsRepository.findByBasicProjectConfigId(any()))
+				.thenReturn(new AssigneeDetails());
+		ServiceResponse response =
+				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
 	}
 
@@ -444,8 +417,8 @@ public class ProjectBasicConfigServiceImplTest {
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
 		when(basicConfigRepository.findByProjectNameAndIdNot(any(), any())).thenReturn(null);
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
-		ServiceResponse response = projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef",
-				basicConfigDTO);
+		ServiceResponse response =
+				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
 	}
 
@@ -491,7 +464,8 @@ public class ProjectBasicConfigServiceImplTest {
 		mapOfProjectDetails.put(UUID.randomUUID().toString(), projectBasicConfig);
 		Mockito.when(cacheService.cacheAllProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 		Mockito.when(cacheService.filterOnHoldProjectBasicConfig()).thenReturn(mapOfProjectDetails);
-		List<ProjectBasicConfig> list = projectBasicConfigServiceImpl.getFilteredProjectsBasicConfigs(Boolean.FALSE);
+		List<ProjectBasicConfig> list =
+				projectBasicConfigServiceImpl.getFilteredProjectsBasicConfigs(Boolean.FALSE);
 		assertThat("response list size: ", list.size(), equalTo(1));
 	}
 
@@ -506,7 +480,8 @@ public class ProjectBasicConfigServiceImplTest {
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
 		mapOfProjectDetails.put(projectId.toString(), project);
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		ProjectBasicConfig config = projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
+		ProjectBasicConfig config =
+				projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
 		assertThat("response : ", config.getId(), equalTo(projectId));
 	}
 
@@ -524,7 +499,8 @@ public class ProjectBasicConfigServiceImplTest {
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
 		mapOfProjectDetails.put(projectId.toString(), userproject);
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		ProjectBasicConfig config = projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
+		ProjectBasicConfig config =
+				projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
 		assertThat("response : ", config.getId(), equalTo(projectId));
 	}
 
@@ -537,7 +513,8 @@ public class ProjectBasicConfigServiceImplTest {
 		Set<String> userProjIds = new HashSet<>();
 		userProjIds.add(projectId2.toString());
 		Mockito.when(tokenAuthenticationService.getUserProjects()).thenReturn(userProjIds);
-		ProjectBasicConfig config = projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
+		ProjectBasicConfig config =
+				projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
 		assertNull(config);
 	}
 
@@ -554,7 +531,8 @@ public class ProjectBasicConfigServiceImplTest {
 		Mockito.when(tokenAuthenticationService.getUserProjects()).thenReturn(userProjIds);
 		Set<ObjectId> projIdSet = new HashSet<>();
 		projIdSet.add(projectId);
-		List<ProjectBasicConfig> list = projectBasicConfigServiceImpl.getFilteredProjectsBasicConfigs(Boolean.FALSE);
+		List<ProjectBasicConfig> list =
+				projectBasicConfigServiceImpl.getFilteredProjectsBasicConfigs(Boolean.FALSE);
 		assertThat("response list size: ", list.size(), equalTo(0));
 	}
 
@@ -565,7 +543,8 @@ public class ProjectBasicConfigServiceImplTest {
 		Mockito.when(userAuthorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
 		Set<String> userProjIds = new HashSet<>();
 		Mockito.when(tokenAuthenticationService.getUserProjects()).thenReturn(userProjIds);
-		ProjectBasicConfig config = projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
+		ProjectBasicConfig config =
+				projectBasicConfigServiceImpl.getProjectBasicConfigs(projectId.toString());
 		assertNull(config);
 	}
 
@@ -587,13 +566,13 @@ public class ProjectBasicConfigServiceImplTest {
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
 		mapOfProjectDetails.put(p1.getId().toString(), p1);
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		when(dataCleanUpServiceFactory.getService(ProcessorConstants.JIRA)).thenReturn(agileDataCleanUpService);
+		when(dataCleanUpServiceFactory.getService(ProcessorConstants.JIRA))
+				.thenReturn(agileDataCleanUpService);
 		doNothing().when(agileDataCleanUpService).clean(anyString());
 		doNothing().when(toolRepository).deleteById(any(ObjectId.class));
 		doNothing().when(fieldMappingService).deleteByBasicProjectConfigId(any(ObjectId.class));
 		doNothing().when(basicConfigRepository).delete(any(ProjectBasicConfig.class));
 		doNothing().when(deleteProjectTraceLogService).save(any(ProjectBasicConfig.class));
-
 
 		projectBasicConfigServiceImpl.deleteProject(id);
 
@@ -645,7 +624,8 @@ public class ProjectBasicConfigServiceImplTest {
 		mapOfProjectDetails.put(diffbasicConfig.getId().toHexString(), diffbasicConfig);
 
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		List<ProjectBasicConfigDTO> list = projectBasicConfigServiceImpl.getAllProjectsBasicConfigsDTOWithoutPermission();
+		List<ProjectBasicConfigDTO> list =
+				projectBasicConfigServiceImpl.getAllProjectsBasicConfigsDTOWithoutPermission();
 		assertThat("response list size: ", list.size(), equalTo(2));
 	}
 
@@ -657,7 +637,8 @@ public class ProjectBasicConfigServiceImplTest {
 		mapOfProjectDetails.put(diffbasicConfig.getId().toHexString(), diffbasicConfig);
 
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-		Map<String, ProjectBasicConfigDTO> list = projectBasicConfigServiceImpl.getBasicConfigsDTOMapWithoutPermission();
+		Map<String, ProjectBasicConfigDTO> list =
+				projectBasicConfigServiceImpl.getBasicConfigsDTOMapWithoutPermission();
 		assertThat("response list size: ", list.size(), equalTo(2));
 	}
 
@@ -703,7 +684,8 @@ public class ProjectBasicConfigServiceImplTest {
 		projectBasicConfigServiceImpl.findParents(Arrays.asList(child1, child2), parentNode);
 		projectBasicConfigServiceImpl.findChildren(child1, childNodes);
 		ProjectBasicConfigNode node = projectBasicConfigServiceImpl.findNode(root, "root", "root");
-		ProjectBasicConfigNode childNode = projectBasicConfigServiceImpl.findNode(root, "child2", "child2");
+		ProjectBasicConfigNode childNode =
+				projectBasicConfigServiceImpl.findNode(root, "child2", "child2");
 
 		// Verify the result
 		assertEquals(1, leafNodes.size());
@@ -775,8 +757,8 @@ public class ProjectBasicConfigServiceImplTest {
 		List<HierarchyResponseDTO> hierarchyResponseDTOS = Arrays.asList(dto1, dto2);
 
 		// Call the method
-		List<HierarchyResponseDTO> result = projectBasicConfigServiceImpl
-				.filterHierarchyDTOsWithConnectedTools(hierarchyResponseDTOS);
+		List<HierarchyResponseDTO> result =
+				projectBasicConfigServiceImpl.filterHierarchyDTOsWithConnectedTools(hierarchyResponseDTOS);
 
 		// Assert the result
 		assertEquals(2, result.size());

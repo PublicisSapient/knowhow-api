@@ -59,8 +59,10 @@ public class KPIExcelDropDown {
 				mongoTemplate.createCollection(backupCollectionName);
 			}
 
-			MongoCollection<Document> backupCollection = mongoTemplate.getCollection(backupCollectionName);
-			MongoCollection<Document> sourceCollection = mongoTemplate.getCollection("kpi_column_configs");
+			MongoCollection<Document> backupCollection =
+					mongoTemplate.getCollection(backupCollectionName);
+			MongoCollection<Document> sourceCollection =
+					mongoTemplate.getCollection("kpi_column_configs");
 
 			// Backup existing data
 			try (MongoCursor<Document> cursor = sourceCollection.find().iterator()) {
@@ -73,9 +75,11 @@ public class KPIExcelDropDown {
 
 			// Step 2: Delete all data except for the Iteration kpiIds and
 			// LEAD_TIME_FOR_CHANGE
-			List<String> kpiIdsToKeep = Arrays.asList("kpi128", "kpi121", "kpi119", "kpi75", "kpi123", "kpi122", "kpi120",
-					"kpi124", "kpi132", "kpi133", "kpi134", "kpi125", "kpi131", "kpi135", "kpi136", "kpi140", "kpi145", "kpi154",
-					"kpi176", "Kpi146", "Kpi156");
+			List<String> kpiIdsToKeep =
+					Arrays.asList(
+							"kpi128", "kpi121", "kpi119", "kpi75", "kpi123", "kpi122", "kpi120", "kpi124",
+							"kpi132", "kpi133", "kpi134", "kpi125", "kpi131", "kpi135", "kpi136", "kpi140",
+							"kpi145", "kpi154", "kpi176", "Kpi146", "Kpi156");
 
 			sourceCollection.deleteMany(new Document(KPI_ID, new Document("$nin", kpiIdsToKeep)));
 			log.info("Deleted unwanted kpi_column_configs entries.");
@@ -83,7 +87,8 @@ public class KPIExcelDropDown {
 			// Step 3: Insert new data from the KPIExcelColumn enum
 			for (KPIExcelColumn kpiExcelColumn : KPIExcelColumn.values()) {
 				// Check if the kpiId already exists in the collection
-				Document existingEntry = sourceCollection.find(new Document(KPI_ID, kpiExcelColumn.getKpiId())).first();
+				Document existingEntry =
+						sourceCollection.find(new Document(KPI_ID, kpiExcelColumn.getKpiId())).first();
 				if (existingEntry != null) {
 					log.info("Skipping insertion for existing kpiId: {}", kpiExcelColumn.getKpiId());
 					continue; // Skip this kpiId if it already exists
@@ -100,24 +105,55 @@ public class KPIExcelDropDown {
 			}
 
 			// Document for kpi156
-			Document kpi156 = new Document(BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, "kpi156").append(KPI_COLUMN_DETAILS,
-					List.of(
-							new Document(COLUMN_NAME, "Project Name").append(ORDER, 1).append(IS_SHOWN, true).append(IS_DEFAULT,
-									true),
-							new Document(COLUMN_NAME, "Weeks").append(ORDER, 2).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-							new Document(COLUMN_NAME, "Story ID").append(ORDER, 3).append(IS_SHOWN, true).append(IS_DEFAULT, true),
-							new Document(COLUMN_NAME, "Lead Time (In Days) [B-A]").append(ORDER, 4).append(IS_SHOWN, true)
-									.append(IS_DEFAULT, true),
-							new Document(COLUMN_NAME, "Change Completion Date [A]").append(ORDER, 5).append(IS_SHOWN, true)
-									.append(IS_DEFAULT, true),
-							new Document(COLUMN_NAME, "Change Release Date [B]").append(ORDER, 6).append(IS_SHOWN, true)
-									.append(IS_DEFAULT, true),
-							new Document(COLUMN_NAME, "Merge Request Id").append(ORDER, 7).append(IS_SHOWN, true).append(IS_DEFAULT,
-									false),
-							new Document(COLUMN_NAME, "Branch").append(ORDER, 8).append(IS_SHOWN, true).append(IS_DEFAULT, false)));
+			Document kpi156 =
+					new Document(BASIC_PROJECT_CONFIG_ID, null)
+							.append(KPI_ID, "kpi156")
+							.append(
+									KPI_COLUMN_DETAILS,
+									List.of(
+											new Document(COLUMN_NAME, "Project Name")
+													.append(ORDER, 1)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true),
+											new Document(COLUMN_NAME, "Weeks")
+													.append(ORDER, 2)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true),
+											new Document(COLUMN_NAME, "Story ID")
+													.append(ORDER, 3)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true),
+											new Document(COLUMN_NAME, "Lead Time (In Days) [B-A]")
+													.append(ORDER, 4)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true),
+											new Document(COLUMN_NAME, "Change Completion Date [A]")
+													.append(ORDER, 5)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true),
+											new Document(COLUMN_NAME, "Change Release Date [B]")
+													.append(ORDER, 6)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true),
+											new Document(COLUMN_NAME, "Merge Request Id")
+													.append(ORDER, 7)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, false),
+											new Document(COLUMN_NAME, "Branch")
+													.append(ORDER, 8)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, false)));
 			// Document for kpi146
-			Document kpi146 = new Document(BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, "kpi146").append(KPI_COLUMN_DETAILS,
-					List.of(new Document(COLUMN_NAME, "Date").append(ORDER, 1).append(IS_SHOWN, true).append(IS_DEFAULT, true)));
+			Document kpi146 =
+					new Document(BASIC_PROJECT_CONFIG_ID, null)
+							.append(KPI_ID, "kpi146")
+							.append(
+									KPI_COLUMN_DETAILS,
+									List.of(
+											new Document(COLUMN_NAME, "Date")
+													.append(ORDER, 1)
+													.append(IS_SHOWN, true)
+													.append(IS_DEFAULT, true)));
 			// Insert documents
 			sourceCollection.insertMany(List.of(kpi156, kpi146));
 
@@ -130,14 +166,16 @@ public class KPIExcelDropDown {
 	@RollbackExecution
 	public void rollback() {
 		try {
-			MongoCollection<Document> backupCollection = mongoTemplate.getCollection("kpi_column_configs_backup");
+			MongoCollection<Document> backupCollection =
+					mongoTemplate.getCollection("kpi_column_configs_backup");
 			if (backupCollection.countDocuments() == 0) {
 				log.warn("No backup data found. Rollback skipped.");
 				return;
 			}
 
 			// Clear the target collection
-			MongoCollection<Document> sourceCollection = mongoTemplate.getCollection("kpi_column_configs");
+			MongoCollection<Document> sourceCollection =
+					mongoTemplate.getCollection("kpi_column_configs");
 			sourceCollection.deleteMany(new Document());
 			// Restore backup
 			try (MongoCursor<Document> cursor = backupCollection.find().iterator()) {

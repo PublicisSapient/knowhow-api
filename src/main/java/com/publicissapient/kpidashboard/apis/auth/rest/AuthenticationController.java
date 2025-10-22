@@ -83,30 +83,31 @@ public class AuthenticationController {
 	/**
 	 * Register user.
 	 *
-	 * @param httpServletRequest
-	 *          the http servlet request
-	 * @param httpServletResponse
-	 *          the http servlet response
-	 * @param request
-	 *          the request
+	 * @param httpServletRequest the http servlet request
+	 * @param httpServletResponse the http servlet response
+	 * @param request the request
 	 * @return the response entity
-	 * @throws IOException
-	 *           the io exception
-	 * @throws ServletException
-	 *           the servlet exception
+	 * @throws IOException the io exception
+	 * @throws ServletException the servlet exception
 	 */
 	@PostMapping(value = "/registerUser")
-	public ResponseEntity<ServiceResponse> registerUser(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, @Valid @RequestBody AuthenticationRequest request) {
+	public ResponseEntity<ServiceResponse> registerUser(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
+			@Valid @RequestBody AuthenticationRequest request) {
 
 		try {
 			if (!Pattern.matches(CommonConstant.USERNAME_PATTERN, request.getUsername())) {
 				return ResponseEntity.status(HttpStatus.OK)
-						.body(new ServiceResponse(false, "Cannot complete the registration process, Invalid Username", null));
+						.body(
+								new ServiceResponse(
+										false, "Cannot complete the registration process, Invalid Username", null));
 			}
 			if (!Pattern.matches(CommonConstant.EMAIL_PATTERN, request.getEmail())) {
 				return ResponseEntity.status(HttpStatus.OK)
-						.body(new ServiceResponse(false, "Cannot complete the registration process, Invalid Email", null));
+						.body(
+								new ServiceResponse(
+										false, "Cannot complete the registration process, Invalid Email", null));
 			}
 			Pattern pattern = Pattern.compile(CommonConstant.PASSWORD_PATTERN);
 			Matcher matcher = pattern.matcher(request.getPassword());
@@ -114,42 +115,68 @@ public class AuthenticationController {
 			boolean isEmailExist = authenticationService.isEmailExist(request.getEmail());
 			boolean isUsernameExists = authenticationService.isUsernameExists(request.getUsername());
 
-			boolean isUsernameExistsInUserInfo = authenticationService.isUsernameExistsInUserInfo(request.getUsername());
+			boolean isUsernameExistsInUserInfo =
+					authenticationService.isUsernameExistsInUserInfo(request.getUsername());
 
 			if (isUsernameExists || isUsernameExistsInUserInfo) {
-				return ResponseEntity.status(HttpStatus.OK).body(
-						new ServiceResponse(false, "Cannot complete the registration process, Try with different username", null));
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(
+								new ServiceResponse(
+										false,
+										"Cannot complete the registration process, Try with different username",
+										null));
 			}
 			if (isEmailExist) {
-				return ResponseEntity.status(HttpStatus.OK).body(
-						new ServiceResponse(false, "Cannot complete the registration process, Try with different email", null));
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(
+								new ServiceResponse(
+										false,
+										"Cannot complete the registration process, Try with different email",
+										null));
 			}
 			if (flag) {
-				Authentication authentication = authenticationService.create(request.getUsername(), request.getPassword(),
-						request.getEmail().toLowerCase());
+				Authentication authentication =
+						authenticationService.create(
+								request.getUsername(), request.getPassword(), request.getEmail().toLowerCase());
 
-				UserInfo useInfo = userInfoService.save(userInfoService.createDefaultUserInfo(request.getUsername(),
-						AuthType.STANDARD, request.getEmail().toLowerCase()));
+				UserInfo useInfo =
+						userInfoService.save(
+								userInfoService.createDefaultUserInfo(
+										request.getUsername(), AuthType.STANDARD, request.getEmail().toLowerCase()));
 
 				authenticationResponseService.handle(httpServletResponse, authentication);
 
 				if (useInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN)) {
-					return ResponseEntity.status(HttpStatus.ACCEPTED).body(new ServiceResponse(true,
-							"User successfully created and assigned the server administration rights.", null));
+					return ResponseEntity.status(HttpStatus.ACCEPTED)
+							.body(
+									new ServiceResponse(
+											true,
+											"User successfully created and assigned the server administration rights.",
+											null));
 				}
-				signupManager.sendUserPreApprovalRequestEmailToAdmin(request.getUsername(), request.getEmail());
+				signupManager.sendUserPreApprovalRequestEmailToAdmin(
+						request.getUsername(), request.getEmail());
 				return ResponseEntity.status(HttpStatus.ACCEPTED)
-						.body(new ServiceResponse(true, "Your access request has been sent for approval", null));
+						.body(
+								new ServiceResponse(true, "Your access request has been sent for approval", null));
 
 			} else {
-				return ResponseEntity.status(HttpStatus.OK).body(
-						new ServiceResponse(false, "Cannot complete the registration process, Try with different password", null));
+				return ResponseEntity.status(HttpStatus.OK)
+						.body(
+								new ServiceResponse(
+										false,
+										"Cannot complete the registration process, Try with different password",
+										null));
 			}
 
 		} catch (DuplicateKeyException dke) {
 			log.error("Error in registration ", dke);
-			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
-					new ServiceResponse(true, "Cannot complete the registration process, Try with different username", null));
+			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+					.body(
+							new ServiceResponse(
+									true,
+									"Cannot complete the registration process, Try with different username",
+									null));
 		}
 	}
 
@@ -163,11 +190,13 @@ public class AuthenticationController {
 	/**
 	 * Update user.
 	 *
-	 * @param request
-	 *          the request
+	 * @param request the request
 	 * @return the response entity
 	 */
-	@PostMapping(value = "/updateUser", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/updateUser",
+			consumes = APPLICATION_JSON_VALUE,
+			produces = APPLICATION_JSON_VALUE)
 	// NOSONAR
 	public ResponseEntity<String> updateUser(@Valid @RequestBody AuthenticationRequest request) {
 
@@ -180,7 +209,7 @@ public class AuthenticationController {
 	 *
 	 * @return the authentication providers
 	 */
-	@RequestMapping(value = "/authenticationProviders", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/authenticationProviders", produces = APPLICATION_JSON_VALUE)
 	public List<AuthType> getAuthenticationProviders() {
 		return authProperties.getAuthenticationProviders();
 	}
@@ -188,46 +217,52 @@ public class AuthenticationController {
 	/**
 	 * Change password.
 	 *
-	 * @param httpServletRequest
-	 *          the http servlet request
-	 * @param httpServletResponse
-	 *          the http servlet response
-	 * @param request
-	 *          the request
+	 * @param httpServletRequest the http servlet request
+	 * @param httpServletResponse the http servlet response
+	 * @param request the request
 	 * @return the response entity
-	 * @throws IOException
-	 *           the io exception
-	 * @throws ServletException
-	 *           the servlet exception
+	 * @throws IOException the io exception
+	 * @throws ServletException the servlet exception
 	 */
-	@PostMapping(value = "/changePassword", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/changePassword",
+			consumes = APPLICATION_JSON_VALUE,
+			produces = APPLICATION_JSON_VALUE)
 	// NOSONAR
-	public ResponseEntity<ServiceResponse> changePassword(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, @Valid @RequestBody ChangePasswordRequest request)
+	public ResponseEntity<ServiceResponse> changePassword(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
+			@Valid @RequestBody ChangePasswordRequest request)
 			throws IOException, ServletException { // NOSONAR
 		try {
 			Pattern pattern = Pattern.compile(CommonConstant.PASSWORD_PATTERN);
 			Matcher matcher = pattern.matcher(request.getPassword());
 			boolean flag = matcher.matches();
 			boolean isEmailExist = authenticationService.isEmailExist(request.getEmail());
-			boolean isPasswordIdentical = authenticationService.isPasswordIdentical(request.getOldPassword(),
-					request.getPassword());
+			boolean isPasswordIdentical =
+					authenticationService.isPasswordIdentical(
+							request.getOldPassword(), request.getPassword());
 			if (isEmailExist) {
 				if (flag) {
 					if (isPassContainUser(request.getPassword(), request.getUser())) {
 						if (isPasswordIdentical) {
 							return ResponseEntity.ok()
-									.body(new ServiceResponse(false, "New Password Can Not Be Same As Old Password", null));
+									.body(
+											new ServiceResponse(
+													false, "New Password Can Not Be Same As Old Password", null));
 						} else {
-							boolean isValidUser = authenticationService.checkIfValidOldPassword(request.getEmail(),
-									request.getOldPassword());
+							boolean isValidUser =
+									authenticationService.checkIfValidOldPassword(
+											request.getEmail(), request.getOldPassword());
 							return isValidUser(isValidUser, request, httpServletResponse);
 						}
 					} else {
-						return ResponseEntity.ok().body(new ServiceResponse(false, "Password should not contain userName", null));
+						return ResponseEntity.ok()
+								.body(new ServiceResponse(false, "Password should not contain userName", null));
 					}
 				} else {
-					return ResponseEntity.ok().body(new ServiceResponse(false, "Password Pattern Fails", null));
+					return ResponseEntity.ok()
+							.body(new ServiceResponse(false, "Password Pattern Fails", null));
 				}
 			} else {
 				return ResponseEntity.ok().body(new ServiceResponse(false, "Email Not Exist", null));
@@ -238,10 +273,15 @@ public class AuthenticationController {
 		}
 	}
 
-	@PostMapping(value = "/changePassword/central", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/changePassword/central",
+			consumes = APPLICATION_JSON_VALUE,
+			produces = APPLICATION_JSON_VALUE)
 	// NOSONAR
-	public ResponseEntity<ServiceResponse> changePasswordForCentralAuth(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, @Valid @RequestBody ChangePasswordRequest request) { // NOSONAR
+	public ResponseEntity<ServiceResponse> changePasswordForCentralAuth(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
+			@Valid @RequestBody ChangePasswordRequest request) { // NOSONAR
 		return authenticationService.changePasswordForCentralAuth(request);
 	}
 
@@ -251,23 +291,28 @@ public class AuthenticationController {
 	 * @param httpServletResponse
 	 * @return
 	 */
-	private ResponseEntity<ServiceResponse> isValidUser(boolean isValidUser, @Valid ChangePasswordRequest request,
+	private ResponseEntity<ServiceResponse> isValidUser(
+			boolean isValidUser,
+			@Valid ChangePasswordRequest request,
 			HttpServletResponse httpServletResponse) {
 		if (isValidUser) {
-			Authentication authentication = authenticationService.changePassword(request.getEmail(), request.getPassword());
+			Authentication authentication =
+					authenticationService.changePassword(request.getEmail(), request.getPassword());
 			authenticationResponseService.handle(httpServletResponse, authentication);
-			return ResponseEntity.ok().body(new ServiceResponse(true, getResponse(httpServletResponse), null));
+			return ResponseEntity.ok()
+					.body(new ServiceResponse(true, getResponse(httpServletResponse), null));
 		} else {
 			return ResponseEntity.ok().body(new ServiceResponse(false, "Wrong Old Password", null));
 		}
 	}
 
 	@RequestMapping(value = "/users/{username}", method = GET) // NOSONAR
-	public ResponseEntity<ServiceResponse> getUser(@PathVariable String username, Principal principal) {
+	public ResponseEntity<ServiceResponse> getUser(
+			@PathVariable String username, Principal principal) {
 
 		username = CommonUtils.handleCrossScriptingTaintedValue(username);
-		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication = authenticationService
-				.getAuthentication(username);
+		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication =
+				authenticationService.getAuthentication(username);
 
 		if (authentication == null) {
 			return ResponseEntity.status(HttpStatus.OK)
@@ -276,7 +321,8 @@ public class AuthenticationController {
 
 		UserInfo userInfo = userInfoService.getUserInfo(username);
 
-		List<String> authorities = userInfo.getAuthorities() == null ? new ArrayList<>() : userInfo.getAuthorities();
+		List<String> authorities =
+				userInfo.getAuthorities() == null ? new ArrayList<>() : userInfo.getAuthorities();
 
 		UserInfoDTO userInfoDTO = new UserInfoDTO();
 		userInfoDTO.setUsername(username);
@@ -286,17 +332,21 @@ public class AuthenticationController {
 		userInfoDTO.setAuthorities(authorities);
 
 		if (isAuthorizeForUserDetail(username, principal)) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "User details", userInfoDTO));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, "User details", userInfoDTO));
 		} else {
 			return ResponseEntity.status(HttpStatus.OK)
-					.body(new ServiceResponse(false, "You are not authorised to get this user's details", null));
+					.body(
+							new ServiceResponse(
+									false, "You are not authorised to get this user's details", null));
 		}
 	}
 
 	private boolean isAuthorizeForUserDetail(String username, Principal principal) {
 		String loggedInUser = principal.getName();
 		UserInfo loggedInUserInfo = userInfoService.getUserInfo(loggedInUser);
-		return loggedInUser.equals(username) || loggedInUserInfo.getAuthorities().contains("ROLE_SUPERADMIN");
+		return loggedInUser.equals(username)
+				|| loggedInUserInfo.getAuthorities().contains("ROLE_SUPERADMIN");
 	}
 
 	private boolean isPassContainUser(String reqPassword, String username) {
@@ -304,11 +354,15 @@ public class AuthenticationController {
 	}
 
 	@GetMapping(value = "/authdetails")
-	public ResponseEntity<ServiceResponse> getAuthDetails(HttpServletRequest request, Authentication authentication) {
-		JSONObject jsonObject = tokenAuthenticationService.getOrSaveUserByToken(request, authentication);
+	public ResponseEntity<ServiceResponse> getAuthDetails(
+			HttpServletRequest request, Authentication authentication) {
+		JSONObject jsonObject =
+				tokenAuthenticationService.getOrSaveUserByToken(request, authentication);
 		if (jsonObject != null) {
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "User Data Found", jsonObject));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, "User Data Found", jsonObject));
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(false, "Invalid token", null));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ServiceResponse(false, "Invalid token", null));
 	}
 }

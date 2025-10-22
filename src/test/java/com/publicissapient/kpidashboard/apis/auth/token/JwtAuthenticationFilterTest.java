@@ -42,24 +42,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class JwtAuthenticationFilterTest {
 
-	@Mock
-	HttpServletRequest request;
-	@Mock
-	HttpServletResponse response;
-	@InjectMocks
-	private JwtAuthenticationFilter filter;
-	@Mock
-	private TokenAuthenticationService authService;
-	@Mock
-	private CookieUtil cookieUtil;
-	@Mock
-	private FilterChain filterChain;
+	@Mock HttpServletRequest request;
+	@Mock HttpServletResponse response;
+	@InjectMocks private JwtAuthenticationFilter filter;
+	@Mock private TokenAuthenticationService authService;
+	@Mock private CookieUtil cookieUtil;
+	@Mock private FilterChain filterChain;
 
-	@Mock
-	private Authentication authentication;
+	@Mock private Authentication authentication;
 
-	@Mock
-	private Cookie cookie;
+	@Mock private Cookie cookie;
 
 	@Before
 	public void setup() {

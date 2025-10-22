@@ -70,18 +70,15 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 	private static final String STORY_POINT = "Story Point";
 	private static final String OVERALL = "Overall";
 	private static final String SEARCH_BY_ISSUE_TYPE = "Filter by issue type";
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CommonServiceImpl commonService;
+	@Autowired private CommonServiceImpl commonService;
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Release Progress -> Requested sprint : {}", leafNode.getName());
@@ -106,30 +103,36 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 		return kpiElement;
 	}
 
-	private void releaseWiseLeafNodeValue(Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void releaseWiseLeafNodeValue(
+			Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
 		if (latestRelease != null) {
 			Object basicProjectConfigId = latestRelease.getProjectFilter().getBasicProjectConfigId();
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+			FieldMapping fieldMapping =
+					configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 			Map<String, Object> resultMap = fetchKPIDataFromDb(latestRelease, null, null, kpiRequest);
 			List<JiraIssue> releaseIssues = (List<JiraIssue>) resultMap.get(TOTAL_ISSUES);
-			JiraIssueReleaseStatus jiraIssueReleaseStatus = (JiraIssueReleaseStatus) resultMap.get(RELEASE_JIRA_ISSUE_STATUS);
+			JiraIssueReleaseStatus jiraIssueReleaseStatus =
+					(JiraIssueReleaseStatus) resultMap.get(RELEASE_JIRA_ISSUE_STATUS);
 			List<IterationKpiValue> filterDataList = new ArrayList<>();
 			if (CollectionUtils.isNotEmpty(releaseIssues) && jiraIssueReleaseStatus != null) {
 				Set<String> issueTypes = new LinkedHashSet<>();
 				issueTypes.add(CommonConstant.OVERALL);
-				createDataCountGroupMap(releaseIssues, jiraIssueReleaseStatus, issueTypes, fieldMapping, filterDataList);
+				createDataCountGroupMap(
+						releaseIssues, jiraIssueReleaseStatus, issueTypes, fieldMapping, filterDataList);
 				populateExcelDataObject(requestTrackerId, excelData, releaseIssues, fieldMapping);
 				List<DataCount> dataCountList = new ArrayList<>();
 				dataCountList.add(getStatusWiseCountList(releaseIssues, jiraIssueReleaseStatus));
-				dataCountList.add(getStatusWiseStoryPointList(releaseIssues, fieldMapping, jiraIssueReleaseStatus));
+				dataCountList.add(
+						getStatusWiseStoryPointList(releaseIssues, fieldMapping, jiraIssueReleaseStatus));
 				IterationKpiValue overAllIterationKpiValue = new IterationKpiValue();
 				overAllIterationKpiValue.setFilter1(OVERALL);
 				overAllIterationKpiValue.setFilter2(OVERALL);
 				overAllIterationKpiValue.setValue(dataCountList);
 				filterDataList.add(overAllIterationKpiValue);
-				IterationKpiFiltersOptions filter1 = new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypes);
+				IterationKpiFiltersOptions filter1 =
+						new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypes);
 				IterationKpiFilters iterationKpiFilters = new IterationKpiFilters(filter1, null);
 				kpiElement.setFilters(iterationKpiFilters);
 				kpiElement.setSprint(latestRelease.getName());
@@ -141,21 +144,27 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 		}
 	}
 
-	public void createDataCountGroupMap(List<JiraIssue> jiraIssueList, JiraIssueReleaseStatus jiraIssueReleaseStatus,
-			Set<String> issueTypes, FieldMapping fieldMapping, List<IterationKpiValue> iterationKpiValues) {
-		Map<String, List<JiraIssue>> typeWiseIssues = jiraIssueList.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getTypeName));
+	public void createDataCountGroupMap(
+			List<JiraIssue> jiraIssueList,
+			JiraIssueReleaseStatus jiraIssueReleaseStatus,
+			Set<String> issueTypes,
+			FieldMapping fieldMapping,
+			List<IterationKpiValue> iterationKpiValues) {
+		Map<String, List<JiraIssue>> typeWiseIssues =
+				jiraIssueList.stream().collect(Collectors.groupingBy(JiraIssue::getTypeName));
 
-		typeWiseIssues.forEach((issueType, issues) -> {
-			List<DataCount> dataCountList = new ArrayList<>();
-			issueTypes.add(issueType);
-			dataCountList.add(getStatusWiseCountList(issues, jiraIssueReleaseStatus));
-			dataCountList.add(getStatusWiseStoryPointList(issues, fieldMapping, jiraIssueReleaseStatus));
-			IterationKpiValue iterationKpiValue = new IterationKpiValue();
-			iterationKpiValue.setFilter1(issueType);
-			iterationKpiValue.setValue(dataCountList);
-			iterationKpiValues.add(iterationKpiValue);
-		});
+		typeWiseIssues.forEach(
+				(issueType, issues) -> {
+					List<DataCount> dataCountList = new ArrayList<>();
+					issueTypes.add(issueType);
+					dataCountList.add(getStatusWiseCountList(issues, jiraIssueReleaseStatus));
+					dataCountList.add(
+							getStatusWiseStoryPointList(issues, fieldMapping, jiraIssueReleaseStatus));
+					IterationKpiValue iterationKpiValue = new IterationKpiValue();
+					iterationKpiValue.setFilter1(issueType);
+					iterationKpiValue.setValue(dataCountList);
+					iterationKpiValues.add(iterationKpiValue);
+				});
 	}
 
 	/**
@@ -165,30 +174,38 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 	 * @param jiraIssueReleaseStatus
 	 * @return
 	 */
-	private DataCount getStatusWiseCountList(List<JiraIssue> jiraIssueList,
-			JiraIssueReleaseStatus jiraIssueReleaseStatus) {
+	private DataCount getStatusWiseCountList(
+			List<JiraIssue> jiraIssueList, JiraIssueReleaseStatus jiraIssueReleaseStatus) {
 		DataCount issueCountDc = new DataCount();
 		List<DataCount> issueCountDcList = new ArrayList<>();
-		List<JiraIssue> toDoJiraIssue = ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList,
-				jiraIssueReleaseStatus.getToDoList());
-		List<JiraIssue> inProgressJiraIssue = ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList,
-				jiraIssueReleaseStatus.getInProgressList());
-		List<JiraIssue> doneJiraIssue = ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList,
-				jiraIssueReleaseStatus.getClosedList());
+		List<JiraIssue> toDoJiraIssue =
+				ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList, jiraIssueReleaseStatus.getToDoList());
+		List<JiraIssue> inProgressJiraIssue =
+				ReleaseKpiHelper.filterIssuesByStatus(
+						jiraIssueList, jiraIssueReleaseStatus.getInProgressList());
+		List<JiraIssue> doneJiraIssue =
+				ReleaseKpiHelper.filterIssuesByStatus(
+						jiraIssueList, jiraIssueReleaseStatus.getClosedList());
 
 		long toDoCount = toDoJiraIssue.size();
-		Map<String, Integer> toDoStatusMap = toDoJiraIssue.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingInt(issue -> 1)));
+		Map<String, Integer> toDoStatusMap =
+				toDoJiraIssue.stream()
+						.collect(
+								Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingInt(issue -> 1)));
 		createIssueCountDrillDown(toDoStatusMap, TO_DO, toDoCount, issueCountDcList);
 
 		long inProgressCount = inProgressJiraIssue.size();
-		Map<String, Integer> inProgressStatusMap = inProgressJiraIssue.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingInt(issue -> 1)));
+		Map<String, Integer> inProgressStatusMap =
+				inProgressJiraIssue.stream()
+						.collect(
+								Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingInt(issue -> 1)));
 		createIssueCountDrillDown(inProgressStatusMap, IN_PROGRESS, inProgressCount, issueCountDcList);
 
 		long doneCount = doneJiraIssue.size();
-		Map<String, Integer> doneStatusMap = (doneJiraIssue.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingInt(issue -> 1))));
+		Map<String, Integer> doneStatusMap =
+				(doneJiraIssue.stream()
+						.collect(
+								Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingInt(issue -> 1))));
 		createIssueCountDrillDown(doneStatusMap, DONE, doneCount, issueCountDcList);
 
 		issueCountDc.setData(String.valueOf(toDoCount + inProgressCount + doneCount));
@@ -205,16 +222,20 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 	 * @param jiraIssueReleaseStatus
 	 * @return
 	 */
-	private DataCount getStatusWiseStoryPointList(List<JiraIssue> jiraIssueList, FieldMapping fieldMapping,
+	private DataCount getStatusWiseStoryPointList(
+			List<JiraIssue> jiraIssueList,
+			FieldMapping fieldMapping,
 			JiraIssueReleaseStatus jiraIssueReleaseStatus) {
 		DataCount storyPointDc = new DataCount();
 		List<DataCount> storyPointDcList = new ArrayList<>();
-		List<JiraIssue> toDoJiraIssue = ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList,
-				jiraIssueReleaseStatus.getToDoList());
-		List<JiraIssue> inProgressJiraIssue = ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList,
-				jiraIssueReleaseStatus.getInProgressList());
-		List<JiraIssue> doneJiraIssue = ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList,
-				jiraIssueReleaseStatus.getClosedList());
+		List<JiraIssue> toDoJiraIssue =
+				ReleaseKpiHelper.filterIssuesByStatus(jiraIssueList, jiraIssueReleaseStatus.getToDoList());
+		List<JiraIssue> inProgressJiraIssue =
+				ReleaseKpiHelper.filterIssuesByStatus(
+						jiraIssueList, jiraIssueReleaseStatus.getInProgressList());
+		List<JiraIssue> doneJiraIssue =
+				ReleaseKpiHelper.filterIssuesByStatus(
+						jiraIssueList, jiraIssueReleaseStatus.getClosedList());
 
 		double toDoSp = KpiDataHelper.calculateStoryPoints(toDoJiraIssue, fieldMapping);
 		Map<String, Double> toDoSpMap = createStatusWiseSpMap(toDoJiraIssue, fieldMapping);
@@ -234,10 +255,13 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 		return storyPointDc;
 	}
 
-	private void populateExcelDataObject(String requestTrackerId, List<KPIExcelData> excelData,
-			List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				CollectionUtils.isNotEmpty(jiraIssueList)) {
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<KPIExcelData> excelData,
+			List<JiraIssue> jiraIssueList,
+			FieldMapping fieldMapping) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+				&& CollectionUtils.isNotEmpty(jiraIssueList)) {
 			KPIExcelUtility.populateReleaseDefectRelatedExcelData(jiraIssueList, excelData, fieldMapping);
 		}
 	}
@@ -249,9 +273,16 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 	 * @param fieldMapping
 	 * @return
 	 */
-	private Map<String, Double> createStatusWiseSpMap(List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
-		return jiraIssueList.stream().collect(Collectors.groupingBy(JiraIssue::getStatus, Collectors.summingDouble(
-				jiraIssue -> KpiDataHelper.calculateStoryPoints(Collections.singletonList(jiraIssue), fieldMapping))));
+	private Map<String, Double> createStatusWiseSpMap(
+			List<JiraIssue> jiraIssueList, FieldMapping fieldMapping) {
+		return jiraIssueList.stream()
+				.collect(
+						Collectors.groupingBy(
+								JiraIssue::getStatus,
+								Collectors.summingDouble(
+										jiraIssue ->
+												KpiDataHelper.calculateStoryPoints(
+														Collections.singletonList(jiraIssue), fieldMapping))));
 	}
 
 	/**
@@ -262,10 +293,14 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 	 * @param releaseStatusCount
 	 * @param issueCountDcList
 	 */
-	private static void createIssueCountDrillDown(Map<String, Integer> issueCountStatusMap, String releaseStatus,
-			long releaseStatusCount, List<DataCount> issueCountDcList) {
+	private static void createIssueCountDrillDown(
+			Map<String, Integer> issueCountStatusMap,
+			String releaseStatus,
+			long releaseStatusCount,
+			List<DataCount> issueCountDcList) {
 		List<DataCount> drillDownList = new ArrayList<>();
-		issueCountStatusMap.forEach((status, count) -> drillDownList.add(new DataCount(status, count, null)));
+		issueCountStatusMap.forEach(
+				(status, count) -> drillDownList.add(new DataCount(status, count, null)));
 		DataCount releaseStatusDc = new DataCount(releaseStatus, releaseStatusCount, drillDownList);
 		issueCountDcList.add(releaseStatusDc);
 	}
@@ -278,7 +313,10 @@ public class ReleaseProgressServiceImpl extends JiraReleaseKPIService {
 	 * @param releaseStatusSp
 	 * @param storyPointDcList
 	 */
-	private static void createSpDrillDown(Map<String, Double> spStatusMap, String releaseStatus, double releaseStatusSp,
+	private static void createSpDrillDown(
+			Map<String, Double> spStatusMap,
+			String releaseStatus,
+			double releaseStatusSp,
 			List<DataCount> storyPointDcList) {
 		List<DataCount> spDrillDownList = new ArrayList<>();
 		spStatusMap.forEach((status, spVal) -> spDrillDownList.add(new DataCount(status, spVal, null)));

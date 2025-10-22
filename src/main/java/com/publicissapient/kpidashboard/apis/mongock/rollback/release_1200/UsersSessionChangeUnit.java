@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "r_ttl_index_users_session", order = "012001", author = "shunaray", systemVersion = "12.0.0")
+@ChangeUnit(
+		id = "r_ttl_index_users_session",
+		order = "012001",
+		author = "shunaray",
+		systemVersion = "12.0.0")
 public class UsersSessionChangeUnit {
 
 	private final MongoTemplate mongoTemplate;

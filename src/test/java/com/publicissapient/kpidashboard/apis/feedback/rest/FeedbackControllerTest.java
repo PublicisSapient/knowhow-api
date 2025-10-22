@@ -47,13 +47,10 @@ public class FeedbackControllerTest {
 	private MockMvc mockMvc;
 	private FeedbackSubmitDTO feedbackSubmitDTO;
 	private String testUsername;
-	@InjectMocks
-	private FeedbackController feedbackController;
-	@Mock
-	private FeedbackService feedbackService;
+	@InjectMocks private FeedbackController feedbackController;
+	@Mock private FeedbackService feedbackService;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
 	/** method includes pre-processes for test cases */
 	@Before
@@ -78,20 +75,21 @@ public class FeedbackControllerTest {
 	/**
 	 * method to test GET /feedback/categories restPoint ;
 	 *
-	 * <p>
-	 * Get all feedback categories
+	 * <p>Get all feedback categories
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetFeedbackCategories() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/feedback/categories").contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/feedback/categories")
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
 	/**
-	 * method to test POST /feedback/submitfeedback restPoint ; to submit all
-	 * feedback
+	 * method to test POST /feedback/submitfeedback restPoint ; to submit all feedback
 	 *
 	 * @throws Exception
 	 */
@@ -99,8 +97,10 @@ public class FeedbackControllerTest {
 	public void testSubmitFeedback() throws Exception {
 
 		mockMvc
-				.perform(MockMvcRequestBuilders.post("/feedback/submitfeedback")
-						.content(mapper.writeValueAsString(feedbackSubmitDTO)).contentType(MediaType.APPLICATION_JSON_VALUE))
+				.perform(
+						MockMvcRequestBuilders.post("/feedback/submitfeedback")
+								.content(mapper.writeValueAsString(feedbackSubmitDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 }

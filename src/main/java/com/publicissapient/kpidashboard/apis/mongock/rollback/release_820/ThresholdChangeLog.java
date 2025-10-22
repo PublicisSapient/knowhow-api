@@ -36,7 +36,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author shunaray
  */
-@ChangeUnit(id = "r_threshold_change_log", order = "08208", author = "shunaray", systemVersion = "8.2.0")
+@ChangeUnit(
+		id = "r_threshold_change_log",
+		order = "08208",
+		author = "shunaray",
+		systemVersion = "8.2.0")
 public class ThresholdChangeLog {
 	private final MongoTemplate mongoTemplate;
 	private MongoCollection<Document> fieldMappingStructure;
@@ -60,12 +64,29 @@ public class ThresholdChangeLog {
 	}
 
 	public void rollBackFieldMappingStructure() {
-		List<String> fieldNamesToDelete = Arrays.asList("thresholdValueKPI126", "thresholdValueKPI42",
-				"thresholdValueKPI168", "thresholdValueKPI70", "thresholdValueKPI40", "thresholdValueKPI5",
-				"thresholdValueKPI39", "thresholdValueKPI46", "thresholdValueKPI8", "thresholdValueKPI73",
-				"thresholdValueKPI113", "thresholdValueKPI149", "thresholdValueKPI153", "thresholdValueKPI162",
-				"thresholdValueKPI116", "thresholdValueKPI156", "thresholdValueKPI118", "thresholdValueKPI127",
-				"thresholdValueKPI170", "thresholdValueKPI139", "thresholdValueKPI166");
+		List<String> fieldNamesToDelete =
+				Arrays.asList(
+						"thresholdValueKPI126",
+						"thresholdValueKPI42",
+						"thresholdValueKPI168",
+						"thresholdValueKPI70",
+						"thresholdValueKPI40",
+						"thresholdValueKPI5",
+						"thresholdValueKPI39",
+						"thresholdValueKPI46",
+						"thresholdValueKPI8",
+						"thresholdValueKPI73",
+						"thresholdValueKPI113",
+						"thresholdValueKPI149",
+						"thresholdValueKPI153",
+						"thresholdValueKPI162",
+						"thresholdValueKPI116",
+						"thresholdValueKPI156",
+						"thresholdValueKPI118",
+						"thresholdValueKPI127",
+						"thresholdValueKPI170",
+						"thresholdValueKPI139",
+						"thresholdValueKPI166");
 		Document filter = new Document("fieldName", new Document("$in", fieldNamesToDelete));
 
 		// Delete documents that match the filter
@@ -73,14 +94,20 @@ public class ThresholdChangeLog {
 	}
 
 	private void rollbackThresholdAndBg() {
-		List<String> kpiIds = Arrays.asList("kpi126", "kpi42", "kpi168", "kpi70", "kpi40", "kpi5", "kpi39", "kpi46", "kpi8",
-				"kpi73", "kpi113", "kpi149", "kpi153", "kpi162", "kpi116", "kpi156", "kpi118", "kpi127", "kpi170", "kpi139",
-				"kpi166");
+		List<String> kpiIds =
+				Arrays.asList(
+						"kpi126", "kpi42", "kpi168", "kpi70", "kpi40", "kpi5", "kpi39", "kpi46", "kpi8",
+						"kpi73", "kpi113", "kpi149", "kpi153", "kpi162", "kpi116", "kpi156", "kpi118", "kpi127",
+						"kpi170", "kpi139", "kpi166");
 
 		Document filter = new Document("kpiId", new Document("$in", kpiIds));
 
-		Document update = new Document("$unset",
-				new Document("thresholdValue", "").append("lowerThresholdBG", "").append("upperThresholdBG", ""));
+		Document update =
+				new Document(
+						"$unset",
+						new Document("thresholdValue", "")
+								.append("lowerThresholdBG", "")
+								.append("upperThresholdBG", ""));
 
 		kpiMaster.updateMany(filter, update);
 	}

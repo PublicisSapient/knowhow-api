@@ -19,11 +19,10 @@
 package com.publicissapient.kpidashboard.apis.common.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -36,22 +35,20 @@ import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 @RestController
 public class CacheController {
 
-	@Autowired
-	private CacheService service;
+	@Autowired private CacheService service;
 
 	/**
 	 * Clear Specified cache.
 	 *
-	 * @param cacheName
-	 *          the cache name
+	 * @param cacheName the cache name
 	 */
-	@RequestMapping(value = "/cache/clearCache/{cacheName}", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/cache/clearCache/{cacheName}", produces = APPLICATION_JSON_VALUE)
 	public void clearCache(@PathVariable String cacheName) {
 		service.clearCache(cacheName);
 	}
 
 	/** Clear all cache. */
-	@RequestMapping(value = "/cache/clearAllCache", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/cache/clearAllCache", produces = APPLICATION_JSON_VALUE)
 	public void clearAllCache() {
 		service.clearAllCache();
 	}
