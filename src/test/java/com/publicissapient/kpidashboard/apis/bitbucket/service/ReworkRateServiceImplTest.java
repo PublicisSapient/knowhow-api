@@ -94,22 +94,14 @@ public class ReworkRateServiceImplTest {
 	private List<DataCount> trendValues = new ArrayList<>();
 	private List<RepoToolKpiMetricResponse> repoToolKpiMetricResponseList = new ArrayList<>();
 
-	@InjectMocks
-	ReworkRateServiceImpl reworkRateService;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private AssigneeDetailsRepository assigneeDetailsRepository;
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@InjectMocks ReworkRateServiceImpl reworkRateService;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Mock CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private AssigneeDetailsRepository assigneeDetailsRepository;
+	@Mock private KpiHelperService kpiHelperService;
 
 	@Before
 	public void setup() {
@@ -126,10 +118,11 @@ public class ReworkRateServiceImplTest {
 		kpiRequest.setXAxisDataPoints(5);
 		kpiRequest.setDuration("WEEKS");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
-		RepoToolsKpiRequestDataFactory repoToolsKpiRequestDataFactory = RepoToolsKpiRequestDataFactory.newInstance();
+		RepoToolsKpiRequestDataFactory repoToolsKpiRequestDataFactory =
+				RepoToolsKpiRequestDataFactory.newInstance();
 		repoToolKpiMetricResponseList = repoToolsKpiRequestDataFactory.getRepoToolsKpiRequest();
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -137,13 +130,15 @@ public class ReworkRateServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -152,17 +147,24 @@ public class ReworkRateServiceImplTest {
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		String kpiRequestTrackerId = "Bitbucket-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		AssigneeDetails assigneeDetails = new AssigneeDetails();
 		assigneeDetails.setBasicProjectConfigId("634fdf4ec859a424263dc035");
 		assigneeDetails.setSource("Jira");
 		Set<Assignee> assigneeSet = new HashSet<>();
-		assigneeSet.add(new Assignee("aks", "Akshat Shrivastava",
-				new HashSet<>(Arrays.asList("akshat.shrivastav@publicissapient.com"))));
-		assigneeSet
-				.add(new Assignee("llid", "Hiren", new HashSet<>(Arrays.asList("99163630+hirbabar@users.noreply.github.com"))));
+		assigneeSet.add(
+				new Assignee(
+						"aks",
+						"Akshat Shrivastava",
+						new HashSet<>(Arrays.asList("akshat.shrivastav@publicissapient.com"))));
+		assigneeSet.add(
+				new Assignee(
+						"llid",
+						"Hiren",
+						new HashSet<>(Arrays.asList("99163630+hirbabar@users.noreply.github.com"))));
 		assigneeDetails.setAssignee(assigneeSet);
 		when(assigneeDetailsRepository.findByBasicProjectConfigId(any())).thenReturn(assigneeDetails);
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap())).thenReturn(toolList3);
@@ -175,22 +177,27 @@ public class ReworkRateServiceImplTest {
 
 	@Test
 	public void getKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 
 		String kpiRequestTrackerId = "Bitbucket-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		when(kpiHelperService.getRepoToolsKpiMetricResponse(any(), any(), any(), any(), any(), any()))
 				.thenReturn(repoToolKpiMetricResponseList);
 		try {
-			KpiElement kpiElement = reworkRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					reworkRateService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertThat("Trend Size: ", ((List) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
@@ -200,11 +207,15 @@ public class ReworkRateServiceImplTest {
 	@Test
 	public void getKpiDataDays() throws ApplicationException {
 		kpiRequest.setDuration(Constant.DAYS);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		try {
-			KpiElement kpiElement = reworkRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					reworkRateService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertThat("Trend Size: ", ((List) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
@@ -266,7 +277,8 @@ public class ReworkRateServiceImplTest {
 		trendValueMap.put("Overall#Hiren", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);

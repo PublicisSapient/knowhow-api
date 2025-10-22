@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author aksshriv1
  */
-@ChangeUnit(id = "cod_y_axislabel", order = "101013", author = "aksshriv1", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "cod_y_axislabel",
+		order = "101013",
+		author = "aksshriv1",
+		systemVersion = "10.1.0")
 public class CostOfDelayAxisUpdate {
 
 	private final MongoTemplate mongoTemplate;
@@ -48,8 +52,11 @@ public class CostOfDelayAxisUpdate {
 		MongoCollection<Document> kpiMaster = mongoTemplate.getCollection("kpi_master");
 		Document filter = new Document("kpiId", "kpi113");
 
-		Document update = new Document("$set",
-				new Document("kpiName", "Value Delivery (Cost of Delay)").append("yAxisLabel", "Cost of Delay"));
+		Document update =
+				new Document(
+						"$set",
+						new Document("kpiName", "Value Delivery (Cost of Delay)")
+								.append("yAxisLabel", "Cost of Delay"));
 
 		// Perform the update
 		kpiMaster.updateOne(filter, update);
@@ -64,8 +71,11 @@ public class CostOfDelayAxisUpdate {
 		MongoCollection<Document> kpiMaster = mongoTemplate.getCollection("kpi_master");
 		Document filter = new Document("kpiId", "kpi113");
 
-		Document update = new Document("$set",
-				new Document("kpiName", "Value Delivered (Cost of Delay)").append("yAxisLabel", "Count(Days)"));
+		Document update =
+				new Document(
+						"$set",
+						new Document("kpiName", "Value Delivered (Cost of Delay)")
+								.append("yAxisLabel", "Count(Days)"));
 
 		// Perform the update
 		kpiMaster.updateOne(filter, update);

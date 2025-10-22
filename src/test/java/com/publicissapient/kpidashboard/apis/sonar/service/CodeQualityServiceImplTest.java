@@ -37,8 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +57,7 @@ import com.publicissapient.kpidashboard.apis.data.SonarHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -70,6 +69,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.generic.ProcessorItem;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.sonar.SonarHistory;
 import com.publicissapient.kpidashboard.common.model.sonar.SonarMetric;
 import com.publicissapient.kpidashboard.common.repository.sonar.SonarHistoryRepository;
@@ -84,20 +84,13 @@ public class CodeQualityServiceImplTest {
 	private static Tool tool2;
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	CodeQualityServiceImpl codeQualityService;
-	@Mock
-	SonarHistoryRepository sonarHistoryRepository;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private SprintDetailsServiceImpl sprintDetailsService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks CodeQualityServiceImpl codeQualityService;
+	@Mock SonarHistoryRepository sonarHistoryRepository;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private SprintDetailsServiceImpl sprintDetailsService;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
@@ -115,8 +108,8 @@ public class CodeQualityServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		SonarHistoryDataFactory sonarHistoryDataFactory = SonarHistoryDataFactory.newInstance();
@@ -127,18 +120,21 @@ public class CodeQualityServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setCompleteDate("2025-04-01T13:44:44.421Z");
 		sprintDetails.setSprintID("40345_Scrum Project_6335363749794a18e8a4479b");
-		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(Arrays.asList(sprintDetails));
+		when(sprintDetailsService.getSprintDetailsByIds(anyList()))
+				.thenReturn(Arrays.asList(sprintDetails));
 	}
 
 	private void setToolMap() {
@@ -167,7 +163,12 @@ public class CodeQualityServiceImplTest {
 		toolMap.put(new ObjectId("6335363749794a18e8a4479b"), toolGroup);
 	}
 
-	private Tool createTool(String key, String url, String toolType, String username, String password,
+	private Tool createTool(
+			String key,
+			String url,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> collectorItemList) {
 		Tool tool = new Tool();
 		tool.setTool(toolType);
@@ -179,14 +180,17 @@ public class CodeQualityServiceImplTest {
 	@Test
 	public void testGetSonarKpiData_NonEmptyInputs() throws ApplicationException {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		when(customApiConfig.getSonarMonthCount()).thenReturn(5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
 				.thenReturn(kpiRequestTrackerId);
 		codeQualityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 		assertFalse(kpiElement.getExcelData().isEmpty());
@@ -196,9 +200,11 @@ public class CodeQualityServiceImplTest {
 	@Test
 	public void testGetSonarKpiData_EmptyInputs() throws ApplicationException {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		List<Node> pList = treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		List<Node> pList =
+				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
 		codeQualityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 		assertFalse(kpiElement.getExcelColumns().isEmpty());
 	}
@@ -207,24 +213,29 @@ public class CodeQualityServiceImplTest {
 	public void testPrepareEmptyJobWiseHistoryMap_EmptyInput() {
 		List<SonarHistory> sonarHistoryList = new ArrayList<>();
 		Long end = System.currentTimeMillis();
-		Map<String, SonarHistory> historyMap = codeQualityService.prepareEmptyJobWiseHistoryMap(sonarHistoryList, end);
+		Map<String, SonarHistory> historyMap =
+				codeQualityService.prepareEmptyJobWiseHistoryMap(sonarHistoryList, end);
 		assertTrue(historyMap.isEmpty());
 	}
 
 	@Test
 	public void testPrepareEmptyJobWiseHistoryMap_DifferentMetricValues() {
 		Long end = System.currentTimeMillis();
-		Map<String, SonarHistory> historyMap = codeQualityService.prepareEmptyJobWiseHistoryMap(sonarHistoryData, end);
+		Map<String, SonarHistory> historyMap =
+				codeQualityService.prepareEmptyJobWiseHistoryMap(sonarHistoryData, end);
 		List<SonarHistory> values = new ArrayList<>(historyMap.values());
-		List<SonarMetric> collect = values.stream().flatMap(sonarHistory -> sonarHistory.getMetrics().stream())
-				.collect(Collectors.toList());
+		List<SonarMetric> collect =
+				values.stream()
+						.flatMap(sonarHistory -> sonarHistory.getMetrics().stream())
+						.collect(Collectors.toList());
 		assertEquals(collect.get(0).getMetricName(), "sqale_rating");
 	}
 
 	@Test
 	public void testGetKpiData_AggregatedValuesWithoutData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(new HashMap<>());
 		KpiElement result = codeQualityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 		assertTrue(((List<DataCount>) result.getTrendValueList()).size() == 0);
@@ -233,15 +244,18 @@ public class CodeQualityServiceImplTest {
 	@Test
 	public void testGetKpiData_AggregatedValuesWithData() throws ApplicationException {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		Map<String, List<DataCount>> trendMap = createTrendValue();
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		KpiElement result = codeQualityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
@@ -251,17 +265,20 @@ public class CodeQualityServiceImplTest {
 	@Test
 	public void testGetKpiData_AggregatedValuesWithDataByMonth() throws ApplicationException {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		Map<String, List<DataCount>> trendMap = createTrendValue();
 		kpiRequest.setLabel("PORT");
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		when(customApiConfig.getSonarMonthCount()).thenReturn(5);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		KpiElement result = codeQualityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
@@ -306,7 +323,8 @@ public class CodeQualityServiceImplTest {
 		// Test when the input is of an unsupported type
 		Object input = new Object(); // An unsupported type
 		// Create an instance of your class containing the method
-		Long result = codeQualityService.getSqualeRatingValue(input); // This should throw a ClassCastException
+		Long result =
+				codeQualityService.getSqualeRatingValue(input); // This should throw a ClassCastException
 	}
 
 	@Test

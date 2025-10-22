@@ -20,5 +20,7 @@ package com.publicissapient.kpidashboard.apis.enums;
 
 public enum ResetPasswordTokenStatusEnum {
 	/** Token status for Reset password */
-	INVALID, VALID, EXPIRED
+	INVALID,
+	VALID,
+	EXPIRED
 }

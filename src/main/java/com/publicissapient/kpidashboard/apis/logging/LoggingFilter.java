@@ -70,10 +70,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoggingFilter implements Filter {
 
-	@Autowired
-	private RequestLogRepository requestLogRepository;
-	@Autowired
-	private CustomApiConfig settings;
+	@Autowired private RequestLogRepository requestLogRepository;
+	@Autowired private CustomApiConfig settings;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -103,19 +101,23 @@ public class LoggingFilter implements Filter {
 			chain.doFilter(bufferedRequest, bufferedResponse);
 			requestLog.setResponseContentType(httpServletResponse.getContentType());
 			try {
-				if (StringUtils.isNotBlank(httpServletRequest.getContentType()) &&
-						(new MimeType(httpServletRequest.getContentType()).match(new MimeType(APPLICATION_JSON_VALUE))) &&
-						StringUtils.isNotBlank(bufferedRequest.getRequestBody())) {
+				if (StringUtils.isNotBlank(httpServletRequest.getContentType())
+						&& (new MimeType(httpServletRequest.getContentType())
+								.match(new MimeType(APPLICATION_JSON_VALUE)))
+						&& StringUtils.isNotBlank(bufferedRequest.getRequestBody())) {
 					requestLog.setRequestBody(BasicDBObject.parse(bufferedRequest.getRequestBody()));
 				}
-				if (StringUtils.isNotBlank(bufferedResponse.getContentType()) &&
-						(new MimeType(bufferedResponse.getContentType()).match(new MimeType(APPLICATION_JSON_VALUE))) &&
-						StringUtils.isNotBlank(bufferedResponse.getContent())) {
+				if (StringUtils.isNotBlank(bufferedResponse.getContentType())
+						&& (new MimeType(bufferedResponse.getContentType())
+								.match(new MimeType(APPLICATION_JSON_VALUE)))
+						&& StringUtils.isNotBlank(bufferedResponse.getContent())) {
 					requestLog.setResponseBody(BasicDBObject.parse(bufferedResponse.getContent()));
 				}
 			} catch (MimeTypeParseException e) {
-				log.error("Invalid MIME Type detected. Request MIME type={}, Response MIME Type={}",
-						httpServletRequest.getContentType(), bufferedResponse.getContentType());
+				log.error(
+						"Invalid MIME Type detected. Request MIME type={}, Response MIME Type={}",
+						httpServletRequest.getContentType(),
+						bufferedResponse.getContentType());
 			}
 			requestLog.setResponseSize(bufferedResponse.getContent().length());
 
@@ -147,9 +149,9 @@ public class LoggingFilter implements Filter {
 	 * @return boolean
 	 */
 	private boolean isRequestContainsHttpMethods(HttpServletRequest httpServletRequest) {
-		return httpServletRequest.getMethod().equals(HttpMethod.PUT.toString()) ||
-				(httpServletRequest.getMethod().equals(HttpMethod.POST.toString())) ||
-				(httpServletRequest.getMethod().equals(HttpMethod.DELETE.toString()));
+		return httpServletRequest.getMethod().equals(HttpMethod.PUT.toString())
+				|| (httpServletRequest.getMethod().equals(HttpMethod.POST.toString()))
+				|| (httpServletRequest.getMethod().equals(HttpMethod.DELETE.toString()));
 	}
 
 	/**
@@ -159,11 +161,13 @@ public class LoggingFilter implements Filter {
 	 * @param clientOrigin
 	 * @param incomingURLs
 	 */
-	private void addHeader(HttpServletResponse httpServletResponse, String clientOrigin, List<String> incomingURLs) {
+	private void addHeader(
+			HttpServletResponse httpServletResponse, String clientOrigin, List<String> incomingURLs) {
 		if (incomingURLs.contains(clientOrigin)) {
 			// adds headers to response to allow CORS
 			httpServletResponse.addHeader("Access-Control-Allow-Origin", clientOrigin);
-			httpServletResponse.addHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE");
+			httpServletResponse.addHeader(
+					"Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE");
 			httpServletResponse.addHeader("Access-Control-Allow-Headers", "Content-Type");
 			httpServletResponse.addHeader("Access-Control-Max-Age", "1");
 		}
@@ -203,10 +207,8 @@ public class LoggingFilter implements Filter {
 		/**
 		 * Instantiates a new Buffered request wrapper.
 		 *
-		 * @param req
-		 *          the req
-		 * @throws IOException
-		 *           the io exception
+		 * @param req the req
+		 * @throws IOException the io exception
 		 */
 		public BufferedRequestWrapper(HttpServletRequest req) throws IOException {
 			super(req);
@@ -234,13 +236,13 @@ public class LoggingFilter implements Filter {
 		 * Gets request body.
 		 *
 		 * @return the request body
-		 * @throws IOException
-		 *           the io exception
+		 * @throws IOException the io exception
 		 */
 		/* package */ String getRequestBody() throws IOException {
 			String line;
 			StringBuilder inputBuffer = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.getInputStream()))) {
+			try (BufferedReader reader =
+					new BufferedReader(new InputStreamReader(this.getInputStream()))) {
 				do {
 					line = reader.readLine();
 					if (null != line) {
@@ -259,8 +261,7 @@ public class LoggingFilter implements Filter {
 		/**
 		 * Instantiates a new Buffered servlet input stream.
 		 *
-		 * @param bais
-		 *          the bais
+		 * @param bais the bais
 		 */
 		public BufferedServletInputStream(ByteArrayInputStream bais) {
 			super();
@@ -308,10 +309,8 @@ public class LoggingFilter implements Filter {
 		/**
 		 * Instantiates a new Tee servlet output stream.
 		 *
-		 * @param one
-		 *          the one
-		 * @param two
-		 *          the two
+		 * @param one the one
+		 * @param two the two
 		 */
 		public TeeServletOutputStream(OutputStream one, OutputStream two) {
 			super();
@@ -359,8 +358,7 @@ public class LoggingFilter implements Filter {
 		/**
 		 * Instantiates a new Buffered response wrapper.
 		 *
-		 * @param response
-		 *          the response
+		 * @param response the response
 		 */
 		public BufferedResponseWrapper(HttpServletResponse response) {
 			original = response;
@@ -390,8 +388,8 @@ public class LoggingFilter implements Filter {
 
 			if (LoggingFilter.BufferedResponseWrapper.this.teeStream == null) {
 				bos = new ByteArrayOutputStream();
-				LoggingFilter.BufferedResponseWrapper.this.teeStream = new TeeServletOutputStream(original.getOutputStream(),
-						bos);
+				LoggingFilter.BufferedResponseWrapper.this.teeStream =
+						new TeeServletOutputStream(original.getOutputStream(), bos);
 			}
 			return LoggingFilter.BufferedResponseWrapper.this.teeStream;
 		}

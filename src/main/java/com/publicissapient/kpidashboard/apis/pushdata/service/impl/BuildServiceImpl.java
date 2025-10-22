@@ -50,11 +50,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BuildServiceImpl {
 
-	@Autowired
-	BuildRepository buildRepository;
+	@Autowired BuildRepository buildRepository;
 
-	@Autowired
-	PushDataValidationServiceImpl pushDataValidationService;
+	@Autowired PushDataValidationServiceImpl pushDataValidationService;
 
 	/**
 	 * @param basicProjectConfigId
@@ -64,29 +62,41 @@ public class BuildServiceImpl {
 	 * @param pushDataDetails
 	 * @return
 	 */
-	public int checkandCreateBuilds(ObjectId basicProjectConfigId, Set<PushBuild> buildsList, List<Build> buildList,
-			List<PushErrorData> buildErrorList, List<PushDataDetail> pushDataDetails) {
+	public int checkandCreateBuilds(
+			ObjectId basicProjectConfigId,
+			Set<PushBuild> buildsList,
+			List<Build> buildList,
+			List<PushErrorData> buildErrorList,
+			List<PushDataDetail> pushDataDetails) {
 		AtomicInteger failedRecords = new AtomicInteger();
 		if (CollectionUtils.isNotEmpty(buildsList)) {
-			buildsList.forEach(pushBuild -> {
-				PushErrorData pushErrorData = new PushErrorData();
-				pushErrorData.setJobName(pushBuild.getJobName());
-				pushErrorData.setNumber(pushBuild.getNumber());
-				Map<String, String> errorMap = createErrorMap(pushBuild);
-				if (MapUtils.isNotEmpty(errorMap)) {
-					failedRecords.getAndIncrement();
-					log.error(
-							"Errors in build for jobNumber " + pushBuild.getNumber() + " jobName " + pushBuild.getJobName() + " are ",
-							errorMap);
-					pushErrorData.setErrors(errorMap);
-				} else {
-					// if no errors are present in the input job then it will create Build List
-					buildList
-							.add(createBuild(basicProjectConfigId, pushBuild, checkExisitingJob(pushBuild, basicProjectConfigId)));
-				}
-				pushDataDetails.add(createTraceLog(pushErrorData));
-				buildErrorList.add(pushErrorData);
-			});
+			buildsList.forEach(
+					pushBuild -> {
+						PushErrorData pushErrorData = new PushErrorData();
+						pushErrorData.setJobName(pushBuild.getJobName());
+						pushErrorData.setNumber(pushBuild.getNumber());
+						Map<String, String> errorMap = createErrorMap(pushBuild);
+						if (MapUtils.isNotEmpty(errorMap)) {
+							failedRecords.getAndIncrement();
+							log.error(
+									"Errors in build for jobNumber "
+											+ pushBuild.getNumber()
+											+ " jobName "
+											+ pushBuild.getJobName()
+											+ " are ",
+									errorMap);
+							pushErrorData.setErrors(errorMap);
+						} else {
+							// if no errors are present in the input job then it will create Build List
+							buildList.add(
+									createBuild(
+											basicProjectConfigId,
+											pushBuild,
+											checkExisitingJob(pushBuild, basicProjectConfigId)));
+						}
+						pushDataDetails.add(createTraceLog(pushErrorData));
+						buildErrorList.add(pushErrorData);
+					});
 		}
 		return failedRecords.get();
 	}
@@ -112,16 +122,22 @@ public class BuildServiceImpl {
 	 */
 	private Map<String, String> createErrorMap(PushBuild pushBuild) {
 		Map<Pair<String, String>, List<PushValidationType>> validations = new HashMap<>();
-		validations.put(Pair.of("jobName", pushBuild.getJobName()), Arrays.asList(PushValidationType.BLANK));
-		validations.put(Pair.of("number", pushBuild.getNumber()),
+		validations.put(
+				Pair.of("jobName", pushBuild.getJobName()), Arrays.asList(PushValidationType.BLANK));
+		validations.put(
+				Pair.of("number", pushBuild.getNumber()),
 				Arrays.asList(PushValidationType.BLANK, PushValidationType.NUMERIC));
-		validations.put(Pair.of("buildStatus", pushBuild.getBuildStatus()),
+		validations.put(
+				Pair.of("buildStatus", pushBuild.getBuildStatus()),
 				Arrays.asList(PushValidationType.BLANK, PushValidationType.BUILD_STATUS));
-		validations.put(Pair.of("startTime", pushBuild.getStartTime().toString()),
+		validations.put(
+				Pair.of("startTime", pushBuild.getStartTime().toString()),
 				Arrays.asList(PushValidationType.BLANK, PushValidationType.TIME_DETAILS));
-		validations.put(Pair.of("endTime", pushBuild.getEndTime().toString()),
+		validations.put(
+				Pair.of("endTime", pushBuild.getEndTime().toString()),
 				Arrays.asList(PushValidationType.BLANK, PushValidationType.TIME_DETAILS));
-		validations.put(Pair.of("duration", pushBuild.getDuration().toString()),
+		validations.put(
+				Pair.of("duration", pushBuild.getDuration().toString()),
 				Arrays.asList(PushValidationType.BLANK, PushValidationType.TIME_DETAILS));
 		return pushDataValidationService.createBuildDeployErrorMap(validations);
 	}
@@ -134,15 +150,16 @@ public class BuildServiceImpl {
 	 * @return
 	 */
 	private Build checkExisitingJob(PushBuild pushBuild, ObjectId basicProjectConfigId) {
-		return buildRepository.findByNumberAndBuildJobAndBasicProjectConfigId(pushBuild.getNumber(), pushBuild.getJobName(),
-				basicProjectConfigId);
+		return buildRepository.findByNumberAndBuildJobAndBasicProjectConfigId(
+				pushBuild.getNumber(), pushBuild.getJobName(), basicProjectConfigId);
 	}
 
 	protected void saveBuilds(List<Build> buildList) {
 		buildRepository.saveAll(buildList);
 	}
 
-	private Build createBuild(ObjectId basicProjectConfigId, PushBuild pushBuild, Build existingBuild) {
+	private Build createBuild(
+			ObjectId basicProjectConfigId, PushBuild pushBuild, Build existingBuild) {
 		Build build = (existingBuild != null) ? existingBuild : new Build();
 		build.setBasicProjectConfigId(basicProjectConfigId);
 		build.setBuildJob(pushBuild.getJobName());
@@ -153,10 +170,14 @@ public class BuildServiceImpl {
 		build.setEndTime(pushBuild.getEndTime());
 		build.setDuration(pushBuild.getDuration());
 		build.setBuildStatus(BuildStatus.fromString(pushBuild.getBuildStatus()));
-		build.setTimestamp(build.getTimestamp() == 0 ? System.currentTimeMillis() : build.getTimestamp());
-		build.setUpdatedTime(DateUtil.dateTimeFormatter(
-				Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime(),
-				DateUtil.TIME_FORMAT));
+		build.setTimestamp(
+				build.getTimestamp() == 0 ? System.currentTimeMillis() : build.getTimestamp());
+		build.setUpdatedTime(
+				DateUtil.dateTimeFormatter(
+						Instant.ofEpochMilli(System.currentTimeMillis())
+								.atZone(ZoneId.systemDefault())
+								.toLocalDateTime(),
+						DateUtil.TIME_FORMAT));
 		return build;
 	}
 }

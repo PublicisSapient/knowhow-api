@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
  *
  * @author tejgorip
  */
-@ChangeUnit(id = "r_hierarchy_helpertext_enh", order = "010107", author = "tejgorip", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "r_hierarchy_helpertext_enh",
+		order = "010107",
+		author = "tejgorip",
+		systemVersion = "10.1.0")
 public class HierarchyHelpertextEnh {
 
 	private final MongoTemplate mongoTemplate;

@@ -47,23 +47,47 @@ public class DSVScreen2 {
 	}
 
 	public void insertFieldMapping() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
-		List<String> fieldNamesToDelete = Arrays.asList("jiraStatusStartDevelopmentKPI154", "jiraDevDoneStatusKPI154",
-				"jiraQADoneStatusKPI154", "jiraIterationCompletionStatusKPI154", "jiraStatusForInProgressKPI154",
-				"jiraSubTaskIdentification", "storyFirstStatusKPI154", "jiraOnHoldStatusKPI154");
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
+		List<String> fieldNamesToDelete =
+				Arrays.asList(
+						"jiraStatusStartDevelopmentKPI154",
+						"jiraDevDoneStatusKPI154",
+						"jiraQADoneStatusKPI154",
+						"jiraIterationCompletionStatusKPI154",
+						"jiraStatusForInProgressKPI154",
+						"jiraSubTaskIdentification",
+						"storyFirstStatusKPI154",
+						"jiraOnHoldStatusKPI154");
 		Document filter = new Document("fieldName", new Document("$in", fieldNamesToDelete));
 		// Delete documents that match the filter
 		fieldMappingStructure.deleteMany(filter);
 
 		MongoCollection<Document> identifier = mongoTemplate.getCollection("metadata_identifier");
 
-		Document indentifierFilter = new Document("$or", Arrays.asList(new Document("templateCode", "8"),
-				new Document("tool", "Azure"), new Document("templateCode", "7")));
+		Document indentifierFilter =
+				new Document(
+						"$or",
+						Arrays.asList(
+								new Document("templateCode", "8"),
+								new Document("tool", "Azure"),
+								new Document("templateCode", "7")));
 
 		// Define the update operation to remove elements from the "workflow" array
-		Document update = new Document("$pull",
-				new Document("workflow", new Document("type", new Document("$in", Arrays.asList("firstDevstatus",
-						"jiraStatusForInProgressKPI154", "jiraStatusStartDevelopmentKPI154", "storyFirstStatusKPI154")))));
+		Document update =
+				new Document(
+						"$pull",
+						new Document(
+								"workflow",
+								new Document(
+										"type",
+										new Document(
+												"$in",
+												Arrays.asList(
+														"firstDevstatus",
+														"jiraStatusForInProgressKPI154",
+														"jiraStatusStartDevelopmentKPI154",
+														"storyFirstStatusKPI154")))));
 
 		// Perform the update operation
 		identifier.updateMany(indentifierFilter, update);

@@ -7,7 +7,8 @@ public interface AutoApproveAccessService {
 
 	AutoApproveAccessConfig getAutoApproveConfig();
 
-	AutoApproveAccessConfig modifyAutoApprovConfigById(String id, AutoApproveAccessConfig autoApproveRole);
+	AutoApproveAccessConfig modifyAutoApprovConfigById(
+			String id, AutoApproveAccessConfig autoApproveRole);
 
 	boolean isAutoApproveEnabled(String role);
 }

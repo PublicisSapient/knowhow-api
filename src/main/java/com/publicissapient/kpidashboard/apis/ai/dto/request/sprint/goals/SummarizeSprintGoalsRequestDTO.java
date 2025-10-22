@@ -22,5 +22,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 
 public record SummarizeSprintGoalsRequestDTO(
-		@Schema(description = "List of sprint goals", example = "Increase team collaboration, Have more prod deployments") @NotEmpty(message = "The field 'sprintGoals' cannot be empty") List<String> sprintGoals) {
-}
+		@Schema(
+						description = "List of sprint goals",
+						example = "Increase team collaboration, Have more prod deployments")
+				@NotEmpty(message = "The field 'sprintGoals' cannot be empty")
+				List<String> sprintGoals) {}

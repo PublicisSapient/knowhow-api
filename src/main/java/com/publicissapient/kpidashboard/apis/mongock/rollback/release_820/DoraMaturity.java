@@ -50,27 +50,40 @@ public class DoraMaturity {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_master");
 
 		// Update command for kpi116
-		collection.updateOne(new Document("kpiId", "kpi116"),
-				new Document("$set", new Document("maturityRange", Arrays.asList("-50", "50-30", "30-20", "20-10", "10-"))
-						.append("maturityLevel", null)));
+		collection.updateOne(
+				new Document("kpiId", "kpi116"),
+				new Document(
+						"$set",
+						new Document("maturityRange", Arrays.asList("-50", "50-30", "30-20", "20-10", "10-"))
+								.append("maturityLevel", null)));
 
 		// Update command for kpi118
 
-		collection.updateOne(new Document("kpiId", "kpi118"),
-				new Document("$set", new Document("maturityRange", Arrays.asList("-1", "1-2", "2-5", "5-10", "10-"))
-						.append("maturityLevel", null).append("aggregationCircleCriteria", "average")));
+		collection.updateOne(
+				new Document("kpiId", "kpi118"),
+				new Document(
+						"$set",
+						new Document("maturityRange", Arrays.asList("-1", "1-2", "2-5", "5-10", "10-"))
+								.append("maturityLevel", null)
+								.append("aggregationCircleCriteria", "average")));
 
 		// Update command for kpi156
-		collection.updateOne(new Document("kpiId", "kpi156"),
-				new Document("$set",
-						new Document("calculateMaturity", false).append("maturityRange", Collections.emptyList())
+		collection.updateOne(
+				new Document("kpiId", "kpi156"),
+				new Document(
+						"$set",
+						new Document("calculateMaturity", false)
+								.append("maturityRange", Collections.emptyList())
 								.append("maturityLevel", Collections.emptyList())
 								.append("kpiInfo.maturityLevels", Collections.emptyList())));
 
 		// Update command for kpi166
-		collection.updateOne(new Document("kpiId", "kpi166"),
-				new Document("$set",
-						new Document("calculateMaturity", false).append("maturityRange", Collections.emptyList())
+		collection.updateOne(
+				new Document("kpiId", "kpi166"),
+				new Document(
+						"$set",
+						new Document("calculateMaturity", false)
+								.append("maturityRange", Collections.emptyList())
 								.append("maturityLevel", Collections.emptyList())
 								.append("kpiInfo.maturityLevels", Collections.emptyList())));
 	}

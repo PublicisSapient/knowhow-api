@@ -18,10 +18,9 @@
 package com.publicissapient.kpidashboard.apis.ai.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface PromptDetailsRepository extends MongoRepository<PromptDetails, String> {
+import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 
-}
+@Repository
+public interface PromptDetailsRepository extends MongoRepository<PromptDetails, String> {}

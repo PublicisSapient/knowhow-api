@@ -7,5 +7,6 @@ import jakarta.validation.Valid;
 
 public interface HierarchyOptionService {
 
-	ServiceResponse addHierarchyOption(@Valid CreateHierarchyRequest hierarchyOption, String parentId);
+	ServiceResponse addHierarchyOption(
+			@Valid CreateHierarchyRequest hierarchyOption, String parentId);
 }

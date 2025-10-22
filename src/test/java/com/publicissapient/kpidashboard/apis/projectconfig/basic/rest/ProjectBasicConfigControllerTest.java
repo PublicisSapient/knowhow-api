@@ -55,32 +55,23 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectBas
 @RunWith(MockitoJUnitRunner.class)
 public class ProjectBasicConfigControllerTest {
 
-	@Mock
-	UserInfoService userInfoService;
+	@Mock UserInfoService userInfoService;
 	private MockMvc mockMvc;
-	@InjectMocks
-	private ProjectBasicConfigController projectConfigController;
-	@Mock
-	private ProjectBasicConfigService projectConfigService;
-	@Mock
-	private ContextAwarePolicyEnforcement policy;
-	@Mock
-	private ProjectBasicConfigRepository configRepo;
-	@Mock
-	private SecurityContext securityContext;
+	@InjectMocks private ProjectBasicConfigController projectConfigController;
+	@Mock private ProjectBasicConfigService projectConfigService;
+	@Mock private ContextAwarePolicyEnforcement policy;
+	@Mock private ProjectBasicConfigRepository configRepo;
+	@Mock private SecurityContext securityContext;
 
-	@Mock
-	private Authentication authentication;
+	@Mock private Authentication authentication;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
 	private ProjectBasicConfigDTO basicConfigDTO;
 
 	private ProjectBasicConfig projectBasicConfig;
 
-	@Mock
-	private ProjectAccessManager projectAccessManager;
+	@Mock private ProjectAccessManager projectAccessManager;
 
 	private ModelMapper modelMapper = new ModelMapper();
 
@@ -89,8 +80,11 @@ public class ProjectBasicConfigControllerTest {
 	public void before() {
 		mockMvc = MockMvcBuilders.standaloneSetup(projectConfigController).build();
 
-		projectBasicConfig = ProjectBasicConfigDataFactory
-				.newInstance("/json/basicConfig/project_basic_config_request.json").getProjectBasicConfigs().get(0);
+		projectBasicConfig =
+				ProjectBasicConfigDataFactory.newInstance(
+								"/json/basicConfig/project_basic_config_request.json")
+						.getProjectBasicConfigs()
+						.get(0);
 		basicConfigDTO = modelMapper.map(projectBasicConfig, ProjectBasicConfigDTO.class);
 
 		ProjectsForAccessRequest par = new ProjectsForAccessRequest();
@@ -107,18 +101,19 @@ public class ProjectBasicConfigControllerTest {
 	/**
 	 * method to test add functionality
 	 *
-	 * <p>
-	 * add basic config
+	 * <p>add basic config
 	 *
-	 * @throws Exception
-	 *           exception
+	 * @throws Exception exception
 	 */
 	@Test
 	public void testAddBasicConfig() throws Exception {
 		SecurityContextHolder.setContext(securityContext);
 		when(authenticationService.getLoggedInUser()).thenReturn("standarduser");
-		this.mockMvc.perform(MockMvcRequestBuilders.post("/basicconfigs")
-				.content(TestUtil.convertObjectToJsonBytes(basicConfigDTO)).contentType(MediaType.APPLICATION_JSON_VALUE))
+		this.mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/basicconfigs")
+								.content(TestUtil.convertObjectToJsonBytes(basicConfigDTO))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 }

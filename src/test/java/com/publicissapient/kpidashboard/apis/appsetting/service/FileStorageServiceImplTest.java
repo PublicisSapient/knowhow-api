@@ -40,58 +40,56 @@ import com.publicissapient.kpidashboard.apis.model.Logo;
 @RunWith(MockitoJUnitRunner.class)
 public class FileStorageServiceImplTest {
 
-	@Mock
-	private GridFsOperations gridOperations;
+	@Mock private GridFsOperations gridOperations;
 
-	@InjectMocks
-	private FileStorageServiceImpl fileStorageServiceImpl;
+	@InjectMocks private FileStorageServiceImpl fileStorageServiceImpl;
 
 	private MultipartFile multipartFile;
 
 	@Before
 	public void setup() {
 
-		multipartFile = new MultipartFile() {
+		multipartFile =
+				new MultipartFile() {
 
-			@Override
-			public void transferTo(File dest) throws IOException, IllegalStateException {
-			}
+					@Override
+					public void transferTo(File dest) throws IOException, IllegalStateException {}
 
-			@Override
-			public boolean isEmpty() {
-				return false;
-			}
+					@Override
+					public boolean isEmpty() {
+						return false;
+					}
 
-			@Override
-			public long getSize() {
-				return 0;
-			}
+					@Override
+					public long getSize() {
+						return 0;
+					}
 
-			@Override
-			public String getOriginalFilename() {
-				return "test_file_for_upload.xlsx";
-			}
+					@Override
+					public String getOriginalFilename() {
+						return "test_file_for_upload.xlsx";
+					}
 
-			@Override
-			public String getName() {
-				return null;
-			}
+					@Override
+					public String getName() {
+						return null;
+					}
 
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return null;
-			}
+					@Override
+					public InputStream getInputStream() throws IOException {
+						return null;
+					}
 
-			@Override
-			public String getContentType() {
-				return null;
-			}
+					@Override
+					public String getContentType() {
+						return null;
+					}
 
-			@Override
-			public byte[] getBytes() throws IOException {
-				return new byte[30];
-			}
-		};
+					@Override
+					public byte[] getBytes() throws IOException {
+						return new byte[30];
+					}
+				};
 	}
 
 	@Test

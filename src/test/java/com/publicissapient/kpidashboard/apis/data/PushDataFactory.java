@@ -43,8 +43,7 @@ public class PushDataFactory {
 	private List<PushBuildDeployDTO> pushBuildDeploy;
 	private ObjectMapper mapper;
 
-	private PushDataFactory() {
-	}
+	private PushDataFactory() {}
 
 	public static PushDataFactory newInstance(String filePath) {
 
@@ -64,9 +63,10 @@ public class PushDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ACCOUNT_HIERARCHIES : filePath;
 
-			pushBuildDeploy = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<PushBuildDeployDTO>>() {
-					});
+			pushBuildDeploy =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<PushBuildDeployDTO>>() {});
 		} catch (IOException e) {
 			log.error("Error in json file = " + filePath, e);
 		}

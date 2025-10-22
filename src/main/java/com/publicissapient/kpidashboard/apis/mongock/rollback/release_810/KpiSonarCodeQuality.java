@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shi6
  */
-@ChangeUnit(id = "r_kpi_sonar_code_quality", order = "08104", author = "shi6", systemVersion = "8.1.0")
+@ChangeUnit(
+		id = "r_kpi_sonar_code_quality",
+		order = "08104",
+		author = "shi6",
+		systemVersion = "8.1.0")
 public class KpiSonarCodeQuality {
 
 	private final MongoTemplate mongoTemplate;
@@ -42,7 +46,9 @@ public class KpiSonarCodeQuality {
 		mongoTemplate.getCollection("kpi_master").findOneAndDelete(new Document("kpiId", "kpi168"));
 
 		// Delete "Sonar Code Quality Kpi" from kpi_category_mapping collection
-		mongoTemplate.getCollection("kpi_category_mapping").findOneAndDelete(new Document("kpiId", "kpi168"));
+		mongoTemplate
+				.getCollection("kpi_category_mapping")
+				.findOneAndDelete(new Document("kpiId", "kpi168"));
 		return true;
 	}
 

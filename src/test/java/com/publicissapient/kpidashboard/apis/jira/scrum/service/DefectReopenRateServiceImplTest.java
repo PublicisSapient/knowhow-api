@@ -66,20 +66,14 @@ public class DefectReopenRateServiceImplTest {
 
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@InjectMocks
-	DefectReopenRateServiceImpl defectReopenRateService;
+	@InjectMocks DefectReopenRateServiceImpl defectReopenRateService;
 	List<JiraIssue> totalJiraIssueList = new ArrayList<>();
 	List<JiraIssueCustomHistory> totalJiraIssueHistoryList = new ArrayList<>();
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private JiraBacklogServiceR jiraService;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraBacklogServiceR jiraService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 
@@ -90,24 +84,26 @@ public class DefectReopenRateServiceImplTest {
 		projectConfig.setProjectName("Scrum Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi137");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
-		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory
-				.newInstance("/json/default/iteration/jira_issues.json");
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory
-				.newInstance("/json/default/iteration/jira_issue_custom_history.json");
+		JiraIssueDataFactory jiraIssueDataFactory =
+				JiraIssueDataFactory.newInstance("/json/default/iteration/jira_issues.json");
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance(
+						"/json/default/iteration/jira_issue_custom_history.json");
 		totalJiraIssueList = jiraIssueDataFactory.getJiraIssues();
 		totalJiraIssueHistoryList = jiraIssueHistoryDataFactory.getUniqueJiraIssueCustomHistory();
 	}
@@ -115,22 +111,31 @@ public class DefectReopenRateServiceImplTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		Mockito.doReturn(totalJiraIssueList).when(jiraIssueRepository).findIssuesByFilterAndProjectMapFilter(anyMap(),
-				anyMap());
-		Mockito.doReturn(totalJiraIssueHistoryList).when(jiraIssueCustomHistoryRepository)
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		Mockito.doReturn(totalJiraIssueList)
+				.when(jiraIssueRepository)
+				.findIssuesByFilterAndProjectMapFilter(anyMap(), anyMap());
+		Mockito.doReturn(totalJiraIssueHistoryList)
+				.when(jiraIssueCustomHistoryRepository)
 				.findByFilterAndFromStatusMap(anyMap(), anyMap());
 		try {
 
-			KpiElement kpiElement = defectReopenRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					defectReopenRateService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertNotNull(kpiElement);
 			assertNotNull(kpiElement.getTrendValueList());
 			Object value = ((DataCount) kpiElement.getTrendValueList()).getValue();
 			List<IterationKpiValue> iterationKpiValues = (List<IterationKpiValue>) value;
-			IterationKpiValue iterationKpiValue = iterationKpiValues.stream()
-					.filter(kpiValue -> "Overall".equals(kpiValue.getFilter1())).findFirst().get();
+			IterationKpiValue iterationKpiValue =
+					iterationKpiValues.stream()
+							.filter(kpiValue -> "Overall".equals(kpiValue.getFilter1()))
+							.findFirst()
+							.get();
 			assertNotNull(iterationKpiValue);
 			assertEquals(Optional.of(3.0d).get(), iterationKpiValue.getData().get(0).getValue());
 		} catch (ApplicationException applicationException) {

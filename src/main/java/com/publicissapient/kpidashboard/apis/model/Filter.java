@@ -45,7 +45,8 @@ public class Filter {
 		this.options = options;
 	}
 
-	public Filter(String filterName, List<String> options, String filterType, Boolean isShown, Integer order) {
+	public Filter(
+			String filterName, List<String> options, String filterType, Boolean isShown, Integer order) {
 		this.filterName = filterName;
 		this.options = options;
 		this.filterType = filterType;

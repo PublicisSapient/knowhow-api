@@ -54,19 +54,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ConnectionController {
 
-	@Autowired
-	private ConnectionService connectionService;
+	@Autowired private ConnectionService connectionService;
 
 	/**
 	 * Fetch all connection data param type.
 	 *
 	 * @return the connection
-	 * @param type
-	 *          type
+	 * @param type type
 	 */
 	@GetMapping
 	@PreAuthorize("hasPermission(#type,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> getAllConnection(@RequestParam(name = "type", required = false) String type) {
+	public ResponseEntity<ServiceResponse> getAllConnection(
+			@RequestParam(name = "type", required = false) String type) {
 		if (StringUtils.isEmpty(type)) {
 			log.info("Fetching all connection");
 			return ResponseEntity.status(HttpStatus.OK).body(connectionService.getAllConnection());
@@ -80,13 +79,13 @@ public class ConnectionController {
 	/**
 	 * save/add Connection details
 	 *
-	 * @param connectionDTO
-	 *          request object that is created in the database.
+	 * @param connectionDTO request object that is created in the database.
 	 * @return responseEntity with data,message and status
 	 */
 	@PostMapping
 	@PreAuthorize("hasPermission(#connectionDTO,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> saveConnectionDetails(@RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> saveConnectionDetails(
+			@RequestBody ConnectionDTO connectionDTO) {
 
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection conn = modelMapper.map(connectionDTO, Connection.class);
@@ -98,14 +97,13 @@ public class ConnectionController {
 	/**
 	 * Modify/Update a connection by id.
 	 *
-	 * @param connectionDTO
-	 *          request object that replaces the connection data present at id.
+	 * @param connectionDTO request object that replaces the connection data present at id.
 	 * @return responseEntity with data,message and status
 	 */
 	@PutMapping("/{id}")
 	@PreAuthorize("hasPermission(#id,'CONNECTION_ACCESS')")
-	public ResponseEntity<ServiceResponse> modifyConnectionById(@PathVariable String id,
-			@Valid @RequestBody ConnectionDTO connectionDTO) {
+	public ResponseEntity<ServiceResponse> modifyConnectionById(
+			@PathVariable String id, @Valid @RequestBody ConnectionDTO connectionDTO) {
 		log.info("conn@{} updated", connectionDTO.getId());
 		final ModelMapper modelMapper = new ModelMapper();
 		final Connection conn = modelMapper.map(connectionDTO, Connection.class);
@@ -115,8 +113,7 @@ public class ConnectionController {
 	/**
 	 * delete a connection by id.
 	 *
-	 * @param id
-	 *          deleted the connection data present at id.
+	 * @param id deleted the connection data present at id.
 	 * @return responseEntity with data,message and status
 	 */
 	@DeleteMapping("/{id}")

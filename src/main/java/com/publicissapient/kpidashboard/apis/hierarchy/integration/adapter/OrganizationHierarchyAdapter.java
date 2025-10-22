@@ -28,6 +28,6 @@ import com.publicissapient.kpidashboard.common.model.application.OrganizationHie
  *	author@aksshriv1
  */
 public interface OrganizationHierarchyAdapter {
-	Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails,
-			List<OrganizationHierarchy> allDbNodes);
+	Set<OrganizationHierarchy> convertToOrganizationHierarchy(
+			HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes);
 }

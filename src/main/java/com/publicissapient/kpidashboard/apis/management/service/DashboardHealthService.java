@@ -24,31 +24,27 @@ public interface DashboardHealthService {
 	/**
 	 * Generates health overview for all dashboard types.
 	 *
-	 * @return {@link HealthResponseDto} containing aggregated health status and
-	 *         metrics for all dashboard types
+	 * @return {@link HealthResponseDto} containing aggregated health status and metrics for all
+	 *     dashboard types
 	 */
 	HealthResponseDto getDashboardHealth();
 
 	/**
 	 * Generates health details for a specific dashboard type.
 	 *
-	 * @param boardType
-	 *            the dashboard type (e.g., scrum, kanban)
-	 * @return {@link HealthResponseDto} containing health status and metrics for
-	 *         the specified dashboard type
+	 * @param boardType the dashboard type (e.g., scrum, kanban)
+	 * @return {@link HealthResponseDto} containing health status and metrics for the specified
+	 *     dashboard type
 	 */
 	HealthResponseDto getBoardTypeHealth(String boardType);
 
 	/**
-	 * Generates detailed health information for a specific dashboard within a board
-	 * type.
+	 * Generates detailed health information for a specific dashboard within a board type.
 	 *
-	 * @param boardType
-	 *            the dashboard type (e.g., scrum, kanban)
-	 * @param dashboard
-	 *            the dashboard name (e.g., speed, quality)
-	 * @return {@link HealthResponseDto} containing detailed health status and
-	 *         metrics for the specified dashboard
+	 * @param boardType the dashboard type (e.g., scrum, kanban)
+	 * @param dashboard the dashboard name (e.g., speed, quality)
+	 * @return {@link HealthResponseDto} containing detailed health status and metrics for the
+	 *     specified dashboard
 	 */
 	HealthResponseDto getDashboardDetailHealth(String boardType, String dashboard);
 }

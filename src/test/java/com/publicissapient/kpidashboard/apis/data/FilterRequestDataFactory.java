@@ -45,7 +45,8 @@ public class FilterRequestDataFactory {
 
 		FilterRequestDataFactory filterRequestDataFactory = new FilterRequestDataFactory();
 		filterRequestDataFactory.createObjectMapper();
-		filterRequestDataFactory.init(StringUtils.isEmpty(filePath) ? FILE_PATH_FILTER_REQUEST : filePath);
+		filterRequestDataFactory.init(
+				StringUtils.isEmpty(filePath) ? FILE_PATH_FILTER_REQUEST : filePath);
 		return filterRequestDataFactory;
 	}
 
@@ -57,8 +58,9 @@ public class FilterRequestDataFactory {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_FILTER_REQUEST : filePath;
 
-			accountFilterRequest = mapper.readValue(TypeReference.class.getResourceAsStream(filePath),
-					AccountFilterRequest.class);
+			accountFilterRequest =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(filePath), AccountFilterRequest.class);
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

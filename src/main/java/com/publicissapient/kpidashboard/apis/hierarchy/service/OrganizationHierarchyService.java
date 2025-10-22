@@ -36,5 +36,5 @@ public interface OrganizationHierarchyService {
 
 	ServiceResponse updateName(String name, String nodeId);
 
-	void saveAll(List<OrganizationHierarchy> organizationHierarchyList );
+	void saveAll(List<OrganizationHierarchy> organizationHierarchyList);
 }

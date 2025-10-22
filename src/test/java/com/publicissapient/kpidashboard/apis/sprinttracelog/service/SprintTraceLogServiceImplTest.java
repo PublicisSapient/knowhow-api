@@ -37,11 +37,9 @@ import com.publicissapient.kpidashboard.common.repository.application.SprintTrac
 
 @RunWith(MockitoJUnitRunner.class)
 public class SprintTraceLogServiceImplTest {
-	@InjectMocks
-	private SprintTraceLogServiceImpl activeItrFetchService;
+	@InjectMocks private SprintTraceLogServiceImpl activeItrFetchService;
 
-	@Mock
-	private SprintTraceLogRepository sprintTraceLogRepository;
+	@Mock private SprintTraceLogRepository sprintTraceLogRepository;
 
 	private SprintTraceLog fetchRecord;
 	private String validSprintId = "Sprint123";

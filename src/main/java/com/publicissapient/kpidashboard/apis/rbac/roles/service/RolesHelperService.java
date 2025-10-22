@@ -29,8 +29,8 @@ public interface RolesHelperService {
 	/**
 	 * Gets all roles.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAllRoles();
 
@@ -38,18 +38,17 @@ public interface RolesHelperService {
 	 * Gets all roles for this Id.
 	 *
 	 * @param id
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getRoleById(String id);
 
 	/**
 	 * Modifies a role. Finds role by @param id and replaces it with @param role
 	 *
-	 * @param role,
-	 *          id
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param role, id
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse modifyRoleById(String id, RoleData role);
 
@@ -57,8 +56,8 @@ public interface RolesHelperService {
 	 * Creates a role.
 	 *
 	 * @param role
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse createRole(RoleData role);
 }

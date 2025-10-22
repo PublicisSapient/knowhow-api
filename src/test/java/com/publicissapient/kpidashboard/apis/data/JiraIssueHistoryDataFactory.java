@@ -41,12 +41,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class JiraIssueHistoryDataFactory {
-	private static final String FILE_PATH_JIRA_ISSUES = "/json/default/jira_issue_custom_history.json";
+	private static final String FILE_PATH_JIRA_ISSUES =
+			"/json/default/jira_issue_custom_history.json";
 	private List<JiraIssueCustomHistory> jiraHistoryIssues = new ArrayList<>();
 	private ObjectMapper mapper = null;
 
-	private JiraIssueHistoryDataFactory() {
-	}
+	private JiraIssueHistoryDataFactory() {}
 
 	public static JiraIssueHistoryDataFactory newInstance(String filePath) {
 
@@ -66,9 +66,10 @@ public class JiraIssueHistoryDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_JIRA_ISSUES : filePath;
 
-			jiraHistoryIssues = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<JiraIssueCustomHistory>>() {
-					});
+			jiraHistoryIssues =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<JiraIssueCustomHistory>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}
@@ -92,24 +93,29 @@ public class JiraIssueHistoryDataFactory {
 	}
 
 	public List<JiraIssueCustomHistory> findIssueByTypeName(String typeName) {
-		return jiraHistoryIssues.stream().filter(jiraIssue -> jiraIssue.getStoryType().equals(typeName))
+		return jiraHistoryIssues.stream()
+				.filter(jiraIssue -> jiraIssue.getStoryType().equals(typeName))
 				.collect(Collectors.toList());
 	}
 
 	public List<JiraIssueCustomHistory> findIssueInTypeNames(List<String> typeName) {
-		return jiraHistoryIssues.stream().filter(jiraIssue -> typeName.contains(jiraIssue.getStoryType()))
+		return jiraHistoryIssues.stream()
+				.filter(jiraIssue -> typeName.contains(jiraIssue.getStoryType()))
 				.collect(Collectors.toList());
 	}
 
 	public JiraIssueCustomHistory findIssueById(String id) {
-		return jiraHistoryIssues.stream().filter(jiraIssue -> jiraIssue.getId().toHexString().equals(id)).findFirst()
+		return jiraHistoryIssues.stream()
+				.filter(jiraIssue -> jiraIssue.getId().toHexString().equals(id))
+				.findFirst()
 				.orElse(null);
 	}
 
 	// added for find unique jira issue custom history.
 	public List<JiraIssueCustomHistory> getUniqueJiraIssueCustomHistory() {
 		Set<String> uniqueStoryIds = new HashSet<>();
-		return jiraHistoryIssues.stream().filter(jiraHistoryIssue -> uniqueStoryIds.add(jiraHistoryIssue.getStoryID()))
+		return jiraHistoryIssues.stream()
+				.filter(jiraHistoryIssue -> uniqueStoryIds.add(jiraHistoryIssue.getStoryID()))
 				.collect(Collectors.toList());
 	}
 }

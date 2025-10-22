@@ -62,42 +62,30 @@ import com.publicissapient.kpidashboard.common.repository.userboardconfig.UserBo
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigHelperServiceTest {
 
-	@Mock
-	CacheService cacheService;
+	@Mock CacheService cacheService;
 	List<ProjectBasicConfig> projectList = null;
 	List<FieldMapping> fieldMappingList = null;
 	List<OrganizationHierarchy> organizationHierarchyList = null;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
-	@Mock
-	private ProjectToolConfigRepositoryCustom toolConfigRepository;
-	@Mock
-	UserBoardConfigRepository userBoardConfigRepository;
-	@Mock
-	FieldMappingStructureRepository fieldMappingStructureRepository;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
+	@Mock private ProjectToolConfigRepositoryCustom toolConfigRepository;
+	@Mock UserBoardConfigRepository userBoardConfigRepository;
+	@Mock FieldMappingStructureRepository fieldMappingStructureRepository;
 
-	@Mock
-	ProjectToolConfigRepository projectToolConfigRepository;
-	@Mock
-	OrganizationHierarchyRepository organizationHierarchyRepository;
-	@Mock
-	ProjectBasicConfigService projectBasicConfigService;
-	@Mock
-	KpiMasterRepository kpiMasterRepository;
-	@InjectMocks
-	private ConfigHelperService configHelperService;
-	@Mock
-	private FiltersRepository filtersRepository;
-	@Mock
-	private HierarchyLevelRepository hierarchyLevelRepository;
+	@Mock ProjectToolConfigRepository projectToolConfigRepository;
+	@Mock OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Mock ProjectBasicConfigService projectBasicConfigService;
+	@Mock KpiMasterRepository kpiMasterRepository;
+	@InjectMocks private ConfigHelperService configHelperService;
+	@Mock private FiltersRepository filtersRepository;
+	@Mock private HierarchyLevelRepository hierarchyLevelRepository;
 
 	@Before
 	public void setUp() {
 		projectList = ProjectBasicConfigDataFactory.newInstance("").getProjectBasicConfigs();
 		fieldMappingList = FieldMappingDataFactory.newInstance("").getFieldMappings();
-		organizationHierarchyList = OrganizationHierarchyDataFactory.newInstance("").getOrganizationHierarchies();
+		organizationHierarchyList =
+				OrganizationHierarchyDataFactory.newInstance("").getOrganizationHierarchies();
 	}
 
 	@Test
@@ -106,14 +94,21 @@ public class ConfigHelperServiceTest {
 		Mockito.when(projectConfigRepository.findAll()).thenReturn(projectList);
 		Mockito.when(fieldMappingRepository.findAll()).thenReturn(fieldMappingList);
 		configHelperService.loadConfigData();
-		Assertions.assertTrue(((Map<String, ProjectBasicConfig>) configHelperService
-				.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP)).size() > 0);
 		Assertions.assertTrue(
-				((Map<ObjectId, FieldMapping>) configHelperService.getConfigMapData(CommonConstant.CACHE_FIELD_MAPPING_MAP))
-						.size() > 0);
+				((Map<String, ProjectBasicConfig>)
+										configHelperService.getConfigMapData(CommonConstant.CACHE_PROJECT_CONFIG_MAP))
+								.size()
+						> 0);
+		Assertions.assertTrue(
+				((Map<ObjectId, FieldMapping>)
+										configHelperService.getConfigMapData(CommonConstant.CACHE_FIELD_MAPPING_MAP))
+								.size()
+						> 0);
 		Assertions.assertFalse(
-				((Map<ObjectId, FieldMapping>) configHelperService.getConfigMapData(CommonConstant.CACHE_BOARD_META_DATA_MAP))
-						.size() > 0);
+				((Map<ObjectId, FieldMapping>)
+										configHelperService.getConfigMapData(CommonConstant.CACHE_BOARD_META_DATA_MAP))
+								.size()
+						> 0);
 	}
 
 	@Test
@@ -128,7 +123,10 @@ public class ConfigHelperServiceTest {
 		Mockito.when(toolConfigRepository.getToolList()).thenReturn(toolList);
 		configHelperService.loadToolConfig();
 		Assertions.assertTrue(
-				((Map<ObjectId, Tool>) configHelperService.getConfigMapData(CommonConstant.CACHE_TOOL_CONFIG_MAP)).size() > 0);
+				((Map<ObjectId, Tool>)
+										configHelperService.getConfigMapData(CommonConstant.CACHE_TOOL_CONFIG_MAP))
+								.size()
+						> 0);
 	}
 
 	@Test
@@ -139,8 +137,11 @@ public class ConfigHelperServiceTest {
 		userBoardConfig.setUsername("PSK");
 		userBoardConfigs.add(userBoardConfig);
 		Mockito.when(userBoardConfigRepository.findAll()).thenReturn(userBoardConfigs);
-		String username = configHelperService.loadUserBoardConfig().values().stream().findFirst()
-				.orElse(new UserBoardConfig()).getUsername();
+		String username =
+				configHelperService.loadUserBoardConfig().values().stream()
+						.findFirst()
+						.orElse(new UserBoardConfig())
+						.getUsername();
 		Assertions.assertEquals("PSK", username);
 	}
 
@@ -172,7 +173,8 @@ public class ConfigHelperServiceTest {
 		kpiMaster.setAggregationCircleCriteria("criteriaX");
 		kpiMasters.add(kpiMaster);
 		Mockito.when(kpiMasterRepository.findAll()).thenReturn(kpiMasters);
-		Assertions.assertEquals("criteriaX",
+		Assertions.assertEquals(
+				"criteriaX",
 				configHelperService.calculateCriteriaForCircleKPI().get("5fd9ab0995fe13000165d0ba"));
 	}
 
@@ -184,7 +186,8 @@ public class ConfigHelperServiceTest {
 		kpiMaster.setAggregationCriteria("criteriaX");
 		kpiMasters.add(kpiMaster);
 		Mockito.when(kpiMasterRepository.findAll()).thenReturn(kpiMasters);
-		Assertions.assertEquals("criteriaX", configHelperService.calculateCriteria().get("5fd9ab0995fe13000165d0ba"));
+		Assertions.assertEquals(
+				"criteriaX", configHelperService.calculateCriteria().get("5fd9ab0995fe13000165d0ba"));
 	}
 
 	@Test
@@ -197,7 +200,8 @@ public class ConfigHelperServiceTest {
 		kpiMaster.setMaturityRange(maturityRange);
 		kpiMasters.add(kpiMaster);
 		Mockito.when(kpiMasterRepository.findAll()).thenReturn(kpiMasters);
-		Assertions.assertEquals("criteriaX",
+		Assertions.assertEquals(
+				"criteriaX",
 				configHelperService.calculateMaturity().get("5fd9ab0995fe13000165d0ba").get(0));
 	}
 

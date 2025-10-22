@@ -83,32 +83,19 @@ public class IssueCountServiceImplTest {
 	public static final String PROJECT_WISE_STORY_CATEGORIES = "projectWiseStoryCategories";
 	public static final String PROJECT_WISE_TOTAL_CATEGORIES = "projectWiseTotalCategories";
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	IssueCountServiceImpl issueCountServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private KpiDataProvider kpiDataProvider;
-	@Mock
-	private JiraServiceR jiraKPIService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks IssueCountServiceImpl issueCountServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock SprintRepository sprintRepository;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataProvider kpiDataProvider;
+	@Mock private JiraServiceR jiraKPIService;
 
 	private Map<String, Object> filterLevelMap;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
@@ -135,13 +122,14 @@ public class IssueCountServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -152,8 +140,8 @@ public class IssueCountServiceImplTest {
 
 		totalIssueList = jiraIssueDataFactory.getJiraIssues();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -167,8 +155,7 @@ public class IssueCountServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testCalculateKPIMetrics() {
@@ -179,8 +166,9 @@ public class IssueCountServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -191,37 +179,48 @@ public class IssueCountServiceImplTest {
 		result.put(PROJECT_WISE_STORY_CATEGORIES, new HashMap<>());
 		result.put(PROJECT_WISE_TOTAL_CATEGORIES, new HashMap<>());
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchIssueCountData(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+		when(kpiDataCacheService.fetchIssueCountData(
+						Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(result);
 
-		Map<String, Object> storyList = issueCountServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
+		Map<String, Object> storyList =
+				issueCountServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 		assertThat("Total Stories : ", storyList.size(), equalTo(4));
 	}
 
 	@Test
 	public void testGetStoryList() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> projectWiseJiraIdentification = new HashMap<>();
 		Map<String, List<String>> projectWiseStoryCategories = new HashMap<>();
-		treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			List<String> jiraStoryIdentification = new ArrayList<>();
-			List<String> jiraStoryCategory = new ArrayList<>();
-			FieldMapping fieldMapping = fieldMappingMap.get(basicProjectConfigId);
-			if (Optional.ofNullable(fieldMapping.getJiraStoryIdentificationKpi40()).isPresent()) {
-				jiraStoryIdentification = fieldMapping.getJiraStoryIdentificationKpi40().stream().map(String::toLowerCase)
-						.collect(Collectors.toList());
-			}
-			if (Optional.ofNullable(fieldMapping.getJiraStoryCategoryKpi40()).isPresent()) {
-				jiraStoryCategory = fieldMapping.getJiraStoryCategoryKpi40().stream().map(String::toLowerCase)
-						.collect(Collectors.toList());
-			}
-			projectWiseJiraIdentification.put(basicProjectConfigId.toString(), jiraStoryIdentification);
-			projectWiseStoryCategories.put(basicProjectConfigId.toString(), jiraStoryCategory);
-		});
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.get("sprint")
+				.forEach(
+						leaf -> {
+							ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+							List<String> jiraStoryIdentification = new ArrayList<>();
+							List<String> jiraStoryCategory = new ArrayList<>();
+							FieldMapping fieldMapping = fieldMappingMap.get(basicProjectConfigId);
+							if (Optional.ofNullable(fieldMapping.getJiraStoryIdentificationKpi40()).isPresent()) {
+								jiraStoryIdentification =
+										fieldMapping.getJiraStoryIdentificationKpi40().stream()
+												.map(String::toLowerCase)
+												.collect(Collectors.toList());
+							}
+							if (Optional.ofNullable(fieldMapping.getJiraStoryCategoryKpi40()).isPresent()) {
+								jiraStoryCategory =
+										fieldMapping.getJiraStoryCategoryKpi40().stream()
+												.map(String::toLowerCase)
+												.collect(Collectors.toList());
+							}
+							projectWiseJiraIdentification.put(
+									basicProjectConfigId.toString(), jiraStoryIdentification);
+							projectWiseStoryCategories.put(basicProjectConfigId.toString(), jiraStoryCategory);
+						});
 
 		Map<String, Object> result = new HashMap<>();
 		result.put(SPRINTSDETAILS, sprintDetailsList);
@@ -230,10 +229,12 @@ public class IssueCountServiceImplTest {
 		result.put(PROJECT_WISE_TOTAL_CATEGORIES, projectWiseJiraIdentification);
 
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(false);
-		when(kpiDataProvider.fetchIssueCountDataFromDB(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(result);
+		when(kpiDataProvider.fetchIssueCountDataFromDB(Mockito.any(), Mockito.any(), Mockito.any()))
+				.thenReturn(result);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(issueCountServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -242,22 +243,25 @@ public class IssueCountServiceImplTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 
 		try {
-			KpiElement kpiElement = issueCountServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					issueCountServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String status = dc.getFilter();
-				switch (status) {
-					case "Story  Count" :
-						assertThat("Story  Count :", dc.getValue().size(), equalTo(1));
-						break;
-					case "Total  Count" :
-						assertThat("Total  Count :", dc.getValue().size(), equalTo(1));
-						break;
-					default :
-						break;
-				}
-			});
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String status = dc.getFilter();
+								switch (status) {
+									case "Story  Count":
+										assertThat("Story  Count :", dc.getValue().size(), equalTo(1));
+										break;
+									case "Total  Count":
+										assertThat("Total  Count :", dc.getValue().size(), equalTo(1));
+										break;
+									default:
+										break;
+								}
+							});
 
 		} catch (ApplicationException enfe) {
 

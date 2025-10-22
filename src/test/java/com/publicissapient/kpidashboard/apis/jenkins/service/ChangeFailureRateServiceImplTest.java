@@ -73,18 +73,12 @@ public class ChangeFailureRateServiceImplTest {
 
 	private static Tool tool1;
 	private static Tool tool2;
-	@Mock
-	BuildRepository buildRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@InjectMocks
-	ChangeFailureRateServiceImpl changeFailureRateService;
+	@Mock BuildRepository buildRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock CustomApiConfig customApiConfig;
+	@InjectMocks ChangeFailureRateServiceImpl changeFailureRateService;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
@@ -98,8 +92,7 @@ public class ChangeFailureRateServiceImplTest {
 	private List<DataCount> trendValues = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new LinkedHashMap<>();
 	Map<String, Object> durationFilter = new LinkedHashMap<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
@@ -114,11 +107,12 @@ public class ChangeFailureRateServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiElement = kpiRequest.getKpiList().get(0);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
-		BuildDataFactory buildDataFactory = BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details.json");
+		BuildDataFactory buildDataFactory =
+				BuildDataFactory.newInstance("/json/non-JiraProcessors/build_details.json");
 		buildList = buildDataFactory.getbuildDataList();
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -126,13 +120,15 @@ public class ChangeFailureRateServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -146,7 +142,8 @@ public class ChangeFailureRateServiceImplTest {
 		trendValueMap.put("API_Build -> KnowHow", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -160,23 +157,29 @@ public class ChangeFailureRateServiceImplTest {
 		durationFilter.put(Constant.DURATION, CommonConstant.WEEK);
 		durationFilter.put(Constant.COUNT, 14);
 		kpiElement.setFilterDuration(durationFilter);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(buildRepository.findBuildList(any(), any(), any(), any())).thenReturn(buildList);
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		String kpiRequestTrackerId = "Excel-JENKINS-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(buildRepository.findBuildList(any(), any(), any(), any())).thenReturn(buildList);
 
 		try {
 
-			KpiElement kpiElement = changeFailureRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("CHANGE-FAILURE-RATE :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					changeFailureRateService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"CHANGE-FAILURE-RATE :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception e) {
 		}
 	}
@@ -186,23 +189,29 @@ public class ChangeFailureRateServiceImplTest {
 		durationFilter.put(Constant.DURATION, CommonConstant.MONTH);
 		durationFilter.put(Constant.COUNT, 20);
 		kpiElement.setFilterDuration(durationFilter);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(buildRepository.findBuildList(any(), any(), any(), any())).thenReturn(buildList);
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		String kpiRequestTrackerId = "Excel-JENKINS-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(buildRepository.findBuildList(any(), any(), any(), any())).thenReturn(buildList);
 
 		try {
 
-			KpiElement kpiElement = changeFailureRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("CHANGE-FAILURE-RATE :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(3));
+			KpiElement kpiElement =
+					changeFailureRateService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"CHANGE-FAILURE-RATE :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(3));
 		} catch (Exception e) {
 		}
 	}
@@ -227,12 +236,17 @@ public class ChangeFailureRateServiceImplTest {
 		List<DataCount> dataCountList = new ArrayList<>();
 		DataCount dataCount = new DataCount();
 		dataCountList.add(dataCount);
-		Method trendValueMethod = ChangeFailureRateServiceImpl.class.getDeclaredMethod("trendValue", List.class,
-				String.class, Map.class, String.class, List.class);
+		Method trendValueMethod =
+				ChangeFailureRateServiceImpl.class.getDeclaredMethod(
+						"trendValue", List.class, String.class, Map.class, String.class, List.class);
 		trendValueMethod.setAccessible(true);
 		trendValueMethod.invoke(null, buildList, trendLineName, trendValueMap, jobName, dataCountList);
 
-		assertTrue(trendValueMap.containsKey("Pipeline1" + CommonUtils.getStringWithDelimiters(trendLineName)));
-		assertEquals(dataCountList, trendValueMap.get("Pipeline1" + CommonUtils.getStringWithDelimiters(trendLineName)));
+		assertTrue(
+				trendValueMap.containsKey(
+						"Pipeline1" + CommonUtils.getStringWithDelimiters(trendLineName)));
+		assertEquals(
+				dataCountList,
+				trendValueMap.get("Pipeline1" + CommonUtils.getStringWithDelimiters(trendLineName)));
 	}
 }

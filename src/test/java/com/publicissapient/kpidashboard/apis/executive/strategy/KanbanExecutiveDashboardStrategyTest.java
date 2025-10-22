@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.executive.dto.ExecutiveDashboardResponseDTO;
 import com.publicissapient.kpidashboard.apis.executive.service.KanbanKpiMaturity;
 import com.publicissapient.kpidashboard.apis.executive.service.ProjectEfficiencyService;
@@ -58,35 +58,27 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 @RunWith(MockitoJUnitRunner.class)
 public class KanbanExecutiveDashboardStrategyTest {
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private ProjectEfficiencyService projectEfficiencyService;
+	@Mock private ProjectEfficiencyService projectEfficiencyService;
 
-	@Mock
-	private UserBoardConfigService userBoardConfigService;
+	@Mock private UserBoardConfigService userBoardConfigService;
 
-	@Mock
-	private KanbanKpiMaturity kanbanKpiMaturity;
+	@Mock private KanbanKpiMaturity kanbanKpiMaturity;
 
-	@Mock
-	private KpiCategoryRepository kpiCategoryRepository;
+	@Mock private KpiCategoryRepository kpiCategoryRepository;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private Executor kanbanExecutiveTaskExecutor;
+	@Mock private Executor kanbanExecutiveTaskExecutor;
 
-	@InjectMocks
-	private KanbanExecutiveDashboardStrategy kanbanStrategy;
+	@InjectMocks private KanbanExecutiveDashboardStrategy kanbanStrategy;
 
 	@Before
 	public void setup() {
 
-		ReflectionTestUtils.setField(kanbanStrategy, "kanbanExecutiveTaskExecutor",
-				Executors.newSingleThreadExecutor());
+		ReflectionTestUtils.setField(
+				kanbanStrategy, "kanbanExecutiveTaskExecutor", Executors.newSingleThreadExecutor());
 		when(userBoardConfigService.getBoardConfig(any(), any())).thenReturn(createUserBoard());
 	}
 
@@ -107,7 +99,7 @@ public class KanbanExecutiveDashboardStrategyTest {
 		request.setIds(Collections.emptyList().toArray(new String[0]));
 		request.setSelectedMap(createSelectedMap());
 
-		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request));
 	}
 
 	@Test
@@ -128,19 +120,19 @@ public class KanbanExecutiveDashboardStrategyTest {
 	public void testFetchDashboardData_ExceptionHandling() {
 		// Setup test data
 		KpiRequest request = createTestKpiRequest();
-		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request));
 	}
 
 	@Test
 	public void testFetchDashboardData_EmptyBoards() {
 		KpiRequest request = createTestKpiRequest();
-		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request));
 	}
 
 	@Test
 	public void testFetchDashboardData_NullKpiElements() {
 		KpiRequest request = createTestKpiRequest();
-		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request) );
+		assertThrows(ExecutiveDataException.class, () -> kanbanStrategy.fetchDashboardData(request));
 	}
 
 	// Helper methods
@@ -158,7 +150,6 @@ public class KanbanExecutiveDashboardStrategyTest {
 		List<OrganizationHierarchy> hierarchyList = new ArrayList<>();
 		hierarchyList.add(createOrgHierarchy("5c0f32fe00a9b83a7cbc4f0c", "Test Project"));
 		when(configHelperService.loadAllOrganizationHierarchy()).thenReturn(hierarchyList);
-
 	}
 
 	private OrganizationHierarchy createOrgHierarchy(String id, String name) {
@@ -218,6 +209,5 @@ public class KanbanExecutiveDashboardStrategyTest {
 		config.setKanban(List.of(board1));
 
 		return config;
-
 	}
 }

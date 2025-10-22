@@ -34,8 +34,7 @@ public class PushDataValidation {
 	private static final String COMMA = " ,";
 	private static final String SHOULD_BE_AMONG = " should be among ";
 
-	private PushDataValidation() {
-	}
+	private PushDataValidation() {}
 
 	/**
 	 * check the Blank
@@ -46,7 +45,8 @@ public class PushDataValidation {
 	 */
 	public static void checkBlank(String parameter, String literal, Map<String, String> errors) {
 		if (StringUtils.isBlank(literal)) {
-			errors.computeIfPresent(parameter, (param, error) -> error.concat(COMMA + parameter + " is Blank"));
+			errors.computeIfPresent(
+					parameter, (param, error) -> error.concat(COMMA + parameter + " is Blank"));
 			errors.putIfAbsent(parameter, parameter + " is Blank");
 		}
 	}
@@ -60,7 +60,8 @@ public class PushDataValidation {
 	 */
 	public static void checkNumeric(String parameter, String number, Map<String, String> errors) {
 		if (!StringUtils.isNumeric(number)) {
-			errors.computeIfPresent(parameter, (param, error) -> error.concat(COMMA + parameter + " should be in digits"));
+			errors.computeIfPresent(
+					parameter, (param, error) -> error.concat(COMMA + parameter + " should be in digits"));
 			errors.putIfAbsent(parameter, parameter + " should be in digits");
 		}
 	}
@@ -73,11 +74,15 @@ public class PushDataValidation {
 	 * @param errors
 	 */
 	public static void checkBuildStatus(String parameter, String status, Map<String, String> errors) {
-		Optional<BuildStatus> buildStatusOptional = Arrays.stream(BuildStatus.values())
-				.filter(buildStatus -> buildStatus.toString().equalsIgnoreCase(status)).findFirst();
+		Optional<BuildStatus> buildStatusOptional =
+				Arrays.stream(BuildStatus.values())
+						.filter(buildStatus -> buildStatus.toString().equalsIgnoreCase(status))
+						.findFirst();
 		if (!buildStatusOptional.isPresent()) {
-			errors.computeIfPresent(parameter,
-					(param, error) -> error.concat(COMMA + parameter + SHOULD_BE_AMONG + getAllBuildValues()));
+			errors.computeIfPresent(
+					parameter,
+					(param, error) ->
+							error.concat(COMMA + parameter + SHOULD_BE_AMONG + getAllBuildValues()));
 			errors.putIfAbsent(parameter, parameter + SHOULD_BE_AMONG + getAllBuildValues());
 		}
 	}
@@ -89,12 +94,17 @@ public class PushDataValidation {
 	 * @param status
 	 * @param errors
 	 */
-	public static void checkDeploymentStatus(String parameter, String status, Map<String, String> errors) {
-		Optional<DeploymentStatus> deploymentStatusOptional = Arrays.stream(DeploymentStatus.values())
-				.filter(deploymentStatus -> deploymentStatus.toString().equalsIgnoreCase(status)).findFirst();
+	public static void checkDeploymentStatus(
+			String parameter, String status, Map<String, String> errors) {
+		Optional<DeploymentStatus> deploymentStatusOptional =
+				Arrays.stream(DeploymentStatus.values())
+						.filter(deploymentStatus -> deploymentStatus.toString().equalsIgnoreCase(status))
+						.findFirst();
 		if (!deploymentStatusOptional.isPresent()) {
-			errors.computeIfPresent(parameter,
-					(param, error) -> error.concat(COMMA + parameter + SHOULD_BE_AMONG + getAllDeploymentValues()));
+			errors.computeIfPresent(
+					parameter,
+					(param, error) ->
+							error.concat(COMMA + parameter + SHOULD_BE_AMONG + getAllDeploymentValues()));
 			errors.putIfAbsent(parameter, parameter + SHOULD_BE_AMONG + getAllDeploymentValues());
 		}
 	}
@@ -123,7 +133,8 @@ public class PushDataValidation {
 	 * @param duration
 	 * @param errors
 	 */
-	public static void checkTimeDetails(String startTime, String endTime, String duration, Map<String, String> errors) {
+	public static void checkTimeDetails(
+			String startTime, String endTime, String duration, Map<String, String> errors) {
 		LocalDateTime startLocalTime = DateUtil.convertMillisToLocalDateTime(Long.parseLong(startTime));
 		LocalDateTime endLocalDateTime = DateUtil.convertMillisToLocalDateTime(Long.parseLong(endTime));
 		if (!startLocalTime.isEqual(endLocalDateTime)) {

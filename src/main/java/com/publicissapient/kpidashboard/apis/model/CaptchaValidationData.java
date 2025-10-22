@@ -36,8 +36,7 @@ public class CaptchaValidationData {
 	/**
 	 * Sets encrypted string.
 	 *
-	 * @param encryptedString
-	 *          the encrypted string
+	 * @param encryptedString the encrypted string
 	 */
 	public void setEncryptedString(String encryptedString) {
 		this.encryptedString = encryptedString;
@@ -55,8 +54,7 @@ public class CaptchaValidationData {
 	/**
 	 * Sets result.
 	 *
-	 * @param result
-	 *          the result
+	 * @param result the result
 	 */
 	public void setResult(String result) {
 		this.result = result;

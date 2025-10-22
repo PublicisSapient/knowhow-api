@@ -35,7 +35,6 @@ import java.util.Optional;
 import org.bson.types.ObjectId;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,20 +58,15 @@ import com.publicissapient.kpidashboard.common.repository.connection.ConnectionR
 @RunWith(MockitoJUnitRunner.class)
 public class BambooServiceImplTest {
 
-	@Mock
-	private RestAPIUtils restAPIUtils;
+	@Mock private RestAPIUtils restAPIUtils;
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@Mock
-	private ConnectionRepository connectionRepository;
+	@Mock private ConnectionRepository connectionRepository;
 
-	@InjectMocks
-	private BambooToolConfigServiceImpl bambooToolConfigService;
+	@InjectMocks private BambooToolConfigServiceImpl bambooToolConfigService;
 
-	@Mock
-	private ConnectionService connectionService;
+	@Mock private ConnectionService connectionService;
 	private Optional<Connection> testConnectionOpt;
 	private Connection connection;
 	private String connectionId;
@@ -90,7 +84,7 @@ public class BambooServiceImplTest {
 	}
 
 	@Test
-	public void getDeploymentProjectListTestSuccess() throws IOException, ParseException {
+	public void getDeploymentProjectListTestSuccess() throws IOException {
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
 		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
 		assertEquals(optConnection, testConnectionOpt);
@@ -129,7 +123,6 @@ public class BambooServiceImplTest {
 
 		HttpHeaders header = new HttpHeaders();
 		header.add("Authorization", "base64str");
-		HttpEntity<?> httpEntity = new HttpEntity<>(header);
 		when(restAPIUtils.getHeaders("tst-ll-SystemAdmin", "decryptPassword")).thenReturn(header);
 		when(restTemplate.exchange(
 						anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class)))
@@ -139,7 +132,7 @@ public class BambooServiceImplTest {
 	}
 
 	@Test
-	public void getBambooBranchesNameAndKeysSuccess() throws IOException, ParseException {
+	public void getBambooBranchesNameAndKeysSuccess() throws IOException {
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
 		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
 		assertEquals(optConnection, testConnectionOpt);
@@ -176,7 +169,6 @@ public class BambooServiceImplTest {
 
 		HttpHeaders header = new HttpHeaders();
 		header.add("Authorization", "base64str");
-		HttpEntity<?> httpEntity = new HttpEntity<>(header);
 		when(restAPIUtils.getHeaders("tst-ll-SystemAdmin", "decryptPassword")).thenReturn(header);
 		when(restTemplate.exchange(
 						anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class)))
@@ -186,7 +178,7 @@ public class BambooServiceImplTest {
 	}
 
 	@Test
-	public void getProjectsAndPlanKeyListSuccess() throws IOException, ParseException {
+	public void getProjectsAndPlanKeyListSuccess() throws IOException {
 		when(connectionRepository.findById(new ObjectId(connectionId))).thenReturn(testConnectionOpt);
 		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
 		assertEquals(optConnection, testConnectionOpt);
@@ -221,7 +213,6 @@ public class BambooServiceImplTest {
 		when(restAPIUtils.decryptPassword(connection.getPassword())).thenReturn("decryptPassword");
 		HttpHeaders header = new HttpHeaders();
 		header.add("Authorization", "base64str");
-		HttpEntity<?> httpEntity = new HttpEntity<>(header);
 		when(restAPIUtils.getHeaders("tst-ll-SystemAdmin", "decryptPassword")).thenReturn(header);
 		when(restTemplate.exchange(
 						anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class)))

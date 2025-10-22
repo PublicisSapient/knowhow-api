@@ -74,24 +74,17 @@ import com.publicissapient.kpidashboard.common.repository.jira.KanbanJiraIssueRe
 public class NetOpenTicketCountStatusImplTest {
 
 	private static final String PROJECT_WISE_CLOSED_STORY_STATUS = "projectWiseClosedStoryStatus";
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	KanbanJiraIssueRepository kanbanJiraIssueRepository;
-	@InjectMocks
-	NetOpenTicketCountStatusImpl totalTicketCountImpl;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@InjectMocks NetOpenTicketCountStatusImpl totalTicketCountImpl;
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
+	@Mock private CustomApiConfig customApiConfig;
 	private KpiRequest kpiRequest;
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 
@@ -100,7 +93,8 @@ public class NetOpenTicketCountStatusImplTest {
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi48");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
@@ -112,14 +106,16 @@ public class NetOpenTicketCountStatusImplTest {
 		projectBasicConfig.setProjectNodeId("Kanban Project_6335368249794a18e8a4479f");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		// set aggregation criteria kpi wise
 		kpiWiseAggregation.put(KPICode.NET_OPEN_TICKET_COUNT_BY_STATUS.name(), "sum");
@@ -132,16 +128,17 @@ public class NetOpenTicketCountStatusImplTest {
 		fieldMappingMap.put(new ObjectId("6335368249794a18e8a4479f"), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testCalculateKPIMetrics() {
-		Map<String, Map<String, Map<String, Set<String>>>> filterComponentIdWiseDefectMap = new HashMap<>();
+		Map<String, Map<String, Map<String, Set<String>>>> filterComponentIdWiseDefectMap =
+				new HashMap<>();
 		Long stringLongMap = totalTicketCountImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
 		assertThat("ticket count :", stringLongMap, equalTo(0L));
 	}
@@ -198,47 +195,57 @@ public class NetOpenTicketCountStatusImplTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testNetOpenTicketByStatus() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
-		when(kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(any(), any(), any(), any(), any(), anyMap()))
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		when(kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(
+						any(), any(), any(), any(), any(), anyMap()))
 				.thenReturn(createResultMap());
-		Map<String, Map<String, Map<String, Set<String>>>> projectWiseJiraHistoryStatusAndDateWiseIssueMap = prepareProjectWiseJiraHistoryByStatusAndDate();
-		when(kpiHelperService.computeProjectWiseJiraHistoryByStatusAndDate(anyMap(), anyString(), anyMap()))
+		Map<String, Map<String, Map<String, Set<String>>>>
+				projectWiseJiraHistoryStatusAndDateWiseIssueMap =
+						prepareProjectWiseJiraHistoryByStatusAndDate();
+		when(kpiHelperService.computeProjectWiseJiraHistoryByStatusAndDate(
+						anyMap(), anyString(), anyMap()))
 				.thenReturn(projectWiseJiraHistoryStatusAndDateWiseIssueMap);
-		List<KanbanIssueCustomHistory> kanbanIssueCustomHistoryDataList = KanbanIssueCustomHistoryDataFactory.newInstance()
-				.getKanbanIssueCustomHistoryDataList();
+		List<KanbanIssueCustomHistory> kanbanIssueCustomHistoryDataList =
+				KanbanIssueCustomHistoryDataFactory.newInstance().getKanbanIssueCustomHistoryDataList();
 
 		Map<String, List<String>> projectWiseDoneStatus = new HashMap<>();
 		projectWiseDoneStatus.put("6335368249794a18e8a4479f", Arrays.asList("Closed"));
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("JiraIssueHistoryData", kanbanIssueCustomHistoryDataList);
 		resultMap.put("projectWiseClosedStoryStatus", projectWiseDoneStatus);
-		when(kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(anyList(), anyString(), anyString(), any(),
-				anyString(), anyMap())).thenReturn(resultMap);
+		when(kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(
+						anyList(), anyString(), anyString(), any(), anyString(), anyMap()))
+				.thenReturn(resultMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(totalTicketCountImpl.getKanbanRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		try {
-			KpiElement kpiElement = totalTicketCountImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String status = dc.getFilter();
-				switch (status) {
-					case "In Analysis" :
-						assertThat("Ticket Analysis Count Value :", dc.getValue().size(), equalTo(7));
-						break;
-					case "Open" :
-						assertThat("Ticket Open Count Value :", dc.getValue().size(), equalTo(8));
-						break;
-					default :
-						break;
-				}
-			});
+			KpiElement kpiElement =
+					totalTicketCountImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String status = dc.getFilter();
+								switch (status) {
+									case "In Analysis":
+										assertThat("Ticket Analysis Count Value :", dc.getValue().size(), equalTo(7));
+										break;
+									case "Open":
+										assertThat("Ticket Open Count Value :", dc.getValue().size(), equalTo(8));
+										break;
+									default:
+										break;
+								}
+							});
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
@@ -252,8 +259,10 @@ public class NetOpenTicketCountStatusImplTest {
 		return resultMap;
 	}
 
-	private Map<String, Map<String, Map<String, Set<String>>>> prepareProjectWiseJiraHistoryByStatusAndDate() {
-		Map<String, Map<String, Map<String, Set<String>>>> projectWiseJiraHistoryStatusAndDateWiseIssueMap = new HashMap<>();
+	private Map<String, Map<String, Map<String, Set<String>>>>
+			prepareProjectWiseJiraHistoryByStatusAndDate() {
+		Map<String, Map<String, Map<String, Set<String>>>>
+				projectWiseJiraHistoryStatusAndDateWiseIssueMap = new HashMap<>();
 		Map<String, Map<String, Set<String>>> jiraHistoryStatusAndDateWiseIssueMap = new HashMap<>();
 		Map<String, Set<String>> dateWiseIssueMap = new HashMap<>();
 		Set<String> ids = new HashSet<>();
@@ -263,13 +272,16 @@ public class NetOpenTicketCountStatusImplTest {
 		dateWiseIssueMap.put("2022-07-02", ids);
 		jiraHistoryStatusAndDateWiseIssueMap.put("Open", dateWiseIssueMap);
 		jiraHistoryStatusAndDateWiseIssueMap.put("In Analysis", dateWiseIssueMap);
-		projectWiseJiraHistoryStatusAndDateWiseIssueMap.put("6335368249794a18e8a4479f",
-				jiraHistoryStatusAndDateWiseIssueMap);
+		projectWiseJiraHistoryStatusAndDateWiseIssueMap.put(
+				"6335368249794a18e8a4479f", jiraHistoryStatusAndDateWiseIssueMap);
 		return projectWiseJiraHistoryStatusAndDateWiseIssueMap;
 	}
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", totalTicketCountImpl.getQualifierType(), equalTo("NET_OPEN_TICKET_COUNT_BY_STATUS"));
+		assertThat(
+				"Kpi Name :",
+				totalTicketCountImpl.getQualifierType(),
+				equalTo("NET_OPEN_TICKET_COUNT_BY_STATUS"));
 	}
 }

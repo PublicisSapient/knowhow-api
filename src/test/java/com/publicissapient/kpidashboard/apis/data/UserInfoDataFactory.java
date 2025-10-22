@@ -39,8 +39,7 @@ public class UserInfoDataFactory {
 	private List<UserInfo> userInfoList;
 	private ObjectMapper mapper;
 
-	private UserInfoDataFactory() {
-	}
+	private UserInfoDataFactory() {}
 
 	public static UserInfoDataFactory newInstance(String filePath) {
 
@@ -60,9 +59,10 @@ public class UserInfoDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ACCOUNT_HIERARCHIES : filePath;
 
-			userInfoList = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<UserInfo>>() {
-					});
+			userInfoList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<UserInfo>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}
@@ -83,6 +83,9 @@ public class UserInfoDataFactory {
 	}
 
 	public UserInfo getUserInfoByRole(String role) {
-		return userInfoList.stream().filter(user -> user.getAuthorities().contains(role)).findFirst().get();
+		return userInfoList.stream()
+				.filter(user -> user.getAuthorities().contains(role))
+				.findFirst()
+				.get();
 	}
 }

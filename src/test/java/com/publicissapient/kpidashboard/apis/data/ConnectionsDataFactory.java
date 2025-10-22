@@ -42,8 +42,7 @@ public class ConnectionsDataFactory {
 	private List<Connection> connections;
 	private ObjectMapper mapper = null;
 
-	private ConnectionsDataFactory() {
-	}
+	private ConnectionsDataFactory() {}
 
 	public static ConnectionsDataFactory newInstance() {
 		return newInstance(null);
@@ -62,9 +61,10 @@ public class ConnectionsDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_CONNECTIONS : filePath;
 
-			connections = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<Connection>>() {
-					});
+			connections =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<Connection>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}
@@ -88,11 +88,16 @@ public class ConnectionsDataFactory {
 
 	public Connection findConnectionById(String id) {
 
-		return connections.stream().filter(connection -> connection.getId().toString().equals(id)).findFirst().orElse(null);
+		return connections.stream()
+				.filter(connection -> connection.getId().toString().equals(id))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public List<Connection> findConnectionsByType(String type) {
 
-		return connections.stream().filter(connection -> connection.getType().equals(type)).collect(Collectors.toList());
+		return connections.stream()
+				.filter(connection -> connection.getType().equals(type))
+				.collect(Collectors.toList());
 	}
 }

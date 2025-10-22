@@ -44,14 +44,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RolesHelperServiceImpl implements RolesHelperService {
 
-	@Autowired
-	private RolesRepository repository;
+	@Autowired private RolesRepository repository;
 
 	/**
 	 * Fetch all roles data.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getAllRoles() {
@@ -69,8 +68,8 @@ public class RolesHelperServiceImpl implements RolesHelperService {
 	 * Fetch a role by id.
 	 *
 	 * @param id
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse getRoleById(String id) {
@@ -96,10 +95,9 @@ public class RolesHelperServiceImpl implements RolesHelperService {
 	/**
 	 * Modify/Update a role by id.
 	 *
-	 * @param id,
-	 *          RoleData
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param id, RoleData
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse modifyRoleById(String id, RoleData role) {
@@ -128,8 +126,8 @@ public class RolesHelperServiceImpl implements RolesHelperService {
 	 * Create a role in the database.
 	 *
 	 * @param role
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	@Override
 	public ServiceResponse createRole(RoleData role) {
@@ -147,16 +145,16 @@ public class RolesHelperServiceImpl implements RolesHelperService {
 	}
 
 	/**
-	 * Checks if @param RoleData has non empty roleName, RoleDescription and
-	 * Permissions
+	 * Checks if @param RoleData has non empty roleName, RoleDescription and Permissions
 	 *
 	 * @param role
 	 * @return Boolean
 	 */
 	private Boolean isRoleDataValid(RoleData role) {
 
-		if (StringUtils.isEmpty(role.getRoleName()) || StringUtils.isEmpty(role.getRoleDescription()) ||
-				CollectionUtils.isEmpty(role.getPermissions())) {
+		if (StringUtils.isEmpty(role.getRoleName())
+				|| StringUtils.isEmpty(role.getRoleDescription())
+				|| CollectionUtils.isEmpty(role.getPermissions())) {
 			log.info("Mandatory fields need to filled");
 			return false;
 		}

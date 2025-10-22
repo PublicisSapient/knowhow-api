@@ -16,13 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 
+import java.util.List;
+
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 
-import java.util.List;
-
 public interface KpiRecommendationProviderService {
 
-	List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendations(KpiRequest kpiRequest, String promptPersona);
-
+	List<ProjectWiseKpiRecommendation> getProjectWiseKpiRecommendations(
+			KpiRequest kpiRequest, String promptPersona);
 }

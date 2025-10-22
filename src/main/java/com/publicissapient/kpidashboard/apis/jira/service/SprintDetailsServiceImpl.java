@@ -30,8 +30,9 @@ public class SprintDetailsServiceImpl implements SprintDetailsService {
 	}
 
 	@Override
-	public List<SprintDetails> findByBasicProjectConfigIdInByCompletedDateDesc(List<ObjectId> basicProjectConfigIds,
-			int limit) {
-		return sprintRepositoryCustom.findByBasicProjectConfigIdInOrderByCompletedDateDesc(basicProjectConfigIds, limit);
+	public List<SprintDetails> findByBasicProjectConfigIdInByCompletedDateDesc(
+			List<ObjectId> basicProjectConfigIds, int limit) {
+		return sprintRepositoryCustom.findByBasicProjectConfigIdInOrderByCompletedDateDesc(
+				basicProjectConfigIds, limit);
 	}
 }

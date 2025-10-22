@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 
 import lombok.Builder;
@@ -41,18 +41,19 @@ import lombok.Builder;
 @Builder
 public class BitBucketKPIServiceFactory {
 
-	private static final Map<String, BitBucketKPIService<?, ?, ?>> BIT_BUCKET_SERVICE_CACHE = new HashMap<>();
-	@Autowired
-	private List<BitBucketKPIService<?, ?, ?>> services;
+	private static final Map<String, BitBucketKPIService<?, ?, ?>> BIT_BUCKET_SERVICE_CACHE =
+			new HashMap<>();
+	@Autowired private List<BitBucketKPIService<?, ?, ?>> services;
 
-    @Autowired
-    private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	@SuppressWarnings("rawtypes")
-	public static BitBucketKPIService getBitBucketKPIService(String type) throws ApplicationException {
+	public static BitBucketKPIService getBitBucketKPIService(String type)
+			throws ApplicationException {
 		BitBucketKPIService<?, ?, ?> service = BIT_BUCKET_SERVICE_CACHE.get(type);
 		if (service == null) {
-			throw new ApplicationException(BitBucketKPIServiceFactory.class, "Bitbucket KPI Service Factory not initalized");
+			throw new ApplicationException(
+					BitBucketKPIServiceFactory.class, "Bitbucket KPI Service Factory not initalized");
 		}
 		return service;
 	}
