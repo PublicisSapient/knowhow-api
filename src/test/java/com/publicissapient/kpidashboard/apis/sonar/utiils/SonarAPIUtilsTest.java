@@ -39,8 +39,7 @@ import org.springframework.http.HttpHeaders;
 */
 @RunWith(MockitoJUnitRunner.class)
 public class SonarAPIUtilsTest {
-	@InjectMocks
-	SonarAPIUtils apiUtils;
+	@InjectMocks SonarAPIUtils apiUtils;
 
 	@Test
 	public void testGetHeadersWithValidCredentials() {
@@ -70,7 +69,8 @@ public class SonarAPIUtilsTest {
 		assertNull(headers8.getFirst("Authorization"));
 		assertNull(headers9.getFirst("Authorization"));
 		assertEquals("Basic am9objpzZWNyZXQ=", headers.getFirst("Authorization"));
-		assertEquals("Basic " + Base64.encodeBase64String("john:".getBytes(StandardCharsets.US_ASCII)),
+		assertEquals(
+				"Basic " + Base64.encodeBase64String("john:".getBytes(StandardCharsets.US_ASCII)),
 				headers2.getFirst("Authorization"));
 	}
 

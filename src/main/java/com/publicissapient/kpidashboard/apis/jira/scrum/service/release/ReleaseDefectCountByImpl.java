@@ -56,11 +56,9 @@ public class ReleaseDefectCountByImpl extends JiraReleaseKPIService {
 	private static final String TOTAL_DEFECT = "totalDefects";
 	private static final String SINGLE = "Single";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	private CommonServiceImpl commonService;
+	@Autowired private CommonServiceImpl commonService;
 
 	@Override
 	public String getQualifierType() {
@@ -76,14 +74,12 @@ public class ReleaseDefectCountByImpl extends JiraReleaseKPIService {
 	}
 
 	/**
-	 * @param latestRelease
-	 *          latestRelease
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param kpiRequest
-	 *          kpiRequest
+	 * @param latestRelease latestRelease
+	 * @param kpiElement kpiElement
+	 * @param kpiRequest kpiRequest
 	 */
-	private void releaseWiseLeafNodeValue(Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void releaseWiseLeafNodeValue(
+			Node latestRelease, KpiElement kpiElement, KpiRequest kpiRequest) {
 		if (latestRelease != null) {
 			String requestTrackerId = getRequestTrackerId();
 			Map<String, Object> resultMap = fetchKPIDataFromDb(latestRelease, null, null, kpiRequest);
@@ -92,12 +88,17 @@ public class ReleaseDefectCountByImpl extends JiraReleaseKPIService {
 
 			if (CollectionUtils.isNotEmpty(totalDefects)) {
 				Object basicProjectConfigId = latestRelease.getProjectFilter().getBasicProjectConfigId();
-				FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-				Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(totalDefects);
-				totalDefects.forEach(defect -> KPIExcelUtility.populateIssueModal(defect, fieldMapping, issueKpiModalObject));
+				FieldMapping fieldMapping =
+						configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+				Map<String, IssueKpiModalValue> issueKpiModalObject =
+						KpiDataHelper.createMapOfIssueModal(totalDefects);
+				totalDefects.forEach(
+						defect ->
+								KPIExcelUtility.populateIssueModal(defect, fieldMapping, issueKpiModalObject));
 
 				if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-					KPIExcelUtility.populateReleaseDefectRelatedExcelData(totalDefects, excelData, fieldMapping);
+					KPIExcelUtility.populateReleaseDefectRelatedExcelData(
+							totalDefects, excelData, fieldMapping);
 				}
 
 				log.info("ReleaseDefectCountBy {}", totalDefects);
@@ -112,13 +113,15 @@ public class ReleaseDefectCountByImpl extends JiraReleaseKPIService {
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Defect count by -> Requested release : {}", leafNode.getName());
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 			if (null != fieldMapping) {
 				List<JiraIssue> releaseDefects = getFilteredReleaseJiraIssuesFromBaseClass(fieldMapping);
 				resultListMap.put(TOTAL_DEFECT, releaseDefects);

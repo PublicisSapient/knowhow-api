@@ -24,11 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CookieUtil {
 	public static final String AUTH_COOKIE = "authCookie";
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private AuthProperties authProperties;
+	@Autowired private AuthProperties authProperties;
 
 	public Cookie createAccessTokenCookie(String token) {
 		Cookie cookie = new Cookie(AUTH_COOKIE, token);
@@ -56,12 +54,14 @@ public class CookieUtil {
 		boolean firstHeader = true;
 		for (String header : headers) { // there can be multiple Set-Cookie attributes
 			if (firstHeader) {
-				response.setHeader(HttpHeaders.SET_COOKIE,
+				response.setHeader(
+						HttpHeaders.SET_COOKIE,
 						String.format("%s; %s", header, customApiConfig.getAuthCookieSameSite()));
 				firstHeader = false;
 				continue;
 			}
-			response.addHeader(HttpHeaders.SET_COOKIE,
+			response.addHeader(
+					HttpHeaders.SET_COOKIE,
 					String.format("%s; %s", header, customApiConfig.getAuthCookieSameSite()));
 		}
 	}
@@ -75,17 +75,21 @@ public class CookieUtil {
 		}
 	}
 
-	public void deleteCookie(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
+	public void deleteCookie(
+			@NotNull HttpServletRequest request,
+			@NotNull HttpServletResponse response,
 			@NotNull String name) {
-		getCookie(request, name).ifPresent(foundCookie -> {
-			foundCookie.setMaxAge(0);
-			foundCookie.setValue("");
-			foundCookie.setPath("/api");
-			if (authProperties.isSubDomainCookie()) {
-				foundCookie.setDomain(authProperties.getDomain());
-			}
-			response.addCookie(foundCookie);
-		});
+		getCookie(request, name)
+				.ifPresent(
+						foundCookie -> {
+							foundCookie.setMaxAge(0);
+							foundCookie.setValue("");
+							foundCookie.setPath("/api");
+							if (authProperties.isSubDomainCookie()) {
+								foundCookie.setDomain(authProperties.getDomain());
+							}
+							response.addCookie(foundCookie);
+						});
 	}
 
 	public HttpHeaders getHeadersForApiKey(String apiKey, boolean usingBasicAuth) {

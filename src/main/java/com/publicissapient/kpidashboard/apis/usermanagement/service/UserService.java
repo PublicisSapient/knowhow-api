@@ -18,16 +18,14 @@ package com.publicissapient.kpidashboard.apis.usermanagement.service;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
-/**
- * Service interface for user operations
- */
+/** Service interface for user operations */
 public interface UserService {
 
-    /**
-     * Saves user information with SAML authentication type
-     *
-     * @param username the username
-     * @return ServiceResponse containing status, message, and user info
-     */
-    ServiceResponse saveUserInfo(String username);
+	/**
+	 * Saves user information with SAML authentication type
+	 *
+	 * @param username the username
+	 * @return ServiceResponse containing status, message, and user info
+	 */
+	ServiceResponse saveUserInfo(String username);
 }

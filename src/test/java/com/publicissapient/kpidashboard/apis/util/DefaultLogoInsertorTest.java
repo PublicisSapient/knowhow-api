@@ -32,14 +32,11 @@ import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultLogoInsertorTest {
 
-	@Mock
-	private GridFsOperations gridOperations;
+	@Mock private GridFsOperations gridOperations;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@InjectMocks
-	private DefaultLogoInsertor defaultLogoInsertor;
+	@InjectMocks private DefaultLogoInsertor defaultLogoInsertor;
 
 	@Test
 	public void testInsertDefaultImage() {

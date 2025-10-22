@@ -4857,18 +4857,70 @@
     "nodeSpecific": false
   },
   {
-    "fieldName" : "jiraDefectCountIssueTypeKPI194",
-    "fieldLabel" : "Issue types with defect linkages",
-    "fieldType" : "chips",
-    "fieldCategory" : "Issue_Type",
-    "section" : "Issue Types Mapping",
-    "processorCommon" : false,
-    "tooltip" : {
-      "definition" : "All issue types that can have valid defect linkages"
+    "fieldName": "jiraDefectCountIssueTypeKPI194",
+    "fieldLabel": "Issue types with defect linkages",
+    "fieldType": "chips",
+    "fieldCategory": "Issue_Type",
+    "section": "Issue Types Mapping",
+    "processorCommon": false,
+    "tooltip": {
+      "definition": "All issue types that can have valid defect linkages"
     },
-    "fieldDisplayOrder" : 1,
-    "sectionOrder" : 2,
-    "mandatory" : true,
-    "nodeSpecific" : false
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 2,
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "aiUsageTypeJiraCustomFieldKPI198",
+    "fieldLabel": "AI Usage type",
+    "fieldType": "text",
+    "fieldCategory": "fields",
+    "section": "Custom Fields Mapping",
+    "tooltip": {
+      "definition": "Custom Jira field representing the kind of AI capability applied in this project or ticket. Provide the field name which can be used to extract this information from a Jira issue"
+    },
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 1,
+    "mandatory": true
+  },
+  {
+    "fieldName": "aiEfficiencyGainJiraCustomFieldKPI198",
+    "fieldLabel": "AI Efficiency Gain",
+    "fieldType": "text",
+    "fieldCategory": "fields",
+    "section": "Custom Fields Mapping",
+    "tooltip": {
+      "definition": "Custom Jira field representing the measurable improvement in productivity or progress efficiency resulting from AI adoption, e.g., reduced cycle time, faster delivery or fewer manual steps. Provide the field name which can be used to extract this information from a Jira issue"
+    },
+    "fieldDisplayOrder": 2,
+    "sectionOrder": 1,
+    "mandatory": true
+  },
+  {
+    "fieldName": "includedIssueTypesFromTheCompletedIssuesKPI198",
+    "fieldLabel": "Issue types filter for completed issues",
+    "fieldType": "chips",
+    "fieldCategory": "Issue_Type",
+    "section": "Issue Types Mapping",
+    "tooltip": {
+      "definition": "Completed issues of the specified issue types will be considered. If left blank, all issue types will be included by default"
+    },
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 2,
+    "mandatory": false
+  },
+  {
+    "fieldName": "includedStatusesToIdentifyCompletedIssuesKPI198",
+    "fieldLabel": "Status to identify completed issues",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "section": "Workflow Status Mapping",
+    "tooltip": {
+      "definition": "Completed issues of the specified issue types will be considered. If left blank, all statuses found to be relating to a 'Complete' state will be used"
+    },
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 2,
+    "mandatory": false
   }
 ]

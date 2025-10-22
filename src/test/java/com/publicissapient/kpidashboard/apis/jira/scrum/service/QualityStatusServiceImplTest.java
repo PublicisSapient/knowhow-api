@@ -59,23 +59,16 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class QualityStatusServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ConfigHelperService configHelperService;
 
-	@InjectMocks
-	private QualityStatusServiceImpl qualityStatusServiceImpl;
+	@InjectMocks private QualityStatusServiceImpl qualityStatusServiceImpl;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private JiraIterationServiceR jiraService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
 
@@ -94,22 +87,30 @@ public class QualityStatusServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi133");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
 
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 
 		bugList = jiraIssueDataFactory.getBugs();
-		List<String> linked = bugList.stream().map(JiraIssue::getDefectStoryID).flatMap(Set::stream)
-				.collect(Collectors.toList());
+		List<String> linked =
+				bugList.stream()
+						.map(JiraIssue::getDefectStoryID)
+						.flatMap(Set::stream)
+						.collect(Collectors.toList());
 		linkedStories = jiraIssueDataFactory.findIssueByNumberList(linked);
 		priority.put("P1", Arrays.asList("p1"));
 	}
@@ -122,11 +123,12 @@ public class QualityStatusServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping.setJiraDefectRejectionStatusKPI133("");
-		fieldMapping.setResolutionTypeForRejectionKPI133(Arrays.asList("Invalid", "Duplicate", "Unrequired"));
+		fieldMapping.setResolutionTypeForRejectionKPI133(
+				Arrays.asList("Invalid", "Duplicate", "Unrequired"));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 	}
@@ -134,20 +136,25 @@ public class QualityStatusServiceImplTest {
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(any(), any())).thenReturn(linkedStories);
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(any(), any()))
+				.thenReturn(linkedStories);
 		when(jiraIssueRepository.findLinkedDefects(anyMap(), any(), anyMap())).thenReturn(bugList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9 ";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(customApiConfig.getPriority()).thenReturn(priority);
 		try {
-			KpiElement kpiElement = qualityStatusServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					qualityStatusServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {
@@ -157,26 +164,32 @@ public class QualityStatusServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProject_OriginalEstimate() throws ApplicationException {
-		fieldMappingMap.forEach((projectId, mapping) -> {
-			mapping.setEstimationCriteria("Original Estimate");
-			mapping.setJiraLabelsKPI133(List.of("label"));
-		});
+		fieldMappingMap.forEach(
+				(projectId, mapping) -> {
+					mapping.setEstimationCriteria("Original Estimate");
+					mapping.setJiraLabelsKPI133(List.of("label"));
+				});
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(any(), any())).thenReturn(linkedStories);
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(any(), any()))
+				.thenReturn(linkedStories);
 		when(jiraIssueRepository.findLinkedDefects(anyMap(), any(), anyMap())).thenReturn(bugList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9 ";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(customApiConfig.getPriority()).thenReturn(priority);
 		try {
-			KpiElement kpiElement = qualityStatusServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					qualityStatusServiceImpl.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {

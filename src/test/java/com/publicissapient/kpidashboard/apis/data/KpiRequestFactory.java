@@ -49,8 +49,7 @@ public class KpiRequestFactory {
 	private KpiRequest kpiRequest;
 	private List<KpiElement> kpiElements;
 
-	private KpiRequestFactory() {
-	}
+	private KpiRequestFactory() {}
 
 	public static KpiRequestFactory newInstance(String filePath) {
 
@@ -69,7 +68,8 @@ public class KpiRequestFactory {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_REQUEST : filePath;
 
-			kpiRequest = mapper.readValue(TypeReference.class.getResourceAsStream(filePath), KpiRequest.class);
+			kpiRequest =
+					mapper.readValue(TypeReference.class.getResourceAsStream(filePath), KpiRequest.class);
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}
@@ -78,9 +78,10 @@ public class KpiRequestFactory {
 	private void createKpiList() {
 		try {
 
-			kpiElements = mapper.readValue(TypeReference.class.getResourceAsStream(FILE_PATH_KPI_LIST),
-					new TypeReference<List<KpiElement>>() {
-					});
+			kpiElements =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(FILE_PATH_KPI_LIST),
+							new TypeReference<List<KpiElement>>() {});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -112,7 +113,9 @@ public class KpiRequestFactory {
 	}
 
 	private KpiElement findKpi(String kpiId) {
-		return CollectionUtils.emptyIfNull(kpiElements).stream().filter(kpi -> kpi.getKpiId().equals(kpiId)).findFirst()
+		return CollectionUtils.emptyIfNull(kpiElements).stream()
+				.filter(kpi -> kpi.getKpiId().equals(kpiId))
+				.findFirst()
 				.orElse(null);
 	}
 }

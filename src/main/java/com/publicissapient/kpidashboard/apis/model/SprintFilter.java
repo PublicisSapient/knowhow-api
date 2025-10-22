@@ -33,8 +33,7 @@ public class SprintFilter implements Serializable {
 	private String startDate;
 	private String endDate;
 
-	public SprintFilter() {
-	}
+	public SprintFilter() {}
 
 	/**
 	 * @param sprintId
@@ -42,7 +41,8 @@ public class SprintFilter implements Serializable {
 	 * @param sprintStartDate
 	 * @param sprintEndDate
 	 */
-	public SprintFilter(String sprintId, String sprintName, String sprintStartDate, String sprintEndDate) {
+	public SprintFilter(
+			String sprintId, String sprintName, String sprintStartDate, String sprintEndDate) {
 		super();
 		this.id = sprintId;
 		this.name = sprintName;

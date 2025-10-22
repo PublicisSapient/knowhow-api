@@ -39,14 +39,11 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends GenericFilterBean {
 
-	@Autowired
-	private TokenAuthenticationService tokenAuthenticationService;
+	@Autowired private TokenAuthenticationService tokenAuthenticationService;
 
-	@Autowired
-	private CookieUtil cookieUtil;
+	@Autowired private CookieUtil cookieUtil;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
@@ -61,8 +58,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 			}
 		}
 
-		Authentication authentication = tokenAuthenticationService.validateAuthentication((HttpServletRequest) request,
-				(HttpServletResponse) response);
+		Authentication authentication =
+				tokenAuthenticationService.validateAuthentication(
+						(HttpServletRequest) request, (HttpServletResponse) response);
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		filterChain.doFilter(request, response);

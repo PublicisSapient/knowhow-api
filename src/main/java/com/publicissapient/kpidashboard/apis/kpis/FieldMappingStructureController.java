@@ -32,11 +32,11 @@ public class FieldMappingStructureController {
 	/**
 	 * Instantiates a new Kpi fieldmapping controller.
 	 *
-	 * @param kPIHelperService
-	 *          the k pi helper service
+	 * @param kPIHelperService the k pi helper service
 	 */
 	@Autowired
-	public FieldMappingStructureController(KpiHelperService kPIHelperService, ProjectAccessUtil projectAccessUtil) {
+	public FieldMappingStructureController(
+			KpiHelperService kPIHelperService, ProjectAccessUtil projectAccessUtil) {
 		this.kPIHelperService = kPIHelperService;
 		this.projectAccessUtil = projectAccessUtil;
 	}
@@ -49,17 +49,20 @@ public class FieldMappingStructureController {
 		boolean hasProjectAccess = projectAccessUtil.configIdHasUserAccess(projectBasicConfigId);
 		if (!hasProjectAccess) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
-					.body(new ServiceResponse(false, "Unauthorized to get the kpi field mapping", "Unauthorized"));
+					.body(
+							new ServiceResponse(
+									false, "Unauthorized to get the kpi field mapping", "Unauthorized"));
 		}
-		FieldMappingStructureResponse result = kPIHelperService.fetchFieldMappingStructureByKpiId(projectBasicConfigId,
-				kpiId);
+		FieldMappingStructureResponse result =
+				kPIHelperService.fetchFieldMappingStructureByKpiId(projectBasicConfigId, kpiId);
 
 		if (result == null) {
 			response = new ServiceResponse(false, "no field mapping stucture found", null);
 		} else {
 			if (StringUtils.isNotEmpty(result.getProjectToolConfigId())) {
-				result.setKpiSource(kPIHelperService.updateKPISource(new ObjectId(projectBasicConfigId),
-						new ObjectId(result.getProjectToolConfigId())));
+				result.setKpiSource(
+						kPIHelperService.updateKPISource(
+								new ObjectId(projectBasicConfigId), new ObjectId(result.getProjectToolConfigId())));
 				response = new ServiceResponse(true, "field mapping stucture", result);
 			} else {
 				response = new ServiceResponse(true, "Tool Source Absent", result);

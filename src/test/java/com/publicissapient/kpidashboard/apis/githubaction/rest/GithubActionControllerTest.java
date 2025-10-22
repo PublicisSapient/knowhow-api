@@ -43,11 +43,9 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class GithubActionControllerTest {
 
-	@InjectMocks
-	private GithubActionController githubActionController;
+	@InjectMocks private GithubActionController githubActionController;
 
-	@Mock
-	private GithubActionToolConfigServiceImpl githubActionToolConfigService;
+	@Mock private GithubActionToolConfigServiceImpl githubActionToolConfigService;
 
 	@Test
 	public void testGetGithubActionWorkflows_SuccessfulFetch() {
@@ -57,9 +55,11 @@ public class GithubActionControllerTest {
 		List<GithubActionWorkflowsDTO> mockWorkflows = new ArrayList<>();
 		mockWorkflows.add(new GithubActionWorkflowsDTO("workflowName", "workflowId"));
 
-		when(githubActionToolConfigService.getGitHubWorkFlowList(any(), any())).thenReturn(mockWorkflows);
+		when(githubActionToolConfigService.getGitHubWorkFlowList(any(), any()))
+				.thenReturn(mockWorkflows);
 
-		ServiceResponse response = githubActionController.getGithubActionWorkflows(connectionId, repoDTO);
+		ServiceResponse response =
+				githubActionController.getGithubActionWorkflows(connectionId, repoDTO);
 
 		assertNotNull(response);
 		assertTrue(response.getSuccess());
@@ -73,9 +73,11 @@ public class GithubActionControllerTest {
 		String connectionId = "5fb3a6412064a35b8069930a";
 		GithubActionRepoDTO repoDTO = new GithubActionRepoDTO("repoName", connectionId);
 
-		when(githubActionToolConfigService.getGitHubWorkFlowList(any(), any())).thenReturn(new ArrayList<>());
+		when(githubActionToolConfigService.getGitHubWorkFlowList(any(), any()))
+				.thenReturn(new ArrayList<>());
 
-		ServiceResponse response = githubActionController.getGithubActionWorkflows(connectionId, repoDTO);
+		ServiceResponse response =
+				githubActionController.getGithubActionWorkflows(connectionId, repoDTO);
 
 		assertNotNull(response);
 		assertFalse(response.getSuccess());

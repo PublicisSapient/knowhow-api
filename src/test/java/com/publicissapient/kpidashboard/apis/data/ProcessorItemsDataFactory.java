@@ -37,12 +37,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProcessorItemsDataFactory {
-	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA = "/json/non-JiraProcessors/processor_items.json";
+	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA =
+			"/json/non-JiraProcessors/processor_items.json";
 	private List<ProcessorItem> processorItemsDataFactory;
 	private ObjectMapper mapper;
 
-	private ProcessorItemsDataFactory() {
-	}
+	private ProcessorItemsDataFactory() {}
 
 	public static ProcessorItemsDataFactory newInstance(String filePath) {
 
@@ -62,9 +62,10 @@ public class ProcessorItemsDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_PROCESSOR_ITEMS_DATA : filePath;
 
-			processorItemsDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<ProcessorItem>>() {
-					});
+			processorItemsDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<ProcessorItem>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

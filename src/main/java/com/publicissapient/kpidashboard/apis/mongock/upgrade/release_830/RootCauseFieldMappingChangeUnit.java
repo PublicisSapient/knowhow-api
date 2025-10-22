@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "root_cause_field_map", order = "8301", author = "kunkambl", systemVersion = "8.3.0")
+@ChangeUnit(
+		id = "root_cause_field_map",
+		order = "8301",
+		author = "kunkambl",
+		systemVersion = "8.3.0")
 public class RootCauseFieldMappingChangeUnit {
 
 	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
@@ -60,26 +64,51 @@ public class RootCauseFieldMappingChangeUnit {
 	}
 
 	public void deleteRCAFieldMapping() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteOne(new Document(FIELD_NAME, ROOT_CAUSE));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.deleteOne(new Document(FIELD_NAME, ROOT_CAUSE));
 	}
 
 	public void insertFieldMapping() {
-		Document fieldMappingDocument = new Document().append(FIELD_NAME, ROOT_CAUSE_IDENTIFIER)
-				.append(FIELD_LABEL, "Root Cause").append(FIELD_TYPE, "radiobutton").append(FIELD_CATEGORY, FIELDS)
-				.append("section", "Custom Fields Mapping")
-				.append(TOOL_TIP, new Document(DEFINITION,
-						"JIRA/AZURE applications let you add custom fields in addition to the built-in fields. Root Cause is a custom field in JIRA. So User need to provide that custom field which is associated with Root Cause in Users JIRA Installation."))
-				.append("nestedFields",
-						Arrays.asList(
-								new Document().append(FIELD_NAME, ROOT_CAUSE).append(FIELD_LABEL, "Root Cause CustomField")
-										.append(FIELD_TYPE, "text").append(FIELD_CATEGORY, FIELDS)
-										.append("filterGroup", Arrays.asList(CUSTOM_FIELD))
-										.append(TOOL_TIP, new Document(DEFINITION, " Provide customfield name to identify Root Cause.")),
-								new Document().append(FIELD_NAME, "rootCauseValues").append(FIELD_LABEL, "Root Cause Defect Values")
-										.append(FIELD_TYPE, "chips").append("filterGroup", Arrays.asList(LABELS))
-										.append(TOOL_TIP, new Document(DEFINITION, "Provide label name to identify Root Cause."))))
-				.append("options", Arrays.asList(new Document().append("label", CUSTOM_FIELD).append("value", CUSTOM_FIELD),
-						new Document().append("label", LABELS).append("value", LABELS)));
+		Document fieldMappingDocument =
+				new Document()
+						.append(FIELD_NAME, ROOT_CAUSE_IDENTIFIER)
+						.append(FIELD_LABEL, "Root Cause")
+						.append(FIELD_TYPE, "radiobutton")
+						.append(FIELD_CATEGORY, FIELDS)
+						.append("section", "Custom Fields Mapping")
+						.append(
+								TOOL_TIP,
+								new Document(
+										DEFINITION,
+										"JIRA/AZURE applications let you add custom fields in addition to the built-in fields. Root Cause is a custom field in JIRA. So User need to provide that custom field which is associated with Root Cause in Users JIRA Installation."))
+						.append(
+								"nestedFields",
+								Arrays.asList(
+										new Document()
+												.append(FIELD_NAME, ROOT_CAUSE)
+												.append(FIELD_LABEL, "Root Cause CustomField")
+												.append(FIELD_TYPE, "text")
+												.append(FIELD_CATEGORY, FIELDS)
+												.append("filterGroup", Arrays.asList(CUSTOM_FIELD))
+												.append(
+														TOOL_TIP,
+														new Document(
+																DEFINITION, " Provide customfield name to identify Root Cause.")),
+										new Document()
+												.append(FIELD_NAME, "rootCauseValues")
+												.append(FIELD_LABEL, "Root Cause Defect Values")
+												.append(FIELD_TYPE, "chips")
+												.append("filterGroup", Arrays.asList(LABELS))
+												.append(
+														TOOL_TIP,
+														new Document(
+																DEFINITION, "Provide label name to identify Root Cause."))))
+						.append(
+								"options",
+								Arrays.asList(
+										new Document().append("label", CUSTOM_FIELD).append("value", CUSTOM_FIELD),
+										new Document().append("label", LABELS).append("value", LABELS)));
 
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(fieldMappingDocument);
 	}
@@ -98,15 +127,25 @@ public class RootCauseFieldMappingChangeUnit {
 	}
 
 	public void deleteRCAFieldMappingRollback() {
-		Document rootCauseDocument = new Document().append(FIELD_NAME, ROOT_CAUSE).append(FIELD_LABEL, "Root Cause")
-				.append(FIELD_TYPE, "text").append(FIELD_CATEGORY, FIELDS).append("section", "Custom Fields Mapping")
-				.append(TOOL_TIP, new Document(DEFINITION,
-						"JIRA/AZURE applications let you add custom fields in addition to the built-in fields. Root Cause is a custom field in JIRA. So User need to provide that custom field which is associated with Root Cause in Users JIRA Installation."));
+		Document rootCauseDocument =
+				new Document()
+						.append(FIELD_NAME, ROOT_CAUSE)
+						.append(FIELD_LABEL, "Root Cause")
+						.append(FIELD_TYPE, "text")
+						.append(FIELD_CATEGORY, FIELDS)
+						.append("section", "Custom Fields Mapping")
+						.append(
+								TOOL_TIP,
+								new Document(
+										DEFINITION,
+										"JIRA/AZURE applications let you add custom fields in addition to the built-in fields. Root Cause is a custom field in JIRA. So User need to provide that custom field which is associated with Root Cause in Users JIRA Installation."));
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(rootCauseDocument);
 	}
 
 	public void insertFieldMappingRollback() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteOne(new Document(FIELD_NAME, ROOT_CAUSE_IDENTIFIER));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.deleteOne(new Document(FIELD_NAME, ROOT_CAUSE_IDENTIFIER));
 	}
 
 	public void updateRootCauseRollback() {

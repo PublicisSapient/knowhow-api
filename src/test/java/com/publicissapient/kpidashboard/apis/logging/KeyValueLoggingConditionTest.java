@@ -34,24 +34,21 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 @RunWith(MockitoJUnitRunner.class)
 public class KeyValueLoggingConditionTest {
 
-	@Mock
-	private ConditionContext context;
+	@Mock private ConditionContext context;
 
-	@Mock
-	private Environment environment;
+	@Mock private Environment environment;
 
-	@Mock
-	private AnnotatedTypeMetadata metadata;
+	@Mock private AnnotatedTypeMetadata metadata;
 
-	@InjectMocks
-	private KeyValueLoggingCondition condition;
+	@InjectMocks private KeyValueLoggingCondition condition;
 
 	@Test
 	public void shouldBeTrueWhenPropertyTrue() {
 		KeyValueLoggingCondition condition = new KeyValueLoggingCondition();
 
 		when(context.getEnvironment()).thenReturn(environment);
-		when(environment.getProperty(KeyValueLoggingCondition.LOG_REQUEST_KEY_VALUE)).thenReturn("true");
+		when(environment.getProperty(KeyValueLoggingCondition.LOG_REQUEST_KEY_VALUE))
+				.thenReturn("true");
 
 		assertTrue(condition.matches(context, metadata));
 	}
@@ -61,7 +58,8 @@ public class KeyValueLoggingConditionTest {
 		KeyValueLoggingCondition condition = new KeyValueLoggingCondition();
 
 		when(context.getEnvironment()).thenReturn(environment);
-		when(environment.getProperty(KeyValueLoggingCondition.LOG_REQUEST_KEY_VALUE)).thenReturn("false");
+		when(environment.getProperty(KeyValueLoggingCondition.LOG_REQUEST_KEY_VALUE))
+				.thenReturn("false");
 
 		assertFalse(condition.matches(context, metadata));
 	}

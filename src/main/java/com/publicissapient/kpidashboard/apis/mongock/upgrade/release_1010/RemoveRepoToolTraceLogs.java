@@ -29,7 +29,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "remove_repo_tool_tracelogs", order = "101014", author = "kunkambl", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "remove_repo_tool_tracelogs",
+		order = "101014",
+		author = "kunkambl",
+		systemVersion = "10.1.0")
 public class RemoveRepoToolTraceLogs {
 	private final MongoTemplate mongoTemplate;
 	private List<Document> deletedDocuments;
@@ -42,9 +46,11 @@ public class RemoveRepoToolTraceLogs {
 	@Execution
 	public void execution() {
 
-		MongoCollection<Document> projectToolConfigs = mongoTemplate.getCollection("processor_execution_trace_log");
+		MongoCollection<Document> projectToolConfigs =
+				mongoTemplate.getCollection("processor_execution_trace_log");
 		// Find and store the documents to be deleted
-		deletedDocuments = projectToolConfigs.find(new Document("processorName", "RepoTool")).into(new ArrayList<>());
+		deletedDocuments =
+				projectToolConfigs.find(new Document("processorName", "RepoTool")).into(new ArrayList<>());
 
 		// Delete the documents
 		projectToolConfigs.deleteMany(new Document("processorName", "RepoTool"));

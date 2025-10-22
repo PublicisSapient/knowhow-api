@@ -52,31 +52,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ZephyrController {
 
-	@Autowired
-	private ZephyrService zephyrService;
+	@Autowired private ZephyrService zephyrService;
 
-	@Autowired
-	private ZephyrServiceKanban zephyrServiceKanban;
+	@Autowired private ZephyrServiceKanban zephyrServiceKanban;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
 	/**
 	 * Gets zephyr data metrics.
 	 *
-	 * @param kpiRequest
-	 *          the kpi request
+	 * @param kpiRequest the kpi request
 	 * @return the zephyr metrics
-	 * @throws Exception
-	 *           the exception
+	 * @throws Exception the exception
 	 */
-	@RequestMapping(value = "/zypher/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<List<KpiElement>> getZephyrMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	@RequestMapping(
+			value = "/zypher/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<List<KpiElement>> getZephyrMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 
-		log.info("[ZEPHYR][{}]. Received Zephyr KPI request {}", kpiRequest.getRequestTrackerId(), kpiRequest);
+		log.info(
+				"[ZEPHYR][{}]. Received Zephyr KPI request {}",
+				kpiRequest.getRequestTrackerId(),
+				kpiRequest);
 
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -94,20 +96,25 @@ public class ZephyrController {
 	/**
 	 * Gets zephyr kanban data metrics.
 	 *
-	 * @param kpiRequest
-	 *          the kpi request
+	 * @param kpiRequest the kpi request
 	 * @return the zephyr kanban metrics
-	 * @throws Exception
-	 *           the exception
+	 * @throws Exception the exception
 	 */
-	@RequestMapping(value = "/zypherkanban/kpi", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@RequestMapping(
+			value = "/zypherkanban/kpi",
+			method = RequestMethod.POST,
+			produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
-	public ResponseEntity<List<KpiElement>> getZephyrKanbanMetrics(@NotNull @RequestBody KpiRequest kpiRequest)
-			throws Exception { // NOSONAR
+	public ResponseEntity<List<KpiElement>> getZephyrKanbanMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 
-		log.info("[ZEPHYR KANBAN][{}]. Received Zephyr KPI request {}", kpiRequest.getRequestTrackerId(), kpiRequest);
+		log.info(
+				"[ZEPHYR KANBAN][{}]. Received Zephyr KPI request {}",
+				kpiRequest.getRequestTrackerId(),
+				kpiRequest);
 
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {

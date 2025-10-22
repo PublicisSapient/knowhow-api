@@ -41,8 +41,7 @@ public class SonarHistoryDataFactory {
 	private List<SonarHistory> sonarHistoryDataFactory;
 	private ObjectMapper mapper;
 
-	private SonarHistoryDataFactory() {
-	}
+	private SonarHistoryDataFactory() {}
 
 	public static SonarHistoryDataFactory newInstance(String filePath) {
 
@@ -62,9 +61,10 @@ public class SonarHistoryDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH : filePath;
 
-			sonarHistoryDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<SonarHistory>>() {
-					});
+			sonarHistoryDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<SonarHistory>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

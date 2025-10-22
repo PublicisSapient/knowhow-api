@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author eswbogol
  */
-@ChangeUnit(id = "ftpr_iteration_labels_changeLog", order = "8203", author = "eswbogol", systemVersion = "8.2.0")
+@ChangeUnit(
+		id = "ftpr_iteration_labels_changeLog",
+		order = "8203",
+		author = "eswbogol",
+		systemVersion = "8.2.0")
 public class FTPRIterationLabelsChangeLog {
 
 	private final MongoTemplate mongoTemplate;
@@ -50,7 +54,8 @@ public class FTPRIterationLabelsChangeLog {
 		document.append("fieldType", "chips");
 		document.append("section", "WorkFlow Status Mapping");
 		Document tooltip = new Document();
-		tooltip.append("definition", "Calculation should only those issues which have defined labels tagged.");
+		tooltip.append(
+				"definition", "Calculation should only those issues which have defined labels tagged.");
 		document.append("tooltip", tooltip);
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(document);
 	}

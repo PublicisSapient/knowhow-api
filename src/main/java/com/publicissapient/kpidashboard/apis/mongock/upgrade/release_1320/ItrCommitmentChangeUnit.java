@@ -40,24 +40,33 @@ public class ItrCommitmentChangeUnit {
 
 	@Execution
 	public void execution() {
-		Document existingDocument = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE)
-				.find(new Document(FIELD_NAME, JIRA_LABELS_KPI_120)).first();
+		Document existingDocument =
+				mongoTemplate
+						.getCollection(FIELD_MAPPING_STRUCTURE)
+						.find(new Document(FIELD_NAME, JIRA_LABELS_KPI_120))
+						.first();
 
 		if (existingDocument == null) {
-			Document document = new Document().append(FIELD_NAME, JIRA_LABELS_KPI_120)
-					.append("fieldLabel", "Labels for Scope Change Identification").append("fieldType", "chips")
-					.append("section", "WorkFlow Status Mapping").append("tooltip",
-							new Document("definition", "Specify labels to detect and track scope changes effectively"));
+			Document document =
+					new Document()
+							.append(FIELD_NAME, JIRA_LABELS_KPI_120)
+							.append("fieldLabel", "Labels for Scope Change Identification")
+							.append("fieldType", "chips")
+							.append("section", "WorkFlow Status Mapping")
+							.append(
+									"tooltip",
+									new Document(
+											"definition",
+											"Specify labels to detect and track scope changes effectively"));
 
 			mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(document);
 		}
-
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).deleteOne(new Document(FIELD_NAME, JIRA_LABELS_KPI_120));
-
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.deleteOne(new Document(FIELD_NAME, JIRA_LABELS_KPI_120));
 	}
-
 }

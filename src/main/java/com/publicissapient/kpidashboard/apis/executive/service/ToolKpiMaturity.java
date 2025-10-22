@@ -17,14 +17,15 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.executive.service;
 
+import java.util.List;
+import java.util.Map;
+
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
-import java.util.List;
-import java.util.Map;
-
 public interface ToolKpiMaturity {
 
-    List<KpiElement> getKpiElements(KpiRequest kpiRequest, Map<String, List<KpiMaster>> sourceWiseKpiList);
+	List<KpiElement> getKpiElements(
+			KpiRequest kpiRequest, Map<String, List<KpiMaster>> sourceWiseKpiList);
 }

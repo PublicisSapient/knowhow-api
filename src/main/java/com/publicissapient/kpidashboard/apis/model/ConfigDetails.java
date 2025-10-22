@@ -58,8 +58,7 @@ public class ConfigDetails {
 	/**
 	 * Sets kpi wise aggregation type.
 	 *
-	 * @param kpiWiseAggregationType
-	 *          the kpi wise aggregation type
+	 * @param kpiWiseAggregationType the kpi wise aggregation type
 	 */
 	public void setKpiWiseAggregationType(Map<String, String> kpiWiseAggregationType) {
 		this.kpiWiseAggregationType = kpiWiseAggregationType;
@@ -77,8 +76,7 @@ public class ConfigDetails {
 	/**
 	 * Sets percentile.
 	 *
-	 * @param percentile
-	 *          the percentile
+	 * @param percentile the percentile
 	 */
 	public void setPercentile(Double percentile) {
 		this.percentile = percentile;
@@ -93,6 +91,8 @@ public class ConfigDetails {
 	}
 
 	public void setNoOfDataPoints(int noOfDataPoints) {
+		// Intentionally left blank —
+		// no action required
 	}
 
 	public void setSprintCountForKpiCalculation(int sprintCountForKpiCalculation) {
@@ -103,11 +103,11 @@ public class ConfigDetails {
 		return sprintCountForKpiCalculation;
 	}
 
-    public boolean isOpenSource() {
-        return isOpenSource;
-    }
+	public boolean isOpenSource() {
+		return isOpenSource;
+	}
 
-    public void setOpenSource(boolean openSource) {
-        isOpenSource = openSource;
-    }
+	public void setOpenSource(boolean openSource) {
+		isOpenSource = openSource;
+	}
 }

@@ -38,6 +38,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.datamigration.model.HierarchyValueDup;
 import com.publicissapient.kpidashboard.apis.datamigration.model.MigrateData;
 import com.publicissapient.kpidashboard.apis.datamigration.model.MigrationLockLog;
@@ -97,51 +98,30 @@ public class DataMigrationService {
 	public static final String SPRINT_HISTORY = "SPRINT_HISTORY";
 	public static final String PROJECT_HIERARCHY = "PROJECT_HIERARCHY";
 	public static final String SPRINT_DETAILS = "SPRINT_DETAILS";
-	@Autowired
-	private ProjectBasicConfigRepository basicConfigRepository;
-	@Autowired
-	private OrganizationHierarchyRepository organizationHierarchyRepository;
-	@Autowired
-	public SaveService saveService;
+	@Autowired private ProjectBasicConfigRepository basicConfigRepository;
+	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Autowired public SaveService saveService;
 
-	@Autowired
-	private AccountHierarchyRepository accountHierarchyRepository;
-	@Autowired
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
-	@Autowired
-	private SprintRepository sprintRepository;
-	@Autowired
-	private CapacityKpiDataRepository capacityKpiDataRepository;
-	@Autowired
-	private KanbanCapacityRepository kanbanCapacityRepository;
+	@Autowired private AccountHierarchyRepository accountHierarchyRepository;
+	@Autowired private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
+	@Autowired private SprintRepository sprintRepository;
+	@Autowired private CapacityKpiDataRepository capacityKpiDataRepository;
+	@Autowired private KanbanCapacityRepository kanbanCapacityRepository;
 
-	@Autowired
-	private HappinessKpiDataRepository happinessKpiDataRepository;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private KanbanJiraIssueRepository kanbanJiraIssueRepository;
-	@Autowired
-	private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-	@Autowired
-	private TestExecutionRepository testExecutionRepository;
-	@Autowired
-	private KanbanTestExecutionRepository kanbanTestExecutionRepository;
-	@Autowired
-	private ProjectReleaseRepo projectReleaseRepo;
-	@Autowired
-	private SprintTraceLogRepository sprintTraceLogRepository;
-	@Autowired
-	private UserInfoRepository userInfoRepository;
-	@Autowired
-	private AccessRequestsRepository accessRequestsRepository;
-	@Autowired
-	private KpiCommentsRepository kpiCommentsRepository;
-	@Autowired
-	private KpiCommentsHistoryRepository kpiCommentsHistoryRepository;
+	@Autowired private HappinessKpiDataRepository happinessKpiDataRepository;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
+	@Autowired private TestExecutionRepository testExecutionRepository;
+	@Autowired private KanbanTestExecutionRepository kanbanTestExecutionRepository;
+	@Autowired private ProjectReleaseRepo projectReleaseRepo;
+	@Autowired private SprintTraceLogRepository sprintTraceLogRepository;
+	@Autowired private UserInfoRepository userInfoRepository;
+	@Autowired private AccessRequestsRepository accessRequestsRepository;
+	@Autowired private KpiCommentsRepository kpiCommentsRepository;
+	@Autowired private KpiCommentsHistoryRepository kpiCommentsHistoryRepository;
 
-	@Autowired
-	private MigrationLockService migrationLockService;
+	@Autowired private MigrationLockService migrationLockService;
 
 	protected Map<String, OrganizationHierarchy> nodeWiseOrganizationHierarchy;
 	protected List<ProjectBasicConfig> projectBasicConfigList;
@@ -159,18 +139,21 @@ public class DataMigrationService {
 
 			for (ProjectBasicDup project : projectBasicDupList) {
 				List<HierarchyValueDup> hierarchyList = project.getHierarchy();
-				if (hierarchyList == null || hierarchyList.isEmpty())
-					continue;
+				if (hierarchyList == null || hierarchyList.isEmpty()) continue;
 				// copy mainOrganzation Hierarchy
-				Map<String, OrganizationHierarchy> projectHierarchyMap = new HashMap<>(nodeWiseOrganizationHierarchy);
+				Map<String, OrganizationHierarchy> projectHierarchyMap =
+						new HashMap<>(nodeWiseOrganizationHierarchy);
 
-				hierarchyList.sort((h1, h2) -> Integer.compare(h2.getHierarchyLevel().getLevel(),
-						h1.getHierarchyLevel().getLevel()));
+				hierarchyList.sort(
+						(h1, h2) ->
+								Integer.compare(
+										h2.getHierarchyLevel().getLevel(), h1.getHierarchyLevel().getLevel()));
 
 				try {
 					// Creating project node
 					int projectAboveLevel = hierarchyList.get(0).getHierarchyLevel().getLevel();
-					String projectParentId = checkParent(projectAboveLevel, hierarchyList, projectHierarchyMap);
+					String projectParentId =
+							checkParent(projectAboveLevel, hierarchyList, projectHierarchyMap);
 					OrganizationHierarchy projectHierarchy = new OrganizationHierarchy();
 					projectHierarchy.setNodeName(project.getProjectName());
 					projectHierarchy.setNodeDisplayName(project.getProjectName());
@@ -178,7 +161,8 @@ public class DataMigrationService {
 					projectHierarchy.setCreatedDate(LocalDateTime.now());
 					projectHierarchy.setParentId(projectParentId);
 					projectHierarchy.setNodeId(UUID.randomUUID().toString());
-					projectHierarchyMap.put(projectAboveLevel + 1 + ":" + project.getProjectName(), projectHierarchy);
+					projectHierarchyMap.put(
+							projectAboveLevel + 1 + ":" + project.getProjectName(), projectHierarchy);
 					nodeWiseOrganizationHierarchy.putAll(projectHierarchyMap);
 
 				} catch (InconsistentDataException e) {
@@ -196,11 +180,16 @@ public class DataMigrationService {
 		log.info("Start of Coping Name of Parent to Child");
 		for (int i = 0; i < projectBasicDupList.size(); i++) {
 			ProjectBasicDup projectBasicDup = projectBasicDupList.get(i);
-			projectBasicDup.getHierarchy().sort(
-					(h1, h2) -> Integer.compare(h2.getHierarchyLevel().getLevel(), h1.getHierarchyLevel().getLevel()));
+			projectBasicDup
+					.getHierarchy()
+					.sort(
+							(h1, h2) ->
+									Integer.compare(
+											h2.getHierarchyLevel().getLevel(), h1.getHierarchyLevel().getLevel()));
 
 			// recuursion
-			updateNameWithParent(projectBasicDup.getHierarchy().get(0).getHierarchyLevel().getLevel(),
+			updateNameWithParent(
+					projectBasicDup.getHierarchy().get(0).getHierarchyLevel().getLevel(),
 					projectBasicDup.getHierarchy());
 		}
 		log.info("End of Coping Name of Parent to Child");
@@ -208,9 +197,12 @@ public class DataMigrationService {
 
 	private String updateNameWithParent(int level, List<HierarchyValueDup> hierarchyList) {
 		// Find current level hierarchy value
-		HierarchyValueDup currentHierarchy = hierarchyList.stream()
-				.filter(hv -> hv.getHierarchyLevel().getLevel() == level).findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("No hierarchy found for level: " + level));
+		HierarchyValueDup currentHierarchy =
+				hierarchyList.stream()
+						.filter(hv -> hv.getHierarchyLevel().getLevel() == level)
+						.findFirst()
+						.orElseThrow(
+								() -> new IllegalArgumentException("No hierarchy found for level: " + level));
 		if (level == 1) {
 			return currentHierarchy.getValue();
 		} else {
@@ -238,21 +230,30 @@ public class DataMigrationService {
 		return projectBasicDupLists;
 	}
 
-	private static String checkParent(int level, List<HierarchyValueDup> hierarchyList,
-			Map<String, OrganizationHierarchy> nodeWiseOrganizationHierachy) throws InconsistentDataException {
+	private static String checkParent(
+			int level,
+			List<HierarchyValueDup> hierarchyList,
+			Map<String, OrganizationHierarchy> nodeWiseOrganizationHierachy)
+			throws InconsistentDataException {
 
 		if (level < 1) {
 			throw new IllegalArgumentException("Level cannot be less than 1");
 		}
 
 		// Find current level hierarchy value
-		HierarchyValueDup currentHierarchy = hierarchyList.stream()
-				.filter(hv -> hv.getHierarchyLevel().getLevel() == level).findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("No hierarchy found for level: " + level));
+		HierarchyValueDup currentHierarchy =
+				hierarchyList.stream()
+						.filter(hv -> hv.getHierarchyLevel().getLevel() == level)
+						.findFirst()
+						.orElseThrow(
+								() -> new IllegalArgumentException("No hierarchy found for level: " + level));
 
-		String key = level + ":"
-				+ (StringUtils.isEmpty(currentHierarchy.getCustomizedValue()) ? currentHierarchy.getValue()
-						: currentHierarchy.getCustomizedValue());
+		String key =
+				level
+						+ ":"
+						+ (StringUtils.isEmpty(currentHierarchy.getCustomizedValue())
+								? currentHierarchy.getValue()
+								: currentHierarchy.getCustomizedValue());
 		OrganizationHierarchy organizationHierarchy = nodeWiseOrganizationHierachy.get(key);
 
 		if (organizationHierarchy == null) {
@@ -260,12 +261,14 @@ public class DataMigrationService {
 			organizationHierarchy = new OrganizationHierarchy();
 			organizationHierarchy.setNodeName(currentHierarchy.getValue());
 			organizationHierarchy.setNodeDisplayName(currentHierarchy.getValue());
-			organizationHierarchy.setHierarchyLevelId(currentHierarchy.getHierarchyLevel().getHierarchyLevelId());
+			organizationHierarchy.setHierarchyLevelId(
+					currentHierarchy.getHierarchyLevel().getHierarchyLevelId());
 			organizationHierarchy.setCreatedDate(LocalDateTime.now());
 
 			// Recursively set parent
 			if (level > 1) {
-				organizationHierarchy.setParentId(checkParent(level - 1, hierarchyList, nodeWiseOrganizationHierachy));
+				organizationHierarchy.setParentId(
+						checkParent(level - 1, hierarchyList, nodeWiseOrganizationHierachy));
 			}
 
 			organizationHierarchy.setNodeId(UUID.randomUUID().toString());
@@ -273,9 +276,10 @@ public class DataMigrationService {
 			nodeWiseOrganizationHierachy.put(key, organizationHierarchy);
 		} else {
 			// Validate parent ID consistency
-			String expectedParentId = level > 1 ? checkParent(level - 1, hierarchyList, nodeWiseOrganizationHierachy)
-					: null;
-			if (expectedParentId != null && !expectedParentId.equals(organizationHierarchy.getParentId())) {
+			String expectedParentId =
+					level > 1 ? checkParent(level - 1, hierarchyList, nodeWiseOrganizationHierachy) : null;
+			if (expectedParentId != null
+					&& !expectedParentId.equals(organizationHierarchy.getParentId())) {
 				throw new InconsistentDataException(level + ":" + currentHierarchy.getValue());
 			}
 		}
@@ -292,64 +296,93 @@ public class DataMigrationService {
 			log.info("Calling the validation process");
 			List<MigrateData> failureData = dataMigration();
 			// Proceed only if there are no failures and the map is populated
-			if (CollectionUtils.isEmpty(failureData) && MapUtils.isNotEmpty(nodeWiseOrganizationHierarchy)) {
-				saveOrganizationHierarchyAndUpdateProjectBasic(new ArrayList<>(nodeWiseOrganizationHierarchy.values()),
-						projectBasicConfigList, projectBasicDupList);
+			if (CollectionUtils.isEmpty(failureData)
+					&& MapUtils.isNotEmpty(nodeWiseOrganizationHierarchy)) {
+				saveOrganizationHierarchyAndUpdateProjectBasic(
+						new ArrayList<>(nodeWiseOrganizationHierarchy.values()),
+						projectBasicConfigList,
+						projectBasicDupList);
 			}
 
 		} else {
-			saveOrganizationHierarchyAndUpdateProjectBasic(new ArrayList<>(nodeWiseOrganizationHierarchy.values()),
-					projectBasicConfigList, projectBasicDupList);
+			saveOrganizationHierarchyAndUpdateProjectBasic(
+					new ArrayList<>(nodeWiseOrganizationHierarchy.values()),
+					projectBasicConfigList,
+					projectBasicDupList);
 		}
 	}
 
-	public void saveOrganizationHierarchyAndUpdateProjectBasic(List<OrganizationHierarchy> organizationHierarchyList,
-			List<ProjectBasicConfig> projectBasicConfigList, List<ProjectBasicDup> projectBasicDupList) {
-		log.info("**********Recommended to take a backup of database before processing******************");
+	public void saveOrganizationHierarchyAndUpdateProjectBasic(
+			List<OrganizationHierarchy> organizationHierarchyList,
+			List<ProjectBasicConfig> projectBasicConfigList,
+			List<ProjectBasicDup> projectBasicDupList) {
+		log.info(
+				"**********Recommended to take a backup of database before processing******************");
 		log.info("Start - Updating Node Names to Original Values");
 		if (!migrationLockService.checkPreviousMigration()) {
 			MigrationLockLog fullMigration = new MigrationLockLog(MigrationEnum.MIGRATION_STEP.name());
 			try {
 				// Update node names to match their display names
 
-				organizationHierarchyList
-						.forEach(orgHierarchy -> orgHierarchy.setNodeName(orgHierarchy.getNodeDisplayName()));
+				organizationHierarchyList.forEach(
+						orgHierarchy -> orgHierarchy.setNodeName(orgHierarchy.getNodeDisplayName()));
 
 				// Map project names to their unique node IDs
-				Map<String, String> projectNameWiseUniqueId = organizationHierarchyList.stream()
-						.filter(orgHierarchy -> "project".equalsIgnoreCase(orgHierarchy.getHierarchyLevelId()))
-						.collect(Collectors.toMap(OrganizationHierarchy::getNodeDisplayName,
-								OrganizationHierarchy::getNodeId));
+				Map<String, String> projectNameWiseUniqueId =
+						organizationHierarchyList.stream()
+								.filter(
+										orgHierarchy -> "project".equalsIgnoreCase(orgHierarchy.getHierarchyLevelId()))
+								.collect(
+										Collectors.toMap(
+												OrganizationHierarchy::getNodeDisplayName,
+												OrganizationHierarchy::getNodeId));
 
-				Map<String, List<HierarchyValueDup>> collect = projectBasicDupList.stream()
-						.collect(Collectors.toMap(ProjectBasicDup::getProjectName, ProjectBasicDup::getHierarchy));
+				Map<String, List<HierarchyValueDup>> collect =
+						projectBasicDupList.stream()
+								.collect(
+										Collectors.toMap(
+												ProjectBasicDup::getProjectName, ProjectBasicDup::getHierarchy));
 
 				// Update project basic config list with unique projectNodeId
-				projectBasicConfigList.forEach(projectBasicConfig -> {
-					List<HierarchyValueDup> hierarchyValueDups = collect.get(projectBasicConfig.getProjectName());
+				projectBasicConfigList.forEach(
+						projectBasicConfig -> {
+							List<HierarchyValueDup> hierarchyValueDups =
+									collect.get(projectBasicConfig.getProjectName());
 
-					projectBasicConfig.getHierarchy()
-							.forEach(
-									hierarchyValue -> hierarchyValue.setOrgHierarchyNodeId(hierarchyValueDups.stream()
-											.filter(dup -> hierarchyValue.getHierarchyLevel().getLevel() == dup
-													.getHierarchyLevel().getLevel())
-											.toList().get(0).getOrgHierarchyNodeId()));
+							projectBasicConfig
+									.getHierarchy()
+									.forEach(
+											hierarchyValue ->
+													hierarchyValue.setOrgHierarchyNodeId(
+															hierarchyValueDups.stream()
+																	.filter(
+																			dup ->
+																					hierarchyValue.getHierarchyLevel().getLevel()
+																							== dup.getHierarchyLevel().getLevel())
+																	.toList()
+																	.get(0)
+																	.getOrgHierarchyNodeId()));
 
-					projectBasicConfig
-							.setProjectNodeId(projectNameWiseUniqueId.get(projectBasicConfig.getProjectName()));
-					projectBasicConfig.setProjectDisplayName(projectBasicConfig.getProjectName());
-				});
+							projectBasicConfig.setProjectNodeId(
+									projectNameWiseUniqueId.get(projectBasicConfig.getProjectName()));
+							projectBasicConfig.setProjectDisplayName(projectBasicConfig.getProjectName());
+						});
 
 				// projectHierarchy
-				Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId = projectBasicConfigList.stream()
-						.collect(Collectors.toMap(ProjectBasicConfig::getId,
-								config -> Pair.of(config.getProjectNodeId(), config.getProjectName()),
-								(existing, replacement) -> existing // Keep the first entry if duplicate projectId
-						// appears
-						));
+				Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId =
+						projectBasicConfigList.stream()
+								.collect(
+										Collectors.toMap(
+												ProjectBasicConfig::getId,
+												config -> Pair.of(config.getProjectNodeId(), config.getProjectName()),
+												(existing, replacement) ->
+														existing // Keep the first entry if duplicate projectId
+												// appears
+												));
 
-				Map<String, Object> dataToSave = createDataToSave(organizationHierarchyList, projectBasicConfigList,
-						projectIdWiseUniqueId);
+				Map<String, Object> dataToSave =
+						createDataToSave(
+								organizationHierarchyList, projectBasicConfigList, projectIdWiseUniqueId);
 
 				dataToSave.put("ORGANIZATION_HIERARCHY", organizationHierarchyList);
 				dataToSave.put("PROJECT_BASIC", projectBasicConfigList);
@@ -375,8 +408,8 @@ public class DataMigrationService {
 			} catch (Exception ex) {
 				log.error("An unexpected error occurred: {}", ex.getMessage());
 				fullMigration.setMigrated(false);
-				throw new IllegalStateException("An unexpected error occurred while saving data: " + ex.getMessage(),
-						ex);
+				throw new IllegalStateException(
+						"An unexpected error occurred while saving data: " + ex.getMessage(), ex);
 			} finally {
 				fullMigration.setMigrationDate(LocalDateTime.now());
 				migrationLockService.saveToDB(fullMigration);
@@ -384,24 +417,34 @@ public class DataMigrationService {
 		}
 	}
 
-	private Map<String, Object> createDataToSave(List<OrganizationHierarchy> organizationHierarchyList,
+	private Map<String, Object> createDataToSave(
+			List<OrganizationHierarchy> organizationHierarchyList,
 			List<ProjectBasicConfig> projectBasicConfigList,
 			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId) {
 		log.info("Start Processing Data");
-		List<String> labelNames = additionalFilterCategoryRepository.findAll().stream()
-				.map(AdditionalFilterCategory::getFilterCategoryId).collect(Collectors.toList());
+		List<String> labelNames =
+				additionalFilterCategoryRepository.findAll().stream()
+						.map(AdditionalFilterCategory::getFilterCategoryId)
+						.collect(Collectors.toList());
 		labelNames.add("sprint");
-		labelNames.add("release");
+		labelNames.add(Constant.RELEASE);
 
-		List<AccountHierarchy> accountHierarchyRepositoryAll = accountHierarchyRepository.findByLabelList(labelNames);
-		List<KanbanAccountHierarchy> kanbanAccountHierarchyList = kanbanAccountHierarchyRepository
-				.findByLabelList(labelNames);
+		List<AccountHierarchy> accountHierarchyRepositoryAll =
+				accountHierarchyRepository.findByLabelList(labelNames);
+		List<KanbanAccountHierarchy> kanbanAccountHierarchyList =
+				kanbanAccountHierarchyRepository.findByLabelList(labelNames);
 
 		Map<String, Object> dataSetToSave = new HashMap<>();
 		createSprintHierarchy(accountHierarchyRepositoryAll, projectIdWiseUniqueId, dataSetToSave);
-		createReleaseHierarchy(accountHierarchyRepositoryAll, kanbanAccountHierarchyList, projectIdWiseUniqueId,
+		createReleaseHierarchy(
+				accountHierarchyRepositoryAll,
+				kanbanAccountHierarchyList,
+				projectIdWiseUniqueId,
 				dataSetToSave);
-		createAdditinalFilterHierarchy(accountHierarchyRepositoryAll, kanbanAccountHierarchyList, projectIdWiseUniqueId,
+		createAdditinalFilterHierarchy(
+				accountHierarchyRepositoryAll,
+				kanbanAccountHierarchyList,
+				projectIdWiseUniqueId,
 				dataSetToSave);
 		updateCapacity(projectIdWiseUniqueId, dataSetToSave);
 		updateHappieness(dataSetToSave);
@@ -415,10 +458,15 @@ public class DataMigrationService {
 		return dataSetToSave;
 	}
 
-	private void updateKpiComments(List<ProjectBasicConfig> projectBasicConfigList, Map<String, Object> dataSetToSave) {
+	private void updateKpiComments(
+			List<ProjectBasicConfig> projectBasicConfigList, Map<String, Object> dataSetToSave) {
 
-		Map<String, String> projectNameWiseNodeId = projectBasicConfigList.stream().collect(
-				Collectors.toMap(a -> (a.getProjectName() + "_" + a.getId()), ProjectBasicConfig::getProjectNodeId));
+		Map<String, String> projectNameWiseNodeId =
+				projectBasicConfigList.stream()
+						.collect(
+								Collectors.toMap(
+										a -> (a.getProjectName() + "_" + a.getId()),
+										ProjectBasicConfig::getProjectNodeId));
 		Map<String, String> sprintNodeHistory = (Map<String, String>) dataSetToSave.get(SPRINT_HISTORY);
 		List<KpiCommentsHistory> allHistory = kpiCommentsHistoryRepository.findAll();
 		List<KPIComments> all = kpiCommentsRepository.findAll();
@@ -449,8 +497,11 @@ public class DataMigrationService {
 		dataSetToSave.put("KPI_COMMENT_HISTORY", finalKpiHistoryComment);
 	}
 
-	private static void kpiComment(Map<String, String> projectNameWiseNodeId, Map<String, String> sprintNodeHistory,
-			List<KPIComments> all, List<KPIComments> finalKpiComment) {
+	private static void kpiComment(
+			Map<String, String> projectNameWiseNodeId,
+			Map<String, String> sprintNodeHistory,
+			List<KPIComments> all,
+			List<KPIComments> finalKpiComment) {
 		if (CollectionUtils.isNotEmpty(all)) {
 			for (KPIComments kpiComment : all) {
 				if (projectNameWiseNodeId.containsKey(kpiComment.getNode())) {
@@ -467,13 +518,17 @@ public class DataMigrationService {
 		}
 	}
 
-	private void updateAccessRequest(List<OrganizationHierarchy> organizationHierarchyList,
-			Map<String, Object> dataSetToSave) {
-		Map<String, List<String>> map = organizationHierarchyList.stream()
-				.collect(Collectors.groupingBy(org -> org.getHierarchyLevelId() + "_" + org.getNodeDisplayName(),
-						Collectors.mapping(OrganizationHierarchy::getNodeId, Collectors.toList()) // Value: list of
-				// nodeIds
-				));
+	private void updateAccessRequest(
+			List<OrganizationHierarchy> organizationHierarchyList, Map<String, Object> dataSetToSave) {
+		Map<String, List<String>> map =
+				organizationHierarchyList.stream()
+						.collect(
+								Collectors.groupingBy(
+										org -> org.getHierarchyLevelId() + "_" + org.getNodeDisplayName(),
+										Collectors.mapping(
+												OrganizationHierarchy::getNodeId, Collectors.toList()) // Value: list of
+										// nodeIds
+										));
 
 		List<AccessRequest> accessRequest = accessRequestsRepository.findAll();
 		log.info("Access Request Data Processing Started");
@@ -483,7 +538,8 @@ public class DataMigrationService {
 		dataSetToSave.put("ACCESS_REQUEST", accessRequest);
 	}
 
-	private static void getAccessRequestData(Map<String, List<String>> map, List<AccessRequest> accessRequest) {
+	private static void getAccessRequestData(
+			Map<String, List<String>> map, List<AccessRequest> accessRequest) {
 		if (CollectionUtils.isNotEmpty(accessRequest)) {
 			for (AccessRequest request : accessRequest) {
 				AccessNode node = request.getAccessNode();
@@ -497,7 +553,10 @@ public class DataMigrationService {
 		}
 	}
 
-	private static void addNewAccessItem(Map<String, List<String>> map, AccessNode node, String level,
+	private static void addNewAccessItem(
+			Map<String, List<String>> map,
+			AccessNode node,
+			String level,
 			List<AccessItem> newAccessItem) {
 		for (AccessItem item : node.getAccessItems()) {
 			if (map.containsKey(level + "_" + item.getItemName())) {
@@ -511,11 +570,14 @@ public class DataMigrationService {
 		}
 	}
 
-	private void updateUserInfo(List<OrganizationHierarchy> organizationHierarchyList,
-			Map<String, Object> dataSetToSave) {
-		Map<String, List<String>> map = organizationHierarchyList.stream()
-				.collect(Collectors.groupingBy(org -> org.getHierarchyLevelId() + "_" + org.getNodeDisplayName(),
-						Collectors.mapping(OrganizationHierarchy::getNodeId, Collectors.toList())));
+	private void updateUserInfo(
+			List<OrganizationHierarchy> organizationHierarchyList, Map<String, Object> dataSetToSave) {
+		Map<String, List<String>> map =
+				organizationHierarchyList.stream()
+						.collect(
+								Collectors.groupingBy(
+										org -> org.getHierarchyLevelId() + "_" + org.getNodeDisplayName(),
+										Collectors.mapping(OrganizationHierarchy::getNodeId, Collectors.toList())));
 		List<UserInfo> newUserInfo = userInfoRepository.findAll();
 		log.info("User Info Data Processing Started");
 		if (CollectionUtils.isNotEmpty(newUserInfo)) {
@@ -530,7 +592,8 @@ public class DataMigrationService {
 		dataSetToSave.put("USER_INFO", newUserInfo);
 	}
 
-	private static void iterateProjectAccess(Map<String, List<String>> map, List<ProjectsAccess> projectsAccess) {
+	private static void iterateProjectAccess(
+			Map<String, List<String>> map, List<ProjectsAccess> projectsAccess) {
 		for (ProjectsAccess access : projectsAccess) {
 			List<AccessNode> accessNodes = access.getAccessNodes();
 			if (CollectionUtils.isNotEmpty(accessNodes)) {
@@ -563,19 +626,24 @@ public class DataMigrationService {
 		dataSetToSave.put("SPRINT_TRACELOG", sprintTraceLogFinalList);
 	}
 
-	private void updateProjectRelease(List<ProjectBasicConfig> projectBasicConfigList,
-			Map<String, Object> dataSetToSave) {
+	private void updateProjectRelease(
+			List<ProjectBasicConfig> projectBasicConfigList, Map<String, Object> dataSetToSave) {
 		List<ProjectRelease> projectReleaseList = projectReleaseRepo.findAll();
 
-		Map<ObjectId, Pair<String, String>> projectWiseIdName = projectBasicConfigList.stream().collect(
-				Collectors.toMap(ProjectBasicConfig::getId, a -> Pair.of(a.getProjectNodeId(), a.getProjectName())));
+		Map<ObjectId, Pair<String, String>> projectWiseIdName =
+				projectBasicConfigList.stream()
+						.collect(
+								Collectors.toMap(
+										ProjectBasicConfig::getId,
+										a -> Pair.of(a.getProjectNodeId(), a.getProjectName())));
 		List<ProjectRelease> projectReleaseFinalList = new ArrayList<>();
 		log.info("Project Release Data Processing Data Started");
 		if (CollectionUtils.isNotEmpty(projectReleaseList)) {
 			for (ProjectRelease projectRelease : projectReleaseList) {
 				if (projectWiseIdName.containsKey(projectRelease.getConfigId())) {
 					projectRelease.setProjectId(projectWiseIdName.get(projectRelease.getConfigId()).getKey());
-					projectRelease.setProjectName(projectWiseIdName.get(projectRelease.getConfigId()).getValue());
+					projectRelease.setProjectName(
+							projectWiseIdName.get(projectRelease.getConfigId()).getValue());
 					projectReleaseFinalList.add(projectRelease);
 				}
 			}
@@ -584,11 +652,12 @@ public class DataMigrationService {
 		log.info("Project Release Data Processing Data Completed");
 	}
 
-	private void updateTestExecution(Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+	private void updateTestExecution(
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
 			Map<String, Object> dataSetToSave) {
 		List<TestExecution> testExecutionList = (List<TestExecution>) testExecutionRepository.findAll();
-		List<KanbanTestExecution> kanbanTestExecutionList = (List<KanbanTestExecution>) kanbanTestExecutionRepository
-				.findAll();
+		List<KanbanTestExecution> kanbanTestExecutionList =
+				(List<KanbanTestExecution>) kanbanTestExecutionRepository.findAll();
 		List<TestExecution> testExecutionFinalList = new ArrayList<>();
 		List<KanbanTestExecution> kanbanTestExecutionFinalList = new ArrayList<>();
 		Map<String, String> sprintNodeHistory = (Map<String, String>) dataSetToSave.get(SPRINT_HISTORY);
@@ -599,7 +668,9 @@ public class DataMigrationService {
 						&& sprintNodeHistory.containsKey(testExecution.getSprintId())) {
 					testExecution.setSprintId(sprintNodeHistory.get(testExecution.getSprintId()));
 					testExecution.setProjectId(
-							projectIdWiseUniqueId.get(new ObjectId(testExecution.getBasicProjectConfigId())).getLeft());
+							projectIdWiseUniqueId
+									.get(new ObjectId(testExecution.getBasicProjectConfigId()))
+									.getLeft());
 					testExecutionFinalList.add(testExecution);
 				}
 			}
@@ -609,9 +680,12 @@ public class DataMigrationService {
 		log.info("Kanban TestExecution Data Processing Data Started");
 		if (CollectionUtils.isNotEmpty(kanbanTestExecutionList)) {
 			for (KanbanTestExecution testExecution : kanbanTestExecutionList) {
-				if (projectIdWiseUniqueId.containsKey(new ObjectId(testExecution.getBasicProjectConfigId()))) {
+				if (projectIdWiseUniqueId.containsKey(
+						new ObjectId(testExecution.getBasicProjectConfigId()))) {
 					testExecution.setProjectNodeId(
-							projectIdWiseUniqueId.get(new ObjectId(testExecution.getBasicProjectConfigId())).getLeft());
+							projectIdWiseUniqueId
+									.get(new ObjectId(testExecution.getBasicProjectConfigId()))
+									.getLeft());
 					kanbanTestExecutionFinalList.add(testExecution);
 				}
 			}
@@ -620,13 +694,15 @@ public class DataMigrationService {
 		log.info("Kanban TestExecution Data Processing Data Completed");
 	}
 
-	private void updateJiraIssue(Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+	private void updateJiraIssue(
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
 			Map<String, Object> dataSetToSave) {
 		Set<ObjectId> objectIds = projectIdWiseUniqueId.keySet();
 		List<String> projectBaiscConfig = objectIds.stream().map(ObjectId::toString).toList();
-		List<JiraIssue> jiraIssueRepositoryAll = jiraIssueRepository.findByBasicProjectConfigIdIn(projectBaiscConfig);
-		List<KanbanJiraIssue> kanbanJiraIssueHistoryRepositoryAll = kanbanJiraIssueRepository
-				.findByBasicProjectConfigIdIn(projectBaiscConfig);
+		List<JiraIssue> jiraIssueRepositoryAll =
+				jiraIssueRepository.findByBasicProjectConfigIdIn(projectBaiscConfig);
+		List<KanbanJiraIssue> kanbanJiraIssueHistoryRepositoryAll =
+				kanbanJiraIssueRepository.findByBasicProjectConfigIdIn(projectBaiscConfig);
 
 		Map<String, String> sprintNodeHistory = (Map<String, String>) dataSetToSave.get(SPRINT_HISTORY);
 		List<JiraIssue> jiraIssueList = new ArrayList<>();
@@ -648,7 +724,9 @@ public class DataMigrationService {
 			for (KanbanJiraIssue jiraIssue : kanbanJiraIssueHistoryRepositoryAll) {
 				if (projectIdWiseUniqueId.containsKey(new ObjectId(jiraIssue.getBasicProjectConfigId()))) {
 					jiraIssue.setProjectID(
-							projectIdWiseUniqueId.get(new ObjectId(jiraIssue.getBasicProjectConfigId())).getLeft());
+							projectIdWiseUniqueId
+									.get(new ObjectId(jiraIssue.getBasicProjectConfigId()))
+									.getLeft());
 					kanbanJiraIssueList.add(jiraIssue);
 				}
 			}
@@ -659,8 +737,8 @@ public class DataMigrationService {
 
 	private void updateHappieness(Map<String, Object> dataSetToSave) {
 		Map<String, String> sprintNodeHistory = (Map<String, String>) dataSetToSave.get(SPRINT_HISTORY);
-		List<HappinessKpiData> happienessCapacity = happinessKpiDataRepository
-				.findBySprintIDIn(sprintNodeHistory.keySet().stream().toList());
+		List<HappinessKpiData> happienessCapacity =
+				happinessKpiDataRepository.findBySprintIDIn(sprintNodeHistory.keySet().stream().toList());
 		List<HappinessKpiData> happinessKpiDataList = new ArrayList<>();
 		log.info("Happienes Data Processing Data Started");
 		if (CollectionUtils.isNotEmpty(happienessCapacity)) {
@@ -676,11 +754,14 @@ public class DataMigrationService {
 		dataSetToSave.put("HAPPIENSS", happinessKpiDataList);
 	}
 
-	private void updateCapacity(Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+	private void updateCapacity(
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
 			Map<String, Object> dataSetToSave) {
 		Set<ObjectId> objectIds = projectIdWiseUniqueId.keySet();
-		List<CapacityKpiData> capacityKpiDataList = capacityKpiDataRepository.findByBasicProjectConfigIdIn(objectIds);
-		List<KanbanCapacity> kanbanCapacityList = kanbanCapacityRepository.findByBasicProjectConfigIdIn(objectIds);
+		List<CapacityKpiData> capacityKpiDataList =
+				capacityKpiDataRepository.findByBasicProjectConfigIdIn(objectIds);
+		List<KanbanCapacity> kanbanCapacityList =
+				kanbanCapacityRepository.findByBasicProjectConfigIdIn(objectIds);
 		Map<String, String> sprintNodeHistory = (Map<String, String>) dataSetToSave.get(SPRINT_HISTORY);
 		List<CapacityKpiData> scrumCapacityKpi = new ArrayList<>();
 		List<KanbanCapacity> kanbanCapacities = new ArrayList<>();
@@ -689,8 +770,8 @@ public class DataMigrationService {
 			if (projectIdWiseUniqueId.containsKey(capacityKpiData.getBasicProjectConfigId())
 					&& sprintNodeHistory.containsKey(capacityKpiData.getSprintID())) {
 				capacityKpiData.setSprintID(sprintNodeHistory.get(capacityKpiData.getSprintID()));
-				capacityKpiData
-						.setProjectId(projectIdWiseUniqueId.get(capacityKpiData.getBasicProjectConfigId()).getLeft());
+				capacityKpiData.setProjectId(
+						projectIdWiseUniqueId.get(capacityKpiData.getBasicProjectConfigId()).getLeft());
 				scrumCapacityKpi.add(capacityKpiData);
 			}
 		}
@@ -698,8 +779,8 @@ public class DataMigrationService {
 		log.info("Kanban Capacity  Processing Data Started");
 		for (KanbanCapacity kanbanCapacity : kanbanCapacityList) {
 			if (projectIdWiseUniqueId.containsKey(kanbanCapacity.getBasicProjectConfigId())) {
-				kanbanCapacity
-						.setProjectId(projectIdWiseUniqueId.get(kanbanCapacity.getBasicProjectConfigId()).getLeft());
+				kanbanCapacity.setProjectId(
+						projectIdWiseUniqueId.get(kanbanCapacity.getBasicProjectConfigId()).getLeft());
 				kanbanCapacities.add(kanbanCapacity);
 			}
 		}
@@ -709,52 +790,64 @@ public class DataMigrationService {
 		dataSetToSave.put("KANBAN_CAPACITY", kanbanCapacities);
 	}
 
-	private void createSprintHierarchy(List<AccountHierarchy> accountHierarchyRepositoryAll,
-			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId, Map<String, Object> dataSetToSave) {
+	private void createSprintHierarchy(
+			List<AccountHierarchy> accountHierarchyRepositoryAll,
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+			Map<String, Object> dataSetToSave) {
 
-		Map<ObjectId, List<AccountHierarchy>> projectWiseSprints = accountHierarchyRepositoryAll.stream()
-				.filter(label -> label.getLabelName().equalsIgnoreCase("sprint"))
-				.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
+		Map<ObjectId, List<AccountHierarchy>> projectWiseSprints =
+				accountHierarchyRepositoryAll.stream()
+						.filter(label -> label.getLabelName().equalsIgnoreCase("sprint"))
+						.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
 
-		Map<ObjectId, List<SprintDetails>> projectWiseSprintDetails = sprintRepository
-				.findByBasicProjectConfigIdIn(projectIdWiseUniqueId.keySet().stream().toList()).stream()
-				.collect(Collectors.groupingBy(SprintDetails::getBasicProjectConfigId));
+		Map<ObjectId, List<SprintDetails>> projectWiseSprintDetails =
+				sprintRepository
+						.findByBasicProjectConfigIdIn(projectIdWiseUniqueId.keySet().stream().toList())
+						.stream()
+						.collect(Collectors.groupingBy(SprintDetails::getBasicProjectConfigId));
 
 		List<ProjectHierarchy> sprintHierarchyList = new ArrayList<>();
 		List<SprintDetails> sprintDetailsList = new ArrayList<>();
 
 		Map<String, String> sprintNodeHistory = new HashMap<>();
 
-		projectWiseSprints.forEach((project, hierarchies) -> {
-			// work only if the projects sprints are present
-			if (projectIdWiseUniqueId.containsKey(project)) {
-				String projectUniqueId = projectIdWiseUniqueId.get(project).getLeft();
-				String projectName = projectIdWiseUniqueId.get(project).getRight();
-				for (AccountHierarchy accountHierarchy : hierarchies) {
-					ProjectHierarchy sprintHierarchy = new ProjectHierarchy();
-					sprintHierarchy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
-					sprintHierarchy.setBeginDate(accountHierarchy.getBeginDate());
-					sprintHierarchy.setEndDate(accountHierarchy.getEndDate());
-					sprintHierarchy.setHierarchyLevelId(accountHierarchy.getLabelName());
-					String changedNodeName = changeNodeName(accountHierarchy.getNodeName(), projectName);
-					sprintHierarchy.setNodeName(changedNodeName);
-					sprintHierarchy.setNodeDisplayName(changedNodeName);
-					sprintHierarchy.setParentId(projectUniqueId);
-					sprintHierarchy.setNodeId(accountHierarchy.getNodeId().replace(accountHierarchy.getParentId(), "")
-							.concat(projectUniqueId));
-					sprintNodeHistory.put(accountHierarchy.getNodeId(), sprintHierarchy.getNodeId());
-					sprintHierarchyList.add(sprintHierarchy);
-				}
+		projectWiseSprints.forEach(
+				(project, hierarchies) -> {
+					// work only if the projects sprints are present
+					if (projectIdWiseUniqueId.containsKey(project)) {
+						String projectUniqueId = projectIdWiseUniqueId.get(project).getLeft();
+						String projectName = projectIdWiseUniqueId.get(project).getRight();
+						for (AccountHierarchy accountHierarchy : hierarchies) {
+							ProjectHierarchy sprintHierarchy = new ProjectHierarchy();
+							sprintHierarchy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
+							sprintHierarchy.setBeginDate(accountHierarchy.getBeginDate());
+							sprintHierarchy.setEndDate(accountHierarchy.getEndDate());
+							sprintHierarchy.setHierarchyLevelId(accountHierarchy.getLabelName());
+							String changedNodeName = changeNodeName(accountHierarchy.getNodeName(), projectName);
+							sprintHierarchy.setNodeName(changedNodeName);
+							sprintHierarchy.setNodeDisplayName(changedNodeName);
+							sprintHierarchy.setParentId(projectUniqueId);
+							sprintHierarchy.setNodeId(
+									accountHierarchy
+											.getNodeId()
+											.replace(accountHierarchy.getParentId(), "")
+											.concat(projectUniqueId));
+							sprintNodeHistory.put(accountHierarchy.getNodeId(), sprintHierarchy.getNodeId());
+							sprintHierarchyList.add(sprintHierarchy);
+						}
 
-				// update sprint details
-				List<SprintDetails> sprintDetails = projectWiseSprintDetails.getOrDefault(project, new ArrayList<>());
-				for (SprintDetails sprintDetail : sprintDetails) {
-					sprintDetail.setSprintID(sprintNodeHistory.getOrDefault(sprintDetail.getSprintID(),
-							sprintDetail.getOriginalSprintId() + "_" + projectUniqueId));
-				}
-				sprintDetailsList.addAll(sprintDetails);
-			}
-		});
+						// update sprint details
+						List<SprintDetails> sprintDetails =
+								projectWiseSprintDetails.getOrDefault(project, new ArrayList<>());
+						for (SprintDetails sprintDetail : sprintDetails) {
+							sprintDetail.setSprintID(
+									sprintNodeHistory.getOrDefault(
+											sprintDetail.getSprintID(),
+											sprintDetail.getOriginalSprintId() + "_" + projectUniqueId));
+						}
+						sprintDetailsList.addAll(sprintDetails);
+					}
+				});
 		log.info("Sprint Details  Processing Data Completed");
 		dataSetToSave.put(PROJECT_HIERARCHY, sprintHierarchyList);
 		dataSetToSave.put(SPRINT_DETAILS, sprintDetailsList);
@@ -763,162 +856,197 @@ public class DataMigrationService {
 
 	private String changeNodeName(String nodeName, String projectName) {
 
-		int index = nodeName.lastIndexOf(CommonConstant.ADDITIONAL_FILTER_VALUE_ID_SEPARATOR + projectName);
+		int index =
+				nodeName.lastIndexOf(CommonConstant.ADDITIONAL_FILTER_VALUE_ID_SEPARATOR + projectName);
 		// Extract substring only if projectName is found in nodeName
 		return (index != -1) ? nodeName.substring(0, index) : nodeName;
 	}
 
-	private void createReleaseHierarchy(List<AccountHierarchy> accountHierarchyRepositoryAll,
+	private void createReleaseHierarchy(
+			List<AccountHierarchy> accountHierarchyRepositoryAll,
 			List<KanbanAccountHierarchy> kanbanAccountHierarchyList,
-			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId, Map<String, Object> dataSetToSave) {
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+			Map<String, Object> dataSetToSave) {
 		log.info("Scrum Release Hierarchy Details  Processing Data Started");
-		Map<ObjectId, List<AccountHierarchy>> projectWiseScrumReleases = accountHierarchyRepositoryAll.stream()
-				.filter(label -> label.getLabelName().equalsIgnoreCase("release"))
-				.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
+		Map<ObjectId, List<AccountHierarchy>> projectWiseScrumReleases =
+				accountHierarchyRepositoryAll.stream()
+						.filter(label -> label.getLabelName().equalsIgnoreCase(Constant.RELEASE))
+						.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
 
-		Map<ObjectId, List<KanbanAccountHierarchy>> projectWiseKanbanReleases = kanbanAccountHierarchyList.stream()
-				.filter(label -> label.getLabelName().equalsIgnoreCase("release"))
-				.collect(Collectors.groupingBy(KanbanAccountHierarchy::getBasicProjectConfigId));
+		Map<ObjectId, List<KanbanAccountHierarchy>> projectWiseKanbanReleases =
+				kanbanAccountHierarchyList.stream()
+						.filter(label -> label.getLabelName().equalsIgnoreCase(Constant.RELEASE))
+						.collect(Collectors.groupingBy(KanbanAccountHierarchy::getBasicProjectConfigId));
 		// for scrum
 		List<ProjectHierarchy> projectHierarchyList = new ArrayList<>();
 		Map<String, String> releaseNodeHistory = new HashMap<>();
 
-		projectWiseScrumReleases.forEach((project, hierarchies) -> {
-			if (projectIdWiseUniqueId.containsKey(project)) {
-				String projectUniqueId = projectIdWiseUniqueId.get(project).getLeft();
-				String projectName = projectIdWiseUniqueId.get(project).getRight();
-				for (AccountHierarchy accountHierarchy : hierarchies) {
-					ProjectHierarchy releaseHierarchy = new ProjectHierarchy();
-					releaseHierarchy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
-					releaseHierarchy.setReleaseState(accountHierarchy.getReleaseState());
-					releaseHierarchy.setBeginDate(accountHierarchy.getBeginDate());
-					releaseHierarchy.setEndDate(accountHierarchy.getEndDate());
-					releaseHierarchy.setNodeId(accountHierarchy.getNodeId().replace(accountHierarchy.getParentId(), "")
-							.concat(projectUniqueId));
-					releaseHierarchy.setHierarchyLevelId(accountHierarchy.getLabelName());
-					String changedNodeName = changeNodeName(accountHierarchy.getNodeName(), projectName);
-					releaseHierarchy.setNodeName(changedNodeName);
-					releaseHierarchy.setNodeDisplayName(changedNodeName);
-					releaseHierarchy.setCreatedDate(accountHierarchy.getCreatedDate());
-					releaseHierarchy.setParentId(projectUniqueId);
-					releaseNodeHistory.put(accountHierarchy.getNodeId(), releaseHierarchy.getNodeId());
-					projectHierarchyList.add(releaseHierarchy);
-				}
-			}
-		});
+		projectWiseScrumReleases.forEach(
+				(project, hierarchies) -> {
+					if (projectIdWiseUniqueId.containsKey(project)) {
+						String projectUniqueId = projectIdWiseUniqueId.get(project).getLeft();
+						String projectName = projectIdWiseUniqueId.get(project).getRight();
+						for (AccountHierarchy accountHierarchy : hierarchies) {
+							ProjectHierarchy releaseHierarchy = new ProjectHierarchy();
+							releaseHierarchy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
+							releaseHierarchy.setReleaseState(accountHierarchy.getReleaseState());
+							releaseHierarchy.setBeginDate(accountHierarchy.getBeginDate());
+							releaseHierarchy.setEndDate(accountHierarchy.getEndDate());
+							releaseHierarchy.setNodeId(
+									accountHierarchy
+											.getNodeId()
+											.replace(accountHierarchy.getParentId(), "")
+											.concat(projectUniqueId));
+							releaseHierarchy.setHierarchyLevelId(accountHierarchy.getLabelName());
+							String changedNodeName = changeNodeName(accountHierarchy.getNodeName(), projectName);
+							releaseHierarchy.setNodeName(changedNodeName);
+							releaseHierarchy.setNodeDisplayName(changedNodeName);
+							releaseHierarchy.setCreatedDate(accountHierarchy.getCreatedDate());
+							releaseHierarchy.setParentId(projectUniqueId);
+							releaseNodeHistory.put(accountHierarchy.getNodeId(), releaseHierarchy.getNodeId());
+							projectHierarchyList.add(releaseHierarchy);
+						}
+					}
+				});
 		log.info("Scrum Release Hierarchy Details  Processing Data Completed");
 		log.info("Kanban Release Hierarchy Details  Processing Data Started");
 		// kanban projects
-		projectWiseKanbanReleases.forEach((project, hierarchies) -> {
-			if (projectIdWiseUniqueId.containsKey(project)) {
-				String projectUniqueId = projectIdWiseUniqueId.get(project).getLeft();
-				String projectName = projectIdWiseUniqueId.get(project).getRight();
-				for (KanbanAccountHierarchy accountHierarchy : hierarchies) {
-					ProjectHierarchy releaseHierarchy = new ProjectHierarchy();
-					releaseHierarchy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
-					releaseHierarchy.setReleaseState(accountHierarchy.getReleaseState());
-					releaseHierarchy.setBeginDate(accountHierarchy.getBeginDate());
-					releaseHierarchy.setEndDate(accountHierarchy.getEndDate());
-					releaseHierarchy.setNodeId(accountHierarchy.getNodeId().replace(accountHierarchy.getParentId(), "")
-							.concat(projectUniqueId));
-					releaseHierarchy.setHierarchyLevelId(accountHierarchy.getLabelName());
-					String changedNodeName = changeNodeName(accountHierarchy.getNodeName(), projectName);
-					releaseHierarchy.setNodeName(changedNodeName);
-					releaseHierarchy.setNodeDisplayName(changedNodeName);
-					releaseHierarchy.setCreatedDate(accountHierarchy.getCreatedDate());
-					releaseHierarchy.setParentId(projectUniqueId);
-					releaseNodeHistory.put(accountHierarchy.getNodeId(), releaseHierarchy.getNodeId());
-					projectHierarchyList.add(releaseHierarchy);
-				}
-			}
-		});
+		projectWiseKanbanReleases.forEach(
+				(project, hierarchies) -> {
+					if (projectIdWiseUniqueId.containsKey(project)) {
+						String projectUniqueId = projectIdWiseUniqueId.get(project).getLeft();
+						String projectName = projectIdWiseUniqueId.get(project).getRight();
+						for (KanbanAccountHierarchy accountHierarchy : hierarchies) {
+							ProjectHierarchy releaseHierarchy = new ProjectHierarchy();
+							releaseHierarchy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
+							releaseHierarchy.setReleaseState(accountHierarchy.getReleaseState());
+							releaseHierarchy.setBeginDate(accountHierarchy.getBeginDate());
+							releaseHierarchy.setEndDate(accountHierarchy.getEndDate());
+							releaseHierarchy.setNodeId(
+									accountHierarchy
+											.getNodeId()
+											.replace(accountHierarchy.getParentId(), "")
+											.concat(projectUniqueId));
+							releaseHierarchy.setHierarchyLevelId(accountHierarchy.getLabelName());
+							String changedNodeName = changeNodeName(accountHierarchy.getNodeName(), projectName);
+							releaseHierarchy.setNodeName(changedNodeName);
+							releaseHierarchy.setNodeDisplayName(changedNodeName);
+							releaseHierarchy.setCreatedDate(accountHierarchy.getCreatedDate());
+							releaseHierarchy.setParentId(projectUniqueId);
+							releaseNodeHistory.put(accountHierarchy.getNodeId(), releaseHierarchy.getNodeId());
+							projectHierarchyList.add(releaseHierarchy);
+						}
+					}
+				});
 
 		dataSetToSave.putIfAbsent(PROJECT_HIERARCHY, projectHierarchyList);
-		dataSetToSave.computeIfPresent(PROJECT_HIERARCHY, (k, v) -> {
-			((List<ProjectHierarchy>) v).addAll(projectHierarchyList);
-			return v;
-		});
+		dataSetToSave.computeIfPresent(
+				PROJECT_HIERARCHY,
+				(k, v) -> {
+					((List<ProjectHierarchy>) v).addAll(projectHierarchyList);
+					return v;
+				});
 		log.info("Kanban Release Hierarchy Details  Processing Data Completed");
 		dataSetToSave.put("RELEASE_HISTORY", releaseNodeHistory);
 	}
 
-	private void createAdditinalFilterHierarchy(List<AccountHierarchy> accountHierarchyRepositoryAll,
+	private void createAdditinalFilterHierarchy(
+			List<AccountHierarchy> accountHierarchyRepositoryAll,
 			List<KanbanAccountHierarchy> kanbanAccountHierarchyList,
-			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId, Map<String, Object> dataSetToSave) {
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+			Map<String, Object> dataSetToSave) {
 		log.info("Scrum Additional Hierarchy Details  Processing Data Started");
-		List<String> additonalFilterCategoryList = additionalFilterCategoryRepository.findAll().stream()
-				.map(AdditionalFilterCategory::getFilterCategoryId).toList();
+		List<String> additonalFilterCategoryList =
+				additionalFilterCategoryRepository.findAll().stream()
+						.map(AdditionalFilterCategory::getFilterCategoryId)
+						.toList();
 
-		Map<ObjectId, List<AccountHierarchy>> projectWiseScrumAdditonalFilter = accountHierarchyRepositoryAll.stream()
-				.filter(label -> additonalFilterCategoryList.contains(label.getLabelName()))
-				.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
+		Map<ObjectId, List<AccountHierarchy>> projectWiseScrumAdditonalFilter =
+				accountHierarchyRepositoryAll.stream()
+						.filter(label -> additonalFilterCategoryList.contains(label.getLabelName()))
+						.collect(Collectors.groupingBy(AccountHierarchy::getBasicProjectConfigId));
 
-		Map<ObjectId, List<KanbanAccountHierarchy>> projectWiseKanbanAdditonalFilter = kanbanAccountHierarchyList
-				.stream().filter(label -> additonalFilterCategoryList.contains(label.getLabelName()))
-				.collect(Collectors.groupingBy(KanbanAccountHierarchy::getBasicProjectConfigId));
+		Map<ObjectId, List<KanbanAccountHierarchy>> projectWiseKanbanAdditonalFilter =
+				kanbanAccountHierarchyList.stream()
+						.filter(label -> additonalFilterCategoryList.contains(label.getLabelName()))
+						.collect(Collectors.groupingBy(KanbanAccountHierarchy::getBasicProjectConfigId));
 
 		// for scrum
 		List<ProjectHierarchy> projectHierarchyList = new ArrayList<>();
 		Map<String, String> sprintNodeHistory = (Map<String, String>) dataSetToSave.get(SPRINT_HISTORY);
 
-		scrumAdditionalHierarchyData(projectIdWiseUniqueId, projectWiseScrumAdditonalFilter, projectHierarchyList,
+		scrumAdditionalHierarchyData(
+				projectIdWiseUniqueId,
+				projectWiseScrumAdditonalFilter,
+				projectHierarchyList,
 				sprintNodeHistory);
 		log.info("Scrum Additional Hierarchy Details  Processing Data Completed");
 		log.info("Kanban Additional Hierarchy Details  Processing Data Started");
 
 		// for kanban
-		kanbanAdditionalHierarchyData(projectIdWiseUniqueId, projectWiseKanbanAdditonalFilter, projectHierarchyList);
+		kanbanAdditionalHierarchyData(
+				projectIdWiseUniqueId, projectWiseKanbanAdditonalFilter, projectHierarchyList);
 		log.info("Kanban Additional Hierarchy Details  Processing Data Completed");
 		dataSetToSave.putIfAbsent(PROJECT_HIERARCHY, projectHierarchyList);
-		dataSetToSave.computeIfPresent(PROJECT_HIERARCHY, (k, v) -> {
-			((List<ProjectHierarchy>) v).addAll(projectHierarchyList);
-			return v;
-		});
+		dataSetToSave.computeIfPresent(
+				PROJECT_HIERARCHY,
+				(k, v) -> {
+					((List<ProjectHierarchy>) v).addAll(projectHierarchyList);
+					return v;
+				});
 	}
 
-	private static void kanbanAdditionalHierarchyData(Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+	private static void kanbanAdditionalHierarchyData(
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
 			Map<ObjectId, List<KanbanAccountHierarchy>> projectWiseKanbanAdditonalFilter,
 			List<ProjectHierarchy> projectHierarchyList) {
 		if (MapUtils.isNotEmpty(projectIdWiseUniqueId)) {
-			projectWiseKanbanAdditonalFilter.forEach((project, hierarchies) -> {
-				if (projectIdWiseUniqueId.containsKey(project)) {
-					for (KanbanAccountHierarchy accountHierarchy : hierarchies) {
-						ProjectHierarchy additionalHierachy = new ProjectHierarchy();
-						additionalHierachy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
-						additionalHierachy.setNodeId(accountHierarchy.getNodeId());
-						additionalHierachy.setHierarchyLevelId(accountHierarchy.getLabelName());
-						additionalHierachy.setNodeName(accountHierarchy.getNodeName());
-						additionalHierachy.setNodeDisplayName(accountHierarchy.getNodeName());
-						additionalHierachy.setCreatedDate(accountHierarchy.getCreatedDate());
-						additionalHierachy.setParentId(projectIdWiseUniqueId.get(project).getLeft());
-						projectHierarchyList.add(additionalHierachy);
-					}
-				}
-			});
+			projectWiseKanbanAdditonalFilter.forEach(
+					(project, hierarchies) -> {
+						if (projectIdWiseUniqueId.containsKey(project)) {
+							for (KanbanAccountHierarchy accountHierarchy : hierarchies) {
+								ProjectHierarchy additionalHierachy = new ProjectHierarchy();
+								additionalHierachy.setBasicProjectConfigId(
+										accountHierarchy.getBasicProjectConfigId());
+								additionalHierachy.setNodeId(accountHierarchy.getNodeId());
+								additionalHierachy.setHierarchyLevelId(accountHierarchy.getLabelName());
+								additionalHierachy.setNodeName(accountHierarchy.getNodeName());
+								additionalHierachy.setNodeDisplayName(accountHierarchy.getNodeName());
+								additionalHierachy.setCreatedDate(accountHierarchy.getCreatedDate());
+								additionalHierachy.setParentId(projectIdWiseUniqueId.get(project).getLeft());
+								projectHierarchyList.add(additionalHierachy);
+							}
+						}
+					});
 		}
 	}
 
-	private static void scrumAdditionalHierarchyData(Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
+	private static void scrumAdditionalHierarchyData(
+			Map<ObjectId, Pair<String, String>> projectIdWiseUniqueId,
 			Map<ObjectId, List<AccountHierarchy>> projectWiseScrumAdditonalFilter,
-			List<ProjectHierarchy> projectHierarchyList, Map<String, String> sprintNodeHistory) {
+			List<ProjectHierarchy> projectHierarchyList,
+			Map<String, String> sprintNodeHistory) {
 		if (MapUtils.isNotEmpty(sprintNodeHistory)) {
-			projectWiseScrumAdditonalFilter.forEach((project, hierarchies) -> {
-				if (projectIdWiseUniqueId.containsKey(project)) {
-					for (AccountHierarchy accountHierarchy : hierarchies) {
-						if (sprintNodeHistory.containsKey(accountHierarchy.getParentId())) {
-							ProjectHierarchy additionalHierachy = new ProjectHierarchy();
-							additionalHierachy.setBasicProjectConfigId(accountHierarchy.getBasicProjectConfigId());
-							additionalHierachy.setNodeId(accountHierarchy.getNodeId());
-							additionalHierachy.setHierarchyLevelId(accountHierarchy.getLabelName());
-							additionalHierachy.setNodeName(accountHierarchy.getNodeName());
-							additionalHierachy.setNodeDisplayName(accountHierarchy.getNodeName());
-							additionalHierachy.setCreatedDate(accountHierarchy.getCreatedDate());
-							additionalHierachy.setParentId(sprintNodeHistory.get(accountHierarchy.getParentId()));
-							projectHierarchyList.add(additionalHierachy);
+			projectWiseScrumAdditonalFilter.forEach(
+					(project, hierarchies) -> {
+						if (projectIdWiseUniqueId.containsKey(project)) {
+							for (AccountHierarchy accountHierarchy : hierarchies) {
+								if (sprintNodeHistory.containsKey(accountHierarchy.getParentId())) {
+									ProjectHierarchy additionalHierachy = new ProjectHierarchy();
+									additionalHierachy.setBasicProjectConfigId(
+											accountHierarchy.getBasicProjectConfigId());
+									additionalHierachy.setNodeId(accountHierarchy.getNodeId());
+									additionalHierachy.setHierarchyLevelId(accountHierarchy.getLabelName());
+									additionalHierachy.setNodeName(accountHierarchy.getNodeName());
+									additionalHierachy.setNodeDisplayName(accountHierarchy.getNodeName());
+									additionalHierachy.setCreatedDate(accountHierarchy.getCreatedDate());
+									additionalHierachy.setParentId(
+											sprintNodeHistory.get(accountHierarchy.getParentId()));
+									projectHierarchyList.add(additionalHierachy);
+								}
+							}
 						}
-					}
-				}
-			});
+					});
 		}
 	}
 }

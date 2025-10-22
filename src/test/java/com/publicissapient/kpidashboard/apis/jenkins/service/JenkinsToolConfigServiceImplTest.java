@@ -60,25 +60,21 @@ import com.publicissapient.kpidashboard.common.repository.connection.ConnectionR
 @RunWith(MockitoJUnitRunner.class)
 public class JenkinsToolConfigServiceImplTest {
 
-	@Mock
-	private RestAPIUtils restAPIUtils;
+	@Mock private RestAPIUtils restAPIUtils;
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@Mock
-	private ConnectionRepository connectionRepository;
-	@Mock
-	private ConnectionService connectionService;
-	@InjectMocks
-	private JenkinsToolConfigServiceImpl jenkinsToolConfigService;
+	@Mock private ConnectionRepository connectionRepository;
+	@Mock private ConnectionService connectionService;
+	@InjectMocks private JenkinsToolConfigServiceImpl jenkinsToolConfigService;
 
 	private Optional<Connection> testConnectionOpt;
 	private Connection connection;
 	private String connectionId;
 	private List<String> responseProjectList = new ArrayList<>();
 
-	private String jenkinsUrl = "http://test.abc.com/api/json?tree=jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url]]]]]]]]]]]]";
+	private String jenkinsUrl =
+			"http://test.abc.com/api/json?tree=jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url,jobs[url]]]]]]]]]]]]";
 
 	@Before
 	public void setup() {

@@ -16,6 +16,10 @@
 
 package com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi;
 
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,9 +27,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.List;
 
 @Data
 @Builder
@@ -35,17 +36,13 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class SearchKpiResponseDTO {
-    private String kpis;
-    private String message;
+	private String kpis;
+	private String message;
 
-    public List<String> getKpis() {
-        if(StringUtils.isBlank(kpis) ||kpis.equalsIgnoreCase("null")) {
-            return List.of();
-        }
-        return List.of(kpis.split(","));
-
-    }
-
-
-
+	public List<String> getKpis() {
+		if (StringUtils.isBlank(kpis) || kpis.equalsIgnoreCase("null")) {
+			return List.of();
+		}
+		return List.of(kpis.split(","));
+	}
 }

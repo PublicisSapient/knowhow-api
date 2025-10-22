@@ -44,14 +44,11 @@ public class FileStorageControllerTest {
 
 	private MockMvc mockMvc;
 
-	@Mock
-	private FileStorageService fileStorageService;
+	@Mock private FileStorageService fileStorageService;
 
-	@InjectMocks
-	private FileStorageController fileStorageController;
+	@InjectMocks private FileStorageController fileStorageController;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void before() {
@@ -80,8 +77,9 @@ public class FileStorageControllerTest {
 
 	@Test
 	public void testUploadFile() throws Exception {
-		MockMultipartFile file = new MockMultipartFile("file", "PsKnowHowLogo.png", MediaType.TEXT_PLAIN_VALUE,
-				"Hello, World!".getBytes());
+		MockMultipartFile file =
+				new MockMultipartFile(
+						"file", "PsKnowHowLogo.png", MediaType.TEXT_PLAIN_VALUE, "Hello, World!".getBytes());
 
 		// when(fileStorageService.upload(Mockito.any())).thenReturn(new
 		// BaseResponse());

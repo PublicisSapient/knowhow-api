@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author purgupta2
  */
-@ChangeUnit(id = "defectBy_field_mapping_changes", order = "9005", author = "purgupta2", systemVersion = "9.0.0")
+@ChangeUnit(
+		id = "defectBy_field_mapping_changes",
+		order = "9005",
+		author = "purgupta2",
+		systemVersion = "9.0.0")
 public class ReleaseDefectByFieldMappingChanges {
 
 	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
@@ -63,10 +67,18 @@ public class ReleaseDefectByFieldMappingChanges {
 	}
 
 	public void insertFieldMapping(String currentFieldName) {
-		Document fieldMappingDocument = new Document().append(FIELD_NAME, currentFieldName)
-				.append(FIELD_LABEL, "DOD Status").append(FIELD_TYPE, "chips").append(FIELD_CATEGORY, "workflow")
-				.append("section", "WorkFlow Status Mapping").append(TOOL_TIP, new Document(DEFINITION,
-						"Status/es that identify that an issue is completed based on Definition of Done (DoD)."));
+		Document fieldMappingDocument =
+				new Document()
+						.append(FIELD_NAME, currentFieldName)
+						.append(FIELD_LABEL, "DOD Status")
+						.append(FIELD_TYPE, "chips")
+						.append(FIELD_CATEGORY, "workflow")
+						.append("section", "WorkFlow Status Mapping")
+						.append(
+								TOOL_TIP,
+								new Document(
+										DEFINITION,
+										"Status/es that identify that an issue is completed based on Definition of Done (DoD)."));
 
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(fieldMappingDocument);
 	}
@@ -77,7 +89,11 @@ public class ReleaseDefectByFieldMappingChanges {
 	}
 
 	private void deleteRCAAndPriorityFieldMappingRollback() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE)
-				.deleteMany(Filters.or(Filters.eq(FIELD_NAME, DOD_STATUS_KPI142), Filters.eq(FIELD_NAME, DOD_STATUS_KPI144)));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.deleteMany(
+						Filters.or(
+								Filters.eq(FIELD_NAME, DOD_STATUS_KPI142),
+								Filters.eq(FIELD_NAME, DOD_STATUS_KPI144)));
 	}
 }
