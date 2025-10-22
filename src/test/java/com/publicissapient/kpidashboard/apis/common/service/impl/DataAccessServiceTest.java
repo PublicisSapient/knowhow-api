@@ -24,11 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 class DataAccessServiceTest {
 

@@ -45,7 +45,6 @@ import org.springframework.web.client.RestTemplate;
 import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
-import com.publicissapient.kpidashboard.apis.auth.AuthenticationUtil;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.DeleteLastAdminException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.UserNotFoundException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
@@ -139,10 +138,12 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public Collection<UserInfoDTO> getUsers() {
-		Collection<GrantedAuthority> grantedAuthorities = getAuthorities(authenticationService.getLoggedInUser());
+		Collection<GrantedAuthority> grantedAuthorities =
+				getAuthorities(authenticationService.getLoggedInUser());
 		List<String> roles = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
 
-		List<UserInfo> userInfoList = dataAccessService.getMembersForUser(roles,authenticationService.getLoggedInUser());
+		List<UserInfo> userInfoList =
+				dataAccessService.getMembersForUser(roles, authenticationService.getLoggedInUser());
 		List<String> userNames = userInfoList.stream().map(UserInfo::getUsername).toList();
 
 		List<Authentication> authentications = authenticationRepository.findByUsernameIn(userNames);

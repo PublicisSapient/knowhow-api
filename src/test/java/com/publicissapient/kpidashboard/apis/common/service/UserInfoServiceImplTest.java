@@ -69,52 +69,32 @@ public class UserInfoServiceImplTest {
 
 	private static final String ROLE_VIEWER = "ROLE_VIEWER";
 	private static final String ROLE_SUPERADMIN = "ROLE_SUPERADMIN";
-	@Mock
-	AuthenticationService authenticationService;
-	@Mock
-	UserTokenDeletionService userTokenDeletionService;
-	@Mock
-	UserBoardConfigService userBoardConfigService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	private UserInfoRepository userInfoRepository;
+	@Mock AuthenticationService authenticationService;
+	@Mock UserTokenDeletionService userTokenDeletionService;
+	@Mock UserBoardConfigService userBoardConfigService;
+	@Mock CacheService cacheService;
+	@Mock TokenAuthenticationService tokenAuthenticationService;
+	@Mock private UserInfoRepository userInfoRepository;
 
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
-	@InjectMocks
-	private UserInfoServiceImpl service;
+	@InjectMocks private UserInfoServiceImpl service;
 
-	@Mock
-	private DataAccessService dataAccessService;
+	@Mock private DataAccessService dataAccessService;
 
-	@Mock
-	private AuthProperties authProperties;
-	@Mock
-	private AuthenticationRepository authenticationRepository;
-	@Mock
-	private UserInfoCustomRepository userInfoCustomRepository;
-	@Mock
-	private ProjectBasicConfigService projectBasicConfigService;
-	@Mock
-	private ProjectAccessManager projectAccessManager;
-	@Mock
-	private HttpServletRequest httpServletRequest;
-	@Mock
-	private UserTokenReopository userTokenReopository;
-	@Mock
-	private CookieUtil cookieUtil;
-	@Mock
-	private Cookie cookie;
+	@Mock private AuthProperties authProperties;
+	@Mock private AuthenticationRepository authenticationRepository;
+	@Mock private UserInfoCustomRepository userInfoCustomRepository;
+	@Mock private ProjectBasicConfigService projectBasicConfigService;
+	@Mock private ProjectAccessManager projectAccessManager;
+	@Mock private HttpServletRequest httpServletRequest;
+	@Mock private UserTokenReopository userTokenReopository;
+	@Mock private CookieUtil cookieUtil;
+	@Mock private Cookie cookie;
 
-	@Mock
-	private SecurityContext securityContext;
+	@Mock private SecurityContext securityContext;
 
-	@Mock
-	private org.springframework.security.core.Authentication authentication;
+	@Mock private org.springframework.security.core.Authentication authentication;
 
 	@BeforeEach
 	void setUp() {
@@ -247,7 +227,7 @@ public class UserInfoServiceImplTest {
 		assertEquals(authType, result.getAuthType());
 	}
 
-	UserInfo createUserInfo(){
+	UserInfo createUserInfo() {
 		ProjectsAccess pa = new ProjectsAccess();
 		pa.setRole(ROLE_SUPERADMIN);
 		pa.setAccessNodes(new ArrayList<>());
@@ -270,12 +250,12 @@ public class UserInfoServiceImplTest {
 
 		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser())).thenReturn(testUser);
+		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
+				.thenReturn(testUser);
 
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(0, ((ArrayList<UserInfo>) result.getData()).size());
 	}
-
 
 	@Test
 	public void getAllUserInfoWithData() {
@@ -283,10 +263,7 @@ public class UserInfoServiceImplTest {
 		SecurityContextHolder.setContext(securityContext);
 		List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Constant.ROLE_SUPERADMIN);
 
-		List<String> roles = authorities
-				.stream()
-				.map(GrantedAuthority::getAuthority)
-				.toList();
+		List<String> roles = authorities.stream().map(GrantedAuthority::getAuthority).toList();
 
 		UserInfo testUser = new UserInfo();
 		testUser.setUsername("UnitTest");
@@ -295,8 +272,10 @@ public class UserInfoServiceImplTest {
 		userInfoList.add(testUser);
 
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser())).thenReturn(testUser);
-		when(dataAccessService.getMembersForUser(roles,authentication.getName())).thenReturn(userInfoList);
+		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
+				.thenReturn(testUser);
+		when(dataAccessService.getMembersForUser(roles, authentication.getName()))
+				.thenReturn(userInfoList);
 
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(1, ((ArrayList<UserInfo>) result.getData()).size());
