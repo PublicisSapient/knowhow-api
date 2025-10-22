@@ -19,13 +19,13 @@
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
   <artifactId>customapi</artifactId>
-  <version>14.1.0-SNAPSHOT</version>
+  <version>14.0.0</version>
   <packaging>jar</packaging>
   <description>Rest API Layer</description>
   <scm>
     <connection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</connection>
     <developerConnection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</developerConnection>
-    <tag>4.6.1</tag>
+    <tag>14.0.0</tag>
     <url>https://github.com/PublicisSapient/knowhow-api.git</url>
   </scm>
   <properties>
