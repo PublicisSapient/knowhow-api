@@ -15,8 +15,10 @@
  */
 package com.publicissapient.kpidashboard.apis.common.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +49,6 @@ class DataAccessServiceTest {
 		Map<String, DataAccessPolicy> policies = new HashMap<>();
 		policies.put("SUPER_ADMIN", superAdminPolicy);
 		policies.put("PROJECT_ADMIN", projectAdminPolicy);
-		policies.put("READ_ONLY_USER", readOnlyPolicy);
 
 		// Initialize service with policies
 		dataAccessService = new DataAccessService(policies);
@@ -79,7 +80,7 @@ class DataAccessServiceTest {
 	@Test
 	void shouldReturnMembersForProjectAdmin() {
 		// given
-		List<String> providedRoles = List.of("PROJECT_ADMIN");
+		List<String> providedRoles = List.of("PROJECT_ADMIN", "READ_ONLY_USER");
 		String user = "projectAdminUser";
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("member1");
@@ -106,11 +107,13 @@ class DataAccessServiceTest {
 		when(readOnlyPolicy.getAccessibleMembers(user)).thenReturn(expectedMembers);
 
 		// when
-		List<UserInfo> result = dataAccessService.getMembersForUser(providedRoles, user);
+		IllegalArgumentException exception =
+				assertThrows(
+						IllegalArgumentException.class,
+						() -> dataAccessService.getMembersForUser(providedRoles, user));
 
 		// then
-		assertTrue(result.isEmpty());
-		verify(readOnlyPolicy, times(1)).getAccessibleMembers(user);
+		assertTrue(exception.getMessage().contains("No policy defined for role"));
 		verifyNoInteractions(superAdminPolicy);
 		verifyNoInteractions(projectAdminPolicy);
 	}

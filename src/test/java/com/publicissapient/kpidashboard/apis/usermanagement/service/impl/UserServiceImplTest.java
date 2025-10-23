@@ -16,10 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertThrows;
+import static org.testng.AssertJUnit.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +39,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -61,8 +64,7 @@ class UserServiceImplTest {
 
 	@Mock private Authentication authentication;
 
-	private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel>
-			mockHierarchyLevels;
+	@Mock private AuthenticationService authenticationService;
 
 	@BeforeEach
 	void setUp() {
@@ -73,27 +75,30 @@ class UserServiceImplTest {
 	@Test
 	void testSaveUserInfo_NewUserForProjectAdmin() {
 		String username = "testUser";
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
+
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
-		List<GrantedAuthority> authorities =
-				List.of((GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN);
+
 		ProjectsAccess access = getProjectAccess("project");
 
+		List<GrantedAuthority> authorities =
+				List.of((GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN);
+		when(userInfoService.getAuthorities(any())).thenReturn(authorities);
 		UserInfo projectAdminUserInfo = new UserInfo();
 		projectAdminUserInfo.setUsername("ProjectAdmin");
 		projectAdminUserInfo.setProjectsAccess(List.of(access));
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
-		when(userInfoService.getUserInfo(authentication.getName())).thenReturn(projectAdminUserInfo);
+
+		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser()))
+				.thenReturn(projectAdminUserInfo);
 
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
 		savedUserInfo.setAuthType(AuthType.SAML);
 		savedUserInfo.setAuthorities(new ArrayList<>());
 		savedUserInfo.setEmailAddress("");
-		savedUserInfo.setProjectsAccess(Collections.emptyList());
+		savedUserInfo.setProjectsAccess(List.of(access));
 
-		when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
+		when(userInfoService.save(any())).thenReturn(savedUserInfo);
 
 		// Act
 		ServiceResponse result = userService.saveUserInfo(username);
@@ -110,17 +115,14 @@ class UserServiceImplTest {
 	@Test
 	void testSaveUserInfo_NewUserForOtherUser() {
 		String username = "testUser";
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
-		List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Constant.ROLE_GUEST);
 
 		ProjectsAccess access = getProjectAccess("project");
 
 		UserInfo projectAdminUserInfo = new UserInfo();
 		projectAdminUserInfo.setUsername("ProjectAdmin");
 		projectAdminUserInfo.setProjectsAccess(List.of(access));
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
 
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
@@ -160,20 +162,13 @@ class UserServiceImplTest {
 	@Test
 	void testSaveUserInfo_NewUserForProjectAdmin1() {
 		String username = "testUser";
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
-		List<GrantedAuthority> authorities =
-				List.of((GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN);
 		ProjectsAccess access = getProjectAccess("acc");
 
 		UserInfo projectAdminUserInfo = new UserInfo();
 		projectAdminUserInfo.setUsername("ProjectAdmin");
 		projectAdminUserInfo.setProjectsAccess(List.of(access));
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
-		when(userInfoService.getUserInfo(authentication.getName())).thenReturn(projectAdminUserInfo);
-		mockHierarchyLevels = createMockHierarchyLevels();
-		when(hierarchyLevelService.getTopHierarchyLevels()).thenReturn(mockHierarchyLevels);
 
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
@@ -199,21 +194,13 @@ class UserServiceImplTest {
 	@Test
 	void testSaveUserInfo_NewUserForProjectAdminForAccess() {
 		String username = "testUser";
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
-		List<GrantedAuthority> authorities =
-				List.of((GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN);
-
 		ProjectsAccess access = getProjectAccess("port");
 
 		UserInfo projectAdminUserInfo = new UserInfo();
 		projectAdminUserInfo.setUsername("ProjectAdmin");
 		projectAdminUserInfo.setProjectsAccess(List.of(access));
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
-		when(userInfoService.getUserInfo(authentication.getName())).thenReturn(projectAdminUserInfo);
-		mockHierarchyLevels = createMockHierarchyLevels();
-		when(hierarchyLevelService.getTopHierarchyLevels()).thenReturn(mockHierarchyLevels);
 
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
@@ -240,13 +227,10 @@ class UserServiceImplTest {
 	void testSaveUserInfo_NewUserForSuperAdmin() {
 		// Arrange
 		String username = "testUser";
-		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
 		List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Constant.ROLE_SUPERADMIN);
-
-		Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
-
+		when(userInfoService.getAuthorities(any())).thenReturn(authorities);
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
 		savedUserInfo.setAuthType(AuthType.SAML);
@@ -278,9 +262,6 @@ class UserServiceImplTest {
 		existingUserInfo.setAuthType(AuthType.SAML);
 
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(existingUserInfo);
-		List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Constant.ROLE_SUPERADMIN);
-
-		// Mockito.when(authentication.getAuthorities()).thenReturn((List) authorities);
 
 		// Act
 		ServiceResponse result = userService.saveUserInfo(username);
@@ -303,41 +284,5 @@ class UserServiceImplTest {
 	void testSaveUserInfo_EmptyUsername() {
 		// Act & Assert
 		assertThrows(IllegalArgumentException.class, () -> userService.saveUserInfo(""));
-	}
-
-	private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel>
-			createMockHierarchyLevels() {
-		List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> levels =
-				new ArrayList<>();
-
-		com.publicissapient.kpidashboard.common.model.application.HierarchyLevel buLevel =
-				new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-		buLevel.setHierarchyLevelId("bu");
-		buLevel.setHierarchyLevelName("BU");
-		buLevel.setLevel(1);
-		levels.add(buLevel);
-
-		com.publicissapient.kpidashboard.common.model.application.HierarchyLevel verticalLevel =
-				new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-		verticalLevel.setHierarchyLevelId("ver");
-		verticalLevel.setHierarchyLevelName("VERTICAL");
-		verticalLevel.setLevel(2);
-		levels.add(verticalLevel);
-
-		com.publicissapient.kpidashboard.common.model.application.HierarchyLevel accountLevel =
-				new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-		accountLevel.setHierarchyLevelId("acc");
-		accountLevel.setHierarchyLevelName("ACCOUNT");
-		accountLevel.setLevel(3);
-		levels.add(accountLevel);
-
-		com.publicissapient.kpidashboard.common.model.application.HierarchyLevel portfolioLevel =
-				new com.publicissapient.kpidashboard.common.model.application.HierarchyLevel();
-		portfolioLevel.setHierarchyLevelId("port");
-		portfolioLevel.setHierarchyLevelName("PORTFOLIO");
-		portfolioLevel.setLevel(4);
-		levels.add(portfolioLevel);
-
-		return levels;
 	}
 }
