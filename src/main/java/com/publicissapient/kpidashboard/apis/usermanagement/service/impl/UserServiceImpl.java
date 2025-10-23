@@ -45,18 +45,17 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /** Implementation of UserService for handling user operations */
-
-/** Implementation of UserService for handling user operations */
 @AllArgsConstructor
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
 
+	private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
+	private static final String DOMAIN_NAME = "@publicisgroupe.net";
+
 	private final UserInfoService userInfoService;
 
 	private final HierarchyLevelServiceImpl hierarchyLevelService;
-	private static final String USER_NAME_CANNOT_NULL = "Username cannot be null or empty";
-	private static final String DOMAIN_NAME = "@publicisgroupe.net";
 
 	private final AuthenticationService authenticationService;
 
@@ -73,7 +72,7 @@ public class UserServiceImpl implements UserService {
 		UserInfo savedUserInfo;
 		String responseMessage;
 
-		if (!Objects.isNull(existingUser)) {
+		if (Objects.nonNull(existingUser)) {
 			log.info("User already exists with username: {} and authType: {}", username, AuthType.SAML);
 			savedUserInfo = existingUser;
 			responseMessage = "User already exists";
@@ -89,9 +88,9 @@ public class UserServiceImpl implements UserService {
 					userInfoService.getAuthorities(authenticationService.getLoggedInUser());
 			List<String> roles = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
 
-			if (roles.contains(Constant.ROLE_SUPERADMIN))
+			if (roles.contains(Constant.ROLE_SUPERADMIN)) {
 				userInfo.setProjectsAccess(Collections.emptyList());
-			else if (roles.contains(Constant.ROLE_PROJECT_ADMIN)) {
+			} else if (roles.contains(Constant.ROLE_PROJECT_ADMIN)) {
 
 				UserInfo currentUserInfo =
 						userInfoService.getUserInfo(authenticationService.getLoggedInUser());
