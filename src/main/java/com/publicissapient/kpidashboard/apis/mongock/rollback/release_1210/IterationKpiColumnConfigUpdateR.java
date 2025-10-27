@@ -28,7 +28,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author prijain3
  */
-@ChangeUnit(id = "r_iteration_kpi_column_config_update", order = "012105", author = "prijain3", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "r_iteration_kpi_column_config_update",
+		order = "012105",
+		author = "prijain3",
+		systemVersion = "12.1.0")
 public class IterationKpiColumnConfigUpdateR {
 
 	IterationKpiColumnConfigUpdate kpiColumnConfigUpdate;

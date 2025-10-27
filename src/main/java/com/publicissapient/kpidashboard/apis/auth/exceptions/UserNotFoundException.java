@@ -25,15 +25,14 @@ public class UserNotFoundException extends RuntimeException {
 
 	private static final long serialVersionUID = -8596676033217258687L;
 
-	private static final String MESSAGE = "No user found with name: %1$2s, and authorization type %2$2s.";
+	private static final String MESSAGE =
+			"No user found with name: %1$2s, and authorization type %2$2s.";
 
 	/**
 	 * Instantiates a new User not found exception.
 	 *
-	 * @param username
-	 *          the username
-	 * @param authType
-	 *          the auth type
+	 * @param username the username
+	 * @param authType the auth type
 	 */
 	public UserNotFoundException(String username, AuthType authType) {
 		super(String.format(MESSAGE, username, authType.name()));

@@ -28,7 +28,13 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 
 /** The interface Valid extension. */
-@Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.PARAMETER, ElementType.TYPE})
+@Target({
+	ElementType.METHOD,
+	ElementType.FIELD,
+	ElementType.ANNOTATION_TYPE,
+	ElementType.PARAMETER,
+	ElementType.TYPE
+})
 @Retention(RUNTIME)
 @Constraint(validatedBy = FileExtensionValidator.class)
 @Documented

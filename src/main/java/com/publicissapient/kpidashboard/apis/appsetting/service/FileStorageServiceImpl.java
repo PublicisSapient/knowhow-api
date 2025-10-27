@@ -65,16 +65,13 @@ public class FileStorageServiceImpl implements FileStorageService {
 	private static final String FILE_SAVE_ERROR = "203";
 	private static final ModelMapper modelMapper = new ModelMapper();
 	private static final long MAX_FILE_SIZE = 100000; // Maximum file size in bytes
-	@Autowired
-	CustomApiConfig customApiConfig;
-	@Autowired
-	private GridFsOperations gridOperations;
+	@Autowired CustomApiConfig customApiConfig;
+	@Autowired private GridFsOperations gridOperations;
 
 	/**
 	 * Uploads <tt>Logo</tt> file
 	 *
-	 * @param multifile
-	 *          ``
+	 * @param multifile ``
 	 * @return baseResponse with success message if file uploads successfully.
 	 */
 	@Override
@@ -85,8 +82,9 @@ public class FileStorageServiceImpl implements FileStorageService {
 			multipartFile = modelMapper.map(multifile, MultiPartFileDTO.class);
 			writeToFile(multipartFile.getOriginalFilename(), multipartFile.getBytes());
 			String extension = multipartFile.getOriginalFilename();
-			boolean isValidFileExtension = (null != extension) &&
-					(extension.matches(".*\\.(pg|PG|png|PNG|JPEG|jpeg|jpg|JPG|gif|GIF|bmp|BMP)$"));
+			boolean isValidFileExtension =
+					(null != extension)
+							&& (extension.matches(".*\\.(pg|PG|png|PNG|JPEG|jpeg|jpg|JPG|gif|GIF|bmp|BMP)$"));
 			if (!isValidFileExtension) {
 				return new ServiceResponse(false, "Invalid upload type", INVALID_UPLOAD_TYPE);
 			}
@@ -100,7 +98,8 @@ public class FileStorageServiceImpl implements FileStorageService {
 			log.error(UPLOAD_FAIL, e);
 		}
 
-		try (InputStream imageInputStream = Files.newInputStream(Paths.get(multipartFile.getOriginalFilename()))) {
+		try (InputStream imageInputStream =
+				Files.newInputStream(Paths.get(multipartFile.getOriginalFilename()))) {
 			DBObject metaData = new BasicDBObject();
 			String fileName = Constant.LOGO_FIL_NAME;
 			metaData.put("type", "image");
@@ -141,7 +140,8 @@ public class FileStorageServiceImpl implements FileStorageService {
 
 	private boolean isValidFile(MultiPartFileDTO multipartFile) {
 		String extension = multipartFile.getOriginalFilename();
-		boolean isValidFileExtension = (null != extension) && (extension.endsWith(".xlsx") || extension.endsWith(".XLSX"));
+		boolean isValidFileExtension =
+				(null != extension) && (extension.endsWith(".xlsx") || extension.endsWith(".XLSX"));
 		boolean isValidFormat = false;
 		try {
 			isValidFormat = true;
@@ -174,19 +174,21 @@ public class FileStorageServiceImpl implements FileStorageService {
 		Logo logo = new Logo();
 		String fileName = Constant.LOGO_FIL_NAME;
 
-		GridFSFindIterable gridFSFindIterable = gridOperations
-				.find(new Query().addCriteria(Criteria.where(FILE_NAME).is(fileName)));
+		GridFSFindIterable gridFSFindIterable =
+				gridOperations.find(new Query().addCriteria(Criteria.where(FILE_NAME).is(fileName)));
 
-		gridFSFindIterable.forEach((Consumer<? super GridFSFile>) file -> {
-			try {
-				InputStream iStream = gridOperations.getResource(file).getInputStream();
-				byte[] bytes = IOUtils.toByteArray(iStream);
-				logo.setImage(bytes);
-			} catch (IOException ioException) {
+		gridFSFindIterable.forEach(
+				(Consumer<? super GridFSFile>)
+						file -> {
+							try {
+								InputStream iStream = gridOperations.getResource(file).getInputStream();
+								byte[] bytes = IOUtils.toByteArray(iStream);
+								logo.setImage(bytes);
+							} catch (IOException ioException) {
 
-				log.error("Exception while writing logo image:", ioException);
-			}
-		});
+								log.error("Exception while writing logo image:", ioException);
+							}
+						});
 
 		return logo;
 	}

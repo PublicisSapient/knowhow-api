@@ -16,24 +16,27 @@
 
 package com.publicissapient.kpidashboard.apis.ai.parser;
 
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.search.kpi.SearchKpiResponseDTO;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 @Component("SearchParser")
 @Slf4j
 public class SearchParser implements ParserStategy<SearchKpiResponseDTO> {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-    @Override
-    public SearchKpiResponseDTO parse(String chatResponse) {
-        try {
-            String formattedJsonString = chatResponse.substring(chatResponse.indexOf('{'));
-            return objectMapper.readValue(formattedJsonString,SearchKpiResponseDTO.class);
-        } catch (JsonProcessingException e) {
-            log.error("Error parsing JSON: {}", e.getMessage());
-            return new SearchKpiResponseDTO();
-        }
-    }
+	private static final ObjectMapper objectMapper = new ObjectMapper();
+
+	@Override
+	public SearchKpiResponseDTO parse(String chatResponse) {
+		try {
+			String formattedJsonString = chatResponse.substring(chatResponse.indexOf('{'));
+			return objectMapper.readValue(formattedJsonString, SearchKpiResponseDTO.class);
+		} catch (JsonProcessingException e) {
+			log.error("Error parsing JSON: {}", e.getMessage());
+			return new SearchKpiResponseDTO();
+		}
+	}
 }

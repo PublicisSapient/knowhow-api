@@ -77,14 +77,10 @@ public class NetOpenTicketCountByPriorityServiceImplTest {
 	String P2 = "p2, critical, p2-critical, 2";
 	String P3 = "p3, p3-major, major, 3";
 	String P4 = "p4, p4-minor, minor, 4, p5-trivial, 5,trivial";
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	NetOpenTicketCountByPriorityServiceImpl netOpenTicketCountByPriorityImpl;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks NetOpenTicketCountByPriorityServiceImpl netOpenTicketCountByPriorityImpl;
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
@@ -93,37 +89,41 @@ public class NetOpenTicketCountByPriorityServiceImplTest {
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CommonService commonService;
+	@Mock private CustomApiConfig customApiConfig;
 	private KpiRequest kpiRequest;
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi50");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory = KanbanJiraIssueDataFactory.newInstance();
-		kanbanJiraIssueDataList = kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeName(Arrays.asList("Story"));
+		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory =
+				KanbanJiraIssueDataFactory.newInstance();
+		kanbanJiraIssueDataList =
+				kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeName(Arrays.asList("Story"));
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -133,7 +133,8 @@ public class NetOpenTicketCountByPriorityServiceImplTest {
 
 		setTreadValuesDataCount();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 		Map<String, ProjectBasicConfig> mapOfProjectDetails = new HashMap<>();
 		ProjectBasicConfig p1 = new ProjectBasicConfig();
 		p1.setId(new ObjectId("6335368249794a18e8a4479f"));
@@ -144,8 +145,7 @@ public class NetOpenTicketCountByPriorityServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	private void setMockProjectConfig() {
 
@@ -198,61 +198,73 @@ public class NetOpenTicketCountByPriorityServiceImplTest {
 	@Test
 	public void testGetTicketCountByPriority() throws ApplicationException {
 
-		Map<String, Map<String, Map<String, Set<String>>>> projectWiseJiraHistoryPriorityAndDateWiseIssueMap = prepareProjectWiseJiraHistoryByFieldAndDate();
+		Map<String, Map<String, Map<String, Set<String>>>>
+				projectWiseJiraHistoryPriorityAndDateWiseIssueMap =
+						prepareProjectWiseJiraHistoryByFieldAndDate();
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 
-		when(kpiHelperService.computeProjectWiseJiraHistoryByFieldAndDate(anyMap(), anyString(), anyMap(), anyString()))
+		when(kpiHelperService.computeProjectWiseJiraHistoryByFieldAndDate(
+						anyMap(), anyString(), anyMap(), anyString()))
 				.thenReturn(projectWiseJiraHistoryPriorityAndDateWiseIssueMap);
 
-		List<KanbanIssueCustomHistory> kanbanIssueCustomHistoryDataList = KanbanIssueCustomHistoryDataFactory.newInstance()
-				.getKanbanIssueCustomHistoryDataList();
+		List<KanbanIssueCustomHistory> kanbanIssueCustomHistoryDataList =
+				KanbanIssueCustomHistoryDataFactory.newInstance().getKanbanIssueCustomHistoryDataList();
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("JiraIssueHistoryData", kanbanIssueCustomHistoryDataList);
-		when(kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(anyList(), anyString(), anyString(), any(),
-				anyString(), anyMap())).thenReturn(resultMap);
+		when(kpiHelperService.fetchJiraCustomHistoryDataFromDbForKanban(
+						anyList(), anyString(), anyString(), any(), anyString(), anyMap()))
+				.thenReturn(resultMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(netOpenTicketCountByPriorityImpl.getKanbanRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(netOpenTicketCountByPriorityImpl.getKanbanRequestTrackerId())
+				.thenReturn(kpiRequestTrackerId);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		try {
-			KpiElement kpiElement = netOpenTicketCountByPriorityImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String priority = dc.getFilter();
-				switch (priority) {
-					case "P1" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P2" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P3" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P4" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "MISC" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
+			KpiElement kpiElement =
+					netOpenTicketCountByPriorityImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String priority = dc.getFilter();
+								switch (priority) {
+									case "P1":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "P2":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "P3":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "P4":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "MISC":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
 
-					default :
-						break;
-				}
-			});
+									default:
+										break;
+								}
+							});
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private Map<String, Map<String, Map<String, Set<String>>>> prepareProjectWiseJiraHistoryByFieldAndDate() {
-		Map<String, Map<String, Map<String, Set<String>>>> projectWiseJiraHistoryPriorityAndDateWiseIssueMap = new HashMap<>();
+	private Map<String, Map<String, Map<String, Set<String>>>>
+			prepareProjectWiseJiraHistoryByFieldAndDate() {
+		Map<String, Map<String, Map<String, Set<String>>>>
+				projectWiseJiraHistoryPriorityAndDateWiseIssueMap = new HashMap<>();
 		Map<String, Map<String, Set<String>>> jiraHistoryPriorityAndDateWiseIssueMap = new HashMap<>();
 		Map<String, Set<String>> dateWiseIssueMap = new HashMap<>();
 		Set<String> ids = new HashSet<>();
@@ -264,14 +276,15 @@ public class NetOpenTicketCountByPriorityServiceImplTest {
 		jiraHistoryPriorityAndDateWiseIssueMap.put("P2", dateWiseIssueMap);
 		jiraHistoryPriorityAndDateWiseIssueMap.put("P3", dateWiseIssueMap);
 		jiraHistoryPriorityAndDateWiseIssueMap.put("P4", dateWiseIssueMap);
-		projectWiseJiraHistoryPriorityAndDateWiseIssueMap.put("6335368249794a18e8a4479f",
-				jiraHistoryPriorityAndDateWiseIssueMap);
+		projectWiseJiraHistoryPriorityAndDateWiseIssueMap.put(
+				"6335368249794a18e8a4479f", jiraHistoryPriorityAndDateWiseIssueMap);
 		return projectWiseJiraHistoryPriorityAndDateWiseIssueMap;
 	}
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat(netOpenTicketCountByPriorityImpl.getQualifierType(), equalTo("TICKET_COUNT_BY_PRIORITY"));
+		assertThat(
+				netOpenTicketCountByPriorityImpl.getQualifierType(), equalTo("TICKET_COUNT_BY_PRIORITY"));
 	}
 
 	@Test

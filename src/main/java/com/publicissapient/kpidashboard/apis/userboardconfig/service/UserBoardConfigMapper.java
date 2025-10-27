@@ -24,8 +24,7 @@ import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardCo
 import com.publicissapient.kpidashboard.common.model.userboardconfig.UserBoardConfigDTO;
 
 /**
- * This class is used to map UserBoardConfigDTO to UserBoardConfig and vice
- * versa
+ * This class is used to map UserBoardConfigDTO to UserBoardConfig and vice versa
  *
  * @author shunaray
  */
@@ -35,8 +34,7 @@ public class UserBoardConfigMapper {
 	/**
 	 * This method convert userBoardConfigDTO to its userBoardConfig K
 	 *
-	 * @param userBoardConfigDTO
-	 *          userBoardConfigDTO
+	 * @param userBoardConfigDTO userBoardConfigDTO
 	 * @return UserBoardConfig
 	 */
 	public UserBoardConfig toEntity(UserBoardConfigDTO userBoardConfigDTO) {
@@ -51,8 +49,7 @@ public class UserBoardConfigMapper {
 	/**
 	 * This method convert user board config to its dto
 	 *
-	 * @param userBoardConfig
-	 *          userBoardConfig
+	 * @param userBoardConfig userBoardConfig
 	 * @return UserBoardConfigDTOb
 	 */
 	public UserBoardConfigDTO toDto(UserBoardConfig userBoardConfig) {

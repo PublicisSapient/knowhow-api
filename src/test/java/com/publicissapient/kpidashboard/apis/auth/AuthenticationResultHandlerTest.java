@@ -42,31 +42,25 @@ import jakarta.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class AuthenticationResultHandlerTest {
 
-	@Mock
-	private AuthenticationResponseService authenticationResponseService;
+	@Mock private AuthenticationResponseService authenticationResponseService;
 
-	@Mock
-	private HttpServletResponse response;
+	@Mock private HttpServletResponse response;
 
-	@Mock
-	private Authentication authentication;
+	@Mock private Authentication authentication;
 
-	@InjectMocks
-	private AuthenticationResultHandler handler;
+	@InjectMocks private AuthenticationResultHandler handler;
 
-	@Mock
-	private CustomAnalyticsService customAnalyticsService;
+	@Mock private CustomAnalyticsService customAnalyticsService;
 
-	@Mock
-	private PrintWriter servletOutputStream;
+	@Mock private PrintWriter servletOutputStream;
 
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private AuthenticationService authenticationService;
 
 	@Test
 	public void testOnSucess() throws IOException, ServletException {
 		JSONObject jsonObject = new JSONObject();
-		Mockito.when(customAnalyticsService.addAnalyticsData(response, "userName")).thenReturn(jsonObject);
+		Mockito.when(customAnalyticsService.addAnalyticsData(response, "userName"))
+				.thenReturn(jsonObject);
 		Mockito.when(response.getWriter()).thenReturn(servletOutputStream);
 		Mockito.doNothing().when(servletOutputStream).print(Mockito.anyString());
 		when(authenticationService.getUsername(authentication)).thenReturn("userName");

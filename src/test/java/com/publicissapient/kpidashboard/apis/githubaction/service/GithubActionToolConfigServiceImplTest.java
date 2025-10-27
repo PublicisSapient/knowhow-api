@@ -55,31 +55,23 @@ import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
 @RunWith(MockitoJUnitRunner.class)
 public class GithubActionToolConfigServiceImplTest {
 
-	@InjectMocks
-	GithubActionToolConfigServiceImpl githubActionToolConfigService;
+	@InjectMocks GithubActionToolConfigServiceImpl githubActionToolConfigService;
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@Mock
-	private RestAPIUtils restAPIUtils;
+	@Mock private RestAPIUtils restAPIUtils;
 
-	@Mock
-	private ConnectionService connectionService;
-	@Mock
-	private ConnectionRepository connectionRepository;
+	@Mock private ConnectionService connectionService;
+	@Mock private ConnectionRepository connectionRepository;
 
-	@Mock
-	private AesEncryptionService aesEncryptionService;
+	@Mock private AesEncryptionService aesEncryptionService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 	String connectionId = "5fb3a6412064a35b8069930a";
 	String repoName = "validRepoName";
 
 	@Before
-	public void setUp() {
-	}
+	public void setUp() {}
 
 	@Test
 	public void testGetGitHubWorkFlowList_ValidInput_Success() {

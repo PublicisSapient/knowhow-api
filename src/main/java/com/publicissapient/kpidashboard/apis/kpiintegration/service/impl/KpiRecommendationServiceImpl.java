@@ -16,18 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.kpiintegration.service.impl;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -36,25 +38,21 @@ public class KpiRecommendationServiceImpl {
 	@Autowired
 	private RnrEngineRecommendationProviderServiceImpl rnrEngineRecommendationProviderService;
 
-	@Autowired
-	private AiKpiRecommendationProviderServiceImpl aiKpiRecommendationProviderService;
+	@Autowired private AiKpiRecommendationProviderServiceImpl aiKpiRecommendationProviderService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
-	 * Retrieves project-wise KPI recommendations based on the provided
-	 * recommendation request.
+	 * Retrieves project-wise KPI recommendations based on the provided recommendation request.
 	 *
-	 * @param kpiRecommendationRequestDTO
-	 *            The DTO containing details for the KPI recommendation request.
-	 * @return A {@link ServiceResponse} object containing the success status,
-	 *         message, and list of project-wise KPI recommendations. If AI
-	 *         recommendations are enabled and the recommendation persona is null,
-	 *         returns a failure response.
+	 * @param kpiRecommendationRequestDTO The DTO containing details for the KPI recommendation
+	 *     request.
+	 * @return A {@link ServiceResponse} object containing the success status, message, and list of
+	 *     project-wise KPI recommendations. If AI recommendations are enabled and the recommendation
+	 *     persona is null, returns a failure response.
 	 */
-
-	public ServiceResponse getProjectWiseKpiRecommendation(KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
+	public ServiceResponse getProjectWiseKpiRecommendation(
+			KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		List<ProjectWiseKpiRecommendation> projectWiseKpiRecommendations;
 		KpiRequest kpiRequest = new KpiRequest();
 		BeanUtils.copyProperties(kpiRecommendationRequestDTO, kpiRequest);
@@ -62,12 +60,14 @@ public class KpiRecommendationServiceImpl {
 			if (kpiRecommendationRequestDTO.getRecommendationFor() == null) {
 				return new ServiceResponse(false, "AiRecommendation", null);
 			}
-			projectWiseKpiRecommendations = aiKpiRecommendationProviderService
-					.getProjectWiseKpiRecommendations(kpiRequest, kpiRecommendationRequestDTO.getRecommendationFor());
+			projectWiseKpiRecommendations =
+					aiKpiRecommendationProviderService.getProjectWiseKpiRecommendations(
+							kpiRequest, kpiRecommendationRequestDTO.getRecommendationFor());
 		} else {
-			projectWiseKpiRecommendations = rnrEngineRecommendationProviderService
-					.getProjectWiseKpiRecommendations(kpiRequest, null);
+			projectWiseKpiRecommendations =
+					rnrEngineRecommendationProviderService.getProjectWiseKpiRecommendations(kpiRequest, null);
 		}
-		return new ServiceResponse(true, "Successfully Fetched Recommendations", projectWiseKpiRecommendations);
+		return new ServiceResponse(
+				true, "Successfully Fetched Recommendations", projectWiseKpiRecommendations);
 	}
 }

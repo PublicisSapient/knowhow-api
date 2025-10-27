@@ -52,20 +52,15 @@ import jakarta.validation.ValidatorFactory;
 @RunWith(MockitoJUnitRunner.class)
 public class PushBuildServiceImplTest {
 
-	@InjectMocks
-	private PushBuildServiceImpl pushBuildService;
+	@InjectMocks private PushBuildServiceImpl pushBuildService;
 
-	@Mock
-	private BuildServiceImpl buildService;
+	@Mock private BuildServiceImpl buildService;
 
-	@Mock
-	private DeployServiceImpl deployService;
+	@Mock private DeployServiceImpl deployService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private PushDataTraceLogService pushDataTraceLogService;
+	@Mock private PushDataTraceLogService pushDataTraceLogService;
 
 	private PushBuildDeploy pushBuildDeploy;
 	private ObjectId projectBasicConfigId;
@@ -77,11 +72,13 @@ public class PushBuildServiceImplTest {
 		projectBasicConfigId = new ObjectId("632824e949794a18e8a44787");
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		validator = factory.getValidator();
-		Set<ConstraintViolation<PushBuildDeployDTO>> validate = validator
-				.validate(PushDataFactory.newInstance().getPushBuildDeploy().get(0));
+		Set<ConstraintViolation<PushBuildDeployDTO>> validate =
+				validator.validate(PushDataFactory.newInstance().getPushBuildDeploy().get(0));
 		if (validate.isEmpty()) {
-			pushBuildDeploy = new ModelMapper().map(PushDataFactory.newInstance().getPushBuildDeploy().get(0),
-					PushBuildDeploy.class);
+			pushBuildDeploy =
+					new ModelMapper()
+							.map(
+									PushDataFactory.newInstance().getPushBuildDeploy().get(0), PushBuildDeploy.class);
 		}
 	}
 

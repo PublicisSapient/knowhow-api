@@ -94,42 +94,27 @@ public class SprintVelocityServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> totalIssueList = new ArrayList<>();
 	List<JiraIssue> previousTotalIssueList = new ArrayList<>();
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	SprintVelocityServiceHelper velocityHelper;
-	@InjectMocks
-	SprintVelocityServiceImpl sprintVelocityServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	KpiDataProvider kpiDataProvider;
-	@Mock
-	KpiDataCacheService kpiDataCacheService;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock CacheService cacheService;
+	@Mock SprintRepository sprintRepository;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock SprintVelocityServiceHelper velocityHelper;
+	@InjectMocks SprintVelocityServiceImpl sprintVelocityServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock KpiDataProvider kpiDataProvider;
+	@Mock KpiDataCacheService kpiDataCacheService;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private List<SprintDetails> sprintDetailsList = new ArrayList<>();
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private SprintRepositoryCustom sprintRepositoryCustom;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private SprintRepositoryCustom sprintRepositoryCustom;
 
 	@Before
 	public void setup() {
@@ -137,8 +122,8 @@ public class SprintVelocityServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId());
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -160,8 +145,8 @@ public class SprintVelocityServiceImplTest {
 		projectConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -184,15 +169,17 @@ public class SprintVelocityServiceImplTest {
 		Map<String, Object> filterComponentIdWiseDefectMap = new HashMap<>();
 
 		filterComponentIdWiseDefectMap.put(SPRINTVELOCITYKEY, totalIssueList);
-		Double velocityValue = sprintVelocityServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
+		Double velocityValue =
+				sprintVelocityServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
 
 		assertThat("Velocity value :", velocityValue, equalTo(8.0));
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -204,18 +191,24 @@ public class SprintVelocityServiceImplTest {
 		resultListMap.put(SPRINT_WISE_SPRINTDETAILS, sprintDetailsList);
 		resultListMap.put(PREVIOUS_SPRINT_VELOCITY, previousTotalIssueList);
 		resultListMap.put(PREVIOUS_SPRINT_WISE_DETAILS, new ArrayList<>());
-		when(kpiDataCacheService.fetchSprintVelocityData(any(),any(), any())).thenReturn(resultListMap);
-		when(filterHelperService.isFilterSelectedTillSprintLevel(anyInt(), anyBoolean())).thenReturn(true);
+		when(kpiDataCacheService.fetchSprintVelocityData(any(), any(), any()))
+				.thenReturn(resultListMap);
+		when(filterHelperService.isFilterSelectedTillSprintLevel(anyInt(), anyBoolean()))
+				.thenReturn(true);
 
-		Map<String, Object> velocityListMap = sprintVelocityServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
-		assertThat("Velocity value :", ((List<JiraIssue>) (velocityListMap.get(SPRINTVELOCITYKEY))).size(), equalTo(20));
+		Map<String, Object> velocityListMap =
+				sprintVelocityServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Velocity value :",
+				((List<JiraIssue>) (velocityListMap.get(SPRINTVELOCITYKEY))).size(),
+				equalTo(20));
 	}
 
 	@Test
 	public void testGetSprintVelocity() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("sprintVelocity", Arrays.asList("-5", "5-25", "25-50", "50-75", "75-"));
@@ -237,17 +230,20 @@ public class SprintVelocityServiceImplTest {
 		// any())).thenReturn(resultListMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(sprintVelocityServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		// when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(any(),
 		// any()))
 		// .thenReturn(sprintDetailsList);
-		when(kpiDataProvider.fetchSprintVelocityDataFromDb((eq(kpiRequest)), any())).thenReturn(resultListMap);
+		when(kpiDataProvider.fetchSprintVelocityDataFromDb((eq(kpiRequest)), any()))
+				.thenReturn(resultListMap);
 		try {
-			KpiElement kpiElement = sprintVelocityServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					sprintVelocityServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			List<DataCount> dataCountList = (List<DataCount>) kpiElement.getTrendValueList();
 
 			assertThat("Sprint Velocity trend value : ", dataCountList.size(), equalTo(1));
@@ -258,8 +254,9 @@ public class SprintVelocityServiceImplTest {
 
 	@Test
 	public void testGetSprintVelocity_EmptySprintDetails_AzureCase() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("sprintVelocity", Arrays.asList("-5", "5-25", "25-50", "50-75", "75-"));
@@ -275,17 +272,20 @@ public class SprintVelocityServiceImplTest {
 		// any())).thenReturn(resultListMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(sprintVelocityServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		// when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(any(),
 		// any()))
 		// .thenReturn(sprintDetailsList);
-		when(kpiDataProvider.fetchSprintVelocityDataFromDb((eq(kpiRequest)), any())).thenReturn(resultListMap);
+		when(kpiDataProvider.fetchSprintVelocityDataFromDb((eq(kpiRequest)), any()))
+				.thenReturn(resultListMap);
 		try {
-			KpiElement kpiElement = sprintVelocityServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					sprintVelocityServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			List<DataCount> dataCountList = (List<DataCount>) kpiElement.getTrendValueList();
 
 			assertThat("Sprint Velocity trend value : ", dataCountList.size(), equalTo(1));

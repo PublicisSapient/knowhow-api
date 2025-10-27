@@ -33,8 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BasicPolicyEnforcement implements PolicyEnforcement {
 
-	@Autowired
-	private PolicyDefinition policyDefinition;
+	@Autowired private PolicyDefinition policyDefinition;
 
 	/*
 	 * (non-Javadoc)
@@ -44,19 +43,25 @@ public class BasicPolicyEnforcement implements PolicyEnforcement {
 	 * java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public boolean check(Object projectAccessManager, Object subject, Object resource, Object action,
+	public boolean check(
+			Object projectAccessManager,
+			Object subject,
+			Object resource,
+			Object action,
 			Object environment) {
 		// Get all policy rules
 		List<ActionPolicyRule> allRules = policyDefinition.getAllPolicyRules();
 		// Wrap the context
-		SecurityAccessContext cxt = new SecurityAccessContext(projectAccessManager, subject, resource, action, environment);
+		SecurityAccessContext cxt =
+				new SecurityAccessContext(projectAccessManager, subject, resource, action, environment);
 		// Filter the rules according to context.
 		List<ActionPolicyRule> matchedRules = filterRules(allRules, cxt);
 		// finally, check if any of the rules are satisfied, otherwise return false.
 		return checkRules(matchedRules, cxt);
 	}
 
-	private List<ActionPolicyRule> filterRules(List<ActionPolicyRule> allRules, SecurityAccessContext cxt) {
+	private List<ActionPolicyRule> filterRules(
+			List<ActionPolicyRule> allRules, SecurityAccessContext cxt) {
 		List<ActionPolicyRule> matchedRules = new ArrayList<>();
 		for (ActionPolicyRule rule : allRules) {
 			try {

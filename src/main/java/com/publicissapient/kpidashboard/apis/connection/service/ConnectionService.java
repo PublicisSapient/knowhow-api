@@ -30,68 +30,59 @@ public interface ConnectionService {
 	/**
 	 * Gets all connection.
 	 *
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getAllConnection();
 
 	/**
 	 * Gets all connection for this type.
 	 *
-	 * @param type
-	 *          for type of the connection.
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param type for type of the connection.
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse getConnectionByType(String type);
 
 	/**
 	 * Creates and save a connection.
 	 *
-	 * @param conn
-	 *          for details.
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param conn for details.
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse saveConnectionDetails(Connection conn);
 
 	/**
-	 * Modifies a connection. Finds connection by @param id and replaces it
-	 * with @param conn
+	 * Modifies a connection. Finds connection by @param id and replaces it with @param conn
 	 *
-	 * @param connection
-	 *          for details.
-	 * @param id
-	 *          replaces the connection data present at id.
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found
+	 * @param connection for details.
+	 * @param id replaces the connection data present at id.
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found
 	 */
 	ServiceResponse updateConnection(String id, Connection connection);
 
 	/**
 	 * deletes a connection. Finds connection by @param id and delete.
 	 *
-	 * @param id
-	 *          deleted the connection data present at id.
-	 * @return ServiceResponse with data object,message and status flag true if data
-	 *         is found,false if not data found.
+	 * @param id deleted the connection data present at id.
+	 * @return ServiceResponse with data object,message and status flag true if data is found,false if
+	 *     not data found.
 	 */
 	ServiceResponse deleteConnection(String id);
 
 	/**
-	 * @param connection
-	 *          connection
-	 * @param connectionErrorMsg
-	 *          connectionErrorMsg
+	 * @param connection connection
+	 * @param connectionErrorMsg connectionErrorMsg
 	 */
 	void updateBreakingConnection(Connection connection, String connectionErrorMsg);
 
 	/**
-	 * Method to validate the broken connection and update the flag for all tools
-	 * except Jira and Azure
+	 * Method to validate the broken connection and update the flag for all tools except Jira and
+	 * Azure
 	 *
-	 * @param connection
-	 *          connection
+	 * @param connection connection
 	 */
 	void validateConnectionFlag(Connection connection);
 }

@@ -18,49 +18,52 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.config;
 
-import com.publicissapient.kpidashboard.apis.aiusage.enums.RequiredHeaders;
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import com.publicissapient.kpidashboard.apis.aiusage.enums.RequiredHeaders;
+
+import lombok.Data;
+
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "ai-usage-file-format.required-headers")
 public class AIUsageFileFormat {
-    private final List<String> requiredHeaders = List.of(
-            RequiredHeaders.EMAIL.getName(),
-            RequiredHeaders.PROMPT_COUNT.getName(),
-            RequiredHeaders.BUSINESS_UNIT.getName(),
-            RequiredHeaders.VERTICAL.getName(),
-            RequiredHeaders.ACCOUNT.getName());
+	private final List<String> requiredHeaders =
+			List.of(
+					RequiredHeaders.EMAIL.getName(),
+					RequiredHeaders.PROMPT_COUNT.getName(),
+					RequiredHeaders.BUSINESS_UNIT.getName(),
+					RequiredHeaders.VERTICAL.getName(),
+					RequiredHeaders.ACCOUNT.getName());
 
-    private List<String> mappings;
+	private List<String> mappings;
 
-    public List<String> getExpectedHeaders() {
-        if(Objects.nonNull(mappings) && mappings.size() == requiredHeaders.size()) {
-            return mappings;
-        }
-        return requiredHeaders;
-    }
+	public List<String> getExpectedHeaders() {
+		if (Objects.nonNull(mappings) && mappings.size() == requiredHeaders.size()) {
+			return mappings;
+		}
+		return requiredHeaders;
+	}
 
-    public Map<String, String> getHeaderToMappingMap() {
-        Map<String, String> headerToMappingMap = new HashMap<>();
-        if (Objects.nonNull(mappings)) {
-            if (requiredHeaders.size() == mappings.size()) {
-                for (int i = 0; i < requiredHeaders.size(); i++) {
-                    headerToMappingMap.put(mappings.get(i), requiredHeaders.get(i));
-                }
-            } else {
-                for (String header : requiredHeaders) {
-                    headerToMappingMap.put(header, header);
-                }
-            }
-        }
-        return headerToMappingMap;
-    }
+	public Map<String, String> getHeaderToMappingMap() {
+		Map<String, String> headerToMappingMap = new HashMap<>();
+		if (Objects.nonNull(mappings)) {
+			if (requiredHeaders.size() == mappings.size()) {
+				for (int i = 0; i < requiredHeaders.size(); i++) {
+					headerToMappingMap.put(mappings.get(i), requiredHeaders.get(i));
+				}
+			} else {
+				for (String header : requiredHeaders) {
+					headerToMappingMap.put(header, header);
+				}
+			}
+		}
+		return headerToMappingMap;
+	}
 }

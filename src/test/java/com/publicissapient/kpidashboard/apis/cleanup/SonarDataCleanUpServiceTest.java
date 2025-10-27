@@ -27,9 +27,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
-import com.publicissapient.kpidashboard.apis.enums.KPICode;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +36,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
+import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.constant.ProcessorType;
@@ -56,29 +56,21 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExec
 @RunWith(MockitoJUnitRunner.class)
 public class SonarDataCleanUpServiceTest {
 
-	@Mock
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Mock private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Mock
-	private ProcessorItemRepository processorItemRepository;
+	@Mock private ProcessorItemRepository processorItemRepository;
 
-	@Mock
-	private SonarDetailsRepository sonarDetailsRepository;
+	@Mock private SonarDetailsRepository sonarDetailsRepository;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private SonarHistoryRepository sonarHistoryRepository;
+	@Mock private SonarHistoryRepository sonarHistoryRepository;
 
-	@InjectMocks
-	private SonarDataCleanUpService sonarDataCleanUpService;
+	@InjectMocks private SonarDataCleanUpService sonarDataCleanUpService;
 
-	@Mock
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Mock private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
 
 	@Test
 	public void getToolCategory() {
@@ -102,7 +94,8 @@ public class SonarDataCleanUpServiceTest {
 		doNothing().when(sonarHistoryRepository).deleteByProcessorItemIdIn(Mockito.anyList());
 		doNothing().when(processorItemRepository).deleteByToolConfigId(Mockito.any(ObjectId.class));
 		doNothing().when(cacheService).clearCache(CommonConstant.SONAR_KPI_CACHE);
-		doNothing().when(processorExecutionTraceLogRepository)
+		doNothing()
+				.when(processorExecutionTraceLogRepository)
 				.deleteByBasicProjectConfigIdAndProcessorName(Mockito.any(), Mockito.anyString());
 		when(kpiDataCacheService.getKpiBasedOnSource(KPISource.SONAR.name()))
 				.thenReturn(List.of(KPICode.SONAR_CODE_QUALITY.getKpiId()));
@@ -113,8 +106,10 @@ public class SonarDataCleanUpServiceTest {
 		verify(sonarHistoryRepository, times(1))
 				.deleteByProcessorItemIdIn(Arrays.asList(new ObjectId("5fc6a0c0e4b00ecfb5941e29")));
 
-		verify(processorItemRepository, times(1)).deleteByToolConfigId(new ObjectId("5e9e4593e4b0c8ece56710c3"));
+		verify(processorItemRepository, times(1))
+				.deleteByToolConfigId(new ObjectId("5e9e4593e4b0c8ece56710c3"));
 		verify(processorExecutionTraceLogRepository, times(1))
-				.deleteByBasicProjectConfigIdAndProcessorName("5e9db8f1e4b0caefbfa8e0c7", ProcessorConstants.SONAR);
+				.deleteByBasicProjectConfigIdAndProcessorName(
+						"5e9db8f1e4b0caefbfa8e0c7", ProcessorConstants.SONAR);
 	}
 }

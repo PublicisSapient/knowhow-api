@@ -26,11 +26,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.KPIExcelDataService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -43,8 +39,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class fetches KPI data for received filter. This API is used by
- * Application Dashboard to fetch Excel Data.
+ * This class fetches KPI data for received filter. This API is used by Application Dashboard to
+ * fetch Excel Data.
  *
  * @author tauakram
  */
@@ -52,35 +48,43 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 public class KPIExcelDataController {
 
-	@Autowired
-	private KPIExcelDataService kpiExcelDataService;
-	@Autowired
-	CustomApiConfig customApiConfig;
+	@Autowired private KPIExcelDataService kpiExcelDataService;
+	@Autowired CustomApiConfig customApiConfig;
 
 	/**
 	 * Fetches KPI validation data (story keys, defect keys) for a specific KPI id.
 	 *
-	 * @param kpiRequest
-	 *          the kpi request
-	 * @param kpiID
-	 *          the kpi id
+	 * @param kpiRequest the kpi request
+	 * @param kpiID the kpi id
 	 * @return validation kpi data
 	 */
-	@RequestMapping(value = "/v1/kpi/{kpiID}", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
-	// NOSONAR
-	public ResponseEntity<KPIExcelValidationDataResponse> getValidationKPIData(HttpServletRequest request,
-			@NotNull @RequestBody KpiRequest kpiRequest, @NotNull @PathVariable("kpiID") String kpiID) {
+	@PostMapping(value = "/v1/kpi/{kpiID}", produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<KPIExcelValidationDataResponse> getValidationKPIData(
+			HttpServletRequest request,
+			@NotNull @RequestBody KpiRequest kpiRequest,
+			@NotNull @PathVariable("kpiID") String kpiID) {
 		String apiKey = customApiConfig.getxApiKey();
-		Boolean isApiAuth = StringUtils.isNotEmpty(apiKey) &&
-				apiKey.equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
+		Boolean isApiAuth =
+				StringUtils.isNotEmpty(apiKey)
+						&& apiKey.equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
 		String kpiRequestStr = kpiRequest.toString();
 		kpiID = CommonUtils.handleCrossScriptingTaintedValue(kpiID);
 		kpiRequestStr = CommonUtils.handleCrossScriptingTaintedValue(kpiRequestStr);
-		log.info("[KPI-EXCEL-DATA][]. Received Specific Excel KPI Data request for {} with kpiRequest {}", kpiID,
+		log.info(
+				"[KPI-EXCEL-DATA][]. Received Specific Excel KPI Data request for {} with kpiRequest {}",
+				kpiID,
 				kpiRequestStr);
 
-		KPIExcelValidationDataResponse responseList = (KPIExcelValidationDataResponse) kpiExcelDataService.process(kpiID,
-				kpiRequest.getLevel(), Arrays.asList(kpiRequest.getIds()), null, kpiRequest, null, isApiAuth);
+		KPIExcelValidationDataResponse responseList =
+				(KPIExcelValidationDataResponse)
+						kpiExcelDataService.process(
+								kpiID,
+								kpiRequest.getLevel(),
+								Arrays.asList(kpiRequest.getIds()),
+								null,
+								kpiRequest,
+								null,
+								isApiAuth);
 		return ResponseEntity.ok().body(responseList);
 	}
 }

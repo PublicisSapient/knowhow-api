@@ -16,6 +16,18 @@
 
 package com.publicissapient.kpidashboard.apis.kpiintegration.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.AiKpiRecommendationProviderServiceImpl;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
@@ -24,71 +36,64 @@ import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class KpiRecommendationServiceImplTest {
 
-    @Mock
-    private RnrEngineRecommendationProviderServiceImpl rnrEngineRecommendationProviderService;
+	@Mock private RnrEngineRecommendationProviderServiceImpl rnrEngineRecommendationProviderService;
 
-    @Mock
-    private AiKpiRecommendationProviderServiceImpl aiKpiRecommendationProviderService;
+	@Mock private AiKpiRecommendationProviderServiceImpl aiKpiRecommendationProviderService;
 
-    @Mock
-    private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-    @InjectMocks
-    private KpiRecommendationServiceImpl kpiRecommendationService;
+	@InjectMocks private KpiRecommendationServiceImpl kpiRecommendationService;
 
-    @Test
-    void getProjectWiseKpiRecommendation_returnsAiRecommendations_whenAiRecommendationListIsNotEmptyAndRecommendationForIsProvided() {
-        KpiRecommendationRequestDTO requestDTO = new KpiRecommendationRequestDTO();
-        requestDTO.setRecommendationFor("someRecommendation");
-        List<ProjectWiseKpiRecommendation> recommendations = List.of(new ProjectWiseKpiRecommendation());
+	@Test
+	void
+			getProjectWiseKpiRecommendation_returnsAiRecommendations_whenAiRecommendationListIsNotEmptyAndRecommendationForIsProvided() {
+		KpiRecommendationRequestDTO requestDTO = new KpiRecommendationRequestDTO();
+		requestDTO.setRecommendationFor("someRecommendation");
+		List<ProjectWiseKpiRecommendation> recommendations =
+				List.of(new ProjectWiseKpiRecommendation());
 
-        Mockito.when(customApiConfig.getAiRecommendationKpiList()).thenReturn(List.of("kpi1", "kpi2"));
-		Mockito.when(aiKpiRecommendationProviderService.getProjectWiseKpiRecommendations(any(KpiRequest.class),
-				Mockito.eq("someRecommendation"))).thenReturn(recommendations);
-        
-        ServiceResponse response = kpiRecommendationService.getProjectWiseKpiRecommendation(requestDTO);
+		Mockito.when(customApiConfig.getAiRecommendationKpiList()).thenReturn(List.of("kpi1", "kpi2"));
+		Mockito.when(
+						aiKpiRecommendationProviderService.getProjectWiseKpiRecommendations(
+								any(KpiRequest.class), Mockito.eq("someRecommendation")))
+				.thenReturn(recommendations);
 
-        assertTrue(response.getSuccess());
-        assertEquals("Successfully Fetched Recommendations", response.getMessage());
-        assertEquals(recommendations, response.getData());
-    }
+		ServiceResponse response = kpiRecommendationService.getProjectWiseKpiRecommendation(requestDTO);
 
-    @Test
-    void getProjectWiseKpiRecommendation_returnsError_whenAiRecommendationListIsNotEmptyAndRecommendationForIsNull() {
-        KpiRecommendationRequestDTO requestDTO = new KpiRecommendationRequestDTO();
+		assertTrue(response.getSuccess());
+		assertEquals("Successfully Fetched Recommendations", response.getMessage());
+		assertEquals(recommendations, response.getData());
+	}
 
-        Mockito.when(customApiConfig.getAiRecommendationKpiList()).thenReturn(List.of("kpi1", "kpi2"));
+	@Test
+	void
+			getProjectWiseKpiRecommendation_returnsError_whenAiRecommendationListIsNotEmptyAndRecommendationForIsNull() {
+		KpiRecommendationRequestDTO requestDTO = new KpiRecommendationRequestDTO();
 
-        ServiceResponse response = kpiRecommendationService.getProjectWiseKpiRecommendation(requestDTO);
+		Mockito.when(customApiConfig.getAiRecommendationKpiList()).thenReturn(List.of("kpi1", "kpi2"));
 
-        assertFalse(response.getSuccess());
-        assertEquals("AiRecommendation", response.getMessage());
-        assertNull(response.getData());
-    }
+		ServiceResponse response = kpiRecommendationService.getProjectWiseKpiRecommendation(requestDTO);
 
-    @Test
+		assertFalse(response.getSuccess());
+		assertEquals("AiRecommendation", response.getMessage());
+		assertNull(response.getData());
+	}
+
+	@Test
 	void getProjectWiseKpiRecommendation_returnsRnrRecommendations_whenAiRecommendationListIsEmpty() {
 		KpiRecommendationRequestDTO requestDTO = new KpiRecommendationRequestDTO();
-		List<ProjectWiseKpiRecommendation> recommendations = List.of(new ProjectWiseKpiRecommendation());
+		List<ProjectWiseKpiRecommendation> recommendations =
+				List.of(new ProjectWiseKpiRecommendation());
 
 		Mockito.when(customApiConfig.getAiRecommendationKpiList()).thenReturn(List.of());
-		Mockito.when(rnrEngineRecommendationProviderService
-				.getProjectWiseKpiRecommendations(any(KpiRequest.class), any())).thenReturn(recommendations);
+		Mockito.when(
+						rnrEngineRecommendationProviderService.getProjectWiseKpiRecommendations(
+								any(KpiRequest.class), any()))
+				.thenReturn(recommendations);
 
 		ServiceResponse response = kpiRecommendationService.getProjectWiseKpiRecommendation(requestDTO);
 

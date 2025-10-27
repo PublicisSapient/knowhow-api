@@ -87,38 +87,25 @@ public class DREServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> closedBugList = new ArrayList<>();
 	List<JiraIssue> totalBugList = new ArrayList<>();
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	DREServiceImpl dreServiceImpl;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	private JiraServiceR jiraKPIService;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock SprintRepository sprintRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks DREServiceImpl dreServiceImpl;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraServiceR jiraKPIService;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
 	private Map<String, Object> filterLevelMap;
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private List<DataCount> dataCountList = new ArrayList<>();
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private CommonService commonService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private CommonService commonService;
 	private List<SprintDetails> sprintDetailsList = new ArrayList<>();
 	List<JiraIssue> totalIssueList = new ArrayList<>();
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
@@ -130,8 +117,8 @@ public class DREServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId());
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -143,18 +130,22 @@ public class DREServiceImplTest {
 		totalBugList = jiraIssueDataFactory.getBugs();
 		totalIssueList = jiraIssueDataFactory.getJiraIssues();
 
-		closedBugList = totalBugList.stream().filter(bug -> bug.getStatus().equals("Closed")).collect(Collectors.toList());
+		closedBugList =
+				totalBugList.stream()
+						.filter(bug -> bug.getStatus().equals("Closed"))
+						.collect(Collectors.toList());
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		sprintDetailsList = sprintDetailsDataFactory.getSprintDetails();
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
 		projectConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
 		projectConfig.setProjectName("Scrum Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -182,56 +173,68 @@ public class DREServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		List<SprintWiseStory> storyData = sprintWiseStoryDataFactory.getSprintWiseStories();
-		Map<String, List<SprintDetails>> sprintWiseProjectData = sprintDetailsList.stream()
-				.collect(Collectors.groupingBy(SprintDetails::getSprintID));
+		Map<String, List<SprintDetails>> sprintWiseProjectData =
+				sprintDetailsList.stream().collect(Collectors.groupingBy(SprintDetails::getSprintID));
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		List<JiraIssue> defectData = jiraIssueDataFactory.getBugs();
 
 		when(sprintRepository.findBySprintIDIn(Mockito.any())).thenReturn(sprintDetailsList);
-		when(jiraIssueRepository.findIssueByNumber(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(totalIssueList);
+		when(jiraIssueRepository.findIssueByNumber(Mockito.any(), Mockito.any(), Mockito.any()))
+				.thenReturn(totalIssueList);
 		when(jiraIssueRepository.findIssueAndDescByNumber(Mockito.any())).thenReturn(totalIssueList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(Mockito.any(), Mockito.any()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						Mockito.any(), Mockito.any()))
 				.thenReturn(new ArrayList<>());
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> defectDataListMap = dreServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
+		Map<String, Object> defectDataListMap =
+				dreServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testGetDRE() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put("defectRemovalEfficiency", Arrays.asList("-30", "30-10", "10-5", "5-2", "2-"));
+		maturityRangeMap.put(
+				"defectRemovalEfficiency", Arrays.asList("-30", "30-10", "10-5", "5-2", "2-"));
 
 		// when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dreServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(sprintRepository.findBySprintIDIn(Mockito.any())).thenReturn(sprintDetailsList);
-		when(jiraIssueRepository.findIssueByNumber(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(totalIssueList);
-		when(jiraIssueRepository.findLinkedDefects(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(totalBugList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(Mockito.any(), Mockito.any()))
+		when(jiraIssueRepository.findIssueByNumber(Mockito.any(), Mockito.any(), Mockito.any()))
+				.thenReturn(totalIssueList);
+		when(jiraIssueRepository.findLinkedDefects(Mockito.any(), Mockito.any(), Mockito.any()))
+				.thenReturn(totalBugList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						Mockito.any(), Mockito.any()))
 				.thenReturn(jiraIssueCustomHistoryList);
 		try {
-			KpiElement kpiElement = dreServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					dreServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (Exception exception) {
 		}
 	}

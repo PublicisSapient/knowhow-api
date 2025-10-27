@@ -67,46 +67,45 @@ import lombok.extern.slf4j.Slf4j;
 public class ProcessorServiceImpl implements ProcessorService {
 
 	public static final String AUTHORIZATION = "Authorization";
-    private static final List<String> SCM_TOOLS = Arrays.asList(
-            ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
-            ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
-    private static final String PROCESSOR_ERROR_TEMPLATE = "Error in running %s processor. Please try after some time.";
+	private static final List<String> SCM_TOOLS =
+			Arrays.asList(
+					ProcessorConstants.BITBUCKET,
+					ProcessorConstants.GITLAB,
+					ProcessorConstants.GITHUB,
+					ProcessorConstants.AZUREREPO);
+	private static final String PROCESSOR_ERROR_TEMPLATE =
+			"Error in running %s processor. Please try after some time.";
 
-    @Context
-	HttpServletRequest httpServletRequest;
-	@Autowired
-	SprintTraceLogRepository sprintTraceLogRepository;
-	@Autowired
-	private ProcessorRepository<Processor> processorRepository;
-	@Autowired
-	private RestTemplate restTemplate;
-	@Autowired
-	private ProcessorUrlConfig processorUrlConfig;
-	@Autowired
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Context HttpServletRequest httpServletRequest;
+	@Autowired SprintTraceLogRepository sprintTraceLogRepository;
+	@Autowired private ProcessorRepository<Processor> processorRepository;
+	@Autowired private RestTemplate restTemplate;
+	@Autowired private ProcessorUrlConfig processorUrlConfig;
+	@Autowired private RepoToolsConfigServiceImpl repoToolsConfigService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private CacheService cacheService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	@Override
 	public ServiceResponse getAllProcessorDetails() {
 		List<Processor> listProcessor = new ArrayList<>();
-		processorRepository.findAll().iterator().forEachRemaining(p -> {
-			if (null != p) {
-				listProcessor.add(p);
-			}
-		});
+		processorRepository
+				.findAll()
+				.iterator()
+				.forEachRemaining(
+						p -> {
+							if (null != p) {
+								listProcessor.add(p);
+							}
+						});
 		log.debug("Returning list of Processors having size: {}", listProcessor.size());
 		return new ServiceResponse(true, StringUtils.EMPTY, listProcessor);
 	}
 
 	@Override
-	public ServiceResponse runProcessor(String processorName,
-			ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
+	public ServiceResponse runProcessor(
+			String processorName, ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
 
 		String url = processorUrlConfig.getProcessorUrl(processorName);
 
@@ -114,12 +113,15 @@ public class ProcessorServiceImpl implements ProcessorService {
 			processorExecutionBasicConfig.setScmProcessorName(processorName);
 		}
 
-		ProcessorResult result = shouldExecuteScmTool(processorName, processorExecutionBasicConfig)
-				? executeScmTool(processorName, processorExecutionBasicConfig)
-				: executeRegularProcessor(url, processorName, processorExecutionBasicConfig);
+		ProcessorResult result =
+				shouldExecuteScmTool(processorName, processorExecutionBasicConfig)
+						? executeScmTool(processorName, processorExecutionBasicConfig)
+						: executeRegularProcessor(url, processorName, processorExecutionBasicConfig);
 
-		return new ServiceResponse(result.isSuccess(),
-				String.format("Got HTTP response: %d on url: %s", result.statusCode(), url), result.body());
+		return new ServiceResponse(
+				result.isSuccess(),
+				String.format("Got HTTP response: %d on url: %s", result.statusCode(), url),
+				result.body());
 	}
 
 	private boolean isScmProcessor(String processorName) {
@@ -127,54 +129,74 @@ public class ProcessorServiceImpl implements ProcessorService {
 	}
 
 	private boolean shouldExecuteScmTool(String processorName, ProcessorExecutionBasicConfig config) {
-		return isScmProcessor(processorName) && isSCMToolEnabled(config) && customApiConfig.isRepoToolEnabled();
+		return isScmProcessor(processorName)
+				&& isSCMToolEnabled(config)
+				&& customApiConfig.isRepoToolEnabled();
 	}
 
-	private ProcessorResult executeScmTool(String processorName, ProcessorExecutionBasicConfig config) {
+	private ProcessorResult executeScmTool(
+			String processorName, ProcessorExecutionBasicConfig config) {
 		String projectBasicConfigId = config.getProjectBasicConfigIds().get(0);
-		int statusCode = repoToolsConfigService.triggerScanRepoToolProject(processorName, projectBasicConfigId);
+		int statusCode =
+				repoToolsConfigService.triggerScanRepoToolProject(processorName, projectBasicConfigId);
 		boolean isSuccess = statusCode >= 200 && statusCode < 300;
 		String body = isSuccess ? "" : String.format(PROCESSOR_ERROR_TEMPLATE, processorName);
 		return new ProcessorResult(isSuccess, statusCode, body);
 	}
 
-	private ProcessorResult executeRegularProcessor(String url, String processorName,
+	private ProcessorResult executeRegularProcessor(
+			String url,
+			String processorName,
 			ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
 
 		if (StringUtils.isEmpty(url)) {
-			return new ProcessorResult(false, HttpStatus.NOT_FOUND.value(),
+			return new ProcessorResult(
+					false,
+					HttpStatus.NOT_FOUND.value(),
 					String.format(PROCESSOR_ERROR_TEMPLATE, processorName));
 		}
 
-		httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-		String token = CommonUtils.handleCrossScriptingTaintedValue(httpServletRequest.getHeader(AUTHORIZATION));
+		httpServletRequest =
+				((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		String token =
+				CommonUtils.handleCrossScriptingTaintedValue(httpServletRequest.getHeader(AUTHORIZATION));
 
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.add(AUTHORIZATION, token);
-			HttpEntity<ProcessorExecutionBasicConfig> requestEntity = new HttpEntity<>(processorExecutionBasicConfig,
-					headers);
-			ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+			HttpEntity<ProcessorExecutionBasicConfig> requestEntity =
+					new HttpEntity<>(processorExecutionBasicConfig, headers);
+			ResponseEntity<String> resp =
+					restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 			int statusCode = resp.getStatusCode().value();
 			boolean isSuccess = statusCode >= 200 && statusCode < 300;
 			String body = "";
-			if (!isSuccess && (statusCode == HttpStatus.NOT_FOUND.value()
-					|| statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value())) {
+			if (!isSuccess
+					&& (statusCode == HttpStatus.NOT_FOUND.value()
+							|| statusCode == HttpStatus.INTERNAL_SERVER_ERROR.value())) {
 				body = String.format(PROCESSOR_ERROR_TEMPLATE, processorName);
 			}
 			return new ProcessorResult(isSuccess, statusCode, body);
 		} catch (HttpClientErrorException ex) {
-			log.error("HTTP client error while running processor {}: {}", processorName, ex.getMessage(), ex);
+			log.error(
+					"HTTP client error while running processor {}: {}", processorName, ex.getMessage(), ex);
 			return new ProcessorResult(false, ex.getStatusCode().value(), getBody(ex));
 		} catch (ResourceAccessException ex) {
-			log.error("Resource access error while running processor {}: {}", processorName, ex.getMessage(), ex);
-			return new ProcessorResult(false, HttpStatus.INTERNAL_SERVER_ERROR.value(),
+			log.error(
+					"Resource access error while running processor {}: {}",
+					processorName,
+					ex.getMessage(),
+					ex);
+			return new ProcessorResult(
+					false,
+					HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					String.format(PROCESSOR_ERROR_TEMPLATE, processorName));
 		}
 	}
 
 	private boolean isSCMToolEnabled(ProcessorExecutionBasicConfig processorExecutionBasicConfig) {
-		if (processorExecutionBasicConfig == null || processorExecutionBasicConfig.getProjectBasicConfigIds() == null
+		if (processorExecutionBasicConfig == null
+				|| processorExecutionBasicConfig.getProjectBasicConfigIds() == null
 				|| processorExecutionBasicConfig.getProjectBasicConfigIds().isEmpty()) {
 			return false;
 		}
@@ -182,8 +204,7 @@ public class ProcessorServiceImpl implements ProcessorService {
 		return configHelperService.getProjectConfig(projectBasicConfigId).isDeveloperKpiEnabled();
 	}
 
-	private record ProcessorResult(boolean isSuccess, int statusCode, String body) {
-	}
+	private record ProcessorResult(boolean isSuccess, int statusCode, String body) {}
 
 	private String getBody(HttpClientErrorException ex) {
 		String msg = ex.getMessage();
@@ -199,12 +220,15 @@ public class ProcessorServiceImpl implements ProcessorService {
 	@Override
 	public ServiceResponse fetchActiveSprint(String sprintId) {
 
-		String url = processorUrlConfig.getProcessorUrl(ProcessorConstants.JIRA).replaceFirst("/startprojectwiseissuejob",
-				"/startfetchsprintjob");
+		String url =
+				processorUrlConfig
+						.getProcessorUrl(ProcessorConstants.JIRA)
+						.replaceFirst("/startprojectwiseissuejob", "/startfetchsprintjob");
 
 		boolean isSuccess = true;
 
-		httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		httpServletRequest =
+				((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 		String token = httpServletRequest.getHeader(AUTHORIZATION);
 		token = CommonUtils.handleCrossScriptingTaintedValue(token);
 		int statuscode = HttpStatus.NOT_FOUND.value();
@@ -216,7 +240,8 @@ public class ProcessorServiceImpl implements ProcessorService {
 				Gson gson = new Gson();
 				String payload = gson.toJson(sprintId);
 				HttpEntity<String> requestEntity = new HttpEntity<>(payload, headers);
-				ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+				ResponseEntity<String> resp =
+						restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 				statuscode = resp.getStatusCode().value();
 			} catch (HttpClientErrorException ex) {
 				statuscode = ex.getStatusCode().value();
@@ -225,7 +250,8 @@ public class ProcessorServiceImpl implements ProcessorService {
 				isSuccess = false;
 			}
 		}
-		if (HttpStatus.NOT_FOUND.value() == statuscode || HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
+		if (HttpStatus.NOT_FOUND.value() == statuscode
+				|| HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
 			isSuccess = false;
 		}
 
@@ -239,14 +265,14 @@ public class ProcessorServiceImpl implements ProcessorService {
 			sprintTraceLogRepository.save(sprintTrace);
 		}
 
-		return new ServiceResponse(isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
+		return new ServiceResponse(
+				isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
 	}
 
 	/**
 	 * saves the response statuses for repo tools
 	 *
-	 * @param repoToolsStatusResponse
-	 *          repo tool response status
+	 * @param repoToolsStatusResponse repo tool response status
 	 */
 	public void saveRepoToolTraceLogs(RepoToolsStatusResponse repoToolsStatusResponse) {
 		repoToolsConfigService.saveRepoToolProjectTraceLog(repoToolsStatusResponse);
@@ -258,19 +284,21 @@ public class ProcessorServiceImpl implements ProcessorService {
 	/**
 	 * run the metadata step of processor, to get the options of fieldmapping
 	 *
-	 * @param projectBasicConfigId
-	 *          id of the project
+	 * @param projectBasicConfigId id of the project
 	 * @return {@code ServiceResponse}
 	 */
 	@Override
 	public ServiceResponse runMetadataStep(String projectBasicConfigId) {
 
-		String url = processorUrlConfig.getProcessorUrl(ProcessorConstants.JIRA).replaceFirst("/startprojectwiseissuejob",
-				"/runMetadataStep");
+		String url =
+				processorUrlConfig
+						.getProcessorUrl(ProcessorConstants.JIRA)
+						.replaceFirst("/startprojectwiseissuejob", "/runMetadataStep");
 
 		boolean isSuccess = true;
 
-		httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		httpServletRequest =
+				((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 		String token = httpServletRequest.getHeader(AUTHORIZATION);
 		token = CommonUtils.handleCrossScriptingTaintedValue(token);
 		int statuscode = HttpStatus.NOT_FOUND.value();
@@ -282,7 +310,8 @@ public class ProcessorServiceImpl implements ProcessorService {
 				Gson gson = new Gson();
 				String payload = gson.toJson(projectBasicConfigId);
 				HttpEntity<String> requestEntity = new HttpEntity<>(payload, headers);
-				ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+				ResponseEntity<String> resp =
+						restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 				statuscode = resp.getStatusCode().value();
 			} catch (HttpClientErrorException ex) {
 				statuscode = ex.getStatusCode().value();
@@ -291,9 +320,11 @@ public class ProcessorServiceImpl implements ProcessorService {
 				isSuccess = false;
 			}
 		}
-		if (HttpStatus.NOT_FOUND.value() == statuscode || HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
+		if (HttpStatus.NOT_FOUND.value() == statuscode
+				|| HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
 			isSuccess = false;
 		}
-		return new ServiceResponse(isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
+		return new ServiceResponse(
+				isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
 	}
 }

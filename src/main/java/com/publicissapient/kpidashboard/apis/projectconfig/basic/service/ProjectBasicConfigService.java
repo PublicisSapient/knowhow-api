@@ -35,47 +35,43 @@ import com.publicissapient.kpidashboard.common.model.rbac.ProjectBasicConfigNode
 public interface ProjectBasicConfigService {
 
 	/**
-	 * Service to save a new project's basic configuration in the
-	 * project_basic_config collection
+	 * Service to save a new project's basic configuration in the project_basic_config collection
 	 *
-	 * @param projectBasicConfigDTO
-	 *          detail to be saved.
+	 * @param projectBasicConfigDTO detail to be saved.
 	 * @return {@link ServiceResponse} object.
 	 */
 	ServiceResponse addBasicConfig(ProjectBasicConfigDTO projectBasicConfigDTO);
 
 	/**
-	 * Service to update an existing project's basic configuration in the
-	 * project_basic_config collection
+	 * Service to update an existing project's basic configuration in the project_basic_config
+	 * collection
 	 *
 	 * @param basicConfigId
-	 * @param projectBasicConfigDTO
-	 *          detail to be updated.
+	 * @param projectBasicConfigDTO detail to be updated.
 	 * @return {@link ServiceResponse} object.
 	 */
-	ServiceResponse updateBasicConfig(String basicConfigId, ProjectBasicConfigDTO projectBasicConfigDTO);
+	ServiceResponse updateBasicConfig(
+			String basicConfigId, ProjectBasicConfigDTO projectBasicConfigDTO);
 
 	/**
-	 * Service to fetch the list of project basic configuration in the
-	 * project_basic_config collection
+	 * Service to fetch the list of project basic configuration in the project_basic_config collection
 	 *
-	 * @param basicProjectConfigIds
-	 *          : if null or empty, return null
+	 * @param basicProjectConfigIds : if null or empty, return null
 	 * @return {@link ProjectBasicConfig }
 	 */
 	ProjectBasicConfig getProjectBasicConfigs(String basicProjectConfigIds);
 
 	/**
-	 * Service to fetch the list of all project basic configuration in the
-	 * project_basic_config collection
+	 * Service to fetch the list of all project basic configuration in the project_basic_config
+	 * collection
 	 *
 	 * @return {@code List<ProjectBasicConfig>} : empty list incase no data found
 	 */
 	List<ProjectBasicConfig> getFilteredProjectsBasicConfigs(boolean includeAll);
 
 	/**
-	 * Service to fetch the list of all project basic configuration in the
-	 * project_basic_config collection
+	 * Service to fetch the list of all project basic configuration in the project_basic_config
+	 * collection
 	 *
 	 * @return {@code List<ProjectBasicConfig>} : empty list in case no data found
 	 */
@@ -90,19 +86,17 @@ public interface ProjectBasicConfigService {
 	ProjectBasicConfig deleteProject(String basicProjectConfigId);
 
 	/**
-	 * Service to fetch the list of all project basic configuration including all
-	 * hierarchy levels property
+	 * Service to fetch the list of all project basic configuration including all hierarchy levels
+	 * property
 	 *
 	 * @return {@code List<ProjectBasicConfigDTO>} : empty list incase no data found
 	 */
 	List<ProjectBasicConfigDTO> getAllProjectsBasicConfigsDTOWithoutPermission();
 
 	/**
-	 * Service to fetch the map of all project basic configuration including all
-	 * hierarchy levels
+	 * Service to fetch the map of all project basic configuration including all hierarchy levels
 	 *
-	 * @return {@code Map<String, ProjectBasicConfigDTO> }: empty map incase no data
-	 *         found
+	 * @return {@code Map<String, ProjectBasicConfigDTO> }: empty map incase no data found
 	 */
 	Map<String, ProjectBasicConfigDTO> getBasicConfigsDTOMapWithoutPermission();
 
@@ -119,7 +113,8 @@ public interface ProjectBasicConfigService {
 	 * @param groupName
 	 * @return
 	 */
-	ProjectBasicConfigNode findNode(ProjectBasicConfigNode node, String searchValue, String groupName);
+	ProjectBasicConfigNode findNode(
+			ProjectBasicConfigNode node, String searchValue, String groupName);
 
 	/**
 	 * Method to find out all the child nodes of a tree
@@ -155,9 +150,9 @@ public interface ProjectBasicConfigService {
 	/**
 	 * Method to filter the hierarchy DTOs with atLeast one connected tools
 	 *
-	 * @param hierarchyData
-	 *          hierarchy data
+	 * @param hierarchyData hierarchy data
 	 * @return a list of HierarchyResponseDTOs with at least one connected tool
 	 */
-	List<HierarchyResponseDTO> filterHierarchyDTOsWithConnectedTools(List<HierarchyResponseDTO> hierarchyData);
+	List<HierarchyResponseDTO> filterHierarchyDTOsWithConnectedTools(
+			List<HierarchyResponseDTO> hierarchyData);
 }

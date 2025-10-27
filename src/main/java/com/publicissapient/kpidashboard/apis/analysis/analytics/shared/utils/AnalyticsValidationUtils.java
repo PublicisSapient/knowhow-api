@@ -34,7 +34,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AnalyticsValidationUtils {
 
-	public static void validateBaseAnalyticsComputationRequest(BaseAnalyticsRequestDTO baseAnalyticsRequestDTO,
+	public static void validateBaseAnalyticsComputationRequest(
+			BaseAnalyticsRequestDTO baseAnalyticsRequestDTO,
 			List<AccountFilteredData> projectsDataCurrentUserHasAccessTo) {
 		if (Objects.isNull(baseAnalyticsRequestDTO)) {
 			throw new BadRequestException("The AI usage request cannot be null");
@@ -46,21 +47,29 @@ public final class AnalyticsValidationUtils {
 
 		Set<String> projectBasicConfigIds = baseAnalyticsRequestDTO.getProjectBasicConfigIds();
 		if (CollectionUtils.isNotEmpty(projectBasicConfigIds)) {
-			Set<String> basicProjectConfigIdsUserHasAccessTo = projectsDataCurrentUserHasAccessTo.stream()
-					.filter(accountFilteredData -> Objects.nonNull(accountFilteredData.getBasicProjectConfigId())
-							&& projectBasicConfigIds.contains(accountFilteredData.getBasicProjectConfigId().toString()))
-					.map(accountFilteredData -> accountFilteredData.getBasicProjectConfigId().toString())
-					.collect(Collectors.toSet());
+			Set<String> basicProjectConfigIdsUserHasAccessTo =
+					projectsDataCurrentUserHasAccessTo.stream()
+							.filter(
+									accountFilteredData ->
+											Objects.nonNull(accountFilteredData.getBasicProjectConfigId())
+													&& projectBasicConfigIds.contains(
+															accountFilteredData.getBasicProjectConfigId().toString()))
+							.map(accountFilteredData -> accountFilteredData.getBasicProjectConfigId().toString())
+							.collect(Collectors.toSet());
 
-			Set<String> invalidProjectBasicConfigIds = projectBasicConfigIds.stream().filter(
-					projectBasicConfigId -> !basicProjectConfigIdsUserHasAccessTo.contains(projectBasicConfigId))
-					.collect(Collectors.toSet());
+			Set<String> invalidProjectBasicConfigIds =
+					projectBasicConfigIds.stream()
+							.filter(
+									projectBasicConfigId ->
+											!basicProjectConfigIdsUserHasAccessTo.contains(projectBasicConfigId))
+							.collect(Collectors.toSet());
 
 			if (CollectionUtils.isNotEmpty(invalidProjectBasicConfigIds)) {
-				throw new BadRequestException(String.format(
-						"The current user doesn't have access to the project "
-								+ "basic configs [%s] or they are not related to any project",
-						String.join(",", invalidProjectBasicConfigIds)));
+				throw new BadRequestException(
+						String.format(
+								"The current user doesn't have access to the project "
+										+ "basic configs [%s] or they are not related to any project",
+								String.join(",", invalidProjectBasicConfigIds)));
 			}
 		}
 	}

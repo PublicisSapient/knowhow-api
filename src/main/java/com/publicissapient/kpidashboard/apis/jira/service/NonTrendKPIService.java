@@ -31,29 +31,22 @@ public interface NonTrendKPIService {
 	/**
 	 * Gets Kpi data based on kpi request
 	 *
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param filteredNode
-	 *          filteredNode
+	 * @param kpiRequest kpiRequest
+	 * @param kpiElement kpiElement
+	 * @param filteredNode filteredNode
 	 * @return kpi data
-	 * @throws ApplicationException
-	 *           ApplicationException
+	 * @throws ApplicationException ApplicationException
 	 */
-	KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node filteredNode) throws ApplicationException;
+	KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node filteredNode)
+			throws ApplicationException;
 
 	/**
-	 * @param leafNode
-	 *          leafNode
-	 * @param startDate
-	 *          startDate
-	 * @param endDate
-	 *          endDate
-	 * @param kpiRequest
-	 *          kpiRequest
+	 * @param leafNode leafNode
+	 * @param startDate startDate
+	 * @param endDate endDate
+	 * @param kpiRequest kpiRequest
 	 * @return map of String and Object
 	 */
-	Map<String, Object> fetchKPIDataFromDb(Node leafNode, final String startDate, final String endDate,
-			final KpiRequest kpiRequest);
+	Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, final String startDate, final String endDate, final KpiRequest kpiRequest);
 }

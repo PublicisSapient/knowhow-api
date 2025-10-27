@@ -30,7 +30,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "r_update_build_frequency", order = "09302", author = "kunkambl", systemVersion = "9.3.0")
+@ChangeUnit(
+		id = "r_update_build_frequency",
+		order = "09302",
+		author = "kunkambl",
+		systemVersion = "9.3.0")
 public class UpdateBuildFrequency {
 
 	private final MongoTemplate mongoTemplate;

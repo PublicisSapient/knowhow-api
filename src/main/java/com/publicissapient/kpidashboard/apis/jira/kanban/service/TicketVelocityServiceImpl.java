@@ -18,7 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.jira.kanban.service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,19 +67,18 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class TicketVelocityServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String TICKETVELOCITYKEY = "ticketVelocityKey";
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
 	private static final String DATE_FORMAT = "yyyy-MM-dd";
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-	@Autowired
-	private KpiHelperService kpiHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	private static final DateTimeFormatter DATE_TIME_FORMATTER =
+			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+	@Autowired private KpiHelperService kpiHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private FilterHelperService filterHelperService;
+	@Autowired private FilterHelperService filterHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -88,34 +86,42 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 		dateWiseLeafNodeValue(mapTmp, projectList, kpiElement, kpiRequest);
 
-		log.debug("[TICKET-VELOCITY-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[TICKET-VELOCITY-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.TICKET_VELOCITY);
 
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TICKET_VELOCITY);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TICKET_VELOCITY);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 		kpiElement.setTrendValueList(trendValues);
 
-		log.debug("[TICKET-VELOCITY-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[TICKET-VELOCITY-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 		return kpiElement;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		return kpiHelperService.fetchTicketVelocityDataFromDb(leafNodeList, startDate, endDate);
 	}
 
@@ -125,9 +131,10 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 
 		String requestTrackerId = getRequestTrackerId();
 		Double ticketVelocity = 0.0d;
-		List<KanbanIssueCustomHistory> ticketVelocityList = (List<KanbanIssueCustomHistory>) techDebtStoryMap
-				.get(TICKETVELOCITYKEY);
-		log.debug("[TICKET-VELOCITY][{}]. Ticket Count: {}", requestTrackerId, ticketVelocityList.size());
+		List<KanbanIssueCustomHistory> ticketVelocityList =
+				(List<KanbanIssueCustomHistory>) techDebtStoryMap.get(TICKETVELOCITYKEY);
+		log.debug(
+				"[TICKET-VELOCITY][{}]. Ticket Count: {}", requestTrackerId, ticketVelocityList.size());
 		for (KanbanIssueCustomHistory feature : ticketVelocityList) {
 			ticketVelocity = ticketVelocity + Double.valueOf(feature.getEstimate());
 		}
@@ -141,7 +148,10 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
@@ -149,61 +159,86 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 		String startDate = dateRange.getStartDate().format(DateTimeFormatter.ofPattern(DATE_FORMAT));
 		String endDate = dateRange.getEndDate().format(DateTimeFormatter.ofPattern(DATE_FORMAT));
 
-		Map<String, Object> ticketVelocityStoryMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		Map<String, Object> ticketVelocityStoryMap =
+				fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 
-		Map<String, Map<String, List<KanbanIssueCustomHistory>>> projectAndDateWiseStoryMap = createDateWiseKanbanHistMap(
-				(List<KanbanIssueCustomHistory>) ticketVelocityStoryMap.get(TICKETVELOCITYKEY),
-				(String) ticketVelocityStoryMap.get(SUBGROUPCATEGORY), filterHelperService);
+		Map<String, Map<String, List<KanbanIssueCustomHistory>>> projectAndDateWiseStoryMap =
+				createDateWiseKanbanHistMap(
+						(List<KanbanIssueCustomHistory>) ticketVelocityStoryMap.get(TICKETVELOCITYKEY),
+						(String) ticketVelocityStoryMap.get(SUBGROUPCATEGORY),
+						filterHelperService);
 
 		kpiWithoutFilter(projectAndDateWiseStoryMap, mapTmp, leafNodeList, kpiElement, kpiRequest);
 	}
 
-	private void kpiWithoutFilter(Map<String, Map<String, List<KanbanIssueCustomHistory>>> projectAndDateWiseStoryMap,
-			Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void kpiWithoutFilter(
+			Map<String, Map<String, List<KanbanIssueCustomHistory>>> projectAndDateWiseStoryMap,
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 		String requestTrackerId = getKanbanRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
-		leafNodeList.forEach(node -> {
-			String projectNodeId = node.getProjectFilter().getId();
-			String basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId().toString();
-			Map<String, List<KanbanIssueCustomHistory>> dateWiseStoryMap = projectAndDateWiseStoryMap
-					.get(basicProjectConfigId);
-			if (MapUtils.isNotEmpty(dateWiseStoryMap)) {
-				LocalDateTime currentDate = DateUtil.getTodayTime();
-				List<DataCount> dataCount = new ArrayList<>();
+		leafNodeList.forEach(
+				node -> {
+					String basicProjectConfigId =
+							node.getProjectFilter().getBasicProjectConfigId().toString();
+					Map<String, List<KanbanIssueCustomHistory>> dateWiseStoryMap =
+							projectAndDateWiseStoryMap.get(basicProjectConfigId);
+					if (MapUtils.isNotEmpty(dateWiseStoryMap)) {
+						LocalDateTime currentDate = DateUtil.getTodayTime();
+						List<DataCount> dataCount = new ArrayList<>();
 
-				for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
-					List<KanbanIssueCustomHistory> kanbanIssueCustomHistories = new ArrayList<>();
-					String projectName = node.getProjectFilter().getName();
-					CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate,
-							kpiRequest.getDuration());
+						for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
+							List<KanbanIssueCustomHistory> kanbanIssueCustomHistories = new ArrayList<>();
+							String projectName = node.getProjectFilter().getName();
+							CustomDateRange dateRange =
+									KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+											currentDate, kpiRequest.getDuration());
 
-					Double capacity = filterDataBasedOnStartAndEndDate(dateWiseStoryMap, dateRange, kanbanIssueCustomHistories);
-					String date = getRange(dateRange, kpiRequest);
-					dataCount.add(getDataCountObject(capacity, projectName, date));
-					currentDate = getNextRangeDate(kpiRequest, currentDate);
-					if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-						KPIExcelUtility.populateTicketVelocityExcelData(kanbanIssueCustomHistories, projectName, date, excelData);
+							Double capacity =
+									filterDataBasedOnStartAndEndDate(
+											dateWiseStoryMap, dateRange, kanbanIssueCustomHistories);
+							String date = getRange(dateRange, kpiRequest);
+							dataCount.add(getDataCountObject(capacity, projectName, date));
+							currentDate = getNextRangeDate(kpiRequest, currentDate);
+							if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+								KPIExcelUtility.populateTicketVelocityExcelData(
+										kanbanIssueCustomHistories, projectName, date, excelData);
+							}
+						}
+						mapTmp.get(node.getId()).setValue(dataCount);
 					}
-				}
-				mapTmp.get(node.getId()).setValue(dataCount);
-			}
-		});
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.TICKET_VELOCITY.getColumns());
 	}
 
 	private Map<String, Map<String, List<KanbanIssueCustomHistory>>> createDateWiseKanbanHistMap(
-			List<KanbanIssueCustomHistory> kanbanIssueCustomHistories, String subGroupCategory,
+			List<KanbanIssueCustomHistory> kanbanIssueCustomHistories,
+			String subGroupCategory,
 			FilterHelperService flterHelperService) {
-		Map<String, AdditionalFilterCategory> addFilterCat = flterHelperService.getAdditionalFilterHierarchyLevel();
+		Map<String, AdditionalFilterCategory> addFilterCat =
+				flterHelperService.getAdditionalFilterHierarchyLevel();
 		List<String> addFilterCategoryList = new ArrayList(addFilterCat.keySet());
-		Map<String, Map<String, List<KanbanIssueCustomHistory>>> projectAndDateWiseTicketMap = new HashMap<>();
-		if (Constant.DATE.equals(subGroupCategory) || addFilterCategoryList.contains(subGroupCategory)) {
-			projectAndDateWiseTicketMap = kanbanIssueCustomHistories.stream()
-					.collect(Collectors.groupingBy(KanbanIssueCustomHistory::getBasicProjectConfigId,
-							Collectors.groupingBy(f -> LocalDate
-									.parse(f.getHistoryDetails().get(0).getActivityDate().split("\\.")[0], DATE_TIME_FORMATTER)
-									.toString())));
+		Map<String, Map<String, List<KanbanIssueCustomHistory>>> projectAndDateWiseTicketMap =
+				new HashMap<>();
+		if (Constant.DATE.equals(subGroupCategory)
+				|| addFilterCategoryList.contains(subGroupCategory)) {
+			projectAndDateWiseTicketMap =
+					kanbanIssueCustomHistories.stream()
+							.collect(
+									Collectors.groupingBy(
+											KanbanIssueCustomHistory::getBasicProjectConfigId,
+											Collectors.groupingBy(
+													f ->
+															LocalDate.parse(
+																			f.getHistoryDetails()
+																					.get(0)
+																					.getActivityDate()
+																					.split("\\.")[0],
+																			DATE_TIME_FORMATTER)
+																	.toString())));
 		}
 		return projectAndDateWiseTicketMap;
 	}
@@ -249,8 +284,10 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 		String range = null;
 		if (CommonConstant.WEEK.equalsIgnoreCase(kpiRequest.getDuration())) {
 
-			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime()) + " to "
-				   + DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
+			range =
+					DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime())
+							+ " to "
+							+ DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getEndDateTime());
 		} else if (CommonConstant.MONTH.equalsIgnoreCase(kpiRequest.getDuration())) {
 			range = DateUtil.tranformUTCLocalTimeToZFormat(dateRange.getStartDateTime());
 		} else {
@@ -259,19 +296,24 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 		return range;
 	}
 
-	private Double filterDataBasedOnStartAndEndDate(Map<String, List<KanbanIssueCustomHistory>> dateWiseStoryMap,
-			CustomDateRange dateRange, List<KanbanIssueCustomHistory> totalTicket) {
+	private Double filterDataBasedOnStartAndEndDate(
+			Map<String, List<KanbanIssueCustomHistory>> dateWiseStoryMap,
+			CustomDateRange dateRange,
+			List<KanbanIssueCustomHistory> totalTicket) {
 		List<KanbanIssueCustomHistory> dummyList = new ArrayList<>();
 
-		for (LocalDate currentDate = dateRange.getStartDate(); currentDate.compareTo(dateRange.getStartDate()) >= 0 &&
-				dateRange.getEndDate().compareTo(currentDate) >= 0; currentDate = currentDate.plusDays(1)) {
+		for (LocalDate currentDate = dateRange.getStartDate();
+				currentDate.compareTo(dateRange.getStartDate()) >= 0
+						&& dateRange.getEndDate().compareTo(currentDate) >= 0;
+				currentDate = currentDate.plusDays(1)) {
 			dummyList.add(KanbanIssueCustomHistory.builder().estimate("0").build());
 
 			totalTicket.addAll(dateWiseStoryMap.getOrDefault(currentDate.toString(), dummyList));
 		}
 		Double ticketEstimate = 0.0d;
 		if (CollectionUtils.isNotEmpty(totalTicket)) {
-			ticketEstimate = totalTicket.stream().mapToDouble(value -> Double.parseDouble(value.getEstimate())).sum();
+			ticketEstimate =
+					totalTicket.stream().mapToDouble(value -> Double.parseDouble(value.getEstimate())).sum();
 		}
 		return ticketEstimate;
 	}
@@ -283,6 +325,7 @@ public class TicketVelocityServiceImpl extends JiraKPIService<Double, List<Objec
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI49(), KPICode.TICKET_VELOCITY.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI49(), KPICode.TICKET_VELOCITY.getKpiId());
 	}
 }

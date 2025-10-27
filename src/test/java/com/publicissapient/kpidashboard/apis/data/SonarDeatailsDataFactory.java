@@ -36,12 +36,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class SonarDeatailsDataFactory {
-	private static final String FILE_PATH_SONAR_DETAILS_DATA = "/json/non-JiraProcessors/sonar_details.json";
+	private static final String FILE_PATH_SONAR_DETAILS_DATA =
+			"/json/non-JiraProcessors/sonar_details.json";
 	private List<SonarDetails> sonarDeatailsDataFactory;
 	private ObjectMapper mapper;
 
-	private SonarDeatailsDataFactory() {
-	}
+	private SonarDeatailsDataFactory() {}
 
 	public static SonarDeatailsDataFactory newInstance(String filePath) {
 
@@ -61,9 +61,10 @@ public class SonarDeatailsDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_SONAR_DETAILS_DATA : filePath;
 
-			sonarDeatailsDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<SonarDetails>>() {
-					});
+			sonarDeatailsDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<SonarDetails>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading account hierarchies from file = " + filePath, e);
 		}

@@ -26,7 +26,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "plan_release_filter", order = "101011", author = "shunaray", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "plan_release_filter",
+		order = "101011",
+		author = "shunaray",
+		systemVersion = "10.1.0")
 public class ReleasePlanEnhc {
 
 	private final MongoTemplate mongoTemplate;
@@ -42,13 +46,19 @@ public class ReleasePlanEnhc {
 	}
 
 	public void updateKpiFilter(String radioButton) {
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi179"),
-				new Document("$set", new Document("kpiFilter", radioButton)));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi179"),
+						new Document("$set", new Document("kpiFilter", radioButton)));
 	}
 
 	public void updateFieldMappingStructure(String section) {
-		mongoTemplate.getCollection("field_mapping_structure").updateOne(new Document("fieldName", "startDateCountKPI150"),
-				new Document("$set", new Document("section", section)));
+		mongoTemplate
+				.getCollection("field_mapping_structure")
+				.updateOne(
+						new Document("fieldName", "startDateCountKPI150"),
+						new Document("$set", new Document("section", section)));
 	}
 
 	@RollbackExecution

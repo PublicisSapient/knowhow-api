@@ -62,8 +62,10 @@ public class KeyValueLoggingFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-		HttpServletRequestWrapper requestWrapper = new HttpServletRequestWrapper((HttpServletRequest) request);
-		HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper((HttpServletResponse) response);
+		HttpServletRequestWrapper requestWrapper =
+				new HttpServletRequestWrapper((HttpServletRequest) request);
+		HttpServletResponseWrapper responseWrapper =
+				new HttpServletResponseWrapper((HttpServletResponse) response);
 
 		chain.doFilter(request, response);
 
@@ -74,8 +76,11 @@ public class KeyValueLoggingFilter implements Filter {
 	private KeyValueLog getLogEntry(HttpServletRequest request, HttpServletResponse response) {
 
 		KeyValueLog log = new KeyValueLog();
-		log.with(REMOTE_ADDRESS, request.getRemoteAddr()).with(APPLICATION_NAME, appName).with(APPLICATION_VERSION, version)
-				.with(REQUEST_URL, request.getRequestURL().toString()).with(REQUEST_METHOD, request.getMethod())
+		log.with(REMOTE_ADDRESS, request.getRemoteAddr())
+				.with(APPLICATION_NAME, appName)
+				.with(APPLICATION_VERSION, version)
+				.with(REQUEST_URL, request.getRequestURL().toString())
+				.with(REQUEST_METHOD, request.getMethod())
 				.with(STATUS_CODE, response.getStatus());
 
 		HttpSession session = request.getSession(false);
@@ -85,8 +90,9 @@ public class KeyValueLoggingFilter implements Filter {
 
 		Authentication user = SecurityContextHolder.getContext().getAuthentication();
 		if (user != null) {
-			log.with(USER_NAME, user.getPrincipal()).with(USER_DETAILS, user.getDetails().toString()).with(USER_AUTHORITIES,
-					user.getAuthorities().toString());
+			log.with(USER_NAME, user.getPrincipal())
+					.with(USER_DETAILS, user.getDetails().toString())
+					.with(USER_AUTHORITIES, user.getAuthorities().toString());
 		}
 
 		return log;

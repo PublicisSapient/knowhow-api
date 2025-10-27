@@ -24,13 +24,13 @@ import org.springframework.data.repository.CrudRepository;
 import com.publicissapient.kpidashboard.apis.auth.model.ForgotPasswordToken;
 
 /** The interface Forgot password token repository. */
-public interface ForgotPasswordTokenRepository extends CrudRepository<ForgotPasswordToken, ObjectId> {
+public interface ForgotPasswordTokenRepository
+		extends CrudRepository<ForgotPasswordToken, ObjectId> {
 
 	/**
 	 * Find by token forgot password token.
 	 *
-	 * @param token
-	 *          the token
+	 * @param token the token
 	 * @return the forgot password token
 	 */
 	ForgotPasswordToken findByToken(String token);

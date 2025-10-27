@@ -83,31 +83,24 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	List<KanbanJiraIssue> kanbanJiraIssueList = new ArrayList<>();
-	@Mock
-	KanbanJiraIssueRepository kanbanJiraIssueRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	OpenTicketAgingByPriorityServiceImpl openTicketAgingByPriorityService;
-	@Mock
-	private FilterHelperService flterHelperService;
+	@Mock KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks OpenTicketAgingByPriorityServiceImpl openTicketAgingByPriorityService;
+	@Mock private FilterHelperService flterHelperService;
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
 	private List<DataCount> trendValues = new ArrayList<>();
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 	private KpiRequest kpiRequest;
 
 	@Before
 	public void setup() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi997");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
@@ -119,26 +112,30 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Kanban Project_6335368249794a18e8a4479f");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 
 		List<String> jiraTicketClosedStatus = fieldMapping.getJiraTicketClosedStatusKPI997();
 		jiraTicketClosedStatus.add(fieldMapping.getJiraLiveStatusKPI997());
 		jiraTicketClosedStatus.addAll(fieldMapping.getJiraTicketRejectedStatusKPI997());
 
-		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory = KanbanJiraIssueDataFactory.newInstance();
-		kanbanJiraIssueList = kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeNameandStatus(
-				fieldMapping.getTicketCountIssueTypeKPI997(), jiraTicketClosedStatus);
+		KanbanJiraIssueDataFactory kanbanJiraIssueDataFactory =
+				KanbanJiraIssueDataFactory.newInstance();
+		kanbanJiraIssueList =
+				kanbanJiraIssueDataFactory.getKanbanJiraIssueDataListByTypeNameandStatus(
+						fieldMapping.getTicketCountIssueTypeKPI997(), jiraTicketClosedStatus);
 		kanbanJiraIssueRepository.saveAll(kanbanJiraIssueList);
 
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
@@ -147,12 +144,12 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 		setTreadValuesDataCount();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		when(cacheService.getFullKanbanHierarchyLevel()).thenReturn(hierachyLevelFactory.getHierarchyLevels());
+		when(cacheService.getFullKanbanHierarchyLevel())
+				.thenReturn(hierachyLevelFactory.getHierarchyLevels());
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	private void setTreadValuesDataCount() {
 		List<DataCount> dataCountList = new ArrayList<>();
@@ -177,12 +174,14 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 	@Test
 	public void testGetTicketAgingByPriority() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 
 		when(customApiConfig.getTotalDefectCountAgingXAxisRange())
 				.thenReturn(new ArrayList<>(Arrays.asList("0-1", "1-3", "3-6", "6-12", ">12")));
-		when(kanbanJiraIssueRepository.findIssuesByDateAndTypeAndStatus(any(), any(), any(), any(), any(), any()))
+		when(kanbanJiraIssueRepository.findIssuesByDateAndTypeAndStatus(
+						any(), any(), any(), any(), any(), any()))
 				.thenReturn(kanbanJiraIssueList);
 
 		when(customApiConfig.getpriorityP1()).thenReturn(P1);
@@ -190,39 +189,44 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(P3);
 		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(openTicketAgingByPriorityService.getKanbanRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(openTicketAgingByPriorityService.getKanbanRequestTrackerId())
+				.thenReturn(kpiRequestTrackerId);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		try {
-			KpiElement kpiElement = openTicketAgingByPriorityService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					openTicketAgingByPriorityService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String priority = dc.getFilter();
-				switch (priority) {
-					case "P1" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P2" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P3" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "P4" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
-					case "MISC" :
-						assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
-						break;
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String priority = dc.getFilter();
+								switch (priority) {
+									case "P1":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "P2":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "P3":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "P4":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
+									case "MISC":
+										assertThat("Ticket Priority Count Value :", dc.getValue().size(), equalTo(1));
+										break;
 
-					default :
-						break;
-				}
-			});
+									default:
+										break;
+								}
+							});
 
 		} catch (ApplicationException enfe) {
 
@@ -232,29 +236,41 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
-		List<Node> leafNodeList = treeAggregatorDetail.getMapOfListOfProjectNodes()
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		List<Node> leafNodeList =
+				treeAggregatorDetail
+						.getMapOfListOfProjectNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 		String startDate = LocalDate.now().minusMonths(15).toString();
 		String endDate = LocalDate.now().toString();
-		when(kanbanJiraIssueRepository.findIssuesByDateAndTypeAndStatus(any(), any(), any(), any(), any(), any()))
+		when(kanbanJiraIssueRepository.findIssuesByDateAndTypeAndStatus(
+						any(), any(), any(), any(), any(), any()))
 				.thenReturn(kanbanJiraIssueList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> defectDataListMap = openTicketAgingByPriorityService.fetchKPIDataFromDb(leafNodeList, startDate,
-				endDate, kpiRequest);
-		assertThat("Total Defects issue list :", ((List<KanbanJiraIssue>) defectDataListMap.get(RANGE_TICKET_LIST)).size(),
+		Map<String, Object> defectDataListMap =
+				openTicketAgingByPriorityService.fetchKPIDataFromDb(
+						leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Total Defects issue list :",
+				((List<KanbanJiraIssue>) defectDataListMap.get(RANGE_TICKET_LIST)).size(),
 				equalTo(172));
 	}
 
 	@Test
 	public void testCalculateKPIMetrics() {
-		assertThat("Total Aging value :", openTicketAgingByPriorityService.calculateKPIMetrics(null), equalTo(0L));
+		assertThat(
+				"Total Aging value :",
+				openTicketAgingByPriorityService.calculateKPIMetrics(null),
+				equalTo(0L));
 	}
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", openTicketAgingByPriorityService.getQualifierType(),
+		assertThat(
+				"Kpi Name :",
+				openTicketAgingByPriorityService.getQualifierType(),
 				equalTo("OPEN_TICKET_AGING_BY_PRIORITY"));
 	}
 }

@@ -26,7 +26,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_change_repo_tool_kpi_combined_source", order = "0101015", author = "kunkambl", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "r_change_repo_tool_kpi_combined_source",
+		order = "0101015",
+		author = "kunkambl",
+		systemVersion = "10.1.0")
 public class ChangeCombinedSourceDevKpis {
 
 	private final MongoTemplate mongoTemplate;
@@ -49,7 +53,8 @@ public class ChangeCombinedSourceDevKpis {
 		updateDocument(kpiMaster, "kpi159", EXISTING_KPI_SOURCE);
 	}
 
-	private void updateDocument(MongoCollection<Document> kpiCategoryMapping, String kpiId, String kpiSource) {
+	private void updateDocument(
+			MongoCollection<Document> kpiCategoryMapping, String kpiId, String kpiSource) {
 		// Create the filter
 		Document filter = new Document("kpiId", kpiId);
 		// Create the update

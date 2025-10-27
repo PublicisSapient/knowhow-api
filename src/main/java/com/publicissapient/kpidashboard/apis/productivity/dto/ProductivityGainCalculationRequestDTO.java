@@ -23,11 +23,11 @@ import lombok.Data;
 @Data
 public class ProductivityGainCalculationRequestDTO {
 
-    @NotNull(message = "The hierarchy 'level' must be specified")
-    private Integer level;
+	@NotNull(message = "The hierarchy 'level' must be specified")
+	private Integer level;
 
-    @NotEmpty(message = "The hierarchy 'label' must be specified")
-    private String label;
+	@NotEmpty(message = "The hierarchy 'label' must be specified")
+	private String label;
 
-    private String parentId;
+	private String parentId;
 }

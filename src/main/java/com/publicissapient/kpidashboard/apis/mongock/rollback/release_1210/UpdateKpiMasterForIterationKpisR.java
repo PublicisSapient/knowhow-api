@@ -9,7 +9,11 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /** prijain3 */
-@ChangeUnit(id = "r_update_kpi_master_for_iteration_kpis", order = "012100", author = "prijain3", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "r_update_kpi_master_for_iteration_kpis",
+		order = "012100",
+		author = "prijain3",
+		systemVersion = "12.1.0")
 public class UpdateKpiMasterForIterationKpisR {
 
 	UpdateKpiMasterForIterationKpis upgradeKpiMaster;

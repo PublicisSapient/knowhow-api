@@ -18,13 +18,15 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
-import jakarta.validation.constraints.NotNull;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.UUID;
 
-public record InitiateUploadResponse(String message, @NotNull UUID requestId, @JsonIgnore String filePath) {
-    public String getMessage() {
-        return message;
-    }
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.validation.constraints.NotNull;
+
+public record InitiateUploadResponse(
+		String message, @NotNull UUID requestId, @JsonIgnore String filePath) {
+	public String getMessage() {
+		return message;
+	}
 }

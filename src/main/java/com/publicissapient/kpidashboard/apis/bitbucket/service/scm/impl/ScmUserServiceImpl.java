@@ -16,6 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
@@ -23,13 +30,8 @@ import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmUserServic
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
 import com.publicissapient.kpidashboard.common.model.scm.User;
-import lombok.AllArgsConstructor;
-import org.bson.types.ObjectId;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -46,9 +48,10 @@ public class ScmUserServiceImpl implements ScmUserService {
 			return repoToolsConfigService.getProjectRepoToolMembers(projectConfigId);
 		} else {
 			List<User> scmUsers = scmKpiHelperService.getScmUser(new ObjectId(projectConfigId));
-			Set<String> userIdentifiers = scmUsers.stream()
-					.map(user -> user.getEmail() != null ? user.getEmail() : user.getUsername())
-					.collect(Collectors.toSet());
+			Set<String> userIdentifiers =
+					scmUsers.stream()
+							.map(user -> user.getEmail() != null ? user.getEmail() : user.getUsername())
+							.collect(Collectors.toSet());
 			return objectMapper.valueToTree(userIdentifiers);
 		}
 	}
