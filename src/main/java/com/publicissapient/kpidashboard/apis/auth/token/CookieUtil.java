@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -28,13 +29,17 @@ public class CookieUtil {
 
 	@Autowired private AuthProperties authProperties;
 
+	@Value("${server.servlet.context-path}")
+	private String cookiePath;
+
+
 	public Cookie createAccessTokenCookie(String token) {
 		Cookie cookie = new Cookie(AUTH_COOKIE, token);
 
 		cookie.setMaxAge(customApiConfig.getAuthCookieDuration());
 		cookie.setSecure(customApiConfig.isAuthCookieSecured());
 		cookie.setHttpOnly(customApiConfig.isAuthCookieHttpOnly());
-		cookie.setPath("/api");
+		cookie.setPath(cookiePath);
 		if (authProperties.isSubDomainCookie()) {
 			cookie.setDomain(authProperties.getDomain());
 		}
@@ -84,7 +89,7 @@ public class CookieUtil {
 						foundCookie -> {
 							foundCookie.setMaxAge(0);
 							foundCookie.setValue("");
-							foundCookie.setPath("/api");
+							foundCookie.setPath(cookiePath);
 							if (authProperties.isSubDomainCookie()) {
 								foundCookie.setDomain(authProperties.getDomain());
 							}
