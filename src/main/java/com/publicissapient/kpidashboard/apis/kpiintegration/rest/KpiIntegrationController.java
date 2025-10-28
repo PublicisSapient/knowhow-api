@@ -22,11 +22,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.Collections;
 import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
-import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,8 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.kpiintegration.service.KpiIntegrationServiceImpl;
+import com.publicissapient.kpidashboard.apis.kpiintegration.service.impl.KpiRecommendationServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -77,11 +78,7 @@ public class KpiIntegrationController {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());
 		}
 		List<KpiElement> responseList = kpiIntegrationService.getKpiResponses(kpiRequest);
-		if (responseList.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
-		} else {
-			return ResponseEntity.ok().body(responseList);
-		}
+		return ResponseEntity.ok(responseList);
 	}
 
 	/**
