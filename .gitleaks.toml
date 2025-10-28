@@ -1,0 +1,7 @@
+title = "Custom Gitleaks Config"
+
+[[rules]]
+id = "generic-password"
+description = "Detect generic passwords"
+regex = '''(?i)(password\s*[:=]\s*['"]?[A-Za-z0-9@#$%^&+=!]{4,}['"]?)'''
+tags = ["password", "custom"]

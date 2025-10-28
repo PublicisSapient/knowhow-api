@@ -1,2 +1,2 @@
 user=admin
-password=asdfdfdsflksjdlsc1234aaralsdfgklskowncreiu42123
+password=asdf
