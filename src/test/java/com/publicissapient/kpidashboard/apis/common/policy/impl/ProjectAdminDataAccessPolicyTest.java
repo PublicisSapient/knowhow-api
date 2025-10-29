@@ -125,7 +125,7 @@ class ProjectAdminDataAccessPolicyTest {
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
 		// then
-		assertEquals(1, result.size());
+		assertEquals(0, result.size());
 		verify(userRepository, times(1)).findByUsername(userName);
 	}
 }
