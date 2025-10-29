@@ -47,17 +47,13 @@ import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
 @RunWith(MockitoJUnitRunner.class)
 public class RestAPIUtilsTest {
 
-	@Mock
-	private AesEncryptionService aesEncryptionService;
+	@Mock private AesEncryptionService aesEncryptionService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private JSONParser parser;
+	@Mock private JSONParser parser;
 
-	@InjectMocks
-	private RestAPIUtils restAPIUtils;
+	@InjectMocks private RestAPIUtils restAPIUtils;
 
 	@BeforeEach
 	public void setUp() {
@@ -113,7 +109,8 @@ public class RestAPIUtilsTest {
 		HttpHeaders headers = RestAPIUtils.getHeaders(accessToken, usingBasicAuth);
 
 		// Assertions
-		assertEquals("Basic " + java.util.Base64.getEncoder().encodeToString("mockAccessToken:".getBytes()),
+		assertEquals(
+				"Basic " + java.util.Base64.getEncoder().encodeToString("mockAccessToken:".getBytes()),
 				headers.getFirst("Authorization"));
 	}
 
@@ -126,7 +123,9 @@ public class RestAPIUtilsTest {
 		HttpHeaders headers = restAPIUtils.getHeaders(username, password);
 
 		// Assertions
-		assertEquals("Basic " + java.util.Base64.getEncoder().encodeToString("mockUsername:mockPassword".getBytes()),
+		assertEquals(
+				"Basic "
+						+ java.util.Base64.getEncoder().encodeToString("mockUsername:mockPassword".getBytes()),
 				headers.getFirst("Authorization"));
 	}
 
@@ -213,7 +212,8 @@ public class RestAPIUtilsTest {
 		jsonObject.put("_class", "com.cloudbees.hudson.plugins.folder.Folder");
 
 		// Call the method
-		List<String> result = restAPIUtils.convertListFromMultipleArray(createJsonArray(jsonObject), "key");
+		List<String> result =
+				restAPIUtils.convertListFromMultipleArray(createJsonArray(jsonObject), "key");
 
 		// Assertion
 		assertEquals(1, result.size()); // No items should be added because _class is not

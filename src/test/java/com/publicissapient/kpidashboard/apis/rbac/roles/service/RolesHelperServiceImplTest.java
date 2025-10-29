@@ -53,10 +53,8 @@ public class RolesHelperServiceImplTest {
 	String testId;
 	String testRolename;
 	String testStatus;
-	@InjectMocks
-	private RolesHelperServiceImpl rolesHelperServiceImpl;
-	@Mock
-	private RolesRepository rolesRepository;
+	@InjectMocks private RolesHelperServiceImpl rolesHelperServiceImpl;
+	@Mock private RolesRepository rolesRepository;
 
 	/** method includes preprocesses for test cases */
 	@Before
@@ -157,10 +155,7 @@ public class RolesHelperServiceImplTest {
 		assertThat("Data should not exist: ", response.getData(), equalTo(null));
 	}
 
-	/**
-	 * 6. Input String id is valid but data at this id does not exist in the
-	 * database.
-	 */
+	/** 6. Input String id is valid but data at this id does not exist in the database. */
 	@Test
 	public void testGetRoleById3() {
 		testId = "5ca455aa70c53c4f50076e34";
@@ -204,9 +199,7 @@ public class RolesHelperServiceImplTest {
 		assertEquals(null, response.getData());
 	}
 
-	/**
-	 * 10. Input String id is valid but input roleData has no permissions selected.
-	 */
+	/** 10. Input String id is valid but input roleData has no permissions selected. */
 	@Test
 	public void testModifyRoleById3() {
 		testId = "5ca455aa70c53c4f50076e34";
@@ -219,9 +212,7 @@ public class RolesHelperServiceImplTest {
 		assertEquals(null, response.getData());
 	}
 
-	/**
-	 * 11. Input String id is valid but input roleData has no permissions selected.
-	 */
+	/** 11. Input String id is valid but input roleData has no permissions selected. */
 	@Test
 	public void testModifyRoleById4() {
 		testId = "5ca455aa70c53c4f50076e34";
@@ -240,10 +231,7 @@ public class RolesHelperServiceImplTest {
 		assertEquals(null, response.getData());
 	}
 
-	/**
-	 * 12. Input String id is valid but input roleData has at least one permission
-	 * selected.
-	 */
+	/** 12. Input String id is valid but input roleData has at least one permission selected. */
 	@Test
 	public void testModifyRoleById5() {
 		testId = "5ca455aa70c53c4f50076e34";

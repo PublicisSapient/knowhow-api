@@ -23,9 +23,9 @@ import lombok.Data;
 @AllArgsConstructor
 public class ProjectAiUsageMetrics {
 
-    private int issueCount;
+	private int issueCount;
 
-    private double efficiencyGain;
+	private double efficiencyGain;
 
-    private String name;
+	private String name;
 }

@@ -36,20 +36,15 @@ public class GithubActionToolConfigServiceImpl {
 	public static final String ID = "id";
 	public static final String PATH = "path";
 	private static final String RESOURCE_JOBS_ENDPOINT = "/actions/workflows";
-	@Autowired
-	private RestTemplate restTemplate;
-	@Autowired
-	private RestAPIUtils restAPIUtils;
-	@Autowired
-	private ConnectionRepository connectionRepository;
-	@Autowired
-	private AesEncryptionService aesEncryptionService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private ConnectionService connectionService;
+	@Autowired private RestTemplate restTemplate;
+	@Autowired private RestAPIUtils restAPIUtils;
+	@Autowired private ConnectionRepository connectionRepository;
+	@Autowired private AesEncryptionService aesEncryptionService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private ConnectionService connectionService;
 
-	public List<GithubActionWorkflowsDTO> getGitHubWorkFlowList(String connectionId, String repoName) {
+	public List<GithubActionWorkflowsDTO> getGitHubWorkFlowList(
+			String connectionId, String repoName) {
 
 		List<GithubActionWorkflowsDTO> responseDTOList = new ArrayList<>();
 		Optional<Connection> optConnection = connectionRepository.findById(new ObjectId(connectionId));
@@ -57,17 +52,22 @@ public class GithubActionToolConfigServiceImpl {
 			Connection connection = optConnection.get();
 			String baseUrl = connection.getBaseUrl() == null ? null : connection.getBaseUrl().trim();
 			String repositoryName = repoName;
-			String repositoryOwner = connection.getUsername() == null ? null : connection.getUsername().trim();
-			String accessToken = connection.getAccessToken() == null
-					? null
-					: aesEncryptionService.decrypt(connection.getAccessToken(), customApiConfig.getAesEncryptionKey());
+			String repositoryOwner =
+					connection.getUsername() == null ? null : connection.getUsername().trim();
+			String accessToken =
+					connection.getAccessToken() == null
+							? null
+							: aesEncryptionService.decrypt(
+									connection.getAccessToken(), customApiConfig.getAesEncryptionKey());
 
-			String url = baseUrl + "/repos/" + repositoryOwner + "/" + repositoryName + RESOURCE_JOBS_ENDPOINT;
+			String url =
+					baseUrl + "/repos/" + repositoryOwner + "/" + repositoryName + RESOURCE_JOBS_ENDPOINT;
 
 			HttpEntity<?> httpEntity = new HttpEntity<>(RestAPIUtils.getHeaders(accessToken, true));
 			try {
 				connectionService.validateConnectionFlag(connection);
-				ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
+				ResponseEntity<String> response =
+						restTemplate.exchange(url, HttpMethod.GET, httpEntity, String.class);
 				if (response.getStatusCode() == HttpStatus.OK) {
 					JSONParser respParser = new JSONParser();
 					JSONObject object = (JSONObject) respParser.parse(response.getBody());
@@ -86,28 +86,32 @@ public class GithubActionToolConfigServiceImpl {
 
 				} else {
 					String statusCode = response.getStatusCode().toString();
-					log.error("Error while fetching getJenkinsJobNameList from {}. with status {}", url, statusCode);
+					log.error(
+							"Error while fetching getJenkinsJobNameList from {}. with status {}",
+							url,
+							statusCode);
 				}
 
 			} catch (Exception exception) {
 				isClientException(connection, exception);
-				log.error("Error while fetching getJenkinsJobNameList from {}:  {}", url, exception.getMessage());
+				log.error(
+						"Error while fetching getJenkinsJobNameList from {}:  {}", url, exception.getMessage());
 			}
 		}
 		return responseDTOList;
 	}
 
 	/**
-	 * @param connection
-	 *          connection
-	 * @param exception
-	 *          exception
+	 * @param connection connection
+	 * @param exception exception
 	 */
 	private void isClientException(Connection connection, Exception exception) {
-		if (exception instanceof HttpClientErrorException &&
-				((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
-			String errMsg = ClientErrorMessageEnum.fromValue(((HttpClientErrorException) exception).getStatusCode().value())
-					.getReasonPhrase();
+		if (exception instanceof HttpClientErrorException
+				&& ((HttpClientErrorException) exception).getStatusCode().is4xxClientError()) {
+			String errMsg =
+					ClientErrorMessageEnum.fromValue(
+									((HttpClientErrorException) exception).getStatusCode().value())
+							.getReasonPhrase();
 			connectionService.updateBreakingConnection(connection, errMsg);
 		}
 	}

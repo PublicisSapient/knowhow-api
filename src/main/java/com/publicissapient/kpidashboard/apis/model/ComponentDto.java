@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,6 +37,7 @@ public class ComponentDto {
 	private double totalTime;
 	private double errorRate;
 	private double errorThreshold;
+
 	@JsonProperty("_links")
 	private LinksDto links;
 }

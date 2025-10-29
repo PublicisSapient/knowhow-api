@@ -31,7 +31,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "r_priority_field_ftpr_enhc", order = "08352", author = "shunaray", systemVersion = "8.3.5")
+@ChangeUnit(
+		id = "r_priority_field_ftpr_enhc",
+		order = "08352",
+		author = "shunaray",
+		systemVersion = "8.3.5")
 public class PriorityFieldEnhcFtpr {
 
 	public static final String LABEL = "label";
@@ -54,13 +58,23 @@ public class PriorityFieldEnhcFtpr {
 	}
 
 	public void rollbackOptionsUpdate() {
-		mongoTemplate.getCollection("field_mapping_structure").updateMany(
-				new Document("fieldName", new Document("$in", Arrays.asList(DEFECT_PRIORITY_KPI_82, DEFECT_PRIORITY_KPI_135))),
-				new Document("$set",
-						new Document("options",
-								Arrays.asList(new Document(LABEL, "p1").append(VALUE, "p1"),
-										new Document(LABEL, "p2").append(VALUE, "p2"), new Document(LABEL, "p3").append(VALUE, "p3"),
-										new Document(LABEL, "p4").append(VALUE, "p4"), new Document(LABEL, "p5").append(VALUE, "p5")))));
+		mongoTemplate
+				.getCollection("field_mapping_structure")
+				.updateMany(
+						new Document(
+								"fieldName",
+								new Document(
+										"$in", Arrays.asList(DEFECT_PRIORITY_KPI_82, DEFECT_PRIORITY_KPI_135))),
+						new Document(
+								"$set",
+								new Document(
+										"options",
+										Arrays.asList(
+												new Document(LABEL, "p1").append(VALUE, "p1"),
+												new Document(LABEL, "p2").append(VALUE, "p2"),
+												new Document(LABEL, "p3").append(VALUE, "p3"),
+												new Document(LABEL, "p4").append(VALUE, "p4"),
+												new Document(LABEL, "p5").append(VALUE, "p5")))));
 	}
 
 	@RollbackExecution
@@ -70,25 +84,53 @@ public class PriorityFieldEnhcFtpr {
 	}
 
 	public void updateOptions() {
-		List<Document> options = Arrays.asList(
-				new Document(LABEL_VALUE, "p1").append(VALUE, "p1").append(OPERATOR, "<=").append(MAX_VALUE, "10")
-						.append(MIN_VALUE, "1"),
-				new Document(LABEL_VALUE, "p2").append(VALUE, "p2").append(OPERATOR, "<=").append(MAX_VALUE, "10")
-						.append(MIN_VALUE, "1"),
-				new Document(LABEL_VALUE, "p3").append(VALUE, "p3").append(OPERATOR, "<=").append(MAX_VALUE, "10")
-						.append(MIN_VALUE, "1"),
-				new Document(LABEL_VALUE, "p4").append(VALUE, "p4").append(OPERATOR, "<=").append(MAX_VALUE, "10")
-						.append(MIN_VALUE, "1"),
-				new Document(LABEL_VALUE, "p5").append(VALUE, "p5").append(OPERATOR, "<=").append(MAX_VALUE, "10")
-						.append(MIN_VALUE, "1"));
+		List<Document> options =
+				Arrays.asList(
+						new Document(LABEL_VALUE, "p1")
+								.append(VALUE, "p1")
+								.append(OPERATOR, "<=")
+								.append(MAX_VALUE, "10")
+								.append(MIN_VALUE, "1"),
+						new Document(LABEL_VALUE, "p2")
+								.append(VALUE, "p2")
+								.append(OPERATOR, "<=")
+								.append(MAX_VALUE, "10")
+								.append(MIN_VALUE, "1"),
+						new Document(LABEL_VALUE, "p3")
+								.append(VALUE, "p3")
+								.append(OPERATOR, "<=")
+								.append(MAX_VALUE, "10")
+								.append(MIN_VALUE, "1"),
+						new Document(LABEL_VALUE, "p4")
+								.append(VALUE, "p4")
+								.append(OPERATOR, "<=")
+								.append(MAX_VALUE, "10")
+								.append(MIN_VALUE, "1"),
+						new Document(LABEL_VALUE, "p5")
+								.append(VALUE, "p5")
+								.append(OPERATOR, "<=")
+								.append(MAX_VALUE, "10")
+								.append(MIN_VALUE, "1"));
 
-		mongoTemplate.getCollection("field_mapping_structure").updateMany(
-				new Document("fieldName", new Document("$in", Arrays.asList(DEFECT_PRIORITY_KPI_82, DEFECT_PRIORITY_KPI_135))),
-				new Document("$set", new Document("fieldType", "conditionalinput").append("options", options)));
+		mongoTemplate
+				.getCollection("field_mapping_structure")
+				.updateMany(
+						new Document(
+								"fieldName",
+								new Document(
+										"$in", Arrays.asList(DEFECT_PRIORITY_KPI_82, DEFECT_PRIORITY_KPI_135))),
+						new Document(
+								"$set", new Document("fieldType", "conditionalinput").append("options", options)));
 	}
 
 	public void clearFtpDefectPriorities() {
-		mongoTemplate.getCollection("field_mapping").updateMany(new Document(), new Document("$set",
-				new Document(DEFECT_PRIORITY_KPI_135, new ArrayList<>()).append(DEFECT_PRIORITY_KPI_82, new ArrayList<>())));
+		mongoTemplate
+				.getCollection("field_mapping")
+				.updateMany(
+						new Document(),
+						new Document(
+								"$set",
+								new Document(DEFECT_PRIORITY_KPI_135, new ArrayList<>())
+										.append(DEFECT_PRIORITY_KPI_82, new ArrayList<>())));
 	}
 }

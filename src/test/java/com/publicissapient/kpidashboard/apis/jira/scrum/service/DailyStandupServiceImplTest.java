@@ -84,32 +84,21 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class DailyStandupServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	private CapacityKpiDataRepository capacityKpiDataRepository;
-	@Mock
-	private AzureStateCategoryRepository azureStateCategoryRepository;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock private CapacityKpiDataRepository capacityKpiDataRepository;
+	@Mock private AzureStateCategoryRepository azureStateCategoryRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private JiraIterationServiceR jiraService;
 
-	@Mock
-	private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
+	@Mock private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
 
-	@InjectMocks
-	private DailyStandupServiceImpl dailyStandupService;
+	@InjectMocks private DailyStandupServiceImpl dailyStandupService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private List<JiraIssue> subTasks = new ArrayList<>();
@@ -127,34 +116,44 @@ public class DailyStandupServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi154");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
 
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 		subTasks = jiraIssueDataFactory.findIssueByOriginalTypeName(Arrays.asList("Sub-Task", "Task"));
 
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 
 		CapacityKpiData capacityKpiData = new CapacityKpiData();
 		capacityKpiData.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
 		capacityKpiData.setCapacityPerSprint(12.0);
 
-		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any())).thenReturn(capacityKpiData);
-		JiraIssueReleaseStatusDataFactory jiraIssueReleaseStatusDataFactory = JiraIssueReleaseStatusDataFactory
-				.newInstance("/json/default/jira_issue_release_status.json");
-		jiraReleasStatus = createJiraReleasStatus(jiraIssueReleaseStatusDataFactory.getJiraIssueReleaseStatusList());
+		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any()))
+				.thenReturn(capacityKpiData);
+		JiraIssueReleaseStatusDataFactory jiraIssueReleaseStatusDataFactory =
+				JiraIssueReleaseStatusDataFactory.newInstance(
+						"/json/default/jira_issue_release_status.json");
+		jiraReleasStatus =
+				createJiraReleasStatus(jiraIssueReleaseStatusDataFactory.getJiraIssueReleaseStatusList());
 	}
 
-	private JiraIssueReleaseStatus createJiraReleasStatus(List<JiraIssueReleaseStatus> jiraIssueReleaseStatusList) {
+	private JiraIssueReleaseStatus createJiraReleasStatus(
+			List<JiraIssueReleaseStatus> jiraIssueReleaseStatusList) {
 
 		JiraIssueReleaseStatus jiraIssueReleaseStatus = new JiraIssueReleaseStatus();
 		jiraIssueReleaseStatus.setInProgressList(jiraIssueReleaseStatusList.get(0).getInProgressList());
@@ -164,16 +163,16 @@ public class DailyStandupServiceImplTest {
 	}
 
 	@Test
-	public void getQualifierType() {
-	}
+	public void getQualifierType() {}
 
 	/*
 	 * when DSV is called for closed sprin, the trendValueList should be empty
 	 */
 	@Test
 	public void getKpiDataWithClosedSprint() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
@@ -181,8 +180,11 @@ public class DailyStandupServiceImplTest {
 		capacityKpiData.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
 		capacityKpiData.setCapacityPerSprint(12.0);
 		when(configHelperService.getToolItemMap()).thenReturn(setToolMap());
-		KpiElement kpiData = dailyStandupService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+		KpiElement kpiData =
+				dailyStandupService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 		assertNotNull(kpiData.getTrendValueList());
 	}
 
@@ -191,28 +193,38 @@ public class DailyStandupServiceImplTest {
 	 */
 	@Test
 	public void getKpiDataWithActiveSprint() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(jiraIssueCustomHistoryList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(anyList(), anyString(), anyString()))
+		when(jiraIssueRepository.findNumberInAndBasicProjectConfigIdAndTypeName(
+						anyList(), anyString(), anyString()))
 				.thenReturn(new HashSet<>(storyList));
-		when(jiraIssueRepository.findByBasicProjectConfigIdAndParentStoryIdInAndOriginalTypeIn(anyString(), anySet(),
-				anyList())).thenReturn(new HashSet<>(subTasks));
-		when(jiraIssueReleaseStatusRepository.findByBasicProjectConfigId(anyString())).thenReturn(jiraReleasStatus);
+		when(jiraIssueRepository.findByBasicProjectConfigIdAndParentStoryIdInAndOriginalTypeIn(
+						anyString(), anySet(), anyList()))
+				.thenReturn(new HashSet<>(subTasks));
+		when(jiraIssueReleaseStatusRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(jiraReleasStatus);
 		when(configHelperService.getToolItemMap()).thenReturn(setToolMap());
 		try {
 
-			KpiElement kpiElement = dailyStandupService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					dailyStandupService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getTrendValueList());
-			List<DailyStandupServiceImpl.UserWiseCardDetail> trendValueList = (List<DailyStandupServiceImpl.UserWiseCardDetail>) kpiElement
-					.getTrendValueList();
-			List<DailyStandupServiceImpl.UserWiseCardDetail> unassigned = trendValueList.stream()
-					.filter(issue -> issue.getRole().equalsIgnoreCase("Unassigned")).collect(Collectors.toList());
+			List<DailyStandupServiceImpl.UserWiseCardDetail> trendValueList =
+					(List<DailyStandupServiceImpl.UserWiseCardDetail>) kpiElement.getTrendValueList();
+			List<DailyStandupServiceImpl.UserWiseCardDetail> unassigned =
+					trendValueList.stream()
+							.filter(issue -> issue.getRole().equalsIgnoreCase("Unassigned"))
+							.collect(Collectors.toList());
 			Assert.assertEquals(unassigned.size(), 5);
 
 		} catch (ApplicationException enfe) {
@@ -225,15 +237,18 @@ public class DailyStandupServiceImplTest {
 	 */
 	@Test
 	public void getKpiDataWithActiveSprintAndCapcity() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(jiraIssueRepository.findByBasicProjectConfigIdAndParentStoryIdInAndOriginalTypeIn(anyString(), anySet(),
-				anyList())).thenReturn(new HashSet<>(subTasks));
-		when(jiraIssueReleaseStatusRepository.findByBasicProjectConfigId(anyString())).thenReturn(jiraReleasStatus);
+		when(jiraIssueRepository.findByBasicProjectConfigIdAndParentStoryIdInAndOriginalTypeIn(
+						anyString(), anySet(), anyList()))
+				.thenReturn(new HashSet<>(subTasks));
+		when(jiraIssueReleaseStatusRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(jiraReleasStatus);
 
 		CapacityKpiData capacityKpiData = new CapacityKpiData();
 		capacityKpiData.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
@@ -248,19 +263,27 @@ public class DailyStandupServiceImplTest {
 		capacityList.add(assigneeCapacity);
 		capacityKpiData.setAssigneeCapacity(capacityList);
 		when(configHelperService.getToolItemMap()).thenReturn(setToolMap());
-		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any())).thenReturn(capacityKpiData);
+		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any()))
+				.thenReturn(capacityKpiData);
 		try {
-			KpiElement kpiElement = dailyStandupService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					dailyStandupService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getTrendValueList());
-			List<DailyStandupServiceImpl.UserWiseCardDetail> trendValueList = (List<DailyStandupServiceImpl.UserWiseCardDetail>) kpiElement
-					.getTrendValueList();
-			List<DailyStandupServiceImpl.UserWiseCardDetail> unassigned = trendValueList.stream()
-					.filter(issue -> issue.getRole().equalsIgnoreCase("Unassigned")).collect(Collectors.toList());
+			List<DailyStandupServiceImpl.UserWiseCardDetail> trendValueList =
+					(List<DailyStandupServiceImpl.UserWiseCardDetail>) kpiElement.getTrendValueList();
+			List<DailyStandupServiceImpl.UserWiseCardDetail> unassigned =
+					trendValueList.stream()
+							.filter(issue -> issue.getRole().equalsIgnoreCase("Unassigned"))
+							.collect(Collectors.toList());
 			Assert.assertEquals(unassigned.size(), 5);
 			Assert.assertEquals(
-					trendValueList.stream().filter(issue -> issue.getRole().equalsIgnoreCase(Role.TESTER.getRoleValue()))
-							.collect(Collectors.toList()).size(),
+					trendValueList.stream()
+							.filter(issue -> issue.getRole().equalsIgnoreCase(Role.TESTER.getRoleValue()))
+							.collect(Collectors.toList())
+							.size(),
 					1);
 
 		} catch (ApplicationException enfe) {
@@ -273,14 +296,16 @@ public class DailyStandupServiceImplTest {
 	 */
 	@Test
 	public void getKpiDataWithActiveSprintAndCapcityAzure() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
 		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(jiraIssueRepository.findByBasicProjectConfigIdAndParentStoryIdInAndOriginalTypeIn(anyString(), anySet(),
-				anyList())).thenReturn(new HashSet<>(subTasks));
+		when(jiraIssueRepository.findByBasicProjectConfigIdAndParentStoryIdInAndOriginalTypeIn(
+						anyString(), anySet(), anyList()))
+				.thenReturn(new HashSet<>(subTasks));
 
 		CapacityKpiData capacityKpiData = new CapacityKpiData();
 		capacityKpiData.setBasicProjectConfigId(new ObjectId("6335363749794a18e8a4479b"));
@@ -295,20 +320,29 @@ public class DailyStandupServiceImplTest {
 		capacityList.add(assigneeCapacity);
 		capacityKpiData.setAssigneeCapacity(capacityList);
 		when(configHelperService.getToolItemMap()).thenReturn(setToolMapAzure());
-		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any())).thenReturn(capacityKpiData);
-		when(azureStateCategoryRepository.findByBasicProjectConfigId(anyString())).thenReturn(createAzureStateCategory());
+		when(capacityKpiDataRepository.findBySprintIDAndBasicProjectConfigId(any(), any()))
+				.thenReturn(capacityKpiData);
+		when(azureStateCategoryRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createAzureStateCategory());
 		try {
-			KpiElement kpiElement = dailyStandupService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					dailyStandupService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getTrendValueList());
-			List<DailyStandupServiceImpl.UserWiseCardDetail> trendValueList = (List<DailyStandupServiceImpl.UserWiseCardDetail>) kpiElement
-					.getTrendValueList();
-			List<DailyStandupServiceImpl.UserWiseCardDetail> unassigned = trendValueList.stream()
-					.filter(issue -> issue.getRole().equalsIgnoreCase("Unassigned")).collect(Collectors.toList());
+			List<DailyStandupServiceImpl.UserWiseCardDetail> trendValueList =
+					(List<DailyStandupServiceImpl.UserWiseCardDetail>) kpiElement.getTrendValueList();
+			List<DailyStandupServiceImpl.UserWiseCardDetail> unassigned =
+					trendValueList.stream()
+							.filter(issue -> issue.getRole().equalsIgnoreCase("Unassigned"))
+							.collect(Collectors.toList());
 			Assert.assertEquals(unassigned.size(), 5);
 			Assert.assertEquals(
-					trendValueList.stream().filter(issue -> issue.getRole().equalsIgnoreCase(Role.TESTER.getRoleValue()))
-							.collect(Collectors.toList()).size(),
+					trendValueList.stream()
+							.filter(issue -> issue.getRole().equalsIgnoreCase(Role.TESTER.getRoleValue()))
+							.collect(Collectors.toList())
+							.size(),
 					1);
 
 		} catch (ApplicationException enfe) {
@@ -338,15 +372,17 @@ public class DailyStandupServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMapping.setJiraSubTaskIdentification(Arrays.asList("Sub-Task", "Task"));
 		fieldMapping.setJiraDevDoneStatusKPI154(Arrays.asList("Ready for Testing", "Deployed"));
-		fieldMapping.setJiraStatusStartDevelopmentKPI154(Arrays.asList("In Analysis", "In Development"));
+		fieldMapping.setJiraStatusStartDevelopmentKPI154(
+				Arrays.asList("In Analysis", "In Development"));
 		fieldMapping.setJiraQADoneStatusKPI154(Arrays.asList("In Testing"));
 		fieldMapping.setJiraStatusForInProgressKPI119(
-				Arrays.asList("In Analysis, In Development", "In Testing", "Ready for Testing", "Deployed"));
+				Arrays.asList(
+						"In Analysis, In Development", "In Testing", "Ready for Testing", "Deployed"));
 		fieldMapping.setJiraIterationCompletionStatusKPI154(Arrays.asList("Closed", "Dropped", "Live"));
 		fieldMapping.setStoryFirstStatusKPI154(Arrays.asList("Open"));
 		fieldMapping.setJiraOnHoldStatusKPI154(Arrays.asList("On Hold"));

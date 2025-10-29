@@ -49,23 +49,17 @@ import jakarta.servlet.http.HttpServletRequest;
 @RunWith(MockitoJUnitRunner.class)
 public class AuthExposeAPIServiceImplTest {
 
-	@InjectMocks
-	private AuthExposeAPIServiceImpl authExposeAPIService;
+	@InjectMocks private AuthExposeAPIServiceImpl authExposeAPIService;
 
-	@Mock
-	private ExposeApiTokenRepository exposeApiTokenRepository;
+	@Mock private ExposeApiTokenRepository exposeApiTokenRepository;
 
-	@Mock
-	private HttpServletRequest httpServletRequest;
+	@Mock private HttpServletRequest httpServletRequest;
 
-	@Mock
-	private ProjectAccessManager projectAccessManager;
+	@Mock private ProjectAccessManager projectAccessManager;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private PushDataTraceLogService pushDataTraceLogService;
+	@Mock private PushDataTraceLogService pushDataTraceLogService;
 
 	private ExposeApiToken exposeApiTokenDbExist;
 
@@ -102,10 +96,12 @@ public class AuthExposeAPIServiceImplTest {
 		exposeAPITokenRequestDbExist.setProjectName("Test_Old_Project");
 		exposeAPITokenRequestDbExist.setUserName("SUPERADMIN");
 
-		when(exposeApiTokenRepository.findByUserNameAndBasicProjectConfigId("SUPERADMIN",
-				new ObjectId("61e4f7852747353d4405c762"))).thenReturn(exposeApiTokenDbExist);
+		when(exposeApiTokenRepository.findByUserNameAndBasicProjectConfigId(
+						"SUPERADMIN", new ObjectId("61e4f7852747353d4405c762")))
+				.thenReturn(exposeApiTokenDbExist);
 
-		ServiceResponse response = authExposeAPIService.generateAndSaveToken(exposeAPITokenRequestDbExist);
+		ServiceResponse response =
+				authExposeAPIService.generateAndSaveToken(exposeAPITokenRequestDbExist);
 		Assert.assertNotNull(response.getData());
 		Assert.assertNotNull(((ExposeAPITokenResponseDTO) response.getData()).getApiToken());
 	}

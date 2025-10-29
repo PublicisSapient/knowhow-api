@@ -29,11 +29,9 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReoposit
 @RunWith(MockitoJUnitRunner.class)
 public class UserTokenDeletionServiceTest {
 
-	@InjectMocks
-	UserTokenDeletionServiceImpl userTokenDeletionServiceImpl;
+	@InjectMocks UserTokenDeletionServiceImpl userTokenDeletionServiceImpl;
 
-	@Mock
-	private UserTokenReopository userTokenReopository;
+	@Mock private UserTokenReopository userTokenReopository;
 
 	@Test
 	public void testDelete() {

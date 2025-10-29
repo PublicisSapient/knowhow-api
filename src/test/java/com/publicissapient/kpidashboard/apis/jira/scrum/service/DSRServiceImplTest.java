@@ -22,7 +22,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -33,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +45,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
@@ -73,9 +71,6 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
-import com.publicissapient.kpidashboard.common.repository.application.FieldMappingRepository;
-import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DSRServiceImplTest {
@@ -91,22 +86,14 @@ public class DSRServiceImplTest {
 	List<SprintWiseStory> sprintWiseStoryList = new ArrayList<>();
 	Map<String, List<String>> priority = new HashMap<>();
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private KpiDataProvider kpiDataProvider;
-	@InjectMocks
-	DSRServiceImpl dsrServiceImpl;
+	@Mock CacheService cacheService;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock ConfigHelperService configHelperService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private CommonService commonService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataProvider kpiDataProvider;
+	@InjectMocks DSRServiceImpl dsrServiceImpl;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -121,11 +108,12 @@ public class DSRServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setLevel(5);
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		sprintWiseStoryList = sprintWiseStoryDataFactory.getSprintWiseStories();
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -136,9 +124,14 @@ public class DSRServiceImplTest {
 
 		totalBugList = jiraIssueDataFactory.getBugs();
 
-		uatBugList = totalBugList.stream()
-				.filter(f -> NormalizedJira.THIRD_PARTY_DEFECT_VALUE.getValue().equalsIgnoreCase(f.getDefectRaisedBy()))
-				.collect(Collectors.toList());
+		uatBugList =
+				totalBugList.stream()
+						.filter(
+								f ->
+										NormalizedJira.THIRD_PARTY_DEFECT_VALUE
+												.getValue()
+												.equalsIgnoreCase(f.getDefectRaisedBy()))
+						.collect(Collectors.toList());
 
 		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
 		projectConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -148,8 +141,8 @@ public class DSRServiceImplTest {
 
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -160,9 +153,7 @@ public class DSRServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-
-	}
+	public void cleanup() {}
 
 	@Test
 	public void testCalculateKPIMetrics() {
@@ -176,19 +167,20 @@ public class DSRServiceImplTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
 
-
-		fieldMappingMap.forEach((k, v) -> {
-			FieldMapping v1 = v;
-			v1.setIncludeRCAForKPI35(Arrays.asList("code issue"));
-			v1.setDefectPriorityKPI35(Arrays.asList("P3"));
-		});
+		fieldMappingMap.forEach(
+				(k, v) -> {
+					FieldMapping v1 = v;
+					v1.setIncludeRCAForKPI35(Arrays.asList("code issue"));
+					v1.setDefectPriorityKPI35(Arrays.asList("P3"));
+				});
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(SPRINTSTORIES, sprintWiseStoryList);
@@ -199,15 +191,19 @@ public class DSRServiceImplTest {
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
 		when(kpiDataCacheService.fetchDSRData(any(), any(), any(), any())).thenReturn(resultListMap);
 
-		Map<String, Object> defectDataListMap = dsrServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
-		assertThat("Total Defects value :", ((List<JiraIssue>) (defectDataListMap.get(TOTALBUGKEY))).size(), equalTo(20));
+		Map<String, Object> defectDataListMap =
+				dsrServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Total Defects value :",
+				((List<JiraIssue>) (defectDataListMap.get(TOTALBUGKEY))).size(),
+				equalTo(20));
 	}
 
 	@Test
 	public void testGetDSR_UATLabels() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("defectSeepageRate", Arrays.asList("-30", "30-10", "10-5", "5-2", "2-"));
@@ -215,14 +211,16 @@ public class DSRServiceImplTest {
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
 		Map<String, FieldMapping> projFieldMapping = new HashMap<>();
-		fieldMappingMap.forEach((k, v) -> {
-			v.setJiraBugRaisedByIdentification(CommonConstant.LABELS);
-			v.setJiraBugRaisedByValue(Arrays.asList("JAVA", "UI"));
-			v.setExcludeUnlinkedDefects(false);
-			projFieldMapping.put(k.toString(), v);
-		});
+		fieldMappingMap.forEach(
+				(k, v) -> {
+					v.setJiraBugRaisedByIdentification(CommonConstant.LABELS);
+					v.setJiraBugRaisedByValue(Arrays.asList("JAVA", "UI"));
+					v.setExcludeUnlinkedDefects(false);
+					projFieldMapping.put(k.toString(), v);
+				});
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dsrServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -239,8 +237,9 @@ public class DSRServiceImplTest {
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(false);
 		when(kpiDataProvider.fetchDSRData(any(), any(), any())).thenReturn(resultListMap);
 		try {
-			KpiElement kpiElement = dsrServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					dsrServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertEquals("DSR Value :", 28, kpiElement.getExcelData().size());
 		} catch (ApplicationException enfe) {
 
@@ -250,28 +249,32 @@ public class DSRServiceImplTest {
 	@Test
 	public void testGetDSR_CustomField() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("defectSeepageRate", Arrays.asList("-30", "30-10", "10-5", "5-2", "2-"));
 
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
-		totalBugList.forEach(issue -> {
-			issue.setDefectRaisedBy("UAT");
-			issue.setUatDefectGroup(Arrays.asList("JAVA"));
-		});
+		totalBugList.forEach(
+				issue -> {
+					issue.setDefectRaisedBy("UAT");
+					issue.setUatDefectGroup(Arrays.asList("JAVA"));
+				});
 
 		Map<String, FieldMapping> projFieldMapping = new HashMap<>();
-		fieldMappingMap.forEach((k, v) -> {
-			v.setJiraBugRaisedByIdentification(CommonConstant.CUSTOM_FIELD);
-			v.setJiraBugRaisedByValue(Arrays.asList("JAVA", "UI"));
-			v.setExcludeUnlinkedDefects(false);
-			projFieldMapping.put(k.toString(), v);
-		});
+		fieldMappingMap.forEach(
+				(k, v) -> {
+					v.setJiraBugRaisedByIdentification(CommonConstant.CUSTOM_FIELD);
+					v.setJiraBugRaisedByValue(Arrays.asList("JAVA", "UI"));
+					v.setExcludeUnlinkedDefects(false);
+					projFieldMapping.put(k.toString(), v);
+				});
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dsrServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -289,8 +292,9 @@ public class DSRServiceImplTest {
 		when(kpiDataCacheService.fetchDSRData(any(), any(), any(), any())).thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = dsrServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					dsrServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertEquals("DSR Value :", 28, kpiElement.getExcelData().size());
 		} catch (ApplicationException enfe) {
 
@@ -299,8 +303,9 @@ public class DSRServiceImplTest {
 
 	@Test
 	public void testGetDSR_NOLabels() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put("defectSeepageRate", Arrays.asList("-30", "30-10", "10-5", "5-2", "2-"));
@@ -308,18 +313,20 @@ public class DSRServiceImplTest {
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
 		Map<String, FieldMapping> projFieldMapping = new HashMap<>();
-		fieldMappingMap.forEach((k, v) -> {
-			FieldMapping v1 = v;
-			v1.setJiraBugRaisedByIdentification(CommonConstant.LABELS);
-			v1.setExcludeUnlinkedDefects(false);
-			projFieldMapping.put(k.toString(), v);
-		});
+		fieldMappingMap.forEach(
+				(k, v) -> {
+					FieldMapping v1 = v;
+					v1.setJiraBugRaisedByIdentification(CommonConstant.LABELS);
+					v1.setExcludeUnlinkedDefects(false);
+					projFieldMapping.put(k.toString(), v);
+				});
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
 		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dsrServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
@@ -332,8 +339,9 @@ public class DSRServiceImplTest {
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
 		when(kpiDataCacheService.fetchDSRData(any(), any(), any(), any())).thenReturn(resultListMap);
 		try {
-			KpiElement kpiElement = dsrServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement kpiElement =
+					dsrServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertEquals("DSR Value :", 28, kpiElement.getExcelData().size());
 		} catch (ApplicationException enfe) {
 
@@ -342,6 +350,9 @@ public class DSRServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("Kpi Name :", dsrServiceImpl.getQualifierType(), equalTo(KPICode.DEFECT_SEEPAGE_RATE.name()));
+		assertThat(
+				"Kpi Name :",
+				dsrServiceImpl.getQualifierType(),
+				equalTo(KPICode.DEFECT_SEEPAGE_RATE.name()));
 	}
 }

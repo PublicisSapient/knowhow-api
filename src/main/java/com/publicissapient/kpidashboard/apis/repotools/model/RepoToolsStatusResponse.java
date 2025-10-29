@@ -30,8 +30,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RepoToolsStatusResponse implements Serializable {
 
-	@Serial
-	private static final long serialVersionUID = 1L;
+	@Serial private static final long serialVersionUID = 1L;
 	private String project;
 	private String repository;
 	private String repositoryProvider;

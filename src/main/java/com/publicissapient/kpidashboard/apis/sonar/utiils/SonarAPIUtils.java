@@ -19,16 +19,13 @@ public class SonarAPIUtils {
 
 	private static final String AUTHORIZATION = "Authorization";
 
-	private SonarAPIUtils() {
-	}
+	private SonarAPIUtils() {}
 
 	/**
 	 * Creates HTTP Headers.
 	 *
-	 * @param username
-	 *          the username
-	 * @param password
-	 *          the password
+	 * @param username the username
+	 * @param password the password
 	 * @return HttpHeaders the http header
 	 */
 	public static HttpHeaders getHeaders(String username, String password) {
@@ -47,7 +44,8 @@ public class SonarAPIUtils {
 		if (accessToken != null && !accessToken.isEmpty()) {
 			if (usingBasicAuth) {
 				String authentication = accessToken + ":";
-				byte[] encodedAuth = Base64.encodeBase64(authentication.getBytes(StandardCharsets.US_ASCII));
+				byte[] encodedAuth =
+						Base64.encodeBase64(authentication.getBytes(StandardCharsets.US_ASCII));
 				String authenticationHeader = "Basic " + new String(encodedAuth);
 				headers.set(AUTHORIZATION, authenticationHeader);
 			} else {
@@ -60,10 +58,8 @@ public class SonarAPIUtils {
 	/**
 	 * Converts json Array to string response body.
 	 *
-	 * @param responseBody
-	 *          the api response body string
-	 * @param key
-	 *          the project key
+	 * @param responseBody the api response body string
+	 * @param key the project key
 	 * @return the string data
 	 */
 	public static JSONArray parseData(String responseBody, String key) throws ParseException {
@@ -75,10 +71,8 @@ public class SonarAPIUtils {
 	/**
 	 * Converts String to json objects.
 	 *
-	 * @param jsonData
-	 *          the json object
-	 * @param key
-	 *          the project key
+	 * @param jsonData the json object
+	 * @param key the project key
 	 * @return the string data
 	 */
 	public static String convertToString(JSONObject jsonData, String key) {
@@ -89,10 +83,8 @@ public class SonarAPIUtils {
 	/**
 	 * Converts list of string to jsonArray.
 	 *
-	 * @param jsonArray
-	 *          the json object
-	 * @param key
-	 *          the project key
+	 * @param jsonArray the json object
+	 * @param key the project key
 	 * @return the string data
 	 */
 	public static List<String> convertListFromArray(JSONArray jsonArray, String key) {

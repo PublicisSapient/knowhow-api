@@ -52,13 +52,11 @@ public class FileExtensionValidator implements ConstraintValidator<ValidExtensio
 	}
 
 	/**
-	 * Validates <tt>file</tt> by checking the size,format and extension of the
-	 * file.
+	 * Validates <tt>file</tt> by checking the size,format and extension of the file.
 	 *
 	 * @param file
 	 * @param context
-	 * @return true if <tt>file</tt> size is greater than 0 and less than
-	 *         <tt>MAX_FILE_SIZE</tt>
+	 * @return true if <tt>file</tt> size is greater than 0 and less than <tt>MAX_FILE_SIZE</tt>
 	 */
 	@Override
 	public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
@@ -76,16 +74,25 @@ public class FileExtensionValidator implements ConstraintValidator<ValidExtensio
 				byte[] iconByteArray = readFromFile(multipartFile.getOriginalFilename());
 
 				ImageIcon icon = new ImageIcon(iconByteArray);
-				BufferedImage bufferedImage = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(),
-						BufferedImage.TYPE_INT_ARGB);
+				BufferedImage bufferedImage =
+						new BufferedImage(
+								icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
 				icon.paintIcon(null, bufferedImage.getGraphics(), 0, 0);
 				isValidFileFormat = true;
 
 				String extension = multipartFile.getOriginalFilename();
-				isValidFileExtension = (null != extension) && (extension.endsWith(".png") || extension.endsWith(".PNG") ||
-						extension.endsWith(".JPEG") || extension.endsWith(".jpeg") || extension.endsWith(".jpg") ||
-						extension.endsWith(".JPG") || extension.endsWith(".gif") || extension.endsWith(".GIF") ||
-						extension.endsWith(".bmp") || extension.endsWith(".BMP"));
+				isValidFileExtension =
+						(null != extension)
+								&& (extension.endsWith(".png")
+										|| extension.endsWith(".PNG")
+										|| extension.endsWith(".JPEG")
+										|| extension.endsWith(".jpeg")
+										|| extension.endsWith(".jpg")
+										|| extension.endsWith(".JPG")
+										|| extension.endsWith(".gif")
+										|| extension.endsWith(".GIF")
+										|| extension.endsWith(".bmp")
+										|| extension.endsWith(".BMP"));
 
 				isValidSize = multipartFile.getSize() > 0 && multipartFile.getSize() <= MAX_FILE_SIZE;
 

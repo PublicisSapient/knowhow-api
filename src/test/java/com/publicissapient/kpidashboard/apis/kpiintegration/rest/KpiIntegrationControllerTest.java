@@ -51,17 +51,13 @@ import jakarta.servlet.http.HttpServletRequest;
 @RunWith(MockitoJUnitRunner.class)
 public class KpiIntegrationControllerTest {
 
-	@InjectMocks
-	KpiIntegrationController kpiIntegrationController;
+	@InjectMocks KpiIntegrationController kpiIntegrationController;
 
-	@Mock
-	KpiIntegrationServiceImpl maturityService;
+	@Mock KpiIntegrationServiceImpl maturityService;
 
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock CustomApiConfig customApiConfig;
 
-	@Mock
-	private HttpServletRequest httpServletRequest;
+	@Mock private HttpServletRequest httpServletRequest;
 
 	@Before
 	public void setUp() {
@@ -73,8 +69,8 @@ public class KpiIntegrationControllerTest {
 
 		KpiRequest kpiRequest = new KpiRequest();
 		when(httpServletRequest.getHeader("X-Api-Key")).thenReturn("invalid-token");
-		ResponseEntity<List<KpiElement>> responseEntity = kpiIntegrationController.getMaturityValues(httpServletRequest,
-				kpiRequest);
+		ResponseEntity<List<KpiElement>> responseEntity =
+				kpiIntegrationController.getMaturityValues(httpServletRequest, kpiRequest);
 
 		assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
 		assertTrue(responseEntity.getBody().isEmpty());
@@ -85,10 +81,11 @@ public class KpiIntegrationControllerTest {
 	public void testGetMaturityValuesSuccess() {
 		KpiRequest kpiRequest = new KpiRequest();
 		when(httpServletRequest.getHeader("X-Api-Key")).thenReturn("valid-token");
-		when(maturityService.getKpiResponses(kpiRequest)).thenReturn(Collections.singletonList(new KpiElement()));
+		when(maturityService.getKpiResponses(kpiRequest))
+				.thenReturn(Collections.singletonList(new KpiElement()));
 
-		ResponseEntity<List<KpiElement>> responseEntity = kpiIntegrationController.getMaturityValues(httpServletRequest,
-				kpiRequest);
+		ResponseEntity<List<KpiElement>> responseEntity =
+				kpiIntegrationController.getMaturityValues(httpServletRequest, kpiRequest);
 
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertFalse(responseEntity.getBody().isEmpty());
@@ -99,11 +96,12 @@ public class KpiIntegrationControllerTest {
 	public void testGetMaturityValuesOk() {
 		KpiRequest kpiRequest = new KpiRequest();
 		when(httpServletRequest.getHeader("X-Api-Key")).thenReturn("valid-token");
-		when(maturityService.getKpiResponses(kpiRequest)).thenReturn(Collections.singletonList(new KpiElement()));
+		when(maturityService.getKpiResponses(kpiRequest))
+				.thenReturn(Collections.singletonList(new KpiElement()));
 		when(maturityService.getKpiResponses(kpiRequest)).thenReturn(Collections.emptyList());
 
-		ResponseEntity<List<KpiElement>> responseEntity = kpiIntegrationController.getMaturityValues(httpServletRequest,
-				kpiRequest);
+		ResponseEntity<List<KpiElement>> responseEntity =
+				kpiIntegrationController.getMaturityValues(httpServletRequest, kpiRequest);
 
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertTrue(responseEntity.getBody().isEmpty());

@@ -41,11 +41,9 @@ import com.publicissapient.kpidashboard.apis.util.TestUtil;
 public class ConfigDetailsControllerTest {
 	private MockMvc mockMvc;
 
-	@InjectMocks
-	private ConfigDetailsController aggregationTypeController;
+	@InjectMocks private ConfigDetailsController aggregationTypeController;
 
-	@Mock
-	private ConfigDetailService aggregationTypeService;
+	@Mock private ConfigDetailService aggregationTypeService;
 
 	@Before
 	public void before() {
@@ -59,7 +57,10 @@ public class ConfigDetailsControllerTest {
 
 	@Test
 	public void testGetAggregationType() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/configDetails").contentType(TestUtil.APPLICATION_JSON_UTF8))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/configDetails")
+								.contentType(TestUtil.APPLICATION_JSON_UTF8))
 				.andExpect(status().isOk());
 	}
 }

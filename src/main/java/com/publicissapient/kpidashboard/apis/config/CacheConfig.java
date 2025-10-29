@@ -18,6 +18,11 @@
 
 package com.publicissapient.kpidashboard.apis.config;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -26,27 +31,24 @@ import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.cache.Caching;
-import javax.cache.spi.CachingProvider;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
-    @Value("${spring.cache.type:jcache}")
-    private String cacheType;
+	@Value("${spring.cache.type:jcache}")
+	private String cacheType;
 
-    @Bean
-    public CacheManager cacheManager() throws URISyntaxException {
-        if ("jcache".equalsIgnoreCase(cacheType)) {
-            CachingProvider cachingProvider = Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
-            URI ehcacheXml = getClass().getResource("/ehcache.xml").toURI();
-            javax.cache.CacheManager jCacheManager = cachingProvider.getCacheManager(ehcacheXml, getClass().getClassLoader());
-            return new JCacheCacheManager(jCacheManager);
-        } else {
-            return new ConcurrentMapCacheManager("default");
-        }
-    }
+	@Bean
+	public CacheManager cacheManager() throws URISyntaxException {
+		if ("jcache".equalsIgnoreCase(cacheType)) {
+			CachingProvider cachingProvider =
+					Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
+			URI ehcacheXml = getClass().getResource("/ehcache.xml").toURI();
+			javax.cache.CacheManager jCacheManager =
+					cachingProvider.getCacheManager(ehcacheXml, getClass().getClassLoader());
+			return new JCacheCacheManager(jCacheManager);
+		} else {
+			return new ConcurrentMapCacheManager("default");
+		}
+	}
 }

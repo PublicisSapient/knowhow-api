@@ -29,7 +29,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "update_code_violations_kpi_column_config", order = "12108", author = "kunkambl", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "update_code_violations_kpi_column_config",
+		order = "12108",
+		author = "kunkambl",
+		systemVersion = "12.1.0")
 public class CodeViolationKPIExcelColumnUpdate {
 	private final MongoTemplate mongoTemplate;
 
@@ -51,14 +55,21 @@ public class CodeViolationKPIExcelColumnUpdate {
 		// Create a query to match the documents
 		Query query = new Query(Criteria.where("kpiId").in(kpiIds));
 
-		Update removeColumn = new Update().pull(KPI_COLUMN_DETAILS, new Document(COLUMN_NAME, "Sonar Violations"));
+		Update removeColumn =
+				new Update().pull(KPI_COLUMN_DETAILS, new Document(COLUMN_NAME, "Sonar Violations"));
 		mongoTemplate.updateMulti(query, removeColumn, KPI_COLUMN_CONFIGS);
 
-		Document newColumn1 = new Document(COLUMN_NAME, "Violation Type").append(ORDER, 3).append(IS_SHOWN, true)
-				.append(IS_DEFAULT, false);
+		Document newColumn1 =
+				new Document(COLUMN_NAME, "Violation Type")
+						.append(ORDER, 3)
+						.append(IS_SHOWN, true)
+						.append(IS_DEFAULT, false);
 
-		Document newColumn2 = new Document(COLUMN_NAME, "Violation Severity").append(ORDER, 4).append(IS_SHOWN, true)
-				.append(IS_DEFAULT, false);
+		Document newColumn2 =
+				new Document(COLUMN_NAME, "Violation Severity")
+						.append(ORDER, 4)
+						.append(IS_SHOWN, true)
+						.append(IS_DEFAULT, false);
 
 		Update addColumns = new Update().push(KPI_COLUMN_DETAILS).each(newColumn1, newColumn2);
 
@@ -70,13 +81,18 @@ public class CodeViolationKPIExcelColumnUpdate {
 		List<String> kpiIds = List.of("kpi38", "kpi64");
 
 		Query query = new Query(Criteria.where("kpiId").in(kpiIds));
-		Update removeColumns = new Update().pull(KPI_COLUMN_DETAILS, new Document(COLUMN_NAME, "Violation Type"))
-				.pull(KPI_COLUMN_DETAILS, new Document(COLUMN_NAME, "Violation Severity"));
+		Update removeColumns =
+				new Update()
+						.pull(KPI_COLUMN_DETAILS, new Document(COLUMN_NAME, "Violation Type"))
+						.pull(KPI_COLUMN_DETAILS, new Document(COLUMN_NAME, "Violation Severity"));
 
 		mongoTemplate.updateMulti(query, removeColumns, KPI_COLUMN_CONFIGS);
 
-		Document sonarColumn = new Document(COLUMN_NAME, "Sonar Violations").append(ORDER, 3).append(IS_SHOWN, true)
-				.append(IS_DEFAULT, true);
+		Document sonarColumn =
+				new Document(COLUMN_NAME, "Sonar Violations")
+						.append(ORDER, 3)
+						.append(IS_SHOWN, true)
+						.append(IS_DEFAULT, true);
 
 		Update addColumns = new Update().push(KPI_COLUMN_DETAILS, sonarColumn);
 		mongoTemplate.updateMulti(query, addColumns, KPI_COLUMN_CONFIGS);

@@ -22,22 +22,10 @@ package com.publicissapient.kpidashboard.apis.filter.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -55,25 +43,17 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.data.AccountHierarchiesDataFactory;
-import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
-import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
-import com.publicissapient.kpidashboard.apis.data.OrganizationHierarchyDataFactory;
-import com.publicissapient.kpidashboard.apis.data.ProjectBasicConfigDataFactory;
-import com.publicissapient.kpidashboard.apis.data.ProjectHierarchyDataFactory;
-import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
+import com.publicissapient.kpidashboard.apis.data.*;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.application.AccountHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyValue;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.application.AccountHierarchyRepository;
 import com.publicissapient.kpidashboard.common.repository.application.GlobalConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
@@ -86,80 +66,71 @@ import jakarta.ws.rs.InternalServerErrorException;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AccountHierarchyServiceImplTest {
-	@Mock
-	TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	GlobalConfigRepository globalConfigRepository;
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	private AccountHierarchyRepository accountHierarchyRepository;
-	@Mock
-	private CacheService cacheService;
-	@InjectMocks
-	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
-	@Mock
-	private SprintRepository sprintRepository;
+	@Mock TokenAuthenticationService tokenAuthenticationService;
+	@Mock UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock GlobalConfigRepository globalConfigRepository;
+	@Mock ConfigHelperService configHelperService;
+	@Mock private AccountHierarchyRepository accountHierarchyRepository;
+	@Mock private CacheService cacheService;
+	@InjectMocks private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	@Mock private SprintRepository sprintRepository;
 
-	@Mock
-	private FilterHelperService filterHelperService;
-
-	private List<AccountHierarchy> ahdList = new ArrayList<>();
+	@Mock private FilterHelperService filterHelperService;
 	private Set<String> userAccessProjects = new HashSet<>();
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
 	private List<AccountHierarchyData> accountHierarchyDataList;
 
-	@Mock
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
-	@Mock
-	private ProjectHierarchyService projectHierarchyService;
+	@Mock private ProjectHierarchyService projectHierarchyService;
 
-	@Mock
-	private ProjectBasicConfigService projectBasicConfigService;
+	@Mock private ProjectBasicConfigService projectBasicConfigService;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void setup() {
-		AccountHierarchiesDataFactory ahdFactoryProjectLabel = AccountHierarchiesDataFactory.newInstance();
-		ahdList = ahdFactoryProjectLabel.getAccountHierarchies();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
-		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
-		List<SprintDetails> sprintDetails = sprintDetailsDataFactory.getSprintDetails();
-		// when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(sprintDetails);
-
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		when(cacheService.cacheAccountHierarchyData()).thenReturn(accountHierarchyDataList);
 
-		ProjectBasicConfigDataFactory projectBasicConfigDataFactory = ProjectBasicConfigDataFactory
-				.newInstance("/json/basicConfig/project_basic_config_request.json");
-		ProjectBasicConfig projectBasicConfig = projectBasicConfigDataFactory.getProjectBasicConfigs().get(1);
+		ProjectBasicConfigDataFactory projectBasicConfigDataFactory =
+				ProjectBasicConfigDataFactory.newInstance(
+						"/json/basicConfig/project_basic_config_request.json");
+		ProjectBasicConfig projectBasicConfig =
+				projectBasicConfigDataFactory.getProjectBasicConfigs().get(1);
 		projectBasicConfig.setIsKanban(false);
 
 		List<HierarchyValue> hierarchyList = new ArrayList<>();
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(1, "bu", "BU", ""), "hierarchyLevelOne_unique_001",
-				"Sample One Value"));
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(2, "ver", "Vertical", ""),
-				"hierarchyLevelTwo_unique_001", "Sample Two Value"));
-		hierarchyList.add(new HierarchyValue(new HierarchyLevel(3, "acc", "Account", ""),
-				"hierarchyLevelThree_unique_001", "Sample Three Value"));
+		hierarchyList.add(
+				new HierarchyValue(
+						new HierarchyLevel(1, "bu", "BU", ""),
+						"hierarchyLevelOne_unique_001",
+						"Sample One Value"));
+		hierarchyList.add(
+				new HierarchyValue(
+						new HierarchyLevel(2, "ver", "Vertical", ""),
+						"hierarchyLevelTwo_unique_001",
+						"Sample Two Value"));
+		hierarchyList.add(
+				new HierarchyValue(
+						new HierarchyLevel(3, "acc", "Account", ""),
+						"hierarchyLevelThree_unique_001",
+						"Sample Three Value"));
 		projectBasicConfig.setHierarchy(hierarchyList);
 
 		when(projectBasicConfigService.getAllProjectsBasicConfigs(anyBoolean()))
 				.thenReturn(Arrays.asList(projectBasicConfig));
 
-		OrganizationHierarchyDataFactory organizationHierarchyDataFactory = OrganizationHierarchyDataFactory
-				.newInstance();
-		ProjectHierarchyDataFactory projectHierarchyDataFactory = ProjectHierarchyDataFactory.newInstance();
-		List<OrganizationHierarchy> organizationHierarchies = organizationHierarchyDataFactory
-				.getOrganizationHierarchies();
+		OrganizationHierarchyDataFactory organizationHierarchyDataFactory =
+				OrganizationHierarchyDataFactory.newInstance();
+		ProjectHierarchyDataFactory projectHierarchyDataFactory =
+				ProjectHierarchyDataFactory.newInstance();
+		List<OrganizationHierarchy> organizationHierarchies =
+				organizationHierarchyDataFactory.getOrganizationHierarchies();
 		when(organizationHierarchyService.findAll()).thenReturn(organizationHierarchies);
 		when(projectHierarchyService.findAllByBasicProjectConfigIds(anyList()))
 				.thenReturn(projectHierarchyDataFactory.getProjectHierarchies());
@@ -213,27 +184,34 @@ public class AccountHierarchyServiceImplTest {
 		when(customApiConfig.getSprintCountForFilters()).thenReturn(15);
 
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
-		List<AccountHierarchyData> accountHierarchies = accountHierarchyServiceImpl.createHierarchyData();
+		List<AccountHierarchyData> accountHierarchies =
+				accountHierarchyServiceImpl.createHierarchyData();
 
 		Assert.assertEquals(3, accountHierarchies.size());
 	}
 
 	@Test
-	public void when_RequestedHierarchyLevelIdIsNotFound_Expect_GettingHierarchyDataCurrentUserHasAccessToThrowsException() {
+	public void
+			when_RequestedHierarchyLevelIdIsNotFound_Expect_GettingHierarchyDataCurrentUserHasAccessToThrowsException() {
 		when(filterHelperService.getHierarchyIdLevelMap(false))
 				.thenReturn(Map.of("hierarchyLevelId1", 1, "hierarchyLevelId2", 2));
 
-		assertThrows(InternalServerErrorException.class,
-				() -> accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo("hierarchyLevelId3"));
+		assertThrows(
+				InternalServerErrorException.class,
+				() ->
+						accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(
+								"hierarchyLevelId3"));
 	}
 
 	@Test
-	public void when_AccountFilteredDataIsRequestedForASpecificHierarchyLevelId_Expect_DataWillBeReturnedAccordinglyV2() {
+	public void
+			when_AccountFilteredDataIsRequestedForASpecificHierarchyLevelId_Expect_DataWillBeReturnedAccordinglyV2() {
 		AccountHierarchyServiceImpl spiedAccountHierarchyServiceImpl = spy(accountHierarchyServiceImpl);
 		when(filterHelperService.getHierarchyIdLevelMap(false))
 				.thenReturn(Map.of("hierarchyLevelId1", 1, "hierarchyLevelId2", 2));
@@ -242,23 +220,42 @@ public class AccountHierarchyServiceImplTest {
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
-		doReturn(Set.of(
-				AccountFilteredData.builder().nodeId("testNodeId1").level(2).labelName("hierarchyLevelId2").build(),
-				AccountFilteredData.builder().nodeId("testNodeId2").level(4).labelName("hierarchyLevelId4").build(),
-				AccountFilteredData.builder().nodeId("testNodeId3").level(6).labelName("hierarchyLevelId6").build())).when(spiedAccountHierarchyServiceImpl).getFilteredList(any());
+		doReturn(
+						Set.of(
+								AccountFilteredData.builder()
+										.nodeId("testNodeId1")
+										.level(2)
+										.labelName("hierarchyLevelId2")
+										.build(),
+								AccountFilteredData.builder()
+										.nodeId("testNodeId2")
+										.level(4)
+										.labelName("hierarchyLevelId4")
+										.build(),
+								AccountFilteredData.builder()
+										.nodeId("testNodeId3")
+										.level(6)
+										.labelName("hierarchyLevelId6")
+										.build()))
+				.when(spiedAccountHierarchyServiceImpl)
+				.getFilteredList(any());
 
 		String expectedHierarchyLevelId = "hierarchyLevelId2";
 
 		int expectedLevel = 2;
 
-		List<AccountFilteredData> resultedAccountFilteredData = spiedAccountHierarchyServiceImpl
-				.getHierarchyDataCurrentUserHasAccessTo(expectedHierarchyLevelId);
+		List<AccountFilteredData> resultedAccountFilteredData =
+				spiedAccountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(
+						expectedHierarchyLevelId);
 
 		assertTrue(CollectionUtils.isNotEmpty(resultedAccountFilteredData));
-		assertTrue(resultedAccountFilteredData.stream()
-				.allMatch(accountFilteredData -> Objects.nonNull(accountFilteredData)
-						&& StringUtils.isNotEmpty(accountFilteredData.getLabelName())
-						&& accountFilteredData.getLabelName().equals(expectedHierarchyLevelId)
-						&& accountFilteredData.getLevel() == expectedLevel));
+		assertTrue(
+				resultedAccountFilteredData.stream()
+						.allMatch(
+								accountFilteredData ->
+										Objects.nonNull(accountFilteredData)
+												&& StringUtils.isNotEmpty(accountFilteredData.getLabelName())
+												&& accountFilteredData.getLabelName().equals(expectedHierarchyLevelId)
+												&& accountFilteredData.getLevel() == expectedLevel));
 	}
 }

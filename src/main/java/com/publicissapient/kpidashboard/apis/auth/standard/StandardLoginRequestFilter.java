@@ -41,9 +41,12 @@ public class StandardLoginRequestFilter extends UsernamePasswordAuthenticationFi
 	 * @param authManager
 	 * @param authenticationResultHandler
 	 */
-	public StandardLoginRequestFilter(String path, AuthenticationManager authManager,
+	public StandardLoginRequestFilter(
+			String path,
+			AuthenticationManager authManager,
 			AuthenticationResultHandler authenticationResultHandler,
-			CustomAuthenticationFailureHandler authenticationFailureHandler, CustomApiConfig customApiConfig) {
+			CustomAuthenticationFailureHandler authenticationFailureHandler,
+			CustomApiConfig customApiConfig) {
 		super();
 		setAuthenticationManager(authManager);
 		setAuthenticationSuccessHandler(authenticationResultHandler);
@@ -61,11 +64,13 @@ public class StandardLoginRequestFilter extends UsernamePasswordAuthenticationFi
 	 * @throws AuthenticationException
 	 */
 	@Override
-	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+	public Authentication attemptAuthentication(
+			HttpServletRequest request, HttpServletResponse response)
 			throws AuthenticationException { // NOSONAR //NOPMD
 
 		if (!request.getMethod().equals("POST")) {
-			throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
+			throw new AuthenticationServiceException(
+					"Authentication method not supported: " + request.getMethod());
 		}
 
 		String username = obtainUsername(request);

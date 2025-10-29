@@ -44,8 +44,7 @@ public class Mail {
 	/**
 	 * Sets from.
 	 *
-	 * @param from
-	 *          the from to set
+	 * @param from the from to set
 	 */
 	public void setFrom(String from) {
 		this.from = from;
@@ -63,8 +62,7 @@ public class Mail {
 	/**
 	 * Sets to.
 	 *
-	 * @param to
-	 *          the to to set
+	 * @param to the to to set
 	 */
 	public void setTo(String to) {
 		this.to = to;
@@ -82,8 +80,7 @@ public class Mail {
 	/**
 	 * Sets subject.
 	 *
-	 * @param subject
-	 *          the subject to set
+	 * @param subject the subject to set
 	 */
 	public void setSubject(String subject) {
 		this.subject = subject;
@@ -101,8 +98,7 @@ public class Mail {
 	/**
 	 * Sets model.
 	 *
-	 * @param model
-	 *          the model to set
+	 * @param model the model to set
 	 */
 	public void setModel(Map<String, Object> model) {
 		this.model = model;

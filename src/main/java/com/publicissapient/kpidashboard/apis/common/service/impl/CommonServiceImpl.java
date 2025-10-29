@@ -65,23 +65,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CommonServiceImpl implements CommonService {
 
-	@Autowired
-	private UserInfoRepository userInfoRepository;
+	@Autowired private UserInfoRepository userInfoRepository;
 
-	@Autowired
-	private AuthenticationRepository authenticationRepository;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private AuthenticationRepository authenticationRepository;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private HttpServletRequest request;
+	@Autowired private HttpServletRequest request;
 
-	@Autowired
-	private ProjectBasicConfigRepository projectBasicConfigRepository;
+	@Autowired private ProjectBasicConfigRepository projectBasicConfigRepository;
 
 	@SuppressWarnings("PMD.AvoidCatchingGenericException")
 	@Override
-	public String getMaturityLevel(List<String> maturityRangeList, String kpiId, String actualMaturityVal) {
+	public String getMaturityLevel(
+			List<String> maturityRangeList, String kpiId, String actualMaturityVal) {
 
 		try {
 			if (actualMaturityVal == null || Constant.NOT_AVAILABLE.equalsIgnoreCase(actualMaturityVal)) {
@@ -109,7 +105,10 @@ public class CommonServiceImpl implements CommonService {
 				}
 			}
 		} catch (Exception e) {
-			log.error("Exception occurred for {}  with value as {}, Exception: {}", kpiId, actualMaturityVal,
+			log.error(
+					"Exception occurred for {}  with value as {}, Exception: {}",
+					kpiId,
+					actualMaturityVal,
 					ExceptionUtils.getStackTrace(e));
 			return Constant.ZERO;
 		}
@@ -124,7 +123,8 @@ public class CommonServiceImpl implements CommonService {
 	 * @param index
 	 * @return
 	 */
-	private boolean isValueMatchedForSingleVal(List<String> maturityRangeList, String actualMaturityVal, int index) {
+	private boolean isValueMatchedForSingleVal(
+			List<String> maturityRangeList, String actualMaturityVal, int index) {
 		String maturityLevel = maturityRangeList.get(index);
 
 		return maturityLevel.equalsIgnoreCase(actualMaturityVal);
@@ -139,9 +139,11 @@ public class CommonServiceImpl implements CommonService {
 	 */
 	private boolean isValueMatchedForDownRange(Double actualVal, String[] boundaries) {
 		if (boundaries.length == 2) {
-			if ((boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING) && actualVal > Double.valueOf(boundaries[1])) ||
-					(!boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING) && actualVal <= Double.valueOf(boundaries[0]) &&
-							actualVal > Double.valueOf(boundaries[1]))) {
+			if ((boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING)
+							&& actualVal > Double.valueOf(boundaries[1]))
+					|| (!boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING)
+							&& actualVal <= Double.valueOf(boundaries[0])
+							&& actualVal > Double.valueOf(boundaries[1]))) {
 				return true;
 			}
 		} else {
@@ -162,9 +164,11 @@ public class CommonServiceImpl implements CommonService {
 	private boolean isValueMatchedForUpRange(Double actualVal, String[] boundaries) {
 
 		if (boundaries.length == 2) {
-			if ((boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING) && actualVal < Double.valueOf(boundaries[1])) ||
-					(!boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING) && actualVal >= Double.valueOf(boundaries[0]) &&
-							actualVal < Double.valueOf(boundaries[1]))) {
+			if ((boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING)
+							&& actualVal < Double.valueOf(boundaries[1]))
+					|| (!boundaries[0].equalsIgnoreCase(Constant.EMPTY_STRING)
+							&& actualVal >= Double.valueOf(boundaries[0])
+							&& actualVal < Double.valueOf(boundaries[1]))) {
 				return true;
 			}
 		} else {
@@ -182,8 +186,8 @@ public class CommonServiceImpl implements CommonService {
 	 * @return
 	 */
 	private boolean hasSingleValueList(String type) {
-		return KPICode.SONAR_CODE_QUALITY.getKpiId().equalsIgnoreCase(type) ||
-				KPICode.CODE_QUALITY_KANBAN.getKpiId().equalsIgnoreCase(type);
+		return KPICode.SONAR_CODE_QUALITY.getKpiId().equalsIgnoreCase(type)
+				|| KPICode.CODE_QUALITY_KANBAN.getKpiId().equalsIgnoreCase(type);
 	}
 
 	/**
@@ -198,8 +202,7 @@ public class CommonServiceImpl implements CommonService {
 	}
 
 	/**
-	 * This method is to search the email addresses based on roles and which have
-	 * notification enabled
+	 * This method is to search the email addresses based on roles and which have notification enabled
 	 *
 	 * @param roles
 	 * @return list of email addresses
@@ -208,19 +211,30 @@ public class CommonServiceImpl implements CommonService {
 		Set<String> emailAddresses = new HashSet<>();
 		List<UserInfo> superAdminUsersList = userInfoRepository.findByAuthoritiesIn(roles);
 		if (CollectionUtils.isNotEmpty(superAdminUsersList)) {
-			List<UserInfo> notificationEnableUsersList = superAdminUsersList.stream()
-					.filter(userInfo -> userInfo.getNotificationEmail() != null &&
-							userInfo.getNotificationEmail().get(CommonConstant.ACCESS_ALERT_NOTIFICATION))
-					.collect(Collectors.toList());
-			emailAddresses
-					.addAll(notificationEnableUsersList.stream().filter(user -> StringUtils.isNotEmpty(user.getEmailAddress()))
-							.map(UserInfo::getEmailAddress).collect(Collectors.toSet()));
-			List<String> usernameList = notificationEnableUsersList.stream().map(UserInfo::getUsername)
-					.collect(Collectors.toList());
+			List<UserInfo> notificationEnableUsersList =
+					superAdminUsersList.stream()
+							.filter(
+									userInfo ->
+											userInfo.getNotificationEmail() != null
+													&& userInfo
+															.getNotificationEmail()
+															.get(CommonConstant.ACCESS_ALERT_NOTIFICATION))
+							.collect(Collectors.toList());
+			emailAddresses.addAll(
+					notificationEnableUsersList.stream()
+							.filter(user -> StringUtils.isNotEmpty(user.getEmailAddress()))
+							.map(UserInfo::getEmailAddress)
+							.collect(Collectors.toSet()));
+			List<String> usernameList =
+					notificationEnableUsersList.stream()
+							.map(UserInfo::getUsername)
+							.collect(Collectors.toList());
 			if (CollectionUtils.isNotEmpty(usernameList)) {
-				List<Authentication> authentications = authenticationRepository.findByUsernameIn(usernameList);
+				List<Authentication> authentications =
+						authenticationRepository.findByUsernameIn(usernameList);
 				if (CollectionUtils.isNotEmpty(authentications)) {
-					emailAddresses.addAll(authentications.stream().map(Authentication::getEmail).collect(Collectors.toSet()));
+					emailAddresses.addAll(
+							authentications.stream().map(Authentication::getEmail).collect(Collectors.toSet()));
 				}
 			}
 		}
@@ -230,39 +244,56 @@ public class CommonServiceImpl implements CommonService {
 	/**
 	 * This method get list of project admin email address
 	 *
-	 * @param projectConfigId
-	 *          projectConfigId
+	 * @param projectConfigId projectConfigId
 	 * @return list of email address based on projectconfigid
 	 */
 	public List<String> getProjectAdminEmailAddressBasedProjectId(String projectConfigId) {
 		Set<String> emailAddresses = new HashSet<>();
 		List<String> usernameList = new ArrayList<>();
-		List<UserInfo> usersList = userInfoRepository.findByAuthoritiesIn(Arrays.asList(Constant.ROLE_PROJECT_ADMIN));
-		List<UserInfo> notificationEnableUsersList = usersList.stream()
-				.filter(userInfo -> userInfo.getNotificationEmail() != null &&
-						userInfo.getNotificationEmail().get(CommonConstant.ACCESS_ALERT_NOTIFICATION))
-				.collect(Collectors.toList());
+		List<UserInfo> usersList =
+				userInfoRepository.findByAuthoritiesIn(Arrays.asList(Constant.ROLE_PROJECT_ADMIN));
+		List<UserInfo> notificationEnableUsersList =
+				usersList.stream()
+						.filter(
+								userInfo ->
+										userInfo.getNotificationEmail() != null
+												&& userInfo
+														.getNotificationEmail()
+														.get(CommonConstant.ACCESS_ALERT_NOTIFICATION))
+						.collect(Collectors.toList());
 		Map<String, String> projectMap = getHierarchyMap(projectConfigId);
 		if (CollectionUtils.isNotEmpty(notificationEnableUsersList)) {
-			notificationEnableUsersList.forEach(action -> {
-				Optional<ProjectsAccess> projectAccess = action.getProjectsAccess().stream()
-						.filter(access -> access.getRole().equalsIgnoreCase(Constant.ROLE_PROJECT_ADMIN)).findAny();
-				if (projectAccess.isPresent()) {
-					projectAccess.get().getAccessNodes().stream().forEach(accessNode -> {
-						if (accessNode.getAccessItems().stream()
-								.anyMatch(item -> item.getItemId().equalsIgnoreCase(projectMap.get(accessNode.getAccessLevel())))) {
-							usernameList.add(action.getUsername());
-							emailAddresses.add(action.getEmailAddress().toLowerCase());
+			notificationEnableUsersList.forEach(
+					action -> {
+						Optional<ProjectsAccess> projectAccess =
+								action.getProjectsAccess().stream()
+										.filter(
+												access -> access.getRole().equalsIgnoreCase(Constant.ROLE_PROJECT_ADMIN))
+										.findAny();
+						if (projectAccess.isPresent()) {
+							projectAccess.get().getAccessNodes().stream()
+									.forEach(
+											accessNode -> {
+												if (accessNode.getAccessItems().stream()
+														.anyMatch(
+																item ->
+																		item.getItemId()
+																				.equalsIgnoreCase(
+																						projectMap.get(accessNode.getAccessLevel())))) {
+													usernameList.add(action.getUsername());
+													emailAddresses.add(action.getEmailAddress().toLowerCase());
+												}
+											});
 						}
 					});
-				}
-			});
 		}
 
 		if (CollectionUtils.isNotEmpty(usernameList)) {
-			List<Authentication> authentications = authenticationRepository.findByUsernameIn(usernameList);
+			List<Authentication> authentications =
+					authenticationRepository.findByUsernameIn(usernameList);
 			if (CollectionUtils.isNotEmpty(authentications)) {
-				emailAddresses.addAll(authentications.stream().map(Authentication::getEmail).collect(Collectors.toSet()));
+				emailAddresses.addAll(
+						authentications.stream().map(Authentication::getEmail).collect(Collectors.toSet()));
 			}
 		}
 		return emailAddresses.stream().filter(StringUtils::isNotEmpty).collect(Collectors.toList());
@@ -271,19 +302,23 @@ public class CommonServiceImpl implements CommonService {
 	/**
 	 * This method createaproject map
 	 *
-	 * @param projectConfigId
-	 *          projectConfigId
+	 * @param projectConfigId projectConfigId
 	 * @return map
 	 */
 	private Map<String, String> getHierarchyMap(String projectConfigId) {
 		Map<String, String> map = new HashMap<>();
-		ProjectBasicConfig projectBasicConfig = projectBasicConfigRepository.findByProjectNodeId(projectConfigId);
+		ProjectBasicConfig projectBasicConfig =
+				projectBasicConfigRepository.findByProjectNodeId(projectConfigId);
 		if (projectBasicConfig != null) {
 			CollectionUtils.emptyIfNull(projectBasicConfig.getHierarchy()).stream()
 					.sorted(
-							Comparator.comparing((HierarchyValue hierarchyValue) -> hierarchyValue.getHierarchyLevel().getLevel()))
-					.forEach(hierarchyValue -> map.put(hierarchyValue.getHierarchyLevel().getHierarchyLevelId(),
-							hierarchyValue.getValue()));
+							Comparator.comparing(
+									(HierarchyValue hierarchyValue) -> hierarchyValue.getHierarchyLevel().getLevel()))
+					.forEach(
+							hierarchyValue ->
+									map.put(
+											hierarchyValue.getHierarchyLevel().getHierarchyLevelId(),
+											hierarchyValue.getValue()));
 			map.put(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, projectBasicConfig.getId().toHexString());
 		}
 
@@ -295,7 +330,10 @@ public class CommonServiceImpl implements CommonService {
 
 		StringBuilder urlPath = new StringBuilder();
 		if (StringUtils.isNotEmpty(customApiConfig.getUiHost())) {
-			urlPath.append(request.getScheme()).append(':').append(File.separator + File.separator)
+			urlPath
+					.append(request.getScheme())
+					.append(':')
+					.append(File.separator + File.separator)
 					.append(customApiConfig.getUiHost().trim());
 			// append port if local setup
 			if (StringUtils.isNotEmpty(customApiConfig.getUiPort())) {
@@ -316,13 +354,17 @@ public class CommonServiceImpl implements CommonService {
 			trendMap.remove(CommonConstant.OVERALL);
 		}
 		if (null != trendMap.get(CommonConstant.OVERALL + "#" + CommonConstant.OVERALL)) {
-			sortedMap.put(CommonConstant.OVERALL + "#" + CommonConstant.OVERALL,
+			sortedMap.put(
+					CommonConstant.OVERALL + "#" + CommonConstant.OVERALL,
 					trendMap.get(CommonConstant.OVERALL + "#" + CommonConstant.OVERALL));
 			trendMap.remove(CommonConstant.OVERALL + "#" + CommonConstant.OVERALL);
 		}
-		Map<String, List<DataCount>> temp = trendMap.entrySet().stream()
-				.sorted((i1, i2) -> i1.getKey().compareTo(i2.getKey()))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+		Map<String, List<DataCount>> temp =
+				trendMap.entrySet().stream()
+						.sorted((i1, i2) -> i1.getKey().compareTo(i2.getKey()))
+						.collect(
+								Collectors.toMap(
+										Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
 		sortedMap.putAll(temp);
 		return sortedMap;

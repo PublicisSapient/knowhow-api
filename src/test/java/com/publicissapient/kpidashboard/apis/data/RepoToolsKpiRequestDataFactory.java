@@ -36,13 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RepoToolsKpiRequestDataFactory {
 
-	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA = "/json/non-JiraProcessors/repo_tools_response.json";
+	private static final String FILE_PATH_PROCESSOR_ITEMS_DATA =
+			"/json/non-JiraProcessors/repo_tools_response.json";
 	private List<RepoToolKpiMetricResponse> repoToolsKpiRequestDataFactory;
 	private List<RepoToolKpiMetricResponse> repoToolsRevertRate;
 	private ObjectMapper mapper;
 
-	private RepoToolsKpiRequestDataFactory() {
-	}
+	private RepoToolsKpiRequestDataFactory() {}
 
 	public static RepoToolsKpiRequestDataFactory newInstance(String filePath) {
 
@@ -62,9 +62,10 @@ public class RepoToolsKpiRequestDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_PROCESSOR_ITEMS_DATA : filePath;
 
-			RepoToolKpiBulkMetricResponse repoToolKpiBulkMetricResponse = mapper.readValue(
-					TypeReference.class.getResourceAsStream(resultPath), new TypeReference<RepoToolKpiBulkMetricResponse>() {
-					});
+			RepoToolKpiBulkMetricResponse repoToolKpiBulkMetricResponse =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<RepoToolKpiBulkMetricResponse>() {});
 			repoToolsKpiRequestDataFactory = repoToolKpiBulkMetricResponse.getValues().get(0);
 			repoToolsRevertRate = repoToolKpiBulkMetricResponse.getValues().get(1);
 		} catch (IOException e) {

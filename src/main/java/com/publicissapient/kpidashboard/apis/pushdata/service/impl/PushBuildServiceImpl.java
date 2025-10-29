@@ -51,48 +51,61 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PushBuildServiceImpl implements PushBaseService {
 
-	@Autowired
-	CustomApiConfig customApiConfig;
-	@Autowired
-	private BuildServiceImpl buildService;
-	@Autowired
-	private DeployServiceImpl deployService;
-	@Autowired
-	private PushDataTraceLogService pushDataTraceLogService;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
+	@Autowired CustomApiConfig customApiConfig;
+	@Autowired private BuildServiceImpl buildService;
+	@Autowired private DeployServiceImpl deployService;
+	@Autowired private PushDataTraceLogService pushDataTraceLogService;
+	@Autowired private CacheService cacheService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
 
 	/**
-	 * validate pushed buildDeploy data and if all requested data is valid then only
-	 * saved in db , otherwise rejected all data and show errors msg of particular
-	 * failed data
+	 * validate pushed buildDeploy data and if all requested data is valid then only saved in db ,
+	 * otherwise rejected all data and show errors msg of particular failed data
 	 *
 	 * @param buildDeploy
 	 * @param projectConfigId
 	 * @return
 	 */
 	@Override
-	public PushDataResponse processPushDataInput(PushBuildDeploy buildDeploy, ObjectId projectConfigId) {
+	public PushDataResponse processPushDataInput(
+			PushBuildDeploy buildDeploy, ObjectId projectConfigId) {
 		PushDataResponse pushDataResponse = new PushDataResponse();
 		pushDataResponse.setTotalRecords(getTotalRecords(buildDeploy));
-		log.info("Total Records input for " + projectConfigId.toHexString() + " are " + pushDataResponse.getTotalRecords());
+		log.info(
+				"Total Records input for "
+						+ projectConfigId.toHexString()
+						+ " are "
+						+ pushDataResponse.getTotalRecords());
 		List<Build> buildList = new ArrayList<>();
 		List<Deployment> deploymentList = new ArrayList<>();
 		List<PushErrorData> buildErrorList = new ArrayList<>();
 		List<PushErrorData> deployErrorList = new ArrayList<>();
 		List<PushDataDetail> pushDataDetails = new ArrayList<>();
-		int buildFailedRecords = buildService.checkandCreateBuilds(projectConfigId, buildDeploy.getBuilds(), buildList,
-				buildErrorList, pushDataDetails);
-		int deployFailedRecords = deployService.checkandCreateDeployment(projectConfigId, buildDeploy.getDeployments(),
-				deploymentList, deployErrorList, pushDataDetails);
+		int buildFailedRecords =
+				buildService.checkandCreateBuilds(
+						projectConfigId, buildDeploy.getBuilds(), buildList, buildErrorList, pushDataDetails);
+		int deployFailedRecords =
+				deployService.checkandCreateDeployment(
+						projectConfigId,
+						buildDeploy.getDeployments(),
+						deploymentList,
+						deployErrorList,
+						pushDataDetails);
 		pushDataResponse.setBuilds(buildErrorList);
 		pushDataResponse.setDeploy(deployErrorList);
 		pushDataResponse.setTotalFailedRecords(buildFailedRecords + deployFailedRecords);
 		pushDataResponse.setTotalSavedRecords(buildList.size() + deploymentList.size());
-		log.info("Total Records for " + projectConfigId + " to be Saved are " + pushDataResponse.getTotalSavedRecords());
-		totalSaveRecords(pushDataResponse, buildList, deploymentList, pushDataDetails, projectConfigId.toHexString());
+		log.info(
+				"Total Records for "
+						+ projectConfigId
+						+ " to be Saved are "
+						+ pushDataResponse.getTotalSavedRecords());
+		totalSaveRecords(
+				pushDataResponse,
+				buildList,
+				deploymentList,
+				pushDataDetails,
+				projectConfigId.toHexString());
 		return pushDataResponse;
 	}
 
@@ -104,8 +117,12 @@ public class PushBuildServiceImpl implements PushBaseService {
 	 * @param deploymentList
 	 * @param pushDataDetails
 	 */
-	private void totalSaveRecords(PushDataResponse pushDataResponse, List<Build> buildList,
-			List<Deployment> deploymentList, List<PushDataDetail> pushDataDetails, String projectConfigId) {
+	private void totalSaveRecords(
+			PushDataResponse pushDataResponse,
+			List<Build> buildList,
+			List<Deployment> deploymentList,
+			List<PushDataDetail> pushDataDetails,
+			String projectConfigId) {
 		PushDataTraceLog instance = PushDataTraceLog.getInstance();
 		instance.setTotalRecord(pushDataResponse.getTotalRecords());
 		instance.setTotalFailedRecord(pushDataResponse.getTotalFailedRecords());
@@ -113,7 +130,8 @@ public class PushBuildServiceImpl implements PushBaseService {
 			pushDataResponse.setTotalSavedRecords(0);
 			instance.setTotalSavedRecord(0);
 			instance.setPushDataDetails(pushDataDetails);
-			pushDataTraceLogService.setExceptionTraceLog("Errors in particular below ids", pushDataResponse);
+			pushDataTraceLogService.setExceptionTraceLog(
+					"Errors in particular below ids", pushDataResponse);
 		}
 		instance.setTotalSavedRecord(pushDataResponse.getTotalSavedRecords());
 		pushDataTraceLogService.save(instance);
@@ -131,17 +149,28 @@ public class PushBuildServiceImpl implements PushBaseService {
 	 * @return
 	 */
 	public int getTotalRecords(PushBuildDeploy buildDeploy) {
-		if ((CollectionUtils.isNotEmpty(buildDeploy.getDeployments()) &&
-				buildDeploy.getDeployments().size() > customApiConfig.getPushDataLimit()) ||
-				(CollectionUtils.isNotEmpty(buildDeploy.getBuilds()) &&
-						buildDeploy.getBuilds().size() > customApiConfig.getPushDataLimit())) {
-			Set<PushDeploy> pushDeploys = Optional.ofNullable(buildDeploy.getDeployments()).orElse(new HashSet<>());
-			Set<PushBuild> pushBuilds = Optional.ofNullable(buildDeploy.getBuilds()).orElse(new HashSet<>());
-			pushDataTraceLogService
-					.setExceptionTraceLog("Maximum Limit of build/deployment is " + customApiConfig.getPushDataLimit() +
-							", input-builds are " + pushBuilds.size() + " and input-deployments are " + pushDeploys.size(), null);
+		if ((CollectionUtils.isNotEmpty(buildDeploy.getDeployments())
+						&& buildDeploy.getDeployments().size() > customApiConfig.getPushDataLimit())
+				|| (CollectionUtils.isNotEmpty(buildDeploy.getBuilds())
+						&& buildDeploy.getBuilds().size() > customApiConfig.getPushDataLimit())) {
+			Set<PushDeploy> pushDeploys =
+					Optional.ofNullable(buildDeploy.getDeployments()).orElse(new HashSet<>());
+			Set<PushBuild> pushBuilds =
+					Optional.ofNullable(buildDeploy.getBuilds()).orElse(new HashSet<>());
+			pushDataTraceLogService.setExceptionTraceLog(
+					"Maximum Limit of build/deployment is "
+							+ customApiConfig.getPushDataLimit()
+							+ ", input-builds are "
+							+ pushBuilds.size()
+							+ " and input-deployments are "
+							+ pushDeploys.size(),
+					null);
 		}
-		return (CollectionUtils.isNotEmpty(buildDeploy.getDeployments()) ? buildDeploy.getDeployments().size() : 0) +
-				(CollectionUtils.isNotEmpty(buildDeploy.getBuilds()) ? buildDeploy.getBuilds().size() : 0);
+		return (CollectionUtils.isNotEmpty(buildDeploy.getDeployments())
+						? buildDeploy.getDeployments().size()
+						: 0)
+				+ (CollectionUtils.isNotEmpty(buildDeploy.getBuilds())
+						? buildDeploy.getBuilds().size()
+						: 0);
 	}
 }

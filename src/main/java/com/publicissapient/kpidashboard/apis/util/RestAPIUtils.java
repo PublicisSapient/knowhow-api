@@ -25,18 +25,17 @@ import com.publicissapient.kpidashboard.common.service.AesEncryptionService;
 public class RestAPIUtils {
 	private static final String AUTHORIZATION = "Authorization";
 
-	@Autowired
-	private AesEncryptionService aesEncryptionService;
+	@Autowired private AesEncryptionService aesEncryptionService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	public static HttpHeaders getHeaders(String accessToken, boolean usingBasicAuth) {
 		HttpHeaders headers = new HttpHeaders();
 		if (accessToken != null && !accessToken.isEmpty()) {
 			if (usingBasicAuth) {
 				String authentication = accessToken + ":";
-				byte[] encodedAuth = Base64.encodeBase64(authentication.getBytes(StandardCharsets.US_ASCII));
+				byte[] encodedAuth =
+						Base64.encodeBase64(authentication.getBytes(StandardCharsets.US_ASCII));
 				String authenticationHeader = "Basic " + new String(encodedAuth);
 				headers.set(AUTHORIZATION, authenticationHeader);
 			} else {
@@ -49,10 +48,8 @@ public class RestAPIUtils {
 	/**
 	 * Creates HTTP Headers.
 	 *
-	 * @param username
-	 *          the username
-	 * @param password
-	 *          the password
+	 * @param username the username
+	 * @param password the password
 	 * @return HttpHeaders the http header
 	 */
 	public HttpHeaders getHeaders(String username, String password) {
@@ -76,12 +73,9 @@ public class RestAPIUtils {
 	/**
 	 * Creates HTTP Headers.
 	 *
-	 * @param header
-	 *          http header
-	 * @param key
-	 *          key
-	 * @param value
-	 *          value
+	 * @param header http header
+	 * @param key key
+	 * @param value value
 	 * @return HttpHeaders the http header
 	 */
 	public HttpHeaders addHeaders(HttpHeaders header, String key, String value) {
@@ -95,13 +89,12 @@ public class RestAPIUtils {
 	/**
 	 * Converts json Array to string response body.
 	 *
-	 * @param responseBody
-	 *          the api response body string
-	 * @param key
-	 *          the project key
+	 * @param responseBody the api response body string
+	 * @param key the project key
 	 * @return the string data
 	 */
-	public JSONArray convertJSONArrayFromResponse(String responseBody, String key) throws ParseException {
+	public JSONArray convertJSONArrayFromResponse(String responseBody, String key)
+			throws ParseException {
 		JSONParser jsonParser = new JSONParser();
 		JSONObject jsonObject = (JSONObject) jsonParser.parse(responseBody);
 		return (JSONArray) jsonObject.get(key);
@@ -110,10 +103,8 @@ public class RestAPIUtils {
 	/**
 	 * Converts String to json objects.
 	 *
-	 * @param jsonData
-	 *          the json object
-	 * @param key
-	 *          the project key
+	 * @param jsonData the json object
+	 * @param key the project key
 	 * @return the string data
 	 */
 	public String convertToString(JSONObject jsonData, String key) {

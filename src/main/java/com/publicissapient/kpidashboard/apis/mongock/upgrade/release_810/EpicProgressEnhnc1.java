@@ -63,7 +63,8 @@ public class EpicProgressEnhnc1 {
 		// Perform the update operation
 		kpiMaster.updateOne(filter, update);
 
-		filter = new Document("kpiId", new Document("$in", Arrays.asList("kpi151", "kpi152", "kpi155")));
+		filter =
+				new Document("kpiId", new Document("$in", Arrays.asList("kpi151", "kpi152", "kpi155")));
 
 		// Define the update operation to unset the "kpiFilter" field
 		update = new Document("$unset", new Document("kpiFilter", 1));
@@ -81,7 +82,8 @@ public class EpicProgressEnhnc1 {
 		kpiMaster.updateOne(filter, update);
 
 		// Rollback the update of multiple documents
-		filter = new Document("kpiId", new Document("$in", Arrays.asList("kpi151", "kpi152", "kpi155")));
+		filter =
+				new Document("kpiId", new Document("$in", Arrays.asList("kpi151", "kpi152", "kpi155")));
 		update = new Document("$set", new Document("kpiFilter", "dropdown"));
 		kpiMaster.updateMany(filter, update);
 	}

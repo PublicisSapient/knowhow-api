@@ -25,10 +25,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /**
- * 
  * @author shunaray
  */
-@ChangeUnit(id = "r_drr_rejection_label", order = "013201", author = "shunaray", systemVersion = "13.2.0")
+@ChangeUnit(
+		id = "r_drr_rejection_label",
+		order = "013201",
+		author = "shunaray",
+		systemVersion = "13.2.0")
 public class DRRChangeUnit {
 
 	public static final String FIELD_NAME = "fieldName";
@@ -43,40 +46,47 @@ public class DRRChangeUnit {
 	public void execution() {
 		rollbackFieldMapping();
 		changeMandatoryFlag(true);
-
 	}
 
 	private void insertDRRLabelFieldMapping() {
 
-		Document fieldMapping = new Document().append(FIELD_NAME, "defectRejectionLabelsKPI37")
-				.append("fieldLabel", "Labels to filter issues in consideration").append("fieldType", "chips")
-				.append("section", "Custom Fields Mapping").append("processorCommon", false)
-				.append("tooltip",
-						new Document("definition",
-								"Specify labels to identify and filter issues considered as rejected defects."))
-				.append("fieldDisplayOrder", 2).append("sectionOrder", 2).append("mandatory", false)
-				.append("nodeSpecific", false);
+		Document fieldMapping =
+				new Document()
+						.append(FIELD_NAME, "defectRejectionLabelsKPI37")
+						.append("fieldLabel", "Labels to filter issues in consideration")
+						.append("fieldType", "chips")
+						.append("section", "Custom Fields Mapping")
+						.append("processorCommon", false)
+						.append(
+								"tooltip",
+								new Document(
+										"definition",
+										"Specify labels to identify and filter issues considered as rejected defects."))
+						.append("fieldDisplayOrder", 2)
+						.append("sectionOrder", 2)
+						.append("mandatory", false)
+						.append("nodeSpecific", false);
 
 		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(fieldMapping);
-
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		insertDRRLabelFieldMapping();
 		changeMandatoryFlag(false);
-
 	}
 
 	private void changeMandatoryFlag(boolean value) {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).updateOne(
-				new Document(FIELD_NAME, "resolutionTypeForRejectionKPI37"),
-				new Document("$set", new Document("mandatory", value)));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.updateOne(
+						new Document(FIELD_NAME, "resolutionTypeForRejectionKPI37"),
+						new Document("$set", new Document("mandatory", value)));
 	}
 
 	private void rollbackFieldMapping() {
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE)
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
 				.deleteOne(new Document(FIELD_NAME, "defectRejectionLabelsKPI37"));
 	}
-
 }

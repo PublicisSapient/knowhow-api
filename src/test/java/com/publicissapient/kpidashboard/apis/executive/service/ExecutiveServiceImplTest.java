@@ -57,24 +57,17 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectBasicCon
 @RunWith(MockitoJUnitRunner.class)
 public class ExecutiveServiceImplTest {
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private ExecutiveDashboardStrategyFactory strategyFactory;
+	@Mock private ExecutiveDashboardStrategyFactory strategyFactory;
 
-	@Mock
-	private ExecutiveDashboardStrategy kanbanStrategy;
+	@Mock private ExecutiveDashboardStrategy kanbanStrategy;
 
-	@Mock
-	private ExecutiveDashboardStrategy scrumStrategy;
+	@Mock private ExecutiveDashboardStrategy scrumStrategy;
 
-	@InjectMocks
-	private ExecutiveServiceImpl service;
-	@Mock
-	private AccountHierarchyServiceImpl accountHierarchyService;
-	@Mock
-	private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
+	@InjectMocks private ExecutiveServiceImpl service;
+	@Mock private AccountHierarchyServiceImpl accountHierarchyService;
+	@Mock private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
 
 	private KpiRequest kpiRequest;
 	private ExecutiveDashboardRequestDTO requestDTO;
@@ -88,9 +81,10 @@ public class ExecutiveServiceImplTest {
 		when(strategyFactory.getStrategy("scrum")).thenReturn(scrumStrategy);
 		when(strategyFactory.getStrategy("kanban")).thenReturn(kanbanStrategy);
 
-		ExecutiveDashboardResponseDTO executiveDashboardRequestDTO = ExecutiveDashboardResponseDTO.builder().data(null)
-				.build();
-		when(scrumStrategy.getExecutiveDashboard(any(KpiRequest.class))).thenReturn(executiveDashboardRequestDTO);
+		ExecutiveDashboardResponseDTO executiveDashboardRequestDTO =
+				ExecutiveDashboardResponseDTO.builder().data(null).build();
+		when(scrumStrategy.getExecutiveDashboard(any(KpiRequest.class)))
+				.thenReturn(executiveDashboardRequestDTO);
 		when(kanbanStrategy.getExecutiveDashboard(any())).thenReturn(executiveDashboardRequestDTO);
 	}
 
@@ -172,7 +166,7 @@ public class ExecutiveServiceImplTest {
 
 		when(cacheService.getFullHierarchyLevel()).thenThrow(new RuntimeException("Cache error"));
 
-		assertThrows(RuntimeException.class,()->service.getExecutiveDashboardScrum(req));
+		assertThrows(RuntimeException.class, () -> service.getExecutiveDashboardScrum(req));
 	}
 
 	@Test
@@ -251,7 +245,7 @@ public class ExecutiveServiceImplTest {
 
 		when(cacheService.getFullKanbanHierarchyLevel()).thenThrow(new RuntimeException("Cache error"));
 
-		assertThrows(RuntimeException.class,()->service.getExecutiveDashboardKanban(req));
+		assertThrows(RuntimeException.class, () -> service.getExecutiveDashboardKanban(req));
 	}
 
 	@Test
@@ -340,7 +334,8 @@ public class ExecutiveServiceImplTest {
 	@SuppressWarnings("unchecked")
 	public Map<String, List<String>> invokeCreateSelectedMap(boolean isKanban) {
 		try {
-			java.lang.reflect.Method method = ExecutiveServiceImpl.class.getDeclaredMethod("createSelectedMap", boolean.class);
+			java.lang.reflect.Method method =
+					ExecutiveServiceImpl.class.getDeclaredMethod("createSelectedMap", boolean.class);
 			method.setAccessible(true);
 			return (Map<String, List<String>>) method.invoke(service, isKanban);
 		} catch (Exception e) {
@@ -350,7 +345,8 @@ public class ExecutiveServiceImplTest {
 
 	public List<HierarchyLevel> invokeGetHierarchyLevels(boolean isKanban) {
 		try {
-			java.lang.reflect.Method method = ExecutiveServiceImpl.class.getDeclaredMethod("getHierarchyLevels", boolean.class);
+			java.lang.reflect.Method method =
+					ExecutiveServiceImpl.class.getDeclaredMethod("getHierarchyLevels", boolean.class);
 			method.setAccessible(true);
 			return (List<HierarchyLevel>) method.invoke(service, isKanban);
 		} catch (Exception e) {
@@ -358,13 +354,22 @@ public class ExecutiveServiceImplTest {
 		}
 	}
 
-	public Set<String> invokeGetNodeIds(KpiRequest kpiRequest, boolean isKanban,
-										AccountFilterRequest accountFilterRequest, String parentId) {
+	public Set<String> invokeGetNodeIds(
+			KpiRequest kpiRequest,
+			boolean isKanban,
+			AccountFilterRequest accountFilterRequest,
+			String parentId) {
 		try {
-			java.lang.reflect.Method method = ExecutiveServiceImpl.class.getDeclaredMethod("getNodeIds", 
-				KpiRequest.class, boolean.class, AccountFilterRequest.class, String.class);
+			java.lang.reflect.Method method =
+					ExecutiveServiceImpl.class.getDeclaredMethod(
+							"getNodeIds",
+							KpiRequest.class,
+							boolean.class,
+							AccountFilterRequest.class,
+							String.class);
 			method.setAccessible(true);
-			return (Set<String>) method.invoke(service, kpiRequest, isKanban, accountFilterRequest, parentId);
+			return (Set<String>)
+					method.invoke(service, kpiRequest, isKanban, accountFilterRequest, parentId);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to invoke getNodeIds", e);
 		}

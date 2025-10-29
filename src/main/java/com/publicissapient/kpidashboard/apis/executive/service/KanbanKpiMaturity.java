@@ -54,36 +54,40 @@ public class KanbanKpiMaturity implements ToolKpiMaturity {
 	private static final String KPI_SOURCE_DEVELOPER = "BitBucket";
 
 	@Override
-	public List<KpiElement> getKpiElements(KpiRequest kpiRequest, Map<String, List<KpiMaster>> sourceWiseKpiList) {
+	public List<KpiElement> getKpiElements(
+			KpiRequest kpiRequest, Map<String, List<KpiMaster>> sourceWiseKpiList) {
 
 		List<KpiElement> kpiElements = new ArrayList<>();
-		sourceWiseKpiList.forEach((source, kpiList) -> {
-			try {
-				kpiRequest.setKpiList(sourceWiseKpiList.get(source).stream()
-						.map(kpiIntegrationServiceImpl::mapKpiMasterToKpiElement).toList());
-				switch (source) {
-				case KPI_SOURCE_JIRA:
-					kpiElements.addAll(jiraService.process(kpiRequest));
-					break;
-				case KPI_SOURCE_SONAR:
-					kpiElements.addAll(sonarService.process(kpiRequest));
-					break;
-				case KPI_SOURCE_ZEPHYR:
-					kpiElements.addAll(zephyrService.process(kpiRequest));
-					break;
-				case KPI_SOURCE_JENKINS:
-					kpiElements.addAll(jenkinsServiceR.process(kpiRequest));
-					break;
-				case KPI_SOURCE_DEVELOPER:
-					kpiElements.addAll(bitBucketServiceR.process(kpiRequest));
-					break;
-				default:
-					log.error("Invalid Kpi");
-				}
-			} catch (Exception ex) {
-				log.error("Error while fetching kpi maturity data", ex);
-			}
-		});
+		sourceWiseKpiList.forEach(
+				(source, kpiList) -> {
+					try {
+						kpiRequest.setKpiList(
+								sourceWiseKpiList.get(source).stream()
+										.map(kpiIntegrationServiceImpl::mapKpiMasterToKpiElement)
+										.toList());
+						switch (source) {
+							case KPI_SOURCE_JIRA:
+								kpiElements.addAll(jiraService.process(kpiRequest));
+								break;
+							case KPI_SOURCE_SONAR:
+								kpiElements.addAll(sonarService.process(kpiRequest));
+								break;
+							case KPI_SOURCE_ZEPHYR:
+								kpiElements.addAll(zephyrService.process(kpiRequest));
+								break;
+							case KPI_SOURCE_JENKINS:
+								kpiElements.addAll(jenkinsServiceR.process(kpiRequest));
+								break;
+							case KPI_SOURCE_DEVELOPER:
+								kpiElements.addAll(bitBucketServiceR.process(kpiRequest));
+								break;
+							default:
+								log.error("Invalid Kpi");
+						}
+					} catch (Exception ex) {
+						log.error("Error while fetching kpi maturity data", ex);
+					}
+				});
 
 		kpiIntegrationServiceImpl.calculateOverallMaturity(kpiElements);
 		return kpiElements;

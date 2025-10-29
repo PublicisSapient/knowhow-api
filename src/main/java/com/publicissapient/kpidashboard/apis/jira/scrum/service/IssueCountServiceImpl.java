@@ -57,7 +57,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
+public class IssueCountServiceImpl
+		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	public static final String PROJECT_WISE_STORY_CATEGORIES = "projectWiseStoryCategories";
 	public static final String PROJECT_WISE_TOTAL_CATEGORIES = "projectWiseTotalCategories";
@@ -66,18 +67,12 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 	private static final String STORY_LIST = "stories";
 	private static final String SPRINTSDETAILS = "sprints";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private FilterHelperService flterHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private KpiDataCacheService kpiDataCacheService;
-	@Autowired
-	private KpiDataProvider kpiDataProvider;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private FilterHelperService flterHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private CacheService cacheService;
+	@Autowired private KpiDataCacheService kpiDataCacheService;
+	@Autowired private KpiDataProvider kpiDataProvider;
 
 	private List<String> sprintIdList = Collections.synchronizedList(new ArrayList<>());
 
@@ -101,48 +96,62 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 	 * @throws ApplicationException
 	 */
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		sprintIdList = treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER).stream()
-				.map(node -> node.getSprintFilter().getId()).collect(Collectors.toList());
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			Filters filters = Filters.getFilter(k);
-			if (Filters.SPRINT == filters) {
-				sprintWiseLeafNodeValue(mapTmp, v, kpiElement, kpiRequest);
-			}
-		});
+		sprintIdList =
+				treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER).stream()
+						.map(node -> node.getSprintFilter().getId())
+						.collect(Collectors.toList());
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							Filters filters = Filters.getFilter(k);
+							if (Filters.SPRINT == filters) {
+								sprintWiseLeafNodeValue(mapTmp, v, kpiElement, kpiRequest);
+							}
+						});
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.ISSUE_COUNT);
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.ISSUE_COUNT);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.ISSUE_COUNT);
 
-		Map<String, List<DataCount>> sortedMap = trendValuesMap.entrySet().stream().sorted(Map.Entry.comparingByKey())
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
+		Map<String, List<DataCount>> sortedMap =
+				trendValuesMap.entrySet().stream()
+						.sorted(Map.Entry.comparingByKey())
+						.collect(
+								Collectors.toMap(
+										Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
 
 		Map<String, Map<String, List<DataCount>>> countProjectWiseDc = new LinkedHashMap<>();
-		sortedMap.forEach((countType, dataCounts) -> {
-			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
-					.collect(Collectors.groupingBy(DataCount::getData));
-			countProjectWiseDc.put(countType, projectWiseDc);
-		});
+		sortedMap.forEach(
+				(countType, dataCounts) -> {
+					Map<String, List<DataCount>> projectWiseDc =
+							dataCounts.stream().collect(Collectors.groupingBy(DataCount::getData));
+					countProjectWiseDc.put(countType, projectWiseDc);
+				});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		countProjectWiseDc.forEach((issueType, projectWiseDc) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
-			dataCountGroup.setFilter(issueType);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		countProjectWiseDc.forEach(
+				(issueType, projectWiseDc) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
+					dataCountGroup.setFilter(issueType);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 
-		log.debug("[ISSUE-COUNT-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[ISSUE-COUNT-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
@@ -159,17 +168,18 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 	 * @return {@code Map<String, Object>}
 	 */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<ObjectId, List<String>> projectWiseSprints = new HashMap<>();
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			String sprint = leaf.getSprintFilter().getId();
-			projectWiseSprints.putIfAbsent(basicProjectConfigId, new ArrayList<>());
-			projectWiseSprints.get(basicProjectConfigId).add(sprint);
-		});
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					String sprint = leaf.getSprintFilter().getId();
+					projectWiseSprints.putIfAbsent(basicProjectConfigId, new ArrayList<>());
+					projectWiseSprints.get(basicProjectConfigId).add(sprint);
+				});
 
 		// for storing projectWise Total Count type Categories
 		Map<String, List<String>> projectWiseJiraIdentification = new HashMap<>();
@@ -177,29 +187,40 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 		Map<String, List<String>> projectWiseStoryCategories = new HashMap<>();
 		List<SprintDetails> sprintDetails = new ArrayList<>();
 		List<JiraIssue> issueList = new ArrayList<>();
-		boolean fetchCachedData = flterHelperService.isFilterSelectedTillSprintLevel(kpiRequest.getLevel(), false);
-		projectWiseSprints.forEach((basicProjectConfigId, sprintList) -> {
-			Map<String, Object> result;
-			if (fetchCachedData) { // fetch data from cache only if Filter is selected till Sprint
-				// level.
-				result = kpiDataCacheService.fetchIssueCountData(kpiRequest, basicProjectConfigId, sprintIdList,
-						KPICode.ISSUE_COUNT.getKpiId());
-			} else { // fetch data from DB if filters below Sprint level (i.e. additional filters)
-				result = kpiDataProvider.fetchIssueCountDataFromDB(kpiRequest, basicProjectConfigId, sprintList);
-			}
-			List<JiraIssue> allJiraIssue = (List<JiraIssue>) result.get(STORY_LIST);
-			List<SprintDetails> sprintDetailsList = (List<SprintDetails>) result.get(SPRINTSDETAILS);
-			Map<String, List<String>> storyCategories = (Map<String, List<String>>) result.get(PROJECT_WISE_STORY_CATEGORIES);
-			Map<String, List<String>> totalCategories = (Map<String, List<String>>) result.get(PROJECT_WISE_TOTAL_CATEGORIES);
+		boolean fetchCachedData =
+				flterHelperService.isFilterSelectedTillSprintLevel(kpiRequest.getLevel(), false);
+		projectWiseSprints.forEach(
+				(basicProjectConfigId, sprintList) -> {
+					Map<String, Object> result;
+					if (fetchCachedData) { // fetch data from cache only if Filter is selected till Sprint
+						// level.
+						result =
+								kpiDataCacheService.fetchIssueCountData(
+										kpiRequest, basicProjectConfigId, sprintIdList, KPICode.ISSUE_COUNT.getKpiId());
+					} else { // fetch data from DB if filters below Sprint level (i.e. additional filters)
+						result =
+								kpiDataProvider.fetchIssueCountDataFromDB(
+										kpiRequest, basicProjectConfigId, sprintList);
+					}
+					List<JiraIssue> allJiraIssue = (List<JiraIssue>) result.get(STORY_LIST);
+					List<SprintDetails> sprintDetailsList = (List<SprintDetails>) result.get(SPRINTSDETAILS);
+					Map<String, List<String>> storyCategories =
+							(Map<String, List<String>>) result.get(PROJECT_WISE_STORY_CATEGORIES);
+					Map<String, List<String>> totalCategories =
+							(Map<String, List<String>>) result.get(PROJECT_WISE_TOTAL_CATEGORIES);
 
-			issueList.addAll(allJiraIssue);
-			sprintDetails.addAll(sprintDetailsList.stream().filter(sprint -> sprintList.contains(sprint.getSprintID()))
-					.collect(Collectors.toSet()));
-			projectWiseStoryCategories.put(basicProjectConfigId.toString(),
-					storyCategories.get(basicProjectConfigId.toString()));
-			projectWiseJiraIdentification.put(basicProjectConfigId.toString(),
-					totalCategories.get(basicProjectConfigId.toString()));
-		});
+					issueList.addAll(allJiraIssue);
+					sprintDetails.addAll(
+							sprintDetailsList.stream()
+									.filter(sprint -> sprintList.contains(sprint.getSprintID()))
+									.collect(Collectors.toSet()));
+					projectWiseStoryCategories.put(
+							basicProjectConfigId.toString(),
+							storyCategories.get(basicProjectConfigId.toString()));
+					projectWiseJiraIdentification.put(
+							basicProjectConfigId.toString(),
+							totalCategories.get(basicProjectConfigId.toString()));
+				});
 
 		resultListMap.put(STORY_LIST, issueList);
 		resultListMap.put(SPRINTSDETAILS, sprintDetails);
@@ -223,8 +244,7 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 	}
 
 	/**
-	 * Populates KPI value to sprint leaf nodes andgives the trend analysis at
-	 * sprint wise.
+	 * Populates KPI value to sprint leaf nodes andgives the trend analysis at sprint wise.
 	 *
 	 * @param mapTmp
 	 * @param sprintLeafNodeList
@@ -232,7 +252,10 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void sprintWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList, KpiElement kpiElement,
+	private void sprintWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> sprintLeafNodeList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
@@ -240,50 +263,70 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 		sprintLeafNodeList.sort(Comparator.comparing(node -> node.getSprintFilter().getStartDate()));
 
 		String startDate = sprintLeafNodeList.get(0).getSprintFilter().getStartDate();
-		String endDate = sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
+		String endDate =
+				sprintLeafNodeList.get(sprintLeafNodeList.size() - 1).getSprintFilter().getEndDate();
 		long time = System.currentTimeMillis();
-		FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-				.get(sprintLeafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
+		FieldMapping fieldMapping =
+				configHelperService
+						.getFieldMappingMap()
+						.get(sprintLeafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
 
-		Map<String, Object> resultMap = fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate, kpiRequest);
+		Map<String, Object> resultMap =
+				fetchKPIDataFromDb(sprintLeafNodeList, startDate, endDate, kpiRequest);
 		log.info("IssueCount taking fetchKPIDataFromDb {}", System.currentTimeMillis() - time);
 
 		List<JiraIssue> allJiraIssue = (List<JiraIssue>) resultMap.get(STORY_LIST);
 
 		List<SprintDetails> sprintDetails = (List<SprintDetails>) resultMap.get(SPRINTSDETAILS);
 
-		Map<String, List<String>> projectWiseStoryCategories = (Map<String, List<String>>) resultMap
-				.get(PROJECT_WISE_STORY_CATEGORIES);
-		Map<String, List<String>> projectWiseTotalCategories = (Map<String, List<String>>) resultMap
-				.get(PROJECT_WISE_TOTAL_CATEGORIES);
+		Map<String, List<String>> projectWiseStoryCategories =
+				(Map<String, List<String>>) resultMap.get(PROJECT_WISE_STORY_CATEGORIES);
+		Map<String, List<String>> projectWiseTotalCategories =
+				(Map<String, List<String>>) resultMap.get(PROJECT_WISE_TOTAL_CATEGORIES);
 
 		Map<Pair<String, String>, List<JiraIssue>> sprintWiseStoryCatIssues = new HashMap<>();
 		Map<Pair<String, String>, List<JiraIssue>> sprintWiseTotalCatIssues = new HashMap<>();
 
 		Map<Pair<String, String>, List<String>> sprintWiseIssueNumbers = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(allJiraIssue)) {
-			sprintDetails.forEach(sd -> {
-				List<String> totalIssues = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sd,
-						CommonConstant.TOTAL_ISSUES);
-				totalIssues.retainAll(allJiraIssue.stream().distinct().map(JiraIssue::getNumber).collect(Collectors.toList()));
-				sprintWiseIssueNumbers.put(Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()), totalIssues);
-				Set<JiraIssue> totalJiraIssues = KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(sd,
-						sd.getTotalIssues(), allJiraIssue);
-				List<String> totalIssueCatOfProj = projectWiseTotalCategories.get(sd.getBasicProjectConfigId().toString());
-				List<String> totalStoryCatOfProj = projectWiseStoryCategories.get(sd.getBasicProjectConfigId().toString());
-				// filtering out issues belong to projectWiseStoryCategories
-				List<JiraIssue> storyCatIssues = totalJiraIssues.stream()
-						.filter(issue -> totalStoryCatOfProj.contains(issue.getTypeName().toLowerCase()))
-						.collect(Collectors.toList());
-				// filtering out issues belong to totalCategories
-				List<JiraIssue> totalCatIssues = totalJiraIssues.stream()
-						.filter(issue -> totalIssueCatOfProj.contains(issue.getTypeName().toLowerCase()))
-						.collect(Collectors.toList());
-				sprintWiseStoryCatIssues.put(Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()),
-						new ArrayList<>(storyCatIssues));
-				sprintWiseTotalCatIssues.put(Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()),
-						new ArrayList<>(totalCatIssues));
-			});
+			sprintDetails.forEach(
+					sd -> {
+						List<String> totalIssues =
+								KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+										sd, CommonConstant.TOTAL_ISSUES);
+						totalIssues.retainAll(
+								allJiraIssue.stream()
+										.distinct()
+										.map(JiraIssue::getNumber)
+										.collect(Collectors.toList()));
+						sprintWiseIssueNumbers.put(
+								Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()), totalIssues);
+						Set<JiraIssue> totalJiraIssues =
+								KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
+										sd, sd.getTotalIssues(), allJiraIssue);
+						List<String> totalIssueCatOfProj =
+								projectWiseTotalCategories.get(sd.getBasicProjectConfigId().toString());
+						List<String> totalStoryCatOfProj =
+								projectWiseStoryCategories.get(sd.getBasicProjectConfigId().toString());
+						// filtering out issues belong to projectWiseStoryCategories
+						List<JiraIssue> storyCatIssues =
+								totalJiraIssues.stream()
+										.filter(
+												issue -> totalStoryCatOfProj.contains(issue.getTypeName().toLowerCase()))
+										.collect(Collectors.toList());
+						// filtering out issues belong to totalCategories
+						List<JiraIssue> totalCatIssues =
+								totalJiraIssues.stream()
+										.filter(
+												issue -> totalIssueCatOfProj.contains(issue.getTypeName().toLowerCase()))
+										.collect(Collectors.toList());
+						sprintWiseStoryCatIssues.put(
+								Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()),
+								new ArrayList<>(storyCatIssues));
+						sprintWiseTotalCatIssues.put(
+								Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()),
+								new ArrayList<>(totalCatIssues));
+					});
 		}
 
 		List<KPIExcelData> excelData = new ArrayList<>();
@@ -292,8 +335,10 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 			// Leaf node wise data
 			String trendLineName = node.getProjectFilter().getName();
 			String currentSprintComponentId = node.getSprintFilter().getId();
-			Pair<String, String> currentNodeIdentifier = Pair.of(node.getProjectFilter().getBasicProjectConfigId().toString(),
-					currentSprintComponentId);
+			Pair<String, String> currentNodeIdentifier =
+					Pair.of(
+							node.getProjectFilter().getBasicProjectConfigId().toString(),
+							currentSprintComponentId);
 			Double storyCount = 0.0;
 			List<JiraIssue> totalPresentStoryIssue = new ArrayList<>();
 			List<JiraIssue> totalPresentTotalIssue = new ArrayList<>();
@@ -303,14 +348,18 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 				storyCount = ((Integer) totalPresentJiraIssue.size()).doubleValue();
 				totalPresentStoryIssue = sprintWiseStoryCatIssues.get(currentNodeIdentifier);
 				totalPresentTotalIssue = sprintWiseTotalCatIssues.get(currentNodeIdentifier);
-				populateExcelData(requestTrackerId, allJiraIssue, excelData, node, totalPresentJiraIssue, fieldMapping);
+				populateExcelData(
+						requestTrackerId, allJiraIssue, excelData, node, totalPresentJiraIssue, fieldMapping);
 			}
 
 			Map<String, Double> issueCountMap = new LinkedHashMap<>();
 			issueCountMap.put(STORY_COUNT, (double) totalPresentStoryIssue.size());
 			issueCountMap.put(TOTAL_COUNT, (double) totalPresentTotalIssue.size());
-			log.debug("[ISSUECOUNT-SPRINT-WISE][{}]. Total Stories Count for sprint {}  is {}", requestTrackerId,
-					node.getSprintFilter().getName(), storyCount);
+			log.debug(
+					"[ISSUECOUNT-SPRINT-WISE][{}]. Total Stories Count for sprint {}  is {}",
+					requestTrackerId,
+					node.getSprintFilter().getName(),
+					storyCount);
 
 			Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 
@@ -322,25 +371,29 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 				dataCount.setSSprintName(node.getSprintFilter().getName());
 				dataCount.setValue(map.getValue());
 				dataCount.setKpiGroup(map.getKey());
-				dataCount.setHoverValue(generateHoverMap(totalPresentStoryIssue, totalPresentTotalIssue, map.getKey()));
+				dataCount.setHoverValue(
+						generateHoverMap(totalPresentStoryIssue, totalPresentTotalIssue, map.getKey()));
 				dataCountMap.put(map.getKey(), new ArrayList<>(Arrays.asList(dataCount)));
 			}
 			mapTmp.get(node.getId()).setValue(dataCountMap);
 		}
 		kpiElement.setExcelData(excelData);
-		kpiElement
-				.setExcelColumns(KPIExcelColumn.ISSUE_COUNT.getColumns(sprintLeafNodeList, cacheService, flterHelperService));
+		kpiElement.setExcelColumns(
+				KPIExcelColumn.ISSUE_COUNT.getColumns(
+						sprintLeafNodeList, cacheService, flterHelperService));
 	}
 
-	private Map<String, Object> generateHoverMap(List<JiraIssue> totalPresentStoryIssue,
-			List<JiraIssue> totalPresentTotalIssue, String key) {
+	private Map<String, Object> generateHoverMap(
+			List<JiraIssue> totalPresentStoryIssue, List<JiraIssue> totalPresentTotalIssue, String key) {
 		Map<String, Object> hoverMap = new LinkedHashMap<>();
 
-		Map<String, Long> typeWiseCountMapStoryCat = totalPresentStoryIssue.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getTypeName, Collectors.counting()));
+		Map<String, Long> typeWiseCountMapStoryCat =
+				totalPresentStoryIssue.stream()
+						.collect(Collectors.groupingBy(JiraIssue::getTypeName, Collectors.counting()));
 
-		Map<String, Long> typeWiseCountMapTotalCat = totalPresentTotalIssue.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getTypeName, Collectors.counting()));
+		Map<String, Long> typeWiseCountMapTotalCat =
+				totalPresentTotalIssue.stream()
+						.collect(Collectors.groupingBy(JiraIssue::getTypeName, Collectors.counting()));
 
 		if (STORY_COUNT.equalsIgnoreCase(key)) {
 			hoverMap.putAll(typeWiseCountMapStoryCat);
@@ -360,12 +413,22 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 	 * @param totalPresentJiraIssue
 	 * @param fieldMapping
 	 */
-	private void populateExcelData(String requestTrackerId, List<JiraIssue> allJiraIssuesList,
-			List<KPIExcelData> excelData, Node node, List<String> totalPresentJiraIssue, FieldMapping fieldMapping) {
+	private void populateExcelData(
+			String requestTrackerId,
+			List<JiraIssue> allJiraIssuesList,
+			List<KPIExcelData> excelData,
+			Node node,
+			List<String> totalPresentJiraIssue,
+			FieldMapping fieldMapping) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			String sprintName = node.getSprintFilter().getName();
-			KPIExcelUtility.populateSpeedKPIExcelData(sprintName, excelData, allJiraIssuesList, totalPresentJiraIssue,
-					fieldMapping, customApiConfig);
+			KPIExcelUtility.populateSpeedKPIExcelData(
+					sprintName,
+					excelData,
+					allJiraIssuesList,
+					totalPresentJiraIssue,
+					fieldMapping,
+					customApiConfig);
 		}
 	}
 
@@ -376,6 +439,7 @@ public class IssueCountServiceImpl extends JiraKPIService<Double, List<Object>, 
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI40(), KPICode.ISSUE_COUNT.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI40(), KPICode.ISSUE_COUNT.getKpiId());
 	}
 }

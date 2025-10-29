@@ -39,18 +39,15 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.EditKpiConfigSer
 import com.publicissapient.kpidashboard.apis.util.TestUtil;
 
 /**
- * This class provides various methods to TEST operations on EditKPIConfig
- * controller
+ * This class provides various methods to TEST operations on EditKPIConfig controller
  *
  * @author jagmongr
  */
 @RunWith(MockitoJUnitRunner.class)
 public class EditKpiConfigControllerTest {
 
-	@InjectMocks
-	EditKpiConfigController editKpiConfigController;
-	@Mock
-	private EditKpiConfigService editKpiConfigService;
+	@InjectMocks EditKpiConfigController editKpiConfigController;
+	@Mock private EditKpiConfigService editKpiConfigService;
 	private MockMvc mockMvc;
 
 	@Before
@@ -78,8 +75,11 @@ public class EditKpiConfigControllerTest {
 	public void getTestDataForType() throws NullPointerException {
 
 		try {
-			mockMvc.perform(MockMvcRequestBuilders.get("/editConfig/jira/editKpi/5f7ee917485b2c09bc8bac7a/kpi150")
-					.contentType(TestUtil.APPLICATION_JSON_UTF8)).andExpect(status().isOk());
+			mockMvc
+					.perform(
+							MockMvcRequestBuilders.get("/editConfig/jira/editKpi/5f7ee917485b2c09bc8bac7a/kpi150")
+									.contentType(TestUtil.APPLICATION_JSON_UTF8))
+					.andExpect(status().isOk());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

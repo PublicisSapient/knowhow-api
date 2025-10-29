@@ -70,14 +70,10 @@ public class TestExecutionServiceImplTest {
 	private static final String TEST_EXECUTION_DETAIL = "testExecutionDetail";
 	private static final String TESTCASEKEY = "testCaseData";
 	private static final String AUTOMATEDTESTCASEKEY = "automatedTestCaseData";
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	TestExecutionRepository testExecutionRepository;
+	@Mock ConfigHelperService configHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock CacheService cacheService;
+	@Mock TestExecutionRepository testExecutionRepository;
 	private List<TestExecution> testExecutionList = new ArrayList<>();
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 
@@ -89,13 +85,10 @@ public class TestExecutionServiceImplTest {
 	private KpiElement kpiElement;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private List<AdditionalFilterCategory> additionalFilterCategoryList;
-	@InjectMocks
-	private TestExecutionServiceImpl testExecutionServiceImpl;
-	@Mock
-	private CommonService commonService;
+	@InjectMocks private TestExecutionServiceImpl testExecutionServiceImpl;
+	@Mock private CommonService commonService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
 	@Before
 	public void setup() {
@@ -112,16 +105,18 @@ public class TestExecutionServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		testExecutionList = TestExecutionDataFactory.newInstance().getTestExecutionList();
-		additionalFilterCategoryList = AdditionalFilterCategoryFactory.newInstance().getAdditionalFilterCategoryList();
+		additionalFilterCategoryList =
+				AdditionalFilterCategoryFactory.newInstance().getAdditionalFilterCategoryList();
 	}
 
 	@Test
@@ -129,33 +124,43 @@ public class TestExecutionServiceImplTest {
 		Map<String, Object> filterComponentIdWiseDefectMap = new HashMap<>();
 		filterComponentIdWiseDefectMap.put(AUTOMATEDTESTCASEKEY, null);
 		filterComponentIdWiseDefectMap.put(TESTCASEKEY, null);
-		Double automatedValue = testExecutionServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
+		Double automatedValue =
+				testExecutionServiceImpl.calculateKPIMetrics(filterComponentIdWiseDefectMap);
 		assertThat("Automated Percentage value :", automatedValue, equalTo(null));
 	}
 
 	@Test
 	public void testGetQualifierType() {
 		String qualifierType = testExecutionServiceImpl.getQualifierType();
-		assertThat("Qualifier type :", qualifierType, equalTo(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.name()));
+		assertThat(
+				"Qualifier type :",
+				qualifierType,
+				equalTo(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.name()));
 	}
 
 	@Test
 	public void fetchKPIDataFromDb() throws ApplicationException {
 		List<Node> leafNodeList = new ArrayList<>();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				leafNodeList.addAll(v);
-			}
-		});
-		when(testExecutionRepository.findTestExecutionDetailByFilters(Mockito.anyMap(), Mockito.anyMap()))
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								leafNodeList.addAll(v);
+							}
+						});
+		when(testExecutionRepository.findTestExecutionDetailByFilters(
+						Mockito.anyMap(), Mockito.anyMap()))
 				.thenReturn(testExecutionList);
-		Map<String, AdditionalFilterCategory> addFilterCategory = additionalFilterCategoryList.stream()
-				.collect(Collectors.toMap(entry -> entry.getFilterCategoryId(), entry -> entry));
+		Map<String, AdditionalFilterCategory> addFilterCategory =
+				additionalFilterCategoryList.stream()
+						.collect(Collectors.toMap(entry -> entry.getFilterCategoryId(), entry -> entry));
 		when(filterHelperService.getAdditionalFilterHierarchyLevel()).thenReturn(addFilterCategory);
-		Map<String, Object> defectDataListMap = testExecutionServiceImpl.fetchKPIDataFromDb(leafNodeList, null, null,
-				kpiRequest);
+		Map<String, Object> defectDataListMap =
+				testExecutionServiceImpl.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		Map<String, Object> outputMap = new HashMap<>();
 		outputMap.put(TEST_EXECUTION_DETAIL, testExecutionList);
 		assertThat("fetch KPI data from DB :", defectDataListMap, equalTo(outputMap));
@@ -163,18 +168,22 @@ public class TestExecutionServiceImplTest {
 
 	@Test
 	public void testGetKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		String kpiRequestTrackerId = "Zephyr-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put("testExecutionPercentage", Arrays.asList("-20", "20-40", "40-60", "60-79", "80-"));
+		maturityRangeMap.put(
+				"testExecutionPercentage", Arrays.asList("-20", "20-40", "40-60", "60-79", "80-"));
 
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
-		Map<String, AdditionalFilterCategory> addFilterCategory = additionalFilterCategoryList.stream()
-				.collect(Collectors.toMap(entry -> entry.getFilterCategoryId(), entry -> entry));
+		Map<String, AdditionalFilterCategory> addFilterCategory =
+				additionalFilterCategoryList.stream()
+						.collect(Collectors.toMap(entry -> entry.getFilterCategoryId(), entry -> entry));
 		when(filterHelperService.getAdditionalFilterHierarchyLevel()).thenReturn(addFilterCategory);
 		kpiWiseAggregation.put("testExecutionPercentage", "average");
 
@@ -182,10 +191,14 @@ public class TestExecutionServiceImplTest {
 				.thenReturn(testExecutionList);
 		fetchKPIDataFromDb();
 		try {
-			KpiElement kpiElement = testExecutionServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Test Exceution Value :",
-					((List<DataCount>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(), equalTo(5));
+			KpiElement kpiElement =
+					testExecutionServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Test Exceution Value :",
+					((List<DataCount>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue())
+							.size(),
+					equalTo(5));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}

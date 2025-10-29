@@ -26,8 +26,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AiUsageAnalyticsSummaryDTO {
-    private int averageEfficiencyGainPerAiUsageType;
-    private int averageEfficiencyGainPerProject;
-    private int usageTypesNumber;
-    private int projectsNumber;
+	private int averageEfficiencyGainPerAiUsageType;
+	private int averageEfficiencyGainPerProject;
+	private int usageTypesNumber;
+	private int projectsNumber;
 }

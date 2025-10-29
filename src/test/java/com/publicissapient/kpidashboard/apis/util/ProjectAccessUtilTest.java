@@ -24,21 +24,15 @@ import com.publicissapient.kpidashboard.common.model.connection.Connection;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProjectAccessUtilTest {
-	@InjectMocks
-	ProjectAccessUtil projectAccessUtil;
+	@InjectMocks ProjectAccessUtil projectAccessUtil;
 
-	@Mock
-	private TokenAuthenticationService tokenAuthenticationService;
-	@Mock
-	private UserAuthorizedProjectsService userAuthorizedProjectsService;
-	@Mock
-	private UserInfoServiceImpl userInfoService;
-	@Mock
-	private AuthenticationService authenticationService;
+	@Mock private TokenAuthenticationService tokenAuthenticationService;
+	@Mock private UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Mock private UserInfoServiceImpl userInfoService;
+	@Mock private AuthenticationService authenticationService;
 
 	@Before
-	public void setUp() {
-	}
+	public void setUp() {}
 
 	@Test
 	public void testConfigIdHasUserAccess_WhenUserIsSuperAdmin() {

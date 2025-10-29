@@ -45,8 +45,7 @@ import com.publicissapient.kpidashboard.common.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class managed all the services for forgot password and reset new
- * password
+ * This class managed all the services for forgot password and reset new password
  *
  * @author vijmishr1
  */
@@ -61,22 +60,17 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	private static final String VALIDATE_PATH = "/validateEmailToken?token="; // NOSONAR
 	private static final String REGEX = "((?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[$@$!%*?&]).{8,20})";
 	private static final String FORGOT_PASSWORD_NOTIFICATION_KEY = "Forgot_Password";
-	@Autowired
-	private AuthenticationRepository authenticationRepository;
-	@Autowired
-	private ForgotPasswordTokenRepository forgotPasswordTokenRepository;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private NotificationService notificationService;
+	@Autowired private AuthenticationRepository authenticationRepository;
+	@Autowired private ForgotPasswordTokenRepository forgotPasswordTokenRepository;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private NotificationService notificationService;
 
 	/**
 	 * Process forgotPassword request.
 	 *
-	 * <p>
-	 * processForgotPassword checks whether the email in the ForgotPasswordRequest
-	 * object exists in the database.If the email exists,creates a token for the
-	 * user account and sends an email with token and reset url info
+	 * <p>processForgotPassword checks whether the email in the ForgotPasswordRequest object exists in
+	 * the database.If the email exists,creates a token for the user account and sends an email with
+	 * token and reset url info
 	 *
 	 * @param email
 	 * @param url
@@ -88,11 +82,18 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 		Authentication authentication = getEmailExistsInDB(email);
 		if (authentication != null) {
 			String token = createForgetPasswordToken(authentication);
-			Map<String, String> customData = createCustomData(authentication.getUsername(), token, url,
-					customApiConfig.getForgotPasswordExpiryInterval());
+			Map<String, String> customData =
+					createCustomData(
+							authentication.getUsername(),
+							token,
+							url,
+							customApiConfig.getForgotPasswordExpiryInterval());
 			log.info("Notification message sent with key : {}", FORGOT_PASSWORD_NOTIFICATION_KEY);
-			notificationService.sendNotificationEvent(Arrays.asList(email), customData,
-					customApiConfig.getEmailSubject(), customApiConfig.isNotificationSwitch(),
+			notificationService.sendNotificationEvent(
+					Arrays.asList(email),
+					customData,
+					customApiConfig.getEmailSubject(),
+					customApiConfig.isNotificationSwitch(),
 					FORGOT_PASSWORD_TEMPLATE);
 			return authentication;
 		}
@@ -102,14 +103,11 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	/**
 	 * Validates Email Token sent to the user via email.
 	 *
-	 * <p>
-	 * validateEmailToken method checks the token received from request, exists in
-	 * the database.If the token is found in the database method will forward the
-	 * token to validate it
+	 * <p>validateEmailToken method checks the token received from request, exists in the database.If
+	 * the token is found in the database method will forward the token to validate it
 	 *
 	 * @param token
-	 * @return one of the enum <tt>INVALID, VALID, EXPIRED</tt> of type
-	 *         ResetPasswordTokenStatusEnum
+	 * @return one of the enum <tt>INVALID, VALID, EXPIRED</tt> of type ResetPasswordTokenStatusEnum
 	 */
 	@Override
 	public ResetPasswordTokenStatusEnum validateEmailToken(String token) {
@@ -120,36 +118,37 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	/**
 	 * Resets password after validating token
 	 *
-	 * <p>
-	 * resetPassword checks if the reset token exists in the database.Later checks
-	 * the validity of the token. If the token is valid,searches for the username
-	 * from the <tt>forgotPasswordToken</tt> in the <tt>authentication</tt>
-	 * collection in the database. Saves the reset password if the username exists
+	 * <p>resetPassword checks if the reset token exists in the database.Later checks the validity of
+	 * the token. If the token is valid,searches for the username from the
+	 * <tt>forgotPasswordToken</tt> in the <tt>authentication</tt> collection in the database. Saves
+	 * the reset password if the username exists
 	 *
 	 * @param resetPasswordRequest
-	 * @return authentication if the <tt>token</tt> is valid and <tt>username</tt>
-	 *         from forgotPasswordToken exists in the database
-	 * @throws ApplicationException
-	 *             if either <tt>forgotPasswordToken</tt> is invalid or
-	 *             <tt>username</tt> doen't exist in the database.
+	 * @return authentication if the <tt>token</tt> is valid and <tt>username</tt> from
+	 *     forgotPasswordToken exists in the database
+	 * @throws ApplicationException if either <tt>forgotPasswordToken</tt> is invalid or
+	 *     <tt>username</tt> doen't exist in the database.
 	 */
 	@Override
-	public Authentication resetPassword(ResetPasswordRequest resetPasswordRequest) throws ApplicationException {
-		ForgotPasswordToken forgotPasswordToken = forgotPasswordTokenRepository
-				.findByToken(resetPasswordRequest.getResetToken());
+	public Authentication resetPassword(ResetPasswordRequest resetPasswordRequest)
+			throws ApplicationException {
+		ForgotPasswordToken forgotPasswordToken =
+				forgotPasswordTokenRepository.findByToken(resetPasswordRequest.getResetToken());
 		ResetPasswordTokenStatusEnum tokenStatus = checkTokenValidity(forgotPasswordToken);
 		if (tokenStatus.equals(ResetPasswordTokenStatusEnum.VALID)) {
-			Authentication authentication = authenticationRepository.findByUsername(forgotPasswordToken.getUsername());
+			Authentication authentication =
+					authenticationRepository.findByUsername(forgotPasswordToken.getUsername());
 			if (null == authentication) {
 				log.error("User {} Does not Exist", forgotPasswordToken.getUsername());
 				throw new ApplicationException("User Does not Exist", ApplicationException.BAD_DATA);
 			} else {
-				validatePasswordRules(forgotPasswordToken.getUsername(), resetPasswordRequest.getPassword(),
-						authentication);
+				validatePasswordRules(
+						forgotPasswordToken.getUsername(), resetPasswordRequest.getPassword(), authentication);
 				return authentication;
 			}
 		} else {
-			throw new ApplicationException("Token is " + tokenStatus.name(), ApplicationException.BAD_DATA);
+			throw new ApplicationException(
+					"Token is " + tokenStatus.name(), ApplicationException.BAD_DATA);
 		}
 	}
 
@@ -167,8 +166,7 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	 * Checks if the email exists in the database.
 	 *
 	 * @param email
-	 * @return Authentication if email exits or <tt>null</tt> if the email doesn't
-	 *         exist
+	 * @return Authentication if email exits or <tt>null</tt> if the email doesn't exist
 	 */
 	private Authentication getEmailExistsInDB(String email) {
 		List<Authentication> authenticateList = authenticationRepository.findByEmail(email);
@@ -179,9 +177,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	}
 
 	/**
-	 * Creates UUID token and sets it to ForgotPasswordToken along with username and
-	 * expiry date and saves it to <tt>forgotPasswordToken</tt> collection in
-	 * database.
+	 * Creates UUID token and sets it to ForgotPasswordToken along with username and expiry date and
+	 * saves it to <tt>forgotPasswordToken</tt> collection in database.
 	 *
 	 * @param authentication
 	 * @return token
@@ -191,7 +188,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 		ForgotPasswordToken forgotPasswordToken = new ForgotPasswordToken();
 		forgotPasswordToken.setToken(token);
 		forgotPasswordToken.setUsername(authentication.getUsername());
-		forgotPasswordToken.setExpiryDate(Integer.parseInt(customApiConfig.getForgotPasswordExpiryInterval()));
+		forgotPasswordToken.setExpiryDate(
+				Integer.parseInt(customApiConfig.getForgotPasswordExpiryInterval()));
 		forgotPasswordTokenRepository.save(forgotPasswordToken);
 		return token;
 	}
@@ -200,9 +198,8 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	 * Checks the validity of <tt>forgotPasswordToken</tt>
 	 *
 	 * @param forgotPasswordToken
-	 * @return ResetPasswordTokenStatusEnum <tt>INVALID</tt> if token is
-	 *         <tt>null</tt>, <tt>VALID</tt> if token is not expired,
-	 *         <tt>EXPIRED</tt> if token is expired
+	 * @return ResetPasswordTokenStatusEnum <tt>INVALID</tt> if token is <tt>null</tt>, <tt>VALID</tt>
+	 *     if token is not expired, <tt>EXPIRED</tt> if token is expired
 	 */
 	private ResetPasswordTokenStatusEnum checkTokenValidity(ForgotPasswordToken forgotPasswordToken) {
 		if (forgotPasswordToken == null) {
@@ -217,20 +214,18 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	/**
 	 * Validates if the given <tt>expiryDate</tt> is in the past
 	 *
-	 * <p>
-	 * isExpired method checks the validity of token by comparing the validity of
-	 * token expriy date with current Time and Date
+	 * <p>isExpired method checks the validity of token by comparing the validity of token expriy date
+	 * with current Time and Date
 	 *
 	 * @param expiryDate
-	 * @return boolean <tt>true</tt> if expiryDate is invalid/expired,<tt>false</tt>
-	 *         if token is valid
+	 * @return boolean <tt>true</tt> if expiryDate is invalid/expired,<tt>false</tt> if token is valid
 	 */
 	private boolean isExpired(Date expiryDate) {
 		return new Date().after(expiryDate);
 	}
 
-	private void validatePasswordRules(String username, String password, Authentication authentication)
-			throws ApplicationException {
+	private void validatePasswordRules(
+			String username, String password, Authentication authentication) throws ApplicationException {
 
 		Pattern pattern = Pattern.compile(REGEX);
 		Matcher matcher = pattern.matcher(password);
@@ -240,11 +235,12 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 					authentication.setPassword(password);
 					authenticationRepository.save(authentication);
 				} else {
-					throw new ApplicationException("Password should not be old password",
-							ApplicationException.BAD_DATA);
+					throw new ApplicationException(
+							"Password should not be old password", ApplicationException.BAD_DATA);
 				}
 			} else {
-				throw new ApplicationException("Password should not contain userName", ApplicationException.BAD_DATA);
+				throw new ApplicationException(
+						"Password should not contain userName", ApplicationException.BAD_DATA);
 			}
 		} else {
 			throw new ApplicationException(
@@ -256,17 +252,14 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
 	/**
 	 * * create custom data for email
 	 *
-	 * @param username
-	 *            emailId
-	 * @param token
-	 *            token
-	 * @param url
-	 *            url
-	 * @param expiryTime
-	 *            expiryTime in Min
+	 * @param username emailId
+	 * @param token token
+	 * @param url url
+	 * @param expiryTime expiryTime in Min
 	 * @return Map<String, String>
 	 */
-	private Map<String, String> createCustomData(String username, String token, String url, String expiryTime) {
+	private Map<String, String> createCustomData(
+			String username, String token, String url, String expiryTime) {
 		Map<String, String> customData = new HashMap<>();
 		customData.put("token", token);
 		customData.put("user", username);

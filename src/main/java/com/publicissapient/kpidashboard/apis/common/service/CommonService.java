@@ -34,19 +34,15 @@ public interface CommonService {
 	/**
 	 * Gets maturity level.
 	 *
-	 * @param maturityRangeList
-	 *          the maturity range list
-	 * @param kpiId
-	 *          the kpi type
-	 * @param actualMaturityVal
-	 *          the actual val
+	 * @param maturityRangeList the maturity range list
+	 * @param kpiId the kpi type
+	 * @param actualMaturityVal the actual val
 	 * @return the maturity level
 	 */
 	String getMaturityLevel(List<String> maturityRangeList, String kpiId, String actualMaturityVal);
 
 	/**
-	 * @param roles
-	 *          roles
+	 * @param roles roles
 	 * @return list of email address based on roles
 	 */
 	public List<String> getEmailAddressBasedOnRoles(List<String> roles);
@@ -54,8 +50,7 @@ public interface CommonService {
 	/**
 	 * This method get list of project admin email address
 	 *
-	 * @param projectConfigId
-	 *          projectConfigId
+	 * @param projectConfigId projectConfigId
 	 * @return list of email address based on projectconfigid
 	 */
 	public List<String> getProjectAdminEmailAddressBasedProjectId(String projectConfigId);
@@ -67,8 +62,7 @@ public interface CommonService {
 	public String getApiHost() throws UnknownHostException;
 
 	/**
-	 * @param trendMap
-	 *          trendMap
+	 * @param trendMap trendMap
 	 * @return sortedMap
 	 */
 	public Map<String, List<DataCount>> sortTrendValueMap(Map<String, List<DataCount>> trendMap);

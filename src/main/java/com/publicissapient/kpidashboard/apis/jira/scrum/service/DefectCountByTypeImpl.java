@@ -51,8 +51,8 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class displays the defects that are presently in the backlog and the
- * active sprint, but have not yet been completed.
+ * This class displays the defects that are presently in the backlog and the active sprint, but have
+ * not yet been completed.
  *
  * @author eswbogol
  */
@@ -62,22 +62,16 @@ public class DefectCountByTypeImpl extends JiraBacklogKPIService<Integer, List<O
 
 	private static final String PROJECT_WISE_JIRA_ISSUE = "Jira Issue";
 
-	@Autowired
-	ConfigHelperService configHelperService;
+	@Autowired ConfigHelperService configHelperService;
 
-	@Autowired
-	JiraIssueRepository jiraIssueRepository;
+	@Autowired JiraIssueRepository jiraIssueRepository;
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest with request details
-	 * @param kpiElement
-	 *          basic details of KPI
-	 * @param projectNode
-	 *          details of project nodes
+	 * @param kpiRequest kpiRequest with request details
+	 * @param kpiElement basic details of KPI
+	 * @param projectNode details of project nodes
 	 * @return KpiElement with data
-	 * @throws ApplicationException
-	 *           exception while processing request
+	 * @throws ApplicationException exception while processing request
 	 */
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -88,30 +82,48 @@ public class DefectCountByTypeImpl extends JiraBacklogKPIService<Integer, List<O
 	}
 
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Node leafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Node leafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
 		if (leafNode != null) {
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 			Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, "", "", kpiRequest);
 			List<JiraIssue> jiraIssues = (List<JiraIssue>) resultMap.get(PROJECT_WISE_JIRA_ISSUE);
 			List<IterationKpiValue> filterDataList = new ArrayList<>();
 			Set<String> excludeStatuses = getExcludeStatuses(fieldMapping);
 			// method to exclude the issues with status
 			jiraIssues = getJiraIssueListAfterDefectsWithStatusExcluded(jiraIssues, excludeStatuses);
-			Map<String, List<JiraIssue>> statusWiseIssuesList = new HashMap<>(CollectionUtils.isNotEmpty(jiraIssues)
-					? jiraIssues.stream()
-							.filter(jiraIssue -> StringUtils.isNotEmpty(jiraIssue.getOriginalType()) &&
-									fieldMapping.getJiradefecttype().contains(jiraIssue.getOriginalType()))
-							.collect(Collectors.groupingBy(JiraIssue::getOriginalType))
-					: new HashMap<>());
-			log.info("Defect Count By Type -> request id : {} total jira Issues : {}", requestTrackerId, jiraIssues.size());
+			Map<String, List<JiraIssue>> statusWiseIssuesList =
+					new HashMap<>(
+							CollectionUtils.isNotEmpty(jiraIssues)
+									? jiraIssues.stream()
+											.filter(
+													jiraIssue ->
+															StringUtils.isNotEmpty(jiraIssue.getOriginalType())
+																	&& fieldMapping
+																			.getJiradefecttype()
+																			.contains(jiraIssue.getOriginalType()))
+											.collect(Collectors.groupingBy(JiraIssue::getOriginalType))
+									: new HashMap<>());
+			log.info(
+					"Defect Count By Type -> request id : {} total jira Issues : {}",
+					requestTrackerId,
+					jiraIssues.size());
 			log.info("statusWiseIssuesList ->  : {}", statusWiseIssuesList);
 			Map<String, Integer> statusWiseCountMap = new HashMap<>();
 			getIssuesStatusCount(statusWiseIssuesList, statusWiseCountMap);
 			if (MapUtils.isNotEmpty(statusWiseCountMap)) {
-				constructData(kpiElement, requestTrackerId, excelData, leafNode, jiraIssues, filterDataList,
+				constructData(
+						kpiElement,
+						requestTrackerId,
+						excelData,
+						leafNode,
+						jiraIssues,
+						filterDataList,
 						statusWiseCountMap);
 			}
 			kpiElement.setTrendValueList(filterDataList);
@@ -119,26 +131,28 @@ public class DefectCountByTypeImpl extends JiraBacklogKPIService<Integer, List<O
 	}
 
 	/**
-	 * @param leafNode
-	 *          project node details
-	 * @param startDate
-	 *          startDate
-	 * @param endDate
-	 *          endDate
-	 * @param kpiRequest
-	 *          kpiRequest with request details
+	 * @param leafNode project node details
+	 * @param startDate startDate
+	 * @param endDate endDate
+	 * @param kpiRequest kpiRequest with request details
 	 * @return JiraIssues with Original Types
 	 */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (leafNode != null) {
-			log.info("Defect Count By Type kpi -> Requested project : {}", leafNode.getProjectFilter().getName());
-			FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-					.get(leafNode.getProjectFilter().getBasicProjectConfigId());
-			List<JiraIssue> totalJiraIssue = getBackLogJiraIssuesFromBaseClass().stream()
-					.filter(j -> fieldMapping.getJiradefecttype().contains(j.getOriginalType())).toList();
+			log.info(
+					"Defect Count By Type kpi -> Requested project : {}",
+					leafNode.getProjectFilter().getName());
+			FieldMapping fieldMapping =
+					configHelperService
+							.getFieldMappingMap()
+							.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+			List<JiraIssue> totalJiraIssue =
+					getBackLogJiraIssuesFromBaseClass().stream()
+							.filter(j -> fieldMapping.getJiradefecttype().contains(j.getOriginalType()))
+							.toList();
 			resultListMap.put(PROJECT_WISE_JIRA_ISSUE, totalJiraIssue);
 		}
 		return resultListMap;
@@ -146,32 +160,41 @@ public class DefectCountByTypeImpl extends JiraBacklogKPIService<Integer, List<O
 
 	private static Set<String> getExcludeStatuses(FieldMapping fieldMapping) {
 		Set<String> excludeStatuses = new HashSet<>();
-		excludeStatuses.add(Optional.ofNullable(fieldMapping.getJiraDefectRejectionStatusKPI155()).orElse(""));
+		excludeStatuses.add(
+				Optional.ofNullable(fieldMapping.getJiraDefectRejectionStatusKPI155()).orElse(""));
 		excludeStatuses.add(Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI155()).orElse(""));
-		excludeStatuses.addAll(Optional.ofNullable(fieldMapping.getJiraDodKPI155()).isPresent()
-				? fieldMapping.getJiraDodKPI155()
-				: new HashSet<>());
+		excludeStatuses.addAll(
+				Optional.ofNullable(fieldMapping.getJiraDodKPI155()).isPresent()
+						? fieldMapping.getJiraDodKPI155()
+						: new HashSet<>());
 		return excludeStatuses;
 	}
 
-	private static List<JiraIssue> getJiraIssueListAfterDefectsWithStatusExcluded(List<JiraIssue> jiraIssues,
-			Set<String> excludeStatuses) {
-		Set<String> excludeStatus = excludeStatuses.stream().map(String::toUpperCase).collect(Collectors.toSet());
-		jiraIssues = jiraIssues.stream()
-				.filter(jiraIssue -> !excludeStatus.contains(jiraIssue.getJiraStatus().toUpperCase()))
-				.collect(Collectors.toList());
+	private static List<JiraIssue> getJiraIssueListAfterDefectsWithStatusExcluded(
+			List<JiraIssue> jiraIssues, Set<String> excludeStatuses) {
+		Set<String> excludeStatus =
+				excludeStatuses.stream().map(String::toUpperCase).collect(Collectors.toSet());
+		jiraIssues =
+				jiraIssues.stream()
+						.filter(jiraIssue -> !excludeStatus.contains(jiraIssue.getJiraStatus().toUpperCase()))
+						.collect(Collectors.toList());
 		return jiraIssues;
 	}
 
-	private static void getIssuesStatusCount(Map<String, List<JiraIssue>> statusData,
-			Map<String, Integer> statusWiseCountMap) {
+	private static void getIssuesStatusCount(
+			Map<String, List<JiraIssue>> statusData, Map<String, Integer> statusWiseCountMap) {
 		for (Map.Entry<String, List<JiraIssue>> statusEntry : statusData.entrySet()) {
 			statusWiseCountMap.put(statusEntry.getKey(), statusEntry.getValue().size());
 		}
 	}
 
-	private void constructData(KpiElement kpiElement, String requestTrackerId, List<KPIExcelData> excelData,
-			Node leafNode, List<JiraIssue> jiraIssues, List<IterationKpiValue> filterDataList,
+	private void constructData(
+			KpiElement kpiElement,
+			String requestTrackerId,
+			List<KPIExcelData> excelData,
+			Node leafNode,
+			List<JiraIssue> jiraIssues,
+			List<IterationKpiValue> filterDataList,
 			Map<String, Integer> statusWiseCountMap) {
 		List<DataCount> trendValueListOverAll = new ArrayList<>();
 		DataCount overallData = new DataCount();
@@ -187,19 +210,22 @@ public class DefectCountByTypeImpl extends JiraBacklogKPIService<Integer, List<O
 		middleOverallData.setValue(trendValueListOverAll);
 		middleTrendValueListOverAll.add(middleOverallData);
 		populateExcelDataObject(requestTrackerId, excelData, jiraIssues);
-		IterationKpiValue filterDataOverall = new IterationKpiValue(CommonConstant.OVERALL, middleTrendValueListOverAll);
+		IterationKpiValue filterDataOverall =
+				new IterationKpiValue(CommonConstant.OVERALL, middleTrendValueListOverAll);
 		filterDataList.add(filterDataOverall);
 		kpiElement.setModalHeads(KPIExcelColumn.DEFECT_COUNT_BY_TYPE.getColumns());
 		kpiElement.setExcelColumns(KPIExcelColumn.DEFECT_COUNT_BY_TYPE.getColumns());
 		kpiElement.setExcelData(excelData);
-		log.info("DefectCountByTypeImpl -> request id : {} total jira Issues : {}", requestTrackerId,
+		log.info(
+				"DefectCountByTypeImpl -> request id : {} total jira Issues : {}",
+				requestTrackerId,
 				filterDataList.get(0));
 	}
 
-	private void populateExcelDataObject(String requestTrackerId, List<KPIExcelData> excelData,
-			List<JiraIssue> jiraIssueList) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				CollectionUtils.isNotEmpty(jiraIssueList)) {
+	private void populateExcelDataObject(
+			String requestTrackerId, List<KPIExcelData> excelData, List<JiraIssue> jiraIssueList) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+				&& CollectionUtils.isNotEmpty(jiraIssueList)) {
 			KPIExcelUtility.populateBacklogDefectCountExcelData(jiraIssueList, excelData);
 		}
 	}

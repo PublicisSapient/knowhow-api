@@ -2,7 +2,6 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -62,18 +61,14 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	private static final String RANGE_TICKET_LIST = "rangeTickets";
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private KpiHelperService kpiHelperService;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private KpiHelperService kpiHelperService;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		Map<String, Object> resultListMap = new HashMap<>();
 		List<String> basicProjectConfigIds = new ArrayList<>();
@@ -89,20 +84,28 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 			Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 			List<String> closedStatusList = new ArrayList<>();
 			closedStatusList.addAll(fieldMapping.getJiraStatusToConsiderKPI127());
-			mapOfProjectFilters.put(JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(),
+			mapOfProjectFilters.put(
+					JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(),
 					CommonUtils.convertToPatternList(closedStatusList));
 
 			List<String> defectList = new ArrayList<>();
 			defectList.add(CommonConstant.BUG);
-			mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
+			mapOfProjectFilters.put(
+					JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 					CommonUtils.convertToPatternList(defectList));
 			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 
-			mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+			mapOfFilters.put(
+					JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 					basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
-            List<JiraIssue> filterProjectJiraIssues = filterProjectJiraIssues(getBackLogJiraIssuesFromBaseClass(), mapOfFilters, uniqueProjectMap, startDate, endDate);
+			List<JiraIssue> filterProjectJiraIssues =
+					filterProjectJiraIssues(
+							getBackLogJiraIssuesFromBaseClass(),
+							mapOfFilters,
+							uniqueProjectMap,
+							startDate,
+							endDate);
 			resultListMap.put(RANGE_TICKET_LIST, filterProjectJiraIssues);
-
 		}
 
 		return resultListMap;
@@ -129,39 +132,47 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		// for chart with filter,group stack chart
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING);
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING);
+		calculateAggregatedValueMap(
+				projectNode, nodeWiseKPIValue, KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(
+						kpiRequest,
+						kpiElement,
+						nodeWiseKPIValue,
+						KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING);
 
 		trendValuesMap = KPIHelperUtil.sortTrendMapByKeyOrder(trendValuesMap, priorityTypes(true));
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
-		trendValuesMap.forEach((priority, dataCounts) -> {
-			Map<String, List<DataCount>> projectWiseDc = dataCounts.stream()
-					.collect(Collectors.groupingBy(DataCount::getData));
-			priorityTypeProjectWiseDc.put(priority, projectWiseDc);
-		});
+		trendValuesMap.forEach(
+				(priority, dataCounts) -> {
+					Map<String, List<DataCount>> projectWiseDc =
+							dataCounts.stream().collect(Collectors.groupingBy(DataCount::getData));
+					priorityTypeProjectWiseDc.put(priority, projectWiseDc);
+				});
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		priorityTypeProjectWiseDc.forEach((priority, projectWiseDc) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			List<DataCount> dataList = new ArrayList<>();
-			projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
-			dataCountGroup.setFilter(priority);
-			dataCountGroup.setValue(dataList);
-			dataCountGroups.add(dataCountGroup);
-		});
+		priorityTypeProjectWiseDc.forEach(
+				(priority, projectWiseDc) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					List<DataCount> dataList = new ArrayList<>();
+					projectWiseDc.entrySet().stream().forEach(trend -> dataList.addAll(trend.getValue()));
+					dataCountGroup.setFilter(priority);
+					dataCountGroup.setValue(dataList);
+					dataCountGroups.add(dataCountGroup);
+				});
 
 		kpiElement.setTrendValueList(dataCountGroups);
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
 
 		log.debug(
 				"[PRODUCTION-ISSUES-BY-PRIORITY-AND-AGING -AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), projectNode);
+				kpiRequest.getRequestTrackerId(),
+				projectNode);
 		return kpiElement;
 	}
 
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, Node leafNode, KpiElement kpiElement,
-			KpiRequest kpiRequest) {
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp, Node leafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
 
 		// this method fetch start and end date to fetch data.
 		CustomDateRange dateRange = KpiDataHelper.getMonthsForPastDataHistory(15);
@@ -173,15 +184,18 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 		// past all tickets and given range ticket data fetch from db
 		Map<String, Object> resultMap = fetchKPIDataFromDb(leafNode, startDate, endDate, kpiRequest);
 
-		List<JiraIssue> jiraIssueList = (List<JiraIssue>) resultMap.getOrDefault(RANGE_TICKET_LIST,
-				new ArrayList<JiraIssue>());
-		Map<String, List<JiraIssue>> projectWiseJiraIssue = jiraIssueList.stream()
-				.collect(Collectors.groupingBy(JiraIssue::getBasicProjectConfigId));
+		List<JiraIssue> jiraIssueList =
+				(List<JiraIssue>) resultMap.getOrDefault(RANGE_TICKET_LIST, new ArrayList<JiraIssue>());
+		Map<String, List<JiraIssue>> projectWiseJiraIssue =
+				jiraIssueList.stream().collect(Collectors.groupingBy(JiraIssue::getBasicProjectConfigId));
 
 		kpiWithFilter(projectWiseJiraIssue, mapTmp, leafNode, kpiElement);
 	}
 
-	private void kpiWithFilter(Map<String, List<JiraIssue>> projectWiseJiraIssueMap, Map<String, Node> mapTmp, Node node,
+	private void kpiWithFilter(
+			Map<String, List<JiraIssue>> projectWiseJiraIssueMap,
+			Map<String, Node> mapTmp,
+			Node node,
 			KpiElement kpiElement) {
 		String requestTrackerId = getRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
@@ -193,31 +207,38 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 		if (MapUtils.isNotEmpty(projectWiseJiraIssueMap)) {
 			String projectNodeId = node.getProjectFilter().getBasicProjectConfigId().toString();
 			String projectName = node.getProjectFilter().getName();
-			List<JiraIssue> projectWiseJiraIssueList = projectWiseJiraIssueMap.getOrDefault(projectNodeId, new ArrayList<>());
+			List<JiraIssue> projectWiseJiraIssueList =
+					projectWiseJiraIssueMap.getOrDefault(projectNodeId, new ArrayList<>());
 
 			if (CollectionUtils.isNotEmpty(projectWiseJiraIssueList)) {
 
-				Set<String> priorityList = projectWiseJiraIssueList.stream()
-						.map(issue -> KPIHelperUtil.mappingPriority(issue.getPriority(), customApiConfig))
-						.collect(Collectors.toSet());
+				Set<String> priorityList =
+						projectWiseJiraIssueList.stream()
+								.map(issue -> KPIHelperUtil.mappingPriority(issue.getPriority(), customApiConfig))
+								.collect(Collectors.toSet());
 
 				Map<String, List<JiraIssue>> rangeWiseJiraIssuesMap = new LinkedHashMap<>();
-				filterDataBasedOnXAxisRangeWise(xAxisRange, projectWiseJiraIssueList, rangeWiseJiraIssuesMap);
+				filterDataBasedOnXAxisRangeWise(
+						xAxisRange, projectWiseJiraIssueList, rangeWiseJiraIssuesMap);
 
 				Map<String, Map<String, Long>> rangeWisePriorityCountMap = new LinkedHashMap<>();
-				rangeWiseJiraIssuesMap.forEach((range, issueList) -> {
-					Map<String, Long> priorityCountMap = KPIHelperUtil.setpriorityScrum(issueList, customApiConfig);
-					rangeWisePriorityCountMap.put(range, priorityCountMap);
-				});
+				rangeWiseJiraIssuesMap.forEach(
+						(range, issueList) -> {
+							Map<String, Long> priorityCountMap =
+									KPIHelperUtil.setpriorityScrum(issueList, customApiConfig);
+							rangeWisePriorityCountMap.put(range, priorityCountMap);
+						});
 
-				rangeWisePriorityCountMap
-						.forEach((rangeMonth, priorityCountMap) -> populateProjectFilterWiseDataMap(priorityCountMap, priorityList,
-								trendValueMap, projectName, rangeMonth));
+				rangeWisePriorityCountMap.forEach(
+						(rangeMonth, priorityCountMap) ->
+								populateProjectFilterWiseDataMap(
+										priorityCountMap, priorityList, trendValueMap, projectName, rangeMonth));
 
 				// Populates data in Excel for validation for tickets created
 				// before
 				if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-					KPIExcelUtility.populateProductionDefectAgingExcelData(projectName, projectWiseJiraIssueList, excelData);
+					KPIExcelUtility.populateProductionDefectAgingExcelData(
+							projectName, projectWiseJiraIssueList, excelData);
 				}
 			}
 		}
@@ -227,38 +248,43 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 	}
 
 	/**
-	 * as per x Axis values initialize month wise range map and put issues as per
-	 * months bucket follows
+	 * as per x Axis values initialize month wise range map and put issues as per months bucket
+	 * follows
 	 *
 	 * @param xAxisRange
 	 * @param projectWiseJiraIssueList
 	 * @param rangeWiseJiraIssuesMap
 	 */
-	private void filterDataBasedOnXAxisRangeWise(List<String> xAxisRange, List<JiraIssue> projectWiseJiraIssueList,
+	private void filterDataBasedOnXAxisRangeWise(
+			List<String> xAxisRange,
+			List<JiraIssue> projectWiseJiraIssueList,
 			Map<String, List<JiraIssue>> rangeWiseJiraIssuesMap) {
 		String highestRange = xAxisRange.get(xAxisRange.size() - 1);
 		Map<Integer, String> monthRangeMap = new HashMap<>();
 
 		initializeRangeMapForProjects(rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
-		projectWiseJiraIssueList.forEach(issue -> {
-			long daysBetween = DAYS.between(DateUtil.convertToUTCLocalDateTime(issue.getCreatedDate()).toLocalDate(),
-					DateUtil.getTodayDate());
-			Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
-			String range;
-			if (null == monthRangeMap.get(monthsBetween)) {
-				range = highestRange;
-			} else {
-				range = monthRangeMap.get(monthsBetween);
-			}
-			if (CollectionUtils.isEmpty(rangeWiseJiraIssuesMap.get(range))) {
-				List<JiraIssue> jiraIssueList = new ArrayList<>();
-				jiraIssueList.add(issue);
-				rangeWiseJiraIssuesMap.put(range, jiraIssueList);
-			} else {
-				rangeWiseJiraIssuesMap.get(range).add(issue);
-			}
-		});
+		projectWiseJiraIssueList.forEach(
+				issue -> {
+					long daysBetween =
+							DAYS.between(
+									DateUtil.convertToUTCLocalDateTime(issue.getCreatedDate()).toLocalDate(),
+									DateUtil.getTodayDate());
+					Integer monthsBetween = (int) Math.ceil((double) daysBetween / Constant.DAYS_IN_MONTHS);
+					String range;
+					if (null == monthRangeMap.get(monthsBetween)) {
+						range = highestRange;
+					} else {
+						range = monthRangeMap.get(monthsBetween);
+					}
+					if (CollectionUtils.isEmpty(rangeWiseJiraIssuesMap.get(range))) {
+						List<JiraIssue> jiraIssueList = new ArrayList<>();
+						jiraIssueList.add(issue);
+						rangeWiseJiraIssuesMap.put(range, jiraIssueList);
+					} else {
+						rangeWiseJiraIssuesMap.get(range).add(issue);
+					}
+				});
 	}
 
 	/**
@@ -269,25 +295,31 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 	 * @param trendValueMap
 	 * @param rangeMonth
 	 */
-	private void populateProjectFilterWiseDataMap(Map<String, Long> projectWisePriorityCountMap,
-			Set<String> projectWisePriorityList, Map<String, List<DataCount>> trendValueMap, String projectName,
+	private void populateProjectFilterWiseDataMap(
+			Map<String, Long> projectWisePriorityCountMap,
+			Set<String> projectWisePriorityList,
+			Map<String, List<DataCount>> trendValueMap,
+			String projectName,
 			String rangeMonth) {
 		Map<String, Long> projectFilterWiseDataMap = new HashMap<>();
 		Map<String, Object> hoverValueMap = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(projectWisePriorityList)) {
-			projectWisePriorityList.forEach(priority -> {
-				Long priorityCount = projectWisePriorityCountMap.getOrDefault(priority, 0L);
-				projectFilterWiseDataMap.put(StringUtils.capitalize(priority), priorityCount);
-				hoverValueMap.put(StringUtils.capitalize(priority), priorityCount.intValue());
-			});
+			projectWisePriorityList.forEach(
+					priority -> {
+						Long priorityCount = projectWisePriorityCountMap.getOrDefault(priority, 0L);
+						projectFilterWiseDataMap.put(StringUtils.capitalize(priority), priorityCount);
+						hoverValueMap.put(StringUtils.capitalize(priority), priorityCount.intValue());
+					});
 			Long overAllCount = projectFilterWiseDataMap.values().stream().mapToLong(val -> val).sum();
 			projectFilterWiseDataMap.put(CommonConstant.OVERALL, overAllCount);
 		}
 
-		projectFilterWiseDataMap.forEach((priority, value) -> {
-			DataCount dcObj = getDataCountObject(value, projectName, rangeMonth, priority, hoverValueMap);
-			trendValueMap.computeIfAbsent(priority, k -> new ArrayList<>()).add(dcObj);
-		});
+		projectFilterWiseDataMap.forEach(
+				(priority, value) -> {
+					DataCount dcObj =
+							getDataCountObject(value, projectName, rangeMonth, priority, hoverValueMap);
+					trendValueMap.computeIfAbsent(priority, k -> new ArrayList<>()).add(dcObj);
+				});
 	}
 
 	/**
@@ -299,7 +331,11 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 	 * @param priority
 	 * @param
 	 */
-	private DataCount getDataCountObject(Long value, String projectName, String date, String priority,
+	private DataCount getDataCountObject(
+			Long value,
+			String projectName,
+			String date,
+			String priority,
 			Map<String, Object> overAllHoverValueMap) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(value));
@@ -326,25 +362,35 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 	 * @param xAxisRange
 	 * @param monthRangeMap
 	 */
-	private void initializeRangeMapForProjects(Map<String, List<JiraIssue>> rangeWiseJiraIssuesMap,
-			List<String> xAxisRange, Map<Integer, String> monthRangeMap) {
-		xAxisRange.forEach(range -> {
-			String[] rangeSplitted = range.trim().split("-");
-			if (rangeSplitted.length == 2) {
-				for (int i = Integer.parseInt(rangeSplitted[0]); i <= Integer.parseInt(rangeSplitted[1]); i++) {
-					if (null == monthRangeMap.get(i)) {
-						monthRangeMap.put(i, range);
+	private void initializeRangeMapForProjects(
+			Map<String, List<JiraIssue>> rangeWiseJiraIssuesMap,
+			List<String> xAxisRange,
+			Map<Integer, String> monthRangeMap) {
+		xAxisRange.forEach(
+				range -> {
+					String[] rangeSplitted = range.trim().split("-");
+					if (rangeSplitted.length == 2) {
+						for (int i = Integer.parseInt(rangeSplitted[0]);
+								i <= Integer.parseInt(rangeSplitted[1]);
+								i++) {
+							if (null == monthRangeMap.get(i)) {
+								monthRangeMap.put(i, range);
+							}
+						}
 					}
-				}
-			}
-			rangeWiseJiraIssuesMap.put(range, new ArrayList<>());
-		});
+					rangeWiseJiraIssuesMap.put(range, new ArrayList<>());
+				});
 	}
-
 
 	private List<String> priorityTypes(boolean addOverall) {
 		if (addOverall) {
-			return Arrays.asList(CommonConstant.OVERALL, Constant.P1, Constant.P2, Constant.P3, Constant.P4, Constant.MISC);
+			return Arrays.asList(
+					CommonConstant.OVERALL,
+					Constant.P1,
+					Constant.P2,
+					Constant.P3,
+					Constant.P4,
+					Constant.MISC);
 		} else {
 			return Arrays.asList(Constant.P1, Constant.P2, Constant.P3, Constant.P4, Constant.MISC);
 		}
@@ -352,49 +398,73 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI127(),
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI127(),
 				KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING.getKpiId());
 	}
 
 	/**
 	 * Filter project issues.
-	 * 
-	 * @param projectJiraIssue
-	 *            getJiraIssuesCustomHistoryFromBaseClass()
-	 * @param mapOfFilters
-	 *            map of filters
-	 * @param uniqueProjectMap
-	 *            unique project map
-	 * @param startDate
-	 *            start date
-	 * @param endDate
-	 *            end date
+	 *
+	 * @param projectJiraIssue getJiraIssuesCustomHistoryFromBaseClass()
+	 * @param mapOfFilters map of filters
+	 * @param uniqueProjectMap unique project map
+	 * @param startDate start date
+	 * @param endDate end date
 	 * @return filtered jira issue
 	 */
-	public List<JiraIssue> filterProjectJiraIssues(List<JiraIssue> projectJiraIssue,
-			Map<String, List<String>> mapOfFilters, Map<String, Map<String, Object>> uniqueProjectMap, String startDate,
+	public List<JiraIssue> filterProjectJiraIssues(
+			List<JiraIssue> projectJiraIssue,
+			Map<String, List<String>> mapOfFilters,
+			Map<String, Map<String, Object>> uniqueProjectMap,
+			String startDate,
 			String endDate) {
-		LocalDateTime startDateTime = DateUtil.stringToLocalDate(startDate, DateUtil.DATE_FORMAT).atStartOfDay();
-		LocalDateTime endDateTime = DateUtil.stringToLocalDate(endDate, DateUtil.DATE_FORMAT).atStartOfDay();
+		LocalDateTime startDateTime =
+				DateUtil.stringToLocalDate(startDate, DateUtil.DATE_FORMAT).atStartOfDay();
+		LocalDateTime endDateTime =
+				DateUtil.stringToLocalDate(endDate, DateUtil.DATE_FORMAT).atStartOfDay();
 
-		return projectJiraIssue.stream().filter(issue -> {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS");
-			LocalDateTime createdDate = LocalDateTime.parse(issue.getCreatedDate(), formatter);
-			return DateUtil.isWithinDateTimeRange(createdDate, startDateTime, endDateTime);
-		}).filter(JiraIssue::isProductionDefect)
-				.filter(issue -> mapOfFilters.getOrDefault("basicProjectConfigId", List.of())
-						.contains(issue.getBasicProjectConfigId()))
-				.filter(issue -> uniqueProjectMap.entrySet().stream()
-						.anyMatch(entry -> entry.getValue().entrySet().stream().allMatch(subEntry -> {
-							if (subEntry.getKey().equals("jiraStatus")) {
-								return ((List<Pattern>) subEntry.getValue()).stream()
-										.anyMatch(pattern -> pattern.matcher(issue.getJiraStatus()).matches());
-							} else if (subEntry.getKey().equals("typeName")) {
-								return ((List<Pattern>) subEntry.getValue()).stream()
-										.anyMatch(pattern -> pattern.matcher(issue.getTypeName()).matches());
-							}
-							return false;
-						})))
+		return projectJiraIssue.stream()
+				.filter(
+						issue -> {
+							DateTimeFormatter formatter =
+									DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS");
+							LocalDateTime createdDate = LocalDateTime.parse(issue.getCreatedDate(), formatter);
+							return DateUtil.isWithinDateTimeRange(createdDate, startDateTime, endDateTime);
+						})
+				.filter(JiraIssue::isProductionDefect)
+				.filter(
+						issue ->
+								mapOfFilters
+										.getOrDefault("basicProjectConfigId", List.of())
+										.contains(issue.getBasicProjectConfigId()))
+				.filter(
+						issue ->
+								uniqueProjectMap.entrySet().stream()
+										.anyMatch(
+												entry ->
+														entry.getValue().entrySet().stream()
+																.allMatch(
+																		subEntry -> {
+																			if (subEntry.getKey().equals("jiraStatus")) {
+																				return ((List<Pattern>) subEntry.getValue())
+																						.stream()
+																								.anyMatch(
+																										pattern ->
+																												pattern
+																														.matcher(issue.getJiraStatus())
+																														.matches());
+																			} else if (subEntry.getKey().equals("typeName")) {
+																				return ((List<Pattern>) subEntry.getValue())
+																						.stream()
+																								.anyMatch(
+																										pattern ->
+																												pattern
+																														.matcher(issue.getTypeName())
+																														.matches());
+																			}
+																			return false;
+																		})))
 				.collect(Collectors.toList());
 	}
 }

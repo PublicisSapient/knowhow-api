@@ -63,22 +63,14 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 @RunWith(MockitoJUnitRunner.class)
 public class SprintGoalServiceImplTest {
 
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	SprintGoalServiceImpl sprintGoalService;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private KpiDataProvider kpiDataProvider;
-	@Mock
-	private CommonService commonService;
+	@Mock SprintRepository sprintRepository;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks SprintGoalServiceImpl sprintGoalService;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiDataProvider kpiDataProvider;
+	@Mock private CommonService commonService;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
@@ -94,15 +86,15 @@ public class SprintGoalServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setLevel(5);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		sprintDetailsList = sprintDetailsDataFactory.getSprintDetails();
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
@@ -113,45 +105,48 @@ public class SprintGoalServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfigs -> {
-			projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
-		});
-
+		projectConfigList.forEach(
+				projectConfigs -> {
+					projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
+				});
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put("sprintDetails", sprintDetailsList);
 
-		Map<String, Object> defectDataListMap = sprintGoalService.fetchKPIDataFromDb(leafNodeList, null, null,
-				kpiRequest);
+		Map<String, Object> defectDataListMap =
+				sprintGoalService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testFetchKPIDataFromDbEmptyData_BadScenario() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put("sprintDetails", new ArrayList<>());
-		Map<String, Object> defectDataListMap = sprintGoalService.fetchKPIDataFromDb(leafNodeList, null, null,
-				kpiRequest);
+		Map<String, Object> defectDataListMap =
+				sprintGoalService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
 		assertNotNull(defectDataListMap);
 	}
 
 	@Test
 	public void testGetData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put("sprintDetails", sprintDetailsList);
@@ -159,17 +154,22 @@ public class SprintGoalServiceImplTest {
 		when(configHelperService.getProjectConfig(any())).thenReturn(projectConfigList.get(0));
 
 		try {
-			KpiElement kpiElement = sprintGoalService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Sprint goal value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					sprintGoalService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Sprint goal value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(1));
 		} catch (Exception exception) {
 		}
 	}
 
 	@Test
 	public void testGetData_BadScenario() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put("sprintDetails", new ArrayList<>());
@@ -177,9 +177,13 @@ public class SprintGoalServiceImplTest {
 		when(configHelperService.getProjectConfig(any())).thenReturn(projectConfigList.get(0));
 
 		try {
-			KpiElement kpiElement = sprintGoalService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Sprint goal value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					sprintGoalService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Sprint goal value :",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(1));
 		} catch (Exception exception) {
 		}
 	}
@@ -190,5 +194,4 @@ public class SprintGoalServiceImplTest {
 		String type = sprintGoalService.getQualifierType();
 		assertThat("KPI NAME: ", type, equalTo(kpiName));
 	}
-
 }

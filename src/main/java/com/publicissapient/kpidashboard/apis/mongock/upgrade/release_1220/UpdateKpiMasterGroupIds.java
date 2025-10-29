@@ -12,7 +12,11 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /** prijain3 */
-@ChangeUnit(id = "update_kpi_master_group_ids", order = "12204", author = "prijain3", systemVersion = "12.2.0")
+@ChangeUnit(
+		id = "update_kpi_master_group_ids",
+		order = "12204",
+		author = "prijain3",
+		systemVersion = "12.2.0")
 public class UpdateKpiMasterGroupIds {
 	private final MongoTemplate mongoTemplate;
 	private static final String KPI_MASTER = "kpi_master";
@@ -147,8 +151,10 @@ public class UpdateKpiMasterGroupIds {
 		changeFieldValue("kpi169", GROUP_ID, 9, kpiMaster);
 	}
 
-	private void changeFieldValue(String kpiId, String field, Integer value, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPI_ID, new Document("$in", List.of(kpiId))),
+	private void changeFieldValue(
+			String kpiId, String field, Integer value, MongoCollection<Document> kpiMaster) {
+		kpiMaster.updateMany(
+				new Document(KPI_ID, new Document("$in", List.of(kpiId))),
 				new Document("$set", new Document(field, value)));
 	}
 }

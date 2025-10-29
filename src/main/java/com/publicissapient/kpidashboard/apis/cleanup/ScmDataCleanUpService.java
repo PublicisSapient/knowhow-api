@@ -23,9 +23,6 @@ import static com.publicissapient.kpidashboard.common.constant.CommonConstant.CA
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
-import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
-import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +38,9 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectToo
 import com.publicissapient.kpidashboard.common.repository.generic.ProcessorItemRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.CommitRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.MergeRequestRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmMergeRequestsRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmUserRepository;
 import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExecutionTraceLogRepository;
 
 /**
@@ -49,37 +49,30 @@ import com.publicissapient.kpidashboard.common.repository.tracelog.ProcessorExec
 @Service
 public class ScmDataCleanUpService implements ToolDataCleanUpService {
 
-	@Autowired
-	private ProjectToolConfigRepository projectToolConfigRepository;
+	@Autowired private ProjectToolConfigRepository projectToolConfigRepository;
 
-	@Autowired
-	private ProcessorItemRepository processorItemRepository;
+	@Autowired private ProcessorItemRepository processorItemRepository;
 
-	@Autowired
-	private CommitRepository commitRepository;
+	@Autowired private CommitRepository commitRepository;
 
-	@Autowired
-	private MergeRequestRepository mergReqRepo;
+	@Autowired private MergeRequestRepository mergReqRepo;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-    @Autowired
-    private ScmCommitsRepository scmCommitsRepository;
+	@Autowired private ScmCommitsRepository scmCommitsRepository;
 
-    @Autowired
-    private ScmMergeRequestsRepository scmMergeRequestsRepository;
+	@Autowired private ScmMergeRequestsRepository scmMergeRequestsRepository;
 
-    @Autowired
-    private ScmUserRepository scmUserRepository;
+	@Autowired private ScmUserRepository scmUserRepository;
 
-	@Autowired
-	private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
+	@Autowired private ProcessorExecutionTraceLogRepository processorExecutionTraceLogRepository;
 
 	private List<ObjectId> getProcessorItemsIds(ProjectToolConfig tool) {
 		List<ProcessorItem> items = processorItemRepository.findByToolConfigId(tool.getId());
 
-		return CollectionUtils.emptyIfNull(items).stream().map(ProcessorItem::getId).collect(Collectors.toList());
+		return CollectionUtils.emptyIfNull(items).stream()
+				.map(ProcessorItem::getId)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -99,11 +92,11 @@ public class ScmDataCleanUpService implements ToolDataCleanUpService {
 			// delete corresponding documents from merge_requests
 			mergReqRepo.deleteByProcessorItemIdIn(itemsIds);
 
-            scmCommitsRepository.deleteByProcessorItemIdIn(itemsIds);
+			scmCommitsRepository.deleteByProcessorItemIdIn(itemsIds);
 
-            scmMergeRequestsRepository.deleteByProcessorItemIdIn(itemsIds);
+			scmMergeRequestsRepository.deleteByProcessorItemIdIn(itemsIds);
 
-            scmUserRepository.deleteByProcessorItemIdIn(itemsIds);
+			scmUserRepository.deleteByProcessorItemIdIn(itemsIds);
 
 			// delete corresponding documents from processor_items
 			processorItemRepository.deleteByToolConfigId(tool.getId());
@@ -118,10 +111,10 @@ public class ScmDataCleanUpService implements ToolDataCleanUpService {
 
 	private void cleanCache(ProjectToolConfig tool) {
 		cacheService.clearCache(CACHE_TOOL_CONFIG_MAP);
-		if (tool.getToolName().equalsIgnoreCase(ProcessorConstants.BITBUCKET) ||
-				tool.getToolName().equalsIgnoreCase(ProcessorConstants.GITLAB) ||
-				tool.getToolName().equalsIgnoreCase(ProcessorConstants.GITHUB) ||
-				tool.getToolName().equalsIgnoreCase(ProcessorConstants.AZUREREPO)) {
+		if (tool.getToolName().equalsIgnoreCase(ProcessorConstants.BITBUCKET)
+				|| tool.getToolName().equalsIgnoreCase(ProcessorConstants.GITLAB)
+				|| tool.getToolName().equalsIgnoreCase(ProcessorConstants.GITHUB)
+				|| tool.getToolName().equalsIgnoreCase(ProcessorConstants.AZUREREPO)) {
 			cacheService.clearCache(CommonConstant.BITBUCKET_KPI_CACHE);
 		}
 		if (tool.getToolName().equalsIgnoreCase(ProcessorConstants.GITLAB)) {

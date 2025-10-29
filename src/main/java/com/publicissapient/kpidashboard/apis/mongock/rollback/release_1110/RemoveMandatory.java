@@ -36,8 +36,8 @@ public class RemoveMandatory {
 
 	public static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
 	public static final String FIELD_NAME = "fieldName";
-	private static final List<String> FIELD_NAME_LIST = Arrays.asList("jiraSubTaskIdentification",
-			"jiraSubTaskDefectType");
+	private static final List<String> FIELD_NAME_LIST =
+			Arrays.asList("jiraSubTaskIdentification", "jiraSubTaskDefectType");
 
 	private final MongoTemplate mongoTemplate;
 
@@ -56,12 +56,16 @@ public class RemoveMandatory {
 	}
 
 	private void updateMandatoryFields(boolean isMandatory) {
-		final MongoCollection<Document> fieldMappingStructCollection = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
+		final MongoCollection<Document> fieldMappingStructCollection =
+				mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
 		updateMandatory(FIELD_NAME_LIST, isMandatory, fieldMappingStructCollection, "$set");
 	}
 
-	private void updateMandatory(List<String> fieldNameList, boolean isMandatory,
-			MongoCollection<Document> fieldMappingStructCollection, String update) {
+	private void updateMandatory(
+			List<String> fieldNameList,
+			boolean isMandatory,
+			MongoCollection<Document> fieldMappingStructCollection,
+			String update) {
 		Document updateDocument = new Document(update, new Document("mandatory", isMandatory));
 		for (String fieldName : fieldNameList) {
 			fieldMappingStructCollection.updateOne(new Document(FIELD_NAME, fieldName), updateDocument);
