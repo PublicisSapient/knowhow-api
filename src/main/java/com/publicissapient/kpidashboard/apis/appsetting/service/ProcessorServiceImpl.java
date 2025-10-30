@@ -269,40 +269,46 @@ public class ProcessorServiceImpl implements ProcessorService {
 				isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
 	}
 
-    @Override
-    public ServiceResponse fetchScmConfigByConnectionId(String connection) {
-        String url = processorUrlConfig.getProcessorUrl(ProcessorConstants.BITBUCKET).replaceFirst("/processor/run",
-                "/api/scm/connection/sync-metadata");
-        boolean isSuccess = true;
+	@Override
+	public ServiceResponse fetchScmConfigByConnectionId(String connection) {
+		String url =
+				processorUrlConfig
+						.getProcessorUrl(ProcessorConstants.BITBUCKET)
+						.replaceFirst("/processor/run", "/api/scm/connection/sync-metadata");
+		boolean isSuccess = true;
 
-        httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String token = httpServletRequest.getHeader(AUTHORIZATION);
-        token = CommonUtils.handleCrossScriptingTaintedValue(token);
-        int statuscode = HttpStatus.NOT_FOUND.value();
-        if (StringUtils.isNotEmpty(url)) {
-            try {
-                url = String.format(url, connection);
-                HttpHeaders headers = new HttpHeaders();
-                headers.add(AUTHORIZATION, token);
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                Gson gson = new Gson();
-                String payload = gson.toJson(connection);
-                HttpEntity<String> requestEntity = new HttpEntity<>(payload, headers);
-                ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
-                statuscode = resp.getStatusCode().value();
-            } catch (HttpClientErrorException ex) {
-                statuscode = ex.getStatusCode().value();
-                isSuccess = false;
-            } catch (ResourceAccessException ex) {
-                isSuccess = false;
-            }
-        }
-        if (HttpStatus.NOT_FOUND.value() == statuscode || HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
-            isSuccess = false;
-        }
+		httpServletRequest =
+				((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		String token = httpServletRequest.getHeader(AUTHORIZATION);
+		token = CommonUtils.handleCrossScriptingTaintedValue(token);
+		int statuscode = HttpStatus.NOT_FOUND.value();
+		if (StringUtils.isNotEmpty(url)) {
+			try {
+				url = String.format(url, connection);
+				HttpHeaders headers = new HttpHeaders();
+				headers.add(AUTHORIZATION, token);
+				headers.setContentType(MediaType.APPLICATION_JSON);
+				Gson gson = new Gson();
+				String payload = gson.toJson(connection);
+				HttpEntity<String> requestEntity = new HttpEntity<>(payload, headers);
+				ResponseEntity<String> resp =
+						restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+				statuscode = resp.getStatusCode().value();
+			} catch (HttpClientErrorException ex) {
+				statuscode = ex.getStatusCode().value();
+				isSuccess = false;
+			} catch (ResourceAccessException ex) {
+				isSuccess = false;
+			}
+		}
+		if (HttpStatus.NOT_FOUND.value() == statuscode
+				|| HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
+			isSuccess = false;
+		}
 
-        return new ServiceResponse(isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
-    }
+		return new ServiceResponse(
+				isSuccess, "Got response: " + statuscode + " for url: " + url, null);
+	}
 
 	/**
 	 * saves the response statuses for repo tools
