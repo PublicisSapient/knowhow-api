@@ -81,7 +81,7 @@ public class UserInfoChangeUnit {
 				updateFields.put(FIELD_CREATED_ON, Date.from(Instant.now()));
 			} else if (createdOn instanceof String) {
 				updateFields.put(
-						FIELD_CREATED_ON, DateUtil.convertingStringToLocalDateTime((String) createdOn, ""));
+						FIELD_CREATED_ON, DateUtil.convertingStringToLocalDateTime(DateUtil.formatDate((String) createdOn), ""));
 			}
 
 			if (updatedOn == null || updatedOn.toString().isBlank()) {
