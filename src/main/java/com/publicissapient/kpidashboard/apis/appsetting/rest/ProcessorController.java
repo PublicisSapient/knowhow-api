@@ -135,6 +135,20 @@ public class ProcessorController {
 		return ResponseEntity.status(responseStatus).body(response);
 	}
 
+    @PostMapping(path = "/fetch/scm/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasPermission(#sprintId, 'TRIGGER_SPRINT_FETCH')")
+    public ResponseEntity<ServiceResponse> triggerRepoConfigFetchByConnectionId(@PathVariable String connectionId) {
+
+        ServiceResponse response = processorService.fetchScmConfigByConnectionId(connectionId);
+
+        HttpStatus responseStatus = HttpStatus.OK;
+        if (null == response) {
+            responseStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            log.warn("Did not get successful response from the service: {} ", response);
+        }
+        return ResponseEntity.status(responseStatus).body(response);
+    }
+
 	/**
 	 * to be hit by repo tool platform to save repo tool tracelogs
 	 *
