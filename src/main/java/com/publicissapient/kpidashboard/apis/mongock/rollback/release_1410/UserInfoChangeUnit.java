@@ -111,7 +111,12 @@ public class UserInfoChangeUnit {
 							Document updateFields = new Document();
 							Document unsetFields = new Document();
 							Object createdOn = doc.get(FIELD_CREATED_ON);
-							updateFields.put(FIELD_CREATED_ON, ((Date) createdOn).toInstant().toString());
+
+							if(createdOn instanceof Date)
+								updateFields.put(FIELD_CREATED_ON, ((Date) createdOn).toInstant().toString());
+							else
+								updateFields.put(FIELD_CREATED_ON, (createdOn));
+
 							unsetFields.put(FIELD_UPDATED_ON, "");
 							unsetFields.put(FIELD_UPDATED_BY, "");
 							unsetFields.put(FIELD_CREATED_BY, "");
