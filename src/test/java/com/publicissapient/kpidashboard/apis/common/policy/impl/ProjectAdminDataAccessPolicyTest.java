@@ -119,13 +119,13 @@ class ProjectAdminDataAccessPolicyTest {
 		List<UserInfo> userInfoList = new ArrayList<>();
 		userInfoList.add(userInfo);
 		List<String> items = accessNode.getAccessItems().stream().map(AccessItem::getItemId).toList();
-		when(userRepository.findUsersByItemIds(items)).thenReturn(userInfoList);
+		when(userRepository.findUsersByItemIdsOrCreatedBy(items,"userName")).thenReturn(userInfoList);
 
 		// when
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
 		// then
-		assertEquals(1, result.size());
+		assertEquals(0, result.size());
 		verify(userRepository, times(1)).findByUsername(userName);
 	}
 }
