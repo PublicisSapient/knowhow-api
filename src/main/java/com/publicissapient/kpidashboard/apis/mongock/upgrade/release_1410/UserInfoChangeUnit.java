@@ -23,7 +23,6 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.client.MongoCollection;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -80,8 +79,7 @@ public class UserInfoChangeUnit {
 			if (createdOn == null) {
 				updateFields.put(FIELD_CREATED_ON, Date.from(Instant.now()));
 			} else if (createdOn instanceof String) {
-				updateFields.put(
-						FIELD_CREATED_ON, DateUtil.convertingStringToLocalDateTime(DateUtil.formatDate((String) createdOn), ""));
+				updateFields.put(FIELD_CREATED_ON, parseDate((String) createdOn));
 			}
 
 			if (updatedOn == null || updatedOn.toString().isBlank()) {
@@ -111,10 +109,9 @@ public class UserInfoChangeUnit {
 							Document updateFields = new Document();
 							Document unsetFields = new Document();
 							Object createdOn = doc.get(FIELD_CREATED_ON);
-							if(createdOn instanceof Date)
+							if (createdOn instanceof Date)
 								updateFields.put(FIELD_CREATED_ON, ((Date) createdOn).toInstant().toString());
-							else
-								updateFields.put(FIELD_CREATED_ON, (createdOn));
+							else updateFields.put(FIELD_CREATED_ON, (createdOn));
 							unsetFields.put(FIELD_UPDATED_ON, "");
 							unsetFields.put(FIELD_UPDATED_BY, "");
 							unsetFields.put(FIELD_CREATED_BY, "");
@@ -127,5 +124,13 @@ public class UserInfoChangeUnit {
 								collection.updateOne(new Document("_id", doc.get("_id")), updateOps);
 							}
 						});
+	}
+
+	private Date parseDate(String value) {
+		try {
+			return Date.from(Instant.parse(value));
+		} catch (Exception e) {
+			return Date.from(Instant.now());
+		}
 	}
 }
