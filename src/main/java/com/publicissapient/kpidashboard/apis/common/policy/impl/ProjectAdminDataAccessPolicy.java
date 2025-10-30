@@ -55,6 +55,6 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 			return Collections.emptyList();
 		}
 
-		return userInfoRepository.findUsersByItemIds(accessibleItemIds);
+		return userInfoRepository.findUsersByItemIdsOrCreatedBy(accessibleItemIds,userName);
 	}
 }

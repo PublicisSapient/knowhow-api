@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.common.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -186,7 +185,6 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		centralUserInfo.setFirstName(centralUserInfoDTO.getFirstName());
 		centralUserInfo.setLastName(centralUserInfoDTO.getLastName());
 		centralUserInfo.setDisplayName(centralUserInfoDTO.getDisplayName());
-		centralUserInfo.setCreatedOn((new Date()).toString());
 		// to create Super admin User info for first time user
 		if (userInfoRepository.count() == 0) {
 			centralUserInfo.setAuthorities(Collections.singletonList(Constant.ROLE_SUPERADMIN));
