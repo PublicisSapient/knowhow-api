@@ -16,6 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.service.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Objects;
+
+import org.springframework.stereotype.Service;
+import org.thymeleaf.util.StringUtils;
+
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -24,14 +31,9 @@ import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelServiceImpl;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.thymeleaf.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Objects;
 
 /** Implementation of UserService for handling user operations */
 @AllArgsConstructor
