@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
@@ -72,9 +73,8 @@ public class UserServiceImpl implements UserService {
 			UserInfo userInfo = new UserInfo();
 			userInfo.setUsername(username);
 			userInfo.setAuthType(AuthType.SAML);
-			userInfo.setAuthorities(new ArrayList<>());
 			userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
-
+			userInfo.setAuthorities(Collections.singletonList(Constant.ROLE_GUEST));
 			userInfo.setProjectsAccess(Collections.emptyList());
 			userInfo.setCreatedBy(authenticationService.getLoggedInUser());
 
