@@ -23,5 +23,4 @@ import org.springframework.stereotype.Repository;
 import com.publicissapient.kpidashboard.apis.datamigration.model.MigrationLockLog;
 
 @Repository
-public interface MigrationLogRepository extends MongoRepository<MigrationLockLog, ObjectId> {
-}
+public interface MigrationLogRepository extends MongoRepository<MigrationLockLog, ObjectId> {}

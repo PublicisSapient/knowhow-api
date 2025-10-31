@@ -13,7 +13,11 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /** prijain3 */
-@ChangeUnit(id = "update_kpi_master_for_iteration_kpis", order = "12000", author = "prijain3", systemVersion = "12.1.0")
+@ChangeUnit(
+		id = "update_kpi_master_for_iteration_kpis",
+		order = "12000",
+		author = "prijain3",
+		systemVersion = "12.1.0")
 public class UpdateKpiMasterForIterationKpis {
 	private final MongoTemplate mongoTemplate;
 	private static final String KPI_MASTER = "kpi_master";
@@ -177,34 +181,44 @@ public class UpdateKpiMasterForIterationKpis {
 		changeFieldValue(KPI_123, DISPLAY_ORDER, 8, kpiMaster);
 		changeFieldValue(KPI_176, DISPLAY_ORDER, 6, kpiMaster);
 
-		List<String> iterationKpis = Arrays.asList(KPI_120, KPI_119, KPI_125, KPI_131, KPI_75, KPI_136, KPI_128, KPI_124,
-				KPI_122, KPI_135, KPI_133, KPI_123, KPI_176);
-		iterationKpis.forEach(kpiId -> {
-			removeField(kpiId, KPI_HEIGHT, kpiMaster);
-			removeField(kpiId, IS_RAW_DATA, kpiMaster);
-		});
+		List<String> iterationKpis =
+				Arrays.asList(
+						KPI_120, KPI_119, KPI_125, KPI_131, KPI_75, KPI_136, KPI_128, KPI_124, KPI_122, KPI_135,
+						KPI_133, KPI_123, KPI_176);
+		iterationKpis.forEach(
+				kpiId -> {
+					removeField(kpiId, KPI_HEIGHT, kpiMaster);
+					removeField(kpiId, IS_RAW_DATA, kpiMaster);
+				});
 		iterationKpis.remove(KPI_120);
 		iterationKpis.remove(KPI_125);
 		iterationKpis.forEach(kpiId -> removeField(kpiId, KPI_WIDTH, kpiMaster));
 	}
 
-	private void changeFieldValue(String kpiId, String field, String value, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPI_ID, new Document("$in", List.of(kpiId))),
+	private void changeFieldValue(
+			String kpiId, String field, String value, MongoCollection<Document> kpiMaster) {
+		kpiMaster.updateMany(
+				new Document(KPI_ID, new Document("$in", List.of(kpiId))),
 				new Document("$set", new Document(field, value)));
 	}
 
-	private void changeFieldValue(String kpiId, String field, Integer value, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPI_ID, new Document("$in", List.of(kpiId))),
+	private void changeFieldValue(
+			String kpiId, String field, Integer value, MongoCollection<Document> kpiMaster) {
+		kpiMaster.updateMany(
+				new Document(KPI_ID, new Document("$in", List.of(kpiId))),
 				new Document("$set", new Document(field, value)));
 	}
 
-	private void changeFieldValue(String kpiId, String field, Boolean value, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPI_ID, new Document("$in", List.of(kpiId))),
+	private void changeFieldValue(
+			String kpiId, String field, Boolean value, MongoCollection<Document> kpiMaster) {
+		kpiMaster.updateMany(
+				new Document(KPI_ID, new Document("$in", List.of(kpiId))),
 				new Document("$set", new Document(field, value)));
 	}
 
 	private void removeField(String kpiId, String field, MongoCollection<Document> kpiMaster) {
-		kpiMaster.updateMany(new Document(KPI_ID, new Document("$in", List.of(kpiId))),
+		kpiMaster.updateMany(
+				new Document(KPI_ID, new Document("$in", List.of(kpiId))),
 				new Document("$unset", new Document(field, "")));
 	}
 

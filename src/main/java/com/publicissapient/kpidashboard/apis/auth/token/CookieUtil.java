@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -24,11 +25,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CookieUtil {
 	public static final String AUTH_COOKIE = "authCookie";
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
-	@Autowired
-	private AuthProperties authProperties;
+	@Autowired private AuthProperties authProperties;
+
+	@Value("${server.servlet.context-path}")
+	private String cookiePath;
+
 
 	public Cookie createAccessTokenCookie(String token) {
 		Cookie cookie = new Cookie(AUTH_COOKIE, token);
@@ -36,7 +39,7 @@ public class CookieUtil {
 		cookie.setMaxAge(customApiConfig.getAuthCookieDuration());
 		cookie.setSecure(customApiConfig.isAuthCookieSecured());
 		cookie.setHttpOnly(customApiConfig.isAuthCookieHttpOnly());
-		cookie.setPath("/api");
+		cookie.setPath(cookiePath);
 		if (authProperties.isSubDomainCookie()) {
 			cookie.setDomain(authProperties.getDomain());
 		}
@@ -56,12 +59,14 @@ public class CookieUtil {
 		boolean firstHeader = true;
 		for (String header : headers) { // there can be multiple Set-Cookie attributes
 			if (firstHeader) {
-				response.setHeader(HttpHeaders.SET_COOKIE,
+				response.setHeader(
+						HttpHeaders.SET_COOKIE,
 						String.format("%s; %s", header, customApiConfig.getAuthCookieSameSite()));
 				firstHeader = false;
 				continue;
 			}
-			response.addHeader(HttpHeaders.SET_COOKIE,
+			response.addHeader(
+					HttpHeaders.SET_COOKIE,
 					String.format("%s; %s", header, customApiConfig.getAuthCookieSameSite()));
 		}
 	}
@@ -75,17 +80,21 @@ public class CookieUtil {
 		}
 	}
 
-	public void deleteCookie(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
+	public void deleteCookie(
+			@NotNull HttpServletRequest request,
+			@NotNull HttpServletResponse response,
 			@NotNull String name) {
-		getCookie(request, name).ifPresent(foundCookie -> {
-			foundCookie.setMaxAge(0);
-			foundCookie.setValue("");
-			foundCookie.setPath("/api");
-			if (authProperties.isSubDomainCookie()) {
-				foundCookie.setDomain(authProperties.getDomain());
-			}
-			response.addCookie(foundCookie);
-		});
+		getCookie(request, name)
+				.ifPresent(
+						foundCookie -> {
+							foundCookie.setMaxAge(0);
+							foundCookie.setValue("");
+							foundCookie.setPath(cookiePath);
+							if (authProperties.isSubDomainCookie()) {
+								foundCookie.setDomain(authProperties.getDomain());
+							}
+							response.addCookie(foundCookie);
+						});
 	}
 
 	public HttpHeaders getHeadersForApiKey(String apiKey, boolean usingBasicAuth) {

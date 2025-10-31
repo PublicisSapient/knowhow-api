@@ -37,12 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings("java:S1075")
 public class KpiColumnConfigDataFactory {
-	private static final String FILE_PATH_KPI_COL_CONFIG = "/json/mongock/default/project_kpi_column_config.json";
+	private static final String FILE_PATH_KPI_COL_CONFIG =
+			"/json/mongock/default/project_kpi_column_config.json";
 	private List<KpiColumnConfig> kpiColumnConfigs;
 	private ObjectMapper mapper;
 
-	private KpiColumnConfigDataFactory() {
-	}
+	private KpiColumnConfigDataFactory() {}
 
 	public static KpiColumnConfigDataFactory newInstance(String filePath) {
 
@@ -62,9 +62,10 @@ public class KpiColumnConfigDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_KPI_COL_CONFIG : filePath;
 
-			kpiColumnConfigs = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KpiColumnConfig>>() {
-					});
+			kpiColumnConfigs =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KpiColumnConfig>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading project basic config from file = " + filePath, e);
 		}

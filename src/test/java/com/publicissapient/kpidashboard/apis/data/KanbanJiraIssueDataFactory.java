@@ -42,8 +42,7 @@ public class KanbanJiraIssueDataFactory {
 	private List<KanbanJiraIssue> KanbanJiraIssueDataFactory;
 	private ObjectMapper mapper = null;
 
-	private KanbanJiraIssueDataFactory() {
-	}
+	private KanbanJiraIssueDataFactory() {}
 
 	public static KanbanJiraIssueDataFactory newInstance() {
 		return newInstance(null);
@@ -62,9 +61,10 @@ public class KanbanJiraIssueDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH : filePath;
 
-			KanbanJiraIssueDataFactory = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<KanbanJiraIssue>>() {
-					});
+			KanbanJiraIssueDataFactory =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<KanbanJiraIssue>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}
@@ -87,12 +87,13 @@ public class KanbanJiraIssueDataFactory {
 	}
 
 	public List<KanbanJiraIssue> getKanbanJiraIssueDataListByTypeName(List<String> typeName) {
-		return KanbanJiraIssueDataFactory.stream().filter(f -> typeName.contains(f.getTypeName()))
+		return KanbanJiraIssueDataFactory.stream()
+				.filter(f -> typeName.contains(f.getTypeName()))
 				.collect(Collectors.toList());
 	}
 
-	public List<KanbanJiraIssue> getKanbanJiraIssueDataListByTypeNameandStatus(List<String> typeName,
-			List<String> status) {
+	public List<KanbanJiraIssue> getKanbanJiraIssueDataListByTypeNameandStatus(
+			List<String> typeName, List<String> status) {
 		return KanbanJiraIssueDataFactory.stream()
 				.filter(f -> (typeName.contains(f.getTypeName())) && (status.contains(f.getStatus())))
 				.collect(Collectors.toList());

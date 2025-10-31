@@ -96,49 +96,33 @@ public class SprintPredictabilityImplTest {
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	List<String> sprintStatusList = new ArrayList<>();
 
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock CustomApiConfig customApiConfig;
 
-	@Mock
-	private SprintRepository sprintRepository;
+	@Mock private SprintRepository sprintRepository;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	KpiDataProvider kpiDataProvider;
-	@Mock
-	KpiDataCacheService kpiDataCacheService;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock KpiDataProvider kpiDataProvider;
+	@Mock KpiDataCacheService kpiDataCacheService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 
-	@InjectMocks
-	private SprintPredictabilityImpl sprintPredictability;
+	@InjectMocks private SprintPredictabilityImpl sprintPredictability;
 
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
-	@Mock
-	private CustomApiConfig customApiSetting;
+	@Mock private CustomApiConfig customApiSetting;
 
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
-	@Mock
-	private JiraServiceR jiraKPIService;
-	@Mock
-	private SprintRepositoryCustom sprintRepositoryCustom;
+	@Mock private JiraServiceR jiraKPIService;
+	@Mock private SprintRepositoryCustom sprintRepositoryCustom;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 
 	@Before
@@ -148,8 +132,8 @@ public class SprintPredictabilityImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest(KPICode.SPRINT_PREDICTABILITY.getKpiId());
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -169,13 +153,15 @@ public class SprintPredictabilityImplTest {
 		projectConfig.setProjectName("Scrum Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		FieldMapping fieldMappingWithActualEstimation = fieldMappingDataFactory.getFieldMappings().get(0);
+		FieldMapping fieldMappingWithActualEstimation =
+				fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingWithActualEstimation.setEstimationCriteria("Actual Estimation");
-		fieldMappingMapForActualEstimation.put(fieldMapping.getBasicProjectConfigId(), fieldMappingWithActualEstimation);
+		fieldMappingMapForActualEstimation.put(
+				fieldMapping.getBasicProjectConfigId(), fieldMappingWithActualEstimation);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 
@@ -186,7 +172,8 @@ public class SprintPredictabilityImplTest {
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(SPRINT_WISE_PREDICTABILITY, sprintWiseStoryList);
 		resultListMap.put(SPRINT_WISE_SPRINT_DETAILS, sprintDetailsList);
-		when(kpiDataProvider.fetchSprintPredictabilityDataFromDb(eq(kpiRequest), any(), any())).thenReturn(resultListMap);
+		when(kpiDataProvider.fetchSprintPredictabilityDataFromDb(eq(kpiRequest), any(), any()))
+				.thenReturn(resultListMap);
 
 		ProjectBasicConfig projectBasicConfig = new ProjectBasicConfig();
 		projectBasicConfig.setId(new ObjectId("6335363749794a18e8a4479b"));
@@ -195,9 +182,10 @@ public class SprintPredictabilityImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfigs -> {
-			projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
-		});
+		projectConfigList.forEach(
+				projectConfigs -> {
+					projectConfigMap.put(projectConfigs.getProjectName(), projectConfigs);
+				});
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 	}
 
@@ -209,31 +197,39 @@ public class SprintPredictabilityImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
 		Map<ObjectId, List<SprintDetails>> expectedDuplicateIssues = new HashMap<>();
-		expectedDuplicateIssues.put(new ObjectId("6335363749794a18e8a4479b"),
+		expectedDuplicateIssues.put(
+				new ObjectId("6335363749794a18e8a4479b"),
 				sprintDetailsList.stream().collect(Collectors.toList()));
-		Map<String, Object> sprintWisePredictability = sprintPredictability.fetchKPIDataFromDb(leafNodeList, startDate,
-				endDate, kpiRequest);
-		assertThat("Sprint wise jira Issue  value :",
-				((List<JiraIssue>) sprintWisePredictability.get(SPRINT_WISE_PREDICTABILITY)).size(), equalTo(25));
-		assertThat("Sprint wise Sprint details value :",
-				((List<SprintDetails>) sprintWisePredictability.get(SPRINT_WISE_SPRINT_DETAILS)).size(), equalTo(7));
+		Map<String, Object> sprintWisePredictability =
+				sprintPredictability.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Sprint wise jira Issue  value :",
+				((List<JiraIssue>) sprintWisePredictability.get(SPRINT_WISE_PREDICTABILITY)).size(),
+				equalTo(25));
+		assertThat(
+				"Sprint wise Sprint details value :",
+				((List<SprintDetails>) sprintWisePredictability.get(SPRINT_WISE_SPRINT_DETAILS)).size(),
+				equalTo(7));
 	}
 
 	@Test
 	public void testGetSprintPredictability() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(sprintPredictability.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -241,27 +237,34 @@ public class SprintPredictabilityImplTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		try {
-			KpiElement kpiElement = sprintPredictability.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					sprintPredictability.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (Exception exception) {
 		}
 	}
 
 	@Test
-	public void testGetSprintPredictability_EmptySprintDetails_AzureCase() throws ApplicationException {
+	public void testGetSprintPredictability_EmptySprintDetails_AzureCase()
+			throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(sprintPredictability.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = sprintPredictability.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Azure Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
+			KpiElement kpiElement =
+					sprintPredictability.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Azure Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
 		} catch (Exception exception) {
 		}
 	}
@@ -276,17 +279,21 @@ public class SprintPredictabilityImplTest {
 	@Test
 	public void testGetSprintPredictabilityForActualEstimation() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMapForActualEstimation);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(sprintPredictability.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = sprintPredictability.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
+			KpiElement kpiElement =
+					sprintPredictability.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
 		} catch (Exception exception) {
 		}
 	}
@@ -294,8 +301,9 @@ public class SprintPredictabilityImplTest {
 	@Test
 	public void testFetchKPIDataFromDbData1() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -309,8 +317,9 @@ public class SprintPredictabilityImplTest {
 		Set<String> set = new HashSet<>();
 		set.add("6335363749794a18e8a4479b");
 		duplicateIssues.put(new ObjectId("6335363749794a18e8a4479b"), set);
-		when(kpiDataProvider.fetchSprintPredictabilityDataFromDb(eq(kpiRequest), any(), any())).thenReturn(resultListMap);
-		Map<String, Object> sprintWisePredictability = sprintPredictability.fetchKPIDataFromDb(leafNodeList, startDate,
-				endDate, kpiRequest);
+		when(kpiDataProvider.fetchSprintPredictabilityDataFromDb(eq(kpiRequest), any(), any()))
+				.thenReturn(resultListMap);
+		Map<String, Object> sprintWisePredictability =
+				sprintPredictability.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 	}
 }

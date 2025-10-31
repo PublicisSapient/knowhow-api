@@ -86,22 +86,14 @@ public class CommitmentReliabilityServiceImplTest {
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	List<JiraIssue> totalIssueList = new ArrayList<>();
 	List<SprintDetails> sprintDetailsList = new ArrayList<>();
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	CommittmentReliabilityServiceImpl commitmentReliabilityImpl;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private KpiDataCacheService kpiDataCacheService;
-	@Mock
-	private KpiDataProvider kpiDataProvider;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks CommittmentReliabilityServiceImpl commitmentReliabilityImpl;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private CommonService commonService;
+	@Mock private KpiDataCacheService kpiDataCacheService;
+	@Mock private KpiDataProvider kpiDataProvider;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
@@ -110,8 +102,7 @@ public class CommitmentReliabilityServiceImplTest {
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 
 	/** Set up the data */
 	@Before
@@ -129,21 +120,23 @@ public class CommitmentReliabilityServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
 		filterLevelMap.put("PROJECT", Filters.PROJECT);
 		filterLevelMap.put("SPRINT", Filters.SPRINT);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -186,7 +179,8 @@ public class CommitmentReliabilityServiceImplTest {
 		trendValueMap.put("Issue Count", dataCountList2);
 	}
 
-	private DataCount createDataCount(String data, String sprint, String sprintName, int delivered, int commited) {
+	private DataCount createDataCount(
+			String data, String sprint, String sprintName, int delivered, int commited) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setSProjectName("PR");
@@ -203,14 +197,14 @@ public class CommitmentReliabilityServiceImplTest {
 
 	/** clean up method */
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	/** Test the data when fetched from db */
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
@@ -220,11 +214,14 @@ public class CommitmentReliabilityServiceImplTest {
 		resultListMap.put(SPRINT_DETAILS, sprintDetailsList);
 		resultListMap.put(PROJECT_WISE_TOTAL_ISSUE, totalIssueList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
-		when(kpiDataCacheService.fetchCommitmentReliabilityData(any(), any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataCacheService.fetchCommitmentReliabilityData(any(), any(), any(), any()))
+				.thenReturn(resultListMap);
 
-		Map<String, Object> predictList = commitmentReliabilityImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
-		assertThat("Sprint story size :", ((List<JiraIssue>) predictList.get(PROJECT_WISE_TOTAL_ISSUE)).size(),
+		Map<String, Object> predictList =
+				commitmentReliabilityImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Sprint story size :",
+				((List<JiraIssue>) predictList.get(PROJECT_WISE_TOTAL_ISSUE)).size(),
 				equalTo(20));
 	}
 
@@ -232,22 +229,26 @@ public class CommitmentReliabilityServiceImplTest {
 	@Test
 	public void testGetSprintCommitmentReliability() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
-		maturityRangeMap.put(COMMITMENTRELIABILITY, Arrays.asList("-20", "20-40", "40-60", "60-80", "80-"));
+		maturityRangeMap.put(
+				COMMITMENTRELIABILITY, Arrays.asList("-20", "20-40", "40-60", "60-80", "80-"));
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(SPRINT_DETAILS, sprintDetailsList);
 		resultListMap.put(PROJECT_WISE_TOTAL_ISSUE, totalIssueList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(false);
-		when(kpiDataProvider.fetchCommitmentReliabilityData(any(), any(), any())).thenReturn(resultListMap);
+		when(kpiDataProvider.fetchCommitmentReliabilityData(any(), any(), any()))
+				.thenReturn(resultListMap);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(commitmentReliabilityImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
@@ -255,21 +256,24 @@ public class CommitmentReliabilityServiceImplTest {
 		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		try {
-			KpiElement kpiElement = commitmentReliabilityImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(dc -> {
-				String status = dc.getFilter();
-				switch (status) {
-					case "Story Point" :
-						assertThat("Story Point :", dc.getValue().size(), equalTo(1));
-						break;
-					case "Issue Count" :
-						assertThat("Issue Count :", dc.getValue().size(), equalTo(1));
-						break;
-					default :
-						break;
-				}
-			});
+			KpiElement kpiElement =
+					commitmentReliabilityImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							dc -> {
+								String status = dc.getFilter();
+								switch (status) {
+									case "Story Point":
+										assertThat("Story Point :", dc.getValue().size(), equalTo(1));
+										break;
+									case "Issue Count":
+										assertThat("Issue Count :", dc.getValue().size(), equalTo(1));
+										break;
+									default:
+										break;
+								}
+							});
 
 		} catch (ApplicationException e) {
 			e.printStackTrace();

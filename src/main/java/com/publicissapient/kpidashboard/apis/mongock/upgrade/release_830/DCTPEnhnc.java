@@ -47,18 +47,25 @@ public class DCTPEnhnc {
 
 	@Execution
 	public void execution() {
-		Document excludeRCA = new Document(FIELD_NAME, "excludeRCAFromKPI163")
-				.append("fieldLabel", "Root cause values to be excluded").append("fieldType", "chips")
-				.append("section", "Defects Mapping")
-				.append("tooltip", new Document(DEFINITION, "Root cause reasons for defects which are to be excluded."));
+		Document excludeRCA =
+				new Document(FIELD_NAME, "excludeRCAFromKPI163")
+						.append("fieldLabel", "Root cause values to be excluded")
+						.append("fieldType", "chips")
+						.append("section", "Defects Mapping")
+						.append(
+								"tooltip",
+								new Document(
+										DEFINITION, "Root cause reasons for defects which are to be excluded."));
 
 		mongoTemplate.getCollection("field_mapping_structure").insertOne(excludeRCA);
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
-		fieldMappingStructure
-				.deleteMany(new Document(FIELD_NAME, new Document("$in", Collections.singletonList("excludeRCAFromKPI163"))));
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
+		fieldMappingStructure.deleteMany(
+				new Document(
+						FIELD_NAME, new Document("$in", Collections.singletonList("excludeRCAFromKPI163"))));
 	}
 }

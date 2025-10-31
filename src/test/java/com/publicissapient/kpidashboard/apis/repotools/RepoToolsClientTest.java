@@ -47,11 +47,9 @@ import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolKpiRequestB
 @RunWith(MockitoJUnitRunner.class)
 public class RepoToolsClientTest {
 
-	@Mock
-	private RestTemplate restTemplate;
+	@Mock private RestTemplate restTemplate;
 
-	@InjectMocks
-	private RepoToolsClient repoToolsClient;
+	@InjectMocks private RepoToolsClient repoToolsClient;
 
 	@Test
 	public void testEnrollProjectCall_Success() {
@@ -59,8 +57,13 @@ public class RepoToolsClientTest {
 		String repoToolsUrl = "http://example.com";
 		String apiKey = "testApiKey";
 
-		Mockito.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.POST), any(HttpEntity.class),
-				Mockito.eq(String.class))).thenReturn(new ResponseEntity<>("", HttpStatus.OK));
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.POST),
+								any(HttpEntity.class),
+								Mockito.eq(String.class)))
+				.thenReturn(new ResponseEntity<>("", HttpStatus.OK));
 
 		int result = repoToolsClient.enrollProjectCall(repoToolConfig, repoToolsUrl, apiKey);
 
@@ -73,8 +76,13 @@ public class RepoToolsClientTest {
 		String repoToolsUrl = "http://example.com";
 		String apiKey = "testApiKey";
 
-		Mockito.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.POST), any(HttpEntity.class),
-				Mockito.eq(String.class))).thenReturn(new ResponseEntity<>("", HttpStatus.INTERNAL_SERVER_ERROR));
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.POST),
+								any(HttpEntity.class),
+								Mockito.eq(String.class)))
+				.thenReturn(new ResponseEntity<>("", HttpStatus.INTERNAL_SERVER_ERROR));
 
 		int result = repoToolsClient.enrollProjectCall(repoToolConfig, repoToolsUrl, apiKey);
 
@@ -88,7 +96,11 @@ public class RepoToolsClientTest {
 		String apiKey = "testApiKey";
 
 		Mockito.when(
-				restTemplate.exchange(anyString(), Mockito.eq(HttpMethod.GET), any(HttpEntity.class), Mockito.eq(String.class)))
+						restTemplate.exchange(
+								anyString(),
+								Mockito.eq(HttpMethod.GET),
+								any(HttpEntity.class),
+								Mockito.eq(String.class)))
 				.thenReturn(new ResponseEntity<>("", HttpStatus.OK));
 
 		int result = repoToolsClient.triggerScanCall(projectKey, repoToolsUrl, apiKey);
@@ -103,7 +115,11 @@ public class RepoToolsClientTest {
 		String apiKey = "testApiKey";
 
 		Mockito.when(
-				restTemplate.exchange(anyString(), Mockito.eq(HttpMethod.GET), any(HttpEntity.class), Mockito.eq(String.class)))
+						restTemplate.exchange(
+								anyString(),
+								Mockito.eq(HttpMethod.GET),
+								any(HttpEntity.class),
+								Mockito.eq(String.class)))
 				.thenReturn(new ResponseEntity<>("", HttpStatus.NOT_FOUND));
 
 		int result = repoToolsClient.triggerScanCall(projectKey, repoToolsUrl, apiKey);
@@ -117,12 +133,16 @@ public class RepoToolsClientTest {
 		String apiKey = "testApiKey";
 		RepoToolKpiRequestBody repoToolKpiRequestBody = new RepoToolKpiRequestBody();
 
-		Mockito
-				.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.POST), any(HttpEntity.class),
-						Mockito.eq(RepoToolKpiBulkMetricResponse.class)))
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.POST),
+								any(HttpEntity.class),
+								Mockito.eq(RepoToolKpiBulkMetricResponse.class)))
 				.thenReturn(new ResponseEntity<>(new RepoToolKpiBulkMetricResponse(), HttpStatus.OK));
 
-		RepoToolKpiBulkMetricResponse result = repoToolsClient.kpiMetricCall(repoToolsUrl, apiKey, repoToolKpiRequestBody);
+		RepoToolKpiBulkMetricResponse result =
+				repoToolsClient.kpiMetricCall(repoToolsUrl, apiKey, repoToolKpiRequestBody);
 
 		assertNotNull(result);
 	}
@@ -133,12 +153,16 @@ public class RepoToolsClientTest {
 		String apiKey = "testApiKey";
 		RepoToolKpiRequestBody repoToolKpiRequestBody = new RepoToolKpiRequestBody();
 
-		Mockito
-				.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.POST), any(HttpEntity.class),
-						Mockito.eq(RepoToolKpiBulkMetricResponse.class)))
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.POST),
+								any(HttpEntity.class),
+								Mockito.eq(RepoToolKpiBulkMetricResponse.class)))
 				.thenReturn(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
 
-		RepoToolKpiBulkMetricResponse result = repoToolsClient.kpiMetricCall(repoToolsUrl, apiKey, repoToolKpiRequestBody);
+		RepoToolKpiBulkMetricResponse result =
+				repoToolsClient.kpiMetricCall(repoToolsUrl, apiKey, repoToolKpiRequestBody);
 
 		assertNull(result);
 	}
@@ -148,10 +172,14 @@ public class RepoToolsClientTest {
 		String repoToolsUrl = "http://example.com";
 		String apiKey = "testApiKey";
 
-		Mockito
-				.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.DELETE), any(HttpEntity.class),
-						Mockito.eq(JsonNode.class)))
-				.thenReturn(new ResponseEntity<>(JsonNodeFactory.instance.objectNode(), HttpStatus.NO_CONTENT));
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.DELETE),
+								any(HttpEntity.class),
+								Mockito.eq(JsonNode.class)))
+				.thenReturn(
+						new ResponseEntity<>(JsonNodeFactory.instance.objectNode(), HttpStatus.NO_CONTENT));
 
 		int result = repoToolsClient.deleteProject(repoToolsUrl, apiKey);
 
@@ -163,10 +191,15 @@ public class RepoToolsClientTest {
 		String repoToolsUrl = "http://example.com";
 		String apiKey = "testApiKey";
 
-		Mockito
-				.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.DELETE), any(HttpEntity.class),
-						Mockito.eq(JsonNode.class)))
-				.thenReturn(new ResponseEntity<>(JsonNodeFactory.instance.objectNode(), HttpStatus.INTERNAL_SERVER_ERROR));
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.DELETE),
+								any(HttpEntity.class),
+								Mockito.eq(JsonNode.class)))
+				.thenReturn(
+						new ResponseEntity<>(
+								JsonNodeFactory.instance.objectNode(), HttpStatus.INTERNAL_SERVER_ERROR));
 
 		int result = repoToolsClient.deleteProject(repoToolsUrl, apiKey);
 
@@ -178,8 +211,13 @@ public class RepoToolsClientTest {
 		String deleteRepoUrl = "http://example.com/delete";
 		String apiKey = "testApiKey";
 
-		Mockito.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.DELETE), any(HttpEntity.class),
-				Mockito.eq(String.class))).thenReturn(new ResponseEntity<>("", HttpStatus.NO_CONTENT));
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.DELETE),
+								any(HttpEntity.class),
+								Mockito.eq(String.class)))
+				.thenReturn(new ResponseEntity<>("", HttpStatus.NO_CONTENT));
 
 		int result = repoToolsClient.deleteRepositories(deleteRepoUrl, apiKey);
 
@@ -191,8 +229,13 @@ public class RepoToolsClientTest {
 		String deleteRepoUrl = "http://example.com/delete";
 		String apiKey = "testApiKey";
 
-		Mockito.when(restTemplate.exchange(any(URI.class), Mockito.eq(HttpMethod.DELETE), any(HttpEntity.class),
-				Mockito.eq(String.class))).thenReturn(new ResponseEntity<>("", HttpStatus.INTERNAL_SERVER_ERROR));
+		Mockito.when(
+						restTemplate.exchange(
+								any(URI.class),
+								Mockito.eq(HttpMethod.DELETE),
+								any(HttpEntity.class),
+								Mockito.eq(String.class)))
+				.thenReturn(new ResponseEntity<>("", HttpStatus.INTERNAL_SERVER_ERROR));
 
 		int result = repoToolsClient.deleteRepositories(deleteRepoUrl, apiKey);
 

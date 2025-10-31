@@ -30,63 +30,83 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 class ProductivityGainConfigTest {
 
-    private ProductivityGainConfig productivityGainConfig;
+	private ProductivityGainConfig productivityGainConfig;
 
-    @BeforeEach
-    void setup() {
-        productivityGainConfig = new ProductivityGainConfig();
-    }
+	@BeforeEach
+	void setup() {
+		productivityGainConfig = new ProductivityGainConfig();
+	}
 
-    @Test
-    void when_NoConfigurationIsSet_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
-        productivityGainConfig.setWeights(Collections.emptyMap());
-        ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
-        Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
+	@Test
+	void when_NoConfigurationIsSet_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
+		productivityGainConfig.setWeights(Collections.emptyMap());
+		ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
+		Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
 
-        assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
-        assertTrue(resultedConfigValidationIssues.contains("No productivity gain configuration could be found"));
-    }
+		assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
+		assertTrue(
+				resultedConfigValidationIssues.contains(
+						"No productivity gain configuration could be found"));
+	}
 
-    @Test
-    void when_InvalidCategoryIdIsSetThroughConfiguration_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
-        productivityGainConfig.setWeights(Map.of("sped", 10.0D));
-        ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
-        Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
+	@Test
+	void
+			when_InvalidCategoryIdIsSetThroughConfiguration_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
+		productivityGainConfig.setWeights(Map.of("sped", 10.0D));
+		ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
+		Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
 
-        assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
-        assertTrue(resultedConfigValidationIssues.stream().anyMatch(configValidationIssue -> configValidationIssue.contains("Category 'sped' is invalid")));
-    }
+		assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
+		assertTrue(
+				resultedConfigValidationIssues.stream()
+						.anyMatch(
+								configValidationIssue ->
+										configValidationIssue.contains("Category 'sped' is invalid")));
+	}
 
-    @Test
-    void when_CategoryIsSetWithNegativeWeightage_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
-        productivityGainConfig.setWeights(Map.of("speed", -0.25D));
-        ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
-        Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
+	@Test
+	void
+			when_CategoryIsSetWithNegativeWeightage_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
+		productivityGainConfig.setWeights(Map.of("speed", -0.25D));
+		ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
+		Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
 
-        assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
-        assertTrue(resultedConfigValidationIssues.stream().anyMatch(configValidationIssue -> configValidationIssue.contains("Invalid category 'speed' was found with a weight of '-0.25'")));
-    }
+		assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
+		assertTrue(
+				resultedConfigValidationIssues.stream()
+						.anyMatch(
+								configValidationIssue ->
+										configValidationIssue.contains(
+												"Invalid category 'speed' was found with a weight of '-0.25'")));
+	}
 
-    @Test
-    void when_SumOfProvidedWeightagesIsDifferentThanOne_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
-        productivityGainConfig.setWeights(Map.of("speed", 0.25D));
-        ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
-        Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
+	@Test
+	void
+			when_SumOfProvidedWeightagesIsDifferentThanOne_Expect_ErrorMessageIsContainedWithinConfigValidationIssues() {
+		productivityGainConfig.setWeights(Map.of("speed", 0.25D));
+		ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
+		Set<String> resultedConfigValidationIssues = productivityGainConfig.getConfigValidationIssues();
 
-        assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
-        assertTrue(resultedConfigValidationIssues.stream().anyMatch(configValidationIssue -> configValidationIssue.contains("The sum of all category weightages must be 1")));
-    }
+		assertTrue(CollectionUtils.isNotEmpty(resultedConfigValidationIssues));
+		assertTrue(
+				resultedConfigValidationIssues.stream()
+						.anyMatch(
+								configValidationIssue ->
+										configValidationIssue.contains(
+												"The sum of all category weightages must be 1")));
+	}
 
-    @Test
-    void when_ConfigurationIsValid_Expect_GetAllConfiguredCategoriesReturnAllCategoriesForWhichTheWeightIsHigherThanZero() {
-        productivityGainConfig.setWeights(Map.of("speed", 1.0D, "efficiency", 0.0D));
-        ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
+	@Test
+	void
+			when_ConfigurationIsValid_Expect_GetAllConfiguredCategoriesReturnAllCategoriesForWhichTheWeightIsHigherThanZero() {
+		productivityGainConfig.setWeights(Map.of("speed", 1.0D, "efficiency", 0.0D));
+		ReflectionTestUtils.invokeMethod(productivityGainConfig, "validateConfiguration");
 
-        Set<String> expectedConfiguredCategories = Set.of("speed");
-        Set<String> resultedConfiguredCategories = productivityGainConfig.getAllConfiguredCategories();
+		Set<String> expectedConfiguredCategories = Set.of("speed");
+		Set<String> resultedConfiguredCategories = productivityGainConfig.getAllConfiguredCategories();
 
-        assertTrue(CollectionUtils.isEmpty(productivityGainConfig.getConfigValidationIssues()));
-        assertTrue(CollectionUtils.isNotEmpty(resultedConfiguredCategories));
-        assertEquals(expectedConfiguredCategories, resultedConfiguredCategories);
-    }
+		assertTrue(CollectionUtils.isEmpty(productivityGainConfig.getConfigValidationIssues()));
+		assertTrue(CollectionUtils.isNotEmpty(resultedConfiguredCategories));
+		assertEquals(expectedConfiguredCategories, resultedConfiguredCategories);
+	}
 }

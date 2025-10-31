@@ -34,8 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class KpiColumnConfigServiceImpl implements KpiColumnConfigService {
 
-	@Autowired
-	KpiColumnConfigRepository kpiColumnConfigRepository;
+	@Autowired KpiColumnConfigRepository kpiColumnConfigRepository;
 
 	@Override
 	public ServiceResponse saveKpiColumnConfig(KpiColumnConfigDTO kpiColumnConfigDTO) {
@@ -50,11 +49,13 @@ public class KpiColumnConfigServiceImpl implements KpiColumnConfigService {
 		}
 		if (!valid(kpiColumnConfig)) {
 			log.info("kpiColumnConfig is not valid");
-			return new ServiceResponse(false, "BasicProjectConfigId, KpiId, cannot be empty or null", null);
+			return new ServiceResponse(
+					false, "BasicProjectConfigId, KpiId, cannot be empty or null", null);
 		}
 
-		KpiColumnConfig existingKpiColumnConfig = kpiColumnConfigRepository
-				.findByBasicProjectConfigIdAndKpiId(kpiColumnConfig.getBasicProjectConfigId(), kpiColumnConfig.getKpiId());
+		KpiColumnConfig existingKpiColumnConfig =
+				kpiColumnConfigRepository.findByBasicProjectConfigIdAndKpiId(
+						kpiColumnConfig.getBasicProjectConfigId(), kpiColumnConfig.getKpiId());
 
 		if (existingKpiColumnConfig != null) {
 
@@ -76,20 +77,21 @@ public class KpiColumnConfigServiceImpl implements KpiColumnConfigService {
 
 		if (basicProjectConfigId != null) {
 			ObjectId basicProjectConfigObjectId = new ObjectId(basicProjectConfigId);
-			KpiColumnConfig existingKpiColumnConfig = kpiColumnConfigRepository
-					.findByBasicProjectConfigIdAndKpiId(basicProjectConfigObjectId, kpiId);
+			KpiColumnConfig existingKpiColumnConfig =
+					kpiColumnConfigRepository.findByBasicProjectConfigIdAndKpiId(
+							basicProjectConfigObjectId, kpiId);
 			if (existingKpiColumnConfig != null) {
 				return convertToKpiColumnConfigDTO(existingKpiColumnConfig);
 			} else {
 				// return the default configuration
-				KpiColumnConfig defaultKpiColumnConfig = kpiColumnConfigRepository.findByBasicProjectConfigIdAndKpiId(null,
-						kpiId);
+				KpiColumnConfig defaultKpiColumnConfig =
+						kpiColumnConfigRepository.findByBasicProjectConfigIdAndKpiId(null, kpiId);
 				return convertToKpiColumnConfigDTO(defaultKpiColumnConfig);
 			}
 		} else {
 
-			KpiColumnConfig defaultKpiColumnConfig = kpiColumnConfigRepository.findByBasicProjectConfigIdAndKpiId(null,
-					kpiId);
+			KpiColumnConfig defaultKpiColumnConfig =
+					kpiColumnConfigRepository.findByBasicProjectConfigIdAndKpiId(null, kpiId);
 			return convertToKpiColumnConfigDTO(defaultKpiColumnConfig);
 		}
 	}
@@ -116,8 +118,7 @@ public class KpiColumnConfigServiceImpl implements KpiColumnConfigService {
 	/**
 	 * This method convert KpiColumnConfig to its dto
 	 *
-	 * @param kpiColumnConfig
-	 *          kpiColumnConfig
+	 * @param kpiColumnConfig kpiColumnConfig
 	 * @return KpiColumnConfigDTO
 	 */
 	private KpiColumnConfigDTO convertToKpiColumnConfigDTO(KpiColumnConfig kpiColumnConfig) {

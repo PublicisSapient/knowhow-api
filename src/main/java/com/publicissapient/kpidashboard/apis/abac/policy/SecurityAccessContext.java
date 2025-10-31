@@ -25,7 +25,11 @@ public class SecurityAccessContext {
 	private Object action;
 	private Object environment;
 
-	public SecurityAccessContext(Object projectAccessManager, Object subject, Object resource, Object action,
+	public SecurityAccessContext(
+			Object projectAccessManager,
+			Object subject,
+			Object resource,
+			Object action,
 			Object environment) {
 		super();
 		this.projectAccessManager = projectAccessManager;
@@ -83,7 +87,8 @@ public class SecurityAccessContext {
 		result = prime * result + ((environment == null) ? 0 : environment.hashCode());
 		result = prime * result + ((resource == null) ? 0 : resource.hashCode());
 		result = prime * result + ((subject == null) ? 0 : subject.hashCode());
-		result = prime * result + ((projectAccessManager == null) ? 0 : projectAccessManager.hashCode());
+		result =
+				prime * result + ((projectAccessManager == null) ? 0 : projectAccessManager.hashCode());
 		return result;
 	}
 

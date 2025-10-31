@@ -27,7 +27,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "board_config_cleanup", order = "13000", author = "shunaray", systemVersion = "13.0.0")
+@ChangeUnit(
+		id = "board_config_cleanup",
+		order = "13000",
+		author = "shunaray",
+		systemVersion = "13.0.0")
 public class BoardConfigChangeUnit {
 
 	private final MongoTemplate mongoTemplate;
@@ -42,7 +46,8 @@ public class BoardConfigChangeUnit {
 	}
 
 	public void deleteProjectBoardConfig() {
-		mongoTemplate.getCollection("user_board_config")
+		mongoTemplate
+				.getCollection("user_board_config")
 				.deleteMany(new Document("basicProjectConfigId", new Document("$exists", true)));
 	}
 

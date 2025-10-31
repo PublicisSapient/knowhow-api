@@ -32,10 +32,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * This class serves as the model for storing credential used for login and
- * Signup.
- */
+/** This class serves as the model for storing credential used for login and Signup. */
 @Data
 @Builder
 @Getter
@@ -54,8 +51,7 @@ public class ForgotPasswordToken extends BasicModel {
 	/**
 	 * Sets expiry date.
 	 *
-	 * @param minutes
-	 *          the minutes
+	 * @param minutes the minutes
 	 */
 	public void setExpiryDate(int minutes) {
 		Calendar now = Calendar.getInstance();

@@ -49,8 +49,8 @@ public class StandardAuthenticationToken extends AbstractAuthenticationToken {
 	 * @param authorities
 	 */
 	@SuppressWarnings("PMD")
-	public StandardAuthenticationToken(Object principal, Object credentials,
-			Collection<? extends GrantedAuthority> authorities) {
+	public StandardAuthenticationToken(
+			Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
 		this.principal = principal;
 		this.credentials = credentials;
@@ -74,8 +74,8 @@ public class StandardAuthenticationToken extends AbstractAuthenticationToken {
 	}
 
 	/**
-	 * Sets authenticated false if isAuthneticated is false, Throws
-	 * IllegalArgumentException if isAuthneticated is true.
+	 * Sets authenticated false if isAuthneticated is false, Throws IllegalArgumentException if
+	 * isAuthneticated is true.
 	 */
 	@Override
 	public void setAuthenticated(boolean isAuthenticated) {
@@ -95,11 +95,11 @@ public class StandardAuthenticationToken extends AbstractAuthenticationToken {
 	}
 
 	/**
-	 * Overridden method of Object's equal method compares principal and credentials
-	 * object to check StandardAuthenticationToken is equal
+	 * Overridden method of Object's equal method compares principal and credentials object to check
+	 * StandardAuthenticationToken is equal
 	 *
-	 * @return true if invoked object's principal and credentials are matching,
-	 *         false if they are not matching
+	 * @return true if invoked object's principal and credentials are matching, false if they are not
+	 *     matching
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -113,7 +113,8 @@ public class StandardAuthenticationToken extends AbstractAuthenticationToken {
 			return false;
 		}
 		StandardAuthenticationToken that = (StandardAuthenticationToken) obj;
-		return Objects.equals(principal, that.principal) && Objects.equals(credentials, that.credentials);
+		return Objects.equals(principal, that.principal)
+				&& Objects.equals(credentials, that.credentials);
 	}
 
 	/**

@@ -59,18 +59,25 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 	 * add logic of converting input datalist to Organization Hierarchy
 	 */
 	@Override
-	public Set<OrganizationHierarchy> convertToOrganizationHierarchy(HierarchyDetails hierarchyDetails,
-			List<OrganizationHierarchy> allDbNodes) {
+	public Set<OrganizationHierarchy> convertToOrganizationHierarchy(
+			HierarchyDetails hierarchyDetails, List<OrganizationHierarchy> allDbNodes) {
 		Set<OrganizationHierarchy> transformedList = new HashSet<>();
 		List<HierarchyNode> hierarchyNodes = hierarchyDetails.getHierarchyNode();
-		List<String> centralHieracyLevels = hierarchyDetails.getHierarchyLevels().parallelStream()
-				.filter(a -> a.getLevel() > 0).sorted(Comparator.comparing(HierarchyLevel::getLevel))
-				.map(k -> k.getDisplayName().toUpperCase()).toList();
-		Map<String, String> localLevels = getHierachyLevelTillProject().stream().limit(centralHieracyLevels.size())
-				.collect(Collectors.toMap(
-						(com.publicissapient.kpidashboard.common.model.application.HierarchyLevel h) -> h
-								.getHierarchyLevelName().toUpperCase(),
-						com.publicissapient.kpidashboard.common.model.application.HierarchyLevel::getHierarchyLevelId));
+		List<String> centralHieracyLevels =
+				hierarchyDetails.getHierarchyLevels().parallelStream()
+						.filter(a -> a.getLevel() > 0)
+						.sorted(Comparator.comparing(HierarchyLevel::getLevel))
+						.map(k -> k.getDisplayName().toUpperCase())
+						.toList();
+		Map<String, String> localLevels =
+				getHierachyLevelTillProject().stream()
+						.limit(centralHieracyLevels.size())
+						.collect(
+								Collectors.toMap(
+										(com.publicissapient.kpidashboard.common.model.application.HierarchyLevel h) ->
+												h.getHierarchyLevelName().toUpperCase(),
+										com.publicissapient.kpidashboard.common.model.application.HierarchyLevel
+												::getHierarchyLevelId));
 		List<String> levels = new ArrayList<>();
 		for (String hierarchyNode : centralHieracyLevels) {
 			levels.add(getMatchingValue(localLevels, hierarchyNode));
@@ -78,28 +85,35 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 
 		ensureHierarchyExists(hierarchyNodes, transformedList, levels, allDbNodes);
 		return transformedList;
-
 	}
 
-	private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel> getHierachyLevelTillProject() {
+	private List<com.publicissapient.kpidashboard.common.model.application.HierarchyLevel>
+			getHierachyLevelTillProject() {
 		return hierarchyLevelService.getTopHierarchyLevels();
 	}
 
-	public void ensureHierarchyExists(List<HierarchyNode> nodes, Set<OrganizationHierarchy> transformedList,
-			List<String> centralHierarchyLevels, List<OrganizationHierarchy> allDbNodes) {
+	public void ensureHierarchyExists(
+			List<HierarchyNode> nodes,
+			Set<OrganizationHierarchy> transformedList,
+			List<String> centralHierarchyLevels,
+			List<OrganizationHierarchy> allDbNodes) {
 		for (HierarchyNode node : nodes) {
 			try {
-				List<OrganizationHierarchy> fullNode = processHierarchyNode(node, centralHierarchyLevels, allDbNodes);
+				List<OrganizationHierarchy> fullNode =
+						processHierarchyNode(node, centralHierarchyLevels, allDbNodes);
 				if (!fullNode.isEmpty()) {
 					transformedList.addAll(fullNode);
 				}
 			} catch (Exception e) {
-				log.error("Error processing node: " + node.getOpportunityUniqueId() + " - " + e.getMessage(), e);
+				log.error(
+						"Error processing node: " + node.getOpportunityUniqueId() + " - " + e.getMessage(), e);
 			}
 		}
 	}
 
-	private List<OrganizationHierarchy> processHierarchyNode(HierarchyNode node, List<String> centralHierarchyLevels,
+	private List<OrganizationHierarchy> processHierarchyNode(
+			HierarchyNode node,
+			List<String> centralHierarchyLevels,
 			List<OrganizationHierarchy> allDbNodes) {
 
 		List<OrganizationHierarchy> fullNode = new ArrayList<>();
@@ -144,17 +158,30 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 	}
 
 	@Nullable
-	private static OrganizationHierarchy getExistingNode(List<OrganizationHierarchy> allDbNodes, String chsLevel,
-			String externalId, OrganizationHierarchy existingNode) {
+	private static OrganizationHierarchy getExistingNode(
+			List<OrganizationHierarchy> allDbNodes,
+			String chsLevel,
+			String externalId,
+			OrganizationHierarchy existingNode) {
 		if (externalId != null) {
-			existingNode = allDbNodes.stream().filter(dbNode -> chsLevel.equalsIgnoreCase(dbNode.getHierarchyLevelId())
-					&& externalId.equalsIgnoreCase(dbNode.getExternalId())).findFirst().orElse(null);
+			existingNode =
+					allDbNodes.stream()
+							.filter(
+									dbNode ->
+											chsLevel.equalsIgnoreCase(dbNode.getHierarchyLevelId())
+													&& externalId.equalsIgnoreCase(dbNode.getExternalId()))
+							.findFirst()
+							.orElse(null);
 		}
 		return existingNode;
 	}
 
-	private static String getParentId(List<OrganizationHierarchy> allDbNodes, String parentLevel,
-			Map<String, OrganizationHierarchy> createdNodes, String parentId, Map<String, String> idMappings) {
+	private static String getParentId(
+			List<OrganizationHierarchy> allDbNodes,
+			String parentLevel,
+			Map<String, OrganizationHierarchy> createdNodes,
+			String parentId,
+			Map<String, String> idMappings) {
 		if (parentLevel != null) {
 			if (createdNodes.containsKey(parentLevel)) {
 				// Parent was created in current iteration
@@ -163,9 +190,11 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 				// Parent might already exist in DB
 				String parentExternalId = idMappings.get(parentLevel);
 				if (parentExternalId != null) {
-					OrganizationHierarchy existingParent = allDbNodes.stream()
-							.filter(dbNode -> parentExternalId.equalsIgnoreCase(dbNode.getExternalId())).findFirst()
-							.orElse(null);
+					OrganizationHierarchy existingParent =
+							allDbNodes.stream()
+									.filter(dbNode -> parentExternalId.equalsIgnoreCase(dbNode.getExternalId()))
+									.findFirst()
+									.orElse(null);
 					if (existingParent != null) {
 						parentId = existingParent.getNodeId();
 					}
@@ -182,42 +211,43 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 		idMappings.put("acc", node.getAccountUniqueId());
 		idMappings.put("port", node.getPortfolioUniqueId());
 
-		idMappings.replaceAll((k, v) -> StringUtils.isEmpty(v) ? k + "_unique_" + UUID.randomUUID() : v);
+		idMappings.replaceAll(
+				(k, v) -> StringUtils.isEmpty(v) ? k + "_unique_" + UUID.randomUUID() : v);
 		return idMappings;
 	}
 
 	private String getNodeName(HierarchyNode node, String chsLevel) {
 		switch (chsLevel) {
-		case "bu":
-			return node.getBu();
-		case "ver":
-			return node.getVertical();
-		case "acc":
-			return node.getAccount();
-		case "port":
-			return node.getPortfolio();
-		default:
-			throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
+			case "bu":
+				return node.getBu();
+			case "ver":
+				return node.getVertical();
+			case "acc":
+				return node.getAccount();
+			case "port":
+				return node.getPortfolio();
+			default:
+				throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
 		}
 	}
 
 	private String getParentLevel(String chsLevel) {
 		switch (chsLevel) {
-		case "bu":
-			return null;
-		case "ver":
-			return "bu";
-		case "acc":
-			return "ver";
-		case "port":
-			return "acc";
-		default:
-			throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
+			case "bu":
+				return null;
+			case "ver":
+				return "bu";
+			case "acc":
+				return "ver";
+			case "port":
+				return "acc";
+			default:
+				throw new IllegalArgumentException("Invalid hierarchy level: " + chsLevel);
 		}
 	}
 
-	public OrganizationHierarchy createOrUpdateNode(String nodeId, String nodeName, String hierarchyLevelId,
-			String parentId) {
+	public OrganizationHierarchy createOrUpdateNode(
+			String nodeId, String nodeName, String hierarchyLevelId, String parentId) {
 
 		if (hierarchyMap.containsKey(nodeId)) {
 			OrganizationHierarchy existingNode = hierarchyMap.get(nodeId);
@@ -253,5 +283,4 @@ public class OrganizationHierarchyAdapterImpl implements OrganizationHierarchyAd
 		}
 		throw new IllegalStateException("Hierarchy Missing");
 	}
-
 }

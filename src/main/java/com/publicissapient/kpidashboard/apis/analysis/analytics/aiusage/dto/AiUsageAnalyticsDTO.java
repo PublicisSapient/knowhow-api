@@ -22,7 +22,7 @@ import lombok.Data;
 
 @Data
 public class AiUsageAnalyticsDTO {
-    private String aiUsageType;
+	private String aiUsageType;
 
-    private List<ProjectAiUsageMetrics> projects;
+	private List<ProjectAiUsageMetrics> projects;
 }

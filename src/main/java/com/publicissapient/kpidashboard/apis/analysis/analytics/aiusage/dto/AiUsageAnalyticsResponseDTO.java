@@ -24,7 +24,7 @@ import lombok.Data;
 @Data
 @Builder
 public class AiUsageAnalyticsResponseDTO {
-    private AiUsageAnalyticsSummaryDTO summary;
+	private AiUsageAnalyticsSummaryDTO summary;
 
-    private List<AiUsageAnalyticsDTO> analytics;
+	private List<AiUsageAnalyticsDTO> analytics;
 }

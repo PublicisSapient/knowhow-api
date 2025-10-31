@@ -28,12 +28,17 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author girpatha
  */
-@ChangeUnit(id = "update_fieldmapping_structure", order = "10102", author = "girpatha", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "update_fieldmapping_structure",
+		order = "10102",
+		author = "girpatha",
+		systemVersion = "10.1.0")
 public class UpdateFieldMappingSructure {
 
 	private final MongoTemplate mongoTemplate;
 	private static final String FIELD_NAME = "jiraTestAutomationIssueType";
-	private static final String FIELD_LABEL = "In Sprint Automation - Issue Types with Linked Test Case ";
+	private static final String FIELD_LABEL =
+			"In Sprint Automation - Issue Types with Linked Test Case ";
 
 	public UpdateFieldMappingSructure(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;

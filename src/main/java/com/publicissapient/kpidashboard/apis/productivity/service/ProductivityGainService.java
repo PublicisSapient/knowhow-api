@@ -20,7 +20,6 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainCalculationRequestDTO;
 
 public interface ProductivityGainService {
-    ServiceResponse processProductivityCalculationRequest(
-            ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO
-    );
+	ServiceResponse processProductivityCalculationRequest(
+			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO);
 }

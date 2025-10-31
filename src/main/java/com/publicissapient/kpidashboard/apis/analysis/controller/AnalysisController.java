@@ -40,6 +40,7 @@ public class AnalysisController {
 	@PostMapping("/analytics/ai-usage/query")
 	public ResponseEntity<ServiceResponse> computeAiUsageAnalyticsData(
 			@RequestBody @Valid BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
-		return ResponseEntity.ok(aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO));
+		return ResponseEntity.ok(
+				aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO));
 	}
 }

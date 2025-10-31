@@ -17,10 +17,12 @@
 
 package com.publicissapient.kpidashboard.apis.management.service.impl;
 
-import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
-import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
-import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
-import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,23 +31,19 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.publicissapient.kpidashboard.apis.config.DashboardConfig;
+import com.publicissapient.kpidashboard.apis.management.service.MetricsService;
+import com.publicissapient.kpidashboard.apis.model.ApiDetailDto;
+import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardHealthServiceImplTest {
 
-	@InjectMocks
-	private DashboardHealthServiceImpl dashboardHealthService;
+	@InjectMocks private DashboardHealthServiceImpl dashboardHealthService;
 
-	@Mock
-	private DashboardConfig dashboardConfig;
+	@Mock private DashboardConfig dashboardConfig;
 
-	@Mock
-	private MetricsService metricsService;
+	@Mock private MetricsService metricsService;
 
 	@BeforeEach
 	void setUp() {
@@ -57,8 +55,8 @@ class DashboardHealthServiceImplTest {
 	void getDashboardHealth_ReturnsAggregatedHealthResponse() {
 		DashboardConfig.BoardType boardTypeConfig = mock(DashboardConfig.BoardType.class);
 		when(dashboardConfig.getTypes()).thenReturn(Collections.singletonMap("type1", boardTypeConfig));
-		HealthResponseDto boardHealth = HealthResponseDto.builder().status("UP").max(100).count(2).totalTime(200)
-				.build();
+		HealthResponseDto boardHealth =
+				HealthResponseDto.builder().status("UP").max(100).count(2).totalTime(200).build();
 		DashboardHealthServiceImpl spyService = spy(dashboardHealthService);
 		doReturn(boardHealth).when(spyService).getBoardTypeHealth("type1");
 
@@ -78,8 +76,8 @@ class DashboardHealthServiceImplTest {
 		when(boardTypeConfig.getBoards())
 				.thenReturn(Collections.singletonMap("dashboard1", mock(DashboardConfig.Board.class)));
 		DashboardHealthServiceImpl spyService = spy(dashboardHealthService);
-		HealthResponseDto dashboardHealth = HealthResponseDto.builder().status("UP").max(50).count(1).totalTime(50)
-				.build();
+		HealthResponseDto dashboardHealth =
+				HealthResponseDto.builder().status("UP").max(50).count(1).totalTime(50).build();
 		doReturn(dashboardHealth).when(spyService).getDashboardDetailHealth("type1", "dashboard1");
 
 		HealthResponseDto result = spyService.getBoardTypeHealth("type1");
@@ -100,9 +98,11 @@ class DashboardHealthServiceImplTest {
 		when(board.getApis()).thenReturn(Arrays.asList("api1", "api2"));
 		ApiDetailDto api1 = ApiDetailDto.builder().status("UP").max(10).count(1).totalTime(10).build();
 		ApiDetailDto api2 = ApiDetailDto.builder().status("UP").max(20).count(2).totalTime(40).build();
-		when(metricsService.getApisMetrics(Arrays.asList("api1", "api2"))).thenReturn(Arrays.asList(api1, api2));
+		when(metricsService.getApisMetrics(Arrays.asList("api1", "api2")))
+				.thenReturn(Arrays.asList(api1, api2));
 
-		HealthResponseDto result = dashboardHealthService.getDashboardDetailHealth("type1", "dashboard1");
+		HealthResponseDto result =
+				dashboardHealthService.getDashboardDetailHealth("type1", "dashboard1");
 
 		assertEquals("UP", result.getStatus());
 		assertEquals(20, result.getMax());
@@ -116,9 +116,12 @@ class DashboardHealthServiceImplTest {
 	void getBoardTypeHealth_WithInvalidBoardType_ThrowsIllegalArgumentException() {
 		when(dashboardConfig.getTypes()).thenReturn(Collections.emptyMap());
 
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-			dashboardHealthService.getBoardTypeHealth("invalidType");
-		});
+		IllegalArgumentException exception =
+				assertThrows(
+						IllegalArgumentException.class,
+						() -> {
+							dashboardHealthService.getBoardTypeHealth("invalidType");
+						});
 
 		assertEquals("Board type not found: invalidType", exception.getMessage());
 	}
@@ -129,10 +132,14 @@ class DashboardHealthServiceImplTest {
 		when(dashboardConfig.getTypes()).thenReturn(Collections.singletonMap("type1", boardTypeConfig));
 		when(boardTypeConfig.getBoards()).thenReturn(Collections.emptyMap());
 
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-			dashboardHealthService.getDashboardDetailHealth("type1", "invalidDashboard");
-		});
+		IllegalArgumentException exception =
+				assertThrows(
+						IllegalArgumentException.class,
+						() -> {
+							dashboardHealthService.getDashboardDetailHealth("type1", "invalidDashboard");
+						});
 
-		assertEquals("Dashboard not found: invalidDashboard in board type type1", exception.getMessage());
+		assertEquals(
+				"Dashboard not found: invalidDashboard in board type type1", exception.getMessage());
 	}
 }

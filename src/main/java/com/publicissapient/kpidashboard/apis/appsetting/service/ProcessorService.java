@@ -27,8 +27,8 @@ import com.publicissapient.kpidashboard.common.model.ProcessorExecutionBasicConf
  */
 public interface ProcessorService {
 	/**
-	 * Gets details of all processors on the running instance including: Last
-	 * executed time of the processor to fetch new data and Status Success/Failure
+	 * Gets details of all processors on the running instance including: Last executed time of the
+	 * processor to fetch new data and Status Success/Failure
 	 *
 	 * @return {@code ServiceResponse}
 	 */
@@ -37,17 +37,16 @@ public interface ProcessorService {
 	/**
 	 * Triggers the processor to fetch the latest data based on the processor name
 	 *
-	 * @param processorName
-	 *          name of the processor same as in the processor collection
+	 * @param processorName name of the processor same as in the processor collection
 	 * @return {@code ServiceResponse}
 	 */
-	ServiceResponse runProcessor(String processorName, ProcessorExecutionBasicConfig processorExecutionBasicConfig);
+	ServiceResponse runProcessor(
+			String processorName, ProcessorExecutionBasicConfig processorExecutionBasicConfig);
 
 	/**
 	 * Fetches the active sprint data for the project
 	 *
-	 * @param sprintId
-	 *          id of the sprint
+	 * @param sprintId id of the sprint
 	 * @return {@code ServiceResponse}
 	 */
 	ServiceResponse fetchActiveSprint(String sprintId);
@@ -55,16 +54,14 @@ public interface ProcessorService {
 	/**
 	 * saves the response statuses for repo tools
 	 *
-	 * @param repoToolsStatusResponse
-	 *          repo tool response status
+	 * @param repoToolsStatusResponse repo tool response status
 	 */
 	void saveRepoToolTraceLogs(RepoToolsStatusResponse repoToolsStatusResponse);
 
 	/**
 	 * run the metadata step of processor, to get the options of fieldmapping
 	 *
-	 * @param projectBasicConfigId
-	 *          id of the project
+	 * @param projectBasicConfigId id of the project
 	 * @return {@code ServiceResponse}
 	 */
 	ServiceResponse runMetadataStep(String projectBasicConfigId);

@@ -41,8 +41,7 @@ public class ToolConfigDataFactory {
 	private List<ProjectToolConfig> projectToolConfigs;
 	private ObjectMapper mapper;
 
-	private ToolConfigDataFactory() {
-	}
+	private ToolConfigDataFactory() {}
 
 	public static ToolConfigDataFactory newInstance(String filePath) {
 
@@ -62,9 +61,10 @@ public class ToolConfigDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_TOOL_CONFIG : filePath;
 
-			projectToolConfigs = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<ProjectToolConfig>>() {
-					});
+			projectToolConfigs =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<ProjectToolConfig>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading tool configs from file = " + filePath, e);
 		}
@@ -85,25 +85,34 @@ public class ToolConfigDataFactory {
 	}
 
 	public ProjectToolConfig findById(String id) {
-		return projectToolConfigs.stream().filter(projectToolConfig -> projectToolConfig.getId().toHexString().equals(id))
-				.findFirst().orElse(null);
+		return projectToolConfigs.stream()
+				.filter(projectToolConfig -> projectToolConfig.getId().toHexString().equals(id))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public List<ProjectToolConfig> findByToolName(String toolName) {
-		return projectToolConfigs.stream().filter(projectToolConfig -> projectToolConfig.getToolName().equals(toolName))
+		return projectToolConfigs.stream()
+				.filter(projectToolConfig -> projectToolConfig.getToolName().equals(toolName))
 				.collect(Collectors.toList());
 	}
 
 	public List<ProjectToolConfig> findByBasicProjectConfigId(String basicProjectConfigId) {
 		return projectToolConfigs.stream()
 				.filter(
-						projectToolConfig -> projectToolConfig.getBasicProjectConfigId().toHexString().equals(basicProjectConfigId))
+						projectToolConfig ->
+								projectToolConfig
+										.getBasicProjectConfigId()
+										.toHexString()
+										.equals(basicProjectConfigId))
 				.collect(Collectors.toList());
 	}
 
 	public List<ProjectToolConfig> findByConnectionId(String connectionId) {
 		return projectToolConfigs.stream()
-				.filter(projectToolConfig -> projectToolConfig.getConnectionId().toHexString().equals(connectionId))
+				.filter(
+						projectToolConfig ->
+								projectToolConfig.getConnectionId().toHexString().equals(connectionId))
 				.collect(Collectors.toList());
 	}
 }

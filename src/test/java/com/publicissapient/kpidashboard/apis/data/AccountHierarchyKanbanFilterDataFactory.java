@@ -37,12 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountHierarchyKanbanFilterDataFactory {
 	private static final String FILE_PATH = "/json/default/kanban_account_hierarchy_filter_data.json";
-	private static final String FILE_PATH_ACCOUNT_HIERARCHIES_FILTER_DATA = "/json/default/account_hierarchy_filter_data.json";
+	private static final String FILE_PATH_ACCOUNT_HIERARCHIES_FILTER_DATA =
+			"/json/default/account_hierarchy_filter_data.json";
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanban;
 	private ObjectMapper mapper = null;
 
-	private AccountHierarchyKanbanFilterDataFactory() {
-	}
+	private AccountHierarchyKanbanFilterDataFactory() {}
 
 	public static AccountHierarchyKanbanFilterDataFactory newInstance() {
 		return newInstance(null);
@@ -50,7 +50,8 @@ public class AccountHierarchyKanbanFilterDataFactory {
 
 	public static AccountHierarchyKanbanFilterDataFactory newInstance(String filePath) {
 
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyDataKanbanDataFactory = new AccountHierarchyKanbanFilterDataFactory();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyDataKanbanDataFactory =
+				new AccountHierarchyKanbanFilterDataFactory();
 		accountHierarchyDataKanbanDataFactory.createObjectMapper();
 		accountHierarchyDataKanbanDataFactory.init(filePath);
 		return accountHierarchyDataKanbanDataFactory;
@@ -61,9 +62,10 @@ public class AccountHierarchyKanbanFilterDataFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH : filePath;
 
-			accountHierarchyDataKanban = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<AccountHierarchyDataKanban>>() {
-					});
+			accountHierarchyDataKanban =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<AccountHierarchyDataKanban>>() {});
 		} catch (IOException e) {
 			log.error("Error in reading kpi request from file = " + filePath, e);
 		}

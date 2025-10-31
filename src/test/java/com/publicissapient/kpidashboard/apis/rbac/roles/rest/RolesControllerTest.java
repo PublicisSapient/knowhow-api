@@ -52,11 +52,9 @@ public class RolesControllerTest {
 
 	private RoleData testRoleData;
 	private String testId;
-	@InjectMocks
-	private RolesController rolesController;
+	@InjectMocks private RolesController rolesController;
 
-	@Mock
-	private RolesHelperService rolesHelperService;
+	@Mock private RolesHelperService rolesHelperService;
 
 	/** method includes preprocesses for test cases */
 	@Before
@@ -95,14 +93,14 @@ public class RolesControllerTest {
 	/**
 	 * method to test /roles restPoint ;
 	 *
-	 * <p>
-	 * Get all access requests
+	 * <p>Get all access requests
 	 *
 	 * @throws Exception
 	 */
 	@Test
 	public void testGetAllRoles() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/roles").contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(MockMvcRequestBuilders.get("/roles").contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
@@ -113,7 +111,10 @@ public class RolesControllerTest {
 	 */
 	@Test
 	public void testGetRoleById() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/roles/" + testId).contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/roles/" + testId)
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
@@ -124,8 +125,11 @@ public class RolesControllerTest {
 	 */
 	@Test
 	public void testModifyRoleById() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.put("/roles/" + testId)
-				.content(TestUtil.convertObjectToJsonBytes(testRoleData)).contentType(MediaType.APPLICATION_JSON_VALUE))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.put("/roles/" + testId)
+								.content(TestUtil.convertObjectToJsonBytes(testRoleData))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
 				.andExpect(status().isOk());
 	}
 
@@ -136,7 +140,11 @@ public class RolesControllerTest {
 	 */
 	@Test
 	public void testCreateRole() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.post("/roles/").content(TestUtil.convertObjectToJsonBytes(testRoleData))
-				.contentType(MediaType.APPLICATION_JSON_VALUE)).andExpect(status().isOk());
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.post("/roles/")
+								.content(TestUtil.convertObjectToJsonBytes(testRoleData))
+								.contentType(MediaType.APPLICATION_JSON_VALUE))
+				.andExpect(status().isOk());
 	}
 }

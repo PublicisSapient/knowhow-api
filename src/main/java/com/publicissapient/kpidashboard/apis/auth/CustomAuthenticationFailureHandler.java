@@ -46,16 +46,18 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @Component
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
-	private static final String WRONGCREDENTIALS = "Login Failed: The username or password entered is incorrect";
+	private static final String WRONGCREDENTIALS =
+			"Login Failed: The username or password entered is incorrect";
 	public static final String USERNAME = "username";
-	@Autowired
-	private UsersSessionService usersSessionService;
-	@Autowired
-	private UserInfoRepository userInfoRepository;
+	@Autowired private UsersSessionService usersSessionService;
+	@Autowired private UserInfoRepository userInfoRepository;
 
 	@Override
-	public void onAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
-			AuthenticationException exception) throws IOException, ServletException {
+	public void onAuthenticationFailure(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
+			AuthenticationException exception)
+			throws IOException, ServletException {
 		httpServletResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
 		httpServletResponse.setContentType("application/json");
 

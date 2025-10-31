@@ -76,36 +76,25 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHi
 @RunWith(MockitoJUnitRunner.class)
 public class LeadTimeServiceImplTest {
 
-	private static List<String> xAxisRange = Arrays.asList("< 16 Months", "< 3 Months", "< 1 Months", "< 2 Weeks",
-			"< 1 Week");
+	private static List<String> xAxisRange =
+			Arrays.asList("< 16 Months", "< 3 Months", "< 1 Months", "< 2 Weeks", "< 1 Week");
 	private static final String LEAD_TIME = "Lead Time";
 	private static final String INTAKE_TO_DOR = "Intake - DoR";
 	private static final String DOR_TO_DOD = "DoR - DoD";
 	private static final String DOD_TO_LIVE = "DoD - Live";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	private JiraBacklogServiceR jiraService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	LeadTimeServiceImpl leadTimeService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	JiraBacklogServiceR jiraBacklogServiceR;
-	@Mock
-	private CommonService commonService;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock private JiraBacklogServiceR jiraService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks LeadTimeServiceImpl leadTimeService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock JiraBacklogServiceR jiraBacklogServiceR;
+	@Mock private CommonService commonService;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
 	private Map<String, String> kpiWiseAggregation = new HashMap<>();
@@ -123,8 +112,8 @@ public class LeadTimeServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi3");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -141,8 +130,8 @@ public class LeadTimeServiceImplTest {
 
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
@@ -150,7 +139,8 @@ public class LeadTimeServiceImplTest {
 		maturityRangeMap.put("kpi3", xAxisRange);
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 
 		jiraIssueCustomHistories = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 
@@ -160,12 +150,20 @@ public class LeadTimeServiceImplTest {
 		kpiWiseAggregation.put(LEAD_TIME, "average");
 
 		when(customApiConfig.getLeadTimeRange()).thenReturn(xAxisRange);
-		jiraIssueCustomHistories.get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
+		jiraIssueCustomHistories
+				.get(0)
+				.getStatusUpdationLog()
+				.forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
 		jiraIssueCustomHistories.stream()
-				.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equalsIgnoreCase("TEST-17908"))
-				.toList().get(0).getStatusUpdationLog().forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
-		when(jiraIssueCustomHistoryRepository
-				.findByBasicProjectConfigIdIn(anyString())).thenReturn(jiraIssueCustomHistories);
+				.filter(
+						jiraIssueCustomHistory ->
+								jiraIssueCustomHistory.getStoryID().equalsIgnoreCase("TEST-17908"))
+				.toList()
+				.get(0)
+				.getStatusUpdationLog()
+				.forEach(s -> s.setUpdatedOn(LocalDateTime.now().minusMonths(2)));
+		when(jiraIssueCustomHistoryRepository.findByBasicProjectConfigIdIn(anyString()))
+				.thenReturn(jiraIssueCustomHistories);
 		when(commonService.getMaturityLevel(any(), any(), any())).thenReturn("3");
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 	}
@@ -189,7 +187,8 @@ public class LeadTimeServiceImplTest {
 		trendValueMap.put(DOD_TO_LIVE, trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -206,32 +205,42 @@ public class LeadTimeServiceImplTest {
 	@Test
 	public void testFetchKPIDataFromDBData() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> resultListMap = leadTimeService.fetchKPIDataFromDb(leafNodeList,
-				LocalDate.of(2022, 7, 1).toString(), LocalDate.of(2022, 7, 31).toString(), kpiRequest);
-		List<JiraIssueCustomHistory> dataMap = (List<JiraIssueCustomHistory>) resultListMap
-				.get(leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
+		Map<String, Object> resultListMap =
+				leadTimeService.fetchKPIDataFromDb(
+						leafNodeList,
+						LocalDate.of(2022, 7, 1).toString(),
+						LocalDate.of(2022, 7, 31).toString(),
+						kpiRequest);
+		List<JiraIssueCustomHistory> dataMap =
+				(List<JiraIssueCustomHistory>)
+						resultListMap.get(
+								leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString());
 		assertThat("Lead Time Data :", dataMap.size(), equalTo(5));
 	}
 
 	@Test
 	public void testGetKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		String kpiRequestTrackerId = "Jira-Excel-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		try {
 
-			KpiElement responseKpiElement = leadTimeService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
+			KpiElement responseKpiElement =
+					leadTimeService.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertNotNull(responseKpiElement);
 			assertEquals(responseKpiElement.getKpiId(), kpiRequest.getKpiList().get(0).getKpiId());
 		} catch (ApplicationException enfe) {

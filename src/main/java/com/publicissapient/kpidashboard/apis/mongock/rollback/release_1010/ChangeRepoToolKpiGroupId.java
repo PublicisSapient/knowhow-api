@@ -26,7 +26,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_change_repo_tool_kpi_group_id", order = "0101012", author = "kunkambl", systemVersion = "10.1.0")
+@ChangeUnit(
+		id = "r_change_repo_tool_kpi_group_id",
+		order = "0101012",
+		author = "kunkambl",
+		systemVersion = "10.1.0")
 public class ChangeRepoToolKpiGroupId {
 
 	private final MongoTemplate mongoTemplate;
@@ -43,7 +47,8 @@ public class ChangeRepoToolKpiGroupId {
 		updateDocument(kpiMaster, "kpi11", 1); // code commit kpi
 	}
 
-	private void updateDocument(MongoCollection<Document> kpiCategoryMapping, String kpiId, int groupId) {
+	private void updateDocument(
+			MongoCollection<Document> kpiCategoryMapping, String kpiId, int groupId) {
 		// Create the filter
 		Document filter = new Document("kpiId", kpiId);
 		// Create the update

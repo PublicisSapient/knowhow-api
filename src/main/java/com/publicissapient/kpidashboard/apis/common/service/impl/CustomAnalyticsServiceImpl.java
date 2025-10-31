@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.common.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,23 +73,15 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	private static final String USER_AUTH_TYPE = "authType";
 	private static final String NOTIFICATION_EMAIL = "notificationEmail";
 
-	@Autowired
-	UserAuthorizedProjectsService userAuthorizedProjectsService;
-	@Autowired
-	UserInfoService userInfoService;
-	@Autowired
-	private UserInfoRepository userInfoRepository;
-	@Autowired
-	private AuthenticationRepository authenticationRepository;
-	@Autowired
-	private CustomApiConfig settings;
-	@Autowired
-	private ProjectAccessManager projectAccessManager;
-	@Autowired
-	private UsersSessionService usersSessionService;
+	@Autowired UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Autowired UserInfoService userInfoService;
+	@Autowired private UserInfoRepository userInfoRepository;
+	@Autowired private AuthenticationRepository authenticationRepository;
+	@Autowired private CustomApiConfig settings;
+	@Autowired private ProjectAccessManager projectAccessManager;
+	@Autowired private UsersSessionService usersSessionService;
 
-	@Autowired
-	private UserTokenReopository userTokenReopository;
+	@Autowired private UserTokenReopository userTokenReopository;
 
 	final ModelMapper modelMapper = new ModelMapper();
 
@@ -114,11 +105,13 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 
 		usersSessionService.createUsersSessionInfo(userinfo, AuthenticationEvent.LOGIN, Status.SUCCESS);
 
-		List<RoleWiseProjects> projectAccessesWithRole = projectAccessManager.getProjectAccessesWithRole(username);
+		List<RoleWiseProjects> projectAccessesWithRole =
+				projectAccessManager.getProjectAccessesWithRole(username);
 
 		if (projectAccessesWithRole != null) {
-			JsonElement element = gson.toJsonTree(projectAccessesWithRole, new TypeToken<List<RoleWiseProjects>>() {
-			}.getType());
+			JsonElement element =
+					gson.toJsonTree(
+							projectAccessesWithRole, new TypeToken<List<RoleWiseProjects>>() {}.getType());
 			json.put(PROJECTS_ACCESS, element.getAsJsonArray());
 		} else {
 			json.put(PROJECTS_ACCESS, new JSONArray());
@@ -131,40 +124,45 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(HttpServletResponse httpServletResponse,
-			String username, String authToken) {
+	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(
+			HttpServletResponse httpServletResponse, String username, String authToken) {
 		Map<String, Object> userMap = new HashMap<>();
 		httpServletResponse.setContentType("application/json");
 		UserInfo userinfoKnowHow = userInfoRepository.findByUsername(username);
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		if (Objects.isNull(userinfoKnowHow)) {
-			CentralUserInfoDTO centralUserInfoDTO = userInfoService.getCentralAuthUserInfoDetails(username, authToken);
+			CentralUserInfoDTO centralUserInfoDTO =
+					userInfoService.getCentralAuthUserInfoDetails(username, authToken);
 			UserInfo centralUserInfo = new UserInfo();
 			if (Objects.nonNull(centralUserInfoDTO)) {
 				setUserDetailsFromCentralAuth(username, centralUserInfoDTO, centralUserInfo);
 				userinfoKnowHow = centralUserInfo;
-				UserTokenData userTokenData = new UserTokenData(username, authToken, LocalDateTime.now().toString());
+				UserTokenData userTokenData =
+						new UserTokenData(username, authToken, LocalDateTime.now().toString());
 				userTokenReopository.save(userTokenData);
 			}
 		}
 		Authentication authentication = authenticationRepository.findByUsername(username);
 		userMap.put(USER_NAME, username);
 		if (Objects.nonNull(userinfoKnowHow)) {
-			String email = authentication == null
-					? userinfoKnowHow.getEmailAddress().toLowerCase()
-					: authentication.getEmail().toLowerCase();
+			String email =
+					authentication == null
+							? userinfoKnowHow.getEmailAddress().toLowerCase()
+							: authentication.getEmail().toLowerCase();
 			userMap.put(USER_EMAIL, email);
 			userMap.put(USER_ID, userinfoKnowHow.getId().toString());
 			userMap.put(USER_AUTHORITIES, userinfoKnowHow.getAuthorities());
 			userMap.put(USER_AUTH_TYPE, userinfoKnowHow.getAuthType().toString());
 			userMap.put(NOTIFICATION_EMAIL, userinfoKnowHow.getNotificationEmail());
-			List<RoleWiseProjects> projectAccessesWithRole = projectAccessManager.getProjectAccessesWithRole(username);
+			List<RoleWiseProjects> projectAccessesWithRole =
+					projectAccessManager.getProjectAccessesWithRole(username);
 			if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
 				userMap.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			} else {
 				userMap.put(PROJECTS_ACCESS, new JSONArray());
 			}
-			usersSessionService.createUsersSessionInfo(userinfoKnowHow, AuthenticationEvent.LOGIN, Status.SUCCESS);
+			usersSessionService.createUsersSessionInfo(
+					userinfoKnowHow, AuthenticationEvent.LOGIN, Status.SUCCESS);
 		}
 		userMap.put(AUTH_RESPONSE_HEADER, httpServletResponse.getHeader(AUTH_RESPONSE_HEADER));
 
@@ -177,8 +175,8 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	 * @param centralUserInfoDTO
 	 * @param centralUserInfo
 	 */
-	private void setUserDetailsFromCentralAuth(String username, CentralUserInfoDTO centralUserInfoDTO,
-			UserInfo centralUserInfo) {
+	private void setUserDetailsFromCentralAuth(
+			String username, CentralUserInfoDTO centralUserInfoDTO, UserInfo centralUserInfo) {
 		centralUserInfo.setUsername(username);
 		centralUserInfo.setAuthType(centralUserInfoDTO.getAuthType());
 		centralUserInfo.setAuthorities(Collections.singletonList(Constant.ROLE_VIEWER));
@@ -187,7 +185,6 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		centralUserInfo.setFirstName(centralUserInfoDTO.getFirstName());
 		centralUserInfo.setLastName(centralUserInfoDTO.getLastName());
 		centralUserInfo.setDisplayName(centralUserInfoDTO.getDisplayName());
-		centralUserInfo.setCreatedOn((new Date()).toString());
 		// to create Super admin User info for first time user
 		if (userInfoRepository.count() == 0) {
 			centralUserInfo.setAuthorities(Collections.singletonList(Constant.ROLE_SUPERADMIN));

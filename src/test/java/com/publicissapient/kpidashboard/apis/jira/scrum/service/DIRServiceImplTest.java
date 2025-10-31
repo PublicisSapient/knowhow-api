@@ -32,8 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +44,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
+import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -82,33 +82,20 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class DIRServiceImplTest {
 
-	@InjectMocks
-	DIRServiceImpl dirServiceImpl;
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	CustomApiConfig customApiSetting;
-	@Mock
-	FilterHelperService filterHelperService;
+	@InjectMocks DIRServiceImpl dirServiceImpl;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock CacheService cacheService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock CustomApiConfig customApiSetting;
+	@Mock FilterHelperService filterHelperService;
 
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	KpiDataProvider kpiDataProvider;
-	@Mock
-	KpiDataCacheService kpiDataCacheService;
+	@Mock private CommonService commonService;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock KpiDataProvider kpiDataProvider;
+	@Mock KpiDataCacheService kpiDataCacheService;
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -132,9 +119,10 @@ public class DIRServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		/// set aggregation criteria kpi wise
@@ -145,16 +133,16 @@ public class DIRServiceImplTest {
 
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
 		filterLevelMap.put("PROJECT", Filters.PROJECT);
 		filterLevelMap.put("SPRINT", Filters.SPRINT);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -168,7 +156,8 @@ public class DIRServiceImplTest {
 	@Test
 	public void testGetDIR() throws ApplicationException {
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 
 		List<SprintWiseStory> storyData = sprintWiseStoryDataFactory.getSprintWiseStories();
 
@@ -181,11 +170,13 @@ public class DIRServiceImplTest {
 		resultListMap.put("defectData", defectData);
 		resultListMap.put("issueData", jiraIssueDataFactory.getJiraIssues());
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		String kpiRequestTrackerId = "Excel-dirtrack001";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
 		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
@@ -193,12 +184,15 @@ public class DIRServiceImplTest {
 		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		FieldMapping fieldMapping = mock(FieldMapping.class);
-		when(kpiDataProvider.fetchDefectInjectionRateDataFromDb(eq(kpiRequest), any(), any())).thenReturn(resultListMap);
+		when(kpiDataProvider.fetchDefectInjectionRateDataFromDb(eq(kpiRequest), any(), any()))
+				.thenReturn(resultListMap);
 
 		try {
-			KpiElement kpiElement = dirServiceImpl.getKpiData(this.kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("DIR Value size:", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					dirServiceImpl.getKpiData(
+							this.kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"DIR Value size:", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
 
 		} catch (ApplicationException enfe) {
 
@@ -207,14 +201,16 @@ public class DIRServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		List<SprintWiseStory> storyData = sprintWiseStoryDataFactory.getSprintWiseStories();
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
@@ -225,12 +221,20 @@ public class DIRServiceImplTest {
 		resultListMap.put("defectData", defectData);
 		resultListMap.put("issueData", new ArrayList<>());
 
-//		when(kpiHelperService.fetchDIRDataFromDb(any(), any(), any())).thenReturn(resultListMap);
-		when(kpiDataProvider.fetchDefectInjectionRateDataFromDb(eq(kpiRequest), any(), any())).thenReturn(resultListMap);
+		// when(kpiHelperService.fetchDIRDataFromDb(any(), any(),
+		// any())).thenReturn(resultListMap);
+		when(kpiDataProvider.fetchDefectInjectionRateDataFromDb(eq(kpiRequest), any(), any()))
+				.thenReturn(resultListMap);
 
-		Map<String, Object> defectDataListMap = dirServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate,
-				kpiRequest);
-		assertThat("Total Story value :", ((List<JiraIssue>) (defectDataListMap.get("storyData"))).size(), equalTo(5));
-		assertThat("Total Defects value :", ((List<JiraIssue>) (defectDataListMap.get("defectData"))).size(), equalTo(20));
+		Map<String, Object> defectDataListMap =
+				dirServiceImpl.fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		assertThat(
+				"Total Story value :",
+				((List<JiraIssue>) (defectDataListMap.get("storyData"))).size(),
+				equalTo(5));
+		assertThat(
+				"Total Defects value :",
+				((List<JiraIssue>) (defectDataListMap.get("defectData"))).size(),
+				equalTo(20));
 	}
 }

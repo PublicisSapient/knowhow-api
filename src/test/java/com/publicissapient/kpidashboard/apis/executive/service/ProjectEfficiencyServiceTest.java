@@ -42,11 +42,9 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 @RunWith(MockitoJUnitRunner.class)
 public class ProjectEfficiencyServiceTest {
 
-	@Mock
-	private KpiCategoryRepository kpiCategoryRepository;
+	@Mock private KpiCategoryRepository kpiCategoryRepository;
 
-	@InjectMocks
-	private ProjectEfficiencyService projectEfficiencyService;
+	@InjectMocks private ProjectEfficiencyService projectEfficiencyService;
 
 	@Before
 	public void setup() {
@@ -65,7 +63,8 @@ public class ProjectEfficiencyServiceTest {
 		when(kpiCategoryRepository.findAll()).thenReturn(Collections.emptyList());
 
 		// Execute
-		Map<String, Object> result = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
+		Map<String, Object> result =
+				projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
 
 		// Verify
 		assertNotNull(result);
@@ -78,14 +77,16 @@ public class ProjectEfficiencyServiceTest {
 	@Test
 	public void testCalculateProjectEfficiency_WithCustomWeightages() {
 		// Setup custom weightages
-		ReflectionTestUtils.setField(projectEfficiencyService, "efficiencyWeightageConfig", "DORA=60, AGILE=40");
+		ReflectionTestUtils.setField(
+				projectEfficiencyService, "efficiencyWeightageConfig", "DORA=60, AGILE=40");
 
 		Map<String, String> boardMaturities = new HashMap<>();
 		boardMaturities.put("DORA", "4.5");
 		boardMaturities.put("AGILE", "3.8");
 
 		// Execute
-		Map<String, Object> result = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
+		Map<String, Object> result =
+				projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
 
 		// Verify
 		assertNotNull(result);
@@ -106,7 +107,8 @@ public class ProjectEfficiencyServiceTest {
 		boardMaturities.put("DORA", "4.5");
 
 		// Execute
-		Map<String, Object> result = projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
+		Map<String, Object> result =
+				projectEfficiencyService.calculateProjectEfficiency(boardMaturities);
 
 		// Verify both DORA (default) and QUALITY (from DB) are considered
 		Map<String, Integer> weightages = (Map<String, Integer>) result.get("weightages");
@@ -118,7 +120,8 @@ public class ProjectEfficiencyServiceTest {
 	public void testCalculateProjectEfficiency_WithEmptyMaturities() {
 		Map<String, String> emptyMaturities = Collections.emptyMap();
 
-		Map<String, Object> result = projectEfficiencyService.calculateProjectEfficiency(emptyMaturities);
+		Map<String, Object> result =
+				projectEfficiencyService.calculateProjectEfficiency(emptyMaturities);
 
 		assertEquals(0.0, (Double) result.get("score"), 0.01);
 		assertEquals(0.0, (Double) result.get("percentage"), 0.01);
@@ -139,7 +142,8 @@ public class ProjectEfficiencyServiceTest {
 	@Test
 	public void testParseWeightageConfig_WithValidConfig() {
 		// Setup
-		ReflectionTestUtils.setField(projectEfficiencyService, "efficiencyWeightageConfig", "DORA=60,AGILE=40");
+		ReflectionTestUtils.setField(
+				projectEfficiencyService, "efficiencyWeightageConfig", "DORA=60,AGILE=40");
 
 		// Execute
 		Map<String, Integer> result = projectEfficiencyService.parseWeightageConfig();
@@ -153,7 +157,8 @@ public class ProjectEfficiencyServiceTest {
 	@Test
 	public void testParseWeightageConfig_WithInvalidConfig() {
 		// Setup invalid config
-		ReflectionTestUtils.setField(projectEfficiencyService, "efficiencyWeightageConfig", "invalid=format");
+		ReflectionTestUtils.setField(
+				projectEfficiencyService, "efficiencyWeightageConfig", "invalid=format");
 
 		// Execute
 		Map<String, Integer> result = projectEfficiencyService.parseWeightageConfig();
@@ -203,8 +208,10 @@ public class ProjectEfficiencyServiceTest {
 		boardMaturities.put("OTHER", "2.5");
 
 		// Execute
-		int doraMaturity = projectEfficiencyService.findBestMatchingBoardMaturity("DORA", boardMaturities);
-		int otherMaturity = projectEfficiencyService.findBestMatchingBoardMaturity("NON_EXISTENT", boardMaturities);
+		int doraMaturity =
+				projectEfficiencyService.findBestMatchingBoardMaturity("DORA", boardMaturities);
+		int otherMaturity =
+				projectEfficiencyService.findBestMatchingBoardMaturity("NON_EXISTENT", boardMaturities);
 
 		// Verify
 		assertEquals(5, doraMaturity); // 4.5 should be rounded to 4

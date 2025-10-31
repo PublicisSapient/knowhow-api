@@ -68,28 +68,17 @@ import jakarta.servlet.http.HttpServletRequest;
 @RunWith(MockitoJUnitRunner.class)
 public class CommonServiceImplTest {
 
-	@Mock
-	JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	ProjectBasicConfigRepository projectBasicConfigRepository;
-	@InjectMocks
-	private CommonServiceImpl commonService;
-	@Mock
-	private CustomApiConfig customAPISettings;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private UserInfoRepository userInfoRepository;
-	@Mock
-	private AuthenticationRepository authenticationRepository;
-	@Mock
-	private HttpServletRequest request;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private GlobalConfigRepository globalConfigRepository;
-	@Mock
-	private SpringTemplateEngine templateEngine;
+	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock ProjectBasicConfigRepository projectBasicConfigRepository;
+	@InjectMocks private CommonServiceImpl commonService;
+	@Mock private CustomApiConfig customAPISettings;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private UserInfoRepository userInfoRepository;
+	@Mock private AuthenticationRepository authenticationRepository;
+	@Mock private HttpServletRequest request;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private GlobalConfigRepository globalConfigRepository;
+	@Mock private SpringTemplateEngine templateEngine;
 
 	private GlobalConfig globalConfig;
 
@@ -116,24 +105,28 @@ public class CommonServiceImplTest {
 		list.add("40-60");
 		list.add("60-80");
 		list.add("80-");
-		Assert.assertEquals("5", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
+		Assert.assertEquals(
+				"5", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
 		list.clear();
 		list.add("0-20");
 		list.add("20-40");
-		Assert.assertEquals("0", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
+		Assert.assertEquals(
+				"0", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
 		list.clear();
 		list.add("0-20-20");
 		list.add("20-40-20");
 		list.add("20-40-20");
 		list.add("20-40-20");
-		Assert.assertEquals("4", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
+		Assert.assertEquals(
+				"4", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
 		list.clear();
 		list.add("20-40-20");
 		list.add("0-20-20");
 		list.add("20-40-20");
 		list.add("20-40-20");
 
-		Assert.assertEquals("4", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
+		Assert.assertEquals(
+				"4", commonService.getMaturityLevel(list, Constant.AUTOMATED_PERCENTAGE, "90"));
 	}
 
 	@Test
@@ -171,7 +164,8 @@ public class CommonServiceImplTest {
 		list.add("20-40-20");
 		list.add("20-40-20");
 
-		Assert.assertEquals("4", commonService.getMaturityLevel(list, KPICode.CODE_COMMIT.getKpiId(), "90"));
+		Assert.assertEquals(
+				"4", commonService.getMaturityLevel(list, KPICode.CODE_COMMIT.getKpiId(), "90"));
 	}
 
 	@Test
@@ -206,8 +200,10 @@ public class CommonServiceImplTest {
 		List<Authentication> authentications = new ArrayList<>();
 		authentications.add(authentication);
 
-		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList("ROLE_SUPERADMIN"))).thenReturn(users);
-		when(authenticationRepository.findByUsernameIn(Arrays.asList(username))).thenReturn(authentications);
+		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList("ROLE_SUPERADMIN")))
+				.thenReturn(users);
+		when(authenticationRepository.findByUsernameIn(Arrays.asList(username)))
+				.thenReturn(authentications);
 		commonService.getEmailAddressBasedOnRoles(Arrays.asList("ROLE_SUPERADMIN"));
 	}
 
@@ -279,7 +275,8 @@ public class CommonServiceImplTest {
 		List<Authentication> authentications = new ArrayList<>();
 		authentications.add(authentication);
 
-		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList("ROLE_SUPERADMIN"))).thenReturn(users);
+		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList("ROLE_SUPERADMIN")))
+				.thenReturn(users);
 		when(authenticationRepository.findByUsernameIn(Arrays.asList(username))).thenReturn(null);
 		commonService.getEmailAddressBasedOnRoles(Arrays.asList("ROLE_SUPERADMIN"));
 	}
@@ -403,7 +400,8 @@ public class CommonServiceImplTest {
 		List<Authentication> authentications = new ArrayList<>();
 		authentications.add(authentication);
 
-		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList(Constant.ROLE_PROJECT_ADMIN))).thenReturn(users);
+		when(userInfoRepository.findByAuthoritiesIn(Arrays.asList(Constant.ROLE_PROJECT_ADMIN)))
+				.thenReturn(users);
 		commonService.getProjectAdminEmailAddressBasedProjectId("5ddf69f6a592816aa30c4fbe");
 	}
 

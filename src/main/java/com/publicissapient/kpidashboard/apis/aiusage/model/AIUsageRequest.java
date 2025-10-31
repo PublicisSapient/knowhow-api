@@ -18,18 +18,19 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.model;
 
+import java.time.Instant;
+
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Instant;
-
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -38,14 +39,13 @@ import java.time.Instant;
 @Builder
 @Document(collection = "ai_usage_requests")
 public class AIUsageRequest extends BasicModel {
-    @Indexed
-    private String requestId;
-    private String userId;
-    private Instant submittedAt;
-    private Instant completedAt;
-    private UploadStatus status;
-    private Integer totalRecords;
-    private Integer successfulRecords;
-    private Integer failedRecords;
-    private String errorMessage;
+	@Indexed private String requestId;
+	private String userId;
+	private Instant submittedAt;
+	private Instant completedAt;
+	private UploadStatus status;
+	private Integer totalRecords;
+	private Integer successfulRecords;
+	private Integer failedRecords;
+	private String errorMessage;
 }

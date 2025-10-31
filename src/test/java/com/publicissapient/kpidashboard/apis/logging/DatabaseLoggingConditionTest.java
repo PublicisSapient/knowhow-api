@@ -34,17 +34,13 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 @RunWith(MockitoJUnitRunner.class)
 public class DatabaseLoggingConditionTest {
 
-	@Mock
-	private ConditionContext context;
+	@Mock private ConditionContext context;
 
-	@Mock
-	private Environment environment;
+	@Mock private Environment environment;
 
-	@Mock
-	private AnnotatedTypeMetadata metadata;
+	@Mock private AnnotatedTypeMetadata metadata;
 
-	@InjectMocks
-	private DatabaseLoggingCondition condition;
+	@InjectMocks private DatabaseLoggingCondition condition;
 
 	@Test
 	public void shouldBeTrueWhenPropertyTrue() {

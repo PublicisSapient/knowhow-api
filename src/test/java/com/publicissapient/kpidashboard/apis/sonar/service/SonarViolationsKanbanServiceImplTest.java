@@ -81,18 +81,12 @@ public class SonarViolationsKanbanServiceImplTest {
 	private static Tool tool2;
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	private ConfigHelperService configHelperService;
-	@InjectMocks
-	private CodeViolationsKanbanServiceImpl svServiceImpl;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private SonarHistoryRepository sonarHistoryRepository;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CommonService commonService;
+	@Mock private ConfigHelperService configHelperService;
+	@InjectMocks private CodeViolationsKanbanServiceImpl svServiceImpl;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private SonarHistoryRepository sonarHistoryRepository;
+	@Mock private CacheService cacheService;
+	@Mock private CommonService commonService;
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
 	private Map<String, List<Tool>> toolGroup = new HashMap<>();
 	private Map<String, List<DataCount>> trendValueMap = new HashMap<>();
@@ -106,16 +100,20 @@ public class SonarViolationsKanbanServiceImplTest {
 	@Before
 	public void setUp() {
 
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
+		KpiRequestFactory kpiRequestFactory =
+				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi64");
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setDuration("WEEKS");
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
-		KanbanIssueCustomHistoryDataFactory issueHistoryFactory = KanbanIssueCustomHistoryDataFactory.newInstance();
-		jiraIssueCustomHistories = issueHistoryFactory
-				.getKanbanIssueCustomHistoryDataListByTypeName(Arrays.asList("Story", "Defect", "Issue"));
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		KanbanIssueCustomHistoryDataFactory issueHistoryFactory =
+				KanbanIssueCustomHistoryDataFactory.newInstance();
+		jiraIssueCustomHistories =
+				issueHistoryFactory.getKanbanIssueCustomHistoryDataListByTypeName(
+						Arrays.asList("Story", "Defect", "Issue"));
 
 		SonarHistoryDataFactory sonarHistoryDataFactory = SonarHistoryDataFactory.newInstance();
 		sonarHistoryData = sonarHistoryDataFactory.getSonarHistoryList();
@@ -123,12 +121,14 @@ public class SonarViolationsKanbanServiceImplTest {
 		List<ProjectBasicConfig> projectConfigList = getMockProjectConfig();
 		List<FieldMapping> fieldMappingList = getMockFieldMapping();
 		DateTime date = new DateTime("2018-07-19", DateTimeZone.UTC);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 		setTreadValuesDataCount();
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -148,7 +148,8 @@ public class SonarViolationsKanbanServiceImplTest {
 		trendValueMap.put("ENGINEERING.KPIDASHBOARD.PROCESSORS->origin/develop->DA_10304", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);
@@ -194,7 +195,12 @@ public class SonarViolationsKanbanServiceImplTest {
 		toolMap.put(new ObjectId("6335368249794a18e8a4479f"), toolGroup);
 	}
 
-	private Tool createTool(String key, String url, String toolType, String username, String password,
+	private Tool createTool(
+			String key,
+			String url,
+			String toolType,
+			String username,
+			String password,
 			List<ProcessorItem> processorItems) {
 		Tool tool = new Tool();
 		tool.setTool(toolType);
@@ -241,34 +247,38 @@ public class SonarViolationsKanbanServiceImplTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetViolations() throws Exception {
 		setToolMap();
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
-		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(anyList(), anyLong()))
+		when(sonarHistoryRepository.findByProcessorItemIdInAndTimestampGreaterThan(
+						anyList(), anyLong()))
 				.thenReturn(sonarHistoryData);
 
 		try {
-			KpiElement kpiElement = svServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			((List<DataCountGroup>) kpiElement.getTrendValueList()).forEach(data -> {
-				String projectName = data.getFilter();
-				switch (projectName) {
-					case "Overall" :
-						assertThat("Sonar Tech Debt:", data.getValue().size(), equalTo(1));
-						break;
+			KpiElement kpiElement =
+					svServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			((List<DataCountGroup>) kpiElement.getTrendValueList())
+					.forEach(
+							data -> {
+								String projectName = data.getFilter();
+								switch (projectName) {
+									case "Overall":
+										assertThat("Sonar Tech Debt:", data.getValue().size(), equalTo(1));
+										break;
 
-					case "ENGINEERING.KPIDASHBOARD.PROCESSORS->origin/develop->DA_10304" :
-						assertThat("Sonar Tech Debt:", data.getValue().size(), equalTo(1));
-						break;
-				}
-			});
+									case "ENGINEERING.KPIDASHBOARD.PROCESSORS->origin/develop->DA_10304":
+										assertThat("Sonar Tech Debt:", data.getValue().size(), equalTo(1));
+										break;
+								}
+							});
 		} catch (Exception enfe) {
 
 		}
@@ -286,8 +296,9 @@ public class SonarViolationsKanbanServiceImplTest {
 
 	@Test
 	public void calculateAggregatedValue() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, new ArrayList<>(), accountHierarchyDataKanbanList, "hierarchyLevelOne", 4);
 		String kpiRequestTrackerId = "Excel-Sonar-5be544de025de212549176a9";
 		SonarViolations ele = null;
 		Assert.assertNull(ele);
@@ -295,6 +306,8 @@ public class SonarViolationsKanbanServiceImplTest {
 
 	@Test
 	public void testCalculateAggregatedValue() {
-		assertNotNull(svServiceImpl.calculateAggregatedValue(null, new HashMap<>(), KPICode.CODE_VIOLATIONS_KANBAN));
+		assertNotNull(
+				svServiceImpl.calculateAggregatedValue(
+						null, new HashMap<>(), KPICode.CODE_VIOLATIONS_KANBAN));
 	}
 }

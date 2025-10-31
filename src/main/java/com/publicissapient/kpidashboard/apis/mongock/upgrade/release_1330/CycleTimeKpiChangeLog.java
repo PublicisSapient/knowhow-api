@@ -16,13 +16,18 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1330;
 
-import io.mongock.api.annotations.ChangeUnit;
-import io.mongock.api.annotations.Execution;
-import io.mongock.api.annotations.RollbackExecution;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-@ChangeUnit(id = "add_cycle_time_kpi", order = "13305", author = "kunkambl", systemVersion = "13.3.0")
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
+
+@ChangeUnit(
+		id = "add_cycle_time_kpi",
+		order = "13305",
+		author = "kunkambl",
+		systemVersion = "13.3.0")
 public class CycleTimeKpiChangeLog {
 
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
@@ -44,22 +49,35 @@ public class CycleTimeKpiChangeLog {
 	}
 
 	private void updateLeadTimeKpi() {
-		Document updateFields = new Document("$set",
-				new Document("boxType", "3_column").append("chartType", "table").append("defaultOrder", 29)
-						.append("aggregationCriteria", "average").append("groupId", 33))
-				.append("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
+		Document updateFields =
+				new Document(
+								"$set",
+								new Document("boxType", "3_column")
+										.append("chartType", "table")
+										.append("defaultOrder", 29)
+										.append("aggregationCriteria", "average")
+										.append("groupId", 33))
+						.append("$unset", new Document("kpiSubCategory", "").append("kpiCategory", ""));
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 	}
 
 	public void addToKpiCategoryMapping() {
-		Document kpiCategoryMappingDocument = new Document().append(KPI_LABEL, KPI_ID).append("categoryId", "speed")
-				.append("kpiOrder", 12).append("kanban", false);
+		Document kpiCategoryMappingDocument =
+				new Document()
+						.append(KPI_LABEL, KPI_ID)
+						.append("categoryId", "speed")
+						.append("kpiOrder", 12)
+						.append("kanban", false);
 		mongoTemplate.getCollection("kpi_category_mapping").insertOne(kpiCategoryMappingDocument);
 	}
 
 	public void updateKpiColumnConfig() {
-		Document query = new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue Id");
-		Document update = new Document("$set", new Document("kpiColumnDetails.$.columnName", "Issue ID"));
+		Document query =
+				new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue Id");
+		Document update =
+				new Document("$set", new Document("kpiColumnDetails.$.columnName", "Issue ID"));
 		mongoTemplate.getCollection("kpi_column_configs").updateMany(query, update);
 	}
 
@@ -71,18 +89,29 @@ public class CycleTimeKpiChangeLog {
 
 	@RollbackExecution
 	public void rollback() {
-		Document updateFields = new Document("$set",
-				new Document("kpiSubCategory", "defaultSubCategory").append("kpiCategory", "defaultCategory")
-						.append("groupId", 11))
-				.append("$unset",
-						new Document("boxType", "").append("chartType", "").append("aggregationCriteria", ""));
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
+		Document updateFields =
+				new Document(
+								"$set",
+								new Document("kpiSubCategory", "defaultSubCategory")
+										.append("kpiCategory", "defaultCategory")
+										.append("groupId", 11))
+						.append(
+								"$unset",
+								new Document("boxType", "")
+										.append("chartType", "")
+										.append("aggregationCriteria", ""));
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.updateOne(new Document(KPI_LABEL, KPI_ID), updateFields);
 
-		Document query = new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue ID");
-		Document update = new Document("$set", new Document("kpiColumnDetails.$.columnName", "Issue Id"));
+		Document query =
+				new Document(KPI_LABEL, KPI_ID).append("kpiColumnDetails.columnName", "Issue ID");
+		Document update =
+				new Document("$set", new Document("kpiColumnDetails.$.columnName", "Issue Id"));
 		mongoTemplate.getCollection("kpi_column_configs").updateMany(query, update);
 
-		mongoTemplate.getCollection("kpi_category_mapping")
+		mongoTemplate
+				.getCollection("kpi_category_mapping")
 				.deleteOne(new Document(KPI_LABEL, KPI_ID).append("categoryId", "speed"));
 
 		Document query2 = new Document("fieldName", "jiraIssueTypeKPI171");

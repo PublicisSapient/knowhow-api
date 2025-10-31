@@ -18,11 +18,12 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
-import com.publicissapient.kpidashboard.common.util.DateUtil;
+import java.io.Serializable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
-import java.io.Serializable;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 /**
  * @author tauakram
@@ -37,8 +38,7 @@ public class ReleaseFilter implements Serializable {
 	private String startDate;
 	private String endDate;
 
-	public ReleaseFilter() {
-	}
+	public ReleaseFilter() {}
 
 	/**
 	 * @param sprintId
@@ -46,13 +46,20 @@ public class ReleaseFilter implements Serializable {
 	 * @param sprintStartDate
 	 * @param sprintEndDate
 	 */
-	public ReleaseFilter(String sprintId, String sprintName, String sprintStartDate, String sprintEndDate) {
+	public ReleaseFilter(
+			String sprintId, String sprintName, String sprintStartDate, String sprintEndDate) {
 		super();
 		this.id = sprintId;
 		this.name = sprintName;
-		this.startDate = StringUtils.isNotEmpty(sprintStartDate)? DateUtil.convertJodaDateTimeToLocalDateTime(DateTime.parse(sprintStartDate)).toString(): sprintStartDate;
-		this.endDate = StringUtils.isNotEmpty(sprintEndDate)? DateUtil.convertJodaDateTimeToLocalDateTime(DateTime.parse(sprintEndDate)).toString(): sprintEndDate;
-
+		this.startDate =
+				StringUtils.isNotEmpty(sprintStartDate)
+						? DateUtil.convertJodaDateTimeToLocalDateTime(DateTime.parse(sprintStartDate))
+								.toString()
+						: sprintStartDate;
+		this.endDate =
+				StringUtils.isNotEmpty(sprintEndDate)
+						? DateUtil.convertJodaDateTimeToLocalDateTime(DateTime.parse(sprintEndDate)).toString()
+						: sprintEndDate;
 	}
 
 	/**

@@ -70,35 +70,29 @@ import lombok.extern.slf4j.Slf4j;
 public class ProjectBasicConfigController {
 
 	public static final String ADDING_PROJECT_CONFIGURATIONS = "Adding project configurations: {}";
-	public static final String UPDATING_PROJECT_CONFIGURATIONS = "Updating project configurations: {}";
+	public static final String UPDATING_PROJECT_CONFIGURATIONS =
+			"Updating project configurations: {}";
 	private static final String AUTH_RESPONSE_HEADER = "X-Authentication-Token";
 	public static final String FETCHED_SUCCESSFULLY = "Fetched successfully";
-	@Autowired
-	HttpServletRequest contextreq;
-	@Autowired
-	UserInfoService userInfoService;
-	@Autowired
-	private ProjectBasicConfigService projectBasicConfigService;
-	@Autowired
-	private ContextAwarePolicyEnforcement policy;
-	@Autowired
-	private ProjectAccessManager projectAccessManager;
+	@Autowired HttpServletRequest contextreq;
+	@Autowired UserInfoService userInfoService;
+	@Autowired private ProjectBasicConfigService projectBasicConfigService;
+	@Autowired private ContextAwarePolicyEnforcement policy;
+	@Autowired private ProjectAccessManager projectAccessManager;
 
-	@Autowired
-	private AuthenticationService authenticationService;
+	@Autowired private AuthenticationService authenticationService;
 
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
 	 * Returns the list of project's basic configuration.
 	 *
-	 * @param basicProjectConfigId
-	 *            basic project config id
+	 * @param basicProjectConfigId basic project config id
 	 * @return ResponseEntity
 	 */
-	@GetMapping(value = { "/{id}" })
-	public ResponseEntity<ServiceResponse> getProjectBasicConfig(@PathVariable("id") String basicProjectConfigId) {
+	@GetMapping(value = {"/{id}"})
+	public ResponseEntity<ServiceResponse> getProjectBasicConfig(
+			@PathVariable("id") String basicProjectConfigId) {
 		basicProjectConfigId = CommonUtils.handleCrossScriptingTaintedValue(basicProjectConfigId);
 		log.info("List project configuration request recieved for : {}", basicProjectConfigId);
 		boolean isSuccess = true;
@@ -106,7 +100,8 @@ public class ProjectBasicConfigController {
 		Object returnObj = null;
 
 		if (Optional.ofNullable(basicProjectConfigId).isPresent()) {
-			ProjectBasicConfig projectConfig = projectBasicConfigService.getProjectBasicConfigs(basicProjectConfigId);
+			ProjectBasicConfig projectConfig =
+					projectBasicConfigService.getProjectBasicConfigs(basicProjectConfigId);
 			if (Optional.ofNullable(projectConfig).isPresent()) {
 				returnObj = projectConfig;
 			} else {
@@ -117,7 +112,8 @@ public class ProjectBasicConfigController {
 		} else {
 			returnObj = projectBasicConfigService.getFilteredProjectsBasicConfigs(Boolean.TRUE);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(isSuccess, message, returnObj));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(new ServiceResponse(isSuccess, message, returnObj));
 	}
 
 	/**
@@ -133,7 +129,8 @@ public class ProjectBasicConfigController {
 			Object result = projectBasicConfigService.getFilteredProjectsBasicConfigs(includeAll);
 
 			// Return a successful response
-			return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, FETCHED_SUCCESSFULLY, result));
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, FETCHED_SUCCESSFULLY, result));
 
 		} catch (Exception ex) {
 			// Handle unexpected exceptions
@@ -152,31 +149,35 @@ public class ProjectBasicConfigController {
 	public ResponseEntity<ProjectConfigResponse> addBasicConfig(
 			@RequestBody ProjectBasicConfigDTO projectBasicConfigDTO, HttpServletResponse response) {
 
-		ServiceResponse serviceResp ;
+		ServiceResponse serviceResp;
 		List<RoleWiseProjects> projectAccess;
 		List<HierarchyValueDTO> hierarchyDTO = projectBasicConfigDTO.getHierarchy();
-		boolean match = hierarchyDTO.stream().allMatch(hierarchy ->
-				StringUtils.isNotBlank(hierarchy.getValue())
-		);
+		boolean match =
+				hierarchyDTO.stream().allMatch(hierarchy -> StringUtils.isNotBlank(hierarchy.getValue()));
 		if (match && StringUtils.isNotBlank(projectBasicConfigDTO.getProjectName())) {
 			policy.checkPermission(projectBasicConfigDTO, "ADD_PROJECT");
 
-			log.info(ADDING_PROJECT_CONFIGURATIONS, CommonUtils.sanitize(projectBasicConfigDTO.toString()));
+			log.info(
+					ADDING_PROJECT_CONFIGURATIONS, CommonUtils.sanitize(projectBasicConfigDTO.toString()));
 
 			serviceResp = projectBasicConfigService.addBasicConfig(projectBasicConfigDTO);
 
-			projectAccess = projectAccessManager.getProjectAccessesWithRole(authenticationService.getLoggedInUser());
-			ProjectConfigResponse projectConfigResponse = new ProjectConfigResponse(
-					response.getHeader(AUTH_RESPONSE_HEADER), serviceResp, projectAccess);
+			projectAccess =
+					projectAccessManager.getProjectAccessesWithRole(authenticationService.getLoggedInUser());
+			ProjectConfigResponse projectConfigResponse =
+					new ProjectConfigResponse(
+							response.getHeader(AUTH_RESPONSE_HEADER), serviceResp, projectAccess);
 			return ResponseEntity.status(HttpStatus.OK).body(projectConfigResponse);
 		} else {
-			ProjectConfigResponse projectConfigResponse = new ProjectConfigResponse(
-					response.getHeader(AUTH_RESPONSE_HEADER),
-					new ServiceResponse(false,
-							"New Project can not be created as project name, and its hierarchy levels "
-									+ "are either empty or contains only spaces.",
-							null),
-					null);
+			ProjectConfigResponse projectConfigResponse =
+					new ProjectConfigResponse(
+							response.getHeader(AUTH_RESPONSE_HEADER),
+							new ServiceResponse(
+									false,
+									"New Project can not be created as project name, and its hierarchy levels "
+											+ "are either empty or contains only spaces.",
+									null),
+							null);
 			return ResponseEntity.status(HttpStatus.OK).body(projectConfigResponse);
 		}
 	}
@@ -188,18 +189,22 @@ public class ProjectBasicConfigController {
 	 * @return ResponseEntity
 	 */
 	@PutMapping(value = "/{id}")
-	public ResponseEntity<ProjectConfigResponse> updateBasicConfig(@PathVariable("id") String basicConfigId,
-			@RequestBody ProjectBasicConfigDTO projectBasicConfigDTO, HttpServletResponse response) {
+	public ResponseEntity<ProjectConfigResponse> updateBasicConfig(
+			@PathVariable("id") String basicConfigId,
+			@RequestBody ProjectBasicConfigDTO projectBasicConfigDTO,
+			HttpServletResponse response) {
 
 		basicConfigId = CommonUtils.handleCrossScriptingTaintedValue(basicConfigId);
 		policy.checkPermission(projectBasicConfigDTO, "UPDATE_PROJECT");
 
 		log.info(UPDATING_PROJECT_CONFIGURATIONS, projectBasicConfigDTO.toString());
 
-		ServiceResponse serviceResp = projectBasicConfigService.updateBasicConfig(basicConfigId, projectBasicConfigDTO);
+		ServiceResponse serviceResp =
+				projectBasicConfigService.updateBasicConfig(basicConfigId, projectBasicConfigDTO);
 
-		ProjectConfigResponse projectConfigResponse = new ProjectConfigResponse(
-				response.getHeader(AUTH_RESPONSE_HEADER), serviceResp, Lists.newArrayList());
+		ProjectConfigResponse projectConfigResponse =
+				new ProjectConfigResponse(
+						response.getHeader(AUTH_RESPONSE_HEADER), serviceResp, Lists.newArrayList());
 		return ResponseEntity.status(HttpStatus.OK).body(projectConfigResponse);
 	}
 
@@ -211,8 +216,8 @@ public class ProjectBasicConfigController {
 	@GetMapping(value = "/all")
 	public ServiceResponse getAllProjectsList() {
 
-		List<ProjectBasicConfigDTO> configsList = projectBasicConfigService
-				.getAllProjectsBasicConfigsDTOWithoutPermission();
+		List<ProjectBasicConfigDTO> configsList =
+				projectBasicConfigService.getAllProjectsBasicConfigsDTOWithoutPermission();
 
 		ServiceResponse response = new ServiceResponse(false, "No record found", null);
 		if (CollectionUtils.isNotEmpty(configsList)) {
@@ -224,34 +229,39 @@ public class ProjectBasicConfigController {
 	/**
 	 * Delete project
 	 *
-	 * @param basicProjectConfigId
-	 *            id
+	 * @param basicProjectConfigId id
 	 * @return ServiceResponse
 	 */
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'DELETE_PROJECT')")
 	@DeleteMapping(value = "/{basicProjectConfigId}")
 	public ResponseEntity<ServiceResponse> deleteProject(@PathVariable String basicProjectConfigId) {
-		ProjectBasicConfig projectBasicConfig = projectBasicConfigService.deleteProject(basicProjectConfigId);
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true,
-				projectBasicConfig.getProjectDisplayName() + " deleted successfully", projectBasicConfig));
+		ProjectBasicConfig projectBasicConfig =
+				projectBasicConfigService.deleteProject(basicProjectConfigId);
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(
+						new ServiceResponse(
+								true,
+								projectBasicConfig.getProjectDisplayName() + " deleted successfully",
+								projectBasicConfig));
 	}
 
 	/**
-	 * Gets All Scrum ProjectsList with hierarchy details this method is only use
-	 * for specific purpose for Expose API
+	 * Gets All Scrum ProjectsList with hierarchy details this method is only use for specific purpose
+	 * for Expose API
 	 *
-	 * @return list of Scrum project list with hierarchy details at least one
-	 *         connected tool
+	 * @return list of Scrum project list with hierarchy details at least one connected tool
 	 */
 	@GetMapping(value = "/hierarchyResponses")
-	public ResponseEntity<List<HierarchyResponseDTO>> getAllHierarchyResponse(HttpServletRequest request) {
+	public ResponseEntity<List<HierarchyResponseDTO>> getAllHierarchyResponse(
+			HttpServletRequest request) {
 		String apiKey = customApiConfig.getxApiKey();
-		boolean isApiAuth = StringUtils.isNotEmpty(apiKey)
-				&& apiKey.equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
+		boolean isApiAuth =
+				StringUtils.isNotEmpty(apiKey)
+						&& apiKey.equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
 		if (isApiAuth) {
 			List<HierarchyResponseDTO> hierarchyData = projectBasicConfigService.getHierarchyData();
-			List<HierarchyResponseDTO> filteredHierarchyData = projectBasicConfigService
-					.filterHierarchyDTOsWithConnectedTools(hierarchyData);
+			List<HierarchyResponseDTO> filteredHierarchyData =
+					projectBasicConfigService.filterHierarchyDTOsWithConnectedTools(hierarchyData);
 			return ResponseEntity.status(HttpStatus.OK).body(filteredHierarchyData);
 		} else {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());

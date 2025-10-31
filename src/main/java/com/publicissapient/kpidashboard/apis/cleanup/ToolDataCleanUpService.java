@@ -32,8 +32,7 @@ public interface ToolDataCleanUpService {
 	/**
 	 * Delete data related to the tool
 	 *
-	 * @param projectToolConfigId
-	 *          toolId
+	 * @param projectToolConfigId toolId
 	 */
 	void clean(String projectToolConfigId);
 }

@@ -17,11 +17,11 @@ import com.publicissapient.kpidashboard.common.model.jira.MetadataIdentifierDTO;
 @RequestMapping("/templates")
 public class MetaDataIdentifierController {
 
-	@Autowired
-	private MetaDataIdentifierService metaDataIdentifierService;
+	@Autowired private MetaDataIdentifierService metaDataIdentifierService;
 
 	@GetMapping(value = {"/{basicConfigId}"})
-	public ResponseEntity<List<MetadataIdentifierDTO>> getTemplateNames(@PathVariable String basicConfigId) {
+	public ResponseEntity<List<MetadataIdentifierDTO>> getTemplateNames(
+			@PathVariable String basicConfigId) {
 		return new ResponseEntity<>(metaDataIdentifierService.getTemplateDetails(), HttpStatus.OK);
 	}
 }

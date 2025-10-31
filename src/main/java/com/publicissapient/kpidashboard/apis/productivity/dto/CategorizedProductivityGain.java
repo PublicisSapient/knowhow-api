@@ -26,9 +26,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CategorizedProductivityGain {
-    private double overall;
-    private double speed;
-    private double quality;
-    private double efficiency;
-    private double productivity;
+	private double overall;
+	private double speed;
+	private double quality;
+	private double efficiency;
+	private double productivity;
 }

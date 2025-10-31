@@ -39,8 +39,7 @@ public class BaseModel {
 	/**
 	 * Sets maturity level.
 	 *
-	 * @param maturityLevel
-	 *          the maturity level
+	 * @param maturityLevel the maturity level
 	 */
 	public void setMaturityLevel(String maturityLevel) {
 		this.maturityLevel = maturityLevel;

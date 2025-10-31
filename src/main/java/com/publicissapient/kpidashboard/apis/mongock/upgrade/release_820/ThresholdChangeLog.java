@@ -33,7 +33,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author shunaray
  */
-@ChangeUnit(id = "threshold_change_log", order = "8208", author = "shunaray", systemVersion = "8.2.0")
+@ChangeUnit(
+		id = "threshold_change_log",
+		order = "8208",
+		author = "shunaray",
+		systemVersion = "8.2.0")
 public class ThresholdChangeLog {
 
 	private final MongoTemplate mongoTemplate;
@@ -79,17 +83,29 @@ public class ThresholdChangeLog {
 	}
 
 	public void insertFieldMapping() {
-		fieldMappingStructure.insertMany(Arrays.asList(createDocument("thresholdValueKPI126"),
-				createDocument("thresholdValueKPI42"), createDocument("thresholdValueKPI168"),
-				createDocument("thresholdValueKPI70"), createDocument("thresholdValueKPI40"),
-				createDocument("thresholdValueKPI5"), createDocument("thresholdValueKPI39"),
-				createDocument("thresholdValueKPI46"), createDocument("thresholdValueKPI8"),
-				createDocument("thresholdValueKPI73"), createDocument("thresholdValueKPI113"),
-				createDocument("thresholdValueKPI149"), createDocument("thresholdValueKPI153"),
-				createDocument("thresholdValueKPI162"), createDocument("thresholdValueKPI116"),
-				createDocument("thresholdValueKPI156"), createDocument("thresholdValueKPI118"),
-				createDocument("thresholdValueKPI127"), createDocument("thresholdValueKPI170"),
-				createDocument("thresholdValueKPI139"), createDocument("thresholdValueKPI166")));
+		fieldMappingStructure.insertMany(
+				Arrays.asList(
+						createDocument("thresholdValueKPI126"),
+						createDocument("thresholdValueKPI42"),
+						createDocument("thresholdValueKPI168"),
+						createDocument("thresholdValueKPI70"),
+						createDocument("thresholdValueKPI40"),
+						createDocument("thresholdValueKPI5"),
+						createDocument("thresholdValueKPI39"),
+						createDocument("thresholdValueKPI46"),
+						createDocument("thresholdValueKPI8"),
+						createDocument("thresholdValueKPI73"),
+						createDocument("thresholdValueKPI113"),
+						createDocument("thresholdValueKPI149"),
+						createDocument("thresholdValueKPI153"),
+						createDocument("thresholdValueKPI162"),
+						createDocument("thresholdValueKPI116"),
+						createDocument("thresholdValueKPI156"),
+						createDocument("thresholdValueKPI118"),
+						createDocument("thresholdValueKPI127"),
+						createDocument("thresholdValueKPI170"),
+						createDocument("thresholdValueKPI139"),
+						createDocument("thresholdValueKPI166")));
 	}
 
 	private void addThresholdAndBg(String kpiId, String thresholdValue, boolean isPositiveTrend) {
@@ -98,16 +114,26 @@ public class ThresholdChangeLog {
 
 		Document updateFilter = new Document("kpiId", kpiId);
 
-		Document update = new Document("$set", new Document("thresholdValue", thresholdValue)
-				.append("lowerThresholdBG", lowerThresholdBG).append("upperThresholdBG", upperThresholdBG));
+		Document update =
+				new Document(
+						"$set",
+						new Document("thresholdValue", thresholdValue)
+								.append("lowerThresholdBG", lowerThresholdBG)
+								.append("upperThresholdBG", upperThresholdBG));
 
 		kpiMaster.updateOne(updateFilter, update);
 	}
 
 	private Document createDocument(String fieldName) {
-		return new Document("fieldName", fieldName).append("fieldLabel", "Target KPI Value").append("fieldType", "number")
-				.append("section", "Custom Fields Mapping").append("tooltip", new Document("definition",
-						"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"));
+		return new Document("fieldName", fieldName)
+				.append("fieldLabel", "Target KPI Value")
+				.append("fieldType", "number")
+				.append("section", "Custom Fields Mapping")
+				.append(
+						"tooltip",
+						new Document(
+								"definition",
+								"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"));
 	}
 
 	@RollbackExecution
@@ -117,12 +143,29 @@ public class ThresholdChangeLog {
 	}
 
 	public void rollBackFieldMappingStructure() {
-		List<String> fieldNamesToDelete = Arrays.asList("thresholdValueKPI126", "thresholdValueKPI42",
-				"thresholdValueKPI168", "thresholdValueKPI70", "thresholdValueKPI40", "thresholdValueKPI5",
-				"thresholdValueKPI39", "thresholdValueKPI46", "thresholdValueKPI8", "thresholdValueKPI73",
-				"thresholdValueKPI113", "thresholdValueKPI149", "thresholdValueKPI153", "thresholdValueKPI162",
-				"thresholdValueKPI116", "thresholdValueKPI156", "thresholdValueKPI118", "thresholdValueKPI127",
-				"thresholdValueKPI170", "thresholdValueKPI139", "thresholdValueKPI166");
+		List<String> fieldNamesToDelete =
+				Arrays.asList(
+						"thresholdValueKPI126",
+						"thresholdValueKPI42",
+						"thresholdValueKPI168",
+						"thresholdValueKPI70",
+						"thresholdValueKPI40",
+						"thresholdValueKPI5",
+						"thresholdValueKPI39",
+						"thresholdValueKPI46",
+						"thresholdValueKPI8",
+						"thresholdValueKPI73",
+						"thresholdValueKPI113",
+						"thresholdValueKPI149",
+						"thresholdValueKPI153",
+						"thresholdValueKPI162",
+						"thresholdValueKPI116",
+						"thresholdValueKPI156",
+						"thresholdValueKPI118",
+						"thresholdValueKPI127",
+						"thresholdValueKPI170",
+						"thresholdValueKPI139",
+						"thresholdValueKPI166");
 		Document filter = new Document("fieldName", new Document("$in", fieldNamesToDelete));
 
 		// Delete documents that match the filter
@@ -130,14 +173,20 @@ public class ThresholdChangeLog {
 	}
 
 	private void rollbackThresholdAndBg() {
-		List<String> kpiIds = Arrays.asList("kpi126", "kpi42", "kpi168", "kpi70", "kpi40", "kpi5", "kpi39", "kpi46", "kpi8",
-				"kpi73", "kpi113", "kpi149", "kpi153", "kpi162", "kpi116", "kpi156", "kpi118", "kpi127", "kpi170", "kpi139",
-				"kpi166");
+		List<String> kpiIds =
+				Arrays.asList(
+						"kpi126", "kpi42", "kpi168", "kpi70", "kpi40", "kpi5", "kpi39", "kpi46", "kpi8",
+						"kpi73", "kpi113", "kpi149", "kpi153", "kpi162", "kpi116", "kpi156", "kpi118", "kpi127",
+						"kpi170", "kpi139", "kpi166");
 
 		Document filter = new Document("kpiId", new Document("$in", kpiIds));
 
-		Document update = new Document("$unset",
-				new Document("thresholdValue", "").append("lowerThresholdBG", "").append("upperThresholdBG", ""));
+		Document update =
+				new Document(
+						"$unset",
+						new Document("thresholdValue", "")
+								.append("lowerThresholdBG", "")
+								.append("upperThresholdBG", ""));
 
 		kpiMaster.updateMany(filter, update);
 	}

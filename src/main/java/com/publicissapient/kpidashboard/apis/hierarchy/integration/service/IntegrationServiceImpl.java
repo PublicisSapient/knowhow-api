@@ -135,7 +135,7 @@ public class IntegrationServiceImpl implements IntegerationService {
 				.filter(node -> PROJECT.equalsIgnoreCase(node.getHierarchyLevelId()))
 				.filter(node -> {
 					OrganizationHierarchy parent = findParentNode(node.getParentId(), allDbNodes);
-					return parent != null && PORT.equalsIgnoreCase(parent.getHierarchyLevelId()) 
+					return parent != null && PORT.equalsIgnoreCase(parent.getHierarchyLevelId())
 							&& parent.getExternalId() != null && !externalIds.contains(parent.getExternalId());
 				})
 				.map(OrganizationHierarchy::getNodeId)

@@ -26,7 +26,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_insert_filter_data", order = "014002", author = "shi6", systemVersion = "14.0.0")
+@ChangeUnit(
+		id = "r_insert_filter_data",
+		order = "014002",
+		author = "shi6",
+		systemVersion = "14.0.0")
 public class FilterInsertRollBack {
 	private final MongoTemplate mongoTemplate;
 
@@ -41,14 +45,20 @@ public class FilterInsertRollBack {
 
 	@RollbackExecution
 	public void rollback() {
-		Document filterDocument = new Document().append("boardId", 0)
-				.append("projectTypeSwitch", new Document().append("enabled", true).append("visible", true))
-				.append("primaryFilter",
-						new Document().append("type", "singleSelect").append("defaultLevel",
-								new Document().append("labelName", "project").append("sortBy", null)))
-				.append("parentFilter", new Document().append("labelName", "Organization Level"));
+		Document filterDocument =
+				new Document()
+						.append("boardId", 0)
+						.append(
+								"projectTypeSwitch", new Document().append("enabled", true).append("visible", true))
+						.append(
+								"primaryFilter",
+								new Document()
+										.append("type", "singleSelect")
+										.append(
+												"defaultLevel",
+												new Document().append("labelName", "project").append("sortBy", null)))
+						.append("parentFilter", new Document().append("labelName", "Organization Level"));
 
 		mongoTemplate.getCollection("filters").insertOne(filterDocument);
-
 	}
 }

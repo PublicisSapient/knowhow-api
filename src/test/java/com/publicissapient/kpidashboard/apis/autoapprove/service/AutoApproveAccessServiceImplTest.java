@@ -59,19 +59,14 @@ public class AutoApproveAccessServiceImplTest {
 	List<AutoApproveAccessConfig> listAutoApproveAccessConfig = new ArrayList<>();
 	Optional<AutoApproveAccessConfig> oAutoApproveAccessConfig;
 	private AutoApproveAccessConfigDTO autoApproveAccessConfigDTO;
-	@InjectMocks
-	private AutoApproveAccessServiceImpl autoApproveAccessServiceImpl;
-	@Mock
-	private AutoApproveAccessService autoApproveAccessService;
-	@Mock
-	private AutoApproveAccessConfigRepository autoAccessRepository;
-	@Mock
-	private RolesRepository rolesRepository;
+	@InjectMocks private AutoApproveAccessServiceImpl autoApproveAccessServiceImpl;
+	@Mock private AutoApproveAccessService autoApproveAccessService;
+	@Mock private AutoApproveAccessConfigRepository autoAccessRepository;
+	@Mock private RolesRepository rolesRepository;
 	private String testId;
 
 	@Before
 	public void before() {
-		// mockMvc = MockMvcBuilders.standaloneSetup(autoApproveController).build();
 		autoApproveAccessConfigDTO = new AutoApproveAccessConfigDTO();
 		testId = "5da46000e645ca33dc927b4a";
 		RoleData roleData = new RoleData();
@@ -95,7 +90,7 @@ public class AutoApproveAccessServiceImplTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testGetAutoApproveConfig() throws Exception {
+	public void testGetAutoApproveConfig() {
 		when(autoAccessRepository.findAll()).thenReturn(listAutoApproveAccessConfig);
 		AutoApproveAccessConfig response = autoApproveAccessServiceImpl.getAutoApproveConfig();
 		assertThat("status: ", response.getEnableAutoApprove(), equalTo("true"));
@@ -103,7 +98,7 @@ public class AutoApproveAccessServiceImplTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testSaveAutoApproveRoles() throws Exception {
+	public void testSaveAutoApproveRoles() {
 
 		when(autoAccessRepository.save(Mockito.any())).thenReturn(autoApproveAccessConfig);
 		AutoApproveAccessConfig response =
@@ -112,11 +107,11 @@ public class AutoApproveAccessServiceImplTest {
 	}
 
 	@Test
-	public void modifyAutoApprovConfigById() throws Exception {
+	public void modifyAutoApprovConfigById() {
 		RoleData roledata = new RoleData();
 		when(rolesRepository.findByRoleName(ArgumentMatchers.anyString())).thenReturn(roledata);
-		AutoApproveAccessConfig response = autoApproveAccessServiceImpl.modifyAutoApprovConfigById(testId,
-				autoApproveAccessConfig);
+		AutoApproveAccessConfig response =
+				autoApproveAccessServiceImpl.modifyAutoApprovConfigById(testId, autoApproveAccessConfig);
 		assertThat("status: ", response.getEnableAutoApprove(), equalTo("true"));
 	}
 

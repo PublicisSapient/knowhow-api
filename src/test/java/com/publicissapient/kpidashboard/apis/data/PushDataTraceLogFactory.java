@@ -35,12 +35,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PushDataTraceLogFactory {
 
-	private static final String FILE_PATH_ACCOUNT_HIERARCHIES = "/json/pushdata/push_data_trace_log.json";
+	private static final String FILE_PATH_ACCOUNT_HIERARCHIES =
+			"/json/pushdata/push_data_trace_log.json";
 	private List<PushDataTraceLog> pushDataTraceLogs;
 	private ObjectMapper mapper;
 
-	private PushDataTraceLogFactory() {
-	}
+	private PushDataTraceLogFactory() {}
 
 	public static PushDataTraceLogFactory newInstance(String filePath) {
 
@@ -60,9 +60,10 @@ public class PushDataTraceLogFactory {
 
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_ACCOUNT_HIERARCHIES : filePath;
 
-			pushDataTraceLogs = mapper.readValue(TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<PushDataTraceLog>>() {
-					});
+			pushDataTraceLogs =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<PushDataTraceLog>>() {});
 		} catch (IOException e) {
 			log.error("Error in json file = " + filePath, e);
 		}

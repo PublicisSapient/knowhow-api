@@ -26,5 +26,4 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 @Configuration
 @EnableWebMvc
 @EnableSpringDataWebSupport
-public class SpringDataTestConfig extends WebMvcConfigurationSupport {
-}
+public class SpringDataTestConfig extends WebMvcConfigurationSupport {}

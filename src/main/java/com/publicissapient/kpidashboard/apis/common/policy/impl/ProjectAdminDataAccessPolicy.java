@@ -15,16 +15,17 @@
  */
 package com.publicissapient.kpidashboard.apis.common.policy.impl;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Bean for Project Admin.
@@ -33,27 +34,27 @@ import java.util.List;
  */
 @Component(Constant.ROLE_PROJECT_ADMIN)
 public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
-    @Autowired
-    private UserInfoRepository userInfoRepository;
-    @Override
-    public List<UserInfo> getAccessibleMembers(String userName) {
-        UserInfo fullUserDoc = userInfoRepository.findByUsername(userName);
-        if (fullUserDoc == null || fullUserDoc.getProjectsAccess().isEmpty()) {
-            return Collections.emptyList();
-        }
+	@Autowired private UserInfoRepository userInfoRepository;
 
-        List<String> accessibleItemIds = fullUserDoc.getProjectsAccess()
-                .stream()
-                .filter(p -> p.getRole().equals(Constant.ROLE_PROJECT_ADMIN))
-                .flatMap(p -> p.getAccessNodes().stream())
-                .flatMap(n -> n.getAccessItems().stream())
-                .map(AccessItem::getItemId)
-                .toList();
+	@Override
+	public List<UserInfo> getAccessibleMembers(String userName) {
+		UserInfo fullUserDoc = userInfoRepository.findByUsername(userName);
+		if (fullUserDoc == null || fullUserDoc.getProjectsAccess().isEmpty()) {
+			return Collections.emptyList();
+		}
 
-        if (accessibleItemIds.isEmpty()) {
-            return Collections.emptyList();
-        }
+		List<String> accessibleItemIds =
+				fullUserDoc.getProjectsAccess().stream()
+						.filter(p -> p.getRole().equals(Constant.ROLE_PROJECT_ADMIN))
+						.flatMap(p -> p.getAccessNodes().stream())
+						.flatMap(n -> n.getAccessItems().stream())
+						.map(AccessItem::getItemId)
+						.toList();
 
-        return userInfoRepository.findUsersByItemIds(accessibleItemIds);
-    }
+		if (accessibleItemIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		return userInfoRepository.findUsersByItemIdsOrCreatedBy(accessibleItemIds,userName);
+	}
 }

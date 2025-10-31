@@ -65,8 +65,8 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiMasterR
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Calls each collector tool service and collect the data. It also formats the
- * data in the required response structure.
+ * Calls each collector tool service and collect the data. It also formats the data in the required
+ * response structure.
  *
  * @author tauakram
  */
@@ -89,84 +89,67 @@ public class KPIExcelDataService {
 	public static final String RELEASE = "release";
 	public static final String SPRINT = "sprint";
 
-	@Autowired
-	private JiraServiceR jiraServiceR;
+	@Autowired private JiraServiceR jiraServiceR;
 
-	@Autowired
-	private JenkinsServiceR jenkinsServiceR;
+	@Autowired private JenkinsServiceR jenkinsServiceR;
 
-	@Autowired
-	private SonarServiceR sonarServiceR;
+	@Autowired private SonarServiceR sonarServiceR;
 
-	@Autowired
-	private ZephyrService zephyrService;
+	@Autowired private ZephyrService zephyrService;
 
-	@Autowired
-	private BitBucketServiceR bitBucketServiceR;
+	@Autowired private BitBucketServiceR bitBucketServiceR;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private JiraServiceKanbanR jiraServiceKanbanR;
+	@Autowired private JiraServiceKanbanR jiraServiceKanbanR;
 
-	@Autowired
-	private ZephyrServiceKanban zephyrServiceKanban;
+	@Autowired private ZephyrServiceKanban zephyrServiceKanban;
 
-	@Autowired
-	private SonarServiceKanbanR sonarServiceKanbanR;
+	@Autowired private SonarServiceKanbanR sonarServiceKanbanR;
 
-	@Autowired
-	private JenkinsServiceKanbanR jenkinsServiceKanbanR;
+	@Autowired private JenkinsServiceKanbanR jenkinsServiceKanbanR;
 
-	@Autowired
-	private BitBucketServiceKanbanR bitBucketServiceKanbanR;
+	@Autowired private BitBucketServiceKanbanR bitBucketServiceKanbanR;
 
-	@Autowired
-	private KpiMasterRepository kpiMasterRepository;
+	@Autowired private KpiMasterRepository kpiMasterRepository;
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
-	@Autowired
-	NonTrendServiceFactory serviceFactory;
-	@Autowired
-	KpiColumnConfigService kpiColumnConfigService;
+	@Autowired NonTrendServiceFactory serviceFactory;
+	@Autowired KpiColumnConfigService kpiColumnConfigService;
 
 	/**
-	 * Processes the request for fetching the source wise KPI data. It leverages
-	 * underneath custom API services to fetch data. If an exception occurred in any
-	 * of source, the service returns data for sources it has processed so far. Why?
-	 * Since the sources are independent instead of showing the exception, why not
-	 * to show data of other sources which has been processed. How to know
-	 * exceptions happening? Logs will detail the exceptions and if certain source
-	 * data is not coming in response it may points to something happening.
+	 * Processes the request for fetching the source wise KPI data. It leverages underneath custom API
+	 * services to fetch data. If an exception occurred in any of source, the service returns data for
+	 * sources it has processed so far. Why? Since the sources are independent instead of showing the
+	 * exception, why not to show data of other sources which has been processed. How to know
+	 * exceptions happening? Logs will detail the exceptions and if certain source data is not coming
+	 * in response it may points to something happening.
 	 *
-	 * <p>
-	 * The threads are not playing great role here. However, since this services
-	 * fires query on level 1 and level 2 filters, which qualifies in the cached
-	 * category, result will come fast after first hit.
+	 * <p>The threads are not playing great role here. However, since this services fires query on
+	 * level 1 and level 2 filters, which qualifies in the cached category, result will come fast
+	 * after first hit.
 	 *
-	 * @param kpiID
-	 *          the kpi id
-	 * @param level
-	 *          the level
-	 * @param filterIds
-	 *          the filter ids
-	 * @param acceptedFilter
-	 *          the accepted filter
-	 * @param kpiRequest
-	 *          the kpi request
-	 * @param isKanban
-	 *          the is kanban
-	 * @param isApiAuth
-	 *          check if api auth
+	 * @param kpiID the kpi id
+	 * @param level the level
+	 * @param filterIds the filter ids
+	 * @param acceptedFilter the accepted filter
+	 * @param kpiRequest the kpi request
+	 * @param isKanban the is kanban
+	 * @param isApiAuth check if api auth
 	 * @return object
 	 */
-	public Object process(String kpiID, int level, List<String> filterIds, List<String> acceptedFilter,
-			KpiRequest kpiRequest, Boolean isKanban, Boolean isApiAuth) {
+	public Object process(
+			String kpiID,
+			int level,
+			List<String> filterIds,
+			List<String> acceptedFilter,
+			KpiRequest kpiRequest,
+			Boolean isKanban,
+			Boolean isApiAuth) {
 
-		Map<String, KpiRequest> kpiRequestSourceWiseMap = createKPIRequest(kpiID, level, filterIds, kpiRequest, isKanban);
+		Map<String, KpiRequest> kpiRequestSourceWiseMap =
+				createKPIRequest(kpiID, level, filterIds, kpiRequest, isKanban);
 		if (isSourceKanban(kpiRequestSourceWiseMap)) {
 			return processKanban(kpiID, kpiRequestSourceWiseMap, acceptedFilter);
 		}
@@ -178,28 +161,40 @@ public class KPIExcelDataService {
 
 		if (CollectionUtils.isNotEmpty(kpiRequest.getSelectedMap().get(PROJECT).stream().toList())) {
 			List<String> projectNodeIds = kpiRequest.getSelectedMap().get(PROJECT);
-			projectNodeIds.forEach(project -> {
-				if (configHelperService.getProjectNodeIdWiseProjectConfig(project) != null) {
-					idAndLabel.add(configHelperService.getProjectNodeIdWiseProjectConfig(project).getId().toString());
-				}
-			});
-		} else if (CollectionUtils.isNotEmpty(kpiRequest.getSelectedMap().get(SPRINT).stream().toList())) {
-			List<ObjectId> projectNodeIds = configHelperService
-					.getProjectHierarchyProjectConfigMap(kpiRequest.getSelectedMap().get(SPRINT).stream().toList());
-			projectNodeIds.forEach(project -> {
-				if (configHelperService.getProjectConfig(project.toString()) != null) {
-					idAndLabel.add(configHelperService.getProjectConfig(project.toString()).getId().toString());
-				}
-			});
+			projectNodeIds.forEach(
+					project -> {
+						if (configHelperService.getProjectNodeIdWiseProjectConfig(project) != null) {
+							idAndLabel.add(
+									configHelperService
+											.getProjectNodeIdWiseProjectConfig(project)
+											.getId()
+											.toString());
+						}
+					});
+		} else if (CollectionUtils.isNotEmpty(
+				kpiRequest.getSelectedMap().get(SPRINT).stream().toList())) {
+			List<ObjectId> projectNodeIds =
+					configHelperService.getProjectHierarchyProjectConfigMap(
+							kpiRequest.getSelectedMap().get(SPRINT).stream().toList());
+			projectNodeIds.forEach(
+					project -> {
+						if (configHelperService.getProjectConfig(project.toString()) != null) {
+							idAndLabel.add(
+									configHelperService.getProjectConfig(project.toString()).getId().toString());
+						}
+					});
 
 		} else {
-			List<ObjectId> projectNodeIds = configHelperService
-					.getProjectHierarchyProjectConfigMap(kpiRequest.getSelectedMap().get(RELEASE).stream().toList());
-			projectNodeIds.forEach(project -> {
-				if (configHelperService.getProjectConfig(project.toString()) != null) {
-					idAndLabel.add(configHelperService.getProjectConfig(project.toString()).getId().toString());
-				}
-			});
+			List<ObjectId> projectNodeIds =
+					configHelperService.getProjectHierarchyProjectConfigMap(
+							kpiRequest.getSelectedMap().get(RELEASE).stream().toList());
+			projectNodeIds.forEach(
+					project -> {
+						if (configHelperService.getProjectConfig(project.toString()) != null) {
+							idAndLabel.add(
+									configHelperService.getProjectConfig(project.toString()).getId().toString());
+						}
+					});
 		}
 		return idAndLabel;
 	}
@@ -227,13 +222,15 @@ public class KPIExcelDataService {
 	 * @param kpiID
 	 * @param kpiRequestSourceWiseMap
 	 * @param acceptedFilter
-	 * @param apiAuth
-	 *          check if api auth
+	 * @param apiAuth check if api auth
 	 * @return Excel data Object
 	 */
 	@SuppressWarnings("PMD.AvoidCatchingGenericException")
-	private Object processScrum(String kpiID, Map<String, KpiRequest> kpiRequestSourceWiseMap,
-			List<String> acceptedFilter, Boolean apiAuth) {
+	private Object processScrum(
+			String kpiID,
+			Map<String, KpiRequest> kpiRequestSourceWiseMap,
+			List<String> acceptedFilter,
+			Boolean apiAuth) {
 
 		List<KpiElement> totalKpiElementList = new ArrayList<>();
 		ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -251,28 +248,29 @@ public class KPIExcelDataService {
 
 			for (Map.Entry<String, KpiRequest> pair : kpiRequestSourceWiseMap.entrySet()) {
 
-				cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.EXCEL.name(),
+				cacheService.setIntoApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.EXCEL.name(),
 						pair.getValue().getRequestTrackerId());
 				projectIds = getProjectIDAndLabel(pair.getValue());
 				label = pair.getValue().getLabel();
 				switch (pair.getKey()) {
-					case EXCEL_JIRA :
+					case EXCEL_JIRA:
 						jiraKpiDataFuture = excelJiraKpiDataFuture(executor, pair, apiAuth);
 						break;
-					case EXCEL_JENKINS :
+					case EXCEL_JENKINS:
 						jenkinsKpiDataFuture = excelJenkinsKpiDataFuture(executor, pair, apiAuth);
 						break;
-					case EXCEL_SONAR :
+					case EXCEL_SONAR:
 						sonarKpiDataFuture = excelSonarKpiDataFuture(executor, pair, apiAuth);
 						break;
-					case EXCEL_ZEPHYR :
+					case EXCEL_ZEPHYR:
 						zephyrKpiDataFuture = excelZephyrKpiDataFuture(executor, pair, apiAuth);
 						break;
-					case EXCEL_BITBUCKET :
+					case EXCEL_BITBUCKET:
 						bitbucketKpiDataFuture = excelbitBucketKpiDataFuture(executor, pair);
 						break;
 
-					default :
+					default:
 						break;
 				}
 			}
@@ -287,7 +285,8 @@ public class KPIExcelDataService {
 			log.error("InterruptedException: ", ie);
 			Thread.currentThread().interrupt();
 		} catch (Exception e) {
-			log.error("[KPI-EXCEL-SERVICE]. Error while getting data from colletor sources services {}", e);
+			log.error(
+					"[KPI-EXCEL-SERVICE]. Error while getting data from colletor sources services {}", e);
 		} finally {
 			executor.shutdown();
 		}
@@ -298,7 +297,8 @@ public class KPIExcelDataService {
 		return getObject(kpiID, totalKpiElementList, label, projectIds);
 	}
 
-	private Object getObject(String kpiID, List<KpiElement> totalKpiElementList, String label, List<String> projectIds) {
+	private Object getObject(
+			String kpiID, List<KpiElement> totalKpiElementList, String label, List<String> projectIds) {
 		if (null != kpiID) {
 			return createKpiExcelValidationDataResponse(totalKpiElementList, label, projectIds);
 		} else {
@@ -316,8 +316,8 @@ public class KPIExcelDataService {
 	 * @return Excel data Object
 	 */
 	@SuppressWarnings("PMD.AvoidCatchingGenericException")
-	private Object processKanban(String kpiID, Map<String, KpiRequest> kpiRequestSourceWiseMap,
-			List<String> acceptedFilter) {
+	private Object processKanban(
+			String kpiID, Map<String, KpiRequest> kpiRequestSourceWiseMap, List<String> acceptedFilter) {
 
 		List<KpiElement> totalKpiElementList = new ArrayList<>();
 		ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -334,30 +334,31 @@ public class KPIExcelDataService {
 
 			for (Map.Entry<String, KpiRequest> pair : kpiRequestSourceWiseMap.entrySet()) {
 
-				cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.EXCEL.name(),
+				cacheService.setIntoApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.EXCEL.name(),
 						pair.getValue().getRequestTrackerId());
 
 				projectIds = getProjectIDAndLabel(pair.getValue());
 				label = pair.getValue().getLabel();
 
 				switch (pair.getKey()) {
-					case EXCEL_JIRAKANBAN :
+					case EXCEL_JIRAKANBAN:
 						jiraKanbanKpiDataFuture = excelJiraKanbanKpiDataFuture(executor, pair);
 						break;
-					case EXCEL_ZEPHYRKANBAN :
+					case EXCEL_ZEPHYRKANBAN:
 						zephyrKanbanKpiDataFuture = excelZephyreKanbanKpiDataFuture(executor, pair);
 
 						break;
-					case EXCEL_SONARKANBAN :
+					case EXCEL_SONARKANBAN:
 						sonarKanbanKpiDataFuture = excelSonarKanbanKpiDataFuture(executor, pair);
 						break;
-					case EXCEL_BIBUCKETKANBAN :
+					case EXCEL_BIBUCKETKANBAN:
 						bitbucketKanbanKpiDataFuture = excelBitBucketKanbanKpiDataFuture(executor, pair);
 						break;
-					case EXCEL_JENKINSKANBAN :
+					case EXCEL_JENKINSKANBAN:
 						jenkinsKanbanKpiDataFuture = excelJenkinsKanbanKpiDataFuture(executor, pair);
 						break;
-					default :
+					default:
 						break;
 				}
 			}
@@ -372,7 +373,8 @@ public class KPIExcelDataService {
 			log.error("InterruptedException: ", ie);
 			Thread.currentThread().interrupt();
 		} catch (Exception e) {
-			log.error("[KPI-EXCEL-SERVICE]. Error while getting data from colletor sources services {}", e);
+			log.error(
+					"[KPI-EXCEL-SERVICE]. Error while getting data from colletor sources services {}", e);
 		} finally {
 			executor.shutdown();
 		}
@@ -389,23 +391,30 @@ public class KPIExcelDataService {
 	 * @param totalKpiElementList
 	 * @return Excel validation data response
 	 */
-	private Object createKpiExcelValidationDataResponse(List<KpiElement> totalKpiElementList, String label,
-			List<String> projectIds) {
-		KPIExcelValidationDataResponse kpiExcelValidationDataResponse = new KPIExcelValidationDataResponse();
+	private Object createKpiExcelValidationDataResponse(
+			List<KpiElement> totalKpiElementList, String label, List<String> projectIds) {
+		KPIExcelValidationDataResponse kpiExcelValidationDataResponse =
+				new KPIExcelValidationDataResponse();
 		KpiColumnConfigDTO kpiColumnConfigDTO;
 
-		if ((label.equalsIgnoreCase("Project") || label.equalsIgnoreCase("SQD") || label.equalsIgnoreCase("Sprint") ||
-				label.equalsIgnoreCase("Release")) && projectIds.size() < 2) {
+		if ((label.equalsIgnoreCase("Project")
+						|| label.equalsIgnoreCase("SQD")
+						|| label.equalsIgnoreCase("Sprint")
+						|| label.equalsIgnoreCase("Release"))
+				&& projectIds.size() < 2) {
 			String projectBasicConfigID = projectIds.get(0);
-			kpiColumnConfigDTO = kpiColumnConfigService.getByKpiColumnConfig(projectBasicConfigID,
-					totalKpiElementList.get(0).getKpiId());
+			kpiColumnConfigDTO =
+					kpiColumnConfigService.getByKpiColumnConfig(
+							projectBasicConfigID, totalKpiElementList.get(0).getKpiId());
 			kpiColumnConfigDTO.setSaveFlag(true);
 
 		} else {
-			kpiColumnConfigDTO = kpiColumnConfigService.getByKpiColumnConfig(null, totalKpiElementList.get(0).getKpiId());
+			kpiColumnConfigDTO =
+					kpiColumnConfigService.getByKpiColumnConfig(null, totalKpiElementList.get(0).getKpiId());
 			kpiColumnConfigDTO.setSaveFlag(false);
 		}
-		prepareKpiExcelValidationDataResponse(kpiExcelValidationDataResponse, totalKpiElementList, kpiColumnConfigDTO);
+		prepareKpiExcelValidationDataResponse(
+				kpiExcelValidationDataResponse, totalKpiElementList, kpiColumnConfigDTO);
 		return kpiExcelValidationDataResponse;
 	}
 
@@ -417,7 +426,8 @@ public class KPIExcelDataService {
 	 * @throws InterruptedException
 	 * @throws java.util.concurrent.ExecutionException
 	 */
-	private void addAllToKpiElementList(List<KpiElement> totalKpiElementList, Future<List<KpiElement>> jiraKpiDataFuture)
+	private void addAllToKpiElementList(
+			List<KpiElement> totalKpiElementList, Future<List<KpiElement>> jiraKpiDataFuture)
 			throws InterruptedException, java.util.concurrent.ExecutionException {
 		if (null != jiraKpiDataFuture) {
 			totalKpiElementList.addAll(jiraKpiDataFuture.get());
@@ -431,13 +441,15 @@ public class KPIExcelDataService {
 	 * @param pair
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelJenkinsKanbanKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair) {
+	private Future<List<KpiElement>> excelJenkinsKanbanKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair) {
 		Future<List<KpiElement>> jenkinsKanbanKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINSKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINSKANBAN.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> jenkinsKanbanKpiDataTask = () -> jenkinsServiceKanbanR.process(pair.getValue());
+		Callable<List<KpiElement>> jenkinsKanbanKpiDataTask =
+				() -> jenkinsServiceKanbanR.process(pair.getValue());
 
 		jenkinsKanbanKpiDataFuture = executor.submit(jenkinsKanbanKpiDataTask);
 		return jenkinsKanbanKpiDataFuture;
@@ -450,13 +462,15 @@ public class KPIExcelDataService {
 	 * @param pair
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelBitBucketKanbanKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair) {
+	private Future<List<KpiElement>> excelBitBucketKanbanKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair) {
 		Future<List<KpiElement>> bitbucketKanbanKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKETKANBAN.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> bitbucketKanbanKpiDataTask = () -> bitBucketServiceKanbanR.process(pair.getValue());
+		Callable<List<KpiElement>> bitbucketKanbanKpiDataTask =
+				() -> bitBucketServiceKanbanR.process(pair.getValue());
 
 		bitbucketKanbanKpiDataFuture = executor.submit(bitbucketKanbanKpiDataTask);
 		return bitbucketKanbanKpiDataFuture;
@@ -469,13 +483,15 @@ public class KPIExcelDataService {
 	 * @param pair
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelSonarKanbanKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair) {
+	private Future<List<KpiElement>> excelSonarKanbanKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair) {
 		Future<List<KpiElement>> sonarKanbanKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONARKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONARKANBAN.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> sonarKanbanKpiDataTask = () -> sonarServiceKanbanR.process(pair.getValue());
+		Callable<List<KpiElement>> sonarKanbanKpiDataTask =
+				() -> sonarServiceKanbanR.process(pair.getValue());
 
 		sonarKanbanKpiDataFuture = executor.submit(sonarKanbanKpiDataTask);
 		return sonarKanbanKpiDataFuture;
@@ -488,13 +504,15 @@ public class KPIExcelDataService {
 	 * @param pair
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelZephyreKanbanKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair) {
+	private Future<List<KpiElement>> excelZephyreKanbanKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair) {
 		Future<List<KpiElement>> zephyrKanbanKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYRKANBAN.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> zephyrKanbanKpiDataTask = () -> zephyrServiceKanban.process(pair.getValue());
+		Callable<List<KpiElement>> zephyrKanbanKpiDataTask =
+				() -> zephyrServiceKanban.process(pair.getValue());
 
 		zephyrKanbanKpiDataFuture = executor.submit(zephyrKanbanKpiDataTask);
 		return zephyrKanbanKpiDataFuture;
@@ -507,13 +525,15 @@ public class KPIExcelDataService {
 	 * @param pair
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelJiraKanbanKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair) {
+	private Future<List<KpiElement>> excelJiraKanbanKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair) {
 		Future<List<KpiElement>> jiraKanbanKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> jiraKanbanKpiDataTask = () -> jiraServiceKanbanR.process(pair.getValue());
+		Callable<List<KpiElement>> jiraKanbanKpiDataTask =
+				() -> jiraServiceKanbanR.process(pair.getValue());
 
 		jiraKanbanKpiDataFuture = executor.submit(jiraKanbanKpiDataTask);
 		return jiraKanbanKpiDataFuture;
@@ -526,13 +546,15 @@ public class KPIExcelDataService {
 	 * @param pair
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelbitBucketKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair) {
+	private Future<List<KpiElement>> excelbitBucketKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair) {
 		Future<List<KpiElement>> bitbucketKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> bitbucketKpiDataTask = () -> bitBucketServiceR.process(pair.getValue());
+		Callable<List<KpiElement>> bitbucketKpiDataTask =
+				() -> bitBucketServiceR.process(pair.getValue());
 
 		bitbucketKpiDataFuture = executor.submit(bitbucketKpiDataTask);
 		return bitbucketKpiDataFuture;
@@ -543,23 +565,24 @@ public class KPIExcelDataService {
 	 *
 	 * @param executor
 	 * @param pair
-	 * @param apiAuth
-	 *          check if api auth
+	 * @param apiAuth check if api auth
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelZephyrKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair, Boolean apiAuth) {
+	private Future<List<KpiElement>> excelZephyrKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair, Boolean apiAuth) {
 		Future<List<KpiElement>> zephyrKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.ZEPHYR.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> zephyrKpiDataTask = () -> {
-			if (Boolean.TRUE.equals(apiAuth)) {
-				return zephyrService.processWithExposedApiToken(pair.getValue(), false);
-			} else {
-				return zephyrService.process(pair.getValue());
-			}
-		};
+		Callable<List<KpiElement>> zephyrKpiDataTask =
+				() -> {
+					if (Boolean.TRUE.equals(apiAuth)) {
+						return zephyrService.processWithExposedApiToken(pair.getValue(), false);
+					} else {
+						return zephyrService.process(pair.getValue());
+					}
+				};
 
 		zephyrKpiDataFuture = executor.submit(zephyrKpiDataTask);
 		return zephyrKpiDataFuture;
@@ -570,23 +593,24 @@ public class KPIExcelDataService {
 	 *
 	 * @param executor
 	 * @param pair
-	 * @param apiAuth
-	 *          check if api auth
+	 * @param apiAuth check if api auth
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelSonarKpiDataFuture(ExecutorService executor, Map.Entry<String, KpiRequest> pair,
-			Boolean apiAuth) {
+	private Future<List<KpiElement>> excelSonarKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair, Boolean apiAuth) {
 		Future<List<KpiElement>> sonarKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.SONAR.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> sonarKpiDataTask = () -> {
-			if (Boolean.TRUE.equals(apiAuth)) {
-				return sonarServiceR.processWithExposedApiToken(pair.getValue(), false);
-			} else {
-				return sonarServiceR.process(pair.getValue());
-			}
-		};
+		Callable<List<KpiElement>> sonarKpiDataTask =
+				() -> {
+					if (Boolean.TRUE.equals(apiAuth)) {
+						return sonarServiceR.processWithExposedApiToken(pair.getValue(), false);
+					} else {
+						return sonarServiceR.process(pair.getValue());
+					}
+				};
 
 		sonarKpiDataFuture = executor.submit(sonarKpiDataTask);
 		return sonarKpiDataFuture;
@@ -597,23 +621,24 @@ public class KPIExcelDataService {
 	 *
 	 * @param executor
 	 * @param pair
-	 * @param apiAuth
-	 *          check if api auth
+	 * @param apiAuth check if api auth
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelJenkinsKpiDataFuture(ExecutorService executor,
-			Map.Entry<String, KpiRequest> pair, Boolean apiAuth) {
+	private Future<List<KpiElement>> excelJenkinsKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair, Boolean apiAuth) {
 		Future<List<KpiElement>> jenkinsKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name(),
 				pair.getValue().getRequestTrackerId());
 
-		Callable<List<KpiElement>> jenkinsKpiDataTask = () -> {
-			if (Boolean.TRUE.equals(apiAuth)) {
-				return jenkinsServiceR.processWithExposedApiToken(pair.getValue(), false);
-			} else {
-				return jenkinsServiceR.process(pair.getValue());
-			}
-		};
+		Callable<List<KpiElement>> jenkinsKpiDataTask =
+				() -> {
+					if (Boolean.TRUE.equals(apiAuth)) {
+						return jenkinsServiceR.processWithExposedApiToken(pair.getValue(), false);
+					} else {
+						return jenkinsServiceR.process(pair.getValue());
+					}
+				};
 
 		jenkinsKpiDataFuture = executor.submit(jenkinsKpiDataTask);
 		return jenkinsKpiDataFuture;
@@ -624,35 +649,39 @@ public class KPIExcelDataService {
 	 *
 	 * @param executor
 	 * @param pair
-	 * @param apiAuth
-	 *          check if api auth
+	 * @param apiAuth check if api auth
 	 * @return
 	 */
-	private Future<List<KpiElement>> excelJiraKpiDataFuture(ExecutorService executor, Map.Entry<String, KpiRequest> pair,
-			Boolean apiAuth) {
+	private Future<List<KpiElement>> excelJiraKpiDataFuture(
+			ExecutorService executor, Map.Entry<String, KpiRequest> pair, Boolean apiAuth) {
 		Future<List<KpiElement>> jiraKpiDataFuture;
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
 				pair.getValue().getRequestTrackerId());
 		HashSet<String> category = new HashSet<>();
 		category.add(CommonConstant.ITERATION);
 		category.add(CommonConstant.RELEASE);
 		category.add(CommonConstant.BACKLOG);
-		Callable<List<KpiElement>> jiraKpiDataTask = () -> {
-			if (category.contains(pair.getValue().getKpiList().get(0).getKpiCategory())) {
-				// when request coming from ITERATION/RELEASE/BACKLOG board
-				if (Boolean.TRUE.equals(apiAuth)) {
-					return serviceFactory.getService(pair.getValue().getKpiList().get(0).getKpiCategory())
-							.processWithExposedApiToken(pair.getValue());
-				}
-				return serviceFactory.getService(pair.getValue().getKpiList().get(0).getKpiCategory()).process(pair.getValue());
-			} else {
-				// when request coming from trend boards
-				if (Boolean.TRUE.equals(apiAuth)) {
-					return jiraServiceR.processWithExposedApiToken(pair.getValue(), false);
-				}
-				return jiraServiceR.process(pair.getValue());
-			}
-		};
+		Callable<List<KpiElement>> jiraKpiDataTask =
+				() -> {
+					if (category.contains(pair.getValue().getKpiList().get(0).getKpiCategory())) {
+						// when request coming from ITERATION/RELEASE/BACKLOG board
+						if (Boolean.TRUE.equals(apiAuth)) {
+							return serviceFactory
+									.getService(pair.getValue().getKpiList().get(0).getKpiCategory())
+									.processWithExposedApiToken(pair.getValue());
+						}
+						return serviceFactory
+								.getService(pair.getValue().getKpiList().get(0).getKpiCategory())
+								.process(pair.getValue());
+					} else {
+						// when request coming from trend boards
+						if (Boolean.TRUE.equals(apiAuth)) {
+							return jiraServiceR.processWithExposedApiToken(pair.getValue(), false);
+						}
+						return jiraServiceR.process(pair.getValue());
+					}
+				};
 
 		jiraKpiDataFuture = executor.submit(jiraKpiDataTask);
 		return jiraKpiDataFuture;
@@ -665,105 +694,133 @@ public class KPIExcelDataService {
 	 * @param totalKpiElementList
 	 * @param kpiColumnConfigDTO
 	 */
-	private void prepareKpiExcelValidationDataResponse(KPIExcelValidationDataResponse kpiExcelValidationDataResponse,
-			List<KpiElement> totalKpiElementList, KpiColumnConfigDTO kpiColumnConfigDTO) {
+	private void prepareKpiExcelValidationDataResponse(
+			KPIExcelValidationDataResponse kpiExcelValidationDataResponse,
+			List<KpiElement> totalKpiElementList,
+			KpiColumnConfigDTO kpiColumnConfigDTO) {
 
 		// totalKpiElementList will have only one KPI data at any given time
-		totalKpiElementList.forEach(element -> {
-			kpiExcelValidationDataResponse.setKpiId(element.getKpiId());
-			kpiExcelValidationDataResponse.setKpiName(element.getKpiName());
-			Map<String, ValidationData> mapOfSprintAndData = element.getMapOfSprintAndData();
-			kpiExcelValidationDataResponse.setMapOfSprintAndData(mapOfSprintAndData);
-			kpiExcelValidationDataResponse.setExcelData(element.getExcelData());
-			kpiExcelValidationDataResponse.setExcelColumns(element.getExcelColumns());
-			kpiExcelValidationDataResponse.setKpiColumnDetails(kpiColumnConfigDTO.getKpiColumnDetails());
-			kpiExcelValidationDataResponse.setSaveDisplay(kpiColumnConfigDTO.isSaveFlag());
-		});
+		totalKpiElementList.forEach(
+				element -> {
+					kpiExcelValidationDataResponse.setKpiId(element.getKpiId());
+					kpiExcelValidationDataResponse.setKpiName(element.getKpiName());
+					Map<String, ValidationData> mapOfSprintAndData = element.getMapOfSprintAndData();
+					kpiExcelValidationDataResponse.setMapOfSprintAndData(mapOfSprintAndData);
+					kpiExcelValidationDataResponse.setExcelData(element.getExcelData());
+					kpiExcelValidationDataResponse.setExcelColumns(element.getExcelColumns());
+					kpiExcelValidationDataResponse.setKpiColumnDetails(
+							kpiColumnConfigDTO.getKpiColumnDetails());
+					kpiExcelValidationDataResponse.setSaveDisplay(kpiColumnConfigDTO.isSaveFlag());
+				});
 	}
 
 	/**
 	 * Creates KPI request for each sources.
 	 *
-	 * @param kpiID
-	 *          the kpi id
-	 * @param level
-	 *          same as level received in the KPI request
-	 * @param filterIds
-	 *          same as ids received in KPI API request
-	 * @param kpiReq
-	 *          the kpi req
-	 * @param isKanban
-	 *          the is kanban
+	 * @param kpiID the kpi id
+	 * @param level same as level received in the KPI request
+	 * @param filterIds same as ids received in KPI API request
+	 * @param kpiReq the kpi req
+	 * @param isKanban the is kanban
 	 * @return map of source with kpi request.
 	 */
-	public Map<String, KpiRequest> createKPIRequest(String kpiID, int level, List<String> filterIds, KpiRequest kpiReq,
-			Boolean isKanban) {
+	public Map<String, KpiRequest> createKPIRequest(
+			String kpiID, int level, List<String> filterIds, KpiRequest kpiReq, Boolean isKanban) {
 
 		List<String> kpiSourceList = null;
 
 		// Get all Collector source tools
-		kpiSourceList = Stream.of(KPICode.values()).map(KPICode::getSource).distinct()
-				.filter(source -> !source.equalsIgnoreCase(KPICode.INVALID.name())).collect(Collectors.toList());
+		kpiSourceList =
+				Stream.of(KPICode.values())
+						.map(KPICode::getSource)
+						.distinct()
+						.filter(source -> !source.equalsIgnoreCase(KPICode.INVALID.name()))
+						.collect(Collectors.toList());
 
 		if (null == kpiID) {
 			if (null != isKanban) {
 				if (Boolean.TRUE.equals(isKanban)) {
-					kpiSourceList = kpiSourceList.stream().filter(source -> source.contains(KANBAN)).collect(Collectors.toList());
+					kpiSourceList =
+							kpiSourceList.stream()
+									.filter(source -> source.contains(KANBAN))
+									.collect(Collectors.toList());
 				} else {
-					kpiSourceList = kpiSourceList.stream().filter(source -> !source.contains(KANBAN))
-							.collect(Collectors.toList());
+					kpiSourceList =
+							kpiSourceList.stream()
+									.filter(source -> !source.contains(KANBAN))
+									.collect(Collectors.toList());
 				}
 			}
 		} else {
-			kpiSourceList = kpiSourceList.stream()
-					.filter(source -> source.equalsIgnoreCase(KPICode.getKPI(kpiID).getSource())).collect(Collectors.toList());
+			kpiSourceList =
+					kpiSourceList.stream()
+							.filter(source -> source.equalsIgnoreCase(KPICode.getKPI(kpiID).getSource()))
+							.collect(Collectors.toList());
 		}
 
 		// Prepare List of KPI Request
 		Map<String, KpiRequest> kpiRequestSourceWiseMap = new HashMap<>();
-		kpiSourceList.forEach(source -> {
-			KpiRequest kpiRequest = kpiReq;
-			if (null == kpiRequest) {
-				kpiRequest = new KpiRequest();
-			}
+		kpiSourceList.forEach(
+				source -> {
+					KpiRequest kpiRequest = kpiReq;
+					if (null == kpiRequest) {
+						kpiRequest = new KpiRequest();
+					}
 
-			List<KpiElement> kpiElementList = new ArrayList<>();
-			List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
-			if (null == kpiID) {
-				List<String> masterKpiIdList = masterList.stream().map(KpiMaster::getKpiId).collect(Collectors.toList());
-				Stream.of(KPICode.values()).filter(kpi -> kpi != KPICode.INVALID && kpi.getSource().equalsIgnoreCase(source) &&
-						masterKpiIdList.contains(kpi.getKpiId())).forEach(kpi -> {
-							KpiElement kpiElement = new KpiElement();
-							kpiElement.setKpiId(kpi.getKpiId());
-							kpiElement.setKpiName(kpi.name());
-							kpiElement.setKpiSource(KPISource.EXCEL.name() + "-" + source);
-							kpiElement.setKpiCategory(
-									masterList.stream().filter(kpiMaster -> kpiMaster.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
-											.map(KpiMaster::getKpiCategory).filter(StringUtils::isNotEmpty).findFirst().orElse(""));
+					List<KpiElement> kpiElementList = new ArrayList<>();
+					List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
+					if (null == kpiID) {
+						List<String> masterKpiIdList =
+								masterList.stream().map(KpiMaster::getKpiId).collect(Collectors.toList());
+						Stream.of(KPICode.values())
+								.filter(
+										kpi ->
+												kpi != KPICode.INVALID
+														&& kpi.getSource().equalsIgnoreCase(source)
+														&& masterKpiIdList.contains(kpi.getKpiId()))
+								.forEach(
+										kpi -> {
+											KpiElement kpiElement = new KpiElement();
+											kpiElement.setKpiId(kpi.getKpiId());
+											kpiElement.setKpiName(kpi.name());
+											kpiElement.setKpiSource(KPISource.EXCEL.name() + "-" + source);
+											kpiElement.setKpiCategory(
+													masterList.stream()
+															.filter(
+																	kpiMaster ->
+																			kpiMaster.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
+															.map(KpiMaster::getKpiCategory)
+															.filter(StringUtils::isNotEmpty)
+															.findFirst()
+															.orElse(""));
 
-							kpiElementList.add(kpiElement);
-						});
-			} else {
+											kpiElementList.add(kpiElement);
+										});
+					} else {
 
-				KPICode kpi = KPICode.getKPI(kpiID);
+						KPICode kpi = KPICode.getKPI(kpiID);
 
-				KpiElement kpiElement = new KpiElement();
-				kpiElement.setKpiId(kpi.getKpiId());
-				kpiElement.setKpiName(kpi.name());
-				kpiElement.setKpiSource(KPISource.EXCEL.name() + "-" + source);
-				kpiElement.setKpiCategory(
-						masterList.stream().filter(kpiMaster -> kpiMaster.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
-								.map(KpiMaster::getKpiCategory).filter(StringUtils::isNotEmpty).findFirst().orElse(""));
+						KpiElement kpiElement = new KpiElement();
+						kpiElement.setKpiId(kpi.getKpiId());
+						kpiElement.setKpiName(kpi.name());
+						kpiElement.setKpiSource(KPISource.EXCEL.name() + "-" + source);
+						kpiElement.setKpiCategory(
+								masterList.stream()
+										.filter(kpiMaster -> kpiMaster.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
+										.map(KpiMaster::getKpiCategory)
+										.filter(StringUtils::isNotEmpty)
+										.findFirst()
+										.orElse(""));
 
-				kpiElementList.add(kpiElement);
-			}
+						kpiElementList.add(kpiElement);
+					}
 
-			kpiRequest.setLevel(level);
-			kpiRequest.setIds(filterIds.parallelStream().toArray(String[]::new));
-			kpiRequest.setKpiList(kpiElementList);
+					kpiRequest.setLevel(level);
+					kpiRequest.setIds(filterIds.parallelStream().toArray(String[]::new));
+					kpiRequest.setKpiList(kpiElementList);
 
-			kpiRequestSourceWiseMap.put(kpiRequest.getKpiList().get(0).getKpiSource(), kpiRequest);
-		});
+					kpiRequestSourceWiseMap.put(kpiRequest.getKpiList().get(0).getKpiSource(), kpiRequest);
+				});
 
 		return kpiRequestSourceWiseMap;
 	}

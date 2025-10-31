@@ -29,11 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.pushdata.model.ExposeApiToken;
@@ -55,12 +51,9 @@ import lombok.extern.slf4j.Slf4j;
 public class PushDataController {
 
 	final ModelMapper modelMapper = new ModelMapper();
-	@Autowired
-	PushBaseService pushBuildService;
-	@Autowired
-	AuthExposeAPIService authExposeAPIService;
-	@Autowired
-	private PushDataTraceLogService pushDataTraceLogService;
+	@Autowired PushBaseService pushBuildService;
+	@Autowired AuthExposeAPIService authExposeAPIService;
+	@Autowired private PushDataTraceLogService pushDataTraceLogService;
 
 	/**
 	 * push data api for build tools
@@ -69,20 +62,29 @@ public class PushDataController {
 	 * @param pushBuildDeployDTO
 	 * @return
 	 */
-	@RequestMapping(value = "/build", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
-	public ResponseEntity<ServiceResponse> savePushDataBuilds(HttpServletRequest request,
-			@RequestBody @Valid PushBuildDeployDTO pushBuildDeployDTO) {
+	@RequestMapping(
+			value = "/build",
+			method = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	public ResponseEntity<ServiceResponse> savePushDataBuilds(
+			HttpServletRequest request, @RequestBody @Valid PushBuildDeployDTO pushBuildDeployDTO) {
 		PushDataTraceLog instance = PushDataTraceLog.getInstance();
 		instance.setPushApiSource("build");
 		ExposeApiToken exposeApiToken = authExposeAPIService.validateToken(request);
 		PushBuildDeploy buildDeploy = modelMapper.map(pushBuildDeployDTO, PushBuildDeploy.class);
-		return ResponseEntity.status(HttpStatus.OK).body(new ServiceResponse(true, "Saved Records successfully",
-				pushBuildService.processPushDataInput(buildDeploy, exposeApiToken.getBasicProjectConfigId())));
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(
+						new ServiceResponse(
+								true,
+								"Saved Records successfully",
+								pushBuildService.processPushDataInput(
+										buildDeploy, exposeApiToken.getBasicProjectConfigId())));
 	}
 
-	@RequestMapping(value = "/tracelog/{basicConfigId}", method = RequestMethod.GET, consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@GetMapping(value = "/tracelog/{basicConfigId}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getTraceLog(@PathVariable String basicConfigId) {
-		List<PushDataTraceLogDTO> allLogs = pushDataTraceLogService.getByProjectConfigId(new ObjectId(basicConfigId));
+		List<PushDataTraceLogDTO> allLogs =
+				pushDataTraceLogService.getByProjectConfigId(new ObjectId(basicConfigId));
 		ServiceResponse response;
 		if (CollectionUtils.isNotEmpty(allLogs)) {
 			log.info("Fetching all logs of configId " + basicConfigId);
