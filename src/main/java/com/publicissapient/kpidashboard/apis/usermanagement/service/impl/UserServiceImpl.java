@@ -73,8 +73,8 @@ public class UserServiceImpl implements UserService {
 			UserInfo userInfo = new UserInfo();
 			userInfo.setUsername(username);
 			userInfo.setAuthType(AuthType.SAML);
+			userInfo.setAuthorities(new ArrayList<>());
 			userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
-			userInfo.setAuthorities(Collections.singletonList(Constant.ROLE_GUEST));
 			userInfo.setProjectsAccess(Collections.emptyList());
 			userInfo.setCreatedBy(authenticationService.getLoggedInUser());
 
