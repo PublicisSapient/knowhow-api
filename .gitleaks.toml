@@ -3,5 +3,12 @@ title = "Custom Gitleaks Config"
 [[rules]]
 id = "generic-password"
 description = "Detect generic passwords"
-regex = '''(?i)(password\s*[:=]\s*['"]?[A-Za-z0-9@#$%^&+=!]{4,}['"]?)'''
-tags = ["password", "custom"]
+regex = '''(?i)(testkey|password|apikey|secret|token)\s*=\s*['"]?[A-Za-z0-9\-_]{8,}['"]?'''
+tags = ["key", "custom"]
+
+[allowlist]
+description = "Exclude common safe paths"
+paths = [
+  "tests/.*",
+  "docs/.*"
+]

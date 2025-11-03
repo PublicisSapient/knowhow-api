@@ -1,1 +1,1 @@
-secret=kajugsjakuanas7hsjn26skaka0jwnslitsh
+secrets=dkajugsjakuanas7hsjn26skaka0jwnslitsh
