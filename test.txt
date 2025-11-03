@@ -1,2 +1,2 @@
-test: aa
-passwd: 222jjjjjjj22222222222jjjjjjjjjjj111111
+test=aa
+passwd=222jjjjjjj22222222222jjjjjjjjjjj111111
