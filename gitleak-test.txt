@@ -1,1 +1,1 @@
-testkey=kajugsjakuanas7hsjn26skaka0jwnslitsh
+secret=kajugsjakuanas7hsjn26skaka0jwnslitsh
