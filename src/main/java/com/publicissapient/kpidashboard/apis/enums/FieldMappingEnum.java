@@ -828,7 +828,16 @@ public enum FieldMappingEnum {
 					"aiUsageTypeJiraCustomFieldKPI198",
 					"aiEfficiencyGainJiraCustomFieldKPI198",
 					"includedIssueTypesFromTheCompletedIssuesKPI198",
-					"includedStatusesToIdentifyCompletedIssuesKPI198"));
+					"includedStatusesToIdentifyCompletedIssuesKPI198")),
+
+	KPI199(
+			"Sprint Analytics",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraDevDoneStatusKPI128",
+					"jiraStatusKPI187",
+					"jiraLabelsKPI120",
+					"jiraDevDoneStatusKPI128"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;
