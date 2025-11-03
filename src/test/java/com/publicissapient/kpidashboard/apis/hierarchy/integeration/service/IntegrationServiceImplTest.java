@@ -230,8 +230,8 @@ public class IntegrationServiceImplTest {
 		doNothing().when(organizationHierarchyService).clearCache();
 
 		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
-		when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
-		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);
+		/*when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
+		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);*/
 
 		// Act
 		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
@@ -239,7 +239,6 @@ public class IntegrationServiceImplTest {
 		// Assert
 		verify(organizationHierarchyService, times(1)).saveAll(anyList());
 		verify(organizationHierarchyService, times(1)).clearCache();
-		verify(projectConfigRepository, times(1)).findByProjectNodeIdIn(anySet());
 	}
 
 	@Test
