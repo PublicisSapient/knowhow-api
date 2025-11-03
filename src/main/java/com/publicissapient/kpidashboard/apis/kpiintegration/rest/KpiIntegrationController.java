@@ -74,6 +74,7 @@ public class KpiIntegrationController {
 		if (Boolean.FALSE.equals(isApiAuth)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());
 		}
+
 		List<KpiElement> responseList = kpiIntegrationService.getKpiResponses(kpiRequest);
 		return ResponseEntity.ok(responseList);
 	}
