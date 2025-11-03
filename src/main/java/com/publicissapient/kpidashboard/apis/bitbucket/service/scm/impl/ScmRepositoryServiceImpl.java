@@ -17,41 +17,52 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmBranchDTO;
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
 import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmRepositoryDTO;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmRepositoryService;
 import com.publicissapient.kpidashboard.common.model.scm.ScmBranch;
+import com.publicissapient.kpidashboard.common.model.scm.ScmConnectionTraceLog;
 import com.publicissapient.kpidashboard.common.model.scm.ScmRepos;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmConnectionTraceLogRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.ScmReposRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class ScmRepositoryServiceImpl implements ScmRepositoryService {
 
 	private final ScmReposRepository scmReposRepository;
+    private final ScmConnectionTraceLogRepository scmConnectionTraceLogRepository;
 
-	public ScmRepositoryServiceImpl(ScmReposRepository scmReposRepository) {
+	public ScmRepositoryServiceImpl(ScmReposRepository scmReposRepository, ScmConnectionTraceLogRepository scmConnectionTraceLogRepository) {
 		this.scmReposRepository = scmReposRepository;
+        this.scmConnectionTraceLogRepository = scmConnectionTraceLogRepository;
 	}
 
 	@Override
-	public List<ScmRepositoryDTO> getScmRepositoryListByConnectionId(ObjectId connectionId) {
+	public ScmConnectionMetaDataDTO getScmRepositoryListByConnectionId(ObjectId connectionId) {
+		ScmConnectionMetaDataDTO scmConnectionMetaDataDTO = new ScmConnectionMetaDataDTO();
+		Optional<ScmConnectionTraceLog> scmConnectionTraceLog = getScmConnectionTraceLogRepository(
+				connectionId.toString());
+		if (scmConnectionTraceLog.isPresent()) {
+			scmConnectionMetaDataDTO.setExecutionSuccess(scmConnectionTraceLog.get().isFetchSuccessful());
+			scmConnectionMetaDataDTO.setExecutionEndedAt(scmConnectionTraceLog.get().getLastSyncTimeTimeStamp());
+			scmConnectionMetaDataDTO.setInitialExecutionOngoing(scmConnectionTraceLog.get().isOnGoing());
+		}
 		List<ScmRepos> scmReposList = scmReposRepository.findAllByConnectionId(connectionId);
 		AtomicInteger repoOrder = new AtomicInteger(1);
-		return scmReposList.stream()
+		scmConnectionMetaDataDTO.setRepositories(scmReposList.stream()
 				.sorted(Comparator.comparing(ScmRepos::getLastUpdated, Comparator.nullsLast(Comparator.reverseOrder())))
-				.map(repo -> mapToRepositoryDTO(repo, repoOrder.getAndIncrement())).toList();
+				.map(repo -> mapToRepositoryDTO(repo, repoOrder.getAndIncrement())).toList());
+		return scmConnectionMetaDataDTO;
 
 	}
 
-	@Override
-	public boolean triggerScmReposFetcher(String connectionId) {
-		return false;
-	}
 
 	private ScmRepositoryDTO mapToRepositoryDTO(ScmRepos scmRepo, int order) {
 		AtomicInteger branchOrder = new AtomicInteger(1);
@@ -64,6 +75,10 @@ public class ScmRepositoryServiceImpl implements ScmRepositoryService {
 				.branchList(sortedBranches).build();
 
 	}
+
+    private Optional<ScmConnectionTraceLog> getScmConnectionTraceLogRepository(String connectionId) {
+        return scmConnectionTraceLogRepository.findByConnectionId(connectionId);
+    }
 
 	private ScmBranchDTO mapToBranchDTO(ScmBranch scmBranch, int order) {
 		return ScmBranchDTO.builder().branchName(scmBranch.getName()).lastUpdatedTimestamp(scmBranch.getLastUpdatedAt())

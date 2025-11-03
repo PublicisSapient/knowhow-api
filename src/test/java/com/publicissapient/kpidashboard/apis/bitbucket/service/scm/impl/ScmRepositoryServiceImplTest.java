@@ -16,13 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
+import com.publicissapient.kpidashboard.common.model.scm.ScmBranch;
+import com.publicissapient.kpidashboard.common.model.scm.ScmConnectionTraceLog;
+import com.publicissapient.kpidashboard.common.model.scm.ScmRepos;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmConnectionTraceLogRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmReposRepository;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,16 +30,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmRepositoryDTO;
-import com.publicissapient.kpidashboard.common.model.scm.ScmBranch;
-import com.publicissapient.kpidashboard.common.model.scm.ScmRepos;
-import com.publicissapient.kpidashboard.common.repository.scm.ScmReposRepository;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ScmRepositoryServiceImplTest {
 
 	@Mock
 	private ScmReposRepository scmReposRepository;
+
+	@Mock
+	private ScmConnectionTraceLogRepository scmConnectionTraceLogRepository;
 
 	@InjectMocks
 	private ScmRepositoryServiceImpl scmRepositoryService;
@@ -55,57 +59,51 @@ public class ScmRepositoryServiceImplTest {
 	@Test
 	public void testGetScmRepositoryListByConnectionId_EmptyList() {
 		when(scmReposRepository.findAllByConnectionId(connectionId)).thenReturn(Collections.emptyList());
+		when(scmConnectionTraceLogRepository.findByConnectionId(connectionId.toString())).thenReturn(Optional.empty());
+		ScmConnectionMetaDataDTO result = scmRepositoryService.getScmRepositoryListByConnectionId(connectionId);
 
-		List<ScmRepositoryDTO> result = scmRepositoryService.getScmRepositoryListByConnectionId(connectionId);
-
-		assertEquals(0, result.size());
+		assertEquals(0, result.getRepositories().size());
 	}
 
 	@Test
 	public void testGetScmRepositoryListByConnectionId_SingleRepo() {
 		ScmBranch branch = ScmBranch.builder().name("main").lastUpdatedAt(1000L).build();
-		ScmRepos repo = ScmRepos.builder()
-				.repositoryName("repo1")
-				.url("http://repo1.com")
-				.connectionId(connectionId)
-				.lastUpdated(2000L)
-				.branchList(Arrays.asList(branch))
-				.build();
+		ScmRepos repo = ScmRepos.builder().repositoryName("repo1").url("http://repo1.com").connectionId(connectionId)
+				.lastUpdated(2000L).branchList(Arrays.asList(branch)).build();
+		ScmConnectionTraceLog scmConnectionTraceLog = new ScmConnectionTraceLog();
+		scmConnectionTraceLog.setConnectionId(connectionId.toString());
+		scmConnectionTraceLog.setLastSyncTimeTimeStamp(2000L);
+		scmConnectionTraceLog.setFetchSuccessful(true);
+		scmConnectionTraceLog.setOnGoing(false);
 
+		when(scmConnectionTraceLogRepository.findByConnectionId(connectionId.toString()))
+				.thenReturn(Optional.of(scmConnectionTraceLog));
 		when(scmReposRepository.findAllByConnectionId(connectionId)).thenReturn(Arrays.asList(repo));
+		when(scmConnectionTraceLogRepository.findByConnectionId(connectionId.toString())).thenReturn(Optional.empty());
 
-		List<ScmRepositoryDTO> result = scmRepositoryService.getScmRepositoryListByConnectionId(connectionId);
+		ScmConnectionMetaDataDTO result = scmRepositoryService.getScmRepositoryListByConnectionId(connectionId);
 
-		assertEquals(1, result.size());
-		assertEquals("repo1", result.get(0).getRepositoryName());
-		assertEquals(1, result.get(0).getOrder());
-		assertEquals(1, result.get(0).getBranchList().size());
+		assertEquals(1, result.getRepositories().size());
+		assertEquals("repo1", result.getRepositories().get(0).getRepositoryName());
+		assertEquals(1, result.getRepositories().get(0).getOrder());
+		assertEquals(1, result.getRepositories().get(0).getBranchList().size());
 	}
 
 	@Test
 	public void testGetScmRepositoryListByConnectionId_SortedByLastUpdated() {
-		ScmRepos repo1 = ScmRepos.builder()
-				.repositoryName("repo1")
-				.lastUpdated(1000L)
-				.branchList(Collections.emptyList())
-				.build();
-		ScmRepos repo2 = ScmRepos.builder()
-				.repositoryName("repo2")
-				.lastUpdated(3000L)
-				.branchList(Collections.emptyList())
-				.build();
+		ScmRepos repo1 = ScmRepos.builder().repositoryName("repo1").lastUpdated(1000L)
+				.branchList(Collections.emptyList()).build();
+		ScmRepos repo2 = ScmRepos.builder().repositoryName("repo2").lastUpdated(3000L)
+				.branchList(Collections.emptyList()).build();
 
+		when(scmConnectionTraceLogRepository.findByConnectionId(connectionId.toString())).thenReturn(Optional.empty());
 		when(scmReposRepository.findAllByConnectionId(connectionId)).thenReturn(Arrays.asList(repo1, repo2));
 
-		List<ScmRepositoryDTO> result = scmRepositoryService.getScmRepositoryListByConnectionId(connectionId);
+		ScmConnectionMetaDataDTO result = scmRepositoryService.getScmRepositoryListByConnectionId(connectionId);
 
-		assertEquals(2, result.size());
-		assertEquals("repo2", result.get(0).getRepositoryName());
-		assertEquals("repo1", result.get(1).getRepositoryName());
+		assertEquals(2, result.getRepositories().size());
+		assertEquals("repo2", result.getRepositories().get(0).getRepositoryName());
+		assertEquals("repo1", result.getRepositories().get(1).getRepositoryName());
 	}
 
-	@Test
-	public void testTriggerScmReposFetcher() {
-		assertEquals(false, scmRepositoryService.triggerScmReposFetcher("connectionId"));
-	}
 }

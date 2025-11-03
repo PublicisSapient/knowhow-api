@@ -16,7 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.rest;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmRepositoryDTO;
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmRepositoryService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,13 +27,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.bson.types.ObjectId;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/scm/config")
@@ -78,15 +75,13 @@ public class ScmReposController {
             )
             @PathVariable("connectionId") String connectionId) {
 		if (ObjectId.isValid(connectionId)) {
-			List<ScmRepositoryDTO> scmRepositoryDTOList = scmRepositoryService
+            ScmConnectionMetaDataDTO scmConnectionMetaDataDTO = scmRepositoryService
 					.getScmRepositoryListByConnectionId(new ObjectId(connectionId));
-			if (!CollectionUtils.isEmpty(scmRepositoryDTOList)) {
 				ServiceResponse serviceResponse = new ServiceResponse(true, "Fetched Repositories for given connection",
-						scmRepositoryDTOList);
+                        scmConnectionMetaDataDTO);
 				return ResponseEntity.ok(serviceResponse);
-			}
 		}
-		return ResponseEntity.ok(new ServiceResponse(false, "No Repositories available for given connection", null));
+		return ResponseEntity.ok(new ServiceResponse(false, "Invalid connectionId", null));
 
     }
 
