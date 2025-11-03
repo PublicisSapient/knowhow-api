@@ -81,15 +81,9 @@ class UserServiceImplTest {
 
 		ProjectsAccess access = getProjectAccess("project");
 
-		List<GrantedAuthority> authorities =
-				List.of((GrantedAuthority) () -> Constant.ROLE_PROJECT_ADMIN);
-		when(userInfoService.getAuthorities(any())).thenReturn(authorities);
 		UserInfo projectAdminUserInfo = new UserInfo();
 		projectAdminUserInfo.setUsername("ProjectAdmin");
 		projectAdminUserInfo.setProjectsAccess(List.of(access));
-
-		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser()))
-				.thenReturn(projectAdminUserInfo);
 
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
@@ -230,7 +224,6 @@ class UserServiceImplTest {
 		SecurityContextHolder.setContext(securityContext);
 		when(userInfoService.getUserInfo(anyString(), eq(AuthType.SAML))).thenReturn(null);
 		List<GrantedAuthority> authorities = List.of((GrantedAuthority) () -> Constant.ROLE_SUPERADMIN);
-		when(userInfoService.getAuthorities(any())).thenReturn(authorities);
 		UserInfo savedUserInfo = new UserInfo();
 		savedUserInfo.setUsername(username);
 		savedUserInfo.setAuthType(AuthType.SAML);
