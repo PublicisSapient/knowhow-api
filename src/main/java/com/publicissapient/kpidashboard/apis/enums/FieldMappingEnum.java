@@ -836,8 +836,7 @@ public enum FieldMappingEnum {
 			List.of(
 					"jiraDevDoneStatusKPI128",
 					"jiraStatusKPI187",
-					"jiraLabelsKPI120",
-					"jiraDevDoneStatusKPI128"));
+					"jiraLabelsKPI120"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

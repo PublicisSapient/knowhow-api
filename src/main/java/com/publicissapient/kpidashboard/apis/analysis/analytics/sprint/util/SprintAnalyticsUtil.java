@@ -89,6 +89,11 @@ public class SprintAnalyticsUtil {
 				.value(Constant.NOT_AVAILABLE).trend(Constant.NOT_AVAILABLE).build();
 	}
 
+    /**
+     * Get sprint name with null safety
+     * @param sprintDetails Sprint details
+     * @return Sprint name or "Unknown Sprint" if null
+     */
 	@NotNull
     public static String getSprintName(SprintDetails sprintDetails) {
 		return sprintDetails != null && sprintDetails.getSprintName() != null ? sprintDetails.getSprintName()

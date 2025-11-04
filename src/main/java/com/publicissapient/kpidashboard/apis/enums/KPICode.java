@@ -310,7 +310,15 @@ public enum KPICode {
 	 * field mapping endpoints required for setting the project configurations based on which some
 	 * Jira fields will be extracted and used in a display.
 	 */
-	AI_USAGE_ANALYTICS("kpi198", KPISource.JIRA.name());
+	AI_USAGE_ANALYTICS("kpi198", KPISource.JIRA.name()),
+
+	/**
+	 * Sprint Analytics KPI. This is a placeholder KPI used for field mapping in the
+	 * Analytics Dashboard. It reuses the field mapping configuration from the ITR
+	 * KPI. Not intended for actual analytics calculation, only for configuration
+	 * purposes.
+	 */
+	SPRINT_ANALYTICS("kpi199", KPISource.JIRA.name());
 
 	// @formatter:on
 
