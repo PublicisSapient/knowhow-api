@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
@@ -122,7 +123,11 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Test Sprint");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "No data available", 2);
+		SprintMetricContext context = SprintMetricContext.builder()
+			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+			.build();
+
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "No data available", 2, context);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 3", dataPoint.getSprint());
@@ -136,7 +141,11 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Empty Reason Sprint");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "", 0);
+		SprintMetricContext context = SprintMetricContext.builder()
+			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+			.build();
+
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "", 0, context);
 
 		assertNotNull(dataPoint);
 		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getValue());

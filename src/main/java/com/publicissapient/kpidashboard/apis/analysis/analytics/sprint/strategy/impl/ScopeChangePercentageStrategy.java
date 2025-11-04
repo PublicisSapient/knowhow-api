@@ -78,7 +78,7 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
 			int sprintIndex) {
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
-			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex);
+			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
 
 		FieldMapping fieldMapping = context.getFieldMapping();
@@ -87,7 +87,7 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 		List<String> scopeChangeLabels = fieldMapping.getJiraLabelsKPI120();
 		if (CollectionUtils.isEmpty(scopeChangeLabels)) {
 			log.warn("Scope change labels not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Scope change labels not configured in field mapping", sprintIndex);
+			return createNADataPoint(sprintDetails, "Scope change labels not configured in field mapping", sprintIndex, context);
 		}
 
 		// Get total issues count
@@ -95,7 +95,7 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 
 		if (totalIssuesCount == 0) {
 			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex);
+			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 
 		// Count scope change issues (issues with scope change labels)

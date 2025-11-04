@@ -80,7 +80,7 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
 			int sprintIndex) {
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
-			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex);
+			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
 
 		FieldMapping fieldMapping = context.getFieldMapping();
@@ -89,13 +89,13 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 		String estimationCriteria = fieldMapping.getEstimationCriteria();
 		if (StringUtils.isEmpty(estimationCriteria)) {
 			log.warn("Estimation criteria not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Estimation criteria not configured", sprintIndex);
+			return createNADataPoint(sprintDetails, "Estimation criteria not configured", sprintIndex, context);
 		}
 
 		// Handle missing total issues
 		if (sprintDetails.getTotalIssues() == null || sprintDetails.getTotalIssues().isEmpty()) {
 			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex);
+			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 
 		Set<SprintIssue> totalIssues = sprintDetails.getTotalIssues();

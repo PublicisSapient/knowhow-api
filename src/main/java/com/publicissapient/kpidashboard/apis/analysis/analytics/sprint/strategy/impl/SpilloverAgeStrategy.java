@@ -88,7 +88,7 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
 			int sprintIndex) {
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
-			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex);
+			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
 
 		FieldMapping fieldMapping = context.getFieldMapping();
@@ -97,7 +97,7 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		List<String> devDoneStatuses = fieldMapping.getJiraDevDoneStatusKPI128();
 		if (CollectionUtils.isEmpty(devDoneStatuses)) {
 			log.warn("Dev done statuses not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Dev done statuses not configured in field mapping", sprintIndex);
+			return createNADataPoint(sprintDetails, "Dev done statuses not configured in field mapping", sprintIndex, context);
 		}
 
 		// Get spillover issues (not completed in current sprint)
@@ -107,7 +107,7 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 
 		if (spilloverCount == 0) {
 			log.info("No spillover issues in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No spillover issues", sprintIndex);
+			return createNADataPoint(sprintDetails, "No spillover issues", sprintIndex, context);
 		}
 
 		// Calculate average age of spillover issues

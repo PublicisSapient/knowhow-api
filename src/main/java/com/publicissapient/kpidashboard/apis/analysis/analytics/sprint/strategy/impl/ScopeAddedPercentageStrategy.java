@@ -75,7 +75,7 @@ public class ScopeAddedPercentageStrategy extends AbstractSprintMetricStrategy {
 
 		if (totalIssuesCount == 0) {
 			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex);
+			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 
 		// Get added issues from sprint details

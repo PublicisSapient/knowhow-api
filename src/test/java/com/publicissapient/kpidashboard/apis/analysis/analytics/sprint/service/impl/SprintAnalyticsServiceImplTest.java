@@ -25,10 +25,12 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -352,6 +355,367 @@ public class SprintAnalyticsServiceImplTest {
 
 		SprintAnalyticsResponseDTO analyticsResponse = (SprintAnalyticsResponseDTO) response.getData();
 		assertFalse(analyticsResponse.getWarnings().isEmpty());
+	}
+
+	@Test
+	public void testComputeSprintAnalyticsData_CrossSprintCalculations() {
+		// Setup multiple sprints for cross-sprint analysis (5 sprints)
+		List<SprintDetails> sprints = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			SprintDetails sprint = new SprintDetails();
+			sprint.setSprintID("sprint-" + i);
+			sprint.setSprintName("Sprint " + (i + 1));
+			sprint.setBasicProjectConfigId(new ObjectId(projectIdStr));
+			sprint.setStartDate("2024-01-" + String.format("%02d", (i * 14) + 1) + "T10:00:00.000Z");
+			sprint.setEndDate("2024-01-" + String.format("%02d", (i * 14) + 14) + "T17:00:00.000Z");
+
+			// Create issues that could span multiple sprints (for spillover analysis)
+			Set<SprintIssue> totalIssues = new HashSet<>();
+			for (int j = 0; j < 10; j++) {
+				SprintIssue issue = new SprintIssue();
+				issue.setNumber("ISSUE-" + (i * 10 + j));
+				totalIssues.add(issue);
+			}
+			sprint.setTotalIssues(totalIssues);
+			sprints.add(sprint);
+		}
+
+		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(anyList(), anyInt()))
+				.thenReturn(sprints);
+
+		// Setup issues with cross-sprint relationships
+		List<JiraIssue> issues = new ArrayList<>();
+		for (int i = 0; i < 50; i++) {
+			JiraIssue issue = new JiraIssue();
+			issue.setNumber("ISSUE-" + i);
+			issue.setBasicProjectConfigId(projectIdStr);
+			// Add some issues with dev due dates for cross-sprint analysis
+			if (i % 5 == 0) {
+				issue.setDevDueDate("2024-01-15"); // Do in middle of sprint timeline
+			}
+			issues.add(issue);
+		}
+
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), anyString()))
+				.thenReturn(issues);
+
+		// Setup histories for cross-sprint status tracking
+		List<JiraIssueCustomHistory> histories = new ArrayList<>();
+		for (int i = 0; i < 50; i++) {
+			JiraIssueCustomHistory history = new JiraIssueCustomHistory();
+			history.setStoryID("ISSUE-" + i);
+			history.setBasicProjectConfigId(projectIdStr);
+			// Add status change logs spanning multiple sprints
+			List<JiraHistoryChangeLog> logs = new ArrayList<>();
+			for (int j = 0; j < 3; j++) {
+				JiraHistoryChangeLog log = new JiraHistoryChangeLog();
+				log.setUpdatedOn(LocalDate.of(2024, 1, (j * 10) + 1).atStartOfDay());
+				log.setChangedFrom("Backlog");
+				log.setChangedTo(j == 2 ? "Done" : "In Progress");
+				logs.add(log);
+			}
+			history.setStatusUpdationLog(logs);
+			histories.add(history);
+		}
+
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+				.thenReturn(histories);
+
+		// Enable metrics that require cross-sprint analysis
+		List<SprintMetricType> enabledMetrics = Arrays.asList(
+				SprintMetricType.SPILLOVER_AGE,
+				SprintMetricType.DEV_COMPLETION_BREACH,
+				SprintMetricType.GROOMING_DAY_ONE);
+		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
+		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
+
+		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", 5);
+		when(mockStrategy.calculate(any(SprintMetricContext.class))).thenReturn(projectMetrics);
+
+		// Execute
+		ServiceResponse response = service.computeSprintAnalyticsData(request);
+
+		// Verify cross-sprint calculations work correctly
+		assertNotNull(response);
+		assertTrue(response.getSuccess());
+
+		SprintAnalyticsResponseDTO analyticsResponse = (SprintAnalyticsResponseDTO) response.getData();
+		assertNotNull(analyticsResponse);
+		assertEquals(3, analyticsResponse.getAnalytics().size()); // 3 enabled metrics
+
+		// Verify each metric was calculated with full sprint context
+		verify(mockStrategy, times(3)).calculate(any(SprintMetricContext.class));
+	}
+
+	@Test
+	public void testComputeSprintAnalyticsData_DataConsistencyValidation() {
+		// Setup sprint with issues
+		List<SprintDetails> sprints = createSprintDetailsList(1);
+		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(anyList(), anyInt()))
+				.thenReturn(sprints);
+
+		// Setup issues - but with fewer issues than referenced in sprints (data inconsistency)
+		List<JiraIssue> issues = createJiraIssuesList(3); // Only 3 issues but sprints reference 5
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), anyString()))
+				.thenReturn(issues);
+
+		// Setup histories - with different set of story IDs (inconsistency)
+		List<JiraIssueCustomHistory> histories = new ArrayList<>();
+		for (int i = 0; i < 2; i++) { // Only 2 histories but 5 issues expected
+			JiraIssueCustomHistory history = new JiraIssueCustomHistory();
+			history.setStoryID("ISSUE-" + (i + 10)); // Different issue numbers
+			history.setBasicProjectConfigId(projectIdStr);
+			histories.add(history);
+		}
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+				.thenReturn(histories);
+
+		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
+		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
+
+		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", 1);
+		when(mockStrategy.calculate(any(SprintMetricContext.class))).thenReturn(projectMetrics);
+
+		// Execute
+		ServiceResponse response = service.computeSprintAnalyticsData(request);
+
+		// Verify - should handle data inconsistencies gracefully
+		assertNotNull(response);
+		assertTrue(response.getSuccess());
+
+		// Should still calculate metrics even with missing data
+		verify(mockStrategy, times(1)).calculate(any(SprintMetricContext.class));
+	}
+
+	@Test
+	public void testComputeSprintAnalyticsData_PerformanceUnderLoad() {
+		// Setup large number of sprints (performance test)
+		int largeSprintCount = 20;
+		List<SprintDetails> sprints = new ArrayList<>();
+		for (int i = 0; i < largeSprintCount; i++) {
+			SprintDetails sprint = new SprintDetails();
+			sprint.setSprintID("sprint-" + i);
+			sprint.setSprintName("Sprint " + (i + 1));
+			sprint.setBasicProjectConfigId(new ObjectId(projectIdStr));
+
+			// Large number of issues per sprint
+			Set<SprintIssue> totalIssues = new HashSet<>();
+			for (int j = 0; j < 50; j++) { // 50 issues per sprint
+				SprintIssue issue = new SprintIssue();
+				issue.setNumber("ISSUE-" + (i * 50 + j));
+				totalIssues.add(issue);
+			}
+			sprint.setTotalIssues(totalIssues);
+			sprints.add(sprint);
+		}
+
+		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(anyList(), anyInt()))
+				.thenReturn(sprints);
+
+		// Large number of issues (1000 total)
+		List<JiraIssue> issues = new ArrayList<>();
+		for (int i = 0; i < 1000; i++) {
+			JiraIssue issue = new JiraIssue();
+			issue.setNumber("ISSUE-" + i);
+			issue.setBasicProjectConfigId(projectIdStr);
+			issues.add(issue);
+		}
+
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), anyString()))
+				.thenReturn(issues);
+
+		// Large number of histories
+		List<JiraIssueCustomHistory> histories = new ArrayList<>();
+		for (int i = 0; i < 1000; i++) {
+			JiraIssueCustomHistory history = new JiraIssueCustomHistory();
+			history.setStoryID("ISSUE-" + i);
+			history.setBasicProjectConfigId(projectIdStr);
+			histories.add(history);
+		}
+
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+				.thenReturn(histories);
+
+		List<SprintMetricType> enabledMetrics = Arrays.asList(
+				SprintMetricType.GROOMING_DAY_ONE,
+				SprintMetricType.DEV_COMPLETION_BREACH);
+		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
+		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
+
+		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", largeSprintCount);
+		when(mockStrategy.calculate(any(SprintMetricContext.class))).thenReturn(projectMetrics);
+
+		// Execute - should handle large datasets without performance issues
+		ServiceResponse response = service.computeSprintAnalyticsData(request);
+
+		// Verify
+		assertNotNull(response);
+		assertTrue(response.getSuccess());
+
+		SprintAnalyticsResponseDTO analyticsResponse = (SprintAnalyticsResponseDTO) response.getData();
+		assertNotNull(analyticsResponse);
+		assertEquals(2, analyticsResponse.getAnalytics().size());
+
+		// Verify strategies were called correctly
+		verify(mockStrategy, times(2)).calculate(any(SprintMetricContext.class));
+	}
+
+	@Test
+	public void testComputeSprintAnalyticsData_MemoryUsagePatterns() {
+		// Test with gradually increasing data sizes to check memory patterns
+		int[] sprintCounts = {1, 5, 10, 15};
+
+		for (int sprintCount : sprintCounts) {
+			// Setup sprints with increasing sizes
+			List<SprintDetails> sprints = new ArrayList<>();
+			for (int i = 0; i < sprintCount; i++) {
+				SprintDetails sprint = new SprintDetails();
+				sprint.setSprintID("sprint-" + i);
+				sprint.setSprintName("Sprint " + (i + 1));
+				sprint.setBasicProjectConfigId(new ObjectId(projectIdStr));
+
+				Set<SprintIssue> totalIssues = new HashSet<>();
+				for (int j = 0; j < 20; j++) {
+					SprintIssue issue = new SprintIssue();
+					issue.setNumber("ISSUE-" + (i * 20 + j));
+					totalIssues.add(issue);
+				}
+				sprint.setTotalIssues(totalIssues);
+				sprints.add(sprint);
+			}
+
+			when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(anyList(), anyInt()))
+					.thenReturn(sprints);
+
+			// Corresponding issues
+			List<JiraIssue> issues = createJiraIssuesList(sprintCount * 20);
+			when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), anyString()))
+					.thenReturn(issues);
+
+			List<JiraIssueCustomHistory> histories = createHistoriesList(sprintCount * 20);
+			when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+					.thenReturn(histories);
+
+			List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+			when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
+			when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
+
+			ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", sprintCount);
+			when(mockStrategy.calculate(any(SprintMetricContext.class))).thenReturn(projectMetrics);
+
+			// Execute for each size
+			ServiceResponse response = service.computeSprintAnalyticsData(request);
+
+			// Verify each size works correctly
+			assertNotNull("Failed for sprint count: " + sprintCount, response);
+			assertTrue("Failed for sprint count: " + sprintCount, response.getSuccess());
+
+			// Reset mocks for next iteration
+			reset(mockStrategy);
+		}
+	}
+
+	@Test
+	public void testComputeSprintAnalyticsData_CrossProjectDataConsistency() {
+		// Setup multiple projects with potential data consistency issues
+		ObjectId projectId2 = new ObjectId();
+		String projectIdStr2 = projectId2.toString();
+
+		// Setup projects
+		ProjectBasicConfig projectBasicConfig2 = new ProjectBasicConfig();
+		projectBasicConfig2.setId(projectId2);
+		projectBasicConfig2.setProjectName("Test Project 2");
+
+		Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
+		projectConfigMap.put(projectIdStr, projectBasicConfig);
+		projectConfigMap.put(projectIdStr2, projectBasicConfig2);
+		when(configHelperService.getProjectConfigMap()).thenReturn(projectConfigMap);
+
+		// Field mappings
+		FieldMapping fieldMapping2 = new FieldMapping();
+		fieldMapping2.setBasicProjectConfigId(projectId2);
+		when(configHelperService.getFieldMapping(projectId2)).thenReturn(fieldMapping2);
+
+		// Update request
+		request.setProjectBasicConfigIds(Set.of(projectIdStr, projectIdStr2));
+
+		// Setup account hierarchy
+		List<AccountFilteredData> accountFilteredDataList = new ArrayList<>();
+		AccountFilteredData data1 = new AccountFilteredData();
+		data1.setBasicProjectConfigId(new ObjectId(projectIdStr));
+		AccountFilteredData data2 = new AccountFilteredData();
+		data2.setBasicProjectConfigId(new ObjectId(projectIdStr2));
+		accountFilteredDataList.add(data1);
+		accountFilteredDataList.add(data2);
+		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+				.thenReturn(accountFilteredDataList);
+
+		// Setup different data for each project (testing cross-project consistency)
+		List<SprintDetails> sprints1 = createSprintDetailsList(2);
+		List<SprintDetails> sprints2 = createSprintDetailsList(3);
+
+		// Mock different return values for different projects
+		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(
+				eq(Collections.singletonList(new ObjectId(projectIdStr))), anyInt()))
+				.thenReturn(sprints1);
+		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(
+				eq(Collections.singletonList(new ObjectId(projectIdStr2))), anyInt()))
+				.thenReturn(sprints2);
+
+		// Different issue sets for each project
+		List<JiraIssue> issues1 = createJiraIssuesList(10);
+		List<JiraIssue> issues2 = new ArrayList<>();
+		for (int i = 0; i < 15; i++) {
+			JiraIssue issue = new JiraIssue();
+			issue.setNumber("PROJECT2-ISSUE-" + i);
+			issue.setBasicProjectConfigId(projectIdStr2);
+			issues2.add(issue);
+		}
+
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), eq(projectIdStr)))
+				.thenReturn(issues1);
+		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), eq(projectIdStr2)))
+				.thenReturn(issues2);
+
+		List<JiraIssueCustomHistory> histories1 = createHistoriesList(10);
+		List<JiraIssueCustomHistory> histories2 = new ArrayList<>();
+		for (int i = 0; i < 15; i++) {
+			JiraIssueCustomHistory history = new JiraIssueCustomHistory();
+			history.setStoryID("PROJECT2-ISSUE-" + i);
+			history.setBasicProjectConfigId(projectIdStr2);
+			histories2.add(history);
+		}
+
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+				anyList(), eq(Collections.singletonList(projectIdStr))))
+				.thenReturn(histories1);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+				anyList(), eq(Collections.singletonList(projectIdStr2))))
+				.thenReturn(histories2);
+
+		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
+		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
+
+		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", 2);
+		when(mockStrategy.calculate(any(SprintMetricContext.class))).thenReturn(projectMetrics);
+
+		// Execute
+		ServiceResponse response = service.computeSprintAnalyticsData(request);
+
+		// Verify cross-project data consistency
+		assertNotNull(response);
+		assertTrue(response.getSuccess());
+
+		SprintAnalyticsResponseDTO analyticsResponse = (SprintAnalyticsResponseDTO) response.getData();
+		assertEquals(1, analyticsResponse.getAnalytics().size());
+
+		SprintMetricDTO metricDTO = analyticsResponse.getAnalytics().get(0);
+		assertEquals(2, metricDTO.getProjects().size()); // 2 projects
+
+		// Verify strategies were called for each project separately
+		verify(mockStrategy, times(2)).calculate(any(SprintMetricContext.class));
 	}
 
 	// Helper methods

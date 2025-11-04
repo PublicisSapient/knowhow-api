@@ -181,23 +181,28 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 				projectSprintMetricsList.add(projectSprintMetrics);
 				successCount++;
 
+				// Collect any warnings generated during metric calculation
+				if (!sprintMetricContext.getWarnings().isEmpty()) {
+					sprintMetricContext.getWarnings().forEach(response::addWarning);
+				}
+
 				log.debug("Successfully computed {} for project: {} [{}]", metricType.getDisplayName(),
 						sprintMetricContext.getProjectName(), projectIdStr);
 
 			} catch (IllegalArgumentException e) {
 				failureCount++;
 				log.warn("Invalid project ID format: {} - Metric: {}", projectIdStr, metricType.getDisplayName());
-				response.addWarning(String.format("Skipped project '%s': Invalid ID format", projectIdStr));
+				response.addWarning(String.format("[%s] Invalid project ID format", projectIdStr));
 			} catch (EntityNotFoundException e) {
 				failureCount++;
 				log.warn("Configuration not found for project: {} - Metric: {} - {}", projectIdStr,
 						metricType.getDisplayName(), e.getMessage());
-				response.addWarning(String.format("Skipped project '%s': %s", projectIdStr, e.getMessage()));
+				response.addWarning(String.format("[%s] %s", projectIdStr, e.getMessage()));
 			} catch (Exception e) {
 				failureCount++;
 				log.error("Failed to compute {} for project: {}", metricType.getDisplayName(), projectIdStr, e);
-				response.addWarning(String.format("Failed to compute %s for project '%s': %s",
-						metricType.getDisplayName(), projectIdStr, e.getMessage()));
+				response.addWarning(String.format("[%s][%s] Calculation failed: %s", projectIdStr,
+						metricType.getDisplayName(), e.getMessage()));
 			}
 		}
 
@@ -275,14 +280,6 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 			if (CollectionUtils.isNotEmpty(sprint.getTotalIssues())) {
 				sprint.getTotalIssues().stream().filter(issue -> issue != null && issue.getNumber() != null)
 						.map(SprintIssue::getNumber).forEach(issueNumbers::add);
-			}
-
-			if (CollectionUtils.isNotEmpty(sprint.getPuntedIssues())) {
-				sprint.getPuntedIssues().stream().filter(issue -> issue != null && issue.getNumber() != null)
-						.map(SprintIssue::getNumber).forEach(issueNumbers::add);
-			}
-			if (CollectionUtils.isNotEmpty(sprint.getAddedIssues())) {
-				sprint.getAddedIssues().stream().filter(Objects::nonNull).forEach(issueNumbers::add);
 			}
 		}
 
@@ -375,7 +372,7 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 	private ProjectBasicConfig fetchProjectBasicConfig(ObjectId projectId) throws EntityNotFoundException {
 		return Optional.ofNullable(configHelperService.getProjectConfigMap().get(projectId.toString()))
 				.orElseThrow(() -> {
-					log.error("Project basic config not found for : {}", projectId);
+					log.error("[{}] Project configuration not found", projectId);
 					return new EntityNotFoundException(ProjectBasicConfig.class, "projectId", projectId.toString());
 				});
 	}
@@ -408,15 +405,15 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 
 			int missingCount = issueNumbers.size() - issues.size();
 			if (missingCount > 0) {
-				log.info("Retrieved {}/{} jira issues ({} missing) for project: {} [{}]", issues.size(),
-						issueNumbers.size(), missingCount, projectName, projectId);
+				log.info("[{}] Retrieved {}/{} jira issues ({} missing)", projectId, issues.size(), issueNumbers.size(),
+						missingCount);
 			} else {
-				log.debug("Retrieved {} jira issues for project: {} [{}]", issues.size(), projectName, projectId);
+				log.debug("[{}] Retrieved {} jira issues", projectId, issues.size());
 			}
 			return issues;
 
 		} catch (Exception e) {
-			log.error("Failed to fetch jira issues for project: {} [{}]", projectName, projectId, e);
+			log.error("[{}] Failed to fetch jira issues - {}", projectId, e.getMessage(), e);
 			return new ArrayList<>();
 		}
 	}
@@ -444,23 +441,21 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 							Collections.singletonList(projectId.toString()));
 
 			if (CollectionUtils.isEmpty(histories)) {
-				log.info("No custom history found for {} story IDs in project: {} [{}]", storyIds.size(), projectName,
-						projectId);
+				log.info("[{}] No custom history found for {} story IDs", projectId, storyIds.size());
 				return new ArrayList<>();
 			}
 
 			int missingCount = storyIds.size() - histories.size();
 			if (missingCount > 0) {
-				log.debug("Retrieved {}/{} custom histories ({} missing) for project: {} [{}]", histories.size(),
-						storyIds.size(), missingCount, projectName, projectId);
+				log.debug("[{}] Retrieved {}/{} custom histories ({} missing)", projectId, histories.size(),
+						storyIds.size(), missingCount);
 			} else {
-				log.debug("Retrieved {} custom histories for project: {} [{}]", histories.size(), projectName,
-						projectId);
+				log.debug("[{}] Retrieved {} custom histories", projectId, histories.size());
 			}
 			return histories;
 
 		} catch (Exception e) {
-			log.error("Failed to fetch custom histories for project: {} [{}]", projectName, projectId, e);
+			log.error("[{}] Failed to fetch custom histories - {}", projectId, e.getMessage(), e);
 			return new ArrayList<>();
 		}
 	}
@@ -474,7 +469,7 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 	 */
 	private FieldMapping fetchFieldMapping(ObjectId basicProjectConfigId) throws EntityNotFoundException {
 		return Optional.ofNullable(configHelperService.getFieldMapping(basicProjectConfigId)).orElseThrow(() -> {
-			log.error("Field mapping not found for project: {}", basicProjectConfigId);
+			log.error("[{}] Field mapping configuration not found", basicProjectConfigId);
 			return new EntityNotFoundException(FieldMapping.class, "basicProjectConfigId",
 					basicProjectConfigId.toString());
 		});

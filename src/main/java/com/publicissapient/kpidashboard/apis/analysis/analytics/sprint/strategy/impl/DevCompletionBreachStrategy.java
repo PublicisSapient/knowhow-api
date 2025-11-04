@@ -90,7 +90,7 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 			int sprintIndex) {
 
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
-			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex);
+			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
 
 		FieldMapping fieldMapping = context.getFieldMapping();
@@ -99,7 +99,7 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 		List<String> devDoneStatuses = fieldMapping.getJiraDevDoneStatusKPI128();
 		if (CollectionUtils.isEmpty(devDoneStatuses)) {
 			log.warn("Dev done statuses not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Dev done statuses not configured in field mapping", sprintIndex);
+			return createNADataPoint(sprintDetails, "Dev done statuses not configured in field mapping", sprintIndex, context);
 		}
 
 		// Get all issues with devDueDate from sprint
@@ -109,7 +109,7 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 
 		if (totalWithDevDueDate == 0) {
 			log.info("No issues with dev due date in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No issues with dev due date", sprintIndex);
+			return createNADataPoint(sprintDetails, "No issues with dev due date", sprintIndex, context);
 		}
 
 		// Count issues that breached dev completion date

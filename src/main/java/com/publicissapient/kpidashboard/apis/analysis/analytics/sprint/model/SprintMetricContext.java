@@ -16,10 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -35,6 +38,8 @@ import lombok.Data;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SprintMetricContext {
 
 	/** Project Basic Config ID */
@@ -58,6 +63,10 @@ public class SprintMetricContext {
 	/** Map of Jira issue custom history by story ID */
 	private Map<String, JiraIssueCustomHistory> historyMap;
 
+	/** Warnings collected during metric calculation */
+	@Builder.Default
+	private List<String> warnings = new ArrayList<>();
+
 	/**
 	 * Get JiraIssue by issue number
 	 *
@@ -78,5 +87,15 @@ public class SprintMetricContext {
 	 */
 	public Optional<JiraIssueCustomHistory> getHistoryByStoryId(String storyId) {
 		return Optional.ofNullable(historyMap.get(storyId));
+	}
+
+	/**
+	 * Add a warning message to the context
+	 * 
+	 * @param warning
+	 *            Warning message
+	 */
+	public void addWarning(String warning) {
+		this.warnings.add(warning);
 	}
 }

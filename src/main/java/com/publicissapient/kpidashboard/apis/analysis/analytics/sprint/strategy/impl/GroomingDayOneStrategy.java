@@ -85,7 +85,7 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
 			int sprintIndex) {
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
-			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex);
+			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
 
 		FieldMapping fieldMapping = context.getFieldMapping();
@@ -94,7 +94,7 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		List<String> groomingStatuses = fieldMapping.getJiraStatusKPI187();
 		if (CollectionUtils.isEmpty(groomingStatuses)) {
 			log.warn("Grooming statuses not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Grooming statuses not configured in field mapping", sprintIndex);
+			return createNADataPoint(sprintDetails, "Grooming statuses not configured in field mapping", sprintIndex, context);
 		}
 
 		Set<String> groomingStatusSet = groomingStatuses.stream().map(status -> status.trim().toLowerCase())
@@ -105,14 +105,14 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 				DateUtil.TIME_FORMAT_WITH_SEC);
 		if (sprintStartDate == null) {
 			log.warn("Sprint start date is null for sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "Sprint start date not available", sprintIndex);
+			return createNADataPoint(sprintDetails, "Sprint start date not available", sprintIndex, context);
 		}
 		LocalDate dayOne = sprintStartDate.toLocalDate();
 
 		// Get total sprint issues count
 		if (sprintDetails.getTotalIssues() == null || sprintDetails.getTotalIssues().isEmpty()) {
 			log.info("No issues found in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex);
+			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 		int totalIssuesCount = sprintDetails.getTotalIssues().size();
 

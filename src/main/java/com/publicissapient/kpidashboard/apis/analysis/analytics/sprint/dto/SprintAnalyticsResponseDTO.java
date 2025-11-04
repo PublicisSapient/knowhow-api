@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -38,7 +39,7 @@ public class SprintAnalyticsResponseDTO {
 
 	/** List of warnings for user transparency (e.g., "Project X has no sprints") */
 	@Builder.Default
-	private List<String> warnings = new java.util.ArrayList<>();
+	private List<String> warnings = new ArrayList<>();
 
 	public void addWarning(String warning) {
 		this.warnings.add(warning);

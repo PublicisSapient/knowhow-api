@@ -62,6 +62,7 @@ public class SprintAnalyticsUtil {
 
 	/**
 	 * Creates a NA (Not Available) data point when metric cannot be calculated
+	 * Also adds the reason to context warnings for API response
 	 * 
 	 * @param sprintDetails
 	 *            Sprint details
@@ -69,10 +70,18 @@ public class SprintAnalyticsUtil {
 	 *            Reason why data is not available
 	 * @param sprintIndex
 	 *            Index of sprint
+	 * @param context
+	 *            Metric context to add warning
 	 * @return SprintDataPoint with "NA" values for value and trend
 	 */
-	public static SprintDataPoint createNADataPoint(SprintDetails sprintDetails, String reason, int sprintIndex) {
-		log.info("Creating NA data point for sprint: {} - Reason: {}", sprintDetails.getSprintName(), reason);
+	public static SprintDataPoint createNADataPoint(SprintDetails sprintDetails, String reason, int sprintIndex,
+			com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext context) {
+		String warning = String.format("Project: %s | Sprint: %s | %s", 
+				context.getBasicProjectConfigId(), 
+				sprintDetails.getSprintName(), 
+				reason);
+		context.addWarning(warning);
+		log.debug("Creating NA data point for sprint: {} - Reason: {}", sprintDetails.getSprintName(), reason);
 		return SprintDataPoint.builder().sprint(normalizeSprintId(sprintIndex)).name(sprintDetails.getSprintName())
 				.value(Constant.NOT_AVAILABLE).trend(Constant.NOT_AVAILABLE).build();
 	}

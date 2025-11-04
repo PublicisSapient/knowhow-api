@@ -78,7 +78,7 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 
 		if (totalIssuesCount == 0) {
 			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
-			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex);
+			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 
 		// Count added issues (scope added after sprint start)
