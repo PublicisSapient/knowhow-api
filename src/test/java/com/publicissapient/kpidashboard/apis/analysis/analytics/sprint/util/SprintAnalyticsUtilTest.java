@@ -81,7 +81,7 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Sprint 1");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 25.5, 10.2, 0);
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 25.5, 10.2, 0, Constant.PERCENTAGE);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 1", dataPoint.getSprint());
@@ -95,7 +95,7 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Sprint 2");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 5, 3, 1);
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 5, 3, 1, Constant.PERCENTAGE);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 2", dataPoint.getSprint());
@@ -109,7 +109,7 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Sprint Zero");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 0, 0, 5);
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 0, 0, 5, Constant.PERCENTAGE);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 6", dataPoint.getSprint());
