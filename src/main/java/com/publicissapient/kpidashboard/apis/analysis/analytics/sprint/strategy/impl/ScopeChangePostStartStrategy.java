@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.calculatePercentage;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createDataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 
 import org.springframework.stereotype.Component;
 
@@ -77,7 +78,7 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 		int totalIssuesCount = sprintDetails.getTotalIssues() != null ? sprintDetails.getTotalIssues().size() : 0;
 
 		if (totalIssuesCount == 0) {
-			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
+			log.info("No issues in sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 
@@ -91,14 +92,14 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 		int netScopeChange = addedIssuesCount + puntedIssuesCount;
 
 		if (netScopeChange == 0) {
-			log.info("No scope changes in sprint: {}", sprintDetails.getSprintName());
+			log.info("No scope changes in sprint: {}", getSprintName(sprintDetails));
 			return createDataPoint(sprintDetails, 0, 0.0, sprintIndex);
 		}
 
 		// Calculate percentage: (net change / total issues) * 100
 		double percentage = calculatePercentage(netScopeChange, totalIssuesCount);
 
-		log.debug("Sprint: {}, Added: {}, Punted: {}, Net Change: {}, Percentage: {}%", sprintDetails.getSprintName(),
+		log.debug("Sprint: {}, Added: {}, Punted: {}, Net Change: {}, Percentage: {}%", getSprintName(sprintDetails),
 				addedIssuesCount, puntedIssuesCount, netScopeChange, percentage);
 
 		return createDataPoint(sprintDetails, netScopeChange, percentage, sprintIndex);

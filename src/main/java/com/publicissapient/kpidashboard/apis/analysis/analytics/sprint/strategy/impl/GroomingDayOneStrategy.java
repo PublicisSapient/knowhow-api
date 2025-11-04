@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.calculatePercentage;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createDataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.isValidFieldMapping;
 
 import java.time.LocalDate;
@@ -104,14 +105,14 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),
 				DateUtil.TIME_FORMAT_WITH_SEC);
 		if (sprintStartDate == null) {
-			log.warn("Sprint start date is null for sprint: {}", sprintDetails.getSprintName());
+			log.warn("Sprint start date is null for sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "Sprint start date not available", sprintIndex, context);
 		}
 		LocalDate dayOne = sprintStartDate.toLocalDate();
 
 		// Get total sprint issues count
 		if (sprintDetails.getTotalIssues() == null || sprintDetails.getTotalIssues().isEmpty()) {
-			log.info("No issues found in sprint: {}", sprintDetails.getSprintName());
+			log.info("No issues found in sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 		int totalIssuesCount = sprintDetails.getTotalIssues().size();

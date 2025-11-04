@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.calculatePercentage;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createDataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 
 import java.util.Set;
 
@@ -74,7 +75,7 @@ public class ScopeAddedPercentageStrategy extends AbstractSprintMetricStrategy {
 		int totalIssuesCount = sprintDetails.getTotalIssues() != null ? sprintDetails.getTotalIssues().size() : 0;
 
 		if (totalIssuesCount == 0) {
-			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
+			log.info("No issues in sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 

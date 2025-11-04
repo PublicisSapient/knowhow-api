@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.calculatePercentage;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createDataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.isValidFieldMapping;
 
 import java.util.Set;
@@ -94,7 +95,7 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 
 		// Handle missing total issues
 		if (sprintDetails.getTotalIssues() == null || sprintDetails.getTotalIssues().isEmpty()) {
-			log.info("No issues in sprint: {}", sprintDetails.getSprintName());
+			log.info("No issues in sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "No issues in sprint", sprintIndex, context);
 		}
 

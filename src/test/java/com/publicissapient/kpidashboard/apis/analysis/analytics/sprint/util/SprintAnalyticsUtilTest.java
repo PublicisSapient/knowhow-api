@@ -134,6 +134,10 @@ public class SprintAnalyticsUtilTest {
 		assertEquals("Test Sprint", dataPoint.getName());
 		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getValue());
 		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getTrend());
+		// Verify warning was added to context
+		assertEquals(1, context.getWarnings().size());
+		assertTrue(context.getWarnings().get(0).contains("Test Sprint"));
+		assertTrue(context.getWarnings().get(0).contains("No data available"));
 	}
 
 	@Test
@@ -150,6 +154,66 @@ public class SprintAnalyticsUtilTest {
 		assertNotNull(dataPoint);
 		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getValue());
 		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getTrend());
+		// Verify warning was added to context
+		assertEquals(1, context.getWarnings().size());
+		assertTrue(context.getWarnings().get(0).contains("Empty Reason Sprint"));
+		assertTrue(context.getWarnings().get(0).contains("507f1f77bcf86cd799439011"));
+	}
+
+	@Test
+	public void testCreateNADataPoint_WithNullSprintDetails() {
+		SprintMetricContext context = SprintMetricContext.builder()
+			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+			.build();
+
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(null, "Null sprint details", 0, context);
+
+		assertNotNull(dataPoint);
+		assertEquals("Unknown Sprint", dataPoint.getName());
+		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getValue());
+		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getTrend());
+		// Verify warning was added with default sprint name
+		assertEquals(1, context.getWarnings().size());
+		assertTrue(context.getWarnings().get(0).contains("Unknown Sprint"));
+	}
+
+	@Test
+	public void testCreateNADataPoint_WithNullSprintName() {
+		SprintDetails sprintDetails = new SprintDetails();
+		sprintDetails.setSprintName(null); // Explicitly set to null
+
+		SprintMetricContext context = SprintMetricContext.builder()
+			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+			.build();
+
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "Null sprint name", 1, context);
+
+		assertNotNull(dataPoint);
+		assertEquals("Unknown Sprint", dataPoint.getName());
+		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getValue());
+		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getTrend());
+		// Verify warning was added with default sprint name
+		assertEquals(1, context.getWarnings().size());
+		assertTrue(context.getWarnings().get(0).contains("Unknown Sprint"));
+	}
+
+	@Test
+	public void testCreateNADataPoint_WarningFormat() {
+		SprintDetails sprintDetails = new SprintDetails();
+		sprintDetails.setSprintName("Test Sprint 123");
+
+		SprintMetricContext context = SprintMetricContext.builder()
+			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+			.build();
+
+		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "Test reason", 0, context);
+
+		// Verify warning format
+		assertEquals(1, context.getWarnings().size());
+		String warning = context.getWarnings().get(0);
+		assertTrue(warning.startsWith("Project: 507f1f77bcf86cd799439011"));
+		assertTrue(warning.contains(" | Sprint: Test Sprint 123"));
+		assertTrue(warning.endsWith(" | Test reason"));
 	}
 
 	@Test

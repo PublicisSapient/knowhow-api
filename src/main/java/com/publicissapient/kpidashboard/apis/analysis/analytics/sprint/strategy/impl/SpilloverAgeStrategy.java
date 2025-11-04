@@ -18,6 +18,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy
 
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createDataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.isValidFieldMapping;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.roundingOff;
 
@@ -106,7 +107,7 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		int spilloverCount = spilloverIssues.size();
 
 		if (spilloverCount == 0) {
-			log.info("No spillover issues in sprint: {}", sprintDetails.getSprintName());
+			log.info("No spillover issues in sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "No spillover issues", sprintIndex, context);
 		}
 
@@ -213,7 +214,7 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 			return null;
 		}
 
-		String currentSprintName = sprintDetails.getSprintName();
+		String currentSprintName = getSprintName(sprintDetails);
 
 		// Find the earliest log where issue was tagged TO this specific sprint
 		return history.getSprintUpdationLog().stream().filter(log -> log.getUpdatedOn() != null)

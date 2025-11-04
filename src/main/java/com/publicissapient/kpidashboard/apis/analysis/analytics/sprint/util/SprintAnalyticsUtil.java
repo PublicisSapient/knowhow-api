@@ -17,11 +17,13 @@
 package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
+import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Utility class for Sprint Analytics calculations
@@ -30,7 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 public class SprintAnalyticsUtil {
 
-	/**
+    public static final String UNKNOWN_SPRINT = "Unknown Sprint";
+
+    /**
 	 * Rounds off a double value to 2 decimal places
 	 *
 	 * @param value
@@ -56,13 +60,13 @@ public class SprintAnalyticsUtil {
 	 */
 	public static SprintDataPoint createDataPoint(SprintDetails sprintDetails, Number value, Number trend,
 			int sprintIndex) {
-		return SprintDataPoint.builder().sprint(normalizeSprintId(sprintIndex)).name(sprintDetails.getSprintName())
+		return SprintDataPoint.builder().sprint(normalizeSprintId(sprintIndex)).name(getSprintName(sprintDetails))
 				.value(String.valueOf(value)).trend(String.valueOf(trend)).build();
 	}
 
 	/**
-	 * Creates a NA (Not Available) data point when metric cannot be calculated
-	 * Also adds the reason to context warnings for API response
+	 * Creates a NA (Not Available) data point when metric cannot be calculated Also
+	 * adds the reason to context warnings for API response
 	 * 
 	 * @param sprintDetails
 	 *            Sprint details
@@ -75,15 +79,20 @@ public class SprintAnalyticsUtil {
 	 * @return SprintDataPoint with "NA" values for value and trend
 	 */
 	public static SprintDataPoint createNADataPoint(SprintDetails sprintDetails, String reason, int sprintIndex,
-			com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext context) {
-		String warning = String.format("Project: %s | Sprint: %s | %s", 
-				context.getBasicProjectConfigId(), 
-				sprintDetails.getSprintName(), 
+			SprintMetricContext context) {
+		final String sprintName = getSprintName(sprintDetails);
+		String warning = String.format("Project: %s | Sprint: %s | %s", context.getBasicProjectConfigId(), sprintName,
 				reason);
 		context.addWarning(warning);
-		log.debug("Creating NA data point for sprint: {} - Reason: {}", sprintDetails.getSprintName(), reason);
-		return SprintDataPoint.builder().sprint(normalizeSprintId(sprintIndex)).name(sprintDetails.getSprintName())
+		log.debug("Creating NA data point for sprint: {} - Reason: {}", sprintName, reason);
+		return SprintDataPoint.builder().sprint(normalizeSprintId(sprintIndex)).name(sprintName)
 				.value(Constant.NOT_AVAILABLE).trend(Constant.NOT_AVAILABLE).build();
+	}
+
+	@NotNull
+    public static String getSprintName(SprintDetails sprintDetails) {
+		return sprintDetails != null && sprintDetails.getSprintName() != null ? sprintDetails.getSprintName()
+				: UNKNOWN_SPRINT;
 	}
 
 	/**

@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.calculatePercentage;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createDataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
+import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.isValidFieldMapping;
 
 import java.time.LocalDate;
@@ -108,7 +109,7 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 		int totalWithDevDueDate = issuesWithDevDueDate.size();
 
 		if (totalWithDevDueDate == 0) {
-			log.info("No issues with dev due date in sprint: {}", sprintDetails.getSprintName());
+			log.info("No issues with dev due date in sprint: {}", getSprintName(sprintDetails));
 			return createNADataPoint(sprintDetails, "No issues with dev due date", sprintIndex, context);
 		}
 

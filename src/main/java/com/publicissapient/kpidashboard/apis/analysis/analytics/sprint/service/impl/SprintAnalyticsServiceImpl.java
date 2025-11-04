@@ -183,7 +183,7 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 
 				// Collect any warnings generated during metric calculation
 				if (!sprintMetricContext.getWarnings().isEmpty()) {
-					sprintMetricContext.getWarnings().forEach(response::addWarning);
+					response.getWarnings().addAll(sprintMetricContext.getWarnings());
 				}
 
 				log.debug("Successfully computed {} for project: {} [{}]", metricType.getDisplayName(),
