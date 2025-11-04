@@ -21,6 +21,7 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
@@ -93,7 +94,7 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 
 		if (netScopeChange == 0) {
 			log.info("No scope changes in sprint: {}", getSprintName(sprintDetails));
-			return createDataPoint(sprintDetails, 0, 0.0, sprintIndex);
+			return createDataPoint(sprintDetails, 0, 0.0, sprintIndex, Constant.PERCENTAGE);
 		}
 
 		// Calculate percentage: (net change / total issues) * 100
@@ -102,6 +103,6 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 		log.debug("Sprint: {}, Added: {}, Punted: {}, Net Change: {}, Percentage: {}%", getSprintName(sprintDetails),
 				addedIssuesCount, puntedIssuesCount, netScopeChange, percentage);
 
-		return createDataPoint(sprintDetails, netScopeChange, percentage, sprintIndex);
+		return createDataPoint(sprintDetails, netScopeChange, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 }

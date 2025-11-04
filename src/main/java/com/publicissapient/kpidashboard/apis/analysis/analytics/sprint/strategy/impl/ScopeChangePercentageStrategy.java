@@ -25,6 +25,7 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 import java.util.List;
 import java.util.Objects;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
@@ -105,7 +106,7 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 		// Calculate percentage: (scopeChangeIssues / totalIssues) * 100
 		double percentage = calculatePercentage(scopeChangeCount, totalIssuesCount);
 
-		return createDataPoint(sprintDetails, scopeChangeCount, percentage, sprintIndex);
+		return createDataPoint(sprintDetails, scopeChangeCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**

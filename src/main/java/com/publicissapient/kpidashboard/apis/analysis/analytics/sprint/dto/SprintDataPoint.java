@@ -41,4 +41,9 @@ public class SprintDataPoint {
 
 	/** Trend value - percentage or absolute change */
 	private String trend;
+
+	/** 
+	 * Unit of the trend value (e.g., "%", "count", "days", "hours")
+	 */
+	private String trendUnit;
 }

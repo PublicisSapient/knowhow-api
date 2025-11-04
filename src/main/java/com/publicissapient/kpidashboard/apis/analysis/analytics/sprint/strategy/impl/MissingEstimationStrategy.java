@@ -24,6 +24,7 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -108,7 +109,7 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (missing / total) * 100
 		double percentage = calculatePercentage(missingEstimationCount, totalIssuesCount);
 
-		return createDataPoint(sprintDetails, missingEstimationCount, percentage, sprintIndex);
+		return createDataPoint(sprintDetails, missingEstimationCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**

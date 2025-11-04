@@ -23,6 +23,7 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
@@ -88,6 +89,6 @@ public class ScopeAddedPercentageStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (addedIssues / totalIssues) * 100
 		double percentage = calculatePercentage(addedCount, totalIssuesCount);
 
-		return createDataPoint(sprintDetails, addedCount, percentage, sprintIndex);
+		return createDataPoint(sprintDetails, addedCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 }

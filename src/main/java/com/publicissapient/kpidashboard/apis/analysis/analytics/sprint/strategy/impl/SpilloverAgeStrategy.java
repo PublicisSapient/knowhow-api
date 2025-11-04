@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -114,7 +115,7 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		// Calculate average age of spillover issues
 		double averageAge = calculateAverageSpilloverAge(spilloverIssues, sprintDetails, context, devDoneStatuses);
 
-		return createDataPoint(sprintDetails, spilloverCount, averageAge, sprintIndex);
+		return createDataPoint(sprintDetails, spilloverCount, averageAge, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**

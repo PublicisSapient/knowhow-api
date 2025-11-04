@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -119,7 +120,7 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (breach / total) * 100
 		double percentage = calculatePercentage(breachCount, totalWithDevDueDate);
 
-		return createDataPoint(sprintDetails, breachCount, percentage, sprintIndex);
+		return createDataPoint(sprintDetails, breachCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**

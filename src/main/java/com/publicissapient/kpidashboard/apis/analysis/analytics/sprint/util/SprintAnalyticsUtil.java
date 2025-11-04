@@ -46,7 +46,7 @@ public class SprintAnalyticsUtil {
 	}
 
 	/**
-	 * Creates a data point with calculated values
+	 * Creates a data point with calculated values and custom trend unit
 	 *
 	 * @param sprintDetails
 	 *            Sprint details
@@ -56,12 +56,14 @@ public class SprintAnalyticsUtil {
 	 *            Trend value (percentage or count)
 	 * @param sprintIndex
 	 *            Index of sprint
+	 * @param trendUnit
+	 *            Unit for trend value (e.g., "%", "count", "days")
 	 * @return SprintDataPoint with String values
 	 */
 	public static SprintDataPoint createDataPoint(SprintDetails sprintDetails, Number value, Number trend,
-			int sprintIndex) {
+			int sprintIndex, String trendUnit) {
 		return SprintDataPoint.builder().sprint(normalizeSprintId(sprintIndex)).name(getSprintName(sprintDetails))
-				.value(String.valueOf(value)).trend(String.valueOf(trend)).build();
+				.value(String.valueOf(value)).trend(String.valueOf(trend)).trendUnit(trendUnit).build();
 	}
 
 	/**

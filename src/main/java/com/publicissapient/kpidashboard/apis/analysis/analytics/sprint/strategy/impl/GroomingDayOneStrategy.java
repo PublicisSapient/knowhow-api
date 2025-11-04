@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
@@ -123,7 +124,7 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (groomingCount / totalIssuesCount) * 100
 		double percentage = calculatePercentage(groomingCount, totalIssuesCount);
 
-		return createDataPoint(sprintDetails, groomingCount, percentage, sprintIndex);
+		return createDataPoint(sprintDetails, groomingCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**
