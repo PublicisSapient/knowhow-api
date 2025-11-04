@@ -441,13 +441,14 @@ public class SprintAnalyticsServiceImpl implements SprintAnalyticsService {
 							Collections.singletonList(projectId.toString()));
 
 			if (CollectionUtils.isEmpty(histories)) {
-				log.info("[{}] No custom history found for {} story IDs", projectId, storyIds.size());
+				log.info("No custom history found for {} story IDs in project: {} [{}]", storyIds.size(),
+						projectName, projectId);
 				return new ArrayList<>();
 			}
 
 			int missingCount = storyIds.size() - histories.size();
 			if (missingCount > 0) {
-				log.debug("[{}] Retrieved {}/{} custom histories ({} missing)", projectId, histories.size(),
+				log.info("[{}] Retrieved {}/{} custom histories ({} missing)", projectId, histories.size(),
 						storyIds.size(), missingCount);
 			} else {
 				log.debug("[{}] Retrieved {} custom histories", projectId, histories.size());
