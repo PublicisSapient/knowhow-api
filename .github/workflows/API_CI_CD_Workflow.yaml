@@ -84,8 +84,8 @@ jobs:
           elif [[ "$ENV" == "dev1" ]]; then
             echo "IMAGE_TAG=dev1-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev1.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-dev1" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-dev1" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-dev1" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-dev1" >> $GITHUB_OUTPUT
           else
             echo "IMAGE_TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev.yaml" >> $GITHUB_ENV
