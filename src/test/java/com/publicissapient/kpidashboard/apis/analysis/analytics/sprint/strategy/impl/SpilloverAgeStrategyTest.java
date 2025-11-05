@@ -46,8 +46,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class SpilloverAgeStrategyTest {
 
-	@InjectMocks
-	private SpilloverAgeStrategy strategy;
+	@InjectMocks private SpilloverAgeStrategy strategy;
 
 	private SprintDetails sprintDetails;
 	private SprintMetricContext context;
@@ -118,14 +117,16 @@ public class SpilloverAgeStrategyTest {
 		Map<String, JiraIssueCustomHistory> historyMap = new HashMap<>();
 
 		// ISSUE-1: Tagged on Jan 1, completed on Jan 10 (9 days)
-		historyMap.put("ISSUE-1", createHistoryWithSprintAndCompletion(
-				LocalDateTime.of(2024, 1, 1, 10, 0),
-				LocalDateTime.of(2024, 1, 10, 10, 0)));
+		historyMap.put(
+				"ISSUE-1",
+				createHistoryWithSprintAndCompletion(
+						LocalDateTime.of(2024, 1, 1, 10, 0), LocalDateTime.of(2024, 1, 10, 10, 0)));
 
 		// ISSUE-2: Tagged on Jan 5, completed on Jan 14 (9 days)
-		historyMap.put("ISSUE-2", createHistoryWithSprintAndCompletion(
-				LocalDateTime.of(2024, 1, 5, 10, 0),
-				LocalDateTime.of(2024, 1, 14, 10, 0)));
+		historyMap.put(
+				"ISSUE-2",
+				createHistoryWithSprintAndCompletion(
+						LocalDateTime.of(2024, 1, 5, 10, 0), LocalDateTime.of(2024, 1, 14, 10, 0)));
 
 		context.setHistoryMap(historyMap);
 
@@ -145,8 +146,7 @@ public class SpilloverAgeStrategyTest {
 		Map<String, JiraIssueCustomHistory> historyMap = new HashMap<>();
 
 		// ISSUE-1: Tagged on Jan 1, not completed (age = today - Jan 1)
-		historyMap.put("ISSUE-1", createHistoryWithSprintOnly(
-				LocalDateTime.of(2024, 1, 1, 10, 0)));
+		historyMap.put("ISSUE-1", createHistoryWithSprintOnly(LocalDateTime.of(2024, 1, 1, 10, 0)));
 
 		context.setHistoryMap(historyMap);
 

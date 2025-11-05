@@ -23,41 +23,46 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.SprintMetricType;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.AbstractSprintMetricStrategy;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Scope Added Percentage Strategy
- * <p>
- * Measures scope creep by tracking stories added to the sprint after sprint
- * planning/start.
- * 
+ *
+ * <p>Measures scope creep by tracking stories added to the sprint after sprint planning/start.
+ *
  * <h3>Calculation Logic:</h3>
+ *
  * <ul>
- * <li>Track stories added to sprint after sprint planning/start</li>
- * <li>Uses addedIssues field from SprintDetails</li>
+ *   <li>Track stories added to sprint after sprint planning/start
+ *   <li>Uses addedIssues field from SprintDetails
  * </ul>
- * 
+ *
  * <h3>Formula:</h3>
- * 
+ *
  * <pre>
  *   Value = Count of issues added after sprint start
  *   Trend = (Added issues / Total issues) × 100
  * </pre>
- * 
- * <h3>Example:</h3> <blockquote> Sprint started with <b>15 stories</b>, <b>5
- * more</b> added later (total = 20)<br>
+ *
+ * <h3>Example:</h3>
+ *
+ * <blockquote>
+ *
+ * Sprint started with <b>15 stories</b>, <b>5 more</b> added later (total = 20)<br>
  * <b>Value</b> = 5<br>
- * <b>Trend</b> = (5/20) × 100 = <b>25%</b> </blockquote>
- * 
+ * <b>Trend</b> = (5/20) × 100 = <b>25%</b>
+ *
+ * </blockquote>
+ *
  * @see SprintMetricType#SCOPE_ADDED_PERCENTAGE
  */
 @Slf4j
@@ -70,10 +75,11 @@ public class ScopeAddedPercentageStrategy extends AbstractSprintMetricStrategy {
 	}
 
 	@Override
-	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
-			int sprintIndex) {
+	protected SprintDataPoint calculateForSprint(
+			SprintDetails sprintDetails, SprintMetricContext context, int sprintIndex) {
 		// Get total issues count
-		int totalIssuesCount = sprintDetails.getTotalIssues() != null ? sprintDetails.getTotalIssues().size() : 0;
+		int totalIssuesCount =
+				sprintDetails.getTotalIssues() != null ? sprintDetails.getTotalIssues().size() : 0;
 
 		if (totalIssuesCount == 0) {
 			log.info("No issues in sprint: {}", getSprintName(sprintDetails));
@@ -84,7 +90,7 @@ public class ScopeAddedPercentageStrategy extends AbstractSprintMetricStrategy {
 		Set<String> addedIssuesNumbers = sprintDetails.getAddedIssues();
 
 		// Count added issues
-        int addedCount = (addedIssuesNumbers != null) ? addedIssuesNumbers.size() : 0;
+		int addedCount = (addedIssuesNumbers != null) ? addedIssuesNumbers.size() : 0;
 
 		// Calculate percentage: (addedIssues / totalIssues) * 100
 		double percentage = calculatePercentage(addedCount, totalIssuesCount);

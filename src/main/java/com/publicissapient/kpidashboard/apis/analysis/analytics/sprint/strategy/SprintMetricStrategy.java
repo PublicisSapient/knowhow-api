@@ -21,17 +21,15 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.Spr
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 
 /**
- * Strategy interface for calculating different sprint metrics Each metric
- * implements this interface to provide its calculation logic
- *
+ * Strategy interface for calculating different sprint metrics Each metric implements this interface
+ * to provide its calculation logic
  */
 public interface SprintMetricStrategy {
 
 	/**
 	 * Calculate the sprint metric for a given project
 	 *
-	 * @param context
-	 *            Context containing all required data for calculation
+	 * @param context Context containing all required data for calculation
 	 * @return ProjectSprintMetrics with calculated values for all sprints
 	 */
 	ProjectSprintMetrics calculate(SprintMetricContext context);
@@ -42,5 +40,4 @@ public interface SprintMetricStrategy {
 	 * @return SprintMetricType
 	 */
 	SprintMetricType getMetricType();
-
 }

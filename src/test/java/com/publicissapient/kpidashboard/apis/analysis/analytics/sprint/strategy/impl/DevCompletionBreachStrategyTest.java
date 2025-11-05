@@ -47,8 +47,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class DevCompletionBreachStrategyTest {
 
-	@InjectMocks
-	private DevCompletionBreachStrategy strategy;
+	@InjectMocks private DevCompletionBreachStrategy strategy;
 
 	private SprintDetails sprintDetails;
 	private SprintMetricContext context;

@@ -38,29 +38,21 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.
 @RunWith(MockitoJUnitRunner.class)
 public class SprintMetricStrategyFactoryTest {
 
-	@InjectMocks
-	private SprintMetricStrategyFactory factory;
+	@InjectMocks private SprintMetricStrategyFactory factory;
 
-	@Mock
-	private SprintMetricStrategy groomingDayOneStrategy;
+	@Mock private SprintMetricStrategy groomingDayOneStrategy;
 
-	@Mock
-	private SprintMetricStrategy devCompletionBreachStrategy;
+	@Mock private SprintMetricStrategy devCompletionBreachStrategy;
 
-	@Mock
-	private SprintMetricStrategy missingEstimationStrategy;
+	@Mock private SprintMetricStrategy missingEstimationStrategy;
 
-	@Mock
-	private SprintMetricStrategy scopeAddedPercentageStrategy;
+	@Mock private SprintMetricStrategy scopeAddedPercentageStrategy;
 
-	@Mock
-	private SprintMetricStrategy scopeChangePercentageStrategy;
+	@Mock private SprintMetricStrategy scopeChangePercentageStrategy;
 
-	@Mock
-	private SprintMetricStrategy scopeChangePostStartStrategy;
+	@Mock private SprintMetricStrategy scopeChangePostStartStrategy;
 
-	@Mock
-	private SprintMetricStrategy spilloverAgeStrategy;
+	@Mock private SprintMetricStrategy spilloverAgeStrategy;
 
 	private List<SprintMetricStrategy> strategies;
 
@@ -68,23 +60,27 @@ public class SprintMetricStrategyFactoryTest {
 	public void setUp() {
 		// Setup mock strategies
 		when(groomingDayOneStrategy.getMetricType()).thenReturn(SprintMetricType.GROOMING_DAY_ONE);
-		when(devCompletionBreachStrategy.getMetricType()).thenReturn(SprintMetricType.DEV_COMPLETION_BREACH);
+		when(devCompletionBreachStrategy.getMetricType())
+				.thenReturn(SprintMetricType.DEV_COMPLETION_BREACH);
 		when(missingEstimationStrategy.getMetricType()).thenReturn(SprintMetricType.MISSING_ESTIMATION);
-		when(scopeAddedPercentageStrategy.getMetricType()).thenReturn(SprintMetricType.SCOPE_ADDED_PERCENTAGE);
-		when(scopeChangePercentageStrategy.getMetricType()).thenReturn(SprintMetricType.SCOPE_CHANGE_PERCENTAGE);
-		when(scopeChangePostStartStrategy.getMetricType()).thenReturn(SprintMetricType.SCOPE_CHANGE_POST_START);
+		when(scopeAddedPercentageStrategy.getMetricType())
+				.thenReturn(SprintMetricType.SCOPE_ADDED_PERCENTAGE);
+		when(scopeChangePercentageStrategy.getMetricType())
+				.thenReturn(SprintMetricType.SCOPE_CHANGE_PERCENTAGE);
+		when(scopeChangePostStartStrategy.getMetricType())
+				.thenReturn(SprintMetricType.SCOPE_CHANGE_POST_START);
 		when(spilloverAgeStrategy.getMetricType()).thenReturn(SprintMetricType.SPILLOVER_AGE);
 
 		// Create strategy list
-		strategies = Arrays.asList(
-				groomingDayOneStrategy,
-				devCompletionBreachStrategy,
-				missingEstimationStrategy,
-				scopeAddedPercentageStrategy,
-				scopeChangePercentageStrategy,
-				scopeChangePostStartStrategy,
-				spilloverAgeStrategy
-		);
+		strategies =
+				Arrays.asList(
+						groomingDayOneStrategy,
+						devCompletionBreachStrategy,
+						missingEstimationStrategy,
+						scopeAddedPercentageStrategy,
+						scopeChangePercentageStrategy,
+						scopeChangePostStartStrategy,
+						spilloverAgeStrategy);
 
 		// Recreate factory with mocked strategies
 		factory = new SprintMetricStrategyFactory(strategies);
@@ -185,8 +181,8 @@ public class SprintMetricStrategyFactoryTest {
 		// Verify that disabled metrics are excluded
 		for (SprintMetricType metricType : SprintMetricType.values()) {
 			if (!metricType.isEnabled()) {
-				assertFalse("Disabled metric should not be in enabled list",
-						enabledMetrics.contains(metricType));
+				assertFalse(
+						"Disabled metric should not be in enabled list", enabledMetrics.contains(metricType));
 			}
 		}
 	}

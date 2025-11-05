@@ -21,9 +21,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Represents a single data point for a sprint containing metric value and trend
- */
+/** Represents a single data point for a sprint containing metric value and trend */
 @Data
 @Builder
 @AllArgsConstructor
@@ -42,8 +40,6 @@ public class SprintDataPoint {
 	/** Trend value - percentage or absolute change */
 	private String trend;
 
-	/** 
-	 * Unit of the trend value (e.g., "%", "count", "days", "hours")
-	 */
+	/** Unit of the trend value (e.g., "%", "count", "days", "hours") */
 	private String trendUnit;
 }

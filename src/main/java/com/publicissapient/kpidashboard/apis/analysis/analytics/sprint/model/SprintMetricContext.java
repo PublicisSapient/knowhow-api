@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -30,12 +28,12 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/**
- * Context object holding all data required for sprint metric calculations
- */
+/** Context object holding all data required for sprint metric calculations */
 @Data
 @Builder
 @NoArgsConstructor
@@ -64,14 +62,12 @@ public class SprintMetricContext {
 	private Map<String, JiraIssueCustomHistory> historyMap;
 
 	/** Warnings collected during metric calculation */
-	@Builder.Default
-	private List<String> warnings = new ArrayList<>();
+	@Builder.Default private List<String> warnings = new ArrayList<>();
 
 	/**
 	 * Get JiraIssue by issue number
 	 *
-	 * @param issueNumber
-	 *            Issue number (e.g., "DTS-12345")
+	 * @param issueNumber Issue number (e.g., "DTS-12345")
 	 * @return Optional containing JiraIssue if found
 	 */
 	public Optional<JiraIssue> getJiraIssueByNumber(String issueNumber) {
@@ -81,8 +77,7 @@ public class SprintMetricContext {
 	/**
 	 * Get JiraIssueCustomHistory by story ID
 	 *
-	 * @param storyId
-	 *            Story ID
+	 * @param storyId Story ID
 	 * @return Optional containing JiraIssueCustomHistory if found
 	 */
 	public Optional<JiraIssueCustomHistory> getHistoryByStoryId(String storyId) {
@@ -91,9 +86,8 @@ public class SprintMetricContext {
 
 	/**
 	 * Add a warning message to the context
-	 * 
-	 * @param warning
-	 *            Warning message
+	 *
+	 * @param warning Warning message
 	 */
 	public void addWarning(String warning) {
 		this.warnings.add(warning);

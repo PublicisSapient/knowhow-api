@@ -81,7 +81,8 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Sprint 1");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 25.5, 10.2, 0, Constant.PERCENTAGE);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createDataPoint(sprintDetails, 25.5, 10.2, 0, Constant.PERCENTAGE);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 1", dataPoint.getSprint());
@@ -95,7 +96,8 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Sprint 2");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 5, 3, 1, Constant.PERCENTAGE);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createDataPoint(sprintDetails, 5, 3, 1, Constant.PERCENTAGE);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 2", dataPoint.getSprint());
@@ -109,7 +111,8 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Sprint Zero");
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createDataPoint(sprintDetails, 0, 0, 5, Constant.PERCENTAGE);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createDataPoint(sprintDetails, 0, 0, 5, Constant.PERCENTAGE);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 6", dataPoint.getSprint());
@@ -123,11 +126,13 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Test Sprint");
 
-		SprintMetricContext context = SprintMetricContext.builder()
-			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
-			.build();
+		SprintMetricContext context =
+				SprintMetricContext.builder()
+						.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+						.build();
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "No data available", 2, context);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createNADataPoint(sprintDetails, "No data available", 2, context);
 
 		assertNotNull(dataPoint);
 		assertEquals("Sprint 3", dataPoint.getSprint());
@@ -145,11 +150,13 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Empty Reason Sprint");
 
-		SprintMetricContext context = SprintMetricContext.builder()
-			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
-			.build();
+		SprintMetricContext context =
+				SprintMetricContext.builder()
+						.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+						.build();
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "", 0, context);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createNADataPoint(sprintDetails, "", 0, context);
 
 		assertNotNull(dataPoint);
 		assertEquals(Constant.NOT_AVAILABLE, dataPoint.getValue());
@@ -162,11 +169,13 @@ public class SprintAnalyticsUtilTest {
 
 	@Test
 	public void testCreateNADataPoint_WithNullSprintDetails() {
-		SprintMetricContext context = SprintMetricContext.builder()
-			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
-			.build();
+		SprintMetricContext context =
+				SprintMetricContext.builder()
+						.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+						.build();
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(null, "Null sprint details", 0, context);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createNADataPoint(null, "Null sprint details", 0, context);
 
 		assertNotNull(dataPoint);
 		assertEquals("Unknown Sprint", dataPoint.getName());
@@ -182,11 +191,13 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName(null); // Explicitly set to null
 
-		SprintMetricContext context = SprintMetricContext.builder()
-			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
-			.build();
+		SprintMetricContext context =
+				SprintMetricContext.builder()
+						.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+						.build();
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "Null sprint name", 1, context);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createNADataPoint(sprintDetails, "Null sprint name", 1, context);
 
 		assertNotNull(dataPoint);
 		assertEquals("Unknown Sprint", dataPoint.getName());
@@ -202,11 +213,13 @@ public class SprintAnalyticsUtilTest {
 		SprintDetails sprintDetails = new SprintDetails();
 		sprintDetails.setSprintName("Test Sprint 123");
 
-		SprintMetricContext context = SprintMetricContext.builder()
-			.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
-			.build();
+		SprintMetricContext context =
+				SprintMetricContext.builder()
+						.basicProjectConfigId(new org.bson.types.ObjectId("507f1f77bcf86cd799439011"))
+						.build();
 
-		SprintDataPoint dataPoint = SprintAnalyticsUtil.createNADataPoint(sprintDetails, "Test reason", 0, context);
+		SprintDataPoint dataPoint =
+				SprintAnalyticsUtil.createNADataPoint(sprintDetails, "Test reason", 0, context);
 
 		// Verify warning format
 		assertEquals(1, context.getWarnings().size());

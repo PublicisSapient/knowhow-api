@@ -40,9 +40,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * REST controller exposing analysis dashboard endpoints.
  *
- * <p>
- * Provides endpoints to compute analytics such as AI usage and sprint metrics.
- * </p>
+ * <p>Provides endpoints to compute analytics such as AI usage and sprint metrics.
  */
 @RestController
 @RequestMapping("/analysis")
@@ -56,16 +54,27 @@ public class AnalysisController {
 	/**
 	 * Compute AI usage analytics for requested projects.
 	 *
-	 * @param aiUsageAnalyticsRequestDTO
-	 *            request containing project ids and filters
+	 * @param aiUsageAnalyticsRequestDTO request containing project ids and filters
 	 * @return {@link ServiceResponse} with AI usage analytics payload
 	 */
-	@Operation(summary = "Compute AI usage analytics", description = "Compute AI usage metrics for requested projects/sprints")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "AI usage analytics computed successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
-			@ApiResponse(responseCode = "400", description = "Bad request - invalid input"),
-			@ApiResponse(responseCode = "403", description = "Forbidden - no access to requested projects"),
-			@ApiResponse(responseCode = "500", description = "Internal server error") })
+	@Operation(
+			summary = "Compute AI usage analytics",
+			description = "Compute AI usage metrics for requested projects/sprints")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "AI usage analytics computed successfully",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(responseCode = "400", description = "Bad request - invalid input"),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden - no access to requested projects"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/analytics/ai-usage/query")
 	public ResponseEntity<ServiceResponse> computeAiUsageAnalyticsData(
 			@RequestBody @Valid BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
@@ -76,19 +85,31 @@ public class AnalysisController {
 	/**
 	 * Compute sprint analytics for requested projects and sprints.
 	 *
-	 * @param sprintAnalyticsRequestDTO
-	 *            request containing project ids and no of sprints to include
+	 * @param sprintAnalyticsRequestDTO request containing project ids and no of sprints to include
 	 * @return {@link ServiceResponse} with sprint analytics payload
 	 */
-	@Operation(summary = "Compute sprint analytics", description = "Compute sprint-related metrics for requested projects/sprints")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Sprint analytics computed successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
-			@ApiResponse(responseCode = "400", description = "Bad request - invalid input"),
-			@ApiResponse(responseCode = "403", description = "Forbidden - no access to requested projects"),
-			@ApiResponse(responseCode = "500", description = "Internal server error") })
+	@Operation(
+			summary = "Compute sprint analytics",
+			description = "Compute sprint-related metrics for requested projects/sprints")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Sprint analytics computed successfully",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(responseCode = "400", description = "Bad request - invalid input"),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden - no access to requested projects"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/analytics/sprint/query")
 	public ResponseEntity<ServiceResponse> computeSprintAnalyticsData(
 			@RequestBody @Valid BaseAnalyticsRequestDTO sprintAnalyticsRequestDTO) {
-		return ResponseEntity.ok(sprintAnalyticsService.computeSprintAnalyticsData(sprintAnalyticsRequestDTO));
+		return ResponseEntity.ok(
+				sprintAnalyticsService.computeSprintAnalyticsData(sprintAnalyticsRequestDTO));
 	}
 }

@@ -27,8 +27,8 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.Spr
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 
 /**
- * Abstract base class for sprint metric strategies Provides common
- * functionality for all metric calculations
+ * Abstract base class for sprint metric strategies Provides common functionality for all metric
+ * calculations
  */
 public abstract class AbstractSprintMetricStrategy implements SprintMetricStrategy {
 
@@ -49,23 +49,21 @@ public abstract class AbstractSprintMetricStrategy implements SprintMetricStrate
 			sprintIndex++;
 		}
 
-		return ProjectSprintMetrics.builder().name(context.getProjectName())
-				.projectBasicConfigId(context.getBasicProjectConfigId().toString()).sprints(sprintDataPoints).build();
+		return ProjectSprintMetrics.builder()
+				.name(context.getProjectName())
+				.projectBasicConfigId(context.getBasicProjectConfigId().toString())
+				.sprints(sprintDataPoints)
+				.build();
 	}
 
 	/**
-	 * Calculate metric value for a single sprint Subclasses must implement this
-	 * method
+	 * Calculate metric value for a single sprint Subclasses must implement this method
 	 *
-	 * @param sprintDetails
-	 *            Details of the sprint
-	 * @param context
-	 *            Data context for calculation
-	 * @param sprintIndex
-	 *            Index of sprint
+	 * @param sprintDetails Details of the sprint
+	 * @param context Data context for calculation
+	 * @param sprintIndex Index of sprint
 	 * @return SprintDataPoint with calculated value and trend
 	 */
-	protected abstract SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
-			int sprintIndex);
-
+	protected abstract SprintDataPoint calculateForSprint(
+			SprintDetails sprintDetails, SprintMetricContext context, int sprintIndex);
 }

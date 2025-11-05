@@ -21,46 +21,52 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.createNADataPoint;
 import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil.getSprintName;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.SprintMetricType;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.AbstractSprintMetricStrategy;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Scope Change Post Start Strategy
- * <p>
- * Tracks net scope changes (added + removed) after sprint start. Uses
- * SprintDetails addedIssues and puntedIssues to calculate total scope
- * volatility.
- * 
+ *
+ * <p>Tracks net scope changes (added + removed) after sprint start. Uses SprintDetails addedIssues
+ * and puntedIssues to calculate total scope volatility.
+ *
  * <h3>Calculation Logic:</h3>
+ *
  * <ul>
- * <li>Count issues added to sprint after start (addedIssues)</li>
- * <li>Count issues removed/punted from sprint (puntedIssues)</li>
- * <li>Calculate net scope change = added + removed</li>
+ *   <li>Count issues added to sprint after start (addedIssues)
+ *   <li>Count issues removed/punted from sprint (puntedIssues)
+ *   <li>Calculate net scope change = added + removed
  * </ul>
- * 
+ *
  * <h3>Formula:</h3>
- * 
+ *
  * <pre>
  *   Net Change = Count of added issues + Count of punted issues
  *   Value = Net scope change count
  *   Trend = (Net change / Total issues) × 100
  * </pre>
- * 
- * <h3>Example:</h3> <blockquote> Sprint has <b>20 total stories</b><br>
+ *
+ * <h3>Example:</h3>
+ *
+ * <blockquote>
+ *
+ * Sprint has <b>20 total stories</b><br>
  * <b>5 stories</b> added after sprint start<br>
  * <b>3 stories</b> removed/punted during sprint<br>
  * Net Change = 5 + 3 = <b>8 changes</b><br>
  * <b>Value</b> = 8<br>
- * <b>Trend</b> = (8/20) × 100 = <b>40%</b> </blockquote>
- * 
+ * <b>Trend</b> = (8/20) × 100 = <b>40%</b>
+ *
+ * </blockquote>
+ *
  * @see SprintMetricType#SCOPE_CHANGE_POST_START
  */
 @Slf4j
@@ -73,10 +79,11 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 	}
 
 	@Override
-	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
-			int sprintIndex) {
+	protected SprintDataPoint calculateForSprint(
+			SprintDetails sprintDetails, SprintMetricContext context, int sprintIndex) {
 		// Get total issues count
-		int totalIssuesCount = sprintDetails.getTotalIssues() != null ? sprintDetails.getTotalIssues().size() : 0;
+		int totalIssuesCount =
+				sprintDetails.getTotalIssues() != null ? sprintDetails.getTotalIssues().size() : 0;
 
 		if (totalIssuesCount == 0) {
 			log.info("No issues in sprint: {}", getSprintName(sprintDetails));
@@ -84,10 +91,12 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 		}
 
 		// Count added issues (scope added after sprint start)
-		int addedIssuesCount = sprintDetails.getAddedIssues() != null ? sprintDetails.getAddedIssues().size() : 0;
+		int addedIssuesCount =
+				sprintDetails.getAddedIssues() != null ? sprintDetails.getAddedIssues().size() : 0;
 
 		// Count punted/removed issues (scope removed during sprint)
-		int puntedIssuesCount = sprintDetails.getPuntedIssues() != null ? sprintDetails.getPuntedIssues().size() : 0;
+		int puntedIssuesCount =
+				sprintDetails.getPuntedIssues() != null ? sprintDetails.getPuntedIssues().size() : 0;
 
 		// Calculate net scope change (added + removed)
 		int netScopeChange = addedIssuesCount + puntedIssuesCount;
@@ -100,9 +109,15 @@ public class ScopeChangePostStartStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (net change / total issues) * 100
 		double percentage = calculatePercentage(netScopeChange, totalIssuesCount);
 
-		log.debug("Sprint: {}, Added: {}, Punted: {}, Net Change: {}, Percentage: {}%", getSprintName(sprintDetails),
-				addedIssuesCount, puntedIssuesCount, netScopeChange, percentage);
+		log.debug(
+				"Sprint: {}, Added: {}, Punted: {}, Net Change: {}, Percentage: {}%",
+				getSprintName(sprintDetails),
+				addedIssuesCount,
+				puntedIssuesCount,
+				netScopeChange,
+				percentage);
 
-		return createDataPoint(sprintDetails, netScopeChange, percentage, sprintIndex, Constant.PERCENTAGE);
+		return createDataPoint(
+				sprintDetails, netScopeChange, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 }

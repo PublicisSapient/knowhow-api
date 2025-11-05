@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +36,7 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.Sprin
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.SprintMetricType;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.AbstractSprintMetricStrategy;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -49,29 +49,35 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Grooming Day One Strategy
- * <p>
- * Measures sprint readiness by tracking stories still in "Grooming" status on
- * Day 1 of the sprint.
- * 
+ *
+ * <p>Measures sprint readiness by tracking stories still in "Grooming" status on Day 1 of the
+ * sprint.
+ *
  * <h3>Calculation Logic:</h3>
+ *
  * <ul>
- * <li>Count stories still in "Grooming" status on Day 1 of sprint</li>
- * <li>Uses statusUpdationLog from JiraIssueCustomHistory to check status at
- * sprint start</li>
+ *   <li>Count stories still in "Grooming" status on Day 1 of sprint
+ *   <li>Uses statusUpdationLog from JiraIssueCustomHistory to check status at sprint start
  * </ul>
- * 
+ *
  * <h3>Formula:</h3>
- * 
+ *
  * <pre>
  *   Value = Count of issues in Grooming status on Day 1
  *   Trend = (Grooming stories / Total stories) × 100
  * </pre>
- * 
- * <h3>Example:</h3> <blockquote> Sprint has <b>20 total stories</b><br>
+ *
+ * <h3>Example:</h3>
+ *
+ * <blockquote>
+ *
+ * Sprint has <b>20 total stories</b><br>
  * <b>5 stories</b> still in "Grooming" status on sprint Day 1<br>
  * <b>Value</b> = 5<br>
- * <b>Trend</b> = (5/20) × 100 = <b>25%</b> </blockquote>
- * 
+ * <b>Trend</b> = (5/20) × 100 = <b>25%</b>
+ *
+ * </blockquote>
+ *
  * @see SprintMetricType#GROOMING_DAY_ONE
  */
 @Slf4j
@@ -84,8 +90,8 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 	}
 
 	@Override
-	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
-			int sprintIndex) {
+	protected SprintDataPoint calculateForSprint(
+			SprintDetails sprintDetails, SprintMetricContext context, int sprintIndex) {
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
 			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
@@ -96,18 +102,22 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		List<String> groomingStatuses = fieldMapping.getJiraStatusKPI187();
 		if (CollectionUtils.isEmpty(groomingStatuses)) {
 			log.warn("Grooming statuses not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Grooming statuses not configured in field mapping", sprintIndex, context);
+			return createNADataPoint(
+					sprintDetails, "Grooming statuses not configured in field mapping", sprintIndex, context);
 		}
 
-		Set<String> groomingStatusSet = groomingStatuses.stream().map(status -> status.trim().toLowerCase())
-				.collect(Collectors.toSet());
+		Set<String> groomingStatusSet =
+				groomingStatuses.stream()
+						.map(status -> status.trim().toLowerCase())
+						.collect(Collectors.toSet());
 
 		// Get sprint start date (Day 1)
-		LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(),
-				DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintStartDate =
+				DateUtil.stringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 		if (sprintStartDate == null) {
 			log.warn("Sprint start date is null for sprint: {}", getSprintName(sprintDetails));
-			return createNADataPoint(sprintDetails, "Sprint start date not available", sprintIndex, context);
+			return createNADataPoint(
+					sprintDetails, "Sprint start date not available", sprintIndex, context);
 		}
 		LocalDate dayOne = sprintStartDate.toLocalDate();
 
@@ -119,36 +129,39 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		int totalIssuesCount = sprintDetails.getTotalIssues().size();
 
 		// Count issues in Grooming status on Day 1
-		int groomingCount = countIssuesInGroomingOnDayOne(sprintDetails, context, groomingStatusSet, dayOne);
+		int groomingCount =
+				countIssuesInGroomingOnDayOne(sprintDetails, context, groomingStatusSet, dayOne);
 
 		// Calculate percentage: (groomingCount / totalIssuesCount) * 100
 		double percentage = calculatePercentage(groomingCount, totalIssuesCount);
 
-		return createDataPoint(sprintDetails, groomingCount, percentage, sprintIndex, Constant.PERCENTAGE);
+		return createDataPoint(
+				sprintDetails, groomingCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**
-	 * Counts issues that were in Grooming status on Day 1 of sprint Logic: For each
-	 * issue in sprint, check its status on sprint start date
+	 * Counts issues that were in Grooming status on Day 1 of sprint Logic: For each issue in sprint,
+	 * check its status on sprint start date
 	 *
-	 * @param sprintDetails
-	 *            Sprint details
-	 * @param context
-	 *            Metric context with issues and histories
-	 * @param groomingStatusSet
-	 *            Set of grooming status values (lowercase)
-	 * @param dayOne
-	 *            Sprint start date (Day 1)
+	 * @param sprintDetails Sprint details
+	 * @param context Metric context with issues and histories
+	 * @param groomingStatusSet Set of grooming status values (lowercase)
+	 * @param dayOne Sprint start date (Day 1)
 	 * @return Count of issues in grooming status
 	 */
-	private int countIssuesInGroomingOnDayOne(SprintDetails sprintDetails, SprintMetricContext context,
-			Set<String> groomingStatusSet, LocalDate dayOne) {
+	private int countIssuesInGroomingOnDayOne(
+			SprintDetails sprintDetails,
+			SprintMetricContext context,
+			Set<String> groomingStatusSet,
+			LocalDate dayOne) {
 
 		int count = 0;
 
 		// Get all issue numbers from sprint
-		Set<String> sprintIssueNumbers = sprintDetails.getTotalIssues().stream().map(SprintIssue::getNumber)
-				.collect(Collectors.toSet());
+		Set<String> sprintIssueNumbers =
+				sprintDetails.getTotalIssues().stream()
+						.map(SprintIssue::getNumber)
+						.collect(Collectors.toSet());
 
 		// For each issue in sprint, check if it was in Grooming on Day 1
 		for (String issueNumber : sprintIssueNumbers) {
@@ -174,18 +187,17 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 	}
 
 	/**
-	 * Checks if an issue was in Grooming status on a specific date Logic: Traverse
-	 * status update logs and find the status on the target date
+	 * Checks if an issue was in Grooming status on a specific date Logic: Traverse status update logs
+	 * and find the status on the target date
 	 *
-	 * @param statusUpdationLog
-	 *            List of status change logs
-	 * @param groomingStatusSet
-	 *            Set of grooming status values
-	 * @param targetDate
-	 *            Date to check (Day 1 of sprint)
+	 * @param statusUpdationLog List of status change logs
+	 * @param groomingStatusSet Set of grooming status values
+	 * @param targetDate Date to check (Day 1 of sprint)
 	 * @return true if issue was in grooming status on target date
 	 */
-	private boolean wasInGroomingOnDate(List<JiraHistoryChangeLog> statusUpdationLog, Set<String> groomingStatusSet,
+	private boolean wasInGroomingOnDate(
+			List<JiraHistoryChangeLog> statusUpdationLog,
+			Set<String> groomingStatusSet,
 			LocalDate targetDate) {
 
 		if (CollectionUtils.isEmpty(statusUpdationLog)) {
@@ -193,8 +205,11 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		}
 
 		// Sort logs by date (oldest first)
-		List<JiraHistoryChangeLog> sortedLogs = statusUpdationLog.stream().filter(log -> log.getUpdatedOn() != null)
-				.sorted(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn)).toList();
+		List<JiraHistoryChangeLog> sortedLogs =
+				statusUpdationLog.stream()
+						.filter(log -> log.getUpdatedOn() != null)
+						.sorted(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn))
+						.toList();
 
 		String statusOnTargetDate = null;
 

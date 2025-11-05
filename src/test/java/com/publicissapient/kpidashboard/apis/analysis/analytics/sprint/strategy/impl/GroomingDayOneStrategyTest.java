@@ -47,8 +47,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class GroomingDayOneStrategyTest {
 
-	@InjectMocks
-	private GroomingDayOneStrategy strategy;
+	@InjectMocks private GroomingDayOneStrategy strategy;
 
 	private SprintDetails sprintDetails;
 	private SprintMetricContext context;

@@ -35,7 +35,8 @@ import lombok.RequiredArgsConstructor;
 public class SprintMetricStrategyFactory {
 
 	private final List<SprintMetricStrategy> strategies;
-	private final Map<SprintMetricType, SprintMetricStrategy> strategyMap = new EnumMap<>(SprintMetricType.class);
+	private final Map<SprintMetricType, SprintMetricStrategy> strategyMap =
+			new EnumMap<>(SprintMetricType.class);
 
 	/** Initialize the strategy map */
 	@PostConstruct
@@ -46,16 +47,15 @@ public class SprintMetricStrategyFactory {
 	/**
 	 * Get strategy for a specific metric type
 	 *
-	 * @param metricType
-	 *            Sprint metric type
+	 * @param metricType Sprint metric type
 	 * @return SprintMetricStrategy implementation
-	 * @throws IllegalArgumentException
-	 *             if no strategy found for metric type
+	 * @throws IllegalArgumentException if no strategy found for metric type
 	 */
 	public SprintMetricStrategy getStrategy(SprintMetricType metricType) {
 		SprintMetricStrategy strategy = strategyMap.get(metricType);
 		if (strategy == null) {
-			throw new IllegalArgumentException(String.format("No strategy found for metric type: %s", metricType));
+			throw new IllegalArgumentException(
+					String.format("No strategy found for metric type: %s", metricType));
 		}
 		return strategy;
 	}

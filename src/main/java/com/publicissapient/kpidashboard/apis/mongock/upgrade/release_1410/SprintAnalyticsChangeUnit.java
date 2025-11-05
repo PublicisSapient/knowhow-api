@@ -25,27 +25,22 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-@ChangeUnit(
-		id = "sprint_analytics",
-		order = "14100",
-		author = "shunaray",
-		systemVersion = "14.1.0")
+@ChangeUnit(id = "sprint_analytics", order = "14100", author = "shunaray", systemVersion = "14.1.0")
 public class SprintAnalyticsChangeUnit {
 	private static final String KPI_ID = "kpi";
 	private static final String KPI_199 = "kpi199";
 
 	private final MongoTemplate mongoTemplate;
 
-
 	@Execution
 	public void rollback() {
 		mongoTemplate.getCollection("kpi_master").insertOne(constructKpiMasterDocument());
 	}
 
-    @RollbackExecution
-    public void execution() {
-        mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_199));
-    }
+	@RollbackExecution
+	public void execution() {
+		mongoTemplate.getCollection("kpi_master").deleteOne(new Document(KPI_ID, KPI_199));
+	}
 
 	private static Document constructKpiMasterDocument() {
 		return new Document()
@@ -55,4 +50,3 @@ public class SprintAnalyticsChangeUnit {
 				.append("kpiSource", "Jira");
 	}
 }
-

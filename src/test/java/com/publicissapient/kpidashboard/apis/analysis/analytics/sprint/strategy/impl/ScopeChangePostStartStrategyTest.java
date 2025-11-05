@@ -1,20 +1,20 @@
 /*
- *  Copyright 2024 <Sapient Corporation>
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not 		assertNotNull(result);
-		assertEquals("8", result.getValue());
-		assertEquals("40.0", result.getTrend()); // (8/20) * 100 = 40% this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the
- *  License.
- */
+*  Copyright 2024 <Sapient Corporation>
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not 		assertNotNull(result);
+	assertEquals("8", result.getValue());
+	assertEquals("40.0", result.getTrend()); // (8/20) * 100 = 40% this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and limitations under the
+*  License.
+*/
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.impl;
 
@@ -40,8 +40,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class ScopeChangePostStartStrategyTest {
 
-	@InjectMocks
-	private ScopeChangePostStartStrategy strategy;
+	@InjectMocks private ScopeChangePostStartStrategy strategy;
 
 	private SprintDetails sprintDetails;
 	private SprintMetricContext context;

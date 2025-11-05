@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +65,7 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
@@ -78,29 +78,21 @@ import jakarta.ws.rs.BadRequestException;
 @RunWith(MockitoJUnitRunner.class)
 public class SprintAnalyticsServiceImplTest {
 
-	@InjectMocks
-	private SprintAnalyticsServiceImpl service;
+	@InjectMocks private SprintAnalyticsServiceImpl service;
 
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private SprintDetailsService sprintDetailsService;
+	@Mock private SprintDetailsService sprintDetailsService;
 
-	@Mock
-	private SprintMetricStrategyFactory strategyFactory;
+	@Mock private SprintMetricStrategyFactory strategyFactory;
 
-	@Mock
-	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	@Mock private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Mock
-	private SprintMetricStrategy mockStrategy;
+	@Mock private SprintMetricStrategy mockStrategy;
 
 	private BaseAnalyticsRequestDTO request;
 	private ObjectId projectId;
@@ -132,7 +124,8 @@ public class SprintAnalyticsServiceImplTest {
 		AccountFilteredData accountFilteredData = new AccountFilteredData();
 		accountFilteredData.setBasicProjectConfigId(new ObjectId(projectIdStr));
 		accountFilteredDataList.add(accountFilteredData);
-		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(
+						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 				.thenReturn(accountFilteredDataList);
 
 		// Setup config helper
@@ -145,9 +138,8 @@ public class SprintAnalyticsServiceImplTest {
 	@Test
 	public void testComputeSprintAnalyticsData_Success() {
 		// Setup enabled metrics
-		List<SprintMetricType> enabledMetrics = Arrays.asList(
-				SprintMetricType.GROOMING_DAY_ONE,
-				SprintMetricType.DEV_COMPLETION_BREACH);
+		List<SprintMetricType> enabledMetrics =
+				Arrays.asList(SprintMetricType.GROOMING_DAY_ONE, SprintMetricType.DEV_COMPLETION_BREACH);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -163,7 +155,8 @@ public class SprintAnalyticsServiceImplTest {
 
 		// Setup histories
 		List<JiraIssueCustomHistory> histories = createHistoriesList(5);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(histories);
 
 		// Setup strategy calculation
@@ -215,14 +208,16 @@ public class SprintAnalyticsServiceImplTest {
 		AccountFilteredData data1 = new AccountFilteredData();
 		data1.setBasicProjectConfigId(new ObjectId(projectIdStr));
 		AccountFilteredData data2 = new AccountFilteredData();
-        data2.setBasicProjectConfigId(new ObjectId(projectIdStr2));
+		data2.setBasicProjectConfigId(new ObjectId(projectIdStr2));
 		accountFilteredDataList.add(data1);
 		accountFilteredDataList.add(data2);
-		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(
+						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 				.thenReturn(accountFilteredDataList);
 
 		// Setup enabled metrics
-		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -236,7 +231,8 @@ public class SprintAnalyticsServiceImplTest {
 				.thenReturn(issues);
 
 		List<JiraIssueCustomHistory> histories = createHistoriesList(5);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(histories);
 
 		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", 3);
@@ -262,7 +258,8 @@ public class SprintAnalyticsServiceImplTest {
 	@Test
 	public void testComputeSprintAnalyticsData_NoSprints() {
 		// Setup enabled metrics
-		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -286,9 +283,8 @@ public class SprintAnalyticsServiceImplTest {
 	@Test
 	public void testComputeSprintAnalyticsData_WithWarnings() {
 		// Setup enabled metrics
-		List<SprintMetricType> enabledMetrics = Arrays.asList(
-				SprintMetricType.GROOMING_DAY_ONE,
-				SprintMetricType.DEV_COMPLETION_BREACH);
+		List<SprintMetricType> enabledMetrics =
+				Arrays.asList(SprintMetricType.GROOMING_DAY_ONE, SprintMetricType.DEV_COMPLETION_BREACH);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 
 		// First metric succeeds
@@ -307,7 +303,8 @@ public class SprintAnalyticsServiceImplTest {
 				.thenReturn(issues);
 
 		List<JiraIssueCustomHistory> histories = createHistoriesList(5);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(histories);
 
 		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", 3);
@@ -331,7 +328,8 @@ public class SprintAnalyticsServiceImplTest {
 	public void testComputeSprintAnalyticsData_InvalidProjectId() {
 		request.setProjectBasicConfigIds(Set.of("invalid-id"));
 
-		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 
 		// Execute - should throw BadRequestException
 		service.computeSprintAnalyticsData(request);
@@ -342,7 +340,8 @@ public class SprintAnalyticsServiceImplTest {
 		// Project not in config map
 		when(configHelperService.getProjectConfigMap()).thenReturn(new HashMap<>());
 
-		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -418,14 +417,16 @@ public class SprintAnalyticsServiceImplTest {
 			histories.add(history);
 		}
 
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(histories);
 
 		// Enable metrics that require cross-sprint analysis
-		List<SprintMetricType> enabledMetrics = Arrays.asList(
-				SprintMetricType.SPILLOVER_AGE,
-				SprintMetricType.DEV_COMPLETION_BREACH,
-				SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Arrays.asList(
+						SprintMetricType.SPILLOVER_AGE,
+						SprintMetricType.DEV_COMPLETION_BREACH,
+						SprintMetricType.GROOMING_DAY_ONE);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -454,7 +455,8 @@ public class SprintAnalyticsServiceImplTest {
 		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(anyList(), anyInt()))
 				.thenReturn(sprints);
 
-		// Setup issues - but with fewer issues than referenced in sprints (data inconsistency)
+		// Setup issues - but with fewer issues than referenced in sprints (data
+		// inconsistency)
 		List<JiraIssue> issues = createJiraIssuesList(3); // Only 3 issues but sprints reference 5
 		when(jiraIssueRepository.findByNumberInAndBasicProjectConfigId(anyList(), anyString()))
 				.thenReturn(issues);
@@ -467,10 +469,12 @@ public class SprintAnalyticsServiceImplTest {
 			history.setBasicProjectConfigId(projectIdStr);
 			histories.add(history);
 		}
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(histories);
 
-		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -534,16 +538,17 @@ public class SprintAnalyticsServiceImplTest {
 			histories.add(history);
 		}
 
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
 				.thenReturn(histories);
 
-		List<SprintMetricType> enabledMetrics = Arrays.asList(
-				SprintMetricType.GROOMING_DAY_ONE,
-				SprintMetricType.DEV_COMPLETION_BREACH);
+		List<SprintMetricType> enabledMetrics =
+				Arrays.asList(SprintMetricType.GROOMING_DAY_ONE, SprintMetricType.DEV_COMPLETION_BREACH);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
-		ProjectSprintMetrics projectMetrics = createProjectSprintMetrics("Test Project", largeSprintCount);
+		ProjectSprintMetrics projectMetrics =
+				createProjectSprintMetrics("Test Project", largeSprintCount);
 		when(mockStrategy.calculate(any(SprintMetricContext.class))).thenReturn(projectMetrics);
 
 		// Execute - should handle large datasets without performance issues
@@ -585,7 +590,8 @@ public class SprintAnalyticsServiceImplTest {
 				sprints.add(sprint);
 			}
 
-			when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(anyList(), anyInt()))
+			when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(
+							anyList(), anyInt()))
 					.thenReturn(sprints);
 
 			// Corresponding issues
@@ -594,10 +600,12 @@ public class SprintAnalyticsServiceImplTest {
 					.thenReturn(issues);
 
 			List<JiraIssueCustomHistory> histories = createHistoriesList(sprintCount * 20);
-			when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList()))
+			when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+							anyList(), anyList()))
 					.thenReturn(histories);
 
-			List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+			List<SprintMetricType> enabledMetrics =
+					Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 			when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 			when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -648,7 +656,8 @@ public class SprintAnalyticsServiceImplTest {
 		data2.setBasicProjectConfigId(new ObjectId(projectIdStr2));
 		accountFilteredDataList.add(data1);
 		accountFilteredDataList.add(data2);
-		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+		when(accountHierarchyServiceImpl.getHierarchyDataCurrentUserHasAccessTo(
+						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 				.thenReturn(accountFilteredDataList);
 
 		// Setup different data for each project (testing cross-project consistency)
@@ -657,10 +666,10 @@ public class SprintAnalyticsServiceImplTest {
 
 		// Mock different return values for different projects
 		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(
-				eq(Collections.singletonList(new ObjectId(projectIdStr))), anyInt()))
+						eq(Collections.singletonList(new ObjectId(projectIdStr))), anyInt()))
 				.thenReturn(sprints1);
 		when(sprintDetailsService.findByBasicProjectConfigIdInByCompletedDateDesc(
-				eq(Collections.singletonList(new ObjectId(projectIdStr2))), anyInt()))
+						eq(Collections.singletonList(new ObjectId(projectIdStr2))), anyInt()))
 				.thenReturn(sprints2);
 
 		// Different issue sets for each project
@@ -688,13 +697,14 @@ public class SprintAnalyticsServiceImplTest {
 		}
 
 		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
-				anyList(), eq(Collections.singletonList(projectIdStr))))
+						anyList(), eq(Collections.singletonList(projectIdStr))))
 				.thenReturn(histories1);
 		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
-				anyList(), eq(Collections.singletonList(projectIdStr2))))
+						anyList(), eq(Collections.singletonList(projectIdStr2))))
 				.thenReturn(histories2);
 
-		List<SprintMetricType> enabledMetrics = Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
+		List<SprintMetricType> enabledMetrics =
+				Collections.singletonList(SprintMetricType.GROOMING_DAY_ONE);
 		when(strategyFactory.getEnabledMetricTypes()).thenReturn(enabledMetrics);
 		when(strategyFactory.getStrategy(any(SprintMetricType.class))).thenReturn(mockStrategy);
 
@@ -764,18 +774,16 @@ public class SprintAnalyticsServiceImplTest {
 	private ProjectSprintMetrics createProjectSprintMetrics(String projectName, int sprintCount) {
 		List<SprintDataPoint> dataPoints = new ArrayList<>();
 		for (int i = 0; i < sprintCount; i++) {
-			SprintDataPoint dp = SprintDataPoint.builder()
-					.sprint("Sprint " + i)
-					.name("Sprint " + i)
-					.value("5")
-					.trend("25")
-					.build();
+			SprintDataPoint dp =
+					SprintDataPoint.builder()
+							.sprint("Sprint " + i)
+							.name("Sprint " + i)
+							.value("5")
+							.trend("25")
+							.build();
 			dataPoints.add(dp);
 		}
 
-		return ProjectSprintMetrics.builder()
-				.name(projectName)
-				.sprints(dataPoints)
-				.build();
+		return ProjectSprintMetrics.builder().name(projectName).sprints(dataPoints).build();
 	}
 }

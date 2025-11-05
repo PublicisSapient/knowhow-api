@@ -25,8 +25,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Response DTO for Sprint Analytics Contains all calculated sprint metrics
- * across projects with metadata and warnings
+ * Response DTO for Sprint Analytics Contains all calculated sprint metrics across projects with
+ * metadata and warnings
  */
 @Data
 @Builder
@@ -38,8 +38,7 @@ public class SprintAnalyticsResponseDTO {
 	private List<SprintMetricDTO> analytics;
 
 	/** List of warnings for user transparency (e.g., "Project X has no sprints") */
-	@Builder.Default
-	private List<String> warnings = new ArrayList<>();
+	@Builder.Default private List<String> warnings = new ArrayList<>();
 
 	public void addWarning(String warning) {
 		this.warnings.add(warning);

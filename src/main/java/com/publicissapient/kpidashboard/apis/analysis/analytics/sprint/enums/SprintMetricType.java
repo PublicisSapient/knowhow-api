@@ -24,38 +24,44 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum SprintMetricType {
 
-	/**
-	 * Stories still in Grooming status on Day 1 of current sprint
-	 */
-	GROOMING_DAY_ONE("Stories still in Grooming status on Day 1 of current sprint",
-			"Measures sprint readiness by tracking stories not refined by sprint start", true),
+	/** Stories still in Grooming status on Day 1 of current sprint */
+	GROOMING_DAY_ONE(
+			"Stories still in Grooming status on Day 1 of current sprint",
+			"Measures sprint readiness by tracking stories not refined by sprint start",
+			true),
 
 	/**
-	 * % of Stories that are not dev completed or have not reached QA as per the Dev
-	 * Completion Date of the current sprint
+	 * % of Stories that are not dev completed or have not reached QA as per the Dev Completion Date
+	 * of the current sprint
 	 */
 	DEV_COMPLETION_BREACH(
 			"% of Stories that are not dev completed or have not reached QA as per the Dev Completion Date of the current sprint",
 			"Tracks stories missing dev completion deadline within sprint", true),
 
-	/**
-	 * Stories whose scope changed post sprint start
-	 */
-	SCOPE_CHANGE_POST_START("Stories whose scope changed post sprint start",
-			"Identifies stories with scope modifications after sprint begins", true),
+	/** Stories whose scope changed post sprint start */
+	SCOPE_CHANGE_POST_START(
+			"Stories whose scope changed post sprint start",
+			"Identifies stories with scope modifications after sprint begins",
+			true),
 
 	/** Age of spillovers Logic applies to past sprints */
-	SPILLOVER_AGE("Age of spillovers", "Calculates the age of stories that spilled over from previous sprints", true),
+	SPILLOVER_AGE(
+			"Age of spillovers",
+			"Calculates the age of stories that spilled over from previous sprints",
+			true),
 
 	/** % of stories missing estimation */
-	MISSING_ESTIMATION("% of stories missing estimation",
+	MISSING_ESTIMATION(
+			"% of stories missing estimation",
 			"Percentage of stories without estimation based on configured criteria", true),
 
 	/** % of scope added */
-	SCOPE_ADDED_PERCENTAGE("% of scope added", "Percentage of work added after sprint planning", true),
+	SCOPE_ADDED_PERCENTAGE(
+			"% of scope added", "Percentage of work added after sprint planning", true),
 
 	/** % of scope changes */
-	SCOPE_CHANGE_PERCENTAGE("% of scope changes", "Percentage of total scope modifications during sprint", true);
+	SCOPE_CHANGE_PERCENTAGE(
+			"% of scope changes", "Percentage of total scope modifications during sprint", true);
 
 	private final String displayName;
 	private final String description;

@@ -24,7 +24,6 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +31,7 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.Sprin
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.SprintMetricType;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.AbstractSprintMetricStrategy;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
@@ -41,32 +41,37 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Missing Estimation Strategy
- * <p>
- * Tracks estimation quality by counting stories without estimation values. Uses
+ *
+ * <p>Tracks estimation quality by counting stories without estimation values. Uses
  * estimationCriteria from field mapping to determine which field to check.
- * 
+ *
  * <h3>Calculation Logic:</h3>
+ *
  * <ul>
- * <li>Count stories without estimation based on estimationCriteria</li>
- * <li>Story Point: Checks SprintIssue.storyPoints field (null or 0 =
- * missing)</li>
- * <li>Original Estimate: Checks SprintIssue.originalEstimate field (null or 0 =
- * missing)</li>
+ *   <li>Count stories without estimation based on estimationCriteria
+ *   <li>Story Point: Checks SprintIssue.storyPoints field (null or 0 = missing)
+ *   <li>Original Estimate: Checks SprintIssue.originalEstimate field (null or 0 = missing)
  * </ul>
- * 
+ *
  * <h3>Formula:</h3>
- * 
+ *
  * <pre>
  *   Value = Count of issues with missing estimation
  *   Trend = (Missing estimation / Total issues) × 100
  * </pre>
- * 
- * <h3>Example:</h3> <blockquote> Sprint has <b>20 stories</b><br>
+ *
+ * <h3>Example:</h3>
+ *
+ * <blockquote>
+ *
+ * Sprint has <b>20 stories</b><br>
  * Estimation Criteria = <b>Story Point</b><br>
  * <b>3 stories</b> have no story points (null or 0)<br>
  * <b>Value</b> = 3<br>
- * <b>Trend</b> = (3/20) × 100 = <b>15%</b> </blockquote>
- * 
+ * <b>Trend</b> = (3/20) × 100 = <b>15%</b>
+ *
+ * </blockquote>
+ *
  * @see SprintMetricType#MISSING_ESTIMATION
  */
 @Slf4j
@@ -79,8 +84,8 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 	}
 
 	@Override
-	protected SprintDataPoint calculateForSprint(SprintDetails sprintDetails, SprintMetricContext context,
-			int sprintIndex) {
+	protected SprintDataPoint calculateForSprint(
+			SprintDetails sprintDetails, SprintMetricContext context, int sprintIndex) {
 		if (!isValidFieldMapping(context.getFieldMapping(), context.getProjectName())) {
 			return createNADataPoint(sprintDetails, "Field mapping not configured", sprintIndex, context);
 		}
@@ -91,7 +96,8 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 		String estimationCriteria = fieldMapping.getEstimationCriteria();
 		if (StringUtils.isEmpty(estimationCriteria)) {
 			log.warn("Estimation criteria not configured for project: {}", context.getProjectName());
-			return createNADataPoint(sprintDetails, "Estimation criteria not configured", sprintIndex, context);
+			return createNADataPoint(
+					sprintDetails, "Estimation criteria not configured", sprintIndex, context);
 		}
 
 		// Handle missing total issues
@@ -109,31 +115,32 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (missing / total) * 100
 		double percentage = calculatePercentage(missingEstimationCount, totalIssuesCount);
 
-		return createDataPoint(sprintDetails, missingEstimationCount, percentage, sprintIndex, Constant.PERCENTAGE);
+		return createDataPoint(
+				sprintDetails, missingEstimationCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
 
 	/**
 	 * Counts issues with missing estimation based on estimation criteria
 	 *
-	 * @param sprintIssues
-	 *            List of sprint issues
-	 * @param estimationCriteria
-	 *            Estimation criteria from field mapping (Story Point, Original
-	 *            Estimate)
+	 * @param sprintIssues List of sprint issues
+	 * @param estimationCriteria Estimation criteria from field mapping (Story Point, Original
+	 *     Estimate)
 	 * @return Count of issues without estimation
 	 */
-	private int countIssuesWithMissingEstimation(Set<SprintIssue> sprintIssues, String estimationCriteria) {
-		return (int) sprintIssues.stream().filter(issue -> hasMissingEstimation(issue, estimationCriteria)).count();
+	private int countIssuesWithMissingEstimation(
+			Set<SprintIssue> sprintIssues, String estimationCriteria) {
+		return (int)
+				sprintIssues.stream()
+						.filter(issue -> hasMissingEstimation(issue, estimationCriteria))
+						.count();
 	}
 
 	/**
-	 * Checks if SprintIssue has missing estimation based on criteria Missing = null
-	 * or 0.0 for the configured estimation field
+	 * Checks if SprintIssue has missing estimation based on criteria Missing = null or 0.0 for the
+	 * configured estimation field
 	 *
-	 * @param sprintIssue
-	 *            Sprint issue
-	 * @param estimationCriteria
-	 *            Estimation criteria (Story Point, Original Estimate)
+	 * @param sprintIssue Sprint issue
+	 * @param estimationCriteria Estimation criteria (Story Point, Original Estimate)
 	 * @return true if estimation is missing
 	 */
 	private boolean hasMissingEstimation(SprintIssue sprintIssue, String estimationCriteria) {
@@ -149,6 +156,5 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 			Double originalEstimate = sprintIssue.getOriginalEstimate();
 			return originalEstimate == null || originalEstimate == 0.0;
 		}
-
 	}
 }

@@ -1,45 +1,43 @@
 /*
- *  Copyright 2024 <Sapient Corporation>
- *
- *  Licensed under 	@Test
-	public void testCalculateForSprint_NoFieldMapping() {
-		context.setFieldMapping(null);
+*  Copyright 2024 <Sapient Corporation>
+*
+*  Licensed under 	@Test
+public void testCalculateForSprint_NoFieldMapping() {
+	context.setFieldMapping(null);
 
-		SprintDataPoint result = strategy.calculateForSprint(sprintDetails, context, 0);
+	SprintDataPoint result = strategy.calculateForSprint(sprintDetails, context, 0);
 
-		assertNotNull(result);
-		assertEquals(Constant.NOT_AVAILABLE, result.getValue());
-	}
+	assertNotNull(result);
+	assertEquals(Constant.NOT_AVAILABLE, result.getValue());
+}
 
-	@Test
-	public void testCalculateForSprint_NoTotalIssues() {
-		sprintDetails.setTotalIssues(null);
+@Test
+public void testCalculateForSprint_NoTotalIssues() {
+	sprintDetails.setTotalIssues(null);
 
-		SprintDataPoint result = strategy.calculateForSprint(sprintDetails, context, 0);
+	SprintDataPoint result = strategy.calculateForSprint(sprintDetails, context, 0);
 
-		assertNotNull(result);
-		assertEquals(Constant.NOT_AVAILABLE, result.getValue());
-	} Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and limitations under the
- *  License.
- */
+	assertNotNull(result);
+	assertEquals(Constant.NOT_AVAILABLE, result.getValue());
+} Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*  http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and limitations under the
+*  License.
+*/
 
 package com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -59,8 +57,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class MissingEstimationStrategyTest {
 
-	@InjectMocks
-	private MissingEstimationStrategy strategy;
+	@InjectMocks private MissingEstimationStrategy strategy;
 
 	private SprintDetails sprintDetails;
 	private SprintMetricContext context;
@@ -142,7 +139,7 @@ public class MissingEstimationStrategyTest {
 
 	@Test
 	public void testCalculateForSprint_NoMissingEstimation() {
-        Set<SprintIssue> totalIssues = new HashSet<>();
+		Set<SprintIssue> totalIssues = new HashSet<>();
 		totalIssues.add(createSprintIssueWithStoryPoints("ISSUE-1", 5.0));
 		totalIssues.add(createSprintIssueWithStoryPoints("ISSUE-2", 3.0));
 		sprintDetails.setTotalIssues(totalIssues);
@@ -161,7 +158,8 @@ public class MissingEstimationStrategyTest {
 		return issue;
 	}
 
-	private SprintIssue createSprintIssueWithOriginalEstimate(String number, Double originalEstimate) {
+	private SprintIssue createSprintIssueWithOriginalEstimate(
+			String number, Double originalEstimate) {
 		SprintIssue issue = new SprintIssue();
 		issue.setNumber(number);
 		issue.setOriginalEstimate(originalEstimate);

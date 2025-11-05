@@ -833,10 +833,7 @@ public enum FieldMappingEnum {
 	KPI199(
 			"Sprint Analytics",
 			KPISource.JIRA.name(),
-			List.of(
-					"jiraDevDoneStatusKPI128",
-					"jiraStatusKPI187",
-					"jiraLabelsKPI120"));
+			List.of("jiraDevDoneStatusKPI128", "jiraStatusKPI187", "jiraLabelsKPI120"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

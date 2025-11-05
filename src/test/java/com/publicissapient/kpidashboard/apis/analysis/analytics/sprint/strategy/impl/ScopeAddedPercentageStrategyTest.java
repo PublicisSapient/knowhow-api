@@ -38,8 +38,7 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 @RunWith(MockitoJUnitRunner.class)
 public class ScopeAddedPercentageStrategyTest {
 
-	@InjectMocks
-	private ScopeAddedPercentageStrategy strategy;
+	@InjectMocks private ScopeAddedPercentageStrategy strategy;
 
 	private SprintDetails sprintDetails;
 	private SprintMetricContext context;

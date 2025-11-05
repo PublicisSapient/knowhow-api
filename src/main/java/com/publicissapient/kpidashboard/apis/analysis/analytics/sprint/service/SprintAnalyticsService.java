@@ -25,8 +25,7 @@ public interface SprintAnalyticsService {
 	/**
 	 * Computes sprint metrics table data for given projects and number of sprints.
 	 *
-	 * @param request
-	 *            Request containing project IDs and number of sprints
+	 * @param request Request containing project IDs and number of sprints
 	 * @return ServiceResponse containing SprintAnalyticsResponseDTO
 	 */
 	ServiceResponse computeSprintAnalyticsData(BaseAnalyticsRequestDTO request);
