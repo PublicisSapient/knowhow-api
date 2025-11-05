@@ -18,20 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.cleanup.ToolDataCleanUpService;
@@ -54,8 +40,20 @@ import com.publicissapient.kpidashboard.common.repository.application.ProjectToo
 import com.publicissapient.kpidashboard.common.repository.application.SubProjectRepository;
 import com.publicissapient.kpidashboard.common.repository.connection.ConnectionRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author yasbano
@@ -68,6 +66,9 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	private static final String SUCCESS_MSG =
 			"Successfully fetched all records for projectToolConfig";
 	private static final String TOOL_NOT_FOUND = "Tool not found";
+	private static final List<String> SCM_TOOLS = Arrays.asList(ProcessorConstants.BITBUCKET, ProcessorConstants.GITLAB,
+			ProcessorConstants.GITHUB, ProcessorConstants.AZUREREPO);
+    
 	@Autowired private ProjectToolConfigRepository toolRepository;
 	@Autowired private ConnectionRepository connectionRepository;
 	@Autowired private SubProjectRepository subProjectRepository;
@@ -163,9 +164,13 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA)) {
 			return new ServiceResponse(false, "Jira already configured for this project", null);
 		}
-		if (isRepoTool(projectToolConfig, projectToolConfig.getBasicProjectConfigId().toString())) {
-			setRepoToolConfig(projectToolConfig);
+		if (CollectionUtils.isNotEmpty(projectToolConfig.getScmToolConfig())) {
+			return new ServiceResponse(true, "Created and Saved new SCM Tool List", setScmToolConfig(projectToolConfig));
 		}
+
+        if (isRepoTool(projectToolConfig, projectToolConfig.getBasicProjectConfigId().toString())) {
+            setRepoToolConfig(projectToolConfig);
+        }
 
 		if (projectToolConfig.getToolName().equalsIgnoreCase(ProcessorConstants.JIRA_TEST)
 				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA_TEST)) {
@@ -192,6 +197,25 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG_MAP);
 		return new ServiceResponse(true, "created and saved new project_tools", projectToolConfig);
 	}
+
+    private List<ProjectToolConfig> setScmToolConfig(ProjectToolConfig projectToolConfig) {
+        List<ProjectToolConfig> projectToolConfigList = new ArrayList<>();
+        projectToolConfig.getScmToolConfig().forEach(scmtoolConfig -> {
+            ProjectToolConfig toolConfig = ProjectToolConfig.builder()
+                    .basicProjectConfigId(projectToolConfig.getBasicProjectConfigId())
+                    .connectionId(scmtoolConfig.getConnectionId())
+                    .branch(scmtoolConfig.getBranch())
+                    .repositoryName(scmtoolConfig.getRepositoryName())
+                    .toolName(scmtoolConfig.getToolName())
+                    .gitFullUrl(scmtoolConfig.getGitFullUrl()).build();
+            projectToolConfigList.add(toolConfig);
+        });
+        toolRepository.saveAll(projectToolConfigList);
+        cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
+        cacheService.clearCache(CommonConstant.CACHE_TOOL_CONFIG_MAP);
+        cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG_MAP);
+        return projectToolConfigList;
+    }
 
 	/**
 	 * Update project_tool_configs data.
@@ -369,13 +393,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	private boolean isRepoTool(ProjectToolConfig tool, String basicProjectConfigId) {
 		ProjectBasicConfig projectBasicConfig =
 				configHelperService.getProjectConfig(basicProjectConfigId);
-		List<String> scmToolList =
-				Arrays.asList(
-						ProcessorConstants.BITBUCKET,
-						ProcessorConstants.GITLAB,
-						ProcessorConstants.GITHUB,
-						ProcessorConstants.AZUREREPO);
-		return scmToolList.contains(tool.getToolName()) && projectBasicConfig.isDeveloperKpiEnabled();
+		return SCM_TOOLS.contains(tool.getToolName()) && projectBasicConfig.isDeveloperKpiEnabled();
 	}
 
 	private void cleanData(ProjectToolConfig tool) {
