@@ -51,7 +51,7 @@ on:
         type: string
 
 env:
-  IMAGE_NAME: knowhow-customapi
+  IMAGE_NAME: knowhow-api
   ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }} # without .azurecr.io
   ACR_LOGIN_SERVER: ${{ secrets.SPEEDTOOLS_ACR_LOGIN_SERVER }} # e.g. myacr.azurecr.io
   BITBUCKET_HELM_REPO: ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }} # HTTPS clone URL (without creds)
@@ -60,7 +60,7 @@ env:
   GITHUB_HEAD_NAME: $GITHUB_HEAD_REF # Store the head branch name used in sonarqube
 
 jobs:
-  # ✅ CustomAPI Build skipping test
+  # ✅ knowhow-api Build skipping test
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -164,18 +164,18 @@ jobs:
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
-      # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
-      - name: Build & skip Test CustomAPI
+      # ✅ Build & Test knowhoiw-api with both dependencies: common + ai-gateway-client
+      - name: Build & skip Test knowhow-api
         if: ${{ github.event.inputs.test == 'false' }}
         run: mvn clean install -Ddockerfile.skip=true -DskipTests
 
-        # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
-      - name: Build & Test CustomAPI
+        # ✅ Build & Test knowhow-api with both dependencies: common + ai-gateway-client
+      - name: Build & Test knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: mvn clean install -Ddockerfile.skip=true
 
-      # ✅ SonarQube Analysis - CustomAPI
-      - name: SonarQube Analysis - CustomAPI
+      # ✅ SonarQube Analysis - knowhow-api
+      - name: SonarQube Analysis - knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: |
           mvn sonar:sonar -Dsonar.projectKey=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
@@ -184,8 +184,8 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} \
             -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} -f pom.xml
 
-      # ✅ Check SonarQube Quality Gate - CustomAPI
-      - name: Check SonarQube Quality Gate - CustomAPI
+      # ✅ Check SonarQube Quality Gate - knowhow-api
+      - name: Check SonarQube Quality Gate - knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: |
           chmod +x SonarQG.sh
@@ -201,7 +201,7 @@ jobs:
       - name: Checkout Helm charts from Bitbucket
         run: |
           git clone ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }}
-          cd build-configurations/KnowHOW-Deploy/knowhow-customapi
+          cd build-configurations/KnowHOW-Deploy/knowhow-api
           # Update values.yaml image tag
           yq -i ".image.tag = \"${IMAGE_TAG}\"" $VALUES_FILE
           # Update Mongock values

@@ -166,11 +166,11 @@ common_version.txt
 /**/.ruleset
 
 application-local.properties
-customapi/test-output/
+knowhoiw-api/test-output/
 
 **/.factorypath
 
-customapi/.eclipse-pmd
+knowhoiw-api/.eclipse-pmd
 
 
 # compiled output
