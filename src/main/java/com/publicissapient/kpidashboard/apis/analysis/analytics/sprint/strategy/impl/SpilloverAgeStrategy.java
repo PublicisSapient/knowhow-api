@@ -25,9 +25,12 @@ import static com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.ut
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -99,7 +102,10 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		FieldMapping fieldMapping = context.getFieldMapping();
 
 		// Get dev done statuses for completion check
-		List<String> devDoneStatuses = fieldMapping.getJiraDevDoneStatusKPI128();
+		List<String> devDoneStatuses =
+				Optional.ofNullable(fieldMapping.getJiraDevDoneStatusKPI128())
+						.map(list -> list.stream().map(String::toLowerCase).collect(Collectors.toList()))
+						.orElse(new ArrayList<>());
 		if (CollectionUtils.isEmpty(devDoneStatuses)) {
 			log.warn("Dev done statuses not configured for project: {}", context.getProjectName());
 			return createNADataPoint(
@@ -119,6 +125,12 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		// Calculate average age of spillover issues
 		double averageAge =
 				calculateAverageSpilloverAge(spilloverIssues, sprintDetails, context, devDoneStatuses);
+
+		log.debug(
+				"Sprint: {}, Spillover count: {}, Average age: {}",
+				getSprintName(sprintDetails),
+				spilloverCount,
+				averageAge);
 
 		return createDataPoint(
 				sprintDetails, spilloverCount, averageAge, sprintIndex, Constant.PERCENTAGE);
@@ -265,10 +277,17 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		}
 
 		// Find when issue reached dev-done status (max date)
-		return history.getStatusUpdationLog().stream()
-				.filter(log -> devDoneStatuses.contains(log.getChangedTo()) && log.getUpdatedOn() != null)
-				.map(JiraHistoryChangeLog::getUpdatedOn)
-				.min(Comparator.naturalOrder())
-				.orElse(null);
+		LocalDateTime completionDate =
+				history.getStatusUpdationLog().stream()
+						.filter(
+								log ->
+										devDoneStatuses.contains(log.getChangedTo().toLowerCase())
+												&& log.getUpdatedOn() != null)
+						.map(JiraHistoryChangeLog::getUpdatedOn)
+						.min(Comparator.naturalOrder())
+						.orElse(null);
+
+		log.debug("Issue: {}, Completion date: {}", history.getStoryID(), completionDate);
+		return completionDate;
 	}
 }
