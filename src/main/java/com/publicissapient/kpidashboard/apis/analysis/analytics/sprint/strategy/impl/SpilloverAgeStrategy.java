@@ -102,11 +102,10 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		FieldMapping fieldMapping = context.getFieldMapping();
 
 		// Get dev done statuses for completion check
-		List<String> devDoneStatuses = Optional.ofNullable(fieldMapping.getJiraDevDoneStatusKPI128())
-				.map(list -> list.stream()
-						.map(String::toLowerCase)
-						.collect(Collectors.toList()))
-				.orElse(new ArrayList<>());
+		List<String> devDoneStatuses =
+				Optional.ofNullable(fieldMapping.getJiraDevDoneStatusKPI128())
+						.map(list -> list.stream().map(String::toLowerCase).collect(Collectors.toList()))
+						.orElse(new ArrayList<>());
 		if (CollectionUtils.isEmpty(devDoneStatuses)) {
 			log.warn("Dev done statuses not configured for project: {}", context.getProjectName());
 			return createNADataPoint(
@@ -273,7 +272,10 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 
 		// Find when issue reached dev-done status (max date)
 		return history.getStatusUpdationLog().stream()
-				.filter(log -> devDoneStatuses.contains(log.getChangedTo().toLowerCase()) && log.getUpdatedOn() != null)
+				.filter(
+						log ->
+								devDoneStatuses.contains(log.getChangedTo().toLowerCase())
+										&& log.getUpdatedOn() != null)
 				.map(JiraHistoryChangeLog::getUpdatedOn)
 				.min(Comparator.naturalOrder())
 				.orElse(null);

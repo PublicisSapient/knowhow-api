@@ -104,11 +104,10 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 		FieldMapping fieldMapping = context.getFieldMapping();
 
 		// Get dev done statuses from field mapping
-		List<String> devDoneStatuses = Optional.ofNullable(fieldMapping.getJiraDevDoneStatusKPI128())
-				.map(list -> list.stream()
-						.map(String::toLowerCase)
-						.collect(Collectors.toList()))
-				.orElse(new ArrayList<>());
+		List<String> devDoneStatuses =
+				Optional.ofNullable(fieldMapping.getJiraDevDoneStatusKPI128())
+						.map(list -> list.stream().map(String::toLowerCase).collect(Collectors.toList()))
+						.orElse(new ArrayList<>());
 		if (CollectionUtils.isEmpty(devDoneStatuses)) {
 			log.warn("Dev done statuses not configured for project: {}", context.getProjectName());
 			return createNADataPoint(
@@ -237,7 +236,9 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 		String devCompleteDate =
 				history.getStatusUpdationLog().stream()
 						.filter(
-								log -> devDoneStatuses.contains(log.getChangedTo().toLowerCase()) && log.getUpdatedOn() != null)
+								log ->
+										devDoneStatuses.contains(log.getChangedTo().toLowerCase())
+												&& log.getUpdatedOn() != null)
 						.map(JiraHistoryChangeLog::getUpdatedOn)
 						.filter(
 								updatedOn ->
