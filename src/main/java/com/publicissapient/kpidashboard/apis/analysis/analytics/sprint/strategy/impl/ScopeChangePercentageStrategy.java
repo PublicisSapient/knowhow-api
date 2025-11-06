@@ -161,6 +161,8 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 		}
 
 		// Check if any issue label matches configured scope change labels
-		return issue.getLabels().stream().anyMatch(scopeChangeLabels::contains);
+		return issue.getLabels().stream()
+				.anyMatch(label -> scopeChangeLabels.stream()
+						.anyMatch(configLabel -> configLabel.equalsIgnoreCase(label)));
 	}
 }
