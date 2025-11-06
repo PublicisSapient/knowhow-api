@@ -11,7 +11,7 @@
 #set  nounset
 
 # in newer versions of sonar scanner the default report-task.txt location may be different
-#REPORT_PATH="./customapi/target/sonar/report-task.txt"
+#REPORT_PATH="./knowhow-api/target/sonar/report-task.txt"
 #REPORT_PATH=".sonar/report-task.txt"
 CE_TASK_ID_KEY="ceTaskId="
 
