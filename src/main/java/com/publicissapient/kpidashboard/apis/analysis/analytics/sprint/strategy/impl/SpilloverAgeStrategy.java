@@ -126,6 +126,12 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		double averageAge =
 				calculateAverageSpilloverAge(spilloverIssues, sprintDetails, context, devDoneStatuses);
 
+		log.debug(
+				"Sprint: {}, Spillover count: {}, Average age: {}",
+				getSprintName(sprintDetails),
+				spilloverCount,
+				averageAge);
+
 		return createDataPoint(
 				sprintDetails, spilloverCount, averageAge, sprintIndex, Constant.PERCENTAGE);
 	}
@@ -271,13 +277,17 @@ public class SpilloverAgeStrategy extends AbstractSprintMetricStrategy {
 		}
 
 		// Find when issue reached dev-done status (max date)
-		return history.getStatusUpdationLog().stream()
-				.filter(
-						log ->
-								devDoneStatuses.contains(log.getChangedTo().toLowerCase())
-										&& log.getUpdatedOn() != null)
-				.map(JiraHistoryChangeLog::getUpdatedOn)
-				.min(Comparator.naturalOrder())
-				.orElse(null);
+		LocalDateTime completionDate =
+				history.getStatusUpdationLog().stream()
+						.filter(
+								log ->
+										devDoneStatuses.contains(log.getChangedTo().toLowerCase())
+												&& log.getUpdatedOn() != null)
+						.map(JiraHistoryChangeLog::getUpdatedOn)
+						.min(Comparator.naturalOrder())
+						.orElse(null);
+
+		log.debug("Issue: {}, Completion date: {}", history.getStoryID(), completionDate);
+		return completionDate;
 	}
 }

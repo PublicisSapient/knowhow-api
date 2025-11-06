@@ -131,6 +131,13 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (breach / total) * 100
 		double percentage = calculatePercentage(breachCount, totalWithDevDueDate);
 
+		log.debug(
+				"Sprint: {}, Total issues with dev due date: {}, Breach count: {}, Percentage: {}",
+				getSprintName(sprintDetails),
+				totalWithDevDueDate,
+				breachCount,
+				percentage);
+
 		return createDataPoint(
 				sprintDetails, breachCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
@@ -243,9 +250,15 @@ public class DevCompletionBreachStrategy extends AbstractSprintMetricStrategy {
 						.filter(
 								updatedOn ->
 										DateUtil.isWithinDateTimeRange(updatedOn, sprintStartDate, sprintEndDate))
-						.max(Comparator.naturalOrder())
+						.min(Comparator.naturalOrder())
 						.map(LocalDateTime::toString)
 						.orElse(CommonConstant.BLANK);
+
+		log.debug(
+				"Sprint: {}, Issue: {}, First dev completion in sprint: {}",
+				getSprintName(sprintDetails),
+				issue.getNumber(),
+				devCompleteDate);
 
 		return StringUtils.isNotEmpty(devCompleteDate) && !CommonConstant.BLANK.equals(devCompleteDate);
 	}

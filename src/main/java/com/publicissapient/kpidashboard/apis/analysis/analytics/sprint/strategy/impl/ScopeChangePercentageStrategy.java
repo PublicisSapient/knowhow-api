@@ -117,6 +117,13 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 		// Calculate percentage: (scopeChangeIssues / totalIssues) * 100
 		double percentage = calculatePercentage(scopeChangeCount, totalIssuesCount);
 
+		log.debug(
+				"Sprint: {}, Total issues: {}, Scope change count: {}, Percentage: {}",
+				getSprintName(sprintDetails),
+				totalIssuesCount,
+				scopeChangeCount,
+				percentage);
+
 		return createDataPoint(
 				sprintDetails, scopeChangeCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
@@ -161,10 +168,18 @@ public class ScopeChangePercentageStrategy extends AbstractSprintMetricStrategy 
 		}
 
 		// Check if any issue label matches configured scope change labels
-		return issue.getLabels().stream()
-				.anyMatch(
-						label ->
-								scopeChangeLabels.stream()
-										.anyMatch(configLabel -> configLabel.equalsIgnoreCase(label)));
+		boolean hasScopeChangeLabel =
+				issue.getLabels().stream()
+						.anyMatch(
+								label ->
+										scopeChangeLabels.stream()
+												.anyMatch(configLabel -> configLabel.equalsIgnoreCase(label)));
+
+		log.debug(
+				"Issue: {}, Labels: {}, Has scope change label: {}",
+				issue.getNumber(),
+				issue.getLabels(),
+				hasScopeChangeLabel);
+		return hasScopeChangeLabel;
 	}
 }
