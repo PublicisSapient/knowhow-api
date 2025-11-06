@@ -74,13 +74,13 @@ jobs:
           if [[ "$ENV" == "qa" ]]; then
             echo "IMAGE_TAG=qa-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-qa.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-qa" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-qa" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-qa" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-qa" >> $GITHUB_OUTPUT
           elif [[ "$ENV" == "stage" ]]; then
             echo "IMAGE_TAG=master-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-stage.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-stage" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-stage" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-stage" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-stage" >> $GITHUB_OUTPUT
           elif [[ "$ENV" == "dev1" ]]; then
             echo "IMAGE_TAG=dev1-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev1.yaml" >> $GITHUB_ENV
@@ -89,8 +89,8 @@ jobs:
           else
             echo "IMAGE_TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-dev" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-dev" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-dev" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-dev" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout Repository
