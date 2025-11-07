@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,6 +63,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +80,8 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 	private static final String FILTER_TYPE = "Multi";
 	private static final String SUM = "sum";
 
-	@Autowired private ConfigHelperService configHelperService;
+	@Autowired
+	private ConfigHelperService configHelperService;
 
 	/**
 	 * Check for the flag status
@@ -113,7 +116,8 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 
 		if (null != leafNode) {
 			log.info("Wastage -> Requested sprint : {}", leafNode.getName());
-			SprintDetails dbSprintDetail = getSprintDetailsFromBaseClass();
+
+			SprintDetails dbSprintDetail = getJiraIterationServiceR().getSprintRepository().findBySprintIDIn(kpiRequest.getSelectedMap().get(CommonConstant.SPRINT)).stream().findFirst().orElse(null);
 			SprintDetails sprintDetails;
 			if (null != dbSprintDetail) {
 				FieldMapping fieldMapping =
@@ -121,10 +125,22 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 								.getFieldMappingMap()
 								.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 				// to modify sprint details on the basis of configuration for the project
-				List<JiraIssueCustomHistory> totalHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
-				List<JiraIssue> totalJiraIssueList = getJiraIssuesFromBaseClass();
+
+				Map<String, Object> mapOfFilter = new HashMap<>();
+				this.getJiraIterationServiceR().createAdditionalFilterMap(kpiRequest, mapOfFilter);
+				Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
+				uniqueProjectMap.put(leafNode.getProjectFilter().getBasicProjectConfigId().toString(), mapOfFilter);
+				List<JiraIssue> totalJiraIssueList =
+						this.getJiraIterationServiceR().getJiraIssueRepository().findIssueByNumberWithAdditionalFilter(
+								new HashSet<>(createIssuesList(List.of(dbSprintDetail),
+										leafNode.getProjectFilter().getBasicProjectConfigId().toString())), uniqueProjectMap);
+
 				Set<String> issueList =
 						totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
+
+				List<JiraIssueCustomHistory> totalHistoryList =
+						getJiraIterationServiceR().getJiraIssueCustomHistoryRepository().findByStoryIDInAndBasicProjectConfigIdIn(
+								new ArrayList<>(issueList), Collections.singletonList(leafNode.getProjectFilter().getBasicProjectConfigId().toString()));
 
 				sprintDetails =
 						transformIterSprintdetail(
@@ -582,5 +598,40 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 		} else {
 			return 0;
 		}
+	}
+
+	private static List<String> createIssuesList(List<SprintDetails> sprintDetails, String basicProjectConfigId) {
+		List<String> totalIssuesList = new ArrayList<>();
+		sprintDetails.stream()
+				.filter(sd -> sd.getBasicProjectConfigId().toString().equals(basicProjectConfigId))
+				.forEach(
+						sprintDetails1 -> {
+							if (!CollectionUtils.isEmpty(sprintDetails1.getCompletedIssues())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getCompletedIssues().stream()
+												.map(SprintIssue::getNumber)
+												.toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getNotCompletedIssues())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getNotCompletedIssues().stream()
+												.map(SprintIssue::getNumber)
+												.toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getPuntedIssues())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getPuntedIssues().stream().map(SprintIssue::getNumber).toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getCompletedIssuesAnotherSprint())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getCompletedIssuesAnotherSprint().stream()
+												.map(SprintIssue::getNumber)
+												.toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getAddedIssues())) {
+								totalIssuesList.addAll(sprintDetails1.getAddedIssues());
+							}
+						});
+		return totalIssuesList;
 	}
 }

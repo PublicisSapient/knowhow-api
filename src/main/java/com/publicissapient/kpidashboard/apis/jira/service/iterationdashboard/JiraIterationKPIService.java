@@ -38,15 +38,17 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
+import lombok.Getter;
+
 /**
  * All Jira NonTrend KPIs service have to implement this class {@link NonTrendKPIService}
  *
  * @author purgupta2
  */
+@Getter
 public abstract class JiraIterationKPIService implements NonTrendKPIService {
 
 	@Autowired private CacheService cacheService;
-
 	@Autowired private JiraIterationServiceR jiraIterationServiceR;
 
 	/**
