@@ -33,7 +33,6 @@ import java.util.function.ObjIntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.owasp.encoder.Encode;
@@ -44,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.UserBoardConfigEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -532,8 +532,14 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(kanban, kpiCategory).stream()
 				.sorted(Comparator.comparing(KpiMaster::getDefaultOrder))
 				.forEach(kpiMaster -> setKpiUserBoardDefaultFromKpiMaster(boardKpisList, kpiMaster));
-		BoardDTO executive = setCustomDashboard(Constant.Home,Constant.Home_SLUG,boardKpisList,0);
-		BoardDTO pebBoard = setCustomDashboard(Constant.POTENTIAL_ECONOMIC_BENEFITS,Constant.POTENTIAL_ECONOMIC_BENEFITS_SLUG,boardKpisList,12);
+		BoardDTO executive =
+				setCustomDashboard(Constant.HOME_TAB, Constant.HOME_TAB_SLUG, boardKpisList, 0);
+		BoardDTO pebBoard =
+				setCustomDashboard(
+						Constant.POTENTIAL_ECONOMIC_BENEFITS,
+						Constant.POTENTIAL_ECONOMIC_BENEFITS_SLUG,
+						boardKpisList,
+						12);
 		defaultBoardList.add(executive);
 		BoardDTO defaultBoard = new BoardDTO();
 		defaultBoard.setBoardId(boardId);
@@ -544,7 +550,8 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		defaultBoardList.add(pebBoard);
 	}
 
-	private BoardDTO setCustomDashboard(String boardName, String slug,List<BoardKpisDTO> boardKpisList,Integer boardId){
+	private BoardDTO setCustomDashboard(
+			String boardName, String slug, List<BoardKpisDTO> boardKpisList, Integer boardId) {
 		BoardDTO executiveDashBoard = new BoardDTO();
 		executiveDashBoard.setBoardId(boardId);
 		executiveDashBoard.setBoardName(boardName);
@@ -552,7 +559,6 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		executiveDashBoard.setKpis(boardKpisList.stream().limit(1).collect(Collectors.toList()));
 		return executiveDashBoard;
 	}
-
 
 	/**
 	 * set Kpi details in board for user board config from kpi master.
