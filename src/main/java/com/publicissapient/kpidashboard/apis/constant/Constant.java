@@ -168,9 +168,9 @@ public final class Constant {
 
 	public static final String POTENTIAL_ECONOMIC_BENEFITS_SLUG = "potential-economic-benefits";
 
-	public static final String Home = "Home";
+	public static final String HOME_TAB = "Home";
 
-	public static final String Home_SLUG = "home";
+	public static final String HOME_TAB_SLUG = "home";
 
 	private Constant() {}
 }
