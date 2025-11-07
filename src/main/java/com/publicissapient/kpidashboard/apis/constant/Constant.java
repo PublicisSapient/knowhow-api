@@ -166,11 +166,11 @@ public final class Constant {
 
 	public static final String POTENTIAL_ECONOMIC_BENEFITS = "Potential Economic Benefits";
 
-	public static final String POTENTIAL_ECONOMIC_BENEFITS_SLUG ="potential-economic-benefits";
+	public static final String POTENTIAL_ECONOMIC_BENEFITS_SLUG = "potential-economic-benefits";
 
-	public static final String Home ="Home";
+	public static final String Home = "Home";
 
-	public static final String Home_SLUG ="home";
+	public static final String Home_SLUG = "home";
 
 	private Constant() {}
 }

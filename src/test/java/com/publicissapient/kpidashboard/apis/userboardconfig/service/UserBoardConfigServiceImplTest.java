@@ -483,7 +483,7 @@ public class UserBoardConfigServiceImplTest {
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 
 		assertEquals(
-				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 5");
+				userBoardConfigDTO.getScrum().get(4).getKpis().size(), 6, "Previously 4 kpis now 5");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -602,7 +602,7 @@ public class UserBoardConfigServiceImplTest {
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertEquals(
-				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 6");
+				userBoardConfigDTO.getScrum().get(4).getKpis().size(), 6, "Previously 4 kpis now 6");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -660,7 +660,7 @@ public class UserBoardConfigServiceImplTest {
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertEquals(
-				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 6");
+				userBoardConfigDTO.getScrum().get(4).getKpis().size(), 6, "Previously 4 kpis now 6");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
@@ -718,7 +718,7 @@ public class UserBoardConfigServiceImplTest {
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
 		assertEquals(
-				userBoardConfigDTO.getScrum().get(3).getKpis().size(), 6, "Previously 4 kpis now 5");
+				userBoardConfigDTO.getScrum().get(1).getKpis().size(), 6, "Previously 4 kpis now 5");
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}
