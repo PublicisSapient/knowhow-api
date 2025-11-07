@@ -33,6 +33,7 @@ import java.util.function.ObjIntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.owasp.encoder.Encode;
@@ -531,8 +532,8 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(kanban, kpiCategory).stream()
 				.sorted(Comparator.comparing(KpiMaster::getDefaultOrder))
 				.forEach(kpiMaster -> setKpiUserBoardDefaultFromKpiMaster(boardKpisList, kpiMaster));
-		BoardDTO executive = setCustomDashboard("Home","home",boardKpisList,0);
-		BoardDTO pebBoard = setCustomDashboard("Potential Economic Benefits","potential-economic-benefits",boardKpisList,12);
+		BoardDTO executive = setCustomDashboard(Constant.Home,Constant.Home_SLUG,boardKpisList,0);
+		BoardDTO pebBoard = setCustomDashboard(Constant.POTENTIAL_ECONOMIC_BENEFITS,Constant.POTENTIAL_ECONOMIC_BENEFITS_SLUG,boardKpisList,12);
 		defaultBoardList.add(executive);
 		BoardDTO defaultBoard = new BoardDTO();
 		defaultBoard.setBoardId(boardId);
