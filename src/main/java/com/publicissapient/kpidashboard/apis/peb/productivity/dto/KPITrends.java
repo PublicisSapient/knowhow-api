@@ -14,12 +14,16 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.service;
+package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.productivity.dto.ProductivityGainCalculationRequestDTO;
+import java.util.List;
 
-public interface ProductivityGainService {
-	ServiceResponse processProductivityCalculationRequest(
-			ProductivityGainCalculationRequestDTO productivityGainCalculationRequestDTO);
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class KPITrends {
+	private List<KPITrend> positive;
+	private List<KPITrend> negative;
 }

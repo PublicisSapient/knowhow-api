@@ -14,19 +14,15 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.dto;
+package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductivityGainDTO {
-	private CategorizedProductivityGain categorizedProductivityGain;
-
-	private KPITrendsDTO kpiTrends;
+public class CategoryScoresDTO {
+    private double overall;
+    private double speed;
+    private double quality;
+    private double efficiency;
+    private double productivity;
 }
