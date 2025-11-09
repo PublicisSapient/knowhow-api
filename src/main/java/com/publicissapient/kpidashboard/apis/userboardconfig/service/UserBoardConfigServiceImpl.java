@@ -43,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.UserBoardConfigEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -531,7 +532,14 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		kpiMasterRepository.findByKanbanAndKpiCategoryNotIn(kanban, kpiCategory).stream()
 				.sorted(Comparator.comparing(KpiMaster::getDefaultOrder))
 				.forEach(kpiMaster -> setKpiUserBoardDefaultFromKpiMaster(boardKpisList, kpiMaster));
-		BoardDTO executive = setExecutiveDashboard(boardKpisList);
+		BoardDTO executive =
+				setCustomDashboard(Constant.HOME_TAB, Constant.HOME_TAB_SLUG, boardKpisList, 0);
+		BoardDTO pebBoard =
+				setCustomDashboard(
+						Constant.POTENTIAL_ECONOMIC_BENEFITS,
+						Constant.POTENTIAL_ECONOMIC_BENEFITS_SLUG,
+						boardKpisList,
+						12);
 		defaultBoardList.add(executive);
 		BoardDTO defaultBoard = new BoardDTO();
 		defaultBoard.setBoardId(boardId);
@@ -539,13 +547,15 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		defaultBoard.setBoardSlug("my-knowhow");
 		defaultBoard.setKpis(boardKpisList);
 		defaultBoardList.add(defaultBoard);
+		defaultBoardList.add(pebBoard);
 	}
 
-	private BoardDTO setExecutiveDashboard(List<BoardKpisDTO> boardKpisList) {
+	private BoardDTO setCustomDashboard(
+			String boardName, String slug, List<BoardKpisDTO> boardKpisList, Integer boardId) {
 		BoardDTO executiveDashBoard = new BoardDTO();
-		executiveDashBoard.setBoardId(0);
-		executiveDashBoard.setBoardName("Home");
-		executiveDashBoard.setBoardSlug("home");
+		executiveDashBoard.setBoardId(boardId);
+		executiveDashBoard.setBoardName(boardName);
+		executiveDashBoard.setBoardSlug(slug);
 		executiveDashBoard.setKpis(boardKpisList.stream().limit(1).collect(Collectors.toList()));
 		return executiveDashBoard;
 	}
