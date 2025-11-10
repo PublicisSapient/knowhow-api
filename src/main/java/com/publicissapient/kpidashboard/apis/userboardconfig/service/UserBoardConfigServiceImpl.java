@@ -366,7 +366,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 				(boards, offset) ->
 						boards.forEach(
 								boardDTO -> {
-									if (boardDTO.getBoardId() == 0) {
+									if (boardDTO.getBoardId() == 0 || boardDTO.getBoardId() == 12 ) {
 										boardDTO.setFilters(copyFiltersWithoutId(filtersMap.get(0)));
 									} else {
 										boardDTO.setFilters(
