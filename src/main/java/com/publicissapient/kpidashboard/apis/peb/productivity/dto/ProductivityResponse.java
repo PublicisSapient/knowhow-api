@@ -14,20 +14,14 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.dto;
+package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import java.util.List;
+
 import lombok.Data;
 
 @Data
-public class ProductivityGainCalculationRequestDTO {
-
-	@NotNull(message = "The hierarchy 'level' must be specified")
-	private Integer level;
-
-	@NotEmpty(message = "The hierarchy 'label' must be specified")
-	private String label;
-
-	private String parentId;
+public class ProductivityResponse {
+    private OrganizationEntityProductivity summary;
+    private List<OrganizationEntityProductivity> details;
 }
