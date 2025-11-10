@@ -163,9 +163,9 @@ class ProductivityServiceTest {
 		assertNotNull(productivityResponse.getSummary());
 		OrganizationEntityProductivity summary = productivityResponse.getSummary();
 		assertTrue(summary.getLevelName().equalsIgnoreCase(levelName));
-		assertNotNull(summary.getCategoryScoresDTO());
+		assertNotNull(summary.getCategoryScores());
 
-		CategoryScoresDTO summaryCategoryScoresDTO = summary.getCategoryScoresDTO();
+		CategoryScoresDTO summaryCategoryScoresDTO = summary.getCategoryScores();
 		assertEquals(0, Double.compare(summaryCategoryScoresDTO.getOverall(), 4.14D));
 		assertEquals(0, Double.compare(summaryCategoryScoresDTO.getSpeed(), -32.86D));
 		assertEquals(0, Double.compare(summaryCategoryScoresDTO.getQuality(), -18.75D));

@@ -23,20 +23,48 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.service.ProductivityService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/v1/peb/productivity")
 @RequiredArgsConstructor
+@Tag(name = "PEB Productivity API v1", description = "APIs for retrieving productivity metrics and analytics data based on organizational hierarchy levels")
 public class ProductivityControllerV1 {
 	private final ProductivityService productivityService;
 
+	@Operation(summary = "Get productivity data by hierarchy level", description = "Retrieves comprehensive productivity metrics and KPIs for a specific organizational hierarchy level. "
+			+ "The hierarchy level determines the scope and aggregation of productivity data returned.", operationId = "getPebProductivityData")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Productivity data retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductivityResponse.class))),
+			@ApiResponse(responseCode = "400", description = """
+					Bad Request will be returned in the following situations:
+					- received level name was empty
+					- requested level is too low on the organizational hierarchy
+					"""),
+			@ApiResponse(responseCode = "404", description = """
+					Not Found will be returned in the following situations:
+					- requested level name does not exist
+					""", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
+			@ApiResponse(responseCode = "500", description = """
+					Internal Server Error will be returned in the following situations:
+					- multiple levels were found corresponding with the requested level name
+					- no organizational level could be found relating to a 'project' entity
+					- an unexpected error occurred when processing the request
+					""", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))) })
 	@GetMapping("/{levelName}")
 	public ResponseEntity<ServiceResponse> getPebProductivityData(
-			@PathVariable String levelName
-	) {
+			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to retrieve productivity "
+					+ "data", required = true, example = "project") @PathVariable String levelName) {
 		return ResponseEntity.ok(productivityService.getProductivityForLevel(levelName));
 	}
 }

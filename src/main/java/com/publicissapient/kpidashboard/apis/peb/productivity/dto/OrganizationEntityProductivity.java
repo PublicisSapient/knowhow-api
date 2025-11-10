@@ -28,7 +28,7 @@ public class OrganizationEntityProductivity {
     private String levelName;
     private String organizationEntityName;
 
-    private CategoryScoresDTO categoryScoresDTO;
+    private CategoryScoresDTO categoryScores;
 
     private KPITrends trends;
 }

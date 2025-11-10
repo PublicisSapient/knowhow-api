@@ -56,6 +56,25 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Service class responsible for retrieving and calculating productivity metrics
+ * for organizational hierarchy levels in the PEB (Potential Economical Benefit)
+ * system.
+ *
+ * <p>
+ * This service provides comprehensive productivity analytics by aggregating
+ * data from project-level calculations and presenting them at various
+ * organizational hierarchy levels such project.
+ * </p>
+ *
+ * <p>
+ * The service operates on a hierarchical model where productivity is calculated
+ * at the project level and then aggregated upwards through the organizational
+ * structure to provide insights at higher levels.
+ * </p>
+ *
+ * @author vladinu
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -65,13 +84,17 @@ public class ProductivityService {
 
 	private final FilterHelperService filterHelperService;
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
-
 	private final ProductivityCustomRepository productivityCustomRepository;
 
+	/**
+	 * Internal data structure representing a node in the organizational hierarchy
+	 * tree based on the account filtered data the current user has access to. Used
+	 * for building and traversing the hierarchical structure of organizational
+	 * entities.
+	 */
 	@Data
 	private static class TreeNode {
 		private Node data;
-
 		private List<TreeNode> children = new ArrayList<>();
 
 		public TreeNode(Node data) {
@@ -83,12 +106,54 @@ public class ProductivityService {
 	private record PEBProductivityRequest(HierarchyLevelsData hierarchyLevelsData, List<TreeNode> accountDataTreeNode) {
 	}
 
+	/**
+	 * Data structure containing hierarchy level information required for
+	 * productivity calculations.
+	 *
+	 * @param requestedLevel
+	 *            The hierarchy level requested by the user
+	 * @param firstChildHierarchyLevelAfterRequestedLevel
+	 *            The immediate child level below the requested level
+	 * @param projectLevel
+	 *            The project hierarchy level (lowest level where productivity is
+	 *            calculated)
+	 */
 	@Builder
 	private record HierarchyLevelsData(HierarchyLevel requestedLevel,
 			HierarchyLevel firstChildHierarchyLevelAfterRequestedLevel, HierarchyLevel projectLevel) {
 	}
 
+	/**
+	 * Retrieves comprehensive productivity data for a specified organizational
+	 * hierarchy level.
+	 *
+	 * <p>
+	 * This method performs the following operations:
+	 * </p>
+	 * <ol>
+	 * <li>Validates the requested hierarchy level</li>
+	 * <li>Constructs the organizational hierarchy tree user has access to</li>
+	 * <li>Retrieves project-level productivity data</li>
+	 * <li>Aggregates productivity scores by organizational entities</li>
+	 * <li>Calculates summary statistics and KPI trends</li>
+	 * </ol>
+	 *
+	 * <p>
+	 * The productivity data includes category scores for Quality, Speed,
+	 * Efficiency, and overall Productivity, along with detailed breakdowns by
+	 * organizational entities and trending information for key performance
+	 * indicators.
+	 * </p>
+	 *
+	 * @param levelName
+	 *            The name of the organizational hierarchy level (e.g., "project"))
+	 * @return ServiceResponse containing ProductivityResponse with summary and
+	 *         detailed productivity metrics
+	 */
 	public ServiceResponse getProductivityForLevel(String levelName) {
+		log.info("Started getting productivity data for level {}", levelName);
+		long startTime = System.currentTimeMillis();
+
 		PEBProductivityRequest pebProductivityRequest = createPEBProductivityRequestForRequestedLevel(levelName);
 
 		// The "roots" will be the nodes corresponding to the first hierarchy child
@@ -114,16 +179,17 @@ public class ProductivityService {
 		Map<String, List<Double>> kpiTrendValuesGroupedById = new HashMap<>();
 		Map<String, KPIData> kpiDataGroupedById = new HashMap<>();
 
-		for (Map.Entry<String, List<TreeNode>> nextHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren
+		for (Map.Entry<String, List<TreeNode>> nextChildHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren
 				.entrySet()) {
-			Node rootNode = rootHierarchyEntityNodesGroupedById.get(nextHierarchyLevelNodeIdProjectTreeNodes.getKey());
+			Node rootNode = rootHierarchyEntityNodesGroupedById
+					.get(nextChildHierarchyLevelNodeIdProjectTreeNodes.getKey());
 			CategoryScoresDTO rootNodeCategoryScore = new CategoryScoresDTO();
-			int numberOfRootNodesHavingProjectProductivities = 0;
-			for (TreeNode projectTreeNode : nextHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
+			int numberOfProjectsWithProductivityData = 0;
+			for (TreeNode projectTreeNode : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
 				Productivity projectProductivity = productivityGroupedByNodeId.get(projectTreeNode.data.getId());
 				if (projectProductivity != null) {
 					// For calculating the break-down details
-					numberOfRootNodesHavingProjectProductivities++;
+					numberOfProjectsWithProductivityData++;
 					addProductivityScores(rootNodeCategoryScore, projectProductivity.getCategoryScores());
 
 					// For calculating the summary
@@ -134,17 +200,23 @@ public class ProductivityService {
 						kpiTrendValuesGroupedById.get(kpiData.getKpiId()).add(kpiData.getVariationPercentage());
 						kpiDataGroupedById.computeIfAbsent(kpiData.getKpiId(), key -> kpiData);
 					});
+				} else {
+					log.info("No productivity data was found for project with node id {} and name {}",
+							projectTreeNode.data.getId(), projectTreeNode.data.getName());
 				}
 			}
 
-			if (numberOfRootNodesHavingProjectProductivities != 0) {
-				setAveragedProductivityScores(rootNodeCategoryScore, numberOfRootNodesHavingProjectProductivities);
+			if (numberOfProjectsWithProductivityData != 0) {
+				setAveragedProductivityScores(rootNodeCategoryScore, numberOfProjectsWithProductivityData);
 
 				details.add(OrganizationEntityProductivity.builder()
 						.levelName(
 								pebProductivityRequest.hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel
 										.getHierarchyLevelName())
-						.organizationEntityName(rootNode.getName()).categoryScoresDTO(rootNodeCategoryScore).build());
+						.organizationEntityName(rootNode.getName()).categoryScores(rootNodeCategoryScore).build());
+			} else {
+				log.info("The next child hierarchy entity root with node id {} and name {} did not have any projects "
+						+ "containing productivity data", rootNode.getId(), rootNode.getName());
 			}
 		}
 
@@ -155,7 +227,7 @@ public class ProductivityService {
 		productivityResponse.setDetails(details);
 		productivityResponse.setSummary(OrganizationEntityProductivity.builder()
 				.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
-				.categoryScoresDTO(summaryCategoryScoresDTO)
+				.categoryScores(summaryCategoryScoresDTO)
 				.trends(constructKPITrends(kpiTrendValuesGroupedById, kpiDataGroupedById)).build());
 
 		ServiceResponse serviceResponse = new ServiceResponse();
@@ -164,9 +236,23 @@ public class ProductivityService {
 		serviceResponse.setSuccess(Boolean.TRUE);
 		serviceResponse.setMessage("Productivity data was successfully retrieved");
 
+		log.info("""
+				Successfully retrieved the productivity data for level {}. Total projects found under requested level: {}
+				Projects without productivity data: {}. Duration: {} ms
+				""", levelName, projectNodeIds.size(), (projectNodeIds.size() - totalProjectsNumber),
+				System.currentTimeMillis() - startTime);
 		return serviceResponse;
 	}
 
+	/**
+	 * Creates a PEB productivity request object containing all necessary data for
+	 * productivity calculations.
+	 *
+	 * @param levelName
+	 *            The name of the hierarchy level for which to create the request
+	 * @return PEBProductivityRequest containing hierarchy data and account tree
+	 *         structure
+	 */
 	private PEBProductivityRequest createPEBProductivityRequestForRequestedLevel(String levelName) {
 		PEBProductivityRequest.PEBProductivityRequestBuilder pebProductivityRequestBuilder = PEBProductivityRequest
 				.builder();
@@ -176,6 +262,21 @@ public class ProductivityService {
 				.accountDataTreeNode(accountDataTreeNode).build();
 	}
 
+	/**
+	 * Constructs the organizational hierarchy tree structure based on user access
+	 * permissions.
+	 *
+	 * <p>
+	 * This method filters the organizational hierarchy data to include only
+	 * entities that the current user has access to, within the range from the first
+	 * child level after the requested level down to the project level.
+	 * </p>
+	 *
+	 * @param hierarchyLevelsData
+	 *            Information about the hierarchy levels involved
+	 * @return List of TreeNode representing the root nodes of the accessible
+	 *         hierarchy tree
+	 */
 	private List<TreeNode> constructAccountDataTreeNode(HierarchyLevelsData hierarchyLevelsData) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
@@ -211,6 +312,21 @@ public class ProductivityService {
 		return treeNodes;
 	}
 
+	/**
+	 * Constructs hierarchy levels data required for productivity calculations based
+	 * on the requested level name.
+	 *
+	 * <p>
+	 * This method validates the requested level, ensures it exists and is
+	 * supported, and identifies the related hierarchy levels needed for the
+	 * calculation process.
+	 * </p>
+	 *
+	 * @param levelName
+	 *            The name of the requested hierarchy level
+	 * @return HierarchyLevelsData containing the requested level, its child level,
+	 *         and project level
+	 */
 	private HierarchyLevelsData constructHierarchyLevelsDataByRequestedLevelName(String levelName) {
 		if (StringUtils.isEmpty(levelName)) {
 			throw new BadRequestException("Level name must not be empty");
@@ -276,6 +392,15 @@ public class ProductivityService {
 				.findAny();
 	}
 
+	/**
+	 * Builds a tree structure from flat account filtered data.
+	 *
+	 * @param accountFilteredData
+	 *            Set of account data to build the tree from
+	 * @param rootNodeIds
+	 *            Set of node IDs that should be treated as root nodes
+	 * @return List of TreeNode representing the root nodes of the constructed tree
+	 */
 	private static List<TreeNode> buildTreeNode(Set<AccountFilteredData> accountFilteredData, Set<String> rootNodeIds) {
 		Map<String, TreeNode> lookup = new HashMap<>();
 		List<TreeNode> roots = new ArrayList<>();
@@ -304,6 +429,19 @@ public class ProductivityService {
 		return roots;
 	}
 
+	/**
+	 * Creates a mapping of root nodes to their descendant nodes at the target
+	 * level.
+	 *
+	 * @param roots
+	 *            List of root tree nodes to start the mapping from
+	 * @param currentLevel
+	 *            The current level in the hierarchy traversal
+	 * @param targetLevel
+	 *            The target level to collect nodes from
+	 * @return Map where keys are root node IDs and values are lists of nodes at the
+	 *         target level
+	 */
 	private static Map<String, List<TreeNode>> getLevelMappingByRoot(List<TreeNode> roots, int currentLevel,
 			int targetLevel) {
 		Map<String, List<TreeNode>> mapping = new HashMap<>();
@@ -317,6 +455,18 @@ public class ProductivityService {
 		return mapping;
 	}
 
+	/**
+	 * Recursively collects nodes at a specific target level in the hierarchy tree.
+	 *
+	 * @param current
+	 *            The current node being processed
+	 * @param currentLevel
+	 *            The current level in the traversal
+	 * @param targetLevel
+	 *            The target level to collect nodes from
+	 * @param result
+	 *            List to collect the nodes found at the target level
+	 */
 	private static void collectNodesAtLevel(TreeNode current, int currentLevel, int targetLevel,
 			List<TreeNode> result) {
 		if (currentLevel == targetLevel) {
@@ -340,6 +490,14 @@ public class ProductivityService {
 		return Math.round(number * TWO_DECIMAL_ROUNDING_COEFFICIENT) / TWO_DECIMAL_ROUNDING_COEFFICIENT;
 	}
 
+	/**
+	 * Adds productivity scores from a project to the aggregated category scores.
+	 *
+	 * @param categoryScoresDTO
+	 *            The DTO to accumulate scores in
+	 * @param projectCategoryScores
+	 *            The project-level category scores to add
+	 */
 	private static void addProductivityScores(CategoryScoresDTO categoryScoresDTO,
 			CategoryScores projectCategoryScores) {
 		categoryScoresDTO.setOverall(categoryScoresDTO.getOverall() + projectCategoryScores.getOverall());
@@ -350,6 +508,15 @@ public class ProductivityService {
 				.setProductivity(categoryScoresDTO.getProductivity() + projectCategoryScores.getProductivity());
 	}
 
+	/**
+	 * Calculates averaged productivity scores by dividing accumulated scores by the
+	 * entity count.
+	 *
+	 * @param categoryScoresDTO
+	 *            The DTO containing accumulated scores
+	 * @param entityCount
+	 *            The number of entities to average across
+	 */
 	private static void setAveragedProductivityScores(CategoryScoresDTO categoryScoresDTO, int entityCount) {
 		categoryScoresDTO.setOverall(roundToTwoDecimals(categoryScoresDTO.getOverall() / entityCount));
 		categoryScoresDTO.setQuality(roundToTwoDecimals(categoryScoresDTO.getQuality() / entityCount));
@@ -358,6 +525,20 @@ public class ProductivityService {
 		categoryScoresDTO.setProductivity(roundToTwoDecimals(categoryScoresDTO.getProductivity() / entityCount));
 	}
 
+	/**
+	 * Constructs KPI trends by categorizing them into positive and negative trends.
+	 *
+	 * <p>
+	 * This method calculates the average trend value for each KPI and categorizes
+	 * them as positive (>= 0) or negative (< 0) trends.
+	 * </p>
+	 *
+	 * @param kpiTrendValuesGroupedById
+	 *            Map of KPI IDs to their trend values
+	 * @param kpiDataGroupedById
+	 *            Map of KPI IDs to their metadata
+	 * @return KPITrends object containing categorized positive and negative trends
+	 */
 	private static KPITrends constructKPITrends(Map<String, List<Double>> kpiTrendValuesGroupedById,
 			Map<String, KPIData> kpiDataGroupedById) {
 		List<KPITrend> positive = new ArrayList<>();
