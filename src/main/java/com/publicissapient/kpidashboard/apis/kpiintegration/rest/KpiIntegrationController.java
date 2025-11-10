@@ -22,6 +22,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.Collections;
 import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,12 +74,9 @@ public class KpiIntegrationController {
 		if (Boolean.FALSE.equals(isApiAuth)) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());
 		}
+
 		List<KpiElement> responseList = kpiIntegrationService.getKpiResponses(kpiRequest);
-		if (responseList.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
-		} else {
-			return ResponseEntity.ok().body(responseList);
-		}
+		return ResponseEntity.ok(responseList);
 	}
 
 	/**
