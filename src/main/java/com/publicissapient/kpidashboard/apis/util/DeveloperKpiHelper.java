@@ -316,7 +316,6 @@ public final class DeveloperKpiHelper {
 			String dateLabel,
 			String kpiGroup,
 			List<PullRequestsValue> pullRequestsValues,
-			Map<String, Object> hoverValue,
 			Map<String, List<DataCount>> dataCountMap) {
 
 		// Get or create list of DataCount for this KPI group
@@ -349,7 +348,6 @@ public final class DeveloperKpiHelper {
 			}
 
 			existingDataCount.setPrValues(existingPrValues);
-			existingDataCount.setHoverValue(hoverValue);
 
 		} else {
 			// Create a new DataCount entry
@@ -357,7 +355,6 @@ public final class DeveloperKpiHelper {
 			newDataCount.setSProjectName(projectName);
 			newDataCount.setDate(dateLabel);
 			newDataCount.setKpiGroup(kpiGroup);
-			newDataCount.setHoverValue(hoverValue);
 			newDataCount.setPrValues(new ArrayList<>(pullRequestsValues));
 			dataCounts.add(newDataCount);
 		}

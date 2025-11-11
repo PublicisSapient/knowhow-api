@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 public class ScmPRSizeServiceImpl
         extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
-    private static final String MR_COUNT = "No of PRs";
+    private static final String MR_SIZE = "No. of lines";
     private static final String ASSIGNEE_SET = "assigneeSet";
     private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
@@ -118,8 +118,7 @@ public class ScmPRSizeServiceImpl
 
     @Override
     public Double calculateThresholdValue(FieldMapping fieldMapping) {
-        return calculateThresholdValue(
-                fieldMapping.getThresholdValueKPI162(), KPICode.PR_SIZE_OVERTIME.getKpiId());
+        return null;
     }
 
     /**
@@ -217,17 +216,15 @@ public class ScmPRSizeServiceImpl
             pr.setId(scmMergeRequests.getExternalId());
             pr.setSize(scmMergeRequests.getLinesChanged().toString());
             pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
+            pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
             overAllPRValues.add(pr);
         });
-
-        long totalMergeRequests = mergeRequestsForBranch.size();
 
         DeveloperKpiHelper.setDataCounts(
                 projectName,
                 dateLabel,
                 overallKpiGroup,
                 overAllPRValues,
-                Map.of(MR_COUNT, totalMergeRequests),
                 kpiTrendDataByGroup);
 
         Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
@@ -259,6 +256,7 @@ public class ScmPRSizeServiceImpl
                                 pr.setId(scmMergeRequests.getExternalId());
                                 pr.setSize(scmMergeRequests.getLinesChanged().toString());
                                 pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
+                                pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
                                 userWiseMRValues.add(pr);
                             });
 
@@ -271,7 +269,6 @@ public class ScmPRSizeServiceImpl
                                     dateLabel,
                                     userKpiGroup,
                                     userWiseMRValues,
-                                    Map.of(MR_COUNT, userMrCount),
                                     kpiTrendDataByGroup);
 
                             return createValidationData(
