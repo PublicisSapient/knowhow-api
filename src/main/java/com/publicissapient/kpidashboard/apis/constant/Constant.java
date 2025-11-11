@@ -164,5 +164,13 @@ public final class Constant {
 
 	public static final String RELEASE = "release";
 
+	public static final String POTENTIAL_ECONOMIC_BENEFITS = "Potential Economic Benefits";
+
+	public static final String POTENTIAL_ECONOMIC_BENEFITS_SLUG = "potential-economic-benefits";
+
+	public static final String HOME_TAB = "Home";
+
+	public static final String HOME_TAB_SLUG = "home";
+
 	private Constant() {}
 }

@@ -20,11 +20,20 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
@@ -62,20 +71,24 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WorkStatusServiceImplTest {
 
-	@Mock CacheService cacheService;
+	@Mock private SprintRepository sprintRepository;
+	@Mock private CacheService cacheService;
 	@Mock private JiraIssueRepository jiraIssueRepository;
 	@Mock private ConfigHelperService configHelperService;
-	@InjectMocks private WorkStatusServiceImpl workStatusService;
 	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Mock private JiraIterationServiceR jiraService;
+
+	@InjectMocks private WorkStatusServiceImpl workStatusService;
+
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
-	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
-	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
+	private final Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
+	private final Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private SprintDetails sprintDetails = new SprintDetails();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
@@ -129,10 +142,14 @@ public class WorkStatusServiceImplTest {
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
-				.thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
@@ -162,12 +179,17 @@ public class WorkStatusServiceImplTest {
 				.filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768"))
 				.findFirst()
 				.get()
-				.setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
+				.setDueDate(LocalDate.now().plusDays(3) + "T00:00:00.000Z");
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
-				.thenReturn(jiraIssueCustomHistoryList);
+
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
@@ -200,12 +222,16 @@ public class WorkStatusServiceImplTest {
 				.filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768"))
 				.findFirst()
 				.get()
-				.setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
+				.setDueDate(LocalDate.now().plusDays(3) + "T00:00:00.000Z");
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
-				.thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
@@ -239,10 +265,14 @@ public class WorkStatusServiceImplTest {
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
-				.thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		Map<String, Object> returnMap =
 				workStatusService.fetchKPIDataFromDb(leafNodeList.get(0), startDate, endDate, kpiRequest);

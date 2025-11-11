@@ -17,6 +17,8 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.zephyr.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -224,7 +226,7 @@ public class TestExecutionTimeServiceImpl
 							node.getSprintFilter().getName(),
 							executionTimeForCurrentLeaf);
 					DataCount dataCount = new DataCount();
-					dataCount.setData(String.valueOf(Math.round(executionTimeForCurrentLeaf)));
+					dataCount.setData(String.valueOf(executionTimeForCurrentLeaf));
 					dataCount.setSProjectName(trendLineName);
 					dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
 					dataCount.setSprintNames(
@@ -273,8 +275,8 @@ public class TestExecutionTimeServiceImpl
 			int totalCount = testCases.size();
 
 			// Compute per-test average execution time in **minutes**
-			long avgExecTimeMin =
-					Math.round(
+			double avgExecTimeMin =
+					BigDecimal.valueOf(
 							testCases.stream()
 											.mapToDouble(
 													tc -> {
@@ -298,7 +300,8 @@ public class TestExecutionTimeServiceImpl
 											.orElse(0.0)
 									/ 1000.0
 									/ 60.0 // ms → sec → min
-							);
+							).setScale(2, RoundingMode.HALF_UP)
+							.doubleValue();
 
 			// Put results into hover map
 			Map<String, Object> categoryData = new HashMap<>();

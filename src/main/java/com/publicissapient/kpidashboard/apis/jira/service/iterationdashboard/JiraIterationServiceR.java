@@ -63,6 +63,8 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHi
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -71,6 +73,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author purgupta2
  */
+@Getter
+@Setter
 @Slf4j
 @Service
 public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
@@ -108,7 +112,7 @@ public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
 		List<KpiElement> origRequestedKpis =
 				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
-		String[] projectKeyCache = null;
+		String[] projectKeyCache;
 		try {
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
 			String groupName =
@@ -147,7 +151,7 @@ public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
 
 				Node filteredNode = getFilteredNodes(filteredAccountDataList);
 				if (filteredNode != null) {
-					if (!CollectionUtils.isEmpty(origRequestedKpis)
+					if (CollectionUtils.isNotEmpty(origRequestedKpis)
 							&& StringUtils.isNotEmpty(origRequestedKpis.get(0).getKpiCategory())) {
 						updateJiraIssueList(kpiRequest, filteredAccountDataList);
 					}
@@ -287,6 +291,10 @@ public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
 		fetchJiraIssuesCustomHistory(basicConfigId);
 	}
 
+	private List<SprintDetails> findSprintDetails(KpiRequest kpiRequest) {
+		return sprintRepository.findBySprintIDIn(kpiRequest.getSelectedMap().get(CommonConstant.SPRINT));
+	}
+
 	public void fetchSprintDetails(List<String> sprintId) {
 		sprintDetails = sprintRepository.findBySprintIDIn(sprintId);
 	}
@@ -294,6 +302,7 @@ public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
 	public SprintDetails getCurrentSprintDetails() {
 		return threadLocalSprintDetails.get().stream().findFirst().orElse(null);
 	}
+	
 
 	public void setSprintDetails(List<SprintDetails> modifiedSprintDetails) {
 		sprintDetails = modifiedSprintDetails;

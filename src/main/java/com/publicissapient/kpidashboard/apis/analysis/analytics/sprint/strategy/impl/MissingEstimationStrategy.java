@@ -115,6 +115,13 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (missing / total) * 100
 		double percentage = calculatePercentage(missingEstimationCount, totalIssuesCount);
 
+		log.debug(
+				"Sprint: {}, Total issues: {}, Missing estimation count: {}, Percentage: {}",
+				getSprintName(sprintDetails),
+				totalIssuesCount,
+				missingEstimationCount,
+				percentage);
+
 		return createDataPoint(
 				sprintDetails, missingEstimationCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}
@@ -151,9 +158,19 @@ public class MissingEstimationStrategy extends AbstractSprintMetricStrategy {
 		// Check based on estimation criteria
 		if (CommonConstant.STORY_POINT.equalsIgnoreCase(estimationCriteria)) {
 			Double storyPoints = sprintIssue.getStoryPoints();
+			log.debug(
+					"Issue: {}, Estimation criteria: Story Point, Value: {}, Missing: {}",
+					sprintIssue.getNumber(),
+					storyPoints,
+					(storyPoints == null || storyPoints == 0.0));
 			return storyPoints == null || storyPoints == 0.0;
 		} else {
 			Double originalEstimate = sprintIssue.getOriginalEstimate();
+			log.debug(
+					"Issue: {}, Estimation criteria: Original Estimate, Value: {}, Missing: {}",
+					sprintIssue.getNumber(),
+					originalEstimate,
+					(originalEstimate == null || originalEstimate == 0.0));
 			return originalEstimate == null || originalEstimate == 0.0;
 		}
 	}

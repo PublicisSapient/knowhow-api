@@ -14,21 +14,16 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.dto;
+package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CategorizedProductivityGain {
-	private double overall;
-	private double speed;
-	private double quality;
-	private double efficiency;
-	private double productivity;
+public class KPITrends {
+	private List<KPITrend> positive;
+	private List<KPITrend> negative;
 }

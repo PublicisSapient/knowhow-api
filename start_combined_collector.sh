@@ -17,6 +17,6 @@ do
         echo "Imported $cert_file to $keystorefile as $alias."
 done
 
-# Running Customapi jar file
+# Running knowhow-api jar file
 
-java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar customapi.jar --spring.config.location=classpath:/BOOT-INF/classes/application.properties --spring.config.additional-location=optional:file:/app/properties/customapi.properties
+java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar knowhow-api.jar --spring.config.location=classpath:/BOOT-INF/classes/application.properties --spring.config.additional-location=optional:file:/app/properties/knowhow-api.properties

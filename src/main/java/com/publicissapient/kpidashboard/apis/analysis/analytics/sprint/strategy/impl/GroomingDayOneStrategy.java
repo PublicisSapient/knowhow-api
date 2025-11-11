@@ -135,6 +135,13 @@ public class GroomingDayOneStrategy extends AbstractSprintMetricStrategy {
 		// Calculate percentage: (groomingCount / totalIssuesCount) * 100
 		double percentage = calculatePercentage(groomingCount, totalIssuesCount);
 
+		log.debug(
+				"Sprint: {}, Total issues: {}, Grooming count: {}, Percentage: {}",
+				getSprintName(sprintDetails),
+				totalIssuesCount,
+				groomingCount,
+				percentage);
+
 		return createDataPoint(
 				sprintDetails, groomingCount, percentage, sprintIndex, Constant.PERCENTAGE);
 	}

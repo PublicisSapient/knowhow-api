@@ -25,9 +25,9 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-@ChangeUnit(id = "sprint_analytics", order = "14100", author = "shunaray", systemVersion = "14.1.0")
+@ChangeUnit(id = "r_sprint_analytics", order = "014104", author = "shunaray", systemVersion = "14.1.0")
 public class SprintAnalyticsChangeUnit {
-	private static final String KPI_ID = "kpi";
+	private static final String KPI_ID = "kpiId";
 	private static final String KPI_199 = "kpi199";
 
 	private final MongoTemplate mongoTemplate;
