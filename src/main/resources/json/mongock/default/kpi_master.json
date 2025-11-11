@@ -5274,5 +5274,11 @@
     "isDeleted": "False",
     "kpiName": "AI Usage Analytics",
     "kpiSource": "Jira"
+  },
+  {
+    "kpiId": "kpi199",
+    "isDeleted": "False",
+    "kpiName": "Sprint Analytics",
+    "kpiSource": "Jira"
   }
 ]
