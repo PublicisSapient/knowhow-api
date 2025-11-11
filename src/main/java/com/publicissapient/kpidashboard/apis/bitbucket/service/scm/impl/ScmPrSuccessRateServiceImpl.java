@@ -183,7 +183,7 @@ public class ScmPrSuccessRateServiceImpl
 									assignees,
 									kpiTrendDataByGroup,
 									validationDataList,
-									dateLabel,
+									"",
 									projectLeafNode.getProjectFilter().getName()));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
