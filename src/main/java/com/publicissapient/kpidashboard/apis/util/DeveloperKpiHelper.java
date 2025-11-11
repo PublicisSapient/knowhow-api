@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.bson.types.ObjectId;
@@ -298,6 +299,70 @@ public final class DeveloperKpiHelper {
 			dataCounts.add(newDataCount);
 		}
 	}
+
+	/**
+	 * Creates or updates data count entries for KPI metrics. Supports both Long and Double pullRequestsValues
+	 * types with proper aggregation.
+	 *
+	 * @param projectName Project name for the data
+	 * @param dateLabel Date label for the data point
+	 * @param kpiGroup KPI group identifier
+	 * @param pullRequestsValues Numeric pullRequestsValues (Long or Double)
+	 * @param hoverValue Additional hover information
+	 * @param dataCountMap Map to store/update data counts
+	 */
+	public static void setDataCounts(
+			String projectName,
+			String dateLabel,
+			String kpiGroup,
+			List<PullRequestsValue> pullRequestsValues,
+			Map<String, Object> hoverValue,
+			Map<String, List<DataCount>> dataCountMap) {
+
+		// Get or create list of DataCount for this KPI group
+		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
+
+		// Find existing DataCount for this date
+		Optional<DataCount> existingDataCountOpt =
+				dataCounts.stream()
+						.filter(dc -> dc.getDate().equals(dateLabel))
+						.findFirst();
+
+		if (existingDataCountOpt.isPresent()) {
+			// Update existing entry
+			DataCount existingDataCount = existingDataCountOpt.get();
+
+			// Get existing PRs (initialize if null)
+			List<PullRequestsValue> existingPrValues =
+					existingDataCount.getPrValues() != null ? existingDataCount.getPrValues() : new ArrayList<>();
+
+			// Build a set of existing PR IDs for fast duplicate check
+			Set<String> existingIds = existingPrValues.stream()
+					.map(PullRequestsValue::getId)
+					.collect(Collectors.toSet());
+
+			// Add only new PRs (avoid duplicates)
+			for (PullRequestsValue newPr : pullRequestsValues) {
+				if (!existingIds.contains(newPr.getId())) {
+					existingPrValues.add(newPr);
+				}
+			}
+
+			existingDataCount.setPrValues(existingPrValues);
+			existingDataCount.setHoverValue(hoverValue);
+
+		} else {
+			// Create a new DataCount entry
+			DataCount newDataCount = new DataCount();
+			newDataCount.setSProjectName(projectName);
+			newDataCount.setDate(dateLabel);
+			newDataCount.setKpiGroup(kpiGroup);
+			newDataCount.setHoverValue(hoverValue);
+			newDataCount.setPrValues(new ArrayList<>(pullRequestsValues));
+			dataCounts.add(newDataCount);
+		}
+	}
+
 
 	public static LocalDate convertStringToDate(String dateString) {
 		return LocalDate.parse(dateString.split("T")[0]);

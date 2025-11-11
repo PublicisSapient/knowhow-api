@@ -904,7 +904,7 @@ public enum KPIExcelColumn {
 					"PR Status",
 					"Pickup Time (In Hours)")),
 
-	PR_SIZE(
+	PR_SIZE_OVERTIME(
 			"kpi162",
 			Arrays.asList(
 					"Project",
@@ -912,7 +912,7 @@ public enum KPIExcelColumn {
 					"Branch",
 					"Author",
 					"Days/Weeks",
-					"No of Merge",
+					"Merge Request Url",
 					"PR Size (No. of lines)")),
 
 	EPIC_PROGRESS(

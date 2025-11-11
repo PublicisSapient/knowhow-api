@@ -256,7 +256,7 @@ public enum KPICode {
 	/** Pickup Time */
 	PICKUP_TIME("kpi160", KPISource.BITBUCKET.name()),
 	/** PR Size */
-	PR_SIZE("kpi162", KPISource.BITBUCKET.name()),
+	PR_SIZE_OVERTIME("kpi162", KPISource.BITBUCKET.name()),
 	/** DTS-27553 Epic Progress */
 	EPIC_PROGRESS("kpi165", KPISource.JIRA.name()),
 	/** Epic Progress (Backlog) */

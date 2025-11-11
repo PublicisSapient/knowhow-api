@@ -18,31 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
-import java.text.DecimalFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -67,6 +42,7 @@ import com.publicissapient.kpidashboard.common.model.application.CycleTimeValida
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
+import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import com.publicissapient.kpidashboard.common.model.application.ResolutionTimeValidation;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiData;
 import com.publicissapient.kpidashboard.common.model.jira.IssueDetails;
@@ -82,6 +58,30 @@ import com.publicissapient.kpidashboard.common.model.testexecution.KanbanTestExe
 import com.publicissapient.kpidashboard.common.model.testexecution.TestExecution;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * The class contains mapping of kpi and Excel columns.
@@ -1544,8 +1544,36 @@ public class KPIExcelUtility {
 						excelData.setBranch(repoToolValidationData.getBranchName());
 						excelData.setAuthor(repoToolValidationData.getDeveloperName());
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
-						excelData.setPrSize(String.valueOf(repoToolValidationData.getPrSize()));
-						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+
+						if (CollectionUtils.isNotEmpty(repoToolValidationData.getPullRequestsValues())) {
+
+							Map<String, String> mergeUrlMap = repoToolValidationData.getPullRequestsValues().stream()
+									.filter(pr -> pr.getPrUrl() != null)
+									.collect(Collectors.toMap(
+											PullRequestsValue::getPrUrl,
+											PullRequestsValue::getPrUrl,
+											(v1, v2) -> v1 // handle duplicate keys
+									));
+
+							long totalLineChanges = repoToolValidationData.getPullRequestsValues().stream()
+									.map(PullRequestsValue::getSize)
+									.filter(Objects::nonNull)
+									.mapToLong(size -> {
+										try {
+											return Long.parseLong(size);
+										} catch (NumberFormatException e) {
+											return 0L;
+										}
+									})
+									.sum();
+
+							excelData.setMergeRequestUrl(mergeUrlMap);
+							excelData.setTotalLineChanges(totalLineChanges);
+						} else {
+							excelData.setMergeRequestUrl(Collections.emptyMap());
+							excelData.setTotalLineChanges(0L);
+						}
+
 						kpiExcelData.add(excelData);
 					});
 		}
