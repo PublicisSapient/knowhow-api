@@ -345,6 +345,12 @@
       <artifactId>commons-csv</artifactId>
       <version>1.9.0</version>
     </dependency>
+    <!-- Apache Commons Math for Forecasting -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.6.1</version>
+    </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
