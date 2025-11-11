@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @ChangeUnit(
 		id = "r_test_execution_time_kpi_kanban",
 		order = "014102",
-		author = "rendk",
+		author = "rendk, gursingh49",
 		systemVersion = "14.1.0")
 public class TestExecutionTimeKpiKanban {
 
@@ -110,12 +110,8 @@ public class TestExecutionTimeKpiKanban {
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
-										new Document(COLUMN_NAME, "Test case Type")
+										new Document(COLUMN_NAME, "Test Case Type")
 												.append(ORDER, 3)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document(COLUMN_NAME, "Test Case Status")
-												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document(COLUMN_NAME, "Execution Time")
