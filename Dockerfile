@@ -13,7 +13,7 @@ RUN yum install -y shadow-utils \
     && yum clean all -y
 
 # Set the environment variables
-ENV CONFIG_LOCATION="/app/properties/customapi.properties" \
+ENV CONFIG_LOCATION="/app/properties/knowhow-api.properties" \
     certhostpath="/app/certs/" \
     keytoolalias="myknowhow" \
     JAVA_OPTS="" \ 
@@ -23,10 +23,10 @@ ENV CONFIG_LOCATION="/app/properties/customapi.properties" \
 WORKDIR /app
 
 # Copy your application files to the container
-ARG JAR_FILE=target/customapi-exec.jar
-ADD ${JAR_FILE} /app/customapi.jar
+ARG JAR_FILE=target/knowhow-api-exec.jar
+ADD ${JAR_FILE} /app/knowhow-api.jar
 
-COPY src/main/resources/application.properties /app/properties/customapi.properties
+COPY src/main/resources/application.properties /app/properties/knowhow-api.properties
 COPY start_combined_collector.sh /app/start_combined_collector.sh
 
 # Give execute permissions to the script

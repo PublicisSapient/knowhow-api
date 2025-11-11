@@ -1146,13 +1146,9 @@ public enum KPIExcelColumn {
 					"SLA Breached (Y / N)")),
 
 	TEST_EXECUTION_TIME(
-			"kpi196",
-			Arrays.asList(
-					"Sprint Name", "Test Case ID", "Test case Type", "Test Case Status", "Execution Time")),
+			"kpi196", Arrays.asList("Sprint Name", "Test Case ID", "Test Case Type", "Execution Time")),
 	TEST_EXECUTION_TIME_KANBAN(
-			"kpi197",
-			Arrays.asList(
-					"Project Name", "Test Case ID", "Test case Type", " Test Case Status", "Execution Time"));
+			"kpi197", Arrays.asList("Project Name", "Test Case ID", "Test Case Type", "Execution Time"));
 
 	// @formatter:on
 
