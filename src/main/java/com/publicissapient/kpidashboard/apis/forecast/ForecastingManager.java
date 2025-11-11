@@ -118,6 +118,28 @@ public class ForecastingManager {
 	}
 
 	/**
+	 * Add forecasts to DataCount if forecasting is configured for the KPI.
+	 *
+	 * @param dataCount Target DataCount to add forecasts to
+	 * @param historicalData Historical data points for forecasting
+	 * @param kpiId KPI identifier
+	 */
+	public void addForecastsToDataCount(DataCount dataCount, List<DataCount> historicalData, String kpiId) {
+		if (dataCount == null || historicalData == null || historicalData.isEmpty()) {
+			return;
+		}
+
+		try {
+			List<DataCount> forecasts = generateForecasts(historicalData, kpiId);
+			if (!forecasts.isEmpty()) {
+				dataCount.setForecasts(forecasts);
+			}
+		} catch (Exception e) {
+			log.error("Error adding forecasts for KPI {}", kpiId, e);
+		}
+	}
+
+	/**
 	 * Get KPI master configuration from cache.
 	 *
 	 * @param kpiId

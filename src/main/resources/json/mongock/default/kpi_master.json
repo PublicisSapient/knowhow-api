@@ -856,7 +856,8 @@
     "aggregationCriteria": "sum",
     "kpiFilter": "radioButton",
     "isAdditionalFilterSupport": true,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi72",
@@ -909,7 +910,8 @@
       "80-94",
       "95-105",
       "105-"
-    ]
+    ],
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi5",
@@ -959,6 +961,7 @@
     "aggregationCriteria": "deviation",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
+    "forecastModel": "exponentialSmoothing",
     "maturityRange": [
       "60-",
       "40-60",
@@ -1002,6 +1005,7 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
+    "forecastModel": "exponentialSmoothing",
     "maturityRange": [
       "1-2",
       "2-3",
@@ -1077,7 +1081,8 @@
     "showTrend": false,
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi84",
@@ -1374,7 +1379,8 @@
     "showTrend": true,
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "linearRegression"
   },
   {
     "kpiId": "kpi55",
@@ -2218,7 +2224,8 @@
     "showTrend": true,
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "linearRegression"
   },
   {
     "kpiId": "kpi121",
@@ -3288,7 +3295,8 @@
             "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi149-Happiness+Index"
           }
         }
-      ]
+      ],
+      "forecastModel": "linearRegression"
     },
     "kpiUnit": "",
     "maxValue": "5",
@@ -3443,7 +3451,8 @@
       "71-80",
       "81-90",
       "91-"
-    ]
+    ],
+    "forecastModel": "linearRegression"
   },
   {
     "kpiId": "kpi154",
@@ -4006,7 +4015,8 @@
       "20-10",
       "10-"
     ],
-    "kpiFilter": "radioButton"
+    "kpiFilter": "radioButton",
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi163",
