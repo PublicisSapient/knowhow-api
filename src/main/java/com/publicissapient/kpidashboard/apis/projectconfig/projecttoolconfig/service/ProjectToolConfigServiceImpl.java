@@ -205,7 +205,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 		projectToolConfig.getScmToolConfig().forEach(scmtoolConfig -> scmtoolConfig.getBranches().forEach(branch -> {
 			ProjectToolConfig toolConfig = ProjectToolConfig.builder()
 					.basicProjectConfigId(projectToolConfig.getBasicProjectConfigId())
-					.connectionId(scmtoolConfig.getConnectionId()).branch(branch)
+					.connectionId(projectToolConfig.getConnectionId()).branch(branch)
 					.repositoryName(scmtoolConfig.getRepositoryName()).toolName(projectToolConfig.getToolName())
 					.gitFullUrl(scmtoolConfig.getGitFullUrl()).build();
 			projectToolConfigList.add(toolConfig);
