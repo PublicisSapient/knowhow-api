@@ -3451,8 +3451,7 @@
       "71-80",
       "81-90",
       "91-"
-    ],
-    "forecastModel": "linearRegression"
+    ]
   },
   {
     "kpiId": "kpi154",

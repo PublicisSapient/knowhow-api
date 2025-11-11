@@ -53,7 +53,6 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(KPICode.COST_OF_DELAY.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
 		updateForecastModel(KPICode.COST_OF_DELAY_KANBAN.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
 		updateForecastModel(KPICode.HAPPINESS_INDEX_RATE.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
-		updateForecastModel(KPICode.PI_PREDICTABILITY.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
 
 		log.info("Completed forecast model update for 3 KPIs");
 	}
@@ -70,7 +69,6 @@ public class ForecastModelUpdateChangeUnit {
         removeForecastModel(KPICode.COST_OF_DELAY.getKpiId());
         removeForecastModel(KPICode.COST_OF_DELAY_KANBAN.getKpiId());
         removeForecastModel(KPICode.HAPPINESS_INDEX_RATE.getKpiId());
-        removeForecastModel(KPICode.PI_PREDICTABILITY.getKpiId());
 
 		log.info("Completed rollback of forecast model updates");
 	}
