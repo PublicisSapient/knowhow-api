@@ -804,13 +804,20 @@ public abstract class ToolsKPIService<R, S> {
 				Map<String, List<DataCount>> valueMap =
 						obj instanceof Map<?, ?> ? (Map<String, List<DataCount>>) obj : new HashMap<>();
 				if (MapUtils.isNotEmpty(valueMap)) {
-						valueMap.remove(Constant.DEFAULT);
+					valueMap.remove(Constant.DEFAULT);
 					valueMap.forEach(
 							(key, value) -> {
 								List<DataCount> trendValues = new ArrayList<>();
+								Pair<String, String> maturityValue = getMaturityValuePair(kpiName, kpiId, value);
+								String aggregateValue = null;
+								String maturity = null;
+								if (maturityValue != null) {
+									aggregateValue = maturityValue.getValue();
+									maturity = maturityValue.getKey();
+								}
 								trendValues.add(
 										new DataCount(
-												node.getName(),  getList(value, kpiName)));
+												node.getName(), maturity, aggregateValue, getList(value, kpiName)));
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
 							});
 				}
