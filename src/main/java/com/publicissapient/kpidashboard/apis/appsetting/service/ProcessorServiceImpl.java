@@ -48,6 +48,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -296,7 +297,7 @@ public class ProcessorServiceImpl implements ProcessorService {
 			} catch (HttpClientErrorException ex) {
 				statuscode = ex.getStatusCode().value();
 				isSuccess = false;
-			} catch (ResourceAccessException ex) {
+			} catch (HttpServerErrorException ex) {
 				isSuccess = false;
 			}
 		}
