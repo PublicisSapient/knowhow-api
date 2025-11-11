@@ -164,8 +164,10 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 				&& hasTool(projectToolConfig.getBasicProjectConfigId(), ProcessorConstants.JIRA)) {
 			return new ServiceResponse(false, "Jira already configured for this project", null);
 		}
+
 		if (CollectionUtils.isNotEmpty(projectToolConfig.getScmToolConfig())) {
-			return new ServiceResponse(true, "Created and Saved new SCM Tool List", setScmToolConfig(projectToolConfig));
+			return new ServiceResponse(true, "Created and Saved new SCM Tool List",
+					setScmToolConfig(projectToolConfig));
 		}
 
         if (isRepoTool(projectToolConfig, projectToolConfig.getBasicProjectConfigId().toString())) {
@@ -199,17 +201,15 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 	}
 
     private List<ProjectToolConfig> setScmToolConfig(ProjectToolConfig projectToolConfig) {
-        List<ProjectToolConfig> projectToolConfigList = new ArrayList<>();
-        projectToolConfig.getScmToolConfig().forEach(scmtoolConfig -> {
-            ProjectToolConfig toolConfig = ProjectToolConfig.builder()
-                    .basicProjectConfigId(projectToolConfig.getBasicProjectConfigId())
-                    .connectionId(scmtoolConfig.getConnectionId())
-                    .branch(scmtoolConfig.getBranch())
-                    .repositoryName(scmtoolConfig.getRepositoryName())
-                    .toolName(scmtoolConfig.getToolName())
-                    .gitFullUrl(scmtoolConfig.getGitFullUrl()).build();
-            projectToolConfigList.add(toolConfig);
-        });
+		List<ProjectToolConfig> projectToolConfigList = new ArrayList<>();
+		projectToolConfig.getScmToolConfig().forEach(scmtoolConfig -> scmtoolConfig.getBranches().forEach(branch -> {
+			ProjectToolConfig toolConfig = ProjectToolConfig.builder()
+					.basicProjectConfigId(projectToolConfig.getBasicProjectConfigId())
+					.connectionId(scmtoolConfig.getConnectionId()).branch(branch)
+					.repositoryName(scmtoolConfig.getRepositoryName()).toolName(projectToolConfig.getToolName())
+					.gitFullUrl(scmtoolConfig.getGitFullUrl()).build();
+			projectToolConfigList.add(toolConfig);
+		}));
         toolRepository.saveAll(projectToolConfigList);
         cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
         cacheService.clearCache(CommonConstant.CACHE_TOOL_CONFIG_MAP);
