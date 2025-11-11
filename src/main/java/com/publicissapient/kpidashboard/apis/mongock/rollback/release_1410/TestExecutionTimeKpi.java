@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @ChangeUnit(
 		id = "r_test_execution_time_kpi",
 		order = "014101",
-		author = "rendk",
+		author = "rendk, gursingh49",
 		systemVersion = "14.1.0")
 public class TestExecutionTimeKpi {
 
