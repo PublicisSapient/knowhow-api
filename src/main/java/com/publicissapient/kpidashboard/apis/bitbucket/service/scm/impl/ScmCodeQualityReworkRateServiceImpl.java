@@ -85,7 +85,8 @@ import lombok.extern.slf4j.Slf4j;
  * Lower percentage = Less rework (good)
  * </pre>
  *
- * @author shunaray
+ *
+ * @author valsa anil
  */
 @Slf4j
 @Service
@@ -143,17 +144,33 @@ public class ScmCodeQualityReworkRateServiceImpl
 			List<RepoToolValidationData> validationDataList,
 			Map<ScmCommits, LocalDateTime> commitTimestampMap) {}
 
+	/**
+	 * Returns the qualifier type for this KPI service.
+	 * Currently returns null as this service doesn't require a specific qualifier.
+	 * 
+	 * @return null
+	 */
 	@Override
 	public String getQualifierType() {
 		return null;
 	}
 
+	/**
+	 * Main entry point for calculating rework rate KPI data.
+	 * Processes project node to calculate rework percentages for different filters.
+	 * Returns list of CodeQualityMetricsRes objects with filter1, filter2, and percentage values.
+	 * 
+	 * @param kpiRequest the KPI request containing filters and parameters
+	 * @param kpiElement the KPI element to populate with results
+	 * @param projectNode the project node for which to calculate metrics
+	 * @return populated KpiElement with List<CodeQualityMetricsRes> in trendValueList
+	 * @throws ApplicationException if error occurs during processing
+	 */
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
-		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		Map<String, ReworkCalculation> reworkMap = new HashMap<>();
-		calculateProjectKpiPercentage(kpiElement, nodeMap, projectNode, kpiRequest, reworkMap);
+		calculateProjectKpiPercentage( projectNode, kpiRequest, reworkMap);
 
 		log.debug(
 				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
@@ -164,13 +181,22 @@ public class ScmCodeQualityReworkRateServiceImpl
 		return kpiElement;
 	}
 
+	/**
+	 * Fetches SCM commit data from database for rework rate calculation.
+	 * Extends the date range by 21 days to include reference period data.
+	 * 
+	 * @param leafNodeList list of leaf nodes to process
+	 * @param startDate start date for data retrieval (not used, calculated from kpiRequest)
+	 * @param endDate end date for data retrieval (not used, calculated from kpiRequest)
+	 * @param kpiRequest KPI request containing date range parameters
+	 * @return map containing commits and assignee data
+	 */
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultMap = new HashMap<>();
 
 		// Fetch commits from (current - dataPoints - 21 days) for reference data
-		// T-21
 		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
 		LocalDateTime extendedStartDate =
 				dateRange.getStartDate().atStartOfDay().minusDays(REWORK_DAYS_AGO);
@@ -191,26 +217,53 @@ public class ScmCodeQualityReworkRateServiceImpl
 		return resultMap;
 	}
 
+	/**
+	 * Calculates KPI metrics from provided data map.
+	 * Not implemented for this service as calculations are done in other methods.
+	 * 
+	 * @param stringObjectMap map containing metric calculation data
+	 * @return null as this method is not used
+	 */
 	@Override
 	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
 		return null;
 	}
 
+	/**
+	 * Calculates aggregated KPI value from list of values.
+	 * 
+	 * @param valueList list of double values to aggregate
+	 * @param kpiId KPI identifier
+	 * @return aggregated KPI value
+	 */
 	@Override
 	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
 		return calculateKpiValueForDouble(valueList, kpiId);
 	}
 
+	/**
+	 * Calculates threshold value for rework rate KPI from field mapping.
+	 * 
+	 * @param fieldMapping field mapping containing threshold configuration
+	 * @return threshold value for rework rate KPI
+	 */
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
 				fieldMapping.getThresholdValueKPI173(), KPICode.REWORK_RATE.getKpiId());
 	}
 
+	/**
+	 * Calculates rework rate percentages for a project across multiple time periods.
+	 * Processes each data point in the requested time range and calculates rework metrics
+	 * for both overall project and individual developers.
+	 * 
+	 * @param projectLeafNode the project node to process
+	 * @param kpiRequest KPI request containing duration and data points
+	 * @param reworkMap map to store calculated rework metrics by filter key
+	 */
 	@SuppressWarnings("unchecked")
 	private void calculateProjectKpiPercentage(
-			KpiElement kpiElement,
-			Map<String, Node> mapTmp,
 			Node projectLeafNode,
 			KpiRequest kpiRequest,
 			Map<String, ReworkCalculation> reworkMap) {
@@ -293,6 +346,14 @@ public class ScmCodeQualityReworkRateServiceImpl
 		}
 	}
 
+	/**
+	 * Processes SCM tool data to calculate rework metrics.
+	 * Filters commits by branch, excludes merge commits, and calculates rework
+	 * for both overall metrics and individual developers.
+	 * 
+	 * @param toolContext context containing tool data and configuration
+	 * @param reworkMap map to store calculated rework metrics
+	 */
 	private void processToolData(
 			ToolDataContext toolContext, Map<String, ReworkCalculation> reworkMap) {
 		if (!DeveloperKpiHelper.isValidTool(toolContext.tool())) {
@@ -322,6 +383,15 @@ public class ScmCodeQualityReworkRateServiceImpl
 		prepareUserValidationData(userWiseCommits, toolContext, reworkMap, branchName);
 	}
 
+	/**
+	 * Prepares user-specific validation data by calculating rework metrics
+	 * for each developer who has commits in the analysis period.
+	 * 
+	 * @param userWiseCommits map of commits grouped by user email
+	 * @param toolContext context containing tool data and configuration
+	 * @param reworkMap map to store calculated rework metrics
+	 * @param branchName branch name for filter key construction
+	 */
 	private void prepareUserValidationData(
 			Map<String, List<ScmCommits>> userWiseCommits,
 			ToolDataContext toolContext,
@@ -348,12 +418,15 @@ public class ScmCodeQualityReworkRateServiceImpl
 	}
 
 	/**
-	 * Core rework calculation logic
-	 *
-	 * @param commits All commits (reference + analysis period)
-	 * @param periodRange Current analysis period
-	 * @param commitTimestampMap Map of commit timestamps
-	 * @return Map containing overallReworkRate, totalChanges, and reworkChanges
+	 * Core rework calculation logic for a specific time period.
+	 * Partitions commits into reference period (past 21 days) and analysis period,
+	 * builds reference pool from past changes, and calculates rework metrics.
+	 * 
+	 * @param commits all commits (reference + analysis period)
+	 * @param periodRange current analysis period
+	 * @param commitTimestampMap map of commit timestamps
+	 * @param reworkMap map to store calculated rework metrics
+	 * @param kpiGroup filter key for grouping results
 	 */
 	private void calculateReworkRateForPeriod(
 			List<ScmCommits> commits,
@@ -371,7 +444,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 		// Further partition by referenceCommits and analysisCommits
 		Map<Boolean, List<ScmCommits>> referenceAndAnalysisPartition =
 				commits.stream()
-						.filter(commit -> commitTimestampMap.containsKey(commit))
+						.filter(commitTimestampMap::containsKey)
 						.collect(
 								Collectors.partitioningBy(
 										commit -> commitTimestampMap.get(commit).isBefore(periodStart)));
@@ -386,31 +459,14 @@ public class ScmCodeQualityReworkRateServiceImpl
 		calculateReworkMetrics(analysisCommits, referencePool, reworkMap, kpiGroup);
 	}
 
-	public static Map<String, String> retrieveKeys(String filter1) {
-		// Split the string by " -> " into parts
-		String[] parts = filter1.split(" -> ");
 
-		if (parts.length == 3) {
-			// Create a map to hold the results
-			Map<String, String> filterComponents = new HashMap<>();
-
-			// Add the components to the map with appropriate keys
-			filterComponents.put("branchName", parts[0].trim());
-			filterComponents.put("repoName", parts[1].trim());
-			filterComponents.put("projectName", parts[2].trim());
-
-			return filterComponents;
-		}
-
-		// Return null or an empty map if the input format is incorrect
-		return null;
-	}
 
 	/**
-	 * Creates a map of files to line numbers that were changed in the reference period
-	 *
-	 * @param referenceCommits Commits from the past 21 days
-	 * @return Map of file path to set of changed line numbers
+	 * Creates a reference pool of all lines changed in the past 21 days.
+	 * This pool is used to identify rework in the current analysis period.
+	 * 
+	 * @param referenceCommits commits from the past 21 days
+	 * @return map of file path to set of changed line numbers
 	 */
 	private Map<String, Set<Integer>> createReferencePool(List<ScmCommits> referenceCommits) {
 		Map<String, Set<Integer>> referencePool = new HashMap<>();
@@ -432,12 +488,15 @@ public class ScmCodeQualityReworkRateServiceImpl
 		return referencePool;
 	}
 
+
 	/**
-	 * Calculates the rework metrics for analysis period commits
-	 *
-	 * @param commits Analysis period commits
-	 * @param referencePool Lines changed in reference period
-	 * @return ReworkCalculation with all metrics
+	 * Calculates rework metrics for analysis period commits.
+	 * Processes each file change to count total changes and rework against reference pool.
+	 * 
+	 * @param commits analysis period commits
+	 * @param referencePool lines changed in reference period
+	 * @param reworkMap map to store calculated rework metrics
+	 * @param kpiGroup filter key for grouping results
 	 */
 	private void calculateReworkMetrics(
 			List<ScmCommits> commits,
@@ -455,16 +514,28 @@ public class ScmCodeQualityReworkRateServiceImpl
 				.forEach(fileChange -> processFileChange(fileChange, referencePool, reworkMap, kpiGroup));
 	}
 
+	/**
+	 * Validates if a file change is valid for rework calculation.
+	 * Checks for non-null file path and non-empty changed line numbers.
+	 * 
+	 * @param fileChange the file change to validate
+	 * @return true if file change is valid, false otherwise
+	 */
 	private boolean isValidFileChange(ScmCommits.FileChange fileChange) {
 		return fileChange.getFilePath() != null
 				&& CollectionUtils.isNotEmpty(fileChange.getChangedLineNumbers());
 	}
 
+
 	/**
-	 * Processes a single file change to count rework
-	 *
-	 * @param fileChange Current file change
-	 * @param referencePool Reference pool of past changes
+	 * Processes a single file change to count rework against reference pool.
+	 * Calculates total changes and identifies rework by comparing with reference lines.
+	 * Note: Reference pool should not be modified during analysis period.
+	 * 
+	 * @param fileChange current file change to process
+	 * @param referencePool reference pool of past changes
+	 * @param reworkMap map to store calculated rework metrics
+	 * @param kpiGroup filter key for grouping results
 	 */
 	private void processFileChange(
 			ScmCommits.FileChange fileChange,
@@ -493,6 +564,15 @@ public class ScmCodeQualityReworkRateServiceImpl
 		}
 	}
 
+	/**
+	 * Checks if any commits exist within the specified analysis period.
+	 * Used to determine if a developer should be included in rework calculations.
+	 * 
+	 * @param commits list of commits to check
+	 * @param periodRange the analysis period date range
+	 * @param commitTimestampCache cache of commit timestamps
+	 * @return true if commits exist in period, false otherwise
+	 */
 	private boolean hasCommitsInPeriod(
 			List<ScmCommits> commits,
 			CustomDateRange periodRange,

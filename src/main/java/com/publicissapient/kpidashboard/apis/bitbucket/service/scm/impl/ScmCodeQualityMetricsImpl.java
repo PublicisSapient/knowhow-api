@@ -42,36 +42,31 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * SCM Rework Rate Service Implementation
+ * SCM Code Quality Metrics Composite Service Implementation
  *
- * <h3>REWORK RATE LOGIC</h3>
+ * <h3>PURPOSE</h3>
+ * Aggregates and combines multiple SCM code quality metrics (Rework Rate and Revert Rate)
+ * into a unified response for comprehensive code quality analysis.
  *
- * <b>What:</b> Measures how much code is being changed that was already changed in the past 21
- * days.
+ * <h3>METRICS INCLUDED</h3>
+ * - <b>Rework Rate:</b> Percentage of code changes that modify recently changed lines (within 21 days)
+ * - <b>Revert Rate:</b> Percentage of commits that are later reverted, indicating unstable changes
  *
- * <p><b>Why:</b> High rework indicates quality issues - developers are fixing/changing recently
- * written code.
+ * <h3>OUTPUT FORMAT</h3>
+ * Returns DataCountGroup list containing:
+ * - filter1: "develop -> knowhow-common -> KnowHOW" (branch -> repository -> project)
+ * - filter2: "Overall" or specific developer name
+ * - value: Array of data objects with:
+ *   - data: "Rework Rate" or "Revert Rate"
+ *   - date: "10-Nov-2025 to 16-Nov-2025"
+ *   - kpiGroup: "develop -> knowhow-common -> KnowHOW#Overall"
+ *   - value: percentage (0.0 to 100.0)
+ *   - sprojectName: "KnowHOW"
  *
- * <p><b>How it works:</b>
- *
- * <pre>
- * 1. Look back 21 days (Past three weeks) to build a "reference pool" of all changed lines
- * 2. For current period, check if any changed lines were in the reference pool
- * 3. Rework Rate = (reworked lines / total lines changed) * 100
- *
- * Example:
- * - Day 1: Changed lines 10-20 in FileA.java (goes into reference pool)
- * - Day 15: Changed lines 15-25 in FileA.java
- *   - Lines 15-20 are rework (were changed before)
- *   - Lines 21-25 are new changes
- *   - Rework = 6 lines, Total = 11 lines
- *   - Rate = (6/11) * 100 = 54.55%
- *
- * Higher percentage = More rework (bad)
- * Lower percentage = Less rework (good)
- * </pre>
- *
- * @author shunaray
+ * @author valsa anil
+ * @since 2025
+ * @see ScmCodeQualityReworkRateServiceImpl
+ * @see ScmCodeQualityRevertRateServiceImpl
  */
 @Slf4j
 @Service
@@ -82,51 +77,28 @@ public class ScmCodeQualityMetricsImpl
 	@Autowired private ScmCodeQualityRevertRateServiceImpl scmCodeQualityRevertRateServiceImpl;
 	@Autowired private ScmCodeQualityReworkRateServiceImpl scmCodeQualityReworkRateServiceImpl;
 
+	/**
+	 * Returns the qualifier type for this KPI service.
+	 * 
+	 * @return KPI code name for code quality revert rate
+	 */
 	@Override
 	public String getQualifierType() {
 		return KPICode.CODE_QUALITY_REVERT_RATE.name();
 	}
 
-	// @Override
-	// public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
-	// Node projectNode)
-	// throws ApplicationException {
-	// Map<String, ReworkCalculation> reworkMap = new HashMap<>();
-	// Map<String, MetricsHolder> revertMap = new HashMap<>();
-	//
-	// try {
-	// KpiElement reworkRateElement =
-	// scmCodeQualityReworkRateServiceImpl.getKpiData(kpiRequest, new KpiElement(),
-	// projectNode);
-	// if (reworkRateElement != null && reworkRateElement.getTrendValueList() !=
-	// null) {
-	// reworkMap = (Map<String, ReworkCalculation>)
-	// reworkRateElement.getTrendValueList();
-	// }
-	// } catch (Exception e) {
-	// log.error("Error processing Rework Rate KPI: {}", e.getMessage(), e);
-	// }
-	//
-	// try {
-	// KpiElement revertRateElement =
-	// scmCodeQualityRevertRateServiceImpl.getKpiData(kpiRequest, new KpiElement(),
-	// projectNode);
-	// if (revertRateElement != null && revertRateElement.getTrendValueList() !=
-	// null) {
-	// revertMap = (Map<String, MetricsHolder>)
-	// revertRateElement.getTrendValueList();
-	// }
-	// } catch (Exception e) {
-	// log.error("Error processing Revert Rate KPI: {}", e.getMessage(), e);
-	// }
-	//
-	// List<DataCountGroup> result = convertMetricsToDataCountGroups(reworkMap,
-	// revertMap, kpiRequest);
-	// kpiElement.setTrendValueList(result);
-	//
-	// return kpiElement;
-	// }
 
+	/**
+	 * Retrieves and processes KPI data for both rework rate and revert rate metrics.
+	 * Uses parallel processing to fetch data from both services simultaneously for optimal performance.
+	 * Combines results into unified DataCountGroup format for UI consumption.
+	 * 
+	 * @param kpiRequest the KPI request containing filters, date range, and parameters
+	 * @param kpiElement the KPI element to populate with combined results
+	 * @param projectNode the project node for which to calculate metrics
+	 * @return populated KpiElement with List<DataCountGroup> in trendValueList
+	 * @throws ApplicationException if error occurs during data processing or service calls
+	 */
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
@@ -169,12 +141,14 @@ public class ScmCodeQualityMetricsImpl
 				reworkMap = reworkFuture.get(); // Retrieve and store result from rework task
 			} catch (InterruptedException | ExecutionException e) {
 				log.error("Error processing Rework Rate KPI: {}", e.getMessage(), e);
+                Thread.currentThread().interrupt();
 			}
 
 			try {
 				revertMap = revertFuture.get(); // Retrieve and store result from revert task
 			} catch (InterruptedException | ExecutionException e) {
 				log.error("Error processing Revert Rate KPI: {}", e.getMessage(), e);
+                Thread.currentThread().interrupt();
 			}
 
 		} finally {
@@ -187,6 +161,15 @@ public class ScmCodeQualityMetricsImpl
 		return kpiElement;
 	}
 
+	/**
+	 * Converts rework and revert metrics maps into DataCountGroup format for UI consumption.
+	 * Groups metrics by filter combinations and adds date labels.
+	 * 
+	 * @param reworkMap map of rework calculations by filter key
+	 * @param revertMap map of revert metrics by filter key
+	 * @param kpiRequest request containing duration and data points for date calculation
+	 * @return list of DataCountGroup objects for UI display
+	 */
 	private List<DataCountGroup> convertMetricsToDataCountGroups(
 			Map<String, ReworkCalculation> reworkMap,
 			Map<String, MetricsHolder> revertMap,
@@ -266,16 +249,40 @@ public class ScmCodeQualityMetricsImpl
 		return new ArrayList<>(groupMap.values());
 	}
 
+	/**
+	 * Extracts project name from filter string.
+	 * Expected format: "branch -> repository -> project"
+	 * 
+	 * @param filter1 the filter string containing branch, repository, and project
+	 * @return project name or empty string if not found
+	 */
 	private String extractProjectName(String filter1) {
 		String[] parts = filter1.split(" -> ");
 		return parts.length >= 3 ? parts[2] : "";
 	}
 
+	/**
+	 * Calculates KPI metrics from provided data map.
+	 * Currently not implemented for this composite service.
+	 * 
+	 * @param stringObjectMap map containing metric calculation data
+	 * @return null as this method is not used in current implementation
+	 */
 	@Override
 	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
 		return null;
 	}
 
+	/**
+	 * Fetches KPI data from database.
+	 * Not implemented as this composite service delegates to individual services.
+	 * 
+	 * @param leafNodeList list of leaf nodes to process
+	 * @param startDate start date for data retrieval
+	 * @param endDate end date for data retrieval
+	 * @param kpiRequest KPI request parameters
+	 * @return empty map as data fetching is handled by individual services
+	 */
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
