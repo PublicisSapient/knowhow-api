@@ -16,9 +16,10 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
 import org.bson.types.ObjectId;
 
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
+
 public interface ScmRepositoryService {
-    ScmConnectionMetaDataDTO getScmRepositoryListByConnectionId(ObjectId connectionId);
+	ScmConnectionMetaDataDTO getScmRepositoryListByConnectionId(ObjectId connectionId);
 }

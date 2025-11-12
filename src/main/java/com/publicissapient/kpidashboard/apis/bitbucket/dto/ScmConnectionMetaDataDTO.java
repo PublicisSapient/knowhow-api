@@ -16,14 +16,14 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.dto;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 @Data
 public class ScmConnectionMetaDataDTO {
-    private Boolean initialExecutionOngoing;
-    private Boolean executionSuccess;
-    private Long executionEndedAt;
-    private List<ScmRepositoryDTO> repositories;
+	private Boolean initialExecutionOngoing;
+	private Boolean executionSuccess;
+	private Long executionEndedAt;
+	private List<ScmRepositoryDTO> repositories;
 }

@@ -18,25 +18,11 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.service;
 
-import com.google.gson.Gson;
-import com.publicissapient.kpidashboard.apis.appsetting.config.ProcessorUrlConfig;
-import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmRepositoryService;
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolsStatusResponse;
-import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
-import com.publicissapient.kpidashboard.apis.util.CommonUtils;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
-import com.publicissapient.kpidashboard.common.model.ProcessorExecutionBasicConfig;
-import com.publicissapient.kpidashboard.common.model.application.SprintTraceLog;
-import com.publicissapient.kpidashboard.common.model.generic.Processor;
-import com.publicissapient.kpidashboard.common.repository.application.SprintTraceLogRepository;
-import com.publicissapient.kpidashboard.common.repository.generic.ProcessorRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import javax.ws.rs.core.Context;
+
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,10 +40,26 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.ws.rs.core.Context;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.google.gson.Gson;
+import com.publicissapient.kpidashboard.apis.appsetting.config.ProcessorUrlConfig;
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmRepositoryService;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolsStatusResponse;
+import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
+import com.publicissapient.kpidashboard.apis.util.CommonUtils;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
+import com.publicissapient.kpidashboard.common.model.ProcessorExecutionBasicConfig;
+import com.publicissapient.kpidashboard.common.model.application.SprintTraceLog;
+import com.publicissapient.kpidashboard.common.model.generic.Processor;
+import com.publicissapient.kpidashboard.common.repository.application.SprintTraceLogRepository;
+import com.publicissapient.kpidashboard.common.repository.generic.ProcessorRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class provides various methods related to operations on Processor Data
@@ -88,8 +90,7 @@ public class ProcessorServiceImpl implements ProcessorService {
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private CacheService cacheService;
 	@Autowired private ConfigHelperService configHelperService;
-    @Autowired
-    private ScmRepositoryService scmRepositoryService;
+	@Autowired private ScmRepositoryService scmRepositoryService;
 
 	@Override
 	public ServiceResponse getAllProcessorDetails() {
@@ -275,11 +276,14 @@ public class ProcessorServiceImpl implements ProcessorService {
 
 	@Override
 	public ServiceResponse fetchScmConfigByConnectionId(String connection) {
-		String url = processorUrlConfig.getProcessorUrl(ProcessorConstants.BITBUCKET).replaceFirst("/processor/run",
-				"/api/scm/connection/sync-metadata");
+		String url =
+				processorUrlConfig
+						.getProcessorUrl(ProcessorConstants.BITBUCKET)
+						.replaceFirst("/processor/run", "/api/scm/connection/sync-metadata");
 		boolean isSuccess = true;
 
-		httpServletRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		httpServletRequest =
+				((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 		String token = httpServletRequest.getHeader(AUTHORIZATION);
 		token = CommonUtils.handleCrossScriptingTaintedValue(token);
 		int statuscode = HttpStatus.NOT_FOUND.value();
@@ -292,7 +296,8 @@ public class ProcessorServiceImpl implements ProcessorService {
 				Gson gson = new Gson();
 				String payload = gson.toJson(connection);
 				HttpEntity<String> requestEntity = new HttpEntity<>(payload, headers);
-				ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+				ResponseEntity<String> resp =
+						restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
 				statuscode = resp.getStatusCode().value();
 			} catch (HttpClientErrorException ex) {
 				statuscode = ex.getStatusCode().value();
@@ -301,13 +306,14 @@ public class ProcessorServiceImpl implements ProcessorService {
 				isSuccess = false;
 			}
 		}
-		if (HttpStatus.NOT_FOUND.value() == statuscode || HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
+		if (HttpStatus.NOT_FOUND.value() == statuscode
+				|| HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
 			isSuccess = false;
 		}
-		ScmConnectionMetaDataDTO scmConnectionMetaDataDTO = scmRepositoryService
-				.getScmRepositoryListByConnectionId(new ObjectId(connection));
-		return new ServiceResponse(isSuccess, "Got response: " + statuscode + " for url: " + url,
-				scmConnectionMetaDataDTO);
+		ScmConnectionMetaDataDTO scmConnectionMetaDataDTO =
+				scmRepositoryService.getScmRepositoryListByConnectionId(new ObjectId(connection));
+		return new ServiceResponse(
+				isSuccess, "Got response: " + statuscode + " for url: " + url, scmConnectionMetaDataDTO);
 	}
 
 	/**

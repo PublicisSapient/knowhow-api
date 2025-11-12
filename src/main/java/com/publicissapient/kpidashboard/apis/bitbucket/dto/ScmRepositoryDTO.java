@@ -16,19 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import java.util.List;
+
 import org.bson.types.ObjectId;
 
-import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
 public class ScmRepositoryDTO {
-    private String repositoryName;
-    private String repositoryUrl;
-    private ObjectId connectionId;
-    private long lastUpdatedTimestamp;
-    private int order;
-    private List<ScmBranchDTO> branchList;
+	private String repositoryName;
+	private String repositoryUrl;
+	private ObjectId connectionId;
+	private long lastUpdatedTimestamp;
+	private int order;
+	private List<ScmBranchDTO> branchList;
 }
