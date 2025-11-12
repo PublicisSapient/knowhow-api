@@ -3615,6 +3615,66 @@
       "isShown": true,
       "isDefault": false
     }]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi196",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Sprint Name",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case Type",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Execution Time",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi197",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Project Name",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case Type",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Execution Time",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 
