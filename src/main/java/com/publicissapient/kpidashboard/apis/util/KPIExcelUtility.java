@@ -822,7 +822,6 @@ public class KPIExcelUtility {
 						excelData.setSprintName(sprintProject);
 						excelData.setTestCaseId(testIssue.getNumber());
 						excelData.setTestCaseType(testCaseType);
-						excelData.setTestCaseStatus(testIssue.getTestCaseStatus());
 						excelData.setExecutionTime(String.valueOf(avgExecutionTimeSec));
 
 						kpiExcelData.add(excelData);
