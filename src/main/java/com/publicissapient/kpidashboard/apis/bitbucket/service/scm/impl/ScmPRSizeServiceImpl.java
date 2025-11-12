@@ -213,7 +213,7 @@ public class ScmPRSizeServiceImpl
 
         mergeRequestsForBranch.stream().forEach(scmMergeRequests -> {
             PullRequestsValue pr = new PullRequestsValue();
-            pr.setId(scmMergeRequests.getExternalId());
+            pr.setLabel(scmMergeRequests.getExternalId());
             pr.setSize(scmMergeRequests.getLinesChanged().toString());
             pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
             pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
@@ -253,7 +253,7 @@ public class ScmPRSizeServiceImpl
                             String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
                             userMergeRequests.stream().forEach(scmMergeRequests -> {
                                 PullRequestsValue pr = new PullRequestsValue();
-                                pr.setId(scmMergeRequests.getExternalId());
+                                pr.setLabel(scmMergeRequests.getExternalId());
                                 pr.setSize(scmMergeRequests.getLinesChanged().toString());
                                 pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
                                 pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));

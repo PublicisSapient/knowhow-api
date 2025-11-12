@@ -308,7 +308,6 @@ public final class DeveloperKpiHelper {
 	 * @param dateLabel Date label for the data point
 	 * @param kpiGroup KPI group identifier
 	 * @param pullRequestsValues Numeric pullRequestsValues (Long or Double)
-	 * @param hoverValue Additional hover information
 	 * @param dataCountMap Map to store/update data counts
 	 */
 	public static void setDataCounts(
@@ -333,21 +332,21 @@ public final class DeveloperKpiHelper {
 
 			// Get existing PRs (initialize if null)
 			List<PullRequestsValue> existingPrValues =
-					existingDataCount.getPrValues() != null ? existingDataCount.getPrValues() : new ArrayList<>();
+					existingDataCount.getBubblePoints() != null ? existingDataCount.getBubblePoints() : new ArrayList<>();
 
 			// Build a set of existing PR IDs for fast duplicate check
 			Set<String> existingIds = existingPrValues.stream()
-					.map(PullRequestsValue::getId)
+					.map(PullRequestsValue::getLabel)
 					.collect(Collectors.toSet());
 
 			// Add only new PRs (avoid duplicates)
 			for (PullRequestsValue newPr : pullRequestsValues) {
-				if (!existingIds.contains(newPr.getId())) {
+				if (!existingIds.contains(newPr.getLabel())) {
 					existingPrValues.add(newPr);
 				}
 			}
 
-			existingDataCount.setPrValues(existingPrValues);
+			existingDataCount.setBubblePoints(existingPrValues);
 
 		} else {
 			// Create a new DataCount entry
@@ -355,7 +354,7 @@ public final class DeveloperKpiHelper {
 			newDataCount.setSProjectName(projectName);
 			newDataCount.setDate(dateLabel);
 			newDataCount.setKpiGroup(kpiGroup);
-			newDataCount.setPrValues(new ArrayList<>(pullRequestsValues));
+			newDataCount.setBubblePoints(new ArrayList<>(pullRequestsValues));
 			dataCounts.add(newDataCount);
 		}
 	}

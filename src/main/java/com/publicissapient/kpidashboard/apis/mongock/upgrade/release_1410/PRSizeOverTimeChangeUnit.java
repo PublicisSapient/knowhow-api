@@ -32,6 +32,9 @@ import java.util.Map;
 @ChangeUnit(id = "pr_size_kpi", order = "014106", author = "aksshriv1", systemVersion = "14.1.0")
 public class PRSizeOverTimeChangeUnit {
 
+    public static final String KPI_ID = "kpiId";
+    public static final String KPI_162 = "kpi162";
+    public static final String KPI_COLUMN_CONFIG = "kpi_column_config";
     private final MongoTemplate mongoTemplate;
 
     public PRSizeOverTimeChangeUnit(MongoTemplate mongoTemplate) {
@@ -45,7 +48,7 @@ public class PRSizeOverTimeChangeUnit {
 
     public void updatekpi162() {
 
-        Bson filter = Filters.eq("kpiId", "kpi162");
+        Bson filter = Filters.eq(KPI_ID, KPI_162);
 
         Bson updates = Updates.combine(
                 Updates.set("kpiName", "PR Distribution"),
@@ -57,12 +60,12 @@ public class PRSizeOverTimeChangeUnit {
 
         mongoTemplate.getCollection("kpi_master").updateOne(filter, updates);
 
-        mongoTemplate.getCollection("kpi_column_config").deleteMany(filter);
+        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
 
 
         Map<String, Object> document = new HashMap<>();
         document.put("basicProjectConfigId", null);
-        document.put("kpiId", "kpi162");
+        document.put(KPI_ID, KPI_162);
 
         List<Map<String, Object>> kpiColumnDetails = Arrays.asList(
                 createColumn("Project", 1),
@@ -76,7 +79,7 @@ public class PRSizeOverTimeChangeUnit {
 
         document.put("kpiColumnDetails", kpiColumnDetails);
 
-        mongoTemplate.getCollection("kpi_column_config").insertOne(new org.bson.Document(document));
+        mongoTemplate.getCollection(PRSizeOverTimeChangeUnit.KPI_COLUMN_CONFIG).insertOne(new org.bson.Document(document));
     }
 
     private Map<String, Object> createColumn(String name, int order) {
@@ -96,11 +99,11 @@ public class PRSizeOverTimeChangeUnit {
 
     public void rollbackkpi162() {
 
-        Bson filter = Filters.eq("kpiId", "kpi162");
+        Bson filter = Filters.eq(KPI_ID, KPI_162);
         // Delete from kpi_master collection
         mongoTemplate.getCollection("kpi_master").deleteOne(filter);
         // (Optional) — delete from kpi_column_config if needed
-        mongoTemplate.getCollection("kpi_column_config").deleteMany(filter);
+        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
     }
 
 }
