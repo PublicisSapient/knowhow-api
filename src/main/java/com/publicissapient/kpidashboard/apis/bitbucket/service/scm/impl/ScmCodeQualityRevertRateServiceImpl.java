@@ -48,39 +48,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author valsa anil
- */
-/**
- * SCM Code Quality Revert Rate Service Implementation
- *
- * <h3>REVERT RATE LOGIC</h3>
- *
- * <b>What:</b> Measures the percentage of merge requests that are later reverted,
- * indicating code stability and quality issues.
- *
- * <p><b>Why:</b> High revert rates suggest unstable code changes, poor testing,
- * or insufficient code review processes.
- *
- * <p><b>How it works:</b>
- *
- * <pre>
- * 1. Analyzes merge requests within specified time periods
- * 2. Identifies reverted pull requests by checking commit patterns
- * 3. Calculates: Revert Rate = (reverted PRs / total merged PRs) * 100
- *
- * Example:
- * - 100 PRs merged in a week
- * - 5 PRs were later reverted
- * - Revert Rate = (5/100) * 100 = 5%
- *
- * <h3>OUTPUT FORMAT</h3>
- * Returns MetricsHolder map containing:
- * - Key: "branch -> repository -> project#developer" or "#Overall"
- * - Value: MetricsHolder with total merges and revert counts
- * @author valsa anil
- * @since 2025
- * @see MetricsHolder
- * @see ScmCodeQualityMetricsImpl
+ * @author shunaray
  */
 @Service
 @Slf4j
@@ -179,6 +147,7 @@ public class ScmCodeQualityRevertRateServiceImpl
         for (int i = 0; i < dataPoints; i++) {
             CustomDateRange periodRange =
                     KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+            String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
             List<ScmMergeRequests> mergedRequestsInRange =
                     DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
@@ -189,6 +158,7 @@ public class ScmCodeQualityRevertRateServiceImpl
                                     tool,
                                     mergedRequestsInRange,
                                     assignees,
+                                    dateLabel,
                                     projectLeafNode.getProjectFilter().getName(),
                                     revertRateMap));
 
@@ -200,6 +170,7 @@ public class ScmCodeQualityRevertRateServiceImpl
             Tool tool,
             List<ScmMergeRequests> mergeRequests,
             Set<Assignee> assignees,
+            String dateLabel,
             String projectName,
             Map<String, MetricsHolder> revertRateMap) {
         if (!DeveloperKpiHelper.isValidTool(tool)) {
@@ -240,9 +211,14 @@ public class ScmCodeQualityRevertRateServiceImpl
             long revertedPRs = countRevertedPRs(userMergeRequests);
 
             String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
-            MetricsHolder calculation = revertRateMap.computeIfAbsent(userKpiGroup, key -> new MetricsHolder());
-            calculation.addTotalRevertPRs( revertedPRs);
+
+            MetricsHolder calculation = revertRateMap.get(userKpiGroup);
+            if (calculation == null) {
+                calculation = new MetricsHolder();
+                revertRateMap.put(userKpiGroup, calculation);
+            }
             calculation.addTotalMerges(userMrCount);
+            calculation.addTotalRevertPRs(revertedPRs);
         }
     }
 
