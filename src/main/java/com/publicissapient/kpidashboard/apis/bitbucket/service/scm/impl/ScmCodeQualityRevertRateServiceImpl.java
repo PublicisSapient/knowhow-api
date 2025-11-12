@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -55,183 +54,180 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class ScmCodeQualityRevertRateServiceImpl
-		extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+        extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final String ASSIGNEE_SET = "assigneeSet";
-	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
-	private static final String TOTAL_MR_COUNT = "No of Merges";
-	private static final String REVERTED_PR_COUNT = "Revert PRs";
+    private static final String ASSIGNEE_SET = "assigneeSet";
+    private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
-	private final ConfigHelperService configHelperService;
-	private final KpiHelperService kpiHelperService;
+    private final ConfigHelperService configHelperService;
+    private final KpiHelperService kpiHelperService;
 
-	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
-			throws ApplicationException {
-		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
-		Map<String, MetricsHolder> revertRateMap = new HashMap<>();
-		calculateProjectKpiTrendData(nodeMap, projectNode, kpiRequest, revertRateMap);
+    @Override
+    public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
+            throws ApplicationException {
+        Map<String, MetricsHolder> revertRateMap = new HashMap<>();
+        calculateProjectKpiTrendData(projectNode, kpiRequest, revertRateMap);
 
-		log.debug(
-				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(),
-				projectNode);
+        log.debug(
+                "[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+                kpiRequest.getRequestTrackerId(),
+                projectNode);
+        kpiElement.setTrendValueList(revertRateMap);
+        return kpiElement;
+    }
 
-		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.REVERT_RATE);
+    /**
+     * Fetch data from db
+     *
+     * @param leafNodeList leaf node list
+     * @param startDate start date
+     * @param endDate end date
+     * @param kpiRequest kpi request
+     * @return map of data
+     */
+    @Override
+    public Map<String, Object> fetchKPIDataFromDb(
+            List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
+        Map<String, Object> scmDataMap = new HashMap<>();
 
-		kpiElement.setTrendValueList(revertRateMap);
-		return kpiElement;
-	}
+        scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+        scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+        return scmDataMap;
+    }
 
-	/**
-	 * Fetch data from db
-	 *
-	 * @param leafNodeList leaf node list
-	 * @param startDate start date
-	 * @param endDate end date
-	 * @param kpiRequest kpi request
-	 * @return map of data
-	 */
-	@Override
-	public Map<String, Object> fetchKPIDataFromDb(
-			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
+    @Override
+    public String getQualifierType() {
+        return KPICode.REVERT_RATE.name();
+    }
 
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
-		return scmDataMap;
-	}
+    @Override
+    public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+        return null;
+    }
 
-	@Override
-	public String getQualifierType() {
-		return null;
-	}
+    @Override
+    public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+        return calculateKpiValueForDouble(valueList, kpiId);
+    }
 
-	@Override
-	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
-		return null;
-	}
+    @Override
+    public Double calculateThresholdValue(FieldMapping fieldMapping) {
+        return calculateThresholdValue(
+                fieldMapping.getThresholdValueKPI180(), KPICode.REVERT_RATE.getKpiId());
+    }
 
-	@Override
-	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
-		return calculateKpiValueForDouble(valueList, kpiId);
-	}
+    @SuppressWarnings("unchecked")
+    private void calculateProjectKpiTrendData(
+            Node projectLeafNode, KpiRequest kpiRequest, Map<String, MetricsHolder> revertRateMap) {
+        LocalDateTime currentDate = DateUtil.getTodayTime();
+        int dataPoints = kpiRequest.getXAxisDataPoints();
+        String duration = kpiRequest.getDuration();
 
-	@Override
-	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI180(), KPICode.REVERT_RATE.getKpiId());
-	}
+        List<Tool> scmTools =
+                DeveloperKpiHelper.getScmToolsForProject(
+                        projectLeafNode, configHelperService, kpiHelperService);
+        if (CollectionUtils.isEmpty(scmTools)) {
+            log.error(
+                    "[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+                    projectLeafNode.getProjectFilter());
+            return;
+        }
 
-	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(
-			Map<String, Node> mapTmp,
-			Node projectLeafNode,
-			KpiRequest kpiRequest,
-			Map<String, MetricsHolder> revertRateMap) {
-		LocalDateTime currentDate = DateUtil.getTodayTime();
-		int dataPoints = kpiRequest.getXAxisDataPoints();
-		String duration = kpiRequest.getDuration();
+        Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+        List<ScmMergeRequests> mergeRequests =
+                (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+        Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
-		List<Tool> scmTools =
-				DeveloperKpiHelper.getScmToolsForProject(
-						projectLeafNode, configHelperService, kpiHelperService);
-		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error(
-					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
-					projectLeafNode.getProjectFilter());
-			return;
-		}
+        if (CollectionUtils.isEmpty(mergeRequests)) {
+            log.error(
+                    "[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
+            return;
+        }
 
-		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
-		List<ScmMergeRequests> mergeRequests =
-				(List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
+        for (int i = 0; i < dataPoints; i++) {
+            CustomDateRange periodRange =
+                    KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+            String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
-		if (CollectionUtils.isEmpty(mergeRequests)) {
-			log.error(
-					"[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
-			return;
-		}
+            List<ScmMergeRequests> mergedRequestsInRange =
+                    DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
 
-		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange =
-					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+            scmTools.forEach(
+                    tool ->
+                            processToolData(
+                                    tool,
+                                    mergedRequestsInRange,
+                                    assignees,
+                                    dateLabel,
+                                    projectLeafNode.getProjectFilter().getName(),
+                                    revertRateMap));
 
-			List<ScmMergeRequests> mergedRequestsInRange =
-					DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
+            currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
+        }
+    }
 
-			scmTools.forEach(
-					tool ->
-							processToolData(
-									tool,
-									mergedRequestsInRange,
-									assignees,
-									projectLeafNode.getProjectFilter().getName(),
-									revertRateMap));
+    private void processToolData(
+            Tool tool,
+            List<ScmMergeRequests> mergeRequests,
+            Set<Assignee> assignees,
+            String dateLabel,
+            String projectName,
+            Map<String, MetricsHolder> revertRateMap) {
+        if (!DeveloperKpiHelper.isValidTool(tool)) {
+            return;
+        }
 
-			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
-		}
-	}
+        String branchName = getBranchSubFilter(tool, projectName);
+        String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-	private void processToolData(
-			Tool tool,
-			List<ScmMergeRequests> mergeRequests,
-			Set<Assignee> assignees,
-			String projectName,
-			Map<String, MetricsHolder> revertRateMap) {
-		if (!DeveloperKpiHelper.isValidTool(tool)) {
-			return;
-		}
+        List<ScmMergeRequests> branchMergeRequests =
+                DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		String branchName = getBranchSubFilter(tool, projectName);
-		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
+        long totalMergeRequests = branchMergeRequests.size();
+        long revertedPRs = countRevertedPRs(branchMergeRequests);
+        MetricsHolder calculation =
+                revertRateMap.computeIfAbsent(overallKpiGroup, key -> new MetricsHolder());
+        calculation.addTotalMerges(totalMergeRequests);
+        calculation.addTotalRevertPRs(revertedPRs);
 
-		List<ScmMergeRequests> branchMergeRequests =
-				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
+        Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
+                DeveloperKpiHelper.groupMergeRequestsByUser(branchMergeRequests);
+        prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName, revertRateMap);
+    }
 
-		long totalMergeRequests = branchMergeRequests.size();
-		long revertedPRs = countRevertedPRs(branchMergeRequests);
+    private void prepareUserValidationData(
+            Map<String, List<ScmMergeRequests>> userWiseMergeRequests,
+            Set<Assignee> assignees,
+            Tool tool,
+            String projectName,
+            Map<String, MetricsHolder> revertRateMap) {
 
-		MetricsHolder calculation =
-				revertRateMap.computeIfAbsent(overallKpiGroup, key -> new MetricsHolder());
-		calculation.addTotalMerges(totalMergeRequests);
-		calculation.addTotalRevertPRs(revertedPRs);
+        for (Map.Entry<String, List<ScmMergeRequests>> entry : userWiseMergeRequests.entrySet()) {
+            String userEmail = entry.getKey();
+            List<ScmMergeRequests> userMergeRequests = entry.getValue();
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
-				DeveloperKpiHelper.groupMergeRequestsByUser(branchMergeRequests);
-		prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName, revertRateMap);
-	}
+            String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
+            long userMrCount = userMergeRequests.size();
+            long revertedPRs = countRevertedPRs(userMergeRequests);
 
-	private void prepareUserValidationData(
-			Map<String, List<ScmMergeRequests>> userWiseMergeRequests,
-			Set<Assignee> assignees,
-			Tool tool,
-			String projectName,
-			Map<String, MetricsHolder> revertRateMap) {
+            String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
 
-		userWiseMergeRequests.forEach(
-				(userEmail, userMergeRequests) -> {
-					String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-					long userMrCount = userMergeRequests.size();
-					long revertedPRs = countRevertedPRs(userMergeRequests);
+            MetricsHolder calculation = revertRateMap.get(userKpiGroup);
+            if (calculation == null) {
+                calculation = new MetricsHolder();
+                revertRateMap.put(userKpiGroup, calculation);
+            }
+            calculation.addTotalMerges(userMrCount);
+            calculation.addTotalRevertPRs(revertedPRs);
+        }
+    }
 
-					String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
+    private long countRevertedPRs(List<ScmMergeRequests> mergeRequests) {
+        return mergeRequests.stream().filter(this::isRevertedPR).count();
+    }
 
-					MetricsHolder calculation =
-							revertRateMap.computeIfAbsent(userKpiGroup, key -> new MetricsHolder());
-					calculation.addTotalMerges(userMrCount);
-					calculation.addTotalRevertPRs(revertedPRs);
-				});
-	}
-
-	private long countRevertedPRs(List<ScmMergeRequests> mergeRequests) {
-		return mergeRequests.stream().filter(this::isRevertedPR).count();
-	}
-
-	private boolean isRevertedPR(ScmMergeRequests mergeRequest) {
-		return mergeRequest.getTitle() != null
-				&& mergeRequest.getTitle().toLowerCase().contains("revert");
-	}
+    private boolean isRevertedPR(ScmMergeRequests mergeRequest) {
+        return mergeRequest.getTitle() != null
+                && mergeRequest.getTitle().toLowerCase().contains("revert");
+    }
 }
