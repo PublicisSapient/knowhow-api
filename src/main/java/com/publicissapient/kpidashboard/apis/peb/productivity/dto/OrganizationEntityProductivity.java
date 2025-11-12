@@ -14,19 +14,21 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.productivity.dto;
+package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductivityGainDTO {
-	private CategorizedProductivityGain categorizedProductivityGain;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class OrganizationEntityProductivity {
+    private String levelName;
+    private String organizationEntityName;
 
-	private KPITrendsDTO kpiTrends;
+    private CategoryScoresDTO categoryScores;
+
+    private KPITrends trends;
 }

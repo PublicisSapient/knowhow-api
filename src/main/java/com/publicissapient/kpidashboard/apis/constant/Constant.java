@@ -172,5 +172,7 @@ public final class Constant {
 
 	public static final String HOME_TAB_SLUG = "home";
 
+	public static final int DEFAULT_BOARD_ID_FOR_PEB = 12;
+
 	private Constant() {}
 }
