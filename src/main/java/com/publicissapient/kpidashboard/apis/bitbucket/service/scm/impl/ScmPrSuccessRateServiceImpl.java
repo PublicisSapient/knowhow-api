@@ -168,26 +168,21 @@ public class ScmPrSuccessRateServiceImpl
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange =
-					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
+		CustomDateRange periodRange = KpiDataHelper.getStartAndEndDatesForCumulative(kpiRequest);
+		String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
+		List<ScmMergeRequests> mergeRequestsInRange =
+				DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
 
-			List<ScmMergeRequests> mergeRequestsInRange =
-					DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
-			scmTools.forEach(
-					tool ->
-							processToolData(
-									tool,
-									mergeRequestsInRange,
-									assignees,
-									kpiTrendDataByGroup,
-									validationDataList,
-									"",
-									projectLeafNode.getProjectFilter().getName()));
-
-			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
-		}
+		scmTools.forEach(
+				tool ->
+						processToolData(
+								tool,
+								mergeRequestsInRange,
+								assignees,
+								kpiTrendDataByGroup,
+								validationDataList,
+								dateLabel,
+								projectLeafNode.getProjectFilter().getName()));
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
