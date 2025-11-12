@@ -411,6 +411,8 @@ public final class KpiDataHelper {
 		}
 		cdr.setStartDate(startDate);
 		cdr.setEndDate(LocalDate.now());
+		cdr.setStartDateTime(startDate.atStartOfDay());
+		cdr.setEndDateTime(LocalDateTime.now());
 		return cdr;
 	}
 

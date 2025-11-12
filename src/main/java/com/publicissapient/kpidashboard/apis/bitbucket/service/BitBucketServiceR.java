@@ -404,6 +404,7 @@ public class BitBucketServiceR {
 
 			if (Objects.nonNull(nodeDataClone)
 					&& kpiHelperService.isToolConfigured(kpi, kpiElement, nodeDataClone)) {
+				kpiRequest.setKanbanXaxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
 				kpiElement = bitBucketKPIService.getKpiData(kpiRequest, kpiElement, nodeDataClone);
 				kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 				kpiHelperService.isMandatoryFieldSet(kpi, kpiElement, nodeDataClone);
