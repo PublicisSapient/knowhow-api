@@ -77,7 +77,6 @@ import lombok.extern.slf4j.Slf4j;
  * Returns MetricsHolder map containing:
  * - Key: "branch -> repository -> project#developer" or "#Overall"
  * - Value: MetricsHolder with total merges and revert counts
- *
  * @author valsa anil
  * @since 2025
  * @see MetricsHolder
