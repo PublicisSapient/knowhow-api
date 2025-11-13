@@ -101,10 +101,8 @@ public abstract class AbstractForecastService implements ForecastService {
 		try {
 			if (value instanceof Number) {
 				return ((Number) value).doubleValue();
-			} else if (value instanceof String strValue) {
-				if (NumberUtils.isCreatable(strValue)) {
+			} else if (value instanceof String strValue && NumberUtils.isCreatable(strValue)) {
 					return Double.parseDouble(strValue);
-				}
 			}
 		} catch (Exception e) {
 			log.warn("Failed to extract numeric value from DataCount: {}", value, e);
