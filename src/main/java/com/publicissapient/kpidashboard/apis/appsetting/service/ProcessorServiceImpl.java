@@ -24,6 +24,7 @@ import java.util.List;
 import javax.ws.rs.core.Context;
 
 import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -40,6 +42,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.google.gson.Gson;
 import com.publicissapient.kpidashboard.apis.appsetting.config.ProcessorUrlConfig;
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmRepositoryService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -86,6 +90,7 @@ public class ProcessorServiceImpl implements ProcessorService {
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private CacheService cacheService;
 	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private ScmRepositoryService scmRepositoryService;
 
 	@Override
 	public ServiceResponse getAllProcessorDetails() {
@@ -267,6 +272,48 @@ public class ProcessorServiceImpl implements ProcessorService {
 
 		return new ServiceResponse(
 				isSuccess, "Got HTTP response: " + statuscode + " on url: " + url, null);
+	}
+
+	@Override
+	public ServiceResponse fetchScmConfigByConnectionId(String connection) {
+		String url =
+				processorUrlConfig
+						.getProcessorUrl(ProcessorConstants.BITBUCKET)
+						.replaceFirst("/processor/run", "/api/scm/connection/sync-metadata");
+		boolean isSuccess = true;
+
+		httpServletRequest =
+				((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		String token = httpServletRequest.getHeader(AUTHORIZATION);
+		token = CommonUtils.handleCrossScriptingTaintedValue(token);
+		int statuscode = HttpStatus.NOT_FOUND.value();
+		if (StringUtils.isNotEmpty(url)) {
+			try {
+				url = String.format(url, connection);
+				HttpHeaders headers = new HttpHeaders();
+				headers.add(AUTHORIZATION, token);
+				headers.setContentType(MediaType.APPLICATION_JSON);
+				Gson gson = new Gson();
+				String payload = gson.toJson(connection);
+				HttpEntity<String> requestEntity = new HttpEntity<>(payload, headers);
+				ResponseEntity<String> resp =
+						restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+				statuscode = resp.getStatusCode().value();
+			} catch (HttpClientErrorException ex) {
+				statuscode = ex.getStatusCode().value();
+				isSuccess = false;
+			} catch (HttpServerErrorException ex) {
+				isSuccess = false;
+			}
+		}
+		if (HttpStatus.NOT_FOUND.value() == statuscode
+				|| HttpStatus.INTERNAL_SERVER_ERROR.value() == statuscode) {
+			isSuccess = false;
+		}
+		ScmConnectionMetaDataDTO scmConnectionMetaDataDTO =
+				scmRepositoryService.getScmRepositoryListByConnectionId(new ObjectId(connection));
+		return new ServiceResponse(
+				isSuccess, "Got response: " + statuscode + " for url: " + url, scmConnectionMetaDataDTO);
 	}
 
 	/**
