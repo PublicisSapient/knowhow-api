@@ -138,6 +138,11 @@ public class ProductivityService {
 			HierarchyLevel firstChildHierarchyLevelAfterRequestedLevel, HierarchyLevel projectLevel) {
 	}
 
+	@Builder
+	private record ProductivityTrendsProcessingResult(Map<Integer, CategoryScoresDTO> categoryScoresByDataPoints,
+			List<CategoryScoresDTO> categoryScoresTrendValues, int projectsWithoutProductivityData) {
+	}
+
 	/**
 	 * Retrieves comprehensive productivity data for a specified organizational
 	 * hierarchy level.
@@ -296,9 +301,9 @@ public class ProductivityService {
 	 *            organizational hierarchy.
 	 * @param temporalAggregationUnit
 	 *            The temporal unit for grouping productivity data over time.
-	 *            Supported units include WEEK, MONTH, DAY, QUARTER, YEAR.
-	 *            Determines the granularity of trend analysis and affects the
-	 *            number of data points returned within the specified limit.
+	 *            Supported units include WEEK, MONTH, QUARTER, YEAR. Determines the
+	 *            granularity of trend analysis and affects the number of data
+	 *            points returned within the specified limit.
 	 * @param limit
 	 *            Maximum number of temporal periods to retrieve, counted from the
 	 *            most recent data backwards. Must be positive.
@@ -344,14 +349,109 @@ public class ProductivityService {
 					levelName, temporalAggregationUnit, limit);
 
 			return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
-					ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit.getUnit())
+					ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit)
 							.levelName(
 									pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
 							.build());
 		}
 
+		ProductivityTrendsProcessingResult productivityTrendsProcessingResult = calculateProductivityTrends(
+				productivitiesGroupedByTemporalUnit, rootNodeIdProjectChildren);
+
+		CategoryVariations categoryVariations = calculateCategoryVariations(
+				productivityTrendsProcessingResult.categoryScoresByDataPoints);
+
+		log.info(
+				"""
+						Successfully retrieved the productivity trends for level {}. Total projects found under requested level: {}
+						Projects without productivity data: {}. Duration: {} ms
+						""",
+				levelName, projectNodeIds.size(), productivityTrendsProcessingResult.projectsWithoutProductivityData,
+				System.currentTimeMillis() - startTime);
+
+		return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
+				ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit)
+						.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+						.categoryVariations(categoryVariations)
+						.categoryScores(productivityTrendsProcessingResult.categoryScoresTrendValues).build());
+	}
+
+	/**
+	 * Processes temporal productivity data to calculate aggregated trend metrics
+	 * across organizational projects.
+	 *
+	 * <p>
+	 * This method performs comprehensive data aggregation and trend calculation by
+	 * processing productivity data grouped by temporal units (weeks, months,
+	 * quarters, etc.) and computing averaged category scores across all projects
+	 * within each time period. The processing ensures accurate trend analysis by
+	 * handling missing data gracefully and maintaining chronological ordering.
+	 * </p>
+	 *
+	 * <p>
+	 * The method executes the following data processing operations:
+	 * </p>
+	 * <ol>
+	 * <li>Iterates through each temporal grouping in chronological order</li>
+	 * <li>Groups productivity data by hierarchy entity node ID for efficient
+	 * lookup</li>
+	 * <li>Creates category score DTOs with temporal grouping start dates</li>
+	 * <li>Aggregates productivity scores across all projects for each time
+	 * period</li>
+	 * <li>Calculates averaged scores based on actual productivity data count</li>
+	 * <li>Tracks projects without productivity data for monitoring purposes</li>
+	 * <li>Builds indexed mapping for category variation calculations</li>
+	 * </ol>
+	 *
+	 * <p>
+	 * <strong>Data Aggregation Strategy:</strong> The method accumulates category
+	 * scores (Overall, Quality, Speed, Efficiency, Productivity) from all projects
+	 * that have productivity data within each temporal period. Projects without
+	 * data are logged but excluded from calculations to prevent skewing averages
+	 * with zero values.
+	 * </p>
+	 *
+	 * <p>
+	 * <strong>Temporal Grouping Handling:</strong> Each temporal grouping
+	 * represents a specific time period (e.g., week of 2024-01-15) and contains all
+	 * productivity calculations that fall within that period. The method preserves
+	 * the period start date in the resulting DTOs for client-side temporal
+	 * visualization.
+	 * </p>
+	 * 
+	 * @param productivitiesGroupedByTemporalUnit
+	 *            List of temporal groupings containing productivity data organized
+	 *            by time periods. Each grouping contains all productivity
+	 *            calculations that fall within a specific temporal unit (week,
+	 *            month, etc.). Must not be null or empty. The list should be
+	 *            ordered chronologically from oldest to newest.
+	 * @param rootNodeIdProjectChildren
+	 *            Map linking root organizational entity node IDs to their
+	 *            descendant project nodes. Used to traverse the organizational
+	 *            hierarchy and identify which projects belong to each root entity.
+	 *            Keys are root node IDs, values are lists of project TreeNodes.
+	 *            Must not be null.
+	 * @return ProductivityTrendsProcessingResult containing three components:
+	 *         <ul>
+	 *         <li>categoryScoresByDataPoints: LinkedHashMap indexed by data point
+	 *         number (0, 1, 2...) mapping to CategoryScoresDTO objects, used for
+	 *         category variation calculations</li>
+	 *         <li>categoryScoresTrendValues: Sequential list of CategoryScoresDTO
+	 *         objects representing the chronological trend data, suitable for
+	 *         time-series visualization</li>
+	 *         <li>projectsWithoutProductivityData: Count of project instances that
+	 *         lacked productivity data during the processing, used for monitoring
+	 *         data completeness</li>
+	 *         </ul>
+	 *         All CategoryScoresDTO objects contain averaged productivity scores
+	 *         and temporal grouping start dates. Returns empty collections if no
+	 *         valid productivity data is found.
+	 */
+	private ProductivityTrendsProcessingResult calculateProductivityTrends(
+			List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit,
+			Map<String, List<TreeNode>> rootNodeIdProjectChildren) {
 		Map<Integer, CategoryScoresDTO> categoryScoresByDataPoints = new LinkedHashMap<>();
-		List<CategoryScoresDTO> categoryScoresDTOList = new ArrayList<>();
+		List<CategoryScoresDTO> categoryScoresTrendValues = new ArrayList<>();
 
 		int dataPoint = 0;
 		int projectsWithoutProductivityData = 0;
@@ -381,24 +481,13 @@ public class ProductivityService {
 				}
 			}
 			setAveragedProductivityScores(categoryScoresDTO, productivityTemporalGrouping.getProductivities().size());
-			categoryScoresDTOList.add(categoryScoresDTO);
+			categoryScoresTrendValues.add(categoryScoresDTO);
 			dataPoint++;
 		}
 
-		CategoryVariations categoryVariations = calculateCategoryVariations(categoryScoresByDataPoints);
-
-		log.info(
-				"""
-						Successfully retrieved the productivity trends for level {}. Total projects found under requested level: {}
-						Projects without productivity data: {}. Duration: {} ms
-						""",
-				levelName, projectNodeIds.size(), projectsWithoutProductivityData,
-				System.currentTimeMillis() - startTime);
-
-		return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
-				ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit.getUnit())
-						.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
-						.categoryVariations(categoryVariations).categoryScores(categoryScoresDTOList).build());
+		return ProductivityTrendsProcessingResult.builder().categoryScoresByDataPoints(categoryScoresByDataPoints)
+				.categoryScoresTrendValues(categoryScoresTrendValues)
+				.projectsWithoutProductivityData(projectsWithoutProductivityData).build();
 	}
 
 	/**

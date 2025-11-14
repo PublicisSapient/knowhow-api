@@ -252,8 +252,7 @@ class ProductivityServiceTest {
 
 		ProductivityTrendsResponse productivityTrendsResponse = (ProductivityTrendsResponse) serviceResponse.getData();
 		assertTrue(productivityTrendsResponse.getLevelName().equalsIgnoreCase(testLevelName));
-		assertTrue(TemporalAggregationUnit.WEEK.getUnit()
-				.equalsIgnoreCase(productivityTrendsResponse.getTemporalGrouping()));
+        assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
 
 		assertNull(productivityTrendsResponse.getCategoryVariations());
 		assertTrue(CollectionUtils.isEmpty(productivityTrendsResponse.getCategoryScores()));
@@ -277,8 +276,7 @@ class ProductivityServiceTest {
 
 		ProductivityTrendsResponse productivityTrendsResponse = (ProductivityTrendsResponse) serviceResponse.getData();
 		assertTrue(productivityTrendsResponse.getLevelName().equalsIgnoreCase(testLevelName));
-		assertTrue(TemporalAggregationUnit.WEEK.getUnit()
-				.equalsIgnoreCase(productivityTrendsResponse.getTemporalGrouping()));
+		assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
 
 		assertNotNull(productivityTrendsResponse.getCategoryVariations());
 
