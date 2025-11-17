@@ -15,17 +15,17 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class PrSuccessRateChangeUnit {
     private final MongoTemplate mongoTemplate;
 
-    private final String KPI_CHART_TYPE="semi-circle-donut-chart";
+    private static final String KPI_CHART_TYPE="semi-circle-donut-chart";
 
-    private final String EXISTING_KPI_CHART_TYPE = "line";
+    private static final String EXISTING_KPI_CHART_TYPE = "line";
 
-    private final String KPI_CHART_TYPE_FIELD ="chartType";
+    private static final String KPI_CHART_TYPE_FIELD ="chartType";
 
-    private final String KPI_SEARCH_FIELD ="kpiId";
+    private static final String KPI_SEARCH_FIELD ="kpiId";
 
-    private final String COLLECTION_NAME ="kpi_master";
+    private static final String COLLECTION_NAME ="kpi_master";
 
-    private final String KPI_ID ="kpi182";
+    private static final String KPI_ID ="kpi182";
 
     public PrSuccessRateChangeUnit(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;

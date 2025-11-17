@@ -4700,7 +4700,7 @@
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "semi-circle-donut-chart",
     "kpiInfo": {
       "definition": "PR success rate measures the number of pull requests that went through the process without being abandoned or discarded as against the total PRs raised in a defined period  A low or declining Pull Request Success Rate represents high or increasing waste",
       "details": [
