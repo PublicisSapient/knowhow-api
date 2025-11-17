@@ -345,13 +345,18 @@
       <artifactId>commons-csv</artifactId>
       <version>1.9.0</version>
     </dependency>
-    <!-- Apache Commons Math for Forecasting -->
-    <dependency>
+      <!-- Forecasting dependencies: Apache Commons Math and Smile -->
+      <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
       <version>3.6.1</version>
     </dependency>
-    <dependency>
+      <dependency>
+          <groupId>com.github.haifengl</groupId>
+          <artifactId>smile-core</artifactId>
+          <version>3.0.2</version>
+      </dependency>
+      <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
       <version>${logstash-logback-encoder.version}</version>

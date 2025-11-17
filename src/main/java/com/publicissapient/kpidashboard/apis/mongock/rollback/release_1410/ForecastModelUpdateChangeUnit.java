@@ -53,6 +53,15 @@ public class ForecastModelUpdateChangeUnit {
         removeForecastModel(KPICode.COST_OF_DELAY_KANBAN.getKpiId());
         removeForecastModel(KPICode.HAPPINESS_INDEX_RATE.getKpiId());
 
+        removeForecastModel(KPICode.DEFECT_DENSITY.getKpiId());
+        removeForecastModel(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId());
+        removeForecastModel(KPICode.DEFECT_INJECTION_RATE.getKpiId());
+        removeForecastModel(KPICode.UNIT_TEST_COVERAGE.getKpiId());
+        removeForecastModel(KPICode.CODE_VIOLATIONS.getKpiId());
+        removeForecastModel(KPICode.CODE_VIOLATIONS_KANBAN.getKpiId());
+        removeForecastModel(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId());
+        removeForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId());
+
         log.info("Completed rollback of forecast model updates");
 
 	}
@@ -71,6 +80,15 @@ public class ForecastModelUpdateChangeUnit {
         updateForecastModel(KPICode.COST_OF_DELAY.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
         updateForecastModel(KPICode.COST_OF_DELAY_KANBAN.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
         updateForecastModel(KPICode.HAPPINESS_INDEX_RATE.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
+
+        updateForecastModel(KPICode.DEFECT_DENSITY.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.DEFECT_INJECTION_RATE.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.UNIT_TEST_COVERAGE.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.CODE_VIOLATIONS.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.CODE_VIOLATIONS_KANBAN.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(), ForecastingModel.ARIMA.getName());
+        updateForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.ARIMA.getName());
 
         log.info("Completed forecast model update for 3 KPIs");
 

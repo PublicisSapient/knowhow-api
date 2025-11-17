@@ -154,7 +154,8 @@
       "40-20",
       "20-10",
       "10-"
-    ]
+    ],
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi35",
@@ -259,7 +260,8 @@
       "50-75",
       "75-90",
       "90-"
-    ]
+    ],
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi37",
@@ -604,7 +606,8 @@
       "40-60",
       "60-80",
       "80-"
-    ]
+    ],
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi38",
@@ -644,7 +647,8 @@
     "kpiFilter": "multiTypeFilters",
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi27",
@@ -820,7 +824,8 @@
       "40-60",
       "60-80",
       "80-"
-    ]
+    ],
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi40",
@@ -1778,7 +1783,8 @@
     "kpiFilter": "multiTypeFilters",
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi67",
@@ -1870,7 +1876,8 @@
       "40-60",
       "60-80",
       "80-"
-    ]
+    ],
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi49",
@@ -2944,7 +2951,8 @@
     "isAdditionalFilterSupport": false,
     "kpiFilter": "",
     "boxType": "chart",
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "arima"
   },
   {
     "kpiId": "kpi142",
