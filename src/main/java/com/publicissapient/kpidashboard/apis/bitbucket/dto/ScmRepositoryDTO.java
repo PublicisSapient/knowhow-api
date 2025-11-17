@@ -14,22 +14,22 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
+package com.publicissapient.kpidashboard.apis.bitbucket.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 
+import org.bson.types.ObjectId;
+
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryScoresDTO {
-	private double overall;
-	private double speed;
-	private double quality;
-	private double efficiency;
-	private double productivity;
-
-	private String temporalGroupingStartDate;
+@Builder
+public class ScmRepositoryDTO {
+	private String repositoryName;
+	private String repositoryUrl;
+	private ObjectId connectionId;
+	private long lastUpdatedTimestamp;
+	private int order;
+	private List<ScmBranchDTO> branchList;
 }

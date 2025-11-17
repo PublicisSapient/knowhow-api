@@ -14,22 +14,12 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import org.bson.types.ObjectId;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.publicissapient.kpidashboard.apis.bitbucket.dto.ScmConnectionMetaDataDTO;
 
-@Data
-@NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryScoresDTO {
-	private double overall;
-	private double speed;
-	private double quality;
-	private double efficiency;
-	private double productivity;
-
-	private String temporalGroupingStartDate;
+public interface ScmRepositoryService {
+	ScmConnectionMetaDataDTO getScmRepositoryListByConnectionId(ObjectId connectionId);
 }

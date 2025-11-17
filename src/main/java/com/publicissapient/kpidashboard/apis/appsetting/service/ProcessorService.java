@@ -65,4 +65,6 @@ public interface ProcessorService {
 	 * @return {@code ServiceResponse}
 	 */
 	ServiceResponse runMetadataStep(String projectBasicConfigId);
+
+	ServiceResponse fetchScmConfigByConnectionId(String connection);
 }

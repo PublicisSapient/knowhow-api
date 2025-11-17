@@ -13,23 +13,15 @@
  *  See the License for the specific language governing permissions and limitations under the
  *  License.
  */
+package com.publicissapient.kpidashboard.apis.bitbucket.dto;
 
-package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryScoresDTO {
-	private double overall;
-	private double speed;
-	private double quality;
-	private double efficiency;
-	private double productivity;
-
-	private String temporalGroupingStartDate;
+@Builder
+public class ScmBranchDTO {
+	private String branchName;
+	private long lastUpdatedTimestamp;
+	private int order;
 }
