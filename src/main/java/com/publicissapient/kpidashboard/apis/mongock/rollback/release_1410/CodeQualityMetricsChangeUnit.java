@@ -25,7 +25,7 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_code_quality_metrics_kpi", order = "014107", author = "valanil", systemVersion = "14.1.0")
+@ChangeUnit(id = "r_code_quality_metrics_kpi", order = "014108", author = "valanil", systemVersion = "14.1.0")
 public class CodeQualityMetricsChangeUnit {
 
 	public static final String KPI_ID = "kpiId";
