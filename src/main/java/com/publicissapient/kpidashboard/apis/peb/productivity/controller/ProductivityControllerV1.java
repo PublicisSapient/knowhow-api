@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.service.ProductivityService;
+import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -50,6 +51,9 @@ public class ProductivityControllerV1 {
 					Bad Request will be returned in the following situations:
 					- received level name was empty
 					- requested level is too low on the organizational hierarchy
+					"""), @ApiResponse(responseCode = "403", description = """
+					Forbidden will be returned in the following situations:
+					- user doesn't have access to any data
 					"""),
 			@ApiResponse(responseCode = "404", description = """
 					Not Found will be returned in the following situations:
@@ -65,6 +69,35 @@ public class ProductivityControllerV1 {
 	public ResponseEntity<ServiceResponse> getPebProductivityData(
 			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to retrieve productivity "
 					+ "data", required = true, example = "project") @PathVariable String levelName) {
-		return ResponseEntity.ok(productivityService.getProductivityForLevel(levelName));
+		return ResponseEntity.ok(this.productivityService.getProductivityForLevel(levelName));
+	}
+
+	@Operation(summary = "Get productivity trends by hierarchy level", description = """
+			Retrieves historical productivity trend data for a specific organizational hierarchy level over time. This endpoint provides time-series productivity analytics aggregated by weekly intervals, showing how productivity metrics evolve across different time periods.
+			""")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Productivity trends data retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
+			@ApiResponse(responseCode = "400", description = """
+					Bad Request will be returned in the following situations:
+					- received level name was empty
+					- requested level is too low on the organizational hierarchy
+					"""), @ApiResponse(responseCode = "403", description = """
+					Forbidden will be returned in the following situations:
+					- user doesn't have access to any data
+					"""), @ApiResponse(responseCode = "404", description = """
+					Not Found will be returned in the following situations:
+					- requested level name does not exist
+					"""), @ApiResponse(responseCode = "500", description = """
+					Internal Server Error will be returned in the following situations:
+					- multiple levels were found corresponding with the requested level name
+					- no organizational level could be found relating to a 'project' entity
+					- an unexpected error occurred when processing the request
+					""") })
+	@GetMapping("/{levelName}/trends")
+	public ResponseEntity<ServiceResponse> getPebProductivityTrends(
+			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to"
+					+ " retrieve productivity trends data", required = true, example = "project") @PathVariable String levelName) {
+		return ResponseEntity.ok(this.productivityService.getProductivityTrendsForLevel(levelName,
+				TemporalAggregationUnit.WEEK, ProductivityService.DEFAULT_NUMBER_OF_TREND_DATA_POINTS));
 	}
 }

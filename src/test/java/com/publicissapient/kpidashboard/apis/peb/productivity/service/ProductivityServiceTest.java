@@ -19,12 +19,16 @@ package com.publicissapient.kpidashboard.apis.peb.productivity.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,24 +39,30 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryScoresDTO;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryVariations;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.KPITrends;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.OrganizationEntityProductivity;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityTrendsResponse;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.CategoryScores;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.KPIData;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.Productivity;
 import com.publicissapient.kpidashboard.common.repository.productivity.ProductivityCustomRepository;
+import com.publicissapient.kpidashboard.common.repository.productivity.dto.ProductivityTemporalGrouping;
+import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
@@ -64,6 +74,7 @@ class ProductivityServiceTest {
 
 	@Mock
 	private FilterHelperService filterHelperService;
+
 	@Mock
 	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
@@ -76,13 +87,29 @@ class ProductivityServiceTest {
 	private String testLevelName;
 
 	@Test
-	void when_LevelNameIsNotProvided_Expect_GettingProductivityThrowsBadRequestException() {
+	void when_LevelNameIsNotProvided_Expect_GetProductivityDataAndTrendsAreThrowingBadRequestException() {
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel(null));
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel(StringUtils.EMPTY));
+		assertThrows(BadRequestException.class,
+				() -> productivityService.getProductivityTrendsForLevel(null, TemporalAggregationUnit.WEEK, 0));
+		assertThrows(BadRequestException.class, () -> productivityService
+				.getProductivityTrendsForLevel(StringUtils.EMPTY, TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_MultipleLevelNamesAreCorrespondingToTheRequestedLevel_Expect_GettingProductivityThrowsInternalServerErrorException() {
+	void when_LimitIsNegative_Expect_GetProductivityTrendsThrowsBadRequestException() {
+		assertThrows(BadRequestException.class, () -> productivityService
+				.getProductivityTrendsForLevel(StringUtils.EMPTY, TemporalAggregationUnit.WEEK, -1));
+	}
+
+	@Test
+	void when_TemporalAggregationUnitIsNull_Expect_GetProductivityTrendsThrowsBadRequestException() {
+		assertThrows(BadRequestException.class,
+				() -> productivityService.getProductivityTrendsForLevel(StringUtils.EMPTY, null, 1));
+	}
+
+	@Test
+	void when_MultipleLevelNamesAreCorrespondingToTheRequestedLevel_Expect_GetProductivityDataAndTrendsThrowsInternalServerErrorException() {
 		testLevelName = "duplicate-level-name";
 		HierarchyLevel hierarchyLevel = new HierarchyLevel();
 		hierarchyLevel.setHierarchyLevelName("duplicate-level-name");
@@ -97,17 +124,22 @@ class ProductivityServiceTest {
 
 		assertThrows(InternalServerErrorException.class,
 				() -> productivityService.getProductivityForLevel(testLevelName));
+
+		assertThrows(InternalServerErrorException.class,
+				() -> productivityService.getProductivityTrendsForLevel(testLevelName, TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_RequestedLevelNameDoesNotExist_Expect_GettingProductivityThrowsNotFoundException() {
+	void when_RequestedLevelNameDoesNotExist_Expect_GetProductivityDataAndTrendsThrowsNotFoundException() {
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
 
 		assertThrows(NotFoundException.class, () -> productivityService.getProductivityForLevel("not-existent"));
+		assertThrows(NotFoundException.class,
+				() -> productivityService.getProductivityTrendsForLevel("not-existent", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_ProjectLevelDoesNotExist_Expect_GettingProductivityThrowsNotFoundException() {
+	void when_ProjectLevelDoesNotExist_Expect_GetProductivityDataAndTrendsThrowsNotFoundException() {
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(Map.of("sqd",
 				HierarchyLevel.builder().level(7).hierarchyLevelId("sqd").hierarchyLevelName("Squad").build(),
 				"release",
@@ -122,27 +154,35 @@ class ProductivityServiceTest {
 
 		assertThrows(InternalServerErrorException.class,
 				() -> productivityService.getProductivityForLevel("engagement"));
+
+		assertThrows(InternalServerErrorException.class,
+				() -> productivityService.getProductivityTrendsForLevel("engagement", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_RequestedLevelIsNotSupported_Expect_GettingProductivityThrowsBadRequestException() {
+	void when_RequestedLevelIsNotSupported_Expect_GetProductivityDataAndTrendsThrowsBadRequestException() {
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
 
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("squad"));
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("sprint"));
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("project"));
+
+		assertThrows(BadRequestException.class,
+				() -> productivityService.getProductivityTrendsForLevel("squad", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(BadRequestException.class,
+				() -> productivityService.getProductivityTrendsForLevel("sprint", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(BadRequestException.class,
+				() -> productivityService.getProductivityTrendsForLevel("project", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_UserDoesNotHaveAccessToAnyData_Expect_GettingProductivityThrowsForbiddenException() {
+	void when_UserDoesNotHaveAccessToAnyData_Expect_GetProductivityDataAndTrendsThrowsForbiddenException() {
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(Collections.emptySet());
 
 		assertThrows(ForbiddenException.class, () -> productivityService.getProductivityForLevel("engagement"));
-	}
-
-	private static List<String> provideTestLevelNames() {
-		return List.of("engagement", "account", "vertical", "bu");
+		assertThrows(ForbiddenException.class,
+				() -> productivityService.getProductivityTrendsForLevel("engagement", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@ParameterizedTest
@@ -192,6 +232,114 @@ class ProductivityServiceTest {
 		assertTrue(
 				productivityResponse.getDetails().stream().allMatch(productivityDetail -> expectedOrganizationUnitNames
 						.contains(productivityDetail.getOrganizationEntityName())));
+	}
+
+	@Test
+	void when_NoProductivityDataIsFound_Expect_ProductivityTrendsResponseIsComputedAccordingly() {
+		testLevelName = "engagement";
+		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
+		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(constructTestAccountFilteredData());
+
+		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
+				any(TemporalAggregationUnit.class), anyInt())).thenReturn(Collections.emptyList());
+
+		ServiceResponse serviceResponse = productivityService.getProductivityTrendsForLevel(testLevelName,
+				TemporalAggregationUnit.WEEK, 6);
+		assertNotNull(serviceResponse);
+		assertNotNull(serviceResponse.getData());
+		assertTrue(serviceResponse.getSuccess());
+		assertInstanceOf(ProductivityTrendsResponse.class, serviceResponse.getData());
+
+		ProductivityTrendsResponse productivityTrendsResponse = (ProductivityTrendsResponse) serviceResponse.getData();
+		assertTrue(productivityTrendsResponse.getLevelName().equalsIgnoreCase(testLevelName));
+        assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
+
+		assertNull(productivityTrendsResponse.getCategoryVariations());
+		assertTrue(CollectionUtils.isEmpty(productivityTrendsResponse.getCategoryScores()));
+	}
+
+	@Test
+	void when_RequestIsValid_Expect_ProductivityTrendsResponseIsComputedAccordingly() {
+		testLevelName = "engagement";
+		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
+		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(constructTestAccountFilteredData());
+
+		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
+				any(TemporalAggregationUnit.class), anyInt())).thenReturn(constructProductivityTemporalGroupingList());
+
+		ServiceResponse serviceResponse = productivityService.getProductivityTrendsForLevel(testLevelName,
+				TemporalAggregationUnit.WEEK, 6);
+		assertNotNull(serviceResponse);
+		assertNotNull(serviceResponse.getData());
+		assertTrue(serviceResponse.getSuccess());
+		assertInstanceOf(ProductivityTrendsResponse.class, serviceResponse.getData());
+
+		ProductivityTrendsResponse productivityTrendsResponse = (ProductivityTrendsResponse) serviceResponse.getData();
+		assertTrue(productivityTrendsResponse.getLevelName().equalsIgnoreCase(testLevelName));
+		assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
+
+		assertNotNull(productivityTrendsResponse.getCategoryVariations());
+
+		CategoryVariations categoryVariations = productivityTrendsResponse.getCategoryVariations();
+		assertEquals(0, Double.compare(categoryVariations.getSpeed(), 100.0D));
+		assertEquals(0, Double.compare(categoryVariations.getQuality(), 100.0D));
+		assertEquals(0, Double.compare(categoryVariations.getEfficiency(), -10.27D));
+		assertEquals(0, Double.compare(categoryVariations.getProductivity(), 107.41D));
+
+		assertTrue(CollectionUtils.isNotEmpty(productivityTrendsResponse.getCategoryScores()));
+		productivityTrendsResponse.getCategoryScores().forEach(categoryScoresDTO -> {
+			assertNotNull(categoryScoresDTO);
+			assertTrue(StringUtils.isNotEmpty(categoryScoresDTO.getTemporalGroupingStartDate()));
+		});
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "50.0, 75.0, 50.0, 'Last value greater than first value'",
+			"100.0, 80.0, -20.0, 'Last value less than first value'", "50.0, 50.0, 0.0, 'Both values are equal'",
+			"0.0, 0.0, 0.0, 'Both values are zero'",
+			"-50.0, 25.0, 150.0, 'Negative first value with positive last value'",
+			"-100.0, -50.0, 50.0, 'Both values are negative'",
+			"50.0, -25.0, -150.0, 'Positive first value with negative last value'",
+			"3.0, 4.0, 33.33, 'Calculation requires rounding to two decimal places'" })
+	void when_CalculatingCategoryVariation_Then_ReturnExpectedResult(double firstPointValue, double lastPointValue,
+			Double expectedVariation, String scenario) {
+
+		Double result = ReflectionTestUtils.invokeMethod(ProductivityService.class, "calculateCategoryVariation",
+				firstPointValue, lastPointValue);
+
+		if (expectedVariation == null) {
+			assertNull(result, "Expected null for scenario: " + scenario);
+		} else {
+			assertNotNull(result, "Expected non-null result for scenario: " + scenario);
+			assertEquals(expectedVariation, result, 0.01, "Failed for scenario: " + scenario);
+		}
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "0.0, 50.0, 'First value is zero and last value is non-zero'",
+			"0.0, -25.0, 'First value is zero and last value is negative'" })
+	void when_FirstValueIsZeroAndLastValueIsNonZero_Then_ReturnNull(double firstPointValue, double lastPointValue,
+			String scenario) {
+
+		Double result = ReflectionTestUtils.invokeMethod(ProductivityService.class, "calculateCategoryVariation",
+				firstPointValue, lastPointValue);
+
+		assertNull(result, "Expected null for scenario: " + scenario);
+	}
+
+	private List<ProductivityTemporalGrouping> constructProductivityTemporalGroupingList() {
+		List<Productivity> productivities = constructProjectProductivityList();
+		ProductivityTemporalGrouping productivityTemporalGrouping = new ProductivityTemporalGrouping();
+		productivityTemporalGrouping.setTemporalAggregationUnit(TemporalAggregationUnit.WEEK);
+		productivityTemporalGrouping.setPeriodStart(Instant.now().minus(7L, ChronoUnit.DAYS));
+		productivityTemporalGrouping.setProductivities(List.of(productivities.get(0)));
+
+		ProductivityTemporalGrouping productivityTemporalGrouping1 = new ProductivityTemporalGrouping();
+		productivityTemporalGrouping1.setTemporalAggregationUnit(TemporalAggregationUnit.WEEK);
+		productivityTemporalGrouping1.setPeriodStart(Instant.now());
+		productivityTemporalGrouping1.setProductivities(List.of(productivities.get(1)));
+
+		return List.of(productivityTemporalGrouping, productivityTemporalGrouping1);
 	}
 
 	private List<Productivity> constructProjectProductivityList() {
@@ -290,12 +438,16 @@ class ProductivityServiceTest {
 		List<String> expectedOrganizationUnitNames;
 
 		switch (levelName) {
-			case "engagement" -> expectedOrganizationUnitNames = List.of("test-project-1", "test-project-2");
-			case "account" -> expectedOrganizationUnitNames = List.of("test-port-1", "test-port-2");
-			case "vertical" -> expectedOrganizationUnitNames = List.of("test-acc-1", "test-acc-2");
-			case "bu" -> expectedOrganizationUnitNames = List.of("test-ver-1", "test-ver-2");
-			default -> expectedOrganizationUnitNames = Collections.emptyList();
+		case "engagement" -> expectedOrganizationUnitNames = List.of("test-project-1", "test-project-2");
+		case "account" -> expectedOrganizationUnitNames = List.of("test-port-1", "test-port-2");
+		case "vertical" -> expectedOrganizationUnitNames = List.of("test-acc-1", "test-acc-2");
+		case "bu" -> expectedOrganizationUnitNames = List.of("test-ver-1", "test-ver-2");
+		default -> expectedOrganizationUnitNames = Collections.emptyList();
 		}
 		return expectedOrganizationUnitNames;
+	}
+
+	private static List<String> provideTestLevelNames() {
+		return List.of("engagement", "account", "vertical", "bu");
 	}
 }
