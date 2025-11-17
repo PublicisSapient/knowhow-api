@@ -35,8 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 		id = "forecast_model_update",
 		order = "14105",
 		author = "shunaray",
-		systemVersion = "14.1.0",
-		runAlways = true)
+		systemVersion = "14.1.0")
 public class ForecastModelUpdateChangeUnit {
 
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
