@@ -16,20 +16,14 @@
 
 package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CategoryScoresDTO {
-	private double overall;
-	private double speed;
-	private double quality;
-	private double efficiency;
-	private double productivity;
-
-	private String temporalGroupingStartDate;
+@Builder
+public class CategoryVariations {
+    private Double speed;
+    private Double quality;
+    private Double efficiency;
+    private Double productivity;
 }
