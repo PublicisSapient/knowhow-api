@@ -32,9 +32,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Abstract base class for forecast service implementations.
- */
+/** Abstract base class for forecast service implementations. */
 @Slf4j
 @Component
 public abstract class AbstractForecastService implements ForecastService {
@@ -44,8 +42,7 @@ public abstract class AbstractForecastService implements ForecastService {
 	/**
 	 * Validate if historical data is sufficient for forecasting.
 	 *
-	 * @param historicalData
-	 *            Historical data points
+	 * @param historicalData Historical data points
 	 * @return true if data is valid
 	 */
 	@Override
@@ -57,8 +54,11 @@ public abstract class AbstractForecastService implements ForecastService {
 
 		List<Double> values = extractValues(historicalData);
 		if (values.size() < MIN_DATA_POINTS) {
-			log.debug("Cannot forecast for KPI {}: Insufficient data points (need at least {}, got {})", kpiId,
-					MIN_DATA_POINTS, values.size());
+			log.debug(
+					"Cannot forecast for KPI {}: Insufficient data points (need at least {}, got {})",
+					kpiId,
+					MIN_DATA_POINTS,
+					values.size());
 			return false;
 		}
 
@@ -68,8 +68,7 @@ public abstract class AbstractForecastService implements ForecastService {
 	/**
 	 * Extract numeric values from DataCount objects.
 	 *
-	 * @param dataCounts
-	 *            List of DataCount objects
+	 * @param dataCounts List of DataCount objects
 	 * @return List of Double values
 	 */
 	protected List<Double> extractValues(List<DataCount> dataCounts) {
@@ -77,15 +76,16 @@ public abstract class AbstractForecastService implements ForecastService {
 			return new ArrayList<>();
 		}
 
-		return dataCounts.stream().map(this::extractNumericValue)
-				.filter(val -> val != null && !val.isNaN() && !val.isInfinite()).collect(Collectors.toList());
+		return dataCounts.stream()
+				.map(this::extractNumericValue)
+				.filter(val -> val != null && !val.isNaN() && !val.isInfinite())
+				.collect(Collectors.toList());
 	}
 
 	/**
 	 * Extract numeric value from a DataCount object.
 	 *
-	 * @param dataCount
-	 *            DataCount object
+	 * @param dataCount DataCount object
 	 * @return Double value or null
 	 */
 	protected Double extractNumericValue(DataCount dataCount) {
@@ -102,7 +102,7 @@ public abstract class AbstractForecastService implements ForecastService {
 			if (value instanceof Number) {
 				return ((Number) value).doubleValue();
 			} else if (value instanceof String strValue && NumberUtils.isCreatable(strValue)) {
-					return Double.parseDouble(strValue);
+				return Double.parseDouble(strValue);
 			}
 		} catch (Exception e) {
 			log.warn("Failed to extract numeric value from DataCount: {}", value, e);
@@ -114,18 +114,14 @@ public abstract class AbstractForecastService implements ForecastService {
 	/**
 	 * Create a forecast DataCount object.
 	 *
-	 * @param forecastValue
-	 *            Forecasted value
-	 * @param projectName
-	 *            Project name
-	 * @param kpiGroup
-	 *            KPI group identifier
-	 * @param forecastingModel
-	 *            The forecasting model used
+	 * @param forecastValue Forecasted value
+	 * @param projectName Project name
+	 * @param kpiGroup KPI group identifier
+	 * @param forecastingModel The forecasting model used
 	 * @return DataCount object with forecast
 	 */
-	protected DataCount createForecastDataCount(Double forecastValue, String projectName, String kpiGroup,
-			String forecastingModel) {
+	protected DataCount createForecastDataCount(
+			Double forecastValue, String projectName, String kpiGroup, String forecastingModel) {
 		DataCount forecast = new DataCount();
 		forecast.setData(String.valueOf(roundingOff(forecastValue)));
 		forecast.setValue(roundingOff(forecastValue));

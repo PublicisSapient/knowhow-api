@@ -22,18 +22,14 @@ import java.util.List;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-/**
- * Interface for forecasting service that predicts future KPI values.
- */
+/** Interface for forecasting service that predicts future KPI values. */
 public interface ForecastService {
 
 	/**
 	 * Generate forecast data points based on historical data.
 	 *
-	 * @param historicalData
-	 *            List of historical data points
-	 * @param kpiId
-	 *            KPI identifier
+	 * @param historicalData List of historical data points
+	 * @param kpiId KPI identifier
 	 * @return List of forecasted DataCount objects
 	 */
 	List<DataCount> generateForecast(List<DataCount> historicalData, String kpiId);
@@ -48,10 +44,8 @@ public interface ForecastService {
 	/**
 	 * Check if this forecaster supports the given KPI and has sufficient data.
 	 *
-	 * @param historicalData
-	 *            Historical data points
-	 * @param kpiId
-	 *            KPI identifier
+	 * @param historicalData Historical data points
+	 * @param kpiId KPI identifier
 	 * @return true if forecasting is supported
 	 */
 	boolean canForecast(List<DataCount> historicalData, String kpiId);

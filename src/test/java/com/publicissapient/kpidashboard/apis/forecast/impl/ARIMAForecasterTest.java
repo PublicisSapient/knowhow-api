@@ -33,9 +33,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-/**
- * Test class for ARIMAForecaster.
- */
+/** Test class for ARIMAForecaster. */
 @RunWith(MockitoJUnitRunner.class)
 public class ARIMAForecasterTest {
 
@@ -228,7 +226,7 @@ public class ARIMAForecasterTest {
 	public void testGenerateForecast_WithVolatileData() {
 		// Arrange - Create volatile data
 		List<DataCount> historicalData = new ArrayList<>();
-		double[] values = { 10, 25, 8, 30, 12, 28, 15, 35, 10, 40 };
+		double[] values = {10, 25, 8, 30, 12, 28, 15, 35, 10, 40};
 		for (double value : values) {
 			DataCount dc = new DataCount();
 			dc.setValue(value);
@@ -273,7 +271,6 @@ public class ARIMAForecasterTest {
 			assertEquals(0.0, forecastValue, 0.01);
 		}
 	}
-
 
 	@Test
 	public void testGenerateForecast_WithSeasonalPattern() {

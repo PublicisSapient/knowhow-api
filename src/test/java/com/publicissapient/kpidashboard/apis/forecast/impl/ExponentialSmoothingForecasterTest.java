@@ -33,9 +33,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-/**
- * Test class for ExponentialSmoothingForecaster.
- */
+/** Test class for ExponentialSmoothingForecaster. */
 @RunWith(MockitoJUnitRunner.class)
 public class ExponentialSmoothingForecasterTest {
 
@@ -113,7 +111,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -130,7 +129,7 @@ public class ExponentialSmoothingForecasterTest {
 	public void testGenerateForecast_WithVolatileData() {
 		// Arrange - Create volatile data (high coefficient of variation)
 		List<DataCount> historicalData = new ArrayList<>();
-		double[] values = { 10, 50, 5, 45, 15, 40, 20, 35, 25, 30 };
+		double[] values = {10, 50, 5, 45, 15, 40, 20, 35, 25, 30};
 		for (double value : values) {
 			DataCount dc = new DataCount();
 			dc.setValue(value);
@@ -140,7 +139,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -165,7 +165,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -182,7 +183,8 @@ public class ExponentialSmoothingForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(2);
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -205,7 +207,8 @@ public class ExponentialSmoothingForecasterTest {
 		List<DataCount> historicalData = new ArrayList<>();
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -216,7 +219,7 @@ public class ExponentialSmoothingForecasterTest {
 	public void testGenerateForecast_WithNegativeValues() {
 		// Arrange - Create data with negative values (should be clamped to 0)
 		List<DataCount> historicalData = new ArrayList<>();
-		double[] values = { 10, 5, 0, -5, -10, -15 };
+		double[] values = {10, 5, 0, -5, -10, -15};
 		for (double value : values) {
 			DataCount dc = new DataCount();
 			dc.setValue(value);
@@ -226,7 +229,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -239,7 +243,8 @@ public class ExponentialSmoothingForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(10);
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -253,7 +258,8 @@ public class ExponentialSmoothingForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(5);
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -280,7 +286,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -293,7 +300,8 @@ public class ExponentialSmoothingForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(3);
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -313,7 +321,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -329,7 +338,8 @@ public class ExponentialSmoothingForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(10);
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -341,7 +351,8 @@ public class ExponentialSmoothingForecasterTest {
 
 	@Test
 	public void testGenerateForecast_AlphaCalculation() {
-		// Arrange - Create data to test alpha calculation based on coefficient of variation
+		// Arrange - Create data to test alpha calculation based on coefficient of
+		// variation
 		List<DataCount> historicalData = new ArrayList<>();
 		// Low variation data (alpha should be ~0.3)
 		for (int i = 0; i < 10; i++) {
@@ -353,7 +364,8 @@ public class ExponentialSmoothingForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
+		List<DataCount> forecasts =
+				exponentialSmoothingForecaster.generateForecast(historicalData, "kpi46");
 
 		// Assert
 		assertNotNull(forecasts);

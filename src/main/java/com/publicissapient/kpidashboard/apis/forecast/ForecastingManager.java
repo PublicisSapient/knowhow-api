@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.MapUtils;
@@ -41,9 +40,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Manager service to coordinate forecasting operations. Routes forecast
- * requests to appropriate forecasting implementation based on KPI
- * configuration.
+ * Manager service to coordinate forecasting operations. Routes forecast requests to appropriate
+ * forecasting implementation based on KPI configuration.
  */
 @Service
 @Slf4j
@@ -67,10 +65,8 @@ public class ForecastingManager {
 	/**
 	 * Generate forecasts for given data if KPI is configured for forecasting.
 	 *
-	 * @param dataCounts
-	 *            Historical data points
-	 * @param kpiId
-	 *            KPI identifier
+	 * @param dataCounts Historical data points
+	 * @param kpiId KPI identifier
 	 * @return List of forecast DataCount objects
 	 */
 	public List<DataCount> generateForecasts(List<DataCount> dataCounts, String kpiId) {
@@ -91,7 +87,10 @@ public class ForecastingManager {
 			// Get forecast model from configuration
 			Optional<ForecastingModel> modelOpt = ForecastingModel.fromName(kpiMaster.getForecastModel());
 			if (modelOpt.isEmpty()) {
-				log.warn("Invalid forecast model '{}' configured for KPI {}", kpiMaster.getForecastModel(), kpiId);
+				log.warn(
+						"Invalid forecast model '{}' configured for KPI {}",
+						kpiMaster.getForecastModel(),
+						kpiId);
 				return forecasts;
 			}
 
@@ -106,7 +105,10 @@ public class ForecastingManager {
 			// Generate forecasts
 			if (forecaster.canForecast(dataCounts, kpiId)) {
 				forecasts = forecaster.generateForecast(dataCounts, kpiId);
-				log.debug("Generated {} forecast(s) for KPI {} using {}", forecasts.size(), kpiId,
+				log.debug(
+						"Generated {} forecast(s) for KPI {} using {}",
+						forecasts.size(),
+						kpiId,
 						model.getDisplayName());
 			}
 
@@ -124,7 +126,8 @@ public class ForecastingManager {
 	 * @param historicalData Historical data points for forecasting
 	 * @param kpiId KPI identifier
 	 */
-	public void addForecastsToDataCount(DataCount dataCount, List<DataCount> historicalData, String kpiId) {
+	public void addForecastsToDataCount(
+			DataCount dataCount, List<DataCount> historicalData, String kpiId) {
 		if (dataCount == null || historicalData == null || historicalData.isEmpty()) {
 			return;
 		}
@@ -142,15 +145,14 @@ public class ForecastingManager {
 	/**
 	 * Get KPI master configuration from cache.
 	 *
-	 * @param kpiId
-	 *            KPI identifier
+	 * @param kpiId KPI identifier
 	 * @return KpiMaster object or null
 	 */
 	private KpiMaster getKpiMaster(String kpiId) {
 		try {
 			List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
-			Map<String, KpiMaster> kpiMasterMap = masterList.stream()
-					.collect(Collectors.toMap(KpiMaster::getKpiId, Function.identity()));
+			Map<String, KpiMaster> kpiMasterMap =
+					masterList.stream().collect(Collectors.toMap(KpiMaster::getKpiId, Function.identity()));
 			return MapUtils.isNotEmpty(kpiMasterMap) ? kpiMasterMap.get(kpiId) : null;
 		} catch (Exception e) {
 			log.error("Error loading KPI master for KPI {}", kpiId, e);

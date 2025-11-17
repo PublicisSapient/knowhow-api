@@ -26,57 +26,43 @@ import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.apis.forecast.AbstractForecastService;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-import smile.timeseries.ARMA;
-
 import lombok.extern.slf4j.Slf4j;
+import smile.timeseries.ARMA;
 
 /**
  * ARIMA Forecaster using Smile Machine Learning Library.
- * 
- * <p>
- * <b>What is ARIMA?</b>
- * </p>
- * ARIMA (AutoRegressive Integrated Moving Average) forecasts future values
+ *
+ * <p><b>What is ARIMA?</b> ARIMA (AutoRegressive Integrated Moving Average) forecasts future values
  * based on:
+ *
  * <ul>
- * <li><b>AR(p)</b>: Past values influence the future (e.g., last 2 sprints
- * predict next sprint)</li>
- * <li><b>I(d)</b>: Removes trends by "differencing" - subtracting consecutive
- * values</li>
- * <li><b>MA(q)</b>: Adjusts predictions based on past forecast errors</li>
+ *   <li><b>AR(p)</b>: Past values influence the future (e.g., last 2 sprints predict next sprint)
+ *   <li><b>I(d)</b>: Removes trends by "differencing" - subtracting consecutive values
+ *   <li><b>MA(q)</b>: Adjusts predictions based on past forecast errors
  * </ul>
- * 
- * <p>
- * <b>How It Works:</b>
- * </p>
+ *
+ * <p><b>How It Works:</b>
+ *
  * <ol>
- * <li>Check if data has trends (non-stationary) by comparing variance in first
- * vs second half</li>
- * <li>If trending, apply differencing: [100, 105, 110] → [5, 5] to remove
- * trend</li>
- * <li>Fit ARMA model using Smile library with orders p and q based on data
- * size</li>
- * <li>Forecast next value</li>
- * <li>If we differenced, add back the last value: 5 + 110 = 115</li>
- * <li>Clamp to non-negative (for count-based KPIs)</li>
+ *   <li>Check if data has trends (non-stationary) by comparing variance in first vs second half
+ *   <li>If trending, apply differencing: [100, 105, 110] → [5, 5] to remove trend
+ *   <li>Fit ARMA model using Smile library with orders p and q based on data size
+ *   <li>Forecast next value
+ *   <li>If we differenced, add back the last value: 5 + 110 = 115
+ *   <li>Clamp to non-negative (for count-based KPIs)
  * </ol>
- * 
- * <p>
- * <b>Example:</b>
- * </p>
- * 
+ *
+ * <p><b>Example:</b>
+ *
  * <pre>
  * Input:  [100, 105, 110, 115, 120]
  * Output: 125 (continuing the +5 trend)
  * </pre>
- * 
- * <p>
- * <b>Best For:</b> KPIs with trends like velocity, defect counts, story points
- * </p>
- * <p>
- * <b>Requires:</b> Minimum 5 historical data points
- * </p>
- * 
+ *
+ * <p><b>Best For:</b> KPIs with trends like velocity, defect counts, story points
+ *
+ * <p><b>Requires:</b> Minimum 5 historical data points
+ *
  * @see smile.timeseries.ARMA
  * @see AbstractForecastService
  */
@@ -92,9 +78,8 @@ public class ARIMAForecaster extends AbstractForecastService {
 	}
 
 	/**
-	 * ARIMA-specific validation requiring minimum 5 data points. After differencing
-	 * (d=1), we need at least 4 points to fit ARMA(1,1). Therefore, original data
-	 * must have at least 5 points.
+	 * ARIMA-specific validation requiring minimum 5 data points. After differencing (d=1), we need at
+	 * least 4 points to fit ARMA(1,1). Therefore, original data must have at least 5 points.
 	 */
 	@Override
 	public boolean canForecast(List<DataCount> historicalData, String kpiId) {
@@ -104,7 +89,10 @@ public class ARIMAForecaster extends AbstractForecastService {
 
 		List<Double> values = extractValues(historicalData);
 		if (values.size() < MIN_ARIMA_DATA_POINTS) {
-			log.debug("KPI {}: ARIMA requires at least {} data points, got {}", kpiId, MIN_ARIMA_DATA_POINTS,
+			log.debug(
+					"KPI {}: ARIMA requires at least {} data points, got {}",
+					kpiId,
+					MIN_ARIMA_DATA_POINTS,
 					values.size());
 			return false;
 		}
@@ -159,7 +147,11 @@ public class ARIMAForecaster extends AbstractForecastService {
 			// Step 6: If we differenced, add back the last actual value
 			if (d == 1) {
 				forecastValue = data[data.length - 1] + forecastValue;
-				log.debug("KPI {}: Integrated forecast: {} + {} = {}", kpiId, data[data.length - 1], forecastArray[0],
+				log.debug(
+						"KPI {}: Integrated forecast: {} + {} = {}",
+						kpiId,
+						data[data.length - 1],
+						forecastArray[0],
 						forecastValue);
 			}
 
@@ -169,12 +161,18 @@ public class ARIMAForecaster extends AbstractForecastService {
 			// Step 8: Create forecast data object
 			String projectName = historicalData.get(historicalData.size() - 1).getSProjectName();
 			String kpiGroup = historicalData.get(historicalData.size() - 1).getKpiGroup();
-			DataCount forecast = createForecastDataCount(forecastValue, projectName, kpiGroup,
-					getModelType().getName());
+			DataCount forecast =
+					createForecastDataCount(forecastValue, projectName, kpiGroup, getModelType().getName());
 			forecasts.add(forecast);
 
-			log.info("KPI {}: ARIMA({},{},{}) forecast = {} (last actual = {})", kpiId, p, d, q,
-					String.format("%.2f", forecastValue), String.format("%.2f", values.get(values.size() - 1)));
+			log.info(
+					"KPI {}: ARIMA({},{},{}) forecast = {} (last actual = {})",
+					kpiId,
+					p,
+					d,
+					q,
+					String.format("%.2f", forecastValue),
+					String.format("%.2f", values.get(values.size() - 1)));
 		} catch (IllegalArgumentException e) {
 			log.error("KPI {}: Invalid ARMA parameters - {}", kpiId, e.getMessage());
 		} catch (Exception e) {
@@ -185,14 +183,12 @@ public class ARIMAForecaster extends AbstractForecastService {
 	}
 
 	/**
-	 * Simple variance shift detection to determine if differencing is needed.
-	 * Compares variance in first half vs second half of the data. If variance is
-	 * significantly different, data likely has a trend.
-	 * 
-	 * @param values
-	 *            Historical data points
-	 * @return true if variance shifts significantly (needs differencing), false
-	 *         otherwise
+	 * Simple variance shift detection to determine if differencing is needed. Compares variance in
+	 * first half vs second half of the data. If variance is significantly different, data likely has
+	 * a trend.
+	 *
+	 * @param values Historical data points
+	 * @return true if variance shifts significantly (needs differencing), false otherwise
 	 */
 	private boolean hasVarianceShift(List<Double> values) {
 		if (values.size() < 4) {
@@ -204,10 +200,8 @@ public class ARIMAForecaster extends AbstractForecastService {
 		double var2 = calculateVariance(values.subList(mid, values.size()));
 
 		// Handle edge cases
-		if (var1 < 1e-10 && var2 < 1e-10)
-			return false; // Both constant
-		if (var1 < 1e-10 || var2 < 1e-10)
-			return true; // One varying, one constant
+		if (var1 < 1e-10 && var2 < 1e-10) return false; // Both constant
+		if (var1 < 1e-10 || var2 < 1e-10) return true; // One varying, one constant
 
 		// If one half has 2x+ the variance of the other, apply differencing
 		double ratio = Math.max(var1, var2) / Math.min(var1, var2);
@@ -215,8 +209,8 @@ public class ARIMAForecaster extends AbstractForecastService {
 	}
 
 	/**
-	 * Calculate variance of a list of values. Variance = average of squared
-	 * differences from the mean.
+	 * Calculate variance of a list of values. Variance = average of squared differences from the
+	 * mean.
 	 */
 	private double calculateVariance(List<Double> values) {
 		double mean = values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
@@ -224,8 +218,8 @@ public class ARIMAForecaster extends AbstractForecastService {
 	}
 
 	/**
-	 * Apply first-order differencing: each value becomes (current - previous). This
-	 * removes linear trends. Example: [100, 105, 110] → [5, 5]
+	 * Apply first-order differencing: each value becomes (current - previous). This removes linear
+	 * trends. Example: [100, 105, 110] → [5, 5]
 	 */
 	private double[] difference(double[] data) {
 		if (data.length < 2) {

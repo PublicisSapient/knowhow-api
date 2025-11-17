@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -44,26 +43,19 @@ import com.publicissapient.kpidashboard.apis.forecast.service.ForecastService;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
-/**
- * Test class for ForecastingManager.
- */
+/** Test class for ForecastingManager. */
 @RunWith(MockitoJUnitRunner.class)
 public class ForecastingManagerTest {
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private ForecastService linearRegressionForecaster;
+	@Mock private ForecastService linearRegressionForecaster;
 
-	@Mock
-	private ForecastService exponentialSmoothingForecaster;
+	@Mock private ForecastService exponentialSmoothingForecaster;
 
-	@Mock
-	private ForecastService arimaForecaster;
+	@Mock private ForecastService arimaForecaster;
 
-	@InjectMocks
-	private ForecastingManager forecastingManager;
+	@InjectMocks private ForecastingManager forecastingManager;
 
 	private List<ForecastService> forecastServices;
 
@@ -75,7 +67,8 @@ public class ForecastingManagerTest {
 		forecastServices.add(arimaForecaster);
 
 		when(linearRegressionForecaster.getModelType()).thenReturn(ForecastingModel.LINEAR_REGRESSION);
-		when(exponentialSmoothingForecaster.getModelType()).thenReturn(ForecastingModel.EXPONENTIAL_SMOOTHING);
+		when(exponentialSmoothingForecaster.getModelType())
+				.thenReturn(ForecastingModel.EXPONENTIAL_SMOOTHING);
 		when(arimaForecaster.getModelType()).thenReturn(ForecastingModel.ARIMA);
 
 		forecastingManager = new ForecastingManager(configHelperService, forecastServices);
@@ -97,7 +90,8 @@ public class ForecastingManagerTest {
 
 		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
 		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
-		when(linearRegressionForecaster.generateForecast(any(), anyString())).thenReturn(expectedForecasts);
+		when(linearRegressionForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
 
 		// Act
 		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
@@ -124,7 +118,8 @@ public class ForecastingManagerTest {
 
 		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
 		when(exponentialSmoothingForecaster.canForecast(any(), anyString())).thenReturn(true);
-		when(exponentialSmoothingForecaster.generateForecast(any(), anyString())).thenReturn(expectedForecasts);
+		when(exponentialSmoothingForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
 
 		// Act
 		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
@@ -275,7 +270,8 @@ public class ForecastingManagerTest {
 
 		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
 		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
-		when(linearRegressionForecaster.generateForecast(any(), anyString())).thenReturn(expectedForecasts);
+		when(linearRegressionForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
 
 		// Act
 		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);

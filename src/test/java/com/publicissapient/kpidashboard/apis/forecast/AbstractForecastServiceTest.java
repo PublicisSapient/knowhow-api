@@ -34,17 +34,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-/**
- * Test class for AbstractForecastService.
- */
+/** Test class for AbstractForecastService. */
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractForecastServiceTest {
 
 	private TestForecastService testForecastService;
 
-	/**
-	 * Concrete implementation for testing abstract class
-	 */
+	/** Concrete implementation for testing abstract class */
 	private static class TestForecastService extends AbstractForecastService {
 		@Override
 		public List<DataCount> generateForecast(List<DataCount> historicalData, String kpiId) {
@@ -314,7 +310,8 @@ public class AbstractForecastServiceTest {
 		String kpiGroup = "TestGroup";
 
 		// Act
-		DataCount result = testForecastService.createForecastDataCount(forecastValue, projectName, kpiGroup,"");
+		DataCount result =
+				testForecastService.createForecastDataCount(forecastValue, projectName, kpiGroup, "");
 
 		// Assert
 		assertNotNull(result);
@@ -332,7 +329,8 @@ public class AbstractForecastServiceTest {
 		String kpiGroup = "TestGroup";
 
 		// Act
-		DataCount result = testForecastService.createForecastDataCount(forecastValue, projectName, kpiGroup, "");
+		DataCount result =
+				testForecastService.createForecastDataCount(forecastValue, projectName, kpiGroup, "");
 
 		// Assert
 		assertNotNull(result);
@@ -348,7 +346,8 @@ public class AbstractForecastServiceTest {
 		String kpiGroup = "TestGroup";
 
 		// Act
-		DataCount result = testForecastService.createForecastDataCount(forecastValue, projectName, kpiGroup,"");
+		DataCount result =
+				testForecastService.createForecastDataCount(forecastValue, projectName, kpiGroup, "");
 
 		// Assert
 		assertNotNull(result);

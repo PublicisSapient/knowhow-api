@@ -33,9 +33,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-/**
- * Test class for LinearRegressionForecaster.
- */
+/** Test class for LinearRegressionForecaster. */
 @RunWith(MockitoJUnitRunner.class)
 public class LinearRegressionForecasterTest {
 
@@ -113,12 +111,14 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
-		// Forecast should follow increasing trend (be higher than last historical value)
+		// Forecast should follow increasing trend (be higher than last historical
+		// value)
 		Double forecastValue = (Double) forecasts.get(0).getValue();
 		Double lastHistoricalValue = (Double) historicalData.get(historicalData.size() - 1).getValue();
 		assertTrue(forecastValue >= lastHistoricalValue);
@@ -137,7 +137,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -160,7 +161,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -176,7 +178,8 @@ public class LinearRegressionForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(2);
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -199,7 +202,8 @@ public class LinearRegressionForecasterTest {
 		List<DataCount> historicalData = new ArrayList<>();
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -210,7 +214,7 @@ public class LinearRegressionForecasterTest {
 	public void testGenerateForecast_WithNegativeValues() {
 		// Arrange - Create data that would result in negative forecasts
 		List<DataCount> historicalData = new ArrayList<>();
-		double[] values = { 50, 40, 30, 20, 10, 5 };
+		double[] values = {50, 40, 30, 20, 10, 5};
 		for (double value : values) {
 			DataCount dc = new DataCount();
 			dc.setValue(value);
@@ -220,7 +224,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -236,7 +241,8 @@ public class LinearRegressionForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(5);
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -259,7 +265,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -285,7 +292,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -298,7 +306,8 @@ public class LinearRegressionForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(3);
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -309,7 +318,7 @@ public class LinearRegressionForecasterTest {
 	public void testGenerateForecast_WithVolatileData() {
 		// Arrange - Create volatile but trending data
 		List<DataCount> historicalData = new ArrayList<>();
-		double[] values = { 10, 15, 12, 18, 16, 20, 19, 25, 22, 28 };
+		double[] values = {10, 15, 12, 18, 16, 20, 19, 25, 22, 28};
 		for (double value : values) {
 			DataCount dc = new DataCount();
 			dc.setValue(value);
@@ -319,7 +328,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -341,7 +351,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -362,7 +373,8 @@ public class LinearRegressionForecasterTest {
 		}
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
@@ -377,7 +389,8 @@ public class LinearRegressionForecasterTest {
 		List<DataCount> historicalData = createTestDataCounts(10);
 
 		// Act
-		List<DataCount> forecasts = linearRegressionForecaster.generateForecast(historicalData, "kpi113");
+		List<DataCount> forecasts =
+				linearRegressionForecaster.generateForecast(historicalData, "kpi113");
 
 		// Assert
 		assertNotNull(forecasts);
