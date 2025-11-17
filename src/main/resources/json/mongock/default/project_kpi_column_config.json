@@ -3067,7 +3067,7 @@
         "isDefault": true
       },
       {
-        "columnName": "Repository Url",
+        "columnName": "Repo",
         "order": 1,
         "isShown": true,
         "isDefault": true
@@ -3079,14 +3079,26 @@
         "isDefault": true
       },
       {
-        "columnName": "Weeks",
+        "columnName": "Author",
         "order": 3,
         "isShown": true,
         "isDefault": true
       },
       {
-        "columnName": "PR Size",
+        "columnName": "Days/Weeks",
         "order": 4,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Merge Request Url",
+        "order": 5,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "PR Size (No. of lines)",
+        "order": 6,
         "isShown": true,
         "isDefault": true
       }

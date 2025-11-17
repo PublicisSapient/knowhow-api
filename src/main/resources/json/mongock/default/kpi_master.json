@@ -3927,7 +3927,7 @@
   },
   {
     "kpiId": "kpi162",
-    "kpiName": "PR Size",
+    "kpiName": "PR Distribution",
     "maxValue": 10,
     "kpiUnit": "Lines",
     "isDeleted": false,
@@ -3937,7 +3937,7 @@
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "thresholdValue": "4",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "scatter",
     "kpiInfo": {
       "definition": "Pull request size measures the number of code lines modified in a pull request. Smaller pull requests are easier to review, safer to merge, and correlate to a lower cycle time.",
       "details": [
@@ -3953,21 +3953,12 @@
     "xaxisLabel": "Weeks",
     "yaxisLabel": "Count (No. of Lines)",
     "isPositiveTrend": false,
-    "upperThresholdBG": "red",
-    "lowerThresholdBG": "white",
     "showTrend": false,
     "kpiFilter": "dropDown",
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": false,
     "hideOverallFilter": true,
-    "maturityRange": [
-      "-16",
-      "16-8",
-      "8-4",
-      "4-2",
-      "2-"
-    ],
     "isRepoToolKpi": true,
     "kpiCategory": "Developer"
   },
