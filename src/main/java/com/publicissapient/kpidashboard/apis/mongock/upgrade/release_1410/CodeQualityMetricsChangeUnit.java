@@ -30,7 +30,7 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "code_quality_metrics_kpi", order = "14107", author = "valanil", systemVersion = "14.1.0")
+@ChangeUnit(id = "code_quality_metrics_kpi", order = "14108", author = "valanil", systemVersion = "14.1.0")
 public class CodeQualityMetricsChangeUnit {
 
     public static final String KPI_201 = "kpi201";
