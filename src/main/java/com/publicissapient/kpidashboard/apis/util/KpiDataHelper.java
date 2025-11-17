@@ -396,7 +396,7 @@ public final class KpiDataHelper {
             while (startOfWeek.getDayOfWeek() != DayOfWeek.MONDAY) {
                 startOfWeek = startOfWeek.minusDays(1L);
             }
-            startDate = startOfWeek.minusWeeks((dataPoints - 1));
+            startDate = startOfWeek.minusWeeks( (dataPoints - (long)1));
 
             // Calculate end date based on weeks
             endDate = date;
@@ -409,7 +409,7 @@ public final class KpiDataHelper {
             YearMonth month = YearMonth.from(date);
             startDate =
                     month
-                            .minusMonths((dataPoints - 1))
+                            .minusMonths( (dataPoints - (long)1))
                             .atDay(1)
                             .atStartOfDay(ZoneId.systemDefault())
                             .toLocalDateTime();
@@ -419,7 +419,7 @@ public final class KpiDataHelper {
 
         } else {
             // Calculate start date based on days
-            startDate = date.minusDays((dataPoints - 1)).toLocalDate().atStartOfDay();
+            startDate = date.minusDays( (dataPoints - (long)1)).toLocalDate().atStartOfDay();
 
             // End date is the end of the current day
             endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
