@@ -22,28 +22,10 @@ import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.CommittmentReliabilityServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.BuildFrequencyInfo;
-import com.publicissapient.kpidashboard.apis.model.ChangeFailureRateInfo;
-import com.publicissapient.kpidashboard.apis.model.CodeBuildTimeInfo;
-import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
-import com.publicissapient.kpidashboard.apis.model.DSRValidationData;
-import com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo;
-import com.publicissapient.kpidashboard.apis.model.DeploymentFrequencyInfo;
-import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiModalValue;
-import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
-import com.publicissapient.kpidashboard.apis.model.LeadTimeChangeData;
-import com.publicissapient.kpidashboard.apis.model.MeanTimeRecoverData;
-import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterValue;
-import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
-import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
-import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
-import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
-import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
-import com.publicissapient.kpidashboard.common.model.application.ResolutionTimeValidation;
+import com.publicissapient.kpidashboard.common.model.application.*;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiData;
 import com.publicissapient.kpidashboard.common.model.jira.IssueDetails;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
@@ -58,6 +40,7 @@ import com.publicissapient.kpidashboard.common.model.testexecution.KanbanTestExe
 import com.publicissapient.kpidashboard.common.model.testexecution.TestExecution;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -88,6 +71,7 @@ import java.util.stream.Collectors;
  *
  * @author pkum34
  */
+@Slf4j
 public class KPIExcelUtility {
 
 	public static final String TIME = "0d ";
@@ -2893,4 +2877,115 @@ public class KPIExcelUtility {
 									}));
 		}
 	}
+
+
+    public static void populateCodeQualityMetricsExcelData(
+            Map<String, DataCountGroup> groupMap, List<KPIExcelData> kpiExcelDataList,String dateLabel) {
+        for (Map.Entry<String, DataCountGroup> entry : groupMap.entrySet()) {
+            String key = entry.getKey();
+            String[] filters = extractFilters(key);
+
+            KPIExcelData excelData = new KPIExcelData();
+
+            excelData.setProject(extractProjectName(filters[0]));
+            excelData.setRepo(extractRepositoryName(filters[0]));
+            excelData.setBranch(extractBranchName(filters[0]));
+            excelData.setDeveloper(filters[1]);
+            excelData.setDaysWeeks(dateLabel);
+            excelData.setReworkRate(String.format("%.2f", extractValueRate(entry.getValue(), "Rework Rate")));
+            double revertRate = extractValueRate(entry.getValue(), "Revert Rate");
+            // Format the revertRate to two decimal points and convert back to a double
+            double formattedRevertRate = Double.parseDouble(String.format("%.2f", revertRate));
+            excelData.setRevertRate(formattedRevertRate);
+            kpiExcelDataList.add(excelData);
+        }
+    }
+
+    /**
+     * Extracts filters from a given key string.
+     * Splits the input key string using "#" as a delimiter to extract two potential filters.
+     * - The first part is considered as `filter1`.
+     * - The second part is `filter2`, and if it is not present, it defaults to "Unknown".
+     * @param key the input string containing delimited filter values ---> Expected format: "filter1#filter2"
+     * @return an array containing the extracted filters; if a filter is missing, "Unknown" is substituted
+     */
+
+    public static String[] extractFilters(String key) {
+        String[] keyParts = key.split("#");
+        String filter1 = keyParts.length > 0 ? keyParts[0] : key;
+        String filter2 = keyParts.length > 1 ? keyParts[1] : "Unknown";
+        return new String[] {filter1, filter2};
+    }
+
+    /**
+     * Extracts project name from filter string.
+     * Expected format: "branch -> repository -> project"
+     *
+     * @param filter1 the filter string containing branch, repository, and project
+     * @return project name or empty string if not found
+     */
+    public static String extractProjectName(String filter1) {
+        String[] parts = filter1.split(" -> ");
+        return parts.length >= 3 ? parts[2] : "";
+    }
+
+    /**
+     * Extracts repository name from filter string.
+     * Expected format: "branch -> repository -> project"
+     *
+     * @param filter1 the filter string containing branch, repository, and project
+     * @return repository name or empty string if not found
+     */
+    private static String extractRepositoryName(String filter1) {
+        String[] parts = filter1.split(" -> ");
+        return parts.length >= 2 ? parts[1] : "";
+    }
+
+    /**
+     * Extracts branch name from filter string.
+     * Expected format: "branch -> repository -> project"
+     *
+     * @param filter1 the filter string containing branch, repository, and project
+     * @return branch name or empty string if not found
+     */
+    private static String extractBranchName(String filter1) {
+        String[] parts = filter1.split(" -> ");
+        return parts.length >= 1 ? parts[0] : "";
+    }
+
+    public static String getDateLabel(KpiRequest kpiRequest) {
+        String duration = kpiRequest.getDuration();
+        int dataPoints = kpiRequest.getXAxisDataPoints();
+        LocalDateTime currentDate = DateUtil.getTodayTime();
+
+        CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
+
+        return DateUtil.dateTimeConverter(periodRange.getStartDate().toString(), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT)
+                + " to "
+                + DateUtil.dateTimeConverter(periodRange.getEndDate().toString(), DateUtil.DATE_FORMAT, DateUtil.DISPLAY_DATE_FORMAT);
+    }
+
+    /**
+     * Extracts the value rate of a specified data type from a DataCountGroup.
+     * @param dataCountGroup the group containing a list of DataCount objects
+     * @param dataType the type of data to search for within the group
+     * @return the found value as a double, restricted to 0.0 if not found or upon error
+     */
+    private static double extractValueRate(DataCountGroup dataCountGroup, String dataType) {
+        try {
+            if (dataCountGroup != null && dataCountGroup.getValue() != null && !dataCountGroup.getValue().isEmpty()) {
+                for (DataCount dataCount : dataCountGroup.getValue()) {
+                    if (dataCount != null && dataCount.getValue() != null && dataCount.getData() != null
+                            && dataCount.getData().equals(dataType)) {
+                        return ((Number) dataCount.getValue()).doubleValue();
+
+                    }
+                }
+            }
+            return 0.0;
+        } catch (Exception e) {
+            log.warn("Failed to extract value for dataType: {} - {}", dataType, e.getMessage());
+            return 0.0;
+        }
+    }
 }
