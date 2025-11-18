@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -75,6 +76,9 @@ public abstract class ToolsKPIService<R, S> {
 	@Autowired private CacheService cacheService;
 
 	@Autowired private ConfigHelperService configHelperService;
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
 
 	/**
 	 * Calculates the aggregated value for the nodes in the bottom-up fashion. nodeWiseKPIValue is
@@ -681,9 +685,15 @@ public abstract class ToolsKPIService<R, S> {
 						aggregateValue = maturityValue.getValue();
 						maturity = maturityValue.getKey();
 					}
-					trendValues.add(
-							new DataCount(
-									node.getName(), maturity, aggregateValue, getList(dataCounts, kpiName)));
+
+					DataCount maturityDataCount = new DataCount(node.getName(), maturity, aggregateValue,
+							getList(dataCounts, kpiName));
+
+					// Add forecasts if configured
+					Optional.ofNullable(forecastingManager).ifPresent(
+							manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+
+					trendValues.add(maturityDataCount);
 				}
 			}
 		}
@@ -815,9 +825,15 @@ public abstract class ToolsKPIService<R, S> {
 									aggregateValue = maturityValue.getValue();
 									maturity = maturityValue.getKey();
 								}
-								trendValues.add(
-										new DataCount(
-												node.getName(), maturity, aggregateValue, getList(value, kpiName)));
+
+								DataCount maturityDataCount = new DataCount(node.getName(), maturity, aggregateValue,
+										getList(value, kpiName));
+
+								// Add forecasts if configured
+								Optional.ofNullable(forecastingManager).ifPresent(
+										manager -> manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
+
+								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
 							});
 				}
