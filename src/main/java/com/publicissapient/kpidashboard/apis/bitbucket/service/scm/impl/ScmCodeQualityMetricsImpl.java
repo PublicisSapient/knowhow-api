@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+
 
 /**
  * SCM Code Quality Metrics Composite Service Implementation
@@ -88,8 +88,7 @@ public class ScmCodeQualityMetricsImpl
 
     /**
      * Retrieves and processes KPI data for both rework rate and revert rate metrics.
-     * Uses parallel processing to fetch data from both services simultaneously for optimal performance.
-     * Combines results into unified DataCountGroup format for UI consumption.
+     * Sequentially fetches data from both services and combines results into unified DataCountGroup format for UI consumption.
      *
      * @param kpiRequest the KPI request containing filters, date range, and parameters
      * @param kpiElement the KPI element to populate with combined results
@@ -103,55 +102,18 @@ public class ScmCodeQualityMetricsImpl
         Map<String, ReworkCalculation> reworkMap = new HashMap<>();
         Map<String, MetricsHolder> revertMap = new HashMap<>();
 
-        ExecutorService executorService =
-                Executors.newFixedThreadPool(2); // Create a thread pool with 2 threads
+        // Get rework rate data
+        KpiElement reworkRateElement = scmCodeQualityReworkRateServiceImpl.getKpiData(
+                kpiRequest, new KpiElement(), projectNode);
+        if (reworkRateElement != null && reworkRateElement.getTrendValueList() != null) {
+            reworkMap = (Map<String, ReworkCalculation>) reworkRateElement.getTrendValueList();
+        }
 
-        try {
-            // Define callables for both tasks
-            Callable<Map<String, ReworkCalculation>> reworkTask =
-                    () -> {
-                        KpiElement reworkRateElement =
-                                scmCodeQualityReworkRateServiceImpl.getKpiData(
-                                        kpiRequest, new KpiElement(), projectNode);
-                        if (reworkRateElement != null && reworkRateElement.getTrendValueList() != null) {
-                            return (Map<String, ReworkCalculation>) reworkRateElement.getTrendValueList();
-                        }
-                        return new HashMap<>(); // Return an empty map if null
-                    };
-
-            Callable<Map<String, MetricsHolder>> revertTask =
-                    () -> {
-                        KpiElement revertRateElement =
-                                scmCodeQualityRevertRateServiceImpl.getKpiData(
-                                        kpiRequest, new KpiElement(), projectNode);
-                        if (revertRateElement != null && revertRateElement.getTrendValueList() != null) {
-                            return (Map<String, MetricsHolder>) revertRateElement.getTrendValueList();
-                        }
-                        return new HashMap<>(); // Return an empty map if null
-                    };
-
-            // Submit tasks to executor service
-            Future<Map<String, ReworkCalculation>> reworkFuture = executorService.submit(reworkTask);
-            Future<Map<String, MetricsHolder>> revertFuture = executorService.submit(revertTask);
-
-            // Retrieve results from futures
-            try {
-                reworkMap = reworkFuture.get(); // Retrieve and store result from rework task
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Error processing Rework Rate KPI: {}", e.getMessage(), e);
-                Thread.currentThread().interrupt();
-            }
-
-            try {
-                revertMap = revertFuture.get(); // Retrieve and store result from revert task
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Error processing Revert Rate KPI: {}", e.getMessage(), e);
-                Thread.currentThread().interrupt();
-            }
-
-        } finally {
-            // Shutdown the executor service
-            executorService.shutdown();
+        // Get revert rate data
+        KpiElement revertRateElement = scmCodeQualityRevertRateServiceImpl.getKpiData(
+                kpiRequest, new KpiElement(), projectNode);
+        if (revertRateElement != null && revertRateElement.getTrendValueList() != null) {
+            revertMap = (Map<String, MetricsHolder>) revertRateElement.getTrendValueList();
         }
 
         String dateLabel = KPIExcelUtility.getDateLabel(kpiRequest);
