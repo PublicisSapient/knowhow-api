@@ -21,9 +21,16 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.when;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
@@ -38,7 +45,12 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
-import com.publicissapient.kpidashboard.apis.data.*;
+import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
+import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
+import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
+import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
+import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
+import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
@@ -58,20 +70,22 @@ import com.publicissapient.kpidashboard.common.repository.application.FieldMappi
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WastageServiceImplTest {
-	@Mock CacheService cacheService;
-	@Mock private JiraIssueRepository jiraIssueRepository;
-	@Mock private ConfigHelperService configHelperService;
-	@Mock private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock private CacheService cacheService;
 
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
 	@Mock private FieldMappingRepository fieldMappingRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private SprintRepository sprintRepository;
+
+	@Mock private JiraIterationServiceR jiraService;
 
 	@InjectMocks private WastageServiceImpl wastageServiceImpl;
-
-	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock private JiraIterationServiceR jiraService;
 
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
@@ -131,10 +145,14 @@ public class WastageServiceImplTest {
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
-				.thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
@@ -162,10 +180,15 @@ public class WastageServiceImplTest {
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		sprintDetails.setState("ACTIVE");
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
-				.thenReturn(jiraIssueCustomHistoryList);
+
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(

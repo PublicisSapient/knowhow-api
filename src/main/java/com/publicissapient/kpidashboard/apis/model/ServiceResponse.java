@@ -18,24 +18,21 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /** Class used for common response from All services */
-@Setter
-@Getter
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 public class ServiceResponse extends BaseResponse {
 
 	private Object data;
-
-	// --- auth-N-auth required code starts here --------------
-	public ServiceResponse() {}
-
-	// --- auth-N-auth required code end here --------------
 	/**
-	 * @param isSuccess
-	 * @param msg
-	 * @param data
+	 * @param isSuccess Field representing the status of the response
+	 * @param msg Field representing the status message of the response
+	 * @param data Generic field representing the data which the response will contain
 	 */
 	public ServiceResponse(Boolean isSuccess, String msg, Object data) {
 		super();

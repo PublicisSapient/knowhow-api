@@ -31,7 +31,7 @@ public class ReaderRetryHelper {
 	public static final long TIME_INTERVAL_BETWEEN_RETRY = 5000;
 
 	@Retryable
-	public <T> T executeWithRetry(RetryableOperation<T> operation) throws Exception {
+	public <T> T executeWithRetry(RetryableOperation<T> operation) {
 		RetryTemplate retryTemplate =
 				new RetryTemplate(); // Creating a new RetryTemplate for each retry
 
@@ -54,6 +54,6 @@ public class ReaderRetryHelper {
 
 	@FunctionalInterface
 	public interface RetryableOperation<T> {
-		T execute() throws Exception;
+		T execute();
 	}
 }

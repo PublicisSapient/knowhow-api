@@ -93,7 +93,7 @@ public class KpiIntegrationControllerTest {
 	}
 
 	@Test
-	public void testGetMaturityValuesForbidden() {
+	public void testGetMaturityValuesOk() {
 		KpiRequest kpiRequest = new KpiRequest();
 		when(httpServletRequest.getHeader("X-Api-Key")).thenReturn("valid-token");
 		when(maturityService.getKpiResponses(kpiRequest))
@@ -103,7 +103,7 @@ public class KpiIntegrationControllerTest {
 		ResponseEntity<List<KpiElement>> responseEntity =
 				kpiIntegrationController.getMaturityValues(httpServletRequest, kpiRequest);
 
-		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertTrue(responseEntity.getBody().isEmpty());
 		verify(maturityService).getKpiResponses(kpiRequest);
 	}

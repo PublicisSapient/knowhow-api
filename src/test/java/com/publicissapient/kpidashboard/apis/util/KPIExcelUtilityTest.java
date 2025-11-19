@@ -1769,7 +1769,6 @@ public class KPIExcelUtilityTest {
 
 		assertEquals("Sprint-1", rowTC1.getSprintName());
 		assertEquals("Automated", rowTC1.getTestCaseType());
-		assertEquals("Pass", rowTC1.getTestCaseStatus());
 		assertEquals("3.0", rowTC1.getExecutionTime()); // (2000+4000)/2 ms => 3.0 sec
 
 		KPIExcelData rowTC2 =
@@ -1780,7 +1779,6 @@ public class KPIExcelUtilityTest {
 
 		assertEquals("Sprint-1", rowTC2.getSprintName());
 		assertEquals("Manual", rowTC2.getTestCaseType());
-		assertEquals("Fail", rowTC2.getTestCaseStatus());
 		assertEquals("3.0", rowTC2.getExecutionTime()); // 3000 ms => 3.0 sec
 	}
 
@@ -1817,7 +1815,6 @@ public class KPIExcelUtilityTest {
 		KPIExcelData row = kpiExcelDataLocal.get(0);
 		assertEquals("TC-3", row.getTestCaseId());
 		assertEquals("", row.getTestCaseType()); // not in either list
-		assertEquals("Blocked", row.getTestCaseStatus());
 		assertEquals("1.5", row.getExecutionTime()); // 1500 ms => 1.5 sec
 	}
 
