@@ -136,7 +136,6 @@ public class ProcessorController {
 	}
 
 	@PostMapping(path = "/fetch/scm/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasPermission(#sprintId, 'TRIGGER_PROCESSOR')")
 	public ResponseEntity<ServiceResponse> triggerRepoConfigFetchByConnectionId(
 			@PathVariable String connectionId) {
 
