@@ -42,7 +42,6 @@ import com.publicissapient.kpidashboard.common.model.application.CycleTimeValida
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
-import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import com.publicissapient.kpidashboard.common.model.application.ResolutionTimeValidation;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiData;
 import com.publicissapient.kpidashboard.common.model.jira.IssueDetails;
@@ -1537,43 +1536,35 @@ public class KPIExcelUtility {
 		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
 			repoToolValidationDataList.forEach(
 					repoToolValidationData -> {
-						KPIExcelData excelData = new KPIExcelData();
-						excelData.setProject(repoToolValidationData.getProjectName());
-						excelData.setRepo(repoToolValidationData.getRepoUrl());
-						excelData.setBranch(repoToolValidationData.getBranchName());
-						excelData.setAuthor(repoToolValidationData.getDeveloperName());
-						excelData.setDaysWeeks(repoToolValidationData.getDate());
-
 						if (CollectionUtils.isNotEmpty(repoToolValidationData.getPullRequestsValues())) {
-
-							Map<String, String> mergeUrlMap = repoToolValidationData.getPullRequestsValues().stream()
+							repoToolValidationData.getPullRequestsValues().stream()
 									.filter(pr -> pr.getPrUrl() != null)
-									.collect(Collectors.toMap(
-											PullRequestsValue::getPrUrl,
-											PullRequestsValue::getPrUrl,
-											(v1, v2) -> v1 // handle duplicate keys
-									));
-
-							long totalLineChanges = repoToolValidationData.getPullRequestsValues().stream()
-									.map(PullRequestsValue::getSize)
-									.filter(Objects::nonNull)
-									.mapToLong(size -> {
+									.forEach(pr -> {
+										KPIExcelData excelData = new KPIExcelData();
+										excelData.setProject(repoToolValidationData.getProjectName());
+										excelData.setRepo(repoToolValidationData.getRepoUrl());
+										excelData.setBranch(repoToolValidationData.getBranchName());
+										excelData.setAuthor(repoToolValidationData.getDeveloperName());
+										excelData.setDaysWeeks(repoToolValidationData.getDate());
+										excelData.setMergeRequestUrl(Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
 										try {
-											return Long.parseLong(size);
+											excelData.setTotalLineChanges(Long.parseLong(pr.getSize()));
 										} catch (NumberFormatException e) {
-											return 0L;
+											excelData.setTotalLineChanges(0L);
 										}
-									})
-									.sum();
-
-							excelData.setMergeRequestUrl(mergeUrlMap);
-							excelData.setTotalLineChanges(totalLineChanges);
+										kpiExcelData.add(excelData);
+									});
 						} else {
+							KPIExcelData excelData = new KPIExcelData();
+							excelData.setProject(repoToolValidationData.getProjectName());
+							excelData.setRepo(repoToolValidationData.getRepoUrl());
+							excelData.setBranch(repoToolValidationData.getBranchName());
+							excelData.setAuthor(repoToolValidationData.getDeveloperName());
+							excelData.setDaysWeeks(repoToolValidationData.getDate());
 							excelData.setMergeRequestUrl(Collections.emptyMap());
 							excelData.setTotalLineChanges(0L);
+							kpiExcelData.add(excelData);
 						}
-
-						kpiExcelData.add(excelData);
 					});
 		}
 	}

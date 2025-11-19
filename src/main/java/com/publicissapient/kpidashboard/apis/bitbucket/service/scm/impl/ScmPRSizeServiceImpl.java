@@ -203,36 +203,32 @@ public class ScmPRSizeServiceImpl
             return;
         }
 
-        String branchName = getBranchSubFilter(tool, projectName);
-        String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-
         List<ScmMergeRequests> mergeRequestsForBranch =
                 DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-        List<PullRequestsValue> overAllPRValues = new ArrayList<>();
-
-        mergeRequestsForBranch.stream().forEach(scmMergeRequests -> {
-            PullRequestsValue pr = new PullRequestsValue();
-            pr.setLabel(scmMergeRequests.getExternalId());
-            pr.setSize(scmMergeRequests.getLinesChanged().toString());
-            pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
-            pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
-            overAllPRValues.add(pr);
-        });
+        String branchName = getBranchSubFilter(tool, projectName);
+        
+        List<PullRequestsValue> overAllPRValues = mergeRequestsForBranch.stream()
+                .map(this::createPullRequestValue)
+                .collect(Collectors.toList());
 
         DeveloperKpiHelper.setDataCounts(
-                projectName,
-                dateLabel,
-                overallKpiGroup,
-                overAllPRValues,
-                kpiTrendDataByGroup);
-
-        Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
-                DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch);
+                projectName, dateLabel, branchName + "#" + Constant.AGGREGATED_VALUE,
+                overAllPRValues, kpiTrendDataByGroup);
 
         validationDataList.addAll(
                 prepareUserValidationData(
-                        userWiseMergeRequests, assignees, tool, projectName, dateLabel, kpiTrendDataByGroup));
+                        DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch),
+                        assignees, tool, projectName, dateLabel, kpiTrendDataByGroup));
+    }
+
+    private PullRequestsValue createPullRequestValue(ScmMergeRequests scmMergeRequests) {
+        PullRequestsValue pr = new PullRequestsValue();
+        pr.setLabel(scmMergeRequests.getExternalId());
+        pr.setSize(scmMergeRequests.getLinesChanged().toString());
+        pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
+        pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
+        return pr;
     }
 
     private List<RepoToolValidationData> prepareUserValidationData(
@@ -242,38 +238,24 @@ public class ScmPRSizeServiceImpl
             String projectName,
             String dateLabel,
             Map<String, List<DataCount>> kpiTrendDataByGroup) {
-        List<PullRequestsValue> userWiseMRValues = new ArrayList<>();
 
         return userWiseMergeRequests.entrySet().stream()
-                .map(
-                        entry -> {
-                            String userEmail = entry.getKey();
-                            List<ScmMergeRequests> userMergeRequests = entry.getValue();
+                .map(entry -> {
+                    String userEmail = entry.getKey();
+                    List<ScmMergeRequests> userMergeRequests = entry.getValue();
+                    String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 
-                            String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-                            userMergeRequests.stream().forEach(scmMergeRequests -> {
-                                PullRequestsValue pr = new PullRequestsValue();
-                                pr.setLabel(scmMergeRequests.getExternalId());
-                                pr.setSize(scmMergeRequests.getLinesChanged().toString());
-                                pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
-                                pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
-                                userWiseMRValues.add(pr);
-                            });
+                    List<PullRequestsValue> userWiseMRValues = userMergeRequests.stream()
+                            .map(this::createPullRequestValue)
+                            .collect(Collectors.toList());
 
-                            long userMrCount = userMergeRequests.size();
+                    String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
+                    DeveloperKpiHelper.setDataCounts(
+                            projectName, dateLabel, userKpiGroup, userWiseMRValues, kpiTrendDataByGroup);
 
-                            String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
-
-                            DeveloperKpiHelper.setDataCounts(
-                                    projectName,
-                                    dateLabel,
-                                    userKpiGroup,
-                                    userWiseMRValues,
-                                    kpiTrendDataByGroup);
-
-                            return createValidationData(
-                                    projectName, tool, developerName, dateLabel, userWiseMRValues, userMrCount);
-                        })
+                    return createValidationData(
+                            projectName, tool, developerName, dateLabel, userWiseMRValues, userMergeRequests.size());
+                })
                 .collect(Collectors.toList());
     }
 

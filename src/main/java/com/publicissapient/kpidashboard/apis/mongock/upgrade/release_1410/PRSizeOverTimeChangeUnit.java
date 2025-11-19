@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@ChangeUnit(id = "pr_size_kpi", order = "014106", author = "aksshriv1", systemVersion = "14.1.0")
+@ChangeUnit(id = "pr_size_kpi", order = "14106", author = "aksshriv1", systemVersion = "14.1.0")
 public class PRSizeOverTimeChangeUnit {
 
     public static final String KPI_ID = "kpiId";
