@@ -978,7 +978,7 @@ public enum KPIExcelColumn {
 			"kpi173",
 			Arrays.asList("Project", "Repo", "Branch", "Developer", "Days/Weeks", "Rework Rate")),
     CODE_QUALITY_METRICS(
-            "kpi173",
+            "kpi201",
             Arrays.asList("Project", "Repo", "Branch", "Developer", "Days/Weeks", "Rework Rate","Revert Rate")),
 
 	REVERT_RATE(
