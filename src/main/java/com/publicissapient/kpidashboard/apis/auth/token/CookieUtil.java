@@ -36,7 +36,7 @@ public class CookieUtil {
 		cookie.setMaxAge(customApiConfig.getAuthCookieDuration());
 		cookie.setSecure(customApiConfig.isAuthCookieSecured());
 		cookie.setHttpOnly(customApiConfig.isAuthCookieHttpOnly());
-		cookie.setPath("/api");
+		cookie.setPath("/know-how/api");
 		if (authProperties.isSubDomainCookie()) {
 			cookie.setDomain(authProperties.getDomain());
 		}
@@ -80,7 +80,7 @@ public class CookieUtil {
 		getCookie(request, name).ifPresent(foundCookie -> {
 			foundCookie.setMaxAge(0);
 			foundCookie.setValue("");
-			foundCookie.setPath("/api");
+				foundCookie.setPath("/know-how/api");
 			if (authProperties.isSubDomainCookie()) {
 				foundCookie.setDomain(authProperties.getDomain());
 			}
