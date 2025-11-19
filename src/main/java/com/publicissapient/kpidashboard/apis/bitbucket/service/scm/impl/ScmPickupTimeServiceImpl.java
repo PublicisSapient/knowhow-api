@@ -20,7 +20,7 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiStrategyFactory;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiStrategyRegistry;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
@@ -62,6 +62,7 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
+    private final KpiStrategyRegistry kpiStrategyRegistry;
 
 	@Override
 	public String getQualifierType() {
@@ -155,9 +156,9 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-        KpiCalculationStrategy strategy = KpiStrategyFactory.getStrategy(
+        KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
                 KPICode.PICKUP_TIME, kpiElement.getChartType());
-        Object kpiTrendDataByGroup = strategy.getTrendValueList(kpiRequest, mergeRequests, scmTools,
+        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
                 validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
 
 

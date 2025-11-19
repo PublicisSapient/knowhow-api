@@ -1,27 +1,26 @@
-/*******************************************************************************
- * Copyright 2014 CapitalOne, LLC.
- * Further development Copyright 2022 Sapient Corporation.
+/*
+ *   Copyright 2014 CapitalOne, LLC.
+ *   Further development Copyright 2022 Sapient Corporation.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiStrategyFactory;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiStrategyRegistry;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
@@ -63,6 +62,7 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
+    private final KpiStrategyRegistry kpiStrategyRegistry;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -156,11 +156,10 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		}
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
-		KpiCalculationStrategy strategy = KpiStrategyFactory.getStrategy(
+		KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
 				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, kpiElement.getChartType());
-		Object kpiTrendDataByGroup = strategy.getTrendValueList(kpiRequest, mergeRequests, scmTools,
+		Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
 				validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
-
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);

@@ -1,6 +1,6 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.mttm;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -9,12 +9,13 @@ import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -22,10 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public class MeanTimeToMergeNonTrendKpiServiceImpl implements KpiCalculationStrategy {
+@Component
+public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<List<IterationKpiValue>> {
 
-	public List<IterationKpiValue> getTrendValueList(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests,
+	@Override
+	public List<IterationKpiValue> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests, List<ScmCommits> commits,
 			List<Tool> scmTools, List<RepoToolValidationData> validationDataList, Set<Assignee> assignees,
 			String projectName) {
 		List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
@@ -34,18 +38,6 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl implements KpiCalculationStra
 				validationDataList, kpiRequest, projectName));
 
 		return iterationKpiValueList;
-	}
-
-	private CustomDateRange getCustomDateRange(LocalDateTime currentDate, String duration, int dataPoints) {
-		CustomDateRange periodRange = new CustomDateRange();
-		if (duration.equalsIgnoreCase(CommonConstant.DAY)) {
-			periodRange.setEndDateTime(currentDate.minusDays(1));
-			periodRange.setStartDateTime(currentDate.minusDays(dataPoints - 1L));
-		} else {
-			periodRange.setEndDateTime(currentDate);
-			periodRange.setStartDateTime(currentDate.minusWeeks(dataPoints - 1L));
-		}
-		return periodRange;
 	}
 
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
@@ -75,7 +67,7 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl implements KpiCalculationStra
 		List<ScmMergeRequests> previousMergeRequestsInRange = mergeRequestsForBranch.stream()
 				.filter(request -> request.getMergedAt() != null)
 				.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-						prevPeriodRange.getStartDateTime(), prevPeriodRange.getStartDateTime()))
+						prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
 				.toList();
 
 		double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequestsInRange);
@@ -109,7 +101,7 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl implements KpiCalculationStra
 			List<ScmMergeRequests> previousMergeRequestsInRange = userMergeRequests.stream()
 					.filter(request -> request.getMergedAt() != null)
 					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-							prevPeriodRange.getStartDateTime(), prevPeriodRange.getStartDateTime()))
+							prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
 					.toList();
 
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
@@ -127,53 +119,59 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl implements KpiCalculationStra
 			List<RepoToolValidationData> userValidationData = new ArrayList<>();
 			userMergeRequests.forEach(mr -> {
 				if (mr.getCreatedDate() != null && mr.getMergedAt() != null) {
-					userValidationData.add(createValidationData(projectName, tool, developerName, mr));
+					userValidationData.add(createValidationData(projectName, tool, developerName, null, mr));
 				}
 			});
 			return userValidationData;
 		}).flatMap(List::stream).toList();
 	}
 
-	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			ScmMergeRequests mergeRequest) {
-		RepoToolValidationData validationData = new RepoToolValidationData();
-		validationData.setProjectName(projectName);
-		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
-		validationData.setDeveloperName(developerName);
+    private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {
+        if (CollectionUtils.isEmpty(mergeRequests)) {
+            return 0.0;
+        }
 
-		LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
-		long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, mergeRequest.getMergedAt());
-		validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.0));
+        List<Long> timeToMergeList = mergeRequests.stream()
+                .filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
+                .filter(mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
+                .map(mr -> {
+                    LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+                    return ChronoUnit.SECONDS.between(createdDateTime, mr.getMergedAt());
+                }).collect(Collectors.toList());
 
-		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
-		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
-		LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());
+        if (CollectionUtils.isEmpty(timeToMergeList)) {
+            return 0.0;
+        }
 
-		validationData.setPrRaisedTime(DateUtil.tranformUTCLocalTimeToZFormat(createdDateTimeUTC));
-		validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(mergedAtUTC));
+        return timeToMergeList.stream().mapToLong(Long::longValue).average().orElse(0.0);
+    }
 
-		return validationData;
-	}
+    private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
+                                                        String dateLabel, ScmMergeRequests mergeRequest) {
+        RepoToolValidationData validationData = new RepoToolValidationData();
+        validationData.setProjectName(projectName);
+        validationData.setBranchName(tool.getBranch());
+        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+        validationData.setDeveloperName(developerName);
+        validationData.setDate(dateLabel);
 
-	private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {
-		if (CollectionUtils.isEmpty(mergeRequests)) {
-			return 0.0;
-		}
+        LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
+        long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, mergeRequest.getMergedAt());
+        validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.0));
 
-		List<Long> timeToMergeList = mergeRequests.stream()
-				.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
-				.filter(mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
-				.map(mr -> {
-					LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-					return ChronoUnit.SECONDS.between(createdDateTime, mr.getMergedAt());
-				}).toList();
+        validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
+        LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
+        LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());
 
-		if (CollectionUtils.isEmpty(timeToMergeList)) {
-			return 0.0;
-		}
+        validationData.setPrRaisedTime(DateUtil.tranformUTCLocalTimeToZFormat(createdDateTimeUTC));
+        validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(mergedAtUTC));
 
-		return timeToMergeList.stream().mapToLong(Long::longValue).average().orElse(0.0);
+        return validationData;
+    }
+
+	@Override
+	public String getStrategyType() {
+		return "REPO_TOOL_MEAN_TIME_TO_MERGE_NON_TREND";
 	}
 
 }

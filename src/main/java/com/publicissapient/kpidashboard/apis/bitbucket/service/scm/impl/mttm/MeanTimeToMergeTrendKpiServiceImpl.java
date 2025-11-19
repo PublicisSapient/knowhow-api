@@ -1,6 +1,6 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.mttm;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -11,9 +11,11 @@ import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -25,9 +27,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class MeanTimeToMergeTrendKpiServiceImpl implements KpiCalculationStrategy {
+@Component
+public class MeanTimeToMergeTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<Map<String, List<DataCount>>> {
 
-	public Map<String, List<DataCount>> getTrendValueList(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests,
+	@Override
+	public Map<String, List<DataCount>> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests, List<ScmCommits> commits,
 			List<Tool> scmTools, List<RepoToolValidationData> validationDataList, Set<Assignee> assignees,
 			String projectName) {
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
@@ -124,6 +128,11 @@ public class MeanTimeToMergeTrendKpiServiceImpl implements KpiCalculationStrateg
 		validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(mergedAtUTC));
 
 		return validationData;
+	}
+
+	@Override
+	public String getStrategyType() {
+		return "REPO_TOOL_MEAN_TIME_TO_MERGE_TREND";
 	}
 
 	private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {

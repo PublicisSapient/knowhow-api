@@ -1,6 +1,6 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.pickup.time;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -9,12 +9,12 @@ import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -24,9 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class PickupTimeNonTrendKpiServiceImpl implements KpiCalculationStrategy {
+@Component
+public class PickupTimeNonTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<List<IterationKpiValue>> {
 
-	public List<IterationKpiValue> getTrendValueList(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests,
+	@Override
+	public List<IterationKpiValue> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests, List<ScmCommits> commits,
 			List<Tool> scmTools, List<RepoToolValidationData> validationDataList, Set<Assignee> assignees,
 			String projectName) {
 		List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
@@ -35,18 +37,6 @@ public class PickupTimeNonTrendKpiServiceImpl implements KpiCalculationStrategy 
 				validationDataList, kpiRequest, projectName));
 
 		return iterationKpiValueList;
-	}
-
-	private CustomDateRange getCustomDateRange(LocalDateTime currentDate, String duration, int dataPoints) {
-		CustomDateRange periodRange = new CustomDateRange();
-		if (duration.equalsIgnoreCase(CommonConstant.DAY)) {
-			periodRange.setEndDateTime(currentDate.minusDays(1));
-			periodRange.setStartDateTime(currentDate.minusDays(dataPoints - 1L));
-		} else {
-			periodRange.setEndDateTime(currentDate);
-			periodRange.setStartDateTime(currentDate.minusWeeks(dataPoints - 1L));
-		}
-		return periodRange;
 	}
 
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
@@ -78,7 +68,7 @@ public class PickupTimeNonTrendKpiServiceImpl implements KpiCalculationStrategy 
 				.filter(request -> request.getPickedForReviewOn() != null)
 				.filter(request -> DateUtil.isWithinDateTimeRange(
 						DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
-						prevPeriodRange.getStartDateTime(), prevPeriodRange.getStartDateTime()))
+						prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
 				.toList();
 
 		List<Long> currentPickUpTimes = currentMergedRequestsInRange.stream().map(mr -> {
@@ -128,19 +118,33 @@ public class PickupTimeNonTrendKpiServiceImpl implements KpiCalculationStrategy 
 					.filter(request -> request.getPickedForReviewOn() != null)
 					.filter(request -> DateUtil.isWithinDateTimeRange(
 							DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
-							prevPeriodRange.getStartDateTime(), prevPeriodRange.getStartDateTime()))
+							prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
 					.toList();
 
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequestsInRange);
-			double userAverageHrs = currentMeanTimeToMergeSeconds / (3600);
-			double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergeRequestsInRange);
-			double deviationRate = Math.round((currentMeanTimeToMergeSeconds - previousMeanTimeToMergeSeconds)
-					/ previousMeanTimeToMergeSeconds * 100);
+            List<Long> currentPickUpTimes = currentMergedRequestsInRange.stream().map(mr -> {
+                LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
+                LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+                return Duration.between(createdDate, pickedForReviewOn).toHours();
+            }).toList();
+            double currentAveragePickUpTime = currentPickUpTimes.isEmpty() ? 0
+                    : currentPickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+
+            List<Long> pickUpTimes = previousMergeRequestsInRange.stream().map(mr -> {
+                LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mr.getPickedForReviewOn());
+                LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+                return Duration.between(createdDate, pickedForReviewOn).toHours();
+            }).toList();
+
+            double previousAveragePickUpTime = pickUpTimes.isEmpty() ? 0
+                    : pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+
+            double deviationRate = Math.round((currentAveragePickUpTime - previousAveragePickUpTime)
+                    / (previousAveragePickUpTime + currentAveragePickUpTime) * 100);
 
 			String userKpiGroup = DeveloperKpiHelper.getBranchSubFilter(tool, projectName) + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(DeveloperKpiHelper.getBranchSubFilter(tool, projectName),
-					developerName, List.of(new IterationKpiData(userKpiGroup, userAverageHrs, deviationRate, null,
+					developerName, List.of(new IterationKpiData(userKpiGroup, currentAveragePickUpTime, deviationRate, null,
 							"hrs", "%", null))));
 			List<RepoToolValidationData> userValidationData = new ArrayList<>();
 			userMergeRequests.forEach(mr -> {
@@ -174,24 +178,9 @@ public class PickupTimeNonTrendKpiServiceImpl implements KpiCalculationStrategy 
 		return validationData;
 	}
 
-	private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {
-		if (CollectionUtils.isEmpty(mergeRequests)) {
-			return 0.0;
-		}
-
-		List<Long> timeToMergeList = mergeRequests.stream()
-				.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
-				.filter(mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
-				.map(mr -> {
-					LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-					return ChronoUnit.SECONDS.between(createdDateTime, mr.getMergedAt());
-				}).toList();
-
-		if (CollectionUtils.isEmpty(timeToMergeList)) {
-			return 0.0;
-		}
-
-		return timeToMergeList.stream().mapToLong(Long::longValue).average().orElse(0.0);
+	@Override
+	public String getStrategyType() {
+		return "PICKUP_TIME_NON_TREND";
 	}
 
 }

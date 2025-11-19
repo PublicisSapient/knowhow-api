@@ -1,6 +1,7 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.pickup.time;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
+import org.springframework.stereotype.Component;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -11,6 +12,7 @@ import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +28,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
-public class PickupTimeTrendKpiServiceImpl implements KpiCalculationStrategy {
+@Component
+public class PickupTimeTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<Map<String, List<DataCount>>> {
 
 	private static final String MR_COUNT = "No of PRs";
 
 	@Override
-	public Object getTrendValueList(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests, List<Tool> scmTools,
-			List<RepoToolValidationData> validationDataList, Set<Assignee> assignees, String projectName) {
+	public Map<String, List<DataCount>> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests, List<ScmCommits> commits, List<Tool> scmTools,
+                                    List<RepoToolValidationData> validationDataList, Set<Assignee> assignees, String projectName) {
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
@@ -146,4 +149,9 @@ public class PickupTimeTrendKpiServiceImpl implements KpiCalculationStrategy {
         validationData.setPrStatus(mergeRequest.getState());
         return validationData;
     }
+
+	@Override
+	public String getStrategyType() {
+		return "PICKUP_TIME_TREND";
+	}
 }

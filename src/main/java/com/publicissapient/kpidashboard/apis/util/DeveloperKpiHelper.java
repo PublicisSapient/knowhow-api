@@ -302,11 +302,9 @@ public final class DeveloperKpiHelper {
 		cdr.setEndDate(DateUtil.getTodayDate());
 		LocalDate startDate = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			startDate = DateUtil.getTodayDate().minusWeeks(dataPoint);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			startDate = DateUtil.getTodayDate().minusMonths(dataPoint);
+			startDate = DateUtil.getTodayDate().minusWeeks(dataPoint * 2L);
 		} else {
-			startDate = DateUtil.getTodayDate().minusDays(dataPoint);
+			startDate = DateUtil.getTodayDate().minusDays(dataPoint * 2L);
 		}
 		cdr.setStartDate(startDate);
 		return cdr;

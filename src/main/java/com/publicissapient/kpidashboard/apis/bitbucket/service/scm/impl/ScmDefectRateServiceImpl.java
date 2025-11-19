@@ -19,13 +19,13 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiStrategyRegistry;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
-import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -33,25 +33,21 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
-import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,13 +57,12 @@ import java.util.Set;
 @AllArgsConstructor
 public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final String MR_COUNT = "No of PRs";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
-	private static final List<String> DEFECT_KEYWORDS = List.of("fix", "bug", "repair", "defect");
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
+    private final KpiStrategyRegistry kpiStrategyRegistry;
 
 	@Override
 	public String getQualifierType() {
@@ -83,12 +78,17 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
 				projectNode);
 
-		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.DEFECT_RATE);
+		if (kpiElement.getChartType().equalsIgnoreCase("line")) {
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.DEFECT_RATE);
-		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+			Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
+			calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.DEFECT_RATE);
+
+			Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
+					KPICode.DEFECT_RATE);
+			kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+		} else {
+			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
+		}
 		return kpiElement;
 	}
 
@@ -134,9 +134,6 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
-		LocalDateTime currentDate = DateUtil.getTodayTime();
-		int dataPoints = kpiRequest.getXAxisDataPoints();
-		String duration = kpiRequest.getDuration();
 
 		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
 				kpiHelperService);
@@ -157,100 +154,18 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 			return;
 		}
 
-		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
+        KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
+                KPICode.DEFECT_RATE, kpiElement.getChartType());
+        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
+                validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
 
-			List<ScmMergeRequests> filteredMergeRequests = mergeRequests.stream()
-					.filter(request -> DateUtil.isWithinDateTimeRange(
-							DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate()),
-							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
-					.toList();
 
-			scmTools.forEach(tool -> processToolData(tool, filteredMergeRequests, assignees, kpiTrendDataByGroup,
-					validationDataList, dateLabel, projectLeafNode.getProjectFilter().getName()));
-
-			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
-		}
-
-		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
+        mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
-
-	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
-			Map<String, List<DataCount>> kpiTrendDataByGroup, List<RepoToolValidationData> validationDataList,
-			String dateLabel, String projectName) {
-		if (!DeveloperKpiHelper.isValidTool(tool)) {
-			return;
-		}
-
-		String branchName = getBranchSubFilter(tool, projectName);
-		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-
-		List<ScmMergeRequests> matchingRequests = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
-
-		long defectMergeRequestsCount = matchingRequests.stream()
-				.filter(mergeRequest -> mergeRequest.getTitle() != null && DEFECT_KEYWORDS.stream()
-						.anyMatch(keyword -> mergeRequest.getTitle().toLowerCase().contains(keyword.toLowerCase())))
-				.count();
-
-		long totalMergeRequests = matchingRequests.size();
-
-		double defectRate = totalMergeRequests > 0 ? (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
-
-		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, defectRate,
-				Map.of(MR_COUNT, defectMergeRequestsCount), kpiTrendDataByGroup);
-
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
-				.groupMergeRequestsByUser(matchingRequests);
-
-		validationDataList.addAll(prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName,
-				dateLabel, kpiTrendDataByGroup));
-	}
-
-	private List<RepoToolValidationData> prepareUserValidationData(
-			Map<String, List<ScmMergeRequests>> userWiseMergeRequests, Set<Assignee> assignees, Tool tool,
-			String projectName, String dateLabel, Map<String, List<DataCount>> kpiTrendDataByGroup) {
-		return userWiseMergeRequests.entrySet().stream().map(entry -> {
-			String userEmail = entry.getKey();
-			List<ScmMergeRequests> userMergeRequests = entry.getValue();
-
-			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			long defectMergeRequestsCount = userMergeRequests.stream()
-					.filter(mergeRequest -> mergeRequest.getTitle() != null && DEFECT_KEYWORDS.stream()
-							.anyMatch(keyword -> mergeRequest.getTitle().toLowerCase().contains(keyword.toLowerCase())))
-					.count();
-
-			long totalMergeRequests = userMergeRequests.size();
-
-			double defectRate = totalMergeRequests > 0 ? (defectMergeRequestsCount * 100.0) / totalMergeRequests : 0.0;
-
-			String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
-
-			DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, defectRate,
-					Map.of(MR_COUNT, defectMergeRequestsCount), kpiTrendDataByGroup);
-
-			return createValidationData(projectName, tool, developerName, dateLabel, defectRate,
-					defectMergeRequestsCount, totalMergeRequests);
-		}).toList();
-	}
-
-	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, double defectRate, long defectMrCount, long mrCount) {
-		RepoToolValidationData validationData = new RepoToolValidationData();
-		validationData.setProjectName(projectName);
-		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
-		validationData.setDeveloperName(developerName);
-		validationData.setDate(dateLabel);
-		validationData.setDefectRate(defectRate);
-		validationData.setKpiPRs(defectMrCount);
-		validationData.setMrCount(mrCount);
-		return validationData;
-	}
+    
 
 	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
