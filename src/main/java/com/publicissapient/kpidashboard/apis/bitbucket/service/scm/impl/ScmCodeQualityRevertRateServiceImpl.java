@@ -135,7 +135,7 @@ public class ScmCodeQualityRevertRateServiceImpl
                 leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
         Map<String, Object> scmDataMap = new HashMap<>();
         scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-        scmDataMap.put(MERGE_REQUEST_LIST, scmKpiHelperService.getMergeRequests(projectBasicConfigId,dateRange));
+        scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
         return scmDataMap;
     }
 
