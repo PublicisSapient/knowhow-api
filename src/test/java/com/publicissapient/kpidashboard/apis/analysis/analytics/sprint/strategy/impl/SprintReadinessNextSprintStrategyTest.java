@@ -32,7 +32,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.SprintMetricType;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
@@ -41,8 +40,6 @@ import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SprintReadinessNextSprintStrategyTest {
-
-	@Mock private ConfigHelperService configHelperService;
 
 	@Mock private SprintRepository sprintRepository;
 
@@ -64,6 +61,7 @@ class SprintReadinessNextSprintStrategyTest {
 
 		fieldMapping = new FieldMapping();
 		fieldMapping.setJiraIssueTypeNamesKPI188(Arrays.asList("Story", "Bug"));
+		context.setFieldMapping(fieldMapping);
 	}
 
 	@Test
@@ -75,8 +73,6 @@ class SprintReadinessNextSprintStrategyTest {
 
 	@Test
 	void shouldReturnNAWhenNoFieldMapping() {
-		when(configHelperService.getFieldMappingMap())
-				.thenReturn(Map.of(new ObjectId("507f1f77bcf86cd799439011"), fieldMapping));
 		fieldMapping.setJiraIssueTypeNamesKPI188(Collections.emptyList());
 
 		SprintDataPoint result = strategy.calculateForSprint(sprintDetails, context, 0);
@@ -88,8 +84,6 @@ class SprintReadinessNextSprintStrategyTest {
 
 	@Test
 	void shouldReturnNAWhenNoFutureSprints() {
-		when(configHelperService.getFieldMappingMap())
-				.thenReturn(Map.of(new ObjectId("507f1f77bcf86cd799439011"), fieldMapping));
 		when(sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
 						new ObjectId("507f1f77bcf86cd799439011"), SprintDetails.SPRINT_STATE_FUTURE))
 				.thenReturn(Collections.emptyList());
@@ -106,8 +100,6 @@ class SprintReadinessNextSprintStrategyTest {
 		SprintDetails nextSprint = new SprintDetails();
 		nextSprint.setSprintID("nextSprint");
 
-		when(configHelperService.getFieldMappingMap())
-				.thenReturn(Map.of(new ObjectId("507f1f77bcf86cd799439011"), fieldMapping));
 		when(sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
 						new ObjectId("507f1f77bcf86cd799439011"), SprintDetails.SPRINT_STATE_FUTURE))
 				.thenReturn(Arrays.asList(nextSprint));
@@ -129,8 +121,6 @@ class SprintReadinessNextSprintStrategyTest {
 		JiraIssue issue2 = createJiraIssue("story", Collections.emptySet());
 		JiraIssue issue3 = createJiraIssue("story", Set.of("unrefined"));
 
-		when(configHelperService.getFieldMappingMap())
-				.thenReturn(Map.of(new ObjectId("507f1f77bcf86cd799439011"), fieldMapping));
 		when(sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
 						new ObjectId("507f1f77bcf86cd799439011"), SprintDetails.SPRINT_STATE_FUTURE))
 				.thenReturn(Arrays.asList(nextSprint));
@@ -153,8 +143,6 @@ class SprintReadinessNextSprintStrategyTest {
 		JiraIssue bugIssue = createJiraIssue("bug", Set.of("unrefined"));
 		JiraIssue defectIssue = createJiraIssue("defect", Collections.emptySet());
 
-		when(configHelperService.getFieldMappingMap())
-				.thenReturn(Map.of(new ObjectId("507f1f77bcf86cd799439011"), fieldMapping));
 		when(sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
 						new ObjectId("507f1f77bcf86cd799439011"), SprintDetails.SPRINT_STATE_FUTURE))
 				.thenReturn(Arrays.asList(nextSprint));
@@ -170,7 +158,8 @@ class SprintReadinessNextSprintStrategyTest {
 
 	@Test
 	void shouldReturnNAOnException() {
-		when(configHelperService.getFieldMappingMap())
+		when(sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
+						new ObjectId("507f1f77bcf86cd799439011"), SprintDetails.SPRINT_STATE_FUTURE))
 				.thenThrow(new RuntimeException("Database error"));
 
 		SprintDataPoint result = strategy.calculateForSprint(sprintDetails, context, 0);
@@ -193,8 +182,6 @@ class SprintReadinessNextSprintStrategyTest {
 		JiraIssue issue1 = createJiraIssue("story", Collections.emptySet());
 		JiraIssue issue2 = createJiraIssue("story", Collections.emptySet());
 
-		when(configHelperService.getFieldMappingMap())
-				.thenReturn(Map.of(new ObjectId("507f1f77bcf86cd799439011"), fieldMapping));
 		when(sprintRepository.findByBasicProjectConfigIdAndStateIgnoreCaseOrderByStartDateASC(
 						new ObjectId("507f1f77bcf86cd799439011"), SprintDetails.SPRINT_STATE_FUTURE))
 				.thenReturn(Arrays.asList(nextSprint));

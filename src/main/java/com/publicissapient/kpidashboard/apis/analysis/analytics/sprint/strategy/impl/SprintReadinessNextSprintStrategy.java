@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.dto.SprintDataPoint;
@@ -34,7 +33,6 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.enums.Spr
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.model.SprintMetricContext;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.strategy.AbstractSprintMetricStrategy;
 import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.util.SprintAnalyticsUtil;
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -66,6 +64,27 @@ import lombok.extern.slf4j.Slf4j;
  *   Trend = (Unrefined stories / Total stories) × 100
  * </pre>
  *
+ * <h3>Validation Logic:</h3>
+ *
+ * <ul>
+ *   <li><b>Sprint Index Validation:</b> Returns null for sprintIndex > 0 to ensure project-level
+ *       aggregation
+ *   <li><b>Field Mapping Validation:</b> Validates jiraIssueTypeNamesKPI188 configuration exists
+ *   <li><b>Future Sprint Validation:</b> Checks if future sprints exist in FUTURE state
+ *   <li><b>Issue Type Validation:</b> Filters issues by configured issue types (Story, Bug, Defect)
+ *   <li><b>Data Availability:</b> Returns N/A if no issues found in next sprint
+ *   <li><b>Error Handling:</b> Returns N/A with error message for any calculation failures
+ * </ul>
+ *
+ * <h3>Return Conditions:</h3>
+ *
+ * <ul>
+ *   <li><b>Success:</b> Valid count and percentage when next sprint has configured issue types
+ *   <li><b>N/A:</b> No future sprints, no configured issue types, or no matching issues
+ *   <li><b>Null:</b> Sprint index > 0 (project-level metric only)
+ *   <li><b>Error N/A:</b> Exception during calculation with error message
+ * </ul>
+ *
  * <h3>Example:</h3>
  *
  * <blockquote>
@@ -83,11 +102,14 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrategy {
 
-	@Autowired private ConfigHelperService configHelperService;
+	private final SprintRepository sprintRepository;
+	private final JiraIssueRepository jiraIssueRepository;
 
-	@Autowired private SprintRepository sprintRepository;
-
-	@Autowired private JiraIssueRepository jiraIssueRepository;
+	public SprintReadinessNextSprintStrategy(
+			SprintRepository sprintRepository, JiraIssueRepository jiraIssueRepository) {
+		this.sprintRepository = sprintRepository;
+		this.jiraIssueRepository = jiraIssueRepository;
+	}
 
 	@Override
 	protected SprintDataPoint calculateForSprint(
@@ -97,20 +119,27 @@ public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrat
 		}
 
 		try {
-			List<JiraIssue> totalIssues = getNextSprintRefinementData(context);
+			SprintRefinementData refinementData = getNextSprintRefinementData(context);
 
-			if (CollectionUtils.isEmpty(totalIssues)) {
-				return createNADataPoint(
-						sprintDetails, "No issues found in next sprint", sprintIndex, context);
+			if (CollectionUtils.isEmpty(refinementData.issues)) {
+				String message =
+						refinementData.nextSprintName != null
+								? "No issues found in next sprint: " + refinementData.nextSprintName
+								: "No issues found in next sprint";
+				return createNADataPoint(sprintDetails, message, sprintIndex, context);
 			}
 
 			long unRefinedCount =
-					totalIssues.stream()
+					refinementData.issues.stream()
 							.filter(issue -> CollectionUtils.isNotEmpty(issue.getUnRefinedValue188()))
 							.count();
 
 			double percentage =
-					SprintAnalyticsUtil.calculatePercentage(unRefinedCount, totalIssues.size());
+					SprintAnalyticsUtil.calculatePercentage(unRefinedCount, refinementData.issues.size());
+
+			log.debug(
+					"Sprint Readiness Next Sprint calculation - Total issues: {}, Unrefined count: {}, Percentage: {}%",
+					refinementData.issues.size(), unRefinedCount, percentage);
 
 			return createDataPoint(
 					sprintDetails, unRefinedCount, percentage, sprintIndex, Constant.PERCENTAGE);
@@ -127,11 +156,17 @@ public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrat
 		return SprintMetricType.SPRINT_READINESS_NEXT_SPRINT;
 	}
 
-	private List<JiraIssue> getNextSprintRefinementData(SprintMetricContext context) {
-		FieldMapping fieldMapping =
-				configHelperService.getFieldMappingMap().get(context.getBasicProjectConfigId());
-		if (CollectionUtils.isEmpty(fieldMapping.getJiraIssueTypeNamesKPI188())) {
-			return new ArrayList<>();
+	/**
+	 * Retrieves next sprint refinement data including issues and sprint name.
+	 *
+	 * @param context Sprint metric context containing field mapping and project config
+	 * @return SprintRefinementData containing filtered issues and next sprint name
+	 */
+	private SprintRefinementData getNextSprintRefinementData(SprintMetricContext context) {
+		FieldMapping fieldMapping = context.getFieldMapping();
+		if (fieldMapping == null
+				|| CollectionUtils.isEmpty(fieldMapping.getJiraIssueTypeNamesKPI188())) {
+			return new SprintRefinementData(new ArrayList<>(), null);
 		}
 
 		List<SprintDetails> futureSprintList =
@@ -139,15 +174,24 @@ public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrat
 						context.getBasicProjectConfigId(), SprintDetails.SPRINT_STATE_FUTURE);
 
 		if (CollectionUtils.isEmpty(futureSprintList)) {
-			return new ArrayList<>();
+			return new SprintRefinementData(new ArrayList<>(), null);
 		}
 
 		SprintDetails nextSprint = futureSprintList.get(0);
-		return jiraIssueRepository.findBySprintID(nextSprint.getSprintID()).stream()
-				.filter(issue -> getTypeNames(fieldMapping).contains(issue.getTypeName().toLowerCase()))
-				.toList();
+		List<JiraIssue> issues =
+				jiraIssueRepository.findBySprintID(nextSprint.getSprintID()).stream()
+						.filter(issue -> getTypeNames(fieldMapping).contains(issue.getTypeName().toLowerCase()))
+						.toList();
+		return new SprintRefinementData(issues, nextSprint.getSprintName());
 	}
 
+	/**
+	 * Converts configured issue type names to lowercase set for filtering. Maps 'Defect' to both
+	 * 'defect' and 'bug' for compatibility.
+	 *
+	 * @param fieldMapping Field mapping containing issue type configuration
+	 * @return Set of lowercase issue type names for filtering
+	 */
 	private Set<String> getTypeNames(FieldMapping fieldMapping) {
 		return fieldMapping.getJiraIssueTypeNamesKPI188().stream()
 				.flatMap(
@@ -156,5 +200,15 @@ public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrat
 										? Stream.of("defect", "bug")
 										: Stream.of(name.trim().toLowerCase()))
 				.collect(Collectors.toSet());
+	}
+
+	private static class SprintRefinementData {
+		final List<JiraIssue> issues;
+		final String nextSprintName;
+
+		SprintRefinementData(List<JiraIssue> issues, String nextSprintName) {
+			this.issues = issues;
+			this.nextSprintName = nextSprintName;
+		}
 	}
 }
