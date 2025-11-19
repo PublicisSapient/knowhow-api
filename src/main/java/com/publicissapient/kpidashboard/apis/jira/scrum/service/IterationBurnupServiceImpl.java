@@ -22,17 +22,7 @@ import static com.publicissapient.kpidashboard.apis.util.KpiDataHelper.sprintWis
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,6 +37,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.CalculatePCDHelper;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
@@ -94,6 +85,9 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 	public static final String DOTTED_LINE = "Gap Between Completed and Predicted";
 	private static final String SPRINT = "sprint";
 	private static final String ISSUES = "issues";
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
 
 	@Autowired private ConfigHelperService configHelperService;
 
@@ -518,12 +512,12 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 			List<JiraIssue> processedPlannedIssues = new ArrayList<>();
 			List<JiraIssue> processCompletedIssues = new ArrayList<>();
 			List<JiraIssue> pcdIssues = new ArrayList<>();
-
+			DataCountGroup dataCountGroup = new DataCountGroup();
+			List<DataCount> dataCountList = new ArrayList<>();
 			for (LocalDateTime date = sprintStartDate;
 					date.isBefore(sprintEndDate);
 					date = date.plusDays(1)) {
-				DataCountGroup dataCountGroup = new DataCountGroup();
-				List<DataCount> dataCountList = new ArrayList<>();
+
 				Long dueDateWiseTypeCountMap =
 						calculateOverallScopeDayWise(
 								fullSprintIssuesMap,
@@ -580,6 +574,12 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 			IterationKpiValue iterationKpiValue = new IterationKpiValue();
 			iterationKpiValue.setDataGroup(dataCountGroups);
 			iterationKpiValue.setFilter1("OVERALL");
+			// Add forecasts if configured
+			Optional.ofNullable(forecastingManager)
+					.ifPresent(
+							manager ->
+									manager.addForecastsToDataCount(
+											iterationKpiValue, dataCountList, KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);
