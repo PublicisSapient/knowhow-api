@@ -40,6 +40,8 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -100,16 +102,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrategy {
 
 	private final SprintRepository sprintRepository;
 	private final JiraIssueRepository jiraIssueRepository;
-
-	public SprintReadinessNextSprintStrategy(
-			SprintRepository sprintRepository, JiraIssueRepository jiraIssueRepository) {
-		this.sprintRepository = sprintRepository;
-		this.jiraIssueRepository = jiraIssueRepository;
-	}
 
 	@Override
 	protected SprintDataPoint calculateForSprint(
@@ -202,13 +199,9 @@ public class SprintReadinessNextSprintStrategy extends AbstractSprintMetricStrat
 				.collect(Collectors.toSet());
 	}
 
+	@AllArgsConstructor
 	private static class SprintRefinementData {
 		final List<JiraIssue> issues;
 		final String nextSprintName;
-
-		SprintRefinementData(List<JiraIssue> issues, String nextSprintName) {
-			this.issues = issues;
-			this.nextSprintName = nextSprintName;
-		}
 	}
 }
