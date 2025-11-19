@@ -41,7 +41,6 @@ public class CodeQualityMetricsChangeUnit {
     private static final String REPO = "Repo";
     private static final String BRANCH = "Branch";
     private static final String DEVELOPER = "Developer";
-    private static final String AUTHOR = "Author";
     private static final String DAYS_WEEKS = "Days/Weeks";
     private static final String REWORK_RATE = "Rework Rate";
     private static final String REVERT_RATE = "Revert Rate";
@@ -99,7 +98,7 @@ public class CodeQualityMetricsChangeUnit {
 		document.put("calculateMaturity", false);
 		document.put("hideOverallFilter", true);
 		document.put("isRepoToolKpi", true);
-		document.put("kpiCategory", "Developer");
+		document.put("kpiCategory", DEVELOPER);
 		document.put("combinedKpiSource", "Bitbucket/AzureRepository/GitHub/GitLab");
 
 		mongoTemplate.getCollection(KPI_MASTER).insertOne(new org.bson.Document(document));
