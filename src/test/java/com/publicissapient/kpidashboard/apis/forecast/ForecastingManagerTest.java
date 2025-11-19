@@ -17,9 +17,7 @@
 
 package com.publicissapient.kpidashboard.apis.forecast;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -40,7 +38,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.apis.forecast.service.ForecastService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
 /** Test class for ForecastingManager. */
@@ -281,6 +281,61 @@ public class ForecastingManagerTest {
 		assertEquals(1, dataCount.getForecasts().size());
 		verify(linearRegressionForecaster, times(1)).canForecast(historicalData, kpiId);
 		verify(linearRegressionForecaster, times(1)).generateForecast(historicalData, kpiId);
+	}
+
+	@Test
+	public void testAddForecastsToDataCount_ForIterationKPI() {
+		// Arrange
+		String kpiId = "kpi125";
+		KpiMaster kpiMaster = new KpiMaster();
+		kpiMaster.setKpiId(kpiId);
+		kpiMaster.setForecastModel("linearRegression");
+		List<KpiMaster> testKpiMasterList = new ArrayList<>();
+		testKpiMasterList.add(kpiMaster);
+
+		IterationKpiValue dataCount = new IterationKpiValue();
+		List<DataCount> historicalData = createTestDataCounts(5);
+		List<DataCount> expectedForecasts = createTestDataCounts(1);
+
+		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+		when(linearRegressionForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
+
+		// Act
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+
+		// Assert
+		assertNotNull(dataCount.getForecasts());
+		assertEquals(1, dataCount.getForecasts().size());
+		verify(linearRegressionForecaster, times(1)).canForecast(historicalData, kpiId);
+		verify(linearRegressionForecaster, times(1)).generateForecast(historicalData, kpiId);
+	}
+
+	@Test
+	public void testAddForecastsToDataCount_WhenTypeIsNotSupportedClass() {
+		// Arrange
+		String kpiId = "kpi125";
+		KpiMaster kpiMaster = new KpiMaster();
+		kpiMaster.setKpiId(kpiId);
+		kpiMaster.setForecastModel("linearRegression");
+		List<KpiMaster> testKpiMasterList = new ArrayList<>();
+		testKpiMasterList.add(kpiMaster);
+
+		DataCountGroup dataCount = new DataCountGroup();
+		List<DataCount> historicalData = createTestDataCounts(5);
+		List<DataCount> expectedForecasts = createTestDataCounts(1);
+
+		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+		when(linearRegressionForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
+
+		// Act
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+
+		// Assert
+		assertNull(dataCount.getForecasts());
 	}
 
 	@Test
