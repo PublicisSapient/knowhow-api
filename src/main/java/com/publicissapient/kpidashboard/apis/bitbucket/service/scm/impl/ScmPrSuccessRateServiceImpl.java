@@ -136,7 +136,6 @@ public class ScmPrSuccessRateServiceImpl
 			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
-		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
 		List<Tool> scmTools =

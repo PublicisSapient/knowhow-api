@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -94,6 +96,8 @@ public class ScmCodeQualityRevertRateServiceImpl
 
     private final ConfigHelperService configHelperService;
     private final KpiHelperService kpiHelperService;
+    private final ScmKpiHelperService scmKpiHelperService;
+
 
     @Override
     public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -121,10 +125,17 @@ public class ScmCodeQualityRevertRateServiceImpl
     @Override
     public Map<String, Object> fetchKPIDataFromDb(
             List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-        Map<String, Object> scmDataMap = new HashMap<>();
 
+        LocalDateTime currentDate = DateUtil.getTodayTime();
+        int dataPoints = kpiRequest.getXAxisDataPoints();
+        String duration = kpiRequest.getDuration();
+        CustomDateRange dateRange =
+                KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
+        ObjectId projectBasicConfigId =
+                leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
+        Map<String, Object> scmDataMap = new HashMap<>();
         scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-        scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+        scmDataMap.put(MERGE_REQUEST_LIST, scmKpiHelperService.getMergeRequests(projectBasicConfigId,dateRange));
         return scmDataMap;
     }
 
@@ -165,8 +176,7 @@ public class ScmCodeQualityRevertRateServiceImpl
                     projectLeafNode.getProjectFilter());
             return;
         }
-
-        Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+        Map<String, Object> scmDataMap = fetchKPIDataFromDb(List.of(projectLeafNode), null,null, kpiRequest);
         List<ScmMergeRequests> mergeRequests =
                 (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
         Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
