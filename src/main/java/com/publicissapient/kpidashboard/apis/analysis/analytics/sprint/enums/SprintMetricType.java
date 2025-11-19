@@ -61,7 +61,13 @@ public enum SprintMetricType {
 
 	/** % of scope changes */
 	SCOPE_CHANGE_PERCENTAGE(
-			"% of scope changes", "Percentage of total scope modifications during sprint", true);
+			"% of scope changes", "Percentage of total scope modifications during sprint", true),
+
+	/** Sprint Readiness (Next Sprint) */
+	SPRINT_READINESS_NEXT_SPRINT(
+			"Sprint Readiness (Next Sprint)",
+			"Percentage of unrefined stories in the next sprint after the active sprint",
+			true);
 
 	private final String displayName;
 	private final String description;
