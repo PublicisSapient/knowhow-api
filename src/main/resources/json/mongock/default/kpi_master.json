@@ -2634,7 +2634,8 @@
     "kpiWidth": 66,
     "kpiHeight": 100,
     "isRawData": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi131",
@@ -4997,7 +4998,8 @@
     "boxType": "chart",
     "calculateMaturity": false,
     "isRawData": false,
-    "kpiHeight": 100
+    "kpiHeight": 100,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi188",
