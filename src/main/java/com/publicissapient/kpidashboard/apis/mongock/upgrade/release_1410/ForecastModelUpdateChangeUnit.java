@@ -80,7 +80,7 @@ public class ForecastModelUpdateChangeUnit {
 				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(), ForecastingModel.ARIMA.getName());
 		updateForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.ARIMA.getName());
 
-		// Adding data set for Iteration Board.
+		// KPIs for Iteration Board.
 		updateForecastModel(
 				KPICode.ITERATION_BURNUP.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
@@ -111,7 +111,7 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId());
 
-		// Adding data set for Iteration Board.
+		// KPIs for Iteration Board.
 		removeForecastModel(KPICode.ITERATION_BURNUP.getKpiId());
 		removeForecastModel(KPICode.LATE_REFINEMENT.getKpiId());
 
