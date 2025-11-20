@@ -23,6 +23,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +61,7 @@ public class BitBucketController {
 
 	@Autowired private CacheService cacheService;
 	@Autowired private ScmUserService scmUserService;
+    @Autowired private TeamPerformanceSummaryService teamPerformanceSummaryService;
 
 	/**
 	 * Gets bit bucket aggregated metrics.
@@ -142,5 +145,20 @@ public class BitBucketController {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(
 						new ServiceResponse(true, "", scmUserService.getScmToolUsersMailList(projectConfigId)));
+	}
+
+	@PostMapping(value = "/developer/summary", produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<PerformanceSummary>> getDeveloperDashboardSummary(
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+		log.info("Received Developer Dashboard Summary request {}", kpiRequest);
+		long bitbucketRequestStartTime = System.currentTimeMillis();
+
+		List<PerformanceSummary> responseList = teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
+		log.info("Total Developer Dashboard Summary Time {}", System.currentTimeMillis() - bitbucketRequestStartTime);
+
+		if (responseList.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
+		}
+		return ResponseEntity.ok().body(responseList);
 	}
 }

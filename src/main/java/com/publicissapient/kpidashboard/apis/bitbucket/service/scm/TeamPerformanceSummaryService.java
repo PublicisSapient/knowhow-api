@@ -14,7 +14,13 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.bitbucket.model;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
 
-public record MetricItem(String label, String value) {
+import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+
+import java.util.List;
+
+public interface TeamPerformanceSummaryService {
+    List<PerformanceSummary> getTeamPerformanceSummary(KpiRequest kpiRequest);
 }
