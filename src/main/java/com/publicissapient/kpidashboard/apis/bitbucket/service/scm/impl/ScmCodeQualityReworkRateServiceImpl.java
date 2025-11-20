@@ -167,22 +167,6 @@ public class ScmCodeQualityReworkRateServiceImpl
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultMap = new HashMap<>();
 
-		// Fetch commits from (current - dataPoints - 21 days) for reference data
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
-		LocalDateTime extendedStartDate =
-				dateRange.getStartDate().atStartOfDay().minusDays(REWORK_DAYS_AGO);
-		LocalDateTime endDateTime = dateRange.getEndDate().atTime(23, 59, 59);
-
-		CustomDateRange extendedDateRange = new CustomDateRange();
-		extendedDateRange.setStartDate(extendedStartDate.toLocalDate());
-		extendedDateRange.setEndDate(endDateTime.toLocalDate());
-
-		ObjectId projectBasicConfigId =
-				leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
-
-//		List<ScmCommits> commits =
-//				scmKpiHelperService.getCommitDetails(projectBasicConfigId, extendedDateRange);
-
 		resultMap.put(COMMITS, getCommitsFromBaseClass());
 		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
 		return resultMap;

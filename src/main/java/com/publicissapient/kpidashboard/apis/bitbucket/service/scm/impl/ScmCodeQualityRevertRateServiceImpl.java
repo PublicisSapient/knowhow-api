@@ -124,14 +124,6 @@ public class ScmCodeQualityRevertRateServiceImpl
     @Override
     public Map<String, Object> fetchKPIDataFromDb(
             List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-
-        LocalDateTime currentDate = DateUtil.getTodayTime();
-        int dataPoints = kpiRequest.getXAxisDataPoints();
-        String duration = kpiRequest.getDuration();
-        CustomDateRange dateRange =
-                KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
-        ObjectId projectBasicConfigId =
-                leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
         Map<String, Object> scmDataMap = new HashMap<>();
         scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
         scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());

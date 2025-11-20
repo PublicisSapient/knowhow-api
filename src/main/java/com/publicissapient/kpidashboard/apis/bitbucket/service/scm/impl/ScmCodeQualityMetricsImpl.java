@@ -106,8 +106,9 @@ public class ScmCodeQualityMetricsImpl
 
         String dateLabel = KPIExcelUtility.getDateLabel(kpiRequest);
         Map<String, DataCountGroup> groupMap = convertMetricsToDataCountGroups(metricsHolderMap, dateLabel);
-        kpiElement.setTrendValueList(new ArrayList<>(groupMap.values()));
-        populateExcelData(kpiRequest.getRequestTrackerId() , groupMap, kpiElement,dateLabel);
+        List<DataCountGroup> dataCountGroups = new ArrayList<>(groupMap.values());
+        kpiElement.setTrendValueList(dataCountGroups);
+        populateExcelData(kpiRequest.getRequestTrackerId(), dataCountGroups, kpiElement, dateLabel);
         return kpiElement;
     }
 
@@ -193,17 +194,18 @@ public class ScmCodeQualityMetricsImpl
      * Populate excel data
      *
      * @param requestTrackerId request tracker id
-     * @param groupMap group map
+     * @param dataCountGroups list of data count groups
      * @param kpiElement kpi element
+     * @param dateLabel date label
      */
     private void populateExcelData(
             String requestTrackerId,
-            Map<String, DataCountGroup> groupMap,
+            List<DataCountGroup> dataCountGroups,
             KpiElement kpiElement,
             String dateLabel) {
         if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
             List<KPIExcelData> excelData = new ArrayList<>();
-            KPIExcelUtility.populateCodeQualityMetricsExcelData(groupMap, excelData,dateLabel);
+            KPIExcelUtility.populateCodeQualityMetricsExcelData(dataCountGroups, excelData, dateLabel);
             kpiElement.setExcelData(excelData);
             kpiElement.setExcelColumns(KPIExcelColumn.CODE_QUALITY_METRICS.getColumns());
         }
