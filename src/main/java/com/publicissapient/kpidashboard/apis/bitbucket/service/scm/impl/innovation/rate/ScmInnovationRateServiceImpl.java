@@ -1,21 +1,4 @@
-/*
- *   Copyright 2014 CapitalOne, LLC.
- *   Further development Copyright 2022 Sapient Corporation.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
-package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.innovation.rate;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
@@ -37,7 +20,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -55,14 +38,19 @@ import java.util.Set;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE_SET = "assigneeSet";
-	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
+	private static final String COMMITS_LIST = "commitsList";
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
     private final KpiStrategyRegistry kpiStrategyRegistry;
+
+	@Override
+	public String getQualifierType() {
+		return KPICode.INNOVATION_RATE.name();
+	}
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
@@ -73,12 +61,13 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
 				projectNode);
 
-        if(kpiElement.getChartType().equalsIgnoreCase("line")) {
+        if (kpiElement.getChartType().equalsIgnoreCase("line")) {
+
             Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-            calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE);
+            calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.INNOVATION_RATE);
 
             Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-                    KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE);
+                    KPICode.INNOVATION_RATE);
             kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
         } else {
             kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
@@ -102,19 +91,13 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 		Map<String, Object> scmDataMap = new HashMap<>();
 
 		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
+		scmDataMap.put(COMMITS_LIST, getCommitsFromBaseClass());
 		return scmDataMap;
 	}
 
 	@Override
-	public String getQualifierType() {
-		return KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.name();
-	}
-
-	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI158(),
-				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId());
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.INNOVATION_RATE.getKpiId());
 	}
 
 	/**
@@ -133,7 +116,6 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 	@SuppressWarnings("unchecked")
 	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
-
 		String requestTrackerId = getRequestTrackerId();
 
 		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
@@ -147,33 +129,33 @@ public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, L
 
 		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
 
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		List<ScmCommits> commits = (List<ScmCommits>) scmDataMap.get(COMMITS_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
-		if (CollectionUtils.isEmpty(mergeRequests)) {
+		if (CollectionUtils.isEmpty(commits)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
 			return;
 		}
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
-		KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
-				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, kpiElement.getChartType());
-		Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
-				validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
+
+        KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
+                KPICode.INNOVATION_RATE, kpiElement.getChartType());
+        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, null, commits, scmTools,
+                validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
 
-
 	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populateMeanTimeMergeExcelData(validationDataList, excelData);
+			KPIExcelUtility.populateInnovationRateExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_MEAN_TIME_TO_MERGE.getColumns());
+			kpiElement.setExcelColumns(KPIExcelColumn.INNOVATION_RATE.getColumns());
 		}
 	}
 }

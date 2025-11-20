@@ -15,7 +15,7 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.mttm;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
@@ -55,7 +55,7 @@ import java.util.Set;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
+public class ScmMeanTimeToMergeServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
@@ -65,11 +65,6 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
     private final KpiStrategyRegistry kpiStrategyRegistry;
 
 	@Override
-	public String getQualifierType() {
-		return KPICode.PICKUP_TIME.name();
-	}
-
-	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
@@ -77,12 +72,13 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 
 		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
 				projectNode);
+
         if(kpiElement.getChartType().equalsIgnoreCase("line")) {
             Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-            calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PICKUP_TIME);
+            calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE);
 
             Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-                    KPICode.PICKUP_TIME);
+                    KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE);
             kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
         } else {
             kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
@@ -91,13 +87,13 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 	}
 
 	@Override
-	public Long calculateKPIMetrics(Map<String, Object> stringObjectMap) {
+	public Double calculateKPIMetrics(Map<String, Object> stringObjectMap) {
 		return null;
 	}
 
 	@Override
-	public Long calculateKpiValue(List<Long> valueList, String kpiId) {
-		return calculateKpiValueForLong(valueList, kpiId);
+	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+		return calculateKpiValueForDouble(valueList, kpiId);
 	}
 
 	@Override
@@ -111,68 +107,73 @@ public class ScmPickupTimeServiceImpl extends BitBucketKPIService<Long, List<Obj
 	}
 
 	@Override
+	public String getQualifierType() {
+		return KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.name();
+	}
+
+	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.PICKUP_TIME.getKpiId());
+		return calculateThresholdValue(fieldMapping.getThresholdValueKPI158(),
+				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId());
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
+	 * project wise.
 	 *
-	 * @param kpiElement kpi element
-	 * @param mapTmp node map
-	 * @param projectLeafNode leaf node of project
-	 * @param kpiRequest kpi request
+	 * @param kpiElement
+	 *            kpi element
+	 * @param mapTmp
+	 *            node map
+	 * @param projectLeafNode
+	 *            leaf node of project
+	 * @param kpiRequest
+	 *            kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(
-			KpiElement kpiElement,
-			Map<String, Node> mapTmp,
-			Node projectLeafNode,
+	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
 			KpiRequest kpiRequest) {
+
 		String requestTrackerId = getRequestTrackerId();
 
-		List<Tool> scmTools =
-				DeveloperKpiHelper.getScmToolsForProject(
-						projectLeafNode, configHelperService, kpiHelperService);
+		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
+				kpiHelperService);
 
 		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error(
-					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
 			return;
 		}
 
 		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
 
-		List<ScmMergeRequests> mergeRequests =
-				(List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
-			log.error(
-					"[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
+			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
 			return;
 		}
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
+		KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
+				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, kpiElement.getChartType());
+		Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
+				validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
 
-        KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
-                KPICode.PICKUP_TIME, kpiElement.getChartType());
-        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
-                validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
-
-
-        mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
+		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
+
+
 
 	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populatePickupTimeExcelData(validationDataList, excelData);
+			KPIExcelUtility.populateMeanTimeMergeExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.PICKUP_TIME.getColumns());
+			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_MEAN_TIME_TO_MERGE.getColumns());
 		}
 	}
 }

@@ -1,3 +1,19 @@
+/*
+ *  Copyright 2024 <Sapient Corporation>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the
+ *  License.
+ */
+
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.mttm;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
@@ -25,9 +41,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Service implementation for calculating Mean Time To Merge KPI in non-trend mode.
+ * Measures the average time taken to merge pull/merge requests.
+ */
 @Component
 public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<List<IterationKpiValue>> {
 
+	private static final int SECONDS_PER_HOUR = 3600;
+	private static final double PERCENTAGE_MULTIPLIER = 100.0;
+	private static final long MILLIS_PER_SECOND = 1000L;
+
+	/**
+	 * Calculates Mean Time To Merge KPI for all SCM tools.
+	 *
+	 * @param kpiRequest         the KPI request containing filters and parameters
+	 * @param mergeRequests      list of merge requests
+	 * @param commits            list of SCM commits (unused in this implementation)
+	 * @param scmTools           list of SCM tools to process
+	 * @param validationDataList list to populate with validation data
+	 * @param assignees          set of assignees for developer mapping
+	 * @param projectName        name of the project
+	 * @return list of iteration KPI values
+	 */
 	@Override
 	public List<IterationKpiValue> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests, List<ScmCommits> commits,
 			List<Tool> scmTools, List<RepoToolValidationData> validationDataList, Set<Assignee> assignees,
@@ -40,138 +76,195 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculatio
 		return iterationKpiValueList;
 	}
 
+	/**
+	 * Processes data for a single SCM tool and calculates mean time to merge.
+	 *
+	 * @param tool                   the SCM tool to process
+	 * @param mergeRequests          list of all merge requests
+	 * @param assignees              set of assignees
+	 * @param iterationKpiValueList  list to populate with KPI values
+	 * @param validationDataList     list to populate with validation data
+	 * @param kpiRequest             the KPI request
+	 * @param projectName            name of the project
+	 */
 	private void processToolData(Tool tool, List<ScmMergeRequests> mergeRequests, Set<Assignee> assignees,
 			List<IterationKpiValue> iterationKpiValueList, List<RepoToolValidationData> validationDataList,
 			KpiRequest kpiRequest, String projectName) {
-		int dataPoints = kpiRequest.getXAxisDataPoints();
-		LocalDateTime currentDate = DateUtil.getTodayTime();
-		String duration = kpiRequest.getDuration();
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
 
+		int dataPoints = kpiRequest.getXAxisDataPoints();
+		LocalDateTime currentDate = DateUtil.getTodayTime();
+		String duration = kpiRequest.getDuration();
 		String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
+		List<ScmMergeRequests> mergeRequestsForBranch = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
+
+		CustomDateRange currentPeriodRange = getCustomDateRange(currentDate, duration, dataPoints);
+		List<ScmMergeRequests> currentMergedRequests = filterMergedRequestsByDateRange(mergeRequestsForBranch, currentPeriodRange);
+		double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequests);
+
+		CustomDateRange previousPeriodRange = getCustomDateRange(currentPeriodRange.getStartDateTime(), duration, dataPoints);
+		List<ScmMergeRequests> previousMergedRequests = filterMergedRequestsByDateRange(mergeRequestsForBranch, previousPeriodRange);
+		double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergedRequests);
+
+		double meanTimeToMergeHours = currentMeanTimeToMergeSeconds / SECONDS_PER_HOUR;
+		double deviationRate = calculateDeviationRate(currentMeanTimeToMergeSeconds, previousMeanTimeToMergeSeconds);
+
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-
-		List<ScmMergeRequests> mergeRequestsForBranch = DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests,
-				tool);
-
-		CustomDateRange periodRange = getCustomDateRange(currentDate, duration, dataPoints);
-		List<ScmMergeRequests> currentMergedRequestsInRange = mergeRequestsForBranch.stream()
-				.filter(request -> request.getMergedAt() != null)
-				.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(), periodRange.getStartDateTime(),
-						periodRange.getEndDateTime()))
-				.toList();
-
-		CustomDateRange prevPeriodRange = getCustomDateRange(periodRange.getStartDateTime(), duration, dataPoints);
-		List<ScmMergeRequests> previousMergeRequestsInRange = mergeRequestsForBranch.stream()
-				.filter(request -> request.getMergedAt() != null)
-				.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-						prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
-				.toList();
-
-		double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequestsInRange);
-		double meanTimeToMergeHours = currentMeanTimeToMergeSeconds / (3600);
-		double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergeRequestsInRange);
-		double deviationRate = Math.round((currentMeanTimeToMergeSeconds - previousMeanTimeToMergeSeconds)
-				/ (previousMeanTimeToMergeSeconds + currentMeanTimeToMergeSeconds) * 100);
-
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List.of(
 				new IterationKpiData(overallKpiGroup, meanTimeToMergeHours, deviationRate, null, "hrs", "%", null))));
 
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
-				.groupMergeRequestsByUser(mergeRequestsForBranch);
-
-		validationDataList.addAll(prepareUserValidationData(periodRange, prevPeriodRange, userWiseMergeRequests,
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch);
+		validationDataList.addAll(prepareUserValidationData(currentPeriodRange, previousPeriodRange, userWiseMergeRequests,
 				assignees, tool, projectName, iterationKpiValueList));
 	}
 
-	private List<RepoToolValidationData> prepareUserValidationData(CustomDateRange periodRange,
-			CustomDateRange prevPeriodRange, Map<String, List<ScmMergeRequests>> userWiseMergeRequests,
+	/**
+	 * Filters merged requests within the specified date range.
+	 *
+	 * @param mergeRequests list of merge requests to filter
+	 * @param dateRange     date range to filter by
+	 * @return filtered list of merged requests
+	 */
+	private List<ScmMergeRequests> filterMergedRequestsByDateRange(List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
+		return mergeRequests.stream()
+				.filter(request -> request.getMergedAt() != null)
+				.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
+						dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+				.toList();
+	}
+
+	/**
+	 * Calculates the deviation rate between current and previous mean time to merge.
+	 *
+	 * @param currentSeconds  current period mean time in seconds
+	 * @param previousSeconds previous period mean time in seconds
+	 * @return deviation rate as a percentage
+	 */
+	private double calculateDeviationRate(double currentSeconds, double previousSeconds) {
+		double sum = currentSeconds + previousSeconds;
+		if (sum == 0) {
+			return 0.0;
+		}
+		return Math.round((currentSeconds - previousSeconds) / sum * PERCENTAGE_MULTIPLIER);
+	}
+
+	/**
+	 * Prepares validation data for each user/developer.
+	 *
+	 * @param currentPeriodRange     current period date range
+	 * @param previousPeriodRange    previous period date range
+	 * @param userWiseMergeRequests  map of user email to their merge requests
+	 * @param assignees              set of assignees
+	 * @param tool                   the SCM tool
+	 * @param projectName            name of the project
+	 * @param iterationKpiValueList  list to populate with user-level KPI values
+	 * @return list of validation data for all users
+	 */
+	private List<RepoToolValidationData> prepareUserValidationData(CustomDateRange currentPeriodRange,
+			CustomDateRange previousPeriodRange, Map<String, List<ScmMergeRequests>> userWiseMergeRequests,
 			Set<Assignee> assignees, Tool tool, String projectName, List<IterationKpiValue> iterationKpiValueList) {
+		String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
 		return userWiseMergeRequests.entrySet().stream().map(entry -> {
 			String userEmail = entry.getKey();
 			List<ScmMergeRequests> userMergeRequests = entry.getValue();
-			List<ScmMergeRequests> currentMergedRequestsInRange = userMergeRequests.stream()
-					.filter(request -> request.getMergedAt() != null)
-					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
-					.toList();
-
-			List<ScmMergeRequests> previousMergeRequestsInRange = userMergeRequests.stream()
-					.filter(request -> request.getMergedAt() != null)
-					.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
-							prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
-					.toList();
-
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequestsInRange);
-			double userAverageHrs = currentMeanTimeToMergeSeconds / (3600);
-			double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergeRequestsInRange);
-			double deviationRate = Math.round((currentMeanTimeToMergeSeconds - previousMeanTimeToMergeSeconds)
-					/ previousMeanTimeToMergeSeconds * 100);
 
-			String userKpiGroup = DeveloperKpiHelper.getBranchSubFilter(tool, projectName) + "#" + developerName;
-			iterationKpiValueList.add(new IterationKpiValue(DeveloperKpiHelper.getBranchSubFilter(tool, projectName),
-					developerName, List.of(new IterationKpiData(userKpiGroup, userAverageHrs, deviationRate, null,
-							"hrs", "%", null))));
+			List<ScmMergeRequests> currentMergedRequests = filterMergedRequestsByDateRange(userMergeRequests, currentPeriodRange);
+			double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequests);
+			double userAverageHrs = currentMeanTimeToMergeSeconds / SECONDS_PER_HOUR;
 
-			List<RepoToolValidationData> userValidationData = new ArrayList<>();
-			userMergeRequests.forEach(mr -> {
-				if (mr.getCreatedDate() != null && mr.getMergedAt() != null) {
-					userValidationData.add(createValidationData(projectName, tool, developerName, null, mr));
-				}
-			});
-			return userValidationData;
+			List<ScmMergeRequests> previousMergedRequests = filterMergedRequestsByDateRange(userMergeRequests, previousPeriodRange);
+			double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergedRequests);
+			double deviationRate = calculateDeviationRate(currentMeanTimeToMergeSeconds, previousMeanTimeToMergeSeconds);
+
+			String userKpiGroup = branchName + "#" + developerName;
+			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
+					List.of(new IterationKpiData(userKpiGroup, userAverageHrs, deviationRate, null, "hrs", "%", null))));
+
+			return userMergeRequests.stream()
+					.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
+					.map(mr -> createValidationData(projectName, tool, developerName, null, mr))
+					.toList();
 		}).flatMap(List::stream).toList();
 	}
 
-    private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {
-        if (CollectionUtils.isEmpty(mergeRequests)) {
-            return 0.0;
-        }
+	/**
+	 * Calculates the mean time to merge for a list of merge requests.
+	 *
+	 * @param mergeRequests list of merge requests
+	 * @return average time to merge in seconds
+	 */
+	private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {
+		if (CollectionUtils.isEmpty(mergeRequests)) {
+			return 0.0;
+		}
 
-        List<Long> timeToMergeList = mergeRequests.stream()
-                .filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
-                .filter(mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
-                .map(mr -> {
-                    LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-                    return ChronoUnit.SECONDS.between(createdDateTime, mr.getMergedAt());
-                }).collect(Collectors.toList());
+		List<Long> timeToMergeList = mergeRequests.stream()
+				.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
+				.filter(mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
+				.map(this::calculateTimeToMergeSeconds)
+				.toList();
 
-        if (CollectionUtils.isEmpty(timeToMergeList)) {
-            return 0.0;
-        }
+		if (CollectionUtils.isEmpty(timeToMergeList)) {
+			return 0.0;
+		}
 
-        return timeToMergeList.stream().mapToLong(Long::longValue).average().orElse(0.0);
-    }
+		return timeToMergeList.stream().mapToLong(Long::longValue).average().orElse(0.0);
+	}
 
-    private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-                                                        String dateLabel, ScmMergeRequests mergeRequest) {
-        RepoToolValidationData validationData = new RepoToolValidationData();
-        validationData.setProjectName(projectName);
-        validationData.setBranchName(tool.getBranch());
-        validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
-        validationData.setDeveloperName(developerName);
-        validationData.setDate(dateLabel);
+	/**
+	 * Calculates time to merge in seconds for a single merge request.
+	 *
+	 * @param mergeRequest the merge request
+	 * @return time to merge in seconds
+	 */
+	private long calculateTimeToMergeSeconds(ScmMergeRequests mergeRequest) {
+		LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
+		return ChronoUnit.SECONDS.between(createdDateTime, mergeRequest.getMergedAt());
+	}
 
-        LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
-        long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, mergeRequest.getMergedAt());
-        validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * 1000.0));
+	/**
+	 * Creates validation data object for a merge request.
+	 *
+	 * @param projectName   name of the project
+	 * @param tool          the SCM tool
+	 * @param developerName name of the developer
+	 * @param dateLabel     date label (can be null)
+	 * @param mergeRequest  the merge request
+	 * @return populated validation data object
+	 */
+	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
+			String dateLabel, ScmMergeRequests mergeRequest) {
+		RepoToolValidationData validationData = new RepoToolValidationData();
+		validationData.setProjectName(projectName);
+		validationData.setBranchName(tool.getBranch());
+		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setDeveloperName(developerName);
+		validationData.setDate(dateLabel);
 
-        validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
-        LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
-        LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());
+		LocalDateTime createdDateTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
+		long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, mergeRequest.getMergedAt());
+		validationData.setMeanTimeToMerge(KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * MILLIS_PER_SECOND));
 
-        validationData.setPrRaisedTime(DateUtil.tranformUTCLocalTimeToZFormat(createdDateTimeUTC));
-        validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(mergedAtUTC));
+		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
+		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
+		LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());
 
-        return validationData;
-    }
+		validationData.setPrRaisedTime(DateUtil.tranformUTCLocalTimeToZFormat(createdDateTimeUTC));
+		validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(mergedAtUTC));
 
+		return validationData;
+	}
+
+	/**
+	 * Returns the strategy type identifier.
+	 *
+	 * @return strategy type string
+	 */
 	@Override
 	public String getStrategyType() {
 		return "REPO_TOOL_MEAN_TIME_TO_MERGE_NON_TREND";
 	}
-
 }

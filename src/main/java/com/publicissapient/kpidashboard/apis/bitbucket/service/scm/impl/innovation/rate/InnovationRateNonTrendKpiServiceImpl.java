@@ -1,3 +1,19 @@
+/*
+ *  Copyright 2024 <Sapient Corporation>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the
+ *  License.
+ */
+
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.innovation.rate;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
@@ -23,9 +39,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Service implementation for calculating Innovation Rate KPI in non-trend mode.
+ * Innovation Rate measures the percentage of added lines relative to total lines changed.
+ */
 @Component
 public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<List<IterationKpiValue>> {
 
+	private static final double INNOVATION_RATE_DIVISOR = 10.0;
+	private static final double PERCENTAGE_MULTIPLIER = 100.0;
+	private static final int DECIMAL_SCALE = 2;
+
+	/**
+	 * Calculates Innovation Rate KPI for all SCM tools.
+	 *
+	 * @param kpiRequest         the KPI request containing filters and parameters
+	 * @param mergeRequests      list of merge requests (unused in this implementation)
+	 * @param commits            list of SCM commits
+	 * @param scmTools           list of SCM tools to process
+	 * @param validationDataList list to populate with validation data
+	 * @param assignees          set of assignees for developer mapping
+	 * @param projectName        name of the project
+	 * @return list of iteration KPI values
+	 */
 	@Override
 	public List<IterationKpiValue> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests,
 			List<ScmCommits> commits, List<Tool> scmTools, List<RepoToolValidationData> validationDataList,
@@ -38,97 +74,161 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 		return iterationKpiValueList;
 	}
 
+	/**
+	 * Processes data for a single SCM tool and calculates innovation rates.
+	 *
+	 * @param tool                   the SCM tool to process
+	 * @param commits                list of all commits
+	 * @param assignees              set of assignees
+	 * @param iterationKpiValueList  list to populate with KPI values
+	 * @param validationDataList     list to populate with validation data
+	 * @param kpiRequest             the KPI request
+	 * @param projectName            name of the project
+	 */
 	private void processToolData(Tool tool, List<ScmCommits> commits, Set<Assignee> assignees,
 			List<IterationKpiValue> iterationKpiValueList, List<RepoToolValidationData> validationDataList,
 			KpiRequest kpiRequest, String projectName) {
-		int dataPoints = kpiRequest.getXAxisDataPoints();
-		LocalDateTime currentDate = DateUtil.getTodayTime();
-		String duration = kpiRequest.getDuration();
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
 
+		int dataPoints = kpiRequest.getXAxisDataPoints();
+		LocalDateTime currentDate = DateUtil.getTodayTime();
+		String duration = kpiRequest.getDuration();
 		String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
-		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-
 		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(commits, tool);
 
-		CustomDateRange periodRange = getCustomDateRange(currentDate, duration, dataPoints);
-		List<ScmCommits> currentCommitsList = commitsForBranch.stream()
-				.filter(request -> DateUtil.isWithinDateTimeRange(
-						DateUtil.convertMillisToLocalDateTime(request.getCommitTimestamp()),
-						periodRange.getStartDateTime(), periodRange.getEndDateTime()))
-				.toList();
+		CustomDateRange currentPeriodRange = getCustomDateRange(currentDate, duration, dataPoints);
+		List<ScmCommits> currentCommitsList = filterCommitsByDateRange(commitsForBranch, currentPeriodRange);
 		double currentInnovationRate = getInnovationRate(currentCommitsList);
 
-		CustomDateRange prevPeriodRange = getCustomDateRange(periodRange.getStartDateTime(), duration, dataPoints);
-		List<ScmCommits> previousCommitsList = commitsForBranch.stream()
-				.filter(request -> DateUtil.isWithinDateTimeRange(
-						DateUtil.convertMillisToLocalDateTime(request.getCommitTimestamp()),
-						prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
-				.toList();
+		CustomDateRange previousPeriodRange = getCustomDateRange(currentPeriodRange.getStartDateTime(), duration, dataPoints);
+		List<ScmCommits> previousCommitsList = filterCommitsByDateRange(commitsForBranch, previousPeriodRange);
 		double previousInnovationRate = getInnovationRate(previousCommitsList);
-		double deviationRate = Math.round((currentInnovationRate - previousInnovationRate)
-				/ (currentInnovationRate + previousInnovationRate) * 100);
+		double deviationRate = calculateDeviationRate(currentInnovationRate, previousInnovationRate);
 
+		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List.of(
 				new IterationKpiData(overallKpiGroup, currentInnovationRate, deviationRate, null, "hrs", "%", null))));
 
 		Map<String, List<ScmCommits>> userWiseCommits = DeveloperKpiHelper.groupCommitsByUser(commitsForBranch);
-
-		validationDataList.addAll(prepareUserValidationData(periodRange, prevPeriodRange, userWiseCommits, assignees,
-				tool, projectName, iterationKpiValueList));
+		validationDataList.addAll(prepareUserValidationData(currentPeriodRange, previousPeriodRange, userWiseCommits,
+				assignees, tool, projectName, iterationKpiValueList));
 	}
 
+	/**
+	 * Filters commits within the specified date range.
+	 *
+	 * @param commits   list of commits to filter
+	 * @param dateRange date range to filter by
+	 * @return filtered list of commits
+	 */
+	private List<ScmCommits> filterCommitsByDateRange(List<ScmCommits> commits, CustomDateRange dateRange) {
+		return commits.stream()
+				.filter(commit -> DateUtil.isWithinDateTimeRange(
+						DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
+						dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+				.toList();
+	}
+
+	/**
+	 * Calculates the innovation rate as the average percentage of added lines.
+	 * Innovation rate = (added lines / total lines affected) * 100 / 10
+	 *
+	 * @param commits list of commits
+	 * @return average innovation rate
+	 */
 	private double getInnovationRate(List<ScmCommits> commits) {
-		return commits.stream().mapToDouble(commit -> {
-			long linesOfCodeChanged = commit.getTotalLinesAffected();
-			return linesOfCodeChanged != 0
-					? BigDecimal.valueOf((commit.getAddedLines() * 100.0 / linesOfCodeChanged) / 10)
-							.setScale(2, RoundingMode.HALF_UP).doubleValue()
-					: 0.0;
-		}).average().orElse(0.0);
+		return commits.stream()
+				.mapToDouble(this::calculateCommitInnovationRate)
+				.average()
+				.orElse(0.0);
 	}
 
-	private List<RepoToolValidationData> prepareUserValidationData(CustomDateRange periodRange,
-			CustomDateRange prevPeriodRange, Map<String, List<ScmCommits>> userWiseCommits, Set<Assignee> assignees,
+	/**
+	 * Calculates innovation rate for a single commit.
+	 *
+	 * @param commit the commit to calculate for
+	 * @return innovation rate for the commit
+	 */
+	private double calculateCommitInnovationRate(ScmCommits commit) {
+		long totalLinesAffected = commit.getTotalLinesAffected();
+		if (totalLinesAffected == 0) {
+			return 0.0;
+		}
+		double percentage = (commit.getAddedLines() * PERCENTAGE_MULTIPLIER) / totalLinesAffected;
+		return BigDecimal.valueOf(percentage / INNOVATION_RATE_DIVISOR)
+				.setScale(DECIMAL_SCALE, RoundingMode.HALF_UP)
+				.doubleValue();
+	}
+
+	/**
+	 * Calculates the deviation rate between current and previous innovation rates.
+	 *
+	 * @param currentRate  current period innovation rate
+	 * @param previousRate previous period innovation rate
+	 * @return deviation rate as a percentage
+	 */
+	private double calculateDeviationRate(double currentRate, double previousRate) {
+		double sum = currentRate + previousRate;
+		if (sum == 0) {
+			return 0.0;
+		}
+		return Math.round((currentRate - previousRate) / sum * PERCENTAGE_MULTIPLIER);
+	}
+
+	/**
+	 * Prepares validation data for each user/developer.
+	 *
+	 * @param currentPeriodRange     current period date range
+	 * @param previousPeriodRange    previous period date range
+	 * @param userWiseCommits        map of user email to their commits
+	 * @param assignees              set of assignees
+	 * @param tool                   the SCM tool
+	 * @param projectName            name of the project
+	 * @param iterationKpiValueList  list to populate with user-level KPI values
+	 * @return list of validation data for all users
+	 */
+	private List<RepoToolValidationData> prepareUserValidationData(CustomDateRange currentPeriodRange,
+			CustomDateRange previousPeriodRange, Map<String, List<ScmCommits>> userWiseCommits, Set<Assignee> assignees,
 			Tool tool, String projectName, List<IterationKpiValue> iterationKpiValueList) {
+		String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
 		return userWiseCommits.entrySet().stream().map(entry -> {
 			String userEmail = entry.getKey();
 			List<ScmCommits> userCommits = entry.getValue();
-
 			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			double innovationRate = getInnovationRate(userCommits);
+
+			List<ScmCommits> currentCommitsList = filterCommitsByDateRange(userCommits, currentPeriodRange);
+			double currentInnovationRate = getInnovationRate(currentCommitsList);
+
+			List<ScmCommits> previousCommitsList = filterCommitsByDateRange(userCommits, previousPeriodRange);
+			double previousInnovationRate = getInnovationRate(previousCommitsList);
+			double deviationRate = calculateDeviationRate(currentInnovationRate, previousInnovationRate);
+
+			String userKpiGroup = branchName + "#" + developerName;
+			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
+					List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate, null, "hrs", "%", null))));
+
+			double overallInnovationRate = getInnovationRate(userCommits);
 			int addedLines = userCommits.stream().mapToInt(ScmCommits::getAddedLines).sum();
 			int changedLines = userCommits.stream().mapToInt(ScmCommits::getChangedLines).sum();
 
-			String userKpiGroup = DeveloperKpiHelper.getBranchSubFilter(tool, projectName) + "#" + developerName;
-
-			List<ScmCommits> currentCommitsList = userCommits.stream()
-					.filter(request -> DateUtil.isWithinDateTimeRange(
-							DateUtil.convertMillisToLocalDateTime(request.getCommitTimestamp()),
-							periodRange.getStartDateTime(), periodRange.getEndDateTime()))
-					.toList();
-			double currentInnovationRate = getInnovationRate(currentCommitsList);
-
-			List<ScmCommits> previousCommitsList = userCommits.stream()
-					.filter(request -> DateUtil.isWithinDateTimeRange(
-							DateUtil.convertMillisToLocalDateTime(request.getCommitTimestamp()),
-							prevPeriodRange.getStartDateTime(), prevPeriodRange.getEndDateTime()))
-					.toList();
-			double previousInnovationRate = getInnovationRate(previousCommitsList);
-			double deviationRate = Math.round((currentInnovationRate - previousInnovationRate)
-					/ (currentInnovationRate + previousInnovationRate) * 100);
-
-			iterationKpiValueList.add(new IterationKpiValue(DeveloperKpiHelper.getBranchSubFilter(tool, projectName),
-					developerName, List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate,
-							null, "hrs", "%", null))));
-
-			return createValidationData(projectName, tool, developerName, null, innovationRate, addedLines,
-					changedLines);
+			return createValidationData(projectName, tool, developerName, null, overallInnovationRate, addedLines, changedLines);
 		}).toList();
 	}
 
+	/**
+	 * Creates validation data object for a developer.
+	 *
+	 * @param projectName    name of the project
+	 * @param tool           the SCM tool
+	 * @param developerName  name of the developer
+	 * @param dateLabel      date label (can be null)
+	 * @param innovationRate calculated innovation rate
+	 * @param addedLines     total added lines
+	 * @param changedLines   total changed lines
+	 * @return populated validation data object
+	 */
 	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
 			String dateLabel, double innovationRate, long addedLines, long changedLines) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
@@ -143,6 +243,11 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 		return validationData;
 	}
 
+	/**
+	 * Returns the strategy type identifier.
+	 *
+	 * @return strategy type string
+	 */
 	@Override
 	public String getStrategyType() {
 		return "INNOVATION_RATE_NON_TREND";

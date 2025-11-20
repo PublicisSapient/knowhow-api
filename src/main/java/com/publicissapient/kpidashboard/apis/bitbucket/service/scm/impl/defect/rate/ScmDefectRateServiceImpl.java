@@ -1,21 +1,20 @@
 /*
- *   Copyright 2014 CapitalOne, LLC.
- *   Further development Copyright 2022 Sapient Corporation.
+ *  Copyright 2024 <Sapient Corporation>
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and limitations under the
+ *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
+package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.defect.rate;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
@@ -62,7 +61,7 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
-    private final KpiStrategyRegistry kpiStrategyRegistry;
+	private final KpiStrategyRegistry kpiStrategyRegistry;
 
 	@Override
 	public String getQualifierType() {
@@ -156,16 +155,14 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-        KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
-                KPICode.DEFECT_RATE, kpiElement.getChartType());
-        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
-                validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
+		KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(KPICode.DEFECT_RATE,
+				kpiElement.getChartType());
+		Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
+				validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
 
-
-        mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
+		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
-    
 
 	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
