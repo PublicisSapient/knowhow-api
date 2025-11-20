@@ -3660,6 +3660,54 @@
   },
   {
     "basicProjectConfigId" : null,
+    "kpiId" : "kpi201",
+    "kpiColumnDetails" : [
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Project",
+        "order" : 1
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Repo",
+        "order" : 2
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Branch",
+        "order" : 3
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Developer",
+        "order" : 4
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Days/Weeks",
+        "order" : 5
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Rework Rate",
+        "order" : 6
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Revert Rate",
+        "order" : 7
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
     "kpiId" : "kpi197",
     "kpiColumnDetails" : [
       {
