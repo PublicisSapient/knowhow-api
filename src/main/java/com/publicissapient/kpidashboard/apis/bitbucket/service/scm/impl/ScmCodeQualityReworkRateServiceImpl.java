@@ -102,36 +102,6 @@ public class ScmCodeQualityReworkRateServiceImpl
 	private final ScmKpiHelperService scmKpiHelperService;
 	private final ConfigHelperService configHelperService;
 
-	/** Helper class to track rework calculation */
-	public static class ReworkCalculation {
-		private int totalChanges = 0;
-		private int reworkChanges = 0;
-
-		public void addTotalChanges(int changes) {
-			this.totalChanges += changes;
-		}
-
-		public void addRework(int rework) {
-			this.reworkChanges += rework;
-		}
-
-		public Double getPercentage() {
-			if (totalChanges == 0) {
-				return 0.0;
-			}
-
-			return ((double) reworkChanges / totalChanges) * 100;
-		}
-
-		public int getTotalChanges() {
-			return this.totalChanges;
-		}
-
-		public int getReworkChanges() {
-			return this.reworkChanges;
-		}
-	}
-
 	@Builder
 	private record ToolDataContext(
 			Tool tool,
@@ -169,8 +139,9 @@ public class ScmCodeQualityReworkRateServiceImpl
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
-		Map<String, ReworkCalculation> reworkMap = new HashMap<>();
-		calculateProjectKpiPercentage( projectNode, kpiRequest, reworkMap);
+
+        Map<String, MetricsHolder> reworkMap   = (Map<String, MetricsHolder>) kpiElement.getTrendValueList();
+        calculateProjectKpiPercentage( projectNode, kpiRequest, reworkMap);
 
 		log.debug(
 				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
@@ -196,23 +167,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultMap = new HashMap<>();
 
-		// Fetch commits from (current - dataPoints - 21 days) for reference data
-		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
-		LocalDateTime extendedStartDate =
-				dateRange.getStartDate().atStartOfDay().minusDays(REWORK_DAYS_AGO);
-		LocalDateTime endDateTime = dateRange.getEndDate().atTime(23, 59, 59);
-
-		CustomDateRange extendedDateRange = new CustomDateRange();
-		extendedDateRange.setStartDate(extendedStartDate.toLocalDate());
-		extendedDateRange.setEndDate(endDateTime.toLocalDate());
-
-		ObjectId projectBasicConfigId =
-				leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
-
-		List<ScmCommits> commits =
-				scmKpiHelperService.getCommitDetails(projectBasicConfigId, extendedDateRange);
-
-		resultMap.put(COMMITS, commits);
+		resultMap.put(COMMITS, getCommitsFromBaseClass());
 		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
 		return resultMap;
 	}
@@ -266,7 +221,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 	private void calculateProjectKpiPercentage(
 			Node projectLeafNode,
 			KpiRequest kpiRequest,
-			Map<String, ReworkCalculation> reworkMap) {
+			Map<String, MetricsHolder> reworkMap) {
 
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
@@ -355,7 +310,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 	 * @param reworkMap map to store calculated rework metrics
 	 */
 	private void processToolData(
-			ToolDataContext toolContext, Map<String, ReworkCalculation> reworkMap) {
+			ToolDataContext toolContext, Map<String, MetricsHolder> reworkMap) {
 		if (!DeveloperKpiHelper.isValidTool(toolContext.tool())) {
 			return;
 		}
@@ -395,7 +350,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 	private void prepareUserValidationData(
 			Map<String, List<ScmCommits>> userWiseCommits,
 			ToolDataContext toolContext,
-			Map<String, ReworkCalculation> reworkMap,
+			Map<String, MetricsHolder> reworkMap,
 			String branchName) {
 
 		for (Map.Entry<String, List<ScmCommits>> entry : userWiseCommits.entrySet()) {
@@ -432,7 +387,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 			List<ScmCommits> commits,
 			CustomDateRange periodRange,
 			Map<ScmCommits, LocalDateTime> commitTimestampMap,
-			Map<String, ReworkCalculation> reworkMap,
+			Map<String, MetricsHolder> reworkMap,
 			String kpiGroup) {
 
 		if (commits == null || commits.isEmpty()) {
@@ -501,7 +456,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 	private void calculateReworkMetrics(
 			List<ScmCommits> commits,
 			Map<String, Set<Integer>> referencePool,
-			Map<String, ReworkCalculation> reworkMap,
+			Map<String, MetricsHolder> reworkMap,
 			String kpiGroup) {
 		if (CollectionUtils.isEmpty(commits)) {
 			return;
@@ -540,24 +495,30 @@ public class ScmCodeQualityReworkRateServiceImpl
 	private void processFileChange(
 			ScmCommits.FileChange fileChange,
 			Map<String, Set<Integer>> referencePool,
-			Map<String, ReworkCalculation> reworkMap,
+			Map<String, MetricsHolder> reworkMap,
 			String kpiGroup) {
 		String filePath = fileChange.getFilePath();
 		List<Integer> changedLines = fileChange.getChangedLineNumbers();
 		Set<Integer> referenceLines = referencePool.get(filePath);
 
 		int totalChanges = changedLines.size();
-		ReworkCalculation calculation =
-				reworkMap.computeIfAbsent(kpiGroup, key -> new ReworkCalculation());
-		calculation.addTotalChanges(totalChanges);
+        MetricsHolder calculation =
+				reworkMap.computeIfAbsent(kpiGroup, key -> new MetricsHolder());
 
-		if (CollectionUtils.isNotEmpty(referenceLines)) {
+		calculation.addTotalChanges(totalChanges);
+        if (log.isInfoEnabled()) {
+            log.info(" KpiGroup: {} ----> totalChanges: {}", kpiGroup, totalChanges);
+        }
+
+        if (CollectionUtils.isNotEmpty(referenceLines)) {
 			Set<Integer> changedLineSet = new HashSet<>(changedLines);
 			changedLineSet.retainAll(referenceLines);
 			int reworkCount = changedLineSet.size();
-
 			calculation.addRework(reworkCount);
 			referenceLines.addAll(changedLines);
+            if (log.isInfoEnabled()) {
+                log.info(" KpiGroup: {} ----> reworkCount: {}", kpiGroup, reworkCount);
+            }
 		} else {
 			// New file - no rework, add to reference pool
 			referencePool.put(filePath, new HashSet<>(changedLines));

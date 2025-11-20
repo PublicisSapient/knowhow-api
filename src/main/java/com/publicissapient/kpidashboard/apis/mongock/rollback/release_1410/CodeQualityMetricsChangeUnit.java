@@ -44,7 +44,7 @@ public class CodeQualityMetricsChangeUnit {
     private static final String DAYS_WEEKS = "Days/Weeks";
     private static final String REWORK_RATE = "Rework Rate";
     private static final String REVERT_RATE = "Revert Rate";
-    private static final String KPI_COLUMN_CONFIG = "kpi_column_config";
+    private static final String KPI_COLUMN_CONFIG = "kpi_column_configs";
     private static final String KPI_MASTER = "kpi_master";
 
     public CodeQualityMetricsChangeUnit(MongoTemplate mongoTemplate) {

@@ -102,15 +102,14 @@ public class ScmCodeQualityRevertRateServiceImpl
     @Override
     public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
             throws ApplicationException {
-        Map<String, MetricsHolder> revertRateMap = new HashMap<>();
+        Map<String, MetricsHolder> revertRateMap   = (Map<String, MetricsHolder>) kpiElement.getTrendValueList();
         calculateProjectKpiTrendData(projectNode, kpiRequest, revertRateMap);
 
         log.debug(
                 "[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
                 kpiRequest.getRequestTrackerId(),
                 projectNode);
-        kpiElement.setTrendValueList(revertRateMap);
-        return kpiElement;
+        return null;
     }
 
     /**
@@ -125,14 +124,6 @@ public class ScmCodeQualityRevertRateServiceImpl
     @Override
     public Map<String, Object> fetchKPIDataFromDb(
             List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-
-        LocalDateTime currentDate = DateUtil.getTodayTime();
-        int dataPoints = kpiRequest.getXAxisDataPoints();
-        String duration = kpiRequest.getDuration();
-        CustomDateRange dateRange =
-                KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
-        ObjectId projectBasicConfigId =
-                leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
         Map<String, Object> scmDataMap = new HashMap<>();
         scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
         scmDataMap.put(MERGE_REQUEST_LIST, getMergeRequestsFromBaseClass());
@@ -229,7 +220,9 @@ public class ScmCodeQualityRevertRateServiceImpl
                 revertRateMap.computeIfAbsent(overallKpiGroup, key -> new MetricsHolder());
         calculation.addTotalMerges(totalMergeRequests);
         calculation.addTotalRevertPRs(revertedPRs);
-
+        if (log.isInfoEnabled()) {
+            log.info("overallKpiGroup: {} ---->, revertedPRs: {}, userMrCount: {}", overallKpiGroup, revertedPRs, totalMergeRequests);
+        }
         Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
                 DeveloperKpiHelper.groupMergeRequestsByUser(branchMergeRequests);
         prepareUserValidationData(userWiseMergeRequests, assignees, tool, projectName, revertRateMap);
@@ -251,6 +244,9 @@ public class ScmCodeQualityRevertRateServiceImpl
             long revertedPRs = countRevertedPRs(userMergeRequests);
 
             String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
+            if (log.isInfoEnabled()) {
+                log.info("userKpiGroup: {} ---->, revertedPRs: {}, userMrCount: {}", userKpiGroup, revertedPRs, userMrCount);
+            }
             MetricsHolder calculation = revertRateMap.computeIfAbsent(userKpiGroup, key -> new MetricsHolder());
             calculation.addTotalRevertPRs( revertedPRs);
             calculation.addTotalMerges(userMrCount);

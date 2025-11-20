@@ -1814,14 +1814,13 @@ public class KPIExcelUtilityTest {
 
 	@Test
 	public void testPopulateCodeQualityMetricsExcelData_ValidData() {
-		Map<String, DataCountGroup> groupMap = new HashMap<>();
+
 		List<KPIExcelData> kpiExcelDataList = new ArrayList<>();
 		String dateLabel = "2023-01-01 to 2023-01-31";
 
 		DataCountGroup dataCountGroup = createDataCountGroup();
-		groupMap.put("main -> repo1 -> project1#developer1", dataCountGroup);
 
-		KPIExcelUtility.populateCodeQualityMetricsExcelData(groupMap, kpiExcelDataList, dateLabel);
+		KPIExcelUtility.populateCodeQualityMetricsExcelData(List.of(dataCountGroup), kpiExcelDataList, dateLabel);
 
 		assertEquals(1, kpiExcelDataList.size());
 		KPIExcelData excelData = kpiExcelDataList.get(0);
@@ -1836,29 +1835,12 @@ public class KPIExcelUtilityTest {
 
 	@Test
 	public void testPopulateCodeQualityMetricsExcelData_EmptyGroupMap() {
-		Map<String, DataCountGroup> groupMap = new HashMap<>();
 		List<KPIExcelData> kpiExcelDataList = new ArrayList<>();
 		String dateLabel = "2023-01-01 to 2023-01-31";
 
-		KPIExcelUtility.populateCodeQualityMetricsExcelData(groupMap, kpiExcelDataList, dateLabel);
+		KPIExcelUtility.populateCodeQualityMetricsExcelData(List.of(), kpiExcelDataList, dateLabel);
 
 		assertEquals(0, kpiExcelDataList.size());
-	}
-
-	@Test
-	public void testPopulateCodeQualityMetricsExcelData_MultipleEntries() {
-		Map<String, DataCountGroup> groupMap = new HashMap<>();
-		List<KPIExcelData> kpiExcelDataList = new ArrayList<>();
-		String dateLabel = "2023-01-01 to 2023-01-31";
-
-		DataCountGroup dataCountGroup1 = createDataCountGroup();
-		DataCountGroup dataCountGroup2 = createDataCountGroup();
-		groupMap.put("main -> repo1 -> project1#developer1", dataCountGroup1);
-		groupMap.put("develop -> repo2 -> project2#developer2", dataCountGroup2);
-
-		KPIExcelUtility.populateCodeQualityMetricsExcelData(groupMap, kpiExcelDataList, dateLabel);
-
-		assertEquals(2, kpiExcelDataList.size());
 	}
 
 	@Test
@@ -1991,7 +1973,6 @@ public class KPIExcelUtilityTest {
 	private DataCountGroup createDataCountGroup() {
 		DataCountGroup dataCountGroup = new DataCountGroup();
 		List<DataCount> dataCountList = new ArrayList<>();
-
 		DataCount reworkRate = new DataCount();
 		reworkRate.setData("Rework Rate");
 		reworkRate.setValue(15.5);
@@ -2002,6 +1983,8 @@ public class KPIExcelUtilityTest {
 		revertRate.setValue(25.75);
 		dataCountList.add(revertRate);
 
+        dataCountGroup.setFilter1("main -> repo1 -> project1");
+        dataCountGroup.setFilter2("developer1");
 		dataCountGroup.setValue(dataCountList);
 		return dataCountGroup;
 	}

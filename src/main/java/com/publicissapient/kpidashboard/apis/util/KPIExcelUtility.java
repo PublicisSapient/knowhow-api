@@ -2890,28 +2890,23 @@ public class KPIExcelUtility {
 		}
 	}
 
-	public static void populateCodeQualityMetricsExcelData(
-			Map<String, DataCountGroup> groupMap, List<KPIExcelData> kpiExcelDataList, String dateLabel) {
-		for (Map.Entry<String, DataCountGroup> entry : groupMap.entrySet()) {
-			String key = entry.getKey();
-			String[] filters = extractFilters(key);
-
-			KPIExcelData excelData = new KPIExcelData();
-
-			excelData.setProject(extractProjectName(filters[0]));
-			excelData.setRepo(extractRepositoryName(filters[0]));
-			excelData.setBranch(extractBranchName(filters[0]));
-			excelData.setDeveloper(filters[1]);
-			excelData.setDaysWeeks(dateLabel);
-			excelData.setReworkRate(
-					String.format("%.2f", extractValueRate(entry.getValue(), "Rework Rate")));
-			double revertRate = extractValueRate(entry.getValue(), "Revert Rate");
-			// Format the revertRate to two decimal points and convert back to a double
-			double formattedRevertRate = Double.parseDouble(String.format("%.2f", revertRate));
-			excelData.setRevertRate(formattedRevertRate);
-			kpiExcelDataList.add(excelData);
-		}
-	}
+    public static void populateCodeQualityMetricsExcelData(
+            List<DataCountGroup> dataCountGroups, List<KPIExcelData> kpiExcelDataList, String dateLabel) {
+        for (DataCountGroup dataCountGroup : dataCountGroups) {
+            KPIExcelData excelData = new KPIExcelData();
+            String repBranchName = dataCountGroup.getFilter1();
+            excelData.setProject(extractProjectName(repBranchName ));
+            excelData.setRepo(extractRepositoryName(repBranchName));
+            excelData.setBranch(extractBranchName(repBranchName));
+            excelData.setDeveloper(dataCountGroup.getFilter2());
+            excelData.setDaysWeeks(dateLabel);
+            excelData.setReworkRate(String.format("%.2f", extractValueRate(dataCountGroup, "Rework Rate")));
+            double revertRate = extractValueRate(dataCountGroup, "Revert Rate");
+            double formattedRevertRate = Double.parseDouble(String.format("%.2f", revertRate));
+            excelData.setRevertRate(formattedRevertRate);
+            kpiExcelDataList.add(excelData);
+        }
+    }
 
 	/**
 	 * Extracts filters from a given key string. Splits the input key string using "#" as a delimiter

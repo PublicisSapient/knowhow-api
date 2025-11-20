@@ -19,7 +19,6 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.ScmCodeQualityReworkRateServiceImpl.ReworkCalculation;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
@@ -99,77 +98,50 @@ public class ScmCodeQualityMetricsImpl
     @Override
     public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
             throws ApplicationException {
-        Map<String, ReworkCalculation> reworkMap = new HashMap<>();
-        Map<String, MetricsHolder> revertMap = new HashMap<>();
+        Map<String, MetricsHolder> metricsHolderMap = new HashMap<>();
+        kpiElement.setTrendValueList(metricsHolderMap);
 
-        // Get rework rate data
-        KpiElement reworkRateElement = scmCodeQualityReworkRateServiceImpl.getKpiData(
-                kpiRequest, new KpiElement(), projectNode);
-        if (reworkRateElement != null && reworkRateElement.getTrendValueList() != null) {
-            reworkMap = (Map<String, ReworkCalculation>) reworkRateElement.getTrendValueList();
-        }
-
-        // Get revert rate data
-        KpiElement revertRateElement = scmCodeQualityRevertRateServiceImpl.getKpiData(
-                kpiRequest, new KpiElement(), projectNode);
-        if (revertRateElement != null && revertRateElement.getTrendValueList() != null) {
-            revertMap = (Map<String, MetricsHolder>) revertRateElement.getTrendValueList();
-        }
+        scmCodeQualityReworkRateServiceImpl.getKpiData(kpiRequest, kpiElement, projectNode);
+        scmCodeQualityRevertRateServiceImpl.getKpiData(kpiRequest, kpiElement, projectNode);
 
         String dateLabel = KPIExcelUtility.getDateLabel(kpiRequest);
-        Map<String, DataCountGroup> groupMap= convertMetricsToDataCountGroups(reworkMap, revertMap,dateLabel);
-        kpiElement.setTrendValueList(new ArrayList<>(groupMap.values()));
-        populateExcelData(kpiRequest.getRequestTrackerId() , groupMap, kpiElement,dateLabel);
+        Map<String, DataCountGroup> groupMap = convertMetricsToDataCountGroups(metricsHolderMap, dateLabel);
+        List<DataCountGroup> dataCountGroups = new ArrayList<>(groupMap.values());
+        kpiElement.setTrendValueList(dataCountGroups);
+        populateExcelData(kpiRequest.getRequestTrackerId(), dataCountGroups, kpiElement, dateLabel);
         return kpiElement;
     }
 
     /**
-     * Converts rework and revert metrics maps into DataCountGroup format for UI consumption.
-     * Groups metrics by filter combinations and adds date labels.
+     * Converts metrics holder map into DataCountGroup format for UI consumption.
+     * Groups metrics by filter combinations and adds date labels for both rework and revert rates.
      *
-     * @param reworkMap map of rework calculations by filter key
-     * @param revertMap map of revert metrics by filter key
-     * @param dateLabel is string
+     * @param metricsHolderMap map of metrics holders by filter key
+     * @param dateLabel date label string
      * @return Map of DataCountGroup objects for UI display
      */
-
-    private  Map<String, DataCountGroup> convertMetricsToDataCountGroups(
-            Map<String, ReworkCalculation> reworkMap,
-            Map<String, MetricsHolder> revertMap,
+    private Map<String, DataCountGroup> convertMetricsToDataCountGroups(
+            Map<String, MetricsHolder> metricsHolderMap,
             String dateLabel) {
         Map<String, DataCountGroup> groupMap = new HashMap<>();
-        processReworkData(reworkMap, groupMap, dateLabel);
-        processRevertData(revertMap, groupMap, dateLabel);
+        
+        for (Map.Entry<String, MetricsHolder> entry : metricsHolderMap.entrySet()) {
+            String key = entry.getKey();
+            String[] filters = KPIExcelUtility.extractFilters(key);
+            MetricsHolder holder = entry.getValue();
+
+            DataCountGroup group = groupMap.computeIfAbsent(key, k -> createDataCountGroup(filters));
+            
+            // Add rework rate data
+            DataCount reworkDataCount = createDataCount("Rework Rate", holder.getReworkPercentage(), filters[0], key, dateLabel);
+            group.getValue().add(reworkDataCount);
+            
+            // Add revert rate data
+            DataCount revertDataCount = createDataCount("Revert Rate", holder.calculateRevertPercentage(), filters[0], key, dateLabel);
+            group.getValue().add(revertDataCount);
+        }
 
         return groupMap;
-    }
-
-    private void processReworkData(Map<String, ReworkCalculation> reworkMap,
-                                   Map<String, DataCountGroup> groupMap,
-                                   String dateLabel) {
-        for (Map.Entry<String, ReworkCalculation> entry : reworkMap.entrySet()) {
-            String key = entry.getKey();
-            String[] filters = KPIExcelUtility.extractFilters(key);
-
-            DataCountGroup group = groupMap.computeIfAbsent(key, k -> createDataCountGroup(filters));
-            DataCount dataCount = createDataCount("Rework Rate", entry.getValue().getPercentage(), filters[0], key, dateLabel);
-
-            group.getValue().add(dataCount);
-        }
-    }
-
-    private void processRevertData(Map<String, MetricsHolder> revertMap,
-                                   Map<String, DataCountGroup> groupMap,
-                                   String dateLabel) {
-        for (Map.Entry<String, MetricsHolder> entry : revertMap.entrySet()) {
-            String key = entry.getKey();
-            String[] filters = KPIExcelUtility.extractFilters(key);
-
-            DataCountGroup group = groupMap.computeIfAbsent(key, k -> createDataCountGroup(filters));
-            DataCount dataCount = createDataCount("Revert Rate", entry.getValue().calculateRevertPercentage(), filters[0], key, dateLabel);
-
-            group.getValue().add(dataCount);
-        }
     }
 
     private DataCountGroup createDataCountGroup(String[] filters) {
@@ -222,17 +194,18 @@ public class ScmCodeQualityMetricsImpl
      * Populate excel data
      *
      * @param requestTrackerId request tracker id
-     * @param groupMap
+     * @param dataCountGroups list of data count groups
      * @param kpiElement kpi element
+     * @param dateLabel date label
      */
     private void populateExcelData(
             String requestTrackerId,
-            Map<String, DataCountGroup> groupMap,
+            List<DataCountGroup> dataCountGroups,
             KpiElement kpiElement,
             String dateLabel) {
         if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
             List<KPIExcelData> excelData = new ArrayList<>();
-            KPIExcelUtility.populateCodeQualityMetricsExcelData(groupMap, excelData,dateLabel);
+            KPIExcelUtility.populateCodeQualityMetricsExcelData(dataCountGroups, excelData, dateLabel);
             kpiElement.setExcelData(excelData);
             kpiElement.setExcelColumns(KPIExcelColumn.CODE_QUALITY_METRICS.getColumns());
         }
