@@ -54,6 +54,8 @@ public class SprintMetricStrategyFactoryTest {
 
 	@Mock private SprintMetricStrategy spilloverAgeStrategy;
 
+	@Mock private SprintMetricStrategy sprintReadinessNextSprintStrategy;
+
 	private List<SprintMetricStrategy> strategies;
 
 	@Before
@@ -70,6 +72,8 @@ public class SprintMetricStrategyFactoryTest {
 		when(scopeChangePostStartStrategy.getMetricType())
 				.thenReturn(SprintMetricType.SCOPE_CHANGE_POST_START);
 		when(spilloverAgeStrategy.getMetricType()).thenReturn(SprintMetricType.SPILLOVER_AGE);
+		when(sprintReadinessNextSprintStrategy.getMetricType())
+				.thenReturn(SprintMetricType.SPRINT_READINESS_NEXT_SPRINT);
 
 		// Create strategy list
 		strategies =
@@ -80,7 +84,8 @@ public class SprintMetricStrategyFactoryTest {
 						scopeAddedPercentageStrategy,
 						scopeChangePercentageStrategy,
 						scopeChangePostStartStrategy,
-						spilloverAgeStrategy);
+						spilloverAgeStrategy,
+						sprintReadinessNextSprintStrategy);
 
 		// Recreate factory with mocked strategies
 		factory = new SprintMetricStrategyFactory(strategies);
