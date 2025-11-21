@@ -230,8 +230,11 @@ public class IntegrationServiceImplTest {
 		doNothing().when(organizationHierarchyService).clearCache();
 
 		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
-		/*when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
-		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);*/
+		/*
+		 * when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(
+		 * projectConfigs);
+		 * when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);
+		 */
 
 		// Act
 		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);

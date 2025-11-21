@@ -32,7 +32,6 @@ public class CookieUtil {
 	@Value("${server.servlet.context-path}")
 	private String cookiePath;
 
-
 	public Cookie createAccessTokenCookie(String token) {
 		Cookie cookie = new Cookie(AUTH_COOKIE, token);
 

@@ -72,44 +72,55 @@ import jakarta.ws.rs.NotFoundException;
 @ExtendWith(MockitoExtension.class)
 class ProductivityServiceTest {
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
-	@Mock
-	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	@Mock private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
-	@Mock
-	private ProductivityCustomRepository productivityCustomRepository;
+	@Mock private ProductivityCustomRepository productivityCustomRepository;
 
-	@InjectMocks
-	private ProductivityService productivityService;
+	@InjectMocks private ProductivityService productivityService;
 
 	private String testLevelName;
 
 	@Test
-	void when_LevelNameIsNotProvided_Expect_GetProductivityDataAndTrendsAreThrowingBadRequestException() {
-		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel(null));
-		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel(StringUtils.EMPTY));
-		assertThrows(BadRequestException.class,
-				() -> productivityService.getProductivityTrendsForLevel(null, TemporalAggregationUnit.WEEK, 0));
-		assertThrows(BadRequestException.class, () -> productivityService
-				.getProductivityTrendsForLevel(StringUtils.EMPTY, TemporalAggregationUnit.WEEK, 0));
+	void
+			when_LevelNameIsNotProvided_Expect_GetProductivityDataAndTrendsAreThrowingBadRequestException() {
+		assertThrows(
+				BadRequestException.class, () -> productivityService.getProductivityForLevel(null));
+		assertThrows(
+				BadRequestException.class,
+				() -> productivityService.getProductivityForLevel(StringUtils.EMPTY));
+		assertThrows(
+				BadRequestException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								null, TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				BadRequestException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								StringUtils.EMPTY, TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
 	void when_LimitIsNegative_Expect_GetProductivityTrendsThrowsBadRequestException() {
-		assertThrows(BadRequestException.class, () -> productivityService
-				.getProductivityTrendsForLevel(StringUtils.EMPTY, TemporalAggregationUnit.WEEK, -1));
+		assertThrows(
+				BadRequestException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								StringUtils.EMPTY, TemporalAggregationUnit.WEEK, -1));
 	}
 
 	@Test
 	void when_TemporalAggregationUnitIsNull_Expect_GetProductivityTrendsThrowsBadRequestException() {
-		assertThrows(BadRequestException.class,
+		assertThrows(
+				BadRequestException.class,
 				() -> productivityService.getProductivityTrendsForLevel(StringUtils.EMPTY, null, 1));
 	}
 
 	@Test
-	void when_MultipleLevelNamesAreCorrespondingToTheRequestedLevel_Expect_GetProductivityDataAndTrendsThrowsInternalServerErrorException() {
+	void
+			when_MultipleLevelNamesAreCorrespondingToTheRequestedLevel_Expect_GetProductivityDataAndTrendsThrowsInternalServerErrorException() {
 		testLevelName = "duplicate-level-name";
 		HierarchyLevel hierarchyLevel = new HierarchyLevel();
 		hierarchyLevel.setHierarchyLevelName("duplicate-level-name");
@@ -117,79 +128,149 @@ class ProductivityServiceTest {
 		HierarchyLevel hierarchyLevel1 = new HierarchyLevel();
 		hierarchyLevel1.setHierarchyLevelName("duplicate-level-name");
 
-		Map<String, HierarchyLevel> hierarchyLevelMap = Map.of("testLevelId", hierarchyLevel, "testLevelId1",
-				hierarchyLevel1);
+		Map<String, HierarchyLevel> hierarchyLevelMap =
+				Map.of("testLevelId", hierarchyLevel, "testLevelId1", hierarchyLevel1);
 
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevelMap);
 
-		assertThrows(InternalServerErrorException.class,
+		assertThrows(
+				InternalServerErrorException.class,
 				() -> productivityService.getProductivityForLevel(testLevelName));
 
-		assertThrows(InternalServerErrorException.class,
-				() -> productivityService.getProductivityTrendsForLevel(testLevelName, TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				InternalServerErrorException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								testLevelName, TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_RequestedLevelNameDoesNotExist_Expect_GetProductivityDataAndTrendsThrowsNotFoundException() {
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
+	void
+			when_RequestedLevelNameDoesNotExist_Expect_GetProductivityDataAndTrendsThrowsNotFoundException() {
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(constructTestHierarchyLevelMap());
 
-		assertThrows(NotFoundException.class, () -> productivityService.getProductivityForLevel("not-existent"));
-		assertThrows(NotFoundException.class,
-				() -> productivityService.getProductivityTrendsForLevel("not-existent", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				NotFoundException.class, () -> productivityService.getProductivityForLevel("not-existent"));
+		assertThrows(
+				NotFoundException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								"not-existent", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
 	void when_ProjectLevelDoesNotExist_Expect_GetProductivityDataAndTrendsThrowsNotFoundException() {
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(Map.of("sqd",
-				HierarchyLevel.builder().level(7).hierarchyLevelId("sqd").hierarchyLevelName("Squad").build(),
-				"release",
-				HierarchyLevel.builder().level(6).hierarchyLevelId("release").hierarchyLevelName("Release").build(),
-				"sprint",
-				HierarchyLevel.builder().level(6).hierarchyLevelId("sprint").hierarchyLevelName("Sprint").build(),
-				"port",
-				HierarchyLevel.builder().level(4).hierarchyLevelId("port").hierarchyLevelName("Engagement").build(),
-				"acc", HierarchyLevel.builder().level(3).hierarchyLevelId("acc").hierarchyLevelName("Account").build(),
-				"ver", HierarchyLevel.builder().level(2).hierarchyLevelId("ver").hierarchyLevelName("Vertical").build(),
-				"bu", HierarchyLevel.builder().level(1).hierarchyLevelId("bu").hierarchyLevelName("BU").build()));
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(
+						Map.of(
+								"sqd",
+								HierarchyLevel.builder()
+										.level(7)
+										.hierarchyLevelId("sqd")
+										.hierarchyLevelName("Squad")
+										.build(),
+								"release",
+								HierarchyLevel.builder()
+										.level(6)
+										.hierarchyLevelId("release")
+										.hierarchyLevelName("Release")
+										.build(),
+								"sprint",
+								HierarchyLevel.builder()
+										.level(6)
+										.hierarchyLevelId("sprint")
+										.hierarchyLevelName("Sprint")
+										.build(),
+								"port",
+								HierarchyLevel.builder()
+										.level(4)
+										.hierarchyLevelId("port")
+										.hierarchyLevelName("Engagement")
+										.build(),
+								"acc",
+								HierarchyLevel.builder()
+										.level(3)
+										.hierarchyLevelId("acc")
+										.hierarchyLevelName("Account")
+										.build(),
+								"ver",
+								HierarchyLevel.builder()
+										.level(2)
+										.hierarchyLevelId("ver")
+										.hierarchyLevelName("Vertical")
+										.build(),
+								"bu",
+								HierarchyLevel.builder()
+										.level(1)
+										.hierarchyLevelId("bu")
+										.hierarchyLevelName("BU")
+										.build()));
 
-		assertThrows(InternalServerErrorException.class,
+		assertThrows(
+				InternalServerErrorException.class,
 				() -> productivityService.getProductivityForLevel("engagement"));
 
-		assertThrows(InternalServerErrorException.class,
-				() -> productivityService.getProductivityTrendsForLevel("engagement", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				InternalServerErrorException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								"engagement", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_RequestedLevelIsNotSupported_Expect_GetProductivityDataAndTrendsThrowsBadRequestException() {
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
+	void
+			when_RequestedLevelIsNotSupported_Expect_GetProductivityDataAndTrendsThrowsBadRequestException() {
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(constructTestHierarchyLevelMap());
 
-		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("squad"));
-		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("sprint"));
-		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("project"));
+		assertThrows(
+				BadRequestException.class, () -> productivityService.getProductivityForLevel("squad"));
+		assertThrows(
+				BadRequestException.class, () -> productivityService.getProductivityForLevel("sprint"));
+		assertThrows(
+				BadRequestException.class, () -> productivityService.getProductivityForLevel("project"));
 
-		assertThrows(BadRequestException.class,
-				() -> productivityService.getProductivityTrendsForLevel("squad", TemporalAggregationUnit.WEEK, 0));
-		assertThrows(BadRequestException.class,
-				() -> productivityService.getProductivityTrendsForLevel("sprint", TemporalAggregationUnit.WEEK, 0));
-		assertThrows(BadRequestException.class,
-				() -> productivityService.getProductivityTrendsForLevel("project", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				BadRequestException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								"squad", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				BadRequestException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								"sprint", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				BadRequestException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								"project", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
-	void when_UserDoesNotHaveAccessToAnyData_Expect_GetProductivityDataAndTrendsThrowsForbiddenException() {
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
+	void
+			when_UserDoesNotHaveAccessToAnyData_Expect_GetProductivityDataAndTrendsThrowsForbiddenException() {
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(constructTestHierarchyLevelMap());
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(Collections.emptySet());
 
-		assertThrows(ForbiddenException.class, () -> productivityService.getProductivityForLevel("engagement"));
-		assertThrows(ForbiddenException.class,
-				() -> productivityService.getProductivityTrendsForLevel("engagement", TemporalAggregationUnit.WEEK, 0));
+		assertThrows(
+				ForbiddenException.class, () -> productivityService.getProductivityForLevel("engagement"));
+		assertThrows(
+				ForbiddenException.class,
+				() ->
+						productivityService.getProductivityTrendsForLevel(
+								"engagement", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@ParameterizedTest
 	@MethodSource("provideTestLevelNames")
 	void when_RequestIsValid_Expect_ProductivityResponseIsComputedAccordingly(String levelName) {
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
-		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(constructTestAccountFilteredData());
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(constructTestHierarchyLevelMap());
+		when(accountHierarchyServiceImpl.getFilteredList(any()))
+				.thenReturn(constructTestAccountFilteredData());
 		when(productivityCustomRepository.getLatestProductivityByCalculationDateForProjects(anySet()))
 				.thenReturn(constructProjectProductivityList());
 
@@ -215,44 +296,56 @@ class ProductivityServiceTest {
 		assertNotNull(summary.getTrends());
 		KPITrends kpiTrends = summary.getTrends();
 		assertTrue(CollectionUtils.isNotEmpty(kpiTrends.getPositive()));
-		assertTrue(kpiTrends.getPositive().stream().allMatch(kpiTrend -> kpiTrend.getTrendValue() > 0.0D));
+		assertTrue(
+				kpiTrends.getPositive().stream().allMatch(kpiTrend -> kpiTrend.getTrendValue() > 0.0D));
 		assertEquals(1, kpiTrends.getPositive().size());
 		assertEquals("Work Status", kpiTrends.getPositive().get(0).getKpiName());
 
 		assertTrue(CollectionUtils.isNotEmpty(kpiTrends.getNegative()));
-		assertTrue(kpiTrends.getNegative().stream().allMatch(kpiTrend -> kpiTrend.getTrendValue() < 0.0D));
+		assertTrue(
+				kpiTrends.getNegative().stream().allMatch(kpiTrend -> kpiTrend.getTrendValue() < 0.0D));
 		assertEquals(3, kpiTrends.getNegative().size());
-		List<String> expectedNegativeTrendKpiNames = List.of("Sprint Velocity", "Commitment Reliability", "Wastage");
-		assertTrue(kpiTrends.getNegative().stream()
-				.allMatch(kpiTrend -> expectedNegativeTrendKpiNames.contains(kpiTrend.getKpiName())));
+		List<String> expectedNegativeTrendKpiNames =
+				List.of("Sprint Velocity", "Commitment Reliability", "Wastage");
+		assertTrue(
+				kpiTrends.getNegative().stream()
+						.allMatch(kpiTrend -> expectedNegativeTrendKpiNames.contains(kpiTrend.getKpiName())));
 
 		assertTrue(CollectionUtils.isNotEmpty(productivityResponse.getDetails()));
 		List<String> expectedOrganizationUnitNames = getOrganizationUnitNames(levelName);
 
 		assertTrue(
-				productivityResponse.getDetails().stream().allMatch(productivityDetail -> expectedOrganizationUnitNames
-						.contains(productivityDetail.getOrganizationEntityName())));
+				productivityResponse.getDetails().stream()
+						.allMatch(
+								productivityDetail ->
+										expectedOrganizationUnitNames.contains(
+												productivityDetail.getOrganizationEntityName())));
 	}
 
 	@Test
 	void when_NoProductivityDataIsFound_Expect_ProductivityTrendsResponseIsComputedAccordingly() {
 		testLevelName = "engagement";
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
-		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(constructTestAccountFilteredData());
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(constructTestHierarchyLevelMap());
+		when(accountHierarchyServiceImpl.getFilteredList(any()))
+				.thenReturn(constructTestAccountFilteredData());
 
-		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
-				any(TemporalAggregationUnit.class), anyInt())).thenReturn(Collections.emptyList());
+		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(
+						anySet(), any(TemporalAggregationUnit.class), anyInt()))
+				.thenReturn(Collections.emptyList());
 
-		ServiceResponse serviceResponse = productivityService.getProductivityTrendsForLevel(testLevelName,
-				TemporalAggregationUnit.WEEK, 6);
+		ServiceResponse serviceResponse =
+				productivityService.getProductivityTrendsForLevel(
+						testLevelName, TemporalAggregationUnit.WEEK, 6);
 		assertNotNull(serviceResponse);
 		assertNotNull(serviceResponse.getData());
 		assertTrue(serviceResponse.getSuccess());
 		assertInstanceOf(ProductivityTrendsResponse.class, serviceResponse.getData());
 
-		ProductivityTrendsResponse productivityTrendsResponse = (ProductivityTrendsResponse) serviceResponse.getData();
+		ProductivityTrendsResponse productivityTrendsResponse =
+				(ProductivityTrendsResponse) serviceResponse.getData();
 		assertTrue(productivityTrendsResponse.getLevelName().equalsIgnoreCase(testLevelName));
-        assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
+		assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
 
 		assertNull(productivityTrendsResponse.getCategoryVariations());
 		assertTrue(CollectionUtils.isEmpty(productivityTrendsResponse.getCategoryScores()));
@@ -261,20 +354,25 @@ class ProductivityServiceTest {
 	@Test
 	void when_RequestIsValid_Expect_ProductivityTrendsResponseIsComputedAccordingly() {
 		testLevelName = "engagement";
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
-		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(constructTestAccountFilteredData());
+		when(filterHelperService.getHierarchyLevelMap(false))
+				.thenReturn(constructTestHierarchyLevelMap());
+		when(accountHierarchyServiceImpl.getFilteredList(any()))
+				.thenReturn(constructTestAccountFilteredData());
 
-		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
-				any(TemporalAggregationUnit.class), anyInt())).thenReturn(constructProductivityTemporalGroupingList());
+		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(
+						anySet(), any(TemporalAggregationUnit.class), anyInt()))
+				.thenReturn(constructProductivityTemporalGroupingList());
 
-		ServiceResponse serviceResponse = productivityService.getProductivityTrendsForLevel(testLevelName,
-				TemporalAggregationUnit.WEEK, 6);
+		ServiceResponse serviceResponse =
+				productivityService.getProductivityTrendsForLevel(
+						testLevelName, TemporalAggregationUnit.WEEK, 6);
 		assertNotNull(serviceResponse);
 		assertNotNull(serviceResponse.getData());
 		assertTrue(serviceResponse.getSuccess());
 		assertInstanceOf(ProductivityTrendsResponse.class, serviceResponse.getData());
 
-		ProductivityTrendsResponse productivityTrendsResponse = (ProductivityTrendsResponse) serviceResponse.getData();
+		ProductivityTrendsResponse productivityTrendsResponse =
+				(ProductivityTrendsResponse) serviceResponse.getData();
 		assertTrue(productivityTrendsResponse.getLevelName().equalsIgnoreCase(testLevelName));
 		assertEquals(TemporalAggregationUnit.WEEK, productivityTrendsResponse.getTemporalGrouping());
 
@@ -287,25 +385,35 @@ class ProductivityServiceTest {
 		assertEquals(0, Double.compare(categoryVariations.getProductivity(), 107.41D));
 
 		assertTrue(CollectionUtils.isNotEmpty(productivityTrendsResponse.getCategoryScores()));
-		productivityTrendsResponse.getCategoryScores().forEach(categoryScoresDTO -> {
-			assertNotNull(categoryScoresDTO);
-			assertTrue(StringUtils.isNotEmpty(categoryScoresDTO.getTemporalGroupingStartDate()));
-		});
+		productivityTrendsResponse
+				.getCategoryScores()
+				.forEach(
+						categoryScoresDTO -> {
+							assertNotNull(categoryScoresDTO);
+							assertTrue(StringUtils.isNotEmpty(categoryScoresDTO.getTemporalGroupingStartDate()));
+						});
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "50.0, 75.0, 50.0, 'Last value greater than first value'",
-			"100.0, 80.0, -20.0, 'Last value less than first value'", "50.0, 50.0, 0.0, 'Both values are equal'",
-			"0.0, 0.0, 0.0, 'Both values are zero'",
-			"-50.0, 25.0, 150.0, 'Negative first value with positive last value'",
-			"-100.0, -50.0, 50.0, 'Both values are negative'",
-			"50.0, -25.0, -150.0, 'Positive first value with negative last value'",
-			"3.0, 4.0, 33.33, 'Calculation requires rounding to two decimal places'" })
-	void when_CalculatingCategoryVariation_Then_ReturnExpectedResult(double firstPointValue, double lastPointValue,
-			Double expectedVariation, String scenario) {
+	@CsvSource({
+		"50.0, 75.0, 50.0, 'Last value greater than first value'",
+		"100.0, 80.0, -20.0, 'Last value less than first value'",
+		"50.0, 50.0, 0.0, 'Both values are equal'",
+		"0.0, 0.0, 0.0, 'Both values are zero'",
+		"-50.0, 25.0, 150.0, 'Negative first value with positive last value'",
+		"-100.0, -50.0, 50.0, 'Both values are negative'",
+		"50.0, -25.0, -150.0, 'Positive first value with negative last value'",
+		"3.0, 4.0, 33.33, 'Calculation requires rounding to two decimal places'"
+	})
+	void when_CalculatingCategoryVariation_Then_ReturnExpectedResult(
+			double firstPointValue, double lastPointValue, Double expectedVariation, String scenario) {
 
-		Double result = ReflectionTestUtils.invokeMethod(ProductivityService.class, "calculateCategoryVariation",
-				firstPointValue, lastPointValue);
+		Double result =
+				ReflectionTestUtils.invokeMethod(
+						ProductivityService.class,
+						"calculateCategoryVariation",
+						firstPointValue,
+						lastPointValue);
 
 		if (expectedVariation == null) {
 			assertNull(result, "Expected null for scenario: " + scenario);
@@ -316,13 +424,19 @@ class ProductivityServiceTest {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "0.0, 50.0, 'First value is zero and last value is non-zero'",
-			"0.0, -25.0, 'First value is zero and last value is negative'" })
-	void when_FirstValueIsZeroAndLastValueIsNonZero_Then_ReturnNull(double firstPointValue, double lastPointValue,
-			String scenario) {
+	@CsvSource({
+		"0.0, 50.0, 'First value is zero and last value is non-zero'",
+		"0.0, -25.0, 'First value is zero and last value is negative'"
+	})
+	void when_FirstValueIsZeroAndLastValueIsNonZero_Then_ReturnNull(
+			double firstPointValue, double lastPointValue, String scenario) {
 
-		Double result = ReflectionTestUtils.invokeMethod(ProductivityService.class, "calculateCategoryVariation",
-				firstPointValue, lastPointValue);
+		Double result =
+				ReflectionTestUtils.invokeMethod(
+						ProductivityService.class,
+						"calculateCategoryVariation",
+						firstPointValue,
+						lastPointValue);
 
 		assertNull(result, "Expected null for scenario: " + scenario);
 	}
@@ -356,15 +470,36 @@ class ProductivityServiceTest {
 		testCategoryScores1.setEfficiency(83.33);
 		testCategoryScores1.setQuality(-37.5);
 
-		List<KPIData> kpis1 = List.of(
-				KPIData.builder().kpiId("kpi131").name("Wastage").category("efficiency").variationPercentage(-33.33)
-						.calculationValue(-400.0).build(),
-				KPIData.builder().kpiId("kpi128").name("Work Status").category("efficiency").variationPercentage(-41.67)
-						.calculationValue(-500.0).build(),
-				KPIData.builder().kpiId("kpi72").name("Commitment Reliability").category("productivity")
-						.variationPercentage(-45.45).calculationValue(-545.4545454545455).build(),
-				KPIData.builder().kpiId("kpi39").name("Sprint Velocity").category("speed")
-						.variationPercentage(-216.48148148148147).calculationValue(-18.04).build());
+		List<KPIData> kpis1 =
+				List.of(
+						KPIData.builder()
+								.kpiId("kpi131")
+								.name("Wastage")
+								.category("efficiency")
+								.variationPercentage(-33.33)
+								.calculationValue(-400.0)
+								.build(),
+						KPIData.builder()
+								.kpiId("kpi128")
+								.name("Work Status")
+								.category("efficiency")
+								.variationPercentage(-41.67)
+								.calculationValue(-500.0)
+								.build(),
+						KPIData.builder()
+								.kpiId("kpi72")
+								.name("Commitment Reliability")
+								.category("productivity")
+								.variationPercentage(-45.45)
+								.calculationValue(-545.4545454545455)
+								.build(),
+						KPIData.builder()
+								.kpiId("kpi39")
+								.name("Sprint Velocity")
+								.category("speed")
+								.variationPercentage(-216.48148148148147)
+								.calculationValue(-18.04)
+								.build());
 
 		testProductivity1.setCategoryScores(testCategoryScores1);
 		testProductivity1.setKpis(kpis1);
@@ -382,11 +517,22 @@ class ProductivityServiceTest {
 		testCategoryScores2.setEfficiency(74.77);
 		testCategoryScores2.setQuality(0);
 
-		List<KPIData> kpis2 = List.of(
-				KPIData.builder().kpiId("kpi128").name("Work Status").category("efficiency").variationPercentage(74.77)
-						.calculationValue(897.2789115646258).build(),
-				KPIData.builder().kpiId("kpi72").name("Commitment Reliability").category("productivity")
-						.variationPercentage(3.37).calculationValue(40.4040404040404).build());
+		List<KPIData> kpis2 =
+				List.of(
+						KPIData.builder()
+								.kpiId("kpi128")
+								.name("Work Status")
+								.category("efficiency")
+								.variationPercentage(74.77)
+								.calculationValue(897.2789115646258)
+								.build(),
+						KPIData.builder()
+								.kpiId("kpi72")
+								.name("Commitment Reliability")
+								.category("productivity")
+								.variationPercentage(3.37)
+								.calculationValue(40.4040404040404)
+								.build());
 
 		testProductivity2.setCategoryScores(testCategoryScores2);
 		testProductivity2.setKpis(kpis2);
@@ -396,53 +542,135 @@ class ProductivityServiceTest {
 
 	private Set<AccountFilteredData> constructTestAccountFilteredData() {
 		return Set.of(
-				AccountFilteredData.builder().nodeId("bu-node-id-1").level(1).nodeName("test-bu").labelName("bu")
+				AccountFilteredData.builder()
+						.nodeId("bu-node-id-1")
+						.level(1)
+						.nodeName("test-bu")
+						.labelName("bu")
 						.build(),
-				AccountFilteredData.builder().nodeId("ver-node-id-1").level(2).nodeName("test-ver-1").labelName("ver")
-						.parentId("bu-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("acc-node-id-1").level(3).nodeName("test-acc-1").labelName("acc")
-						.parentId("ver-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("port-node-id-1").level(4).nodeName("test-port-1")
-						.labelName("port").parentId("acc-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("project-node-id-1").level(5).nodeName("test-project-1")
-						.labelName("project").parentId("port-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("project-node-id-2").level(5).nodeName("test-project-2")
-						.labelName("project").parentId("port-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("project-node-id-3").level(5).nodeName("test-project-3")
-						.labelName("project").parentId("port-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("project-node-id-4").level(5).nodeName("test-project-4")
-						.labelName("project").parentId("port-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("project-node-id-5").level(5).nodeName("test-project-5")
-						.labelName("project").parentId("port-node-id-1").build(),
-				AccountFilteredData.builder().nodeId("project-node-id-6").level(5).nodeName("test-project-6")
-						.labelName("project").parentId("port-node-id-1").build());
+				AccountFilteredData.builder()
+						.nodeId("ver-node-id-1")
+						.level(2)
+						.nodeName("test-ver-1")
+						.labelName("ver")
+						.parentId("bu-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("acc-node-id-1")
+						.level(3)
+						.nodeName("test-acc-1")
+						.labelName("acc")
+						.parentId("ver-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("port-node-id-1")
+						.level(4)
+						.nodeName("test-port-1")
+						.labelName("port")
+						.parentId("acc-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("project-node-id-1")
+						.level(5)
+						.nodeName("test-project-1")
+						.labelName("project")
+						.parentId("port-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("project-node-id-2")
+						.level(5)
+						.nodeName("test-project-2")
+						.labelName("project")
+						.parentId("port-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("project-node-id-3")
+						.level(5)
+						.nodeName("test-project-3")
+						.labelName("project")
+						.parentId("port-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("project-node-id-4")
+						.level(5)
+						.nodeName("test-project-4")
+						.labelName("project")
+						.parentId("port-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("project-node-id-5")
+						.level(5)
+						.nodeName("test-project-5")
+						.labelName("project")
+						.parentId("port-node-id-1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("project-node-id-6")
+						.level(5)
+						.nodeName("test-project-6")
+						.labelName("project")
+						.parentId("port-node-id-1")
+						.build());
 	}
 
 	private Map<String, HierarchyLevel> constructTestHierarchyLevelMap() {
-		return Map.of("sqd",
-				HierarchyLevel.builder().level(7).hierarchyLevelId("sqd").hierarchyLevelName("Squad").build(),
+		return Map.of(
+				"sqd",
+				HierarchyLevel.builder()
+						.level(7)
+						.hierarchyLevelId("sqd")
+						.hierarchyLevelName("Squad")
+						.build(),
 				"release",
-				HierarchyLevel.builder().level(6).hierarchyLevelId("release").hierarchyLevelName("Release").build(),
+				HierarchyLevel.builder()
+						.level(6)
+						.hierarchyLevelId("release")
+						.hierarchyLevelName("Release")
+						.build(),
 				"sprint",
-				HierarchyLevel.builder().level(6).hierarchyLevelId("sprint").hierarchyLevelName("Sprint").build(),
+				HierarchyLevel.builder()
+						.level(6)
+						.hierarchyLevelId("sprint")
+						.hierarchyLevelName("Sprint")
+						.build(),
 				"project",
-				HierarchyLevel.builder().level(5).hierarchyLevelId("project").hierarchyLevelName("Project").build(),
+				HierarchyLevel.builder()
+						.level(5)
+						.hierarchyLevelId("project")
+						.hierarchyLevelName("Project")
+						.build(),
 				"port",
-				HierarchyLevel.builder().level(4).hierarchyLevelId("port").hierarchyLevelName("Engagement").build(),
-				"acc", HierarchyLevel.builder().level(3).hierarchyLevelId("acc").hierarchyLevelName("Account").build(),
-				"ver", HierarchyLevel.builder().level(2).hierarchyLevelId("ver").hierarchyLevelName("Vertical").build(),
-				"bu", HierarchyLevel.builder().level(1).hierarchyLevelId("bu").hierarchyLevelName("BU").build());
+				HierarchyLevel.builder()
+						.level(4)
+						.hierarchyLevelId("port")
+						.hierarchyLevelName("Engagement")
+						.build(),
+				"acc",
+				HierarchyLevel.builder()
+						.level(3)
+						.hierarchyLevelId("acc")
+						.hierarchyLevelName("Account")
+						.build(),
+				"ver",
+				HierarchyLevel.builder()
+						.level(2)
+						.hierarchyLevelId("ver")
+						.hierarchyLevelName("Vertical")
+						.build(),
+				"bu",
+				HierarchyLevel.builder().level(1).hierarchyLevelId("bu").hierarchyLevelName("BU").build());
 	}
 
 	private static List<String> getOrganizationUnitNames(String levelName) {
 		List<String> expectedOrganizationUnitNames;
 
 		switch (levelName) {
-		case "engagement" -> expectedOrganizationUnitNames = List.of("test-project-1", "test-project-2");
-		case "account" -> expectedOrganizationUnitNames = List.of("test-port-1", "test-port-2");
-		case "vertical" -> expectedOrganizationUnitNames = List.of("test-acc-1", "test-acc-2");
-		case "bu" -> expectedOrganizationUnitNames = List.of("test-ver-1", "test-ver-2");
-		default -> expectedOrganizationUnitNames = Collections.emptyList();
+			case "engagement" ->
+					expectedOrganizationUnitNames = List.of("test-project-1", "test-project-2");
+			case "account" -> expectedOrganizationUnitNames = List.of("test-port-1", "test-port-2");
+			case "vertical" -> expectedOrganizationUnitNames = List.of("test-acc-1", "test-acc-2");
+			case "bu" -> expectedOrganizationUnitNames = List.of("test-ver-1", "test-ver-2");
+			default -> expectedOrganizationUnitNames = Collections.emptyList();
 		}
 		return expectedOrganizationUnitNames;
 	}

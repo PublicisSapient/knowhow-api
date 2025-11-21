@@ -17,7 +17,6 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,7 +53,6 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
-import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -138,8 +136,6 @@ public class ScmPrSuccessRateServiceImpl
 			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
-		LocalDateTime currentDate = DateUtil.getTodayTime();
-		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
 		List<Tool> scmTools =
@@ -168,26 +164,21 @@ public class ScmPrSuccessRateServiceImpl
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange =
-					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
-			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
+		CustomDateRange periodRange = KpiDataHelper.getStartAndEndDatesForCumulative(kpiRequest);
+		String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
+		List<ScmMergeRequests> mergeRequestsInRange =
+				DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
 
-			List<ScmMergeRequests> mergeRequestsInRange =
-					DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
-			scmTools.forEach(
-					tool ->
-							processToolData(
-									tool,
-									mergeRequestsInRange,
-									assignees,
-									kpiTrendDataByGroup,
-									validationDataList,
-									dateLabel,
-									projectLeafNode.getProjectFilter().getName()));
-
-			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
-		}
+		scmTools.forEach(
+				tool ->
+						processToolData(
+								tool,
+								mergeRequestsInRange,
+								assignees,
+								kpiTrendDataByGroup,
+								validationDataList,
+								dateLabel,
+								projectLeafNode.getProjectFilter().getName()));
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
