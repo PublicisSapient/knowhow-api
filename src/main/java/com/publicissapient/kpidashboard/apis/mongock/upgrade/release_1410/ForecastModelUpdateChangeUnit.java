@@ -80,6 +80,12 @@ public class ForecastModelUpdateChangeUnit {
 				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(), ForecastingModel.ARIMA.getName());
 		updateForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.ARIMA.getName());
 
+		// KPIs for Iteration Board.
+		updateForecastModel(
+				KPICode.ITERATION_BURNUP.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.LATE_REFINEMENT.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+
 		log.info("Completed forecast model update for 3 KPIs");
 	}
 
@@ -104,6 +110,10 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.CODE_VIOLATIONS_KANBAN.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId());
+
+		// KPIs for Iteration Board.
+		removeForecastModel(KPICode.ITERATION_BURNUP.getKpiId());
+		removeForecastModel(KPICode.LATE_REFINEMENT.getKpiId());
 
 		log.info("Completed rollback of forecast model updates");
 	}
