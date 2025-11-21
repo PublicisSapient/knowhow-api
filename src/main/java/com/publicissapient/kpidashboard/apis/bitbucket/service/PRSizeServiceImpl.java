@@ -82,7 +82,7 @@ public class PRSizeServiceImpl
 
 	@Override
 	public String getQualifierType() {
-		return KPICode.PR_SIZE.name();
+		return KPICode.PR_SIZE_OVERTIME.name();
 	}
 
 	@Override
@@ -98,10 +98,10 @@ public class PRSizeServiceImpl
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_SIZE);
+		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_SIZE_OVERTIME);
 
 		Map<String, List<DataCount>> trendValuesMap =
-				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SIZE);
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SIZE_OVERTIME);
 		Map<String, Map<String, List<DataCount>>> kpiFilterWiseProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach(
 				(issueType, dataCounts) -> {
@@ -245,7 +245,7 @@ public class PRSizeServiceImpl
 		mapTmp.get(projectLeafNode.getId()).setValue(aggDataMap);
 		populateExcelDataObject(requestTrackerId, repoToolValidationDataList, excelData);
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.PR_SIZE.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.PR_SIZE_OVERTIME.getColumns());
 	}
 
 	/**
@@ -385,6 +385,6 @@ public class PRSizeServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI162(), KPICode.PR_SIZE.getKpiId());
+				fieldMapping.getThresholdValueKPI162(), KPICode.PR_SIZE_OVERTIME.getKpiId());
 	}
 }

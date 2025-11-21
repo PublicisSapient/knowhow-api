@@ -144,11 +144,15 @@ public class WorkStatusServiceImplTest {
 
 		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
 		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
-		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
 
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
-		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
@@ -184,11 +188,15 @@ public class WorkStatusServiceImplTest {
 
 		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
 		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
-		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
 
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
-		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
@@ -226,11 +234,15 @@ public class WorkStatusServiceImplTest {
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
 		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
 		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
-		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
 
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
-		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
@@ -267,11 +279,15 @@ public class WorkStatusServiceImplTest {
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
 		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
 		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
-		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
 
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
-		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		Map<String, Object> returnMap =
