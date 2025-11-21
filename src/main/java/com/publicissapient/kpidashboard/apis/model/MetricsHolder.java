@@ -12,9 +12,8 @@ import lombok.Setter;
 public class MetricsHolder {
 	private long totalRevertPRs = 0;
 	private long totalMerges = 0;
-    private int reworkChanges = 0;
-    private int totalChanges = 0;
-
+	private int reworkChanges = 0;
+	private int totalChanges = 0;
 
 	// Getter for totalRevertPRs
 	public long getTotalRevertPRs() {
@@ -47,27 +46,27 @@ public class MetricsHolder {
 		return ((double) totalRevertPRs / totalMerges) * 100;
 	}
 
-    public void addTotalChanges(int changes) {
-        this.totalChanges += changes;
-    }
+	public void addTotalChanges(int changes) {
+		this.totalChanges += changes;
+	}
 
-    public void addRework(int rework) {
-        this.reworkChanges += rework;
-    }
+	public void addRework(int rework) {
+		this.reworkChanges += rework;
+	}
 
-    public Double getReworkPercentage() {
-        if (totalChanges == 0) {
-            return 0.0;
-        }
+	public Double getReworkPercentage() {
+		if (totalChanges == 0) {
+			return 0.0;
+		}
 
-        return ((double) reworkChanges / totalChanges) * 100;
-    }
+		return ((double) reworkChanges / totalChanges) * 100;
+	}
 
-    public int getTotalChanges() {
-        return this.totalChanges;
-    }
+	public int getTotalChanges() {
+		return this.totalChanges;
+	}
 
-    public int getReworkChanges() {
-        return this.reworkChanges;
-    }
+	public int getReworkChanges() {
+		return this.reworkChanges;
+	}
 }

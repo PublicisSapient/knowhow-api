@@ -1820,7 +1820,8 @@ public class KPIExcelUtilityTest {
 
 		DataCountGroup dataCountGroup = createDataCountGroup();
 
-		KPIExcelUtility.populateCodeQualityMetricsExcelData(List.of(dataCountGroup), kpiExcelDataList, dateLabel);
+		KPIExcelUtility.populateCodeQualityMetricsExcelData(
+				List.of(dataCountGroup), kpiExcelDataList, dateLabel);
 
 		assertEquals(1, kpiExcelDataList.size());
 		KPIExcelData excelData = kpiExcelDataList.get(0);
@@ -1983,8 +1984,8 @@ public class KPIExcelUtilityTest {
 		revertRate.setValue(25.75);
 		dataCountList.add(revertRate);
 
-        dataCountGroup.setFilter1("main -> repo1 -> project1");
-        dataCountGroup.setFilter2("developer1");
+		dataCountGroup.setFilter1("main -> repo1 -> project1");
+		dataCountGroup.setFilter2("developer1");
 		dataCountGroup.setValue(dataCountList);
 		return dataCountGroup;
 	}
