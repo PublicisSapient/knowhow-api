@@ -4437,7 +4437,7 @@
     "kpiName": "Rework Rate",
     "maxValue": "",
     "kpiUnit": "%",
-    "isDeleted": false,
+    "isDeleted": true,
     "defaultOrder": 5,
     "groupId": 7,
     "kpiSource": "BitBucket",
@@ -4656,7 +4656,7 @@
     "kpiName": "Revert Rate",
     "maxValue": "",
     "kpiUnit": "%",
-    "isDeleted": false,
+    "isDeleted": true,
     "defaultOrder": 5,
     "groupId": 7,
     "kpiSource": "BitBucket",
@@ -5288,5 +5288,103 @@
     "isDeleted": "False",
     "kpiName": "Sprint Analytics",
     "kpiSource": "Jira"
-  }
+  },
+  {
+    "kpiUnit" : "%",
+    "aggregationCriteria" : "average",
+    "kpiCategory" : "Developer",
+    "maxValue" : "",
+    "kpiFilter" : "dropDown",
+    "kpiId" : "kpi201",
+    "groupId" : 2,
+    "kpiName" : "Code Quality Metrics",
+    "isAdditionalFilterSupport" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "showTrend" : true,
+    "isDeleted" : false,
+    "defaultOrder" : 7,
+    "kpiInfo" : {
+      "definition" : "Code Quality Metrics - a combination of revert rate and rework rate percentage values",
+      "details" : [
+        {
+          "text" : "Revert Rate: The percentage of total pull requests opened that are reverts.",
+          "type" : "paragraph"
+        },
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate",
+            "text" : "Revert Rate - Detailed Information at"
+          }
+        },
+        {
+          "text" : "Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
+          "type" : "paragraph"
+        },
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate",
+            "text" : "Rework Rate - Detailed Information at"
+          }
+        }
+      ]
+    },
+    "kanban" : false,
+    "chartType" : "progressbar",
+    "isPositiveTrend" : false,
+    "kpiSource" : "BitBucket"
+  },
+  {
+    "kpiId" : "kpi201",
+  "kpiUnit" : "%",
+  "aggregationCriteria" : "average",
+  "kpiCategory" : "Developer",
+  "maxValue" : "",
+  "kpiFilter" : "dropDown",
+  "groupId" : 2,
+  "kpiName" : "Code Quality Metrics",
+  "isAdditionalFilterSupport" : false,
+  "calculateMaturity" : false,
+  "hideOverallFilter" : true,
+  "isRepoToolKpi" : true,
+  "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+  "showTrend" : true,
+  "isDeleted" : false,
+  "defaultOrder" : 7,
+  "kpiInfo" : {
+    "definition" : "Code Quality Metrics - a combination of revert rate and rework rate percentage values",
+    "details" : [
+      {
+        "text" : "Revert Rate: The percentage of total pull requests opened that are reverts.",
+        "type" : "paragraph"
+      },
+      {
+        "type" : "link",
+        "kpiLinkDetail" : {
+          "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate",
+          "text" : "Revert Rate - Detailed Information at"
+        }
+      },
+      {
+        "text" : "Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
+        "type" : "paragraph"
+      },
+      {
+        "type" : "link",
+        "kpiLinkDetail" : {
+          "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate",
+          "text" : "Rework Rate - Detailed Information at"
+        }
+      }
+    ]
+  },
+  "kanban" : false,
+  "chartType" : "progressbar",
+  "isPositiveTrend" : false,
+  "kpiSource" : "BitBucket"
+}
 ]
