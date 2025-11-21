@@ -19,7 +19,6 @@ package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1410;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -31,7 +30,11 @@ import java.util.Map;
 @ChangeUnit(id = "developer_dashboard_top_bottom_panel_kpi_update", order = "14109", author = "kunkambl", systemVersion = "14.1.0")
 public class DeveloperDashboardTopBottomPanelUpdate {
 
-	private static final List<String> kpiIds = List.of("kpi158", "kpi160", "kpi186", "kpi185");
+    private static final String KPI_158 = "kpi158";
+    private static final String KPI_160 = "kpi160";
+    private static final String KPI_185 = "kpi185";
+    private static final String KPI_186 = "kpi186";
+	private static final List<String> kpiIds = List.of(KPI_158, KPI_160, KPI_186, KPI_185);
 	private static final String KPI_ID = "kpiId";
 	private static final String KPI_MASTER = "kpi_master";
 
@@ -43,11 +46,10 @@ public class DeveloperDashboardTopBottomPanelUpdate {
 
 	@Execution
 	public void execution() {
-
 		mongoTemplate.updateMulti(new Query(Criteria.where(KPI_ID).in(kpiIds)),
 				new Update().set("chartType", "card").set("groupId", 6), KPI_MASTER);
 
-		Map.of("kpi158", 1, "kpi160", 2, "kpi185", 3, "kpi186", 4)
+		Map.of(KPI_158, 1, KPI_160, 2, KPI_185, 3, KPI_186, 4)
 				.forEach((kpiId, order) -> mongoTemplate.updateFirst(new Query(Criteria.where(KPI_ID).is(kpiId)),
 						new Update().set("defaultOrder", order), KPI_MASTER));
 	}
@@ -57,7 +59,7 @@ public class DeveloperDashboardTopBottomPanelUpdate {
 		mongoTemplate.updateMulti(new Query(Criteria.where(KPI_ID).in(kpiIds)), new Update().set("chartType", "line"),
 				KPI_MASTER);
 
-        Map.of("kpi158", 2, "kpi160", 3, "kpi185", 9, "kpi186", 10)
+        Map.of(KPI_158, 2, KPI_160, 3, KPI_185, 9, KPI_186, 10)
                 .forEach((kpiId, order) -> mongoTemplate.updateFirst(new Query(Criteria.where(KPI_ID).is(kpiId)),
                         new Update().set("defaultOrder", order), KPI_MASTER));
 	}
