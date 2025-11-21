@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 public class ServiceResponse extends BaseResponse {
 
 	private Object data;
+
 	/**
 	 * @param isSuccess Field representing the status of the response
 	 * @param msg Field representing the status message of the response

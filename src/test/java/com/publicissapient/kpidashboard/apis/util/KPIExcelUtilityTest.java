@@ -17,22 +17,13 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -51,26 +42,11 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
 import com.publicissapient.kpidashboard.apis.data.TestCaseDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
-import com.publicissapient.kpidashboard.apis.model.CodeBuildTimeInfo;
-import com.publicissapient.kpidashboard.apis.model.DSRValidationData;
-import com.publicissapient.kpidashboard.apis.model.DeploymentFrequencyInfo;
-import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiModalValue;
-import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
-import com.publicissapient.kpidashboard.apis.model.LeadTimeChangeData;
-import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.SprintFilter;
+import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.application.AdditionalFilter;
-import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterConfig;
-import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterValue;
-import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
-import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
-import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
-import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
-import com.publicissapient.kpidashboard.common.model.jira.KanbanIssueCustomHistory;
-import com.publicissapient.kpidashboard.common.model.jira.KanbanJiraIssue;
+import com.publicissapient.kpidashboard.common.model.application.*;
+import com.publicissapient.kpidashboard.common.model.jira.*;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData;
 
@@ -1832,5 +1808,185 @@ public class KPIExcelUtilityTest {
 				"");
 
 		assertTrue(kpiExcelDataLocal.isEmpty());
+	}
+
+	// Test cases for populateCodeQualityMetricsExcelData and helper methods
+
+	@Test
+	public void testPopulateCodeQualityMetricsExcelData_ValidData() {
+
+		List<KPIExcelData> kpiExcelDataList = new ArrayList<>();
+		String dateLabel = "2023-01-01 to 2023-01-31";
+
+		DataCountGroup dataCountGroup = createDataCountGroup();
+
+		KPIExcelUtility.populateCodeQualityMetricsExcelData(
+				List.of(dataCountGroup), kpiExcelDataList, dateLabel);
+
+		assertEquals(1, kpiExcelDataList.size());
+		KPIExcelData excelData = kpiExcelDataList.get(0);
+		assertEquals("project1", excelData.getProject());
+		assertEquals("repo1", excelData.getRepo());
+		assertEquals("main", excelData.getBranch());
+		assertEquals("developer1", excelData.getDeveloper());
+		assertEquals(dateLabel, excelData.getDaysWeeks());
+		assertEquals("15.50", excelData.getReworkRate());
+		assertEquals(25.75, excelData.getRevertRate(), 0.01);
+	}
+
+	@Test
+	public void testPopulateCodeQualityMetricsExcelData_EmptyGroupMap() {
+		List<KPIExcelData> kpiExcelDataList = new ArrayList<>();
+		String dateLabel = "2023-01-01 to 2023-01-31";
+
+		KPIExcelUtility.populateCodeQualityMetricsExcelData(List.of(), kpiExcelDataList, dateLabel);
+
+		assertEquals(0, kpiExcelDataList.size());
+	}
+
+	@Test
+	public void testExtractFilters_ValidKey() {
+		String key = "main -> repo1 -> project1#developer1";
+		String[] result = KPIExcelUtility.extractFilters(key);
+
+		assertEquals(2, result.length);
+		assertEquals("main -> repo1 -> project1", result[0]);
+		assertEquals("developer1", result[1]);
+	}
+
+	@Test
+	public void testExtractFilters_KeyWithoutDelimiter() {
+		String key = "main -> repo1 -> project1";
+		String[] result = KPIExcelUtility.extractFilters(key);
+
+		assertEquals(2, result.length);
+		assertEquals("main -> repo1 -> project1", result[0]);
+		assertEquals("Unknown", result[1]);
+	}
+
+	@Test
+	public void testExtractFilters_EmptyKey() {
+		String key = "";
+		String[] result = KPIExcelUtility.extractFilters(key);
+
+		assertEquals(2, result.length);
+		assertEquals("", result[0]);
+		assertEquals("Unknown", result[1]);
+	}
+
+	@Test
+	public void testExtractProjectName_ValidFilter() {
+		String filter = "main -> repo1 -> project1";
+		String result = KPIExcelUtility.extractProjectName(filter);
+
+		assertEquals("project1", result);
+	}
+
+	@Test
+	public void testExtractProjectName_IncompleteFilter() {
+		String filter = "main -> repo1";
+		String result = KPIExcelUtility.extractProjectName(filter);
+
+		assertEquals("", result);
+	}
+
+	@Test
+	public void testExtractProjectName_EmptyFilter() {
+		String filter = "";
+		String result = KPIExcelUtility.extractProjectName(filter);
+
+		assertEquals("", result);
+	}
+
+	@Test
+	public void testExtractRepositoryName_ValidFilter() {
+		String filter = "main -> repo1 -> project1";
+		String result = KPIExcelUtility.extractRepositoryName(filter);
+
+		assertEquals("repo1", result);
+	}
+
+	@Test
+	public void testExtractRepositoryName_IncompleteFilter() {
+		String filter = "main";
+		String result = KPIExcelUtility.extractRepositoryName(filter);
+
+		assertEquals("", result);
+	}
+
+	@Test
+	public void testExtractBranchName_ValidFilter() {
+		String filter = "main -> repo1 -> project1";
+		String result = KPIExcelUtility.extractBranchName(filter);
+
+		assertEquals("main", result);
+	}
+
+	@Test
+	public void testExtractBranchName_EmptyFilter() {
+		String filter = "";
+		String result = KPIExcelUtility.extractBranchName(filter);
+
+		assertEquals("", result);
+	}
+
+	@Test
+	public void testExtractValueRate_ValidDataType() {
+		DataCountGroup dataCountGroup = createDataCountGroup();
+		double result = KPIExcelUtility.extractValueRate(dataCountGroup, "Rework Rate");
+
+		assertEquals(15.5, result, 0.01);
+	}
+
+	@Test
+	public void testExtractValueRate_InvalidDataType() {
+		DataCountGroup dataCountGroup = createDataCountGroup();
+		double result = KPIExcelUtility.extractValueRate(dataCountGroup, "Invalid Type");
+
+		assertEquals(0.0, result, 0.01);
+	}
+
+	@Test
+	public void testExtractValueRate_NullDataCountGroup() {
+		double result = KPIExcelUtility.extractValueRate(null, "Rework Rate");
+
+		assertEquals(0.0, result, 0.01);
+	}
+
+	@Test
+	public void testExtractValueRate_EmptyValueList() {
+		DataCountGroup dataCountGroup = new DataCountGroup();
+		dataCountGroup.setValue(new ArrayList<>());
+		double result = KPIExcelUtility.extractValueRate(dataCountGroup, "Rework Rate");
+
+		assertEquals(0.0, result, 0.01);
+	}
+
+	@Test
+	public void testExtractValueRate_NullValueList() {
+		DataCountGroup dataCountGroup = new DataCountGroup();
+		dataCountGroup.setValue(null);
+		double result = KPIExcelUtility.extractValueRate(dataCountGroup, "Rework Rate");
+
+		assertEquals(0.0, result, 0.01);
+	}
+
+	private DataCountGroup createDataCountGroup() {
+		DataCountGroup dataCountGroup = new DataCountGroup();
+		List<DataCount> dataCountList = new ArrayList<>();
+		DataCount reworkRate = new DataCount();
+		reworkRate.setData("Rework Rate");
+		reworkRate.setValue(15.5);
+		dataCountList.add(reworkRate);
+
+		DataCount revertRate = new DataCount();
+		revertRate.setData("Revert Rate");
+		revertRate.setValue(25.75);
+		dataCountList.add(revertRate);
+
+		dataCountGroup.setFilter1("main -> repo1 -> project1");
+		dataCountGroup.setFilter2("developer1");
+		dataCountGroup.setValue(dataCountList);
+		return dataCountGroup;
 	}
 }
