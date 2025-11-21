@@ -18,6 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.service;
 
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -302,8 +303,11 @@ public class ProcessorServiceImpl implements ProcessorService {
 			} catch (HttpClientErrorException ex) {
 				statuscode = ex.getStatusCode().value();
 				isSuccess = false;
-			} catch (HttpServerErrorException ex) {
+			} catch (HttpServerErrorException | ResourceAccessException ex) {
 				isSuccess = false;
+				if (ex.contains(ResourceAccessException.class)
+						|| ex.getCause().getClass().equals(SocketTimeoutException.class))
+					statuscode = HttpStatus.GATEWAY_TIMEOUT.value();
 			}
 		}
 		if (HttpStatus.NOT_FOUND.value() == statuscode
