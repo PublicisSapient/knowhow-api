@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 

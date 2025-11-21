@@ -277,30 +277,31 @@ public class TestExecutionTimeServiceImpl
 			// Compute per-test average execution time in **minutes**
 			double avgExecTimeMin =
 					BigDecimal.valueOf(
-							testCases.stream()
-											.mapToDouble(
-													tc -> {
-														if (CollectionUtils.isEmpty(tc.getExecutions())) {
-															return 0.0;
-														}
-														double sum =
-																tc.getExecutions().stream()
-																		.filter(exec -> exec.getExecutionTime() != null)
-																		.mapToDouble(TestCaseExecutionData::getExecutionTime)
-																		.sum();
+									testCases.stream()
+													.mapToDouble(
+															tc -> {
+																if (CollectionUtils.isEmpty(tc.getExecutions())) {
+																	return 0.0;
+																}
+																double sum =
+																		tc.getExecutions().stream()
+																				.filter(exec -> exec.getExecutionTime() != null)
+																				.mapToDouble(TestCaseExecutionData::getExecutionTime)
+																				.sum();
 
-														long count =
-																tc.getExecutions().stream()
-																		.filter(exec -> exec.getExecutionTime() != null)
-																		.count();
+																long count =
+																		tc.getExecutions().stream()
+																				.filter(exec -> exec.getExecutionTime() != null)
+																				.count();
 
-														return count > 0 ? (sum / count) : 0.0;
-													})
-											.average()
-											.orElse(0.0)
-									/ 1000.0
-									/ 60.0 // ms → sec → min
-							).setScale(2, RoundingMode.HALF_UP)
+																return count > 0 ? (sum / count) : 0.0;
+															})
+													.average()
+													.orElse(0.0)
+											/ 1000.0
+											/ 60.0 // ms → sec → min
+									)
+							.setScale(2, RoundingMode.HALF_UP)
 							.doubleValue();
 
 			// Put results into hover map
