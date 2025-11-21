@@ -155,7 +155,7 @@
       "20-10",
       "10-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi35",
@@ -261,7 +261,7 @@
       "75-90",
       "90-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi37",
@@ -607,7 +607,7 @@
       "60-80",
       "80-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi38",
@@ -648,7 +648,7 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": false,
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi27",
@@ -825,7 +825,7 @@
       "60-80",
       "80-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi40",
@@ -1784,7 +1784,7 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": false,
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi67",
@@ -1877,7 +1877,7 @@
       "60-80",
       "80-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi49",
@@ -2634,7 +2634,8 @@
     "kpiWidth": 66,
     "kpiHeight": 100,
     "isRawData": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi131",
@@ -2952,7 +2953,7 @@
     "kpiFilter": "",
     "boxType": "chart",
     "calculateMaturity": false,
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi142",
@@ -4988,7 +4989,8 @@
     "boxType": "chart",
     "calculateMaturity": false,
     "isRawData": false,
-    "kpiHeight": 100
+    "kpiHeight": 100,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi188",
