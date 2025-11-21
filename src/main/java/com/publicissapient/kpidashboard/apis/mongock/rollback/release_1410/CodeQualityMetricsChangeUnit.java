@@ -40,7 +40,7 @@ public class CodeQualityMetricsChangeUnit {
     private static final String KPI_173 = "kpi173";
     private static final String KPI_ID = "kpiId";
     private static final String KPI_MASTER = "kpi_master";
-    private static final String KPI_COLUMN_CONFIG = "kpi_column_config";
+    private static final String KPI_COLUMN_CONFIG = "kpi_column_configs";
     private static final String COMBINED_KPI_SOURCE = "Bitbucket/AzureRepository/GitHub/GitLab";
 
     private static final String PROJECT = "Project";
