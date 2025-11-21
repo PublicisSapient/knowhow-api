@@ -149,7 +149,7 @@ public class BitBucketController {
 
 	@PostMapping(value = "/developer/summary", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<PerformanceSummary>> getDeveloperDashboardSummary(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception {
 		log.info("Received Developer Dashboard Summary request {}", kpiRequest);
 		long bitbucketRequestStartTime = System.currentTimeMillis();
 

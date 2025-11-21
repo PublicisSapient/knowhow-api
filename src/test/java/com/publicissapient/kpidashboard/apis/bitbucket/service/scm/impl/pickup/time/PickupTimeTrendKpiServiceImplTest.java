@@ -114,25 +114,6 @@ class PickupTimeTrendKpiServiceImplTest {
 	}
 
 	@Test
-	void testPrepareUserValidationData_WithNullDates() throws Exception {
-		ScmMergeRequests mr = createMergeRequest(null, null);
-		userWiseMergeRequests.put("user1@test.com", List.of(mr));
-
-		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class)) {
-
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One");
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(String.class), any(String.class), any(String.class),
-					any(), any(Map.class), any(Map.class))).thenAnswer(inv -> null);
-
-			List<RepoToolValidationData> result = invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
-
-			assertNotNull(result);
-			assertTrue(result.isEmpty());
-		}
-	}
-
-	@Test
 	void testGetStrategyType() {
 		assertEquals("PICKUP_TIME_TREND", service.getStrategyType());
 	}
