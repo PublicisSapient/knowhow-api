@@ -64,6 +64,7 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.CODE_VIOLATIONS.getKpiId());
 		removeForecastModel(KPICode.CODE_VIOLATIONS_KANBAN.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId());
+		removeForecastModel(KPICode.TEST_EXECUTION_TIME.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId());
 
 		log.info("Completed rollback of forecast model updates");
@@ -111,6 +112,8 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(
 				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(),
 				ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.TEST_EXECUTION_TIME.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
 				KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 
