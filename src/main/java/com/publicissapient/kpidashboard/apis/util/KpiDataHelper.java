@@ -18,6 +18,39 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+
+import java.text.DecimalFormat;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
+import org.joda.time.Hours;
+
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
@@ -43,39 +76,8 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.bson.types.ObjectId;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-import org.joda.time.Hours;
-
-import java.text.DecimalFormat;
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
 /**
  * The class contains methods for helping kpi to prepare data
@@ -382,28 +384,53 @@ public final class KpiDataHelper {
 		return dateRange;
 	}
 
-    public static CustomDateRange getStartAndEndDateTimeForDataFiltering(
-            LocalDateTime date, String period, int timeframe) {
-        CustomDateRange dateRange = new CustomDateRange();
-        LocalDateTime startDate = null;
-        LocalDateTime endDate = null;
-        if (period.equalsIgnoreCase(CommonConstant.WEEK)) {
-            startDate = date;
-            endDate = date.minusWeeks(timeframe);
-        } else if (period.equalsIgnoreCase(CommonConstant.MONTH)) {
-            YearMonth month = YearMonth.from(date);
-            startDate = month.atDay(1).atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
-            endDate = month.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
-        } else {
-            startDate = date.toLocalDate().atStartOfDay();
-            endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
-        }
-        dateRange.setStartDate(startDate.toLocalDate());
-        dateRange.setEndDate(endDate.toLocalDate());
-        dateRange.setStartDateTime(startDate);
-        dateRange.setEndDateTime(endDate);
-        return dateRange;
-    }
+	public static CustomDateRange getStartAndEndDateTimeForDataFiltering(
+			LocalDateTime date, String period, int dataPoints) {
+		CustomDateRange dateRange = new CustomDateRange();
+		LocalDateTime startDate;
+		LocalDateTime endDate;
+
+		if (period.equalsIgnoreCase(CommonConstant.WEEK)) {
+			// Calculate start date based on weeks
+			LocalDateTime startOfWeek = date;
+			while (startOfWeek.getDayOfWeek() != DayOfWeek.MONDAY) {
+				startOfWeek = startOfWeek.minusDays(1L);
+			}
+			startDate = startOfWeek.minusWeeks((dataPoints - (long) 1));
+
+			// Calculate end date based on weeks
+			endDate = date;
+			while (endDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+				endDate = endDate.plusDays(1L);
+			}
+
+		} else if (period.equalsIgnoreCase(CommonConstant.MONTH)) {
+			// Calculate start date based on months
+			YearMonth month = YearMonth.from(date);
+			startDate =
+					month
+							.minusMonths((dataPoints - (long) 1))
+							.atDay(1)
+							.atStartOfDay(ZoneId.systemDefault())
+							.toLocalDateTime();
+
+			// End date remains the end of the current month
+			endDate = month.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
+
+		} else {
+			// Calculate start date based on days
+			startDate = date.minusDays((dataPoints - (long) 1)).toLocalDate().atStartOfDay();
+
+			// End date is the end of the current day
+			endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
+		}
+
+		dateRange.setStartDate(startDate.toLocalDate());
+		dateRange.setEndDate(endDate.toLocalDate());
+		dateRange.setStartDateTime(startDate);
+		dateRange.setEndDateTime(endDate);
+		return dateRange;
+	}
 
 	/**
 	 * CustomDateRange calculation for Cumulative data and start date is always monday for week and or

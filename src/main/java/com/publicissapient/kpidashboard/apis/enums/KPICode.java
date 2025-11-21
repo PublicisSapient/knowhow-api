@@ -256,7 +256,7 @@ public enum KPICode {
 	/** Pickup Time */
 	PICKUP_TIME("kpi160", KPISource.BITBUCKET.name()),
 	/** PR Size */
-	PR_SIZE("kpi162", KPISource.BITBUCKET.name()),
+	PR_SIZE_OVERTIME("kpi162", KPISource.BITBUCKET.name()),
 	/** DTS-27553 Epic Progress */
 	EPIC_PROGRESS("kpi165", KPISource.JIRA.name()),
 	/** Epic Progress (Backlog) */
@@ -276,6 +276,8 @@ public enum KPICode {
 	DEFECT_COUNT_BY("kpi178", KPISource.JIRA.name()),
 	/** Revert Rate (Developer) */
 	REVERT_RATE("kpi180", KPISource.BITBUCKET.name()),
+
+	CODE_QUALITY_REVERT_RATE("kpi201", KPISource.BITBUCKET.name()),
 	/** PR Decline Rate (Developer) */
 	PR_DECLINE_RATE("kpi181", KPISource.BITBUCKET.name()),
 	/** Success Rate (Developer) */

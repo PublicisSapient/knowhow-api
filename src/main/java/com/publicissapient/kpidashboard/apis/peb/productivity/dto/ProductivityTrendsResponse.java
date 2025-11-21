@@ -28,11 +28,11 @@ import lombok.Data;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductivityTrendsResponse {
-    private String levelName;
+	private String levelName;
 
-    private TemporalAggregationUnit temporalGrouping;
+	private TemporalAggregationUnit temporalGrouping;
 
-    private CategoryVariations categoryVariations;
+	private CategoryVariations categoryVariations;
 
-    private List<CategoryScoresDTO> categoryScores;
+	private List<CategoryScoresDTO> categoryScores;
 }
