@@ -68,17 +68,25 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(
 				KPICode.HAPPINESS_INDEX_RATE.getKpiId(), ForecastingModel.LINEAR_REGRESSION.getName());
 
-		updateForecastModel(KPICode.DEFECT_DENSITY.getKpiId(), ForecastingModel.ARIMA.getName());
 		updateForecastModel(
-				KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId(), ForecastingModel.ARIMA.getName());
-		updateForecastModel(KPICode.DEFECT_INJECTION_RATE.getKpiId(), ForecastingModel.ARIMA.getName());
-		updateForecastModel(KPICode.UNIT_TEST_COVERAGE.getKpiId(), ForecastingModel.ARIMA.getName());
-		updateForecastModel(KPICode.CODE_VIOLATIONS.getKpiId(), ForecastingModel.ARIMA.getName());
+				KPICode.DEFECT_DENSITY.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
-				KPICode.CODE_VIOLATIONS_KANBAN.getKpiId(), ForecastingModel.ARIMA.getName());
+				KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId(),
+				ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
-				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(), ForecastingModel.ARIMA.getName());
-		updateForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.ARIMA.getName());
+				KPICode.DEFECT_INJECTION_RATE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.UNIT_TEST_COVERAGE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.CODE_VIOLATIONS.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.CODE_VIOLATIONS_KANBAN.getKpiId(),
+				ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(),
+				ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 
 		log.info("Completed forecast model update for 3 KPIs");
 	}
