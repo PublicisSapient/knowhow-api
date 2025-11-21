@@ -147,11 +147,15 @@ public class WastageServiceImplTest {
 
 		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
 		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
-		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
 
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
-		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
@@ -183,11 +187,15 @@ public class WastageServiceImplTest {
 
 		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
 		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
-		when(jiraService.getJiraIssueCustomHistoryRepository()).thenReturn(jiraIssueCustomHistoryRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
 
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
-		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any())).thenReturn(storyList);
-		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(anyList(), anyList())).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";

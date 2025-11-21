@@ -384,53 +384,53 @@ public final class KpiDataHelper {
 		return dateRange;
 	}
 
-    public static CustomDateRange getStartAndEndDateTimeForDataFiltering(
-            LocalDateTime date, String period, int dataPoints) {
-        CustomDateRange dateRange = new CustomDateRange();
-        LocalDateTime startDate;
-        LocalDateTime endDate;
+	public static CustomDateRange getStartAndEndDateTimeForDataFiltering(
+			LocalDateTime date, String period, int dataPoints) {
+		CustomDateRange dateRange = new CustomDateRange();
+		LocalDateTime startDate;
+		LocalDateTime endDate;
 
-        if (period.equalsIgnoreCase(CommonConstant.WEEK)) {
-            // Calculate start date based on weeks
-            LocalDateTime startOfWeek = date;
-            while (startOfWeek.getDayOfWeek() != DayOfWeek.MONDAY) {
-                startOfWeek = startOfWeek.minusDays(1L);
-            }
-            startDate = startOfWeek.minusWeeks( (dataPoints - (long)1));
+		if (period.equalsIgnoreCase(CommonConstant.WEEK)) {
+			// Calculate start date based on weeks
+			LocalDateTime startOfWeek = date;
+			while (startOfWeek.getDayOfWeek() != DayOfWeek.MONDAY) {
+				startOfWeek = startOfWeek.minusDays(1L);
+			}
+			startDate = startOfWeek.minusWeeks((dataPoints - (long) 1));
 
-            // Calculate end date based on weeks
-            endDate = date;
-            while (endDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                endDate = endDate.plusDays(1L);
-            }
+			// Calculate end date based on weeks
+			endDate = date;
+			while (endDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+				endDate = endDate.plusDays(1L);
+			}
 
-        } else if (period.equalsIgnoreCase(CommonConstant.MONTH)) {
-            // Calculate start date based on months
-            YearMonth month = YearMonth.from(date);
-            startDate =
-                    month
-                            .minusMonths( (dataPoints - (long)1))
-                            .atDay(1)
-                            .atStartOfDay(ZoneId.systemDefault())
-                            .toLocalDateTime();
+		} else if (period.equalsIgnoreCase(CommonConstant.MONTH)) {
+			// Calculate start date based on months
+			YearMonth month = YearMonth.from(date);
+			startDate =
+					month
+							.minusMonths((dataPoints - (long) 1))
+							.atDay(1)
+							.atStartOfDay(ZoneId.systemDefault())
+							.toLocalDateTime();
 
-            // End date remains the end of the current month
-            endDate = month.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
+			// End date remains the end of the current month
+			endDate = month.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
 
-        } else {
-            // Calculate start date based on days
-            startDate = date.minusDays( (dataPoints - (long)1)).toLocalDate().atStartOfDay();
+		} else {
+			// Calculate start date based on days
+			startDate = date.minusDays((dataPoints - (long) 1)).toLocalDate().atStartOfDay();
 
-            // End date is the end of the current day
-            endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
-        }
+			// End date is the end of the current day
+			endDate = date.toLocalDate().atTime(23, 59, 59, 999_999_999);
+		}
 
-        dateRange.setStartDate(startDate.toLocalDate());
-        dateRange.setEndDate(endDate.toLocalDate());
-        dateRange.setStartDateTime(startDate);
-        dateRange.setEndDateTime(endDate);
-        return dateRange;
-    }
+		dateRange.setStartDate(startDate.toLocalDate());
+		dateRange.setEndDate(endDate.toLocalDate());
+		dateRange.setStartDateTime(startDate);
+		dateRange.setEndDateTime(endDate);
+		return dateRange;
+	}
 
 	/**
 	 * CustomDateRange calculation for Cumulative data and start date is always monday for week and or

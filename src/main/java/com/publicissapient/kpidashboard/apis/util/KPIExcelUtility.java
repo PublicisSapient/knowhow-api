@@ -18,6 +18,31 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -60,31 +85,8 @@ import com.publicissapient.kpidashboard.common.model.testexecution.KanbanTestExe
 import com.publicissapient.kpidashboard.common.model.testexecution.TestExecution;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.text.DecimalFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The class contains mapping of kpi and Excel columns.
@@ -1544,21 +1546,23 @@ public class KPIExcelUtility {
 						if (CollectionUtils.isNotEmpty(repoToolValidationData.getPullRequestsValues())) {
 							repoToolValidationData.getPullRequestsValues().stream()
 									.filter(pr -> pr.getPrUrl() != null)
-									.forEach(pr -> {
-										KPIExcelData excelData = new KPIExcelData();
-										excelData.setProject(repoToolValidationData.getProjectName());
-										excelData.setRepo(repoToolValidationData.getRepoUrl());
-										excelData.setBranch(repoToolValidationData.getBranchName());
-										excelData.setAuthor(repoToolValidationData.getDeveloperName());
-										excelData.setDaysWeeks(repoToolValidationData.getDate());
-										excelData.setMergeRequestUrl(Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
-										try {
-											excelData.setTotalLineChanges(Long.parseLong(pr.getSize()));
-										} catch (NumberFormatException e) {
-											excelData.setTotalLineChanges(0L);
-										}
-										kpiExcelData.add(excelData);
-									});
+									.forEach(
+											pr -> {
+												KPIExcelData excelData = new KPIExcelData();
+												excelData.setProject(repoToolValidationData.getProjectName());
+												excelData.setRepo(repoToolValidationData.getRepoUrl());
+												excelData.setBranch(repoToolValidationData.getBranchName());
+												excelData.setAuthor(repoToolValidationData.getDeveloperName());
+												excelData.setDaysWeeks(repoToolValidationData.getDate());
+												excelData.setMergeRequestUrl(
+														Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
+												try {
+													excelData.setTotalLineChanges(Long.parseLong(pr.getSize()));
+												} catch (NumberFormatException e) {
+													excelData.setTotalLineChanges(0L);
+												}
+												kpiExcelData.add(excelData);
+											});
 						} else {
 							KPIExcelData excelData = new KPIExcelData();
 							excelData.setProject(repoToolValidationData.getProjectName());

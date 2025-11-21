@@ -22,8 +22,8 @@ import lombok.Data;
 @Data
 @Builder
 public class CategoryVariations {
-    private Double speed;
-    private Double quality;
-    private Double efficiency;
-    private Double productivity;
+	private Double speed;
+	private Double quality;
+	private Double efficiency;
+	private Double productivity;
 }

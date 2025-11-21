@@ -16,93 +16,93 @@
  */
 package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1410;
 
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import io.mongock.api.annotations.ChangeUnit;
-import io.mongock.api.annotations.Execution;
-import io.mongock.api.annotations.RollbackExecution;
-import org.bson.conversions.Bson;
-import org.springframework.data.mongodb.core.MongoTemplate;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.conversions.Bson;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
+
 @ChangeUnit(id = "r_pr_size_kpi", order = "014106", author = "aksshriv1", systemVersion = "14.1.0")
 public class PRSizeOverTimeChangeUnit {
 
-    public static final String KPI_COLUMN_CONFIG = "kpi_column_config";
-    public static final String KPI_ID = "kpiId";
-    public static final String KPI_162 = "kpi162";
-    private final MongoTemplate mongoTemplate;
+	public static final String KPI_COLUMN_CONFIG = "kpi_column_config";
+	public static final String KPI_ID = "kpiId";
+	public static final String KPI_162 = "kpi162";
+	private final MongoTemplate mongoTemplate;
 
-    public PRSizeOverTimeChangeUnit(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
-    }
+	public PRSizeOverTimeChangeUnit(MongoTemplate mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
 
-    @Execution
-    public void execution() {
-        rollbackkpi162();
-    }
+	@Execution
+	public void execution() {
+		rollbackkpi162();
+	}
 
+	@RollbackExecution
+	public void rollback() {
+		updatekpi162();
+	}
 
-    @RollbackExecution
-    public void rollback() {
-        updatekpi162();
-    }
+	public void updatekpi162() {
 
-    public void updatekpi162() {
+		Bson filter = Filters.eq(KPI_ID, KPI_162);
 
-        Bson filter = Filters.eq(KPI_ID, KPI_162);
+		Bson updates =
+				Updates.combine(
+						Updates.set("kpiName", "PR Distribution"),
+						Updates.set("chartType", "scatter"),
+						Updates.unset("upperThresholdBG"),
+						Updates.unset("lowerThresholdBG"),
+						Updates.unset("maturityRange"));
 
-        Bson updates = Updates.combine(
-                Updates.set("kpiName", "PR Distribution"),
-                Updates.set("chartType", "scatter"),
-                Updates.unset("upperThresholdBG"),
-                Updates.unset("lowerThresholdBG"),
-                Updates.unset("maturityRange")
-        );
+		mongoTemplate.getCollection("kpi_master").updateOne(filter, updates);
 
-        mongoTemplate.getCollection("kpi_master").updateOne(filter, updates);
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
 
-        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
+		Map<String, Object> document = new HashMap<>();
+		document.put("basicProjectConfigId", null);
+		document.put(KPI_ID, KPI_162);
 
+		List<Map<String, Object>> kpiColumnDetails =
+				Arrays.asList(
+						createColumn("Project", 1),
+						createColumn("Repo", 2),
+						createColumn("Branch", 3),
+						createColumn("Author", 4),
+						createColumn("Days/Weeks", 5),
+						createColumn("Merge Request Url", 6),
+						createColumn("PR Size (No. of lines)", 7));
 
-        Map<String, Object> document = new HashMap<>();
-        document.put("basicProjectConfigId", null);
-        document.put(KPI_ID, KPI_162);
+		document.put("kpiColumnDetails", kpiColumnDetails);
 
-        List<Map<String, Object>> kpiColumnDetails = Arrays.asList(
-                createColumn("Project", 1),
-                createColumn("Repo", 2),
-                createColumn("Branch", 3),
-                createColumn("Author", 4),
-                createColumn("Days/Weeks", 5),
-                createColumn("Merge Request Url", 6),
-                createColumn("PR Size (No. of lines)", 7)
-        );
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIG).insertOne(new org.bson.Document(document));
+	}
 
-        document.put("kpiColumnDetails", kpiColumnDetails);
+	private Map<String, Object> createColumn(String name, int order) {
+		Map<String, Object> col = new HashMap<>();
+		col.put("columnName", name);
+		col.put("order", order);
+		col.put("isShown", true);
+		col.put("isDefault", true);
+		return col;
+	}
 
-        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).insertOne(new org.bson.Document(document));
-    }
+	public void rollbackkpi162() {
 
-    private Map<String, Object> createColumn(String name, int order) {
-        Map<String, Object> col = new HashMap<>();
-        col.put("columnName", name);
-        col.put("order", order);
-        col.put("isShown", true);
-        col.put("isDefault", true);
-        return col;
-    }
-
-    public void rollbackkpi162() {
-
-        Bson filter = Filters.eq(KPI_ID, KPI_162);
-        // Delete from kpi_master collection
-        mongoTemplate.getCollection("kpi_master").deleteOne(filter);
-        // (Optional) — delete from kpi_column_config if needed
-        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
-    }
+		Bson filter = Filters.eq(KPI_ID, KPI_162);
+		// Delete from kpi_master collection
+		mongoTemplate.getCollection("kpi_master").deleteOne(filter);
+		// (Optional) — delete from kpi_column_config if needed
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
+	}
 }

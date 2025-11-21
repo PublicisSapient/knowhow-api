@@ -31,21 +31,25 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "code_quality_metrics_kpi", order = "014108", author = "valanil", systemVersion = "14.1.0")
+@ChangeUnit(
+		id = "code_quality_metrics_kpi",
+		order = "014108",
+		author = "valanil",
+		systemVersion = "14.1.0")
 public class CodeQualityMetricsChangeUnit {
 
-    public static final String KPI_201 = "kpi201";
-    public static final String KPI_ID = "kpiId";
-    private final MongoTemplate mongoTemplate;
-    private static final String PROJECT = "Project";
-    private static final String REPO = "Repo";
-    private static final String BRANCH = "Branch";
-    private static final String DEVELOPER = "Developer";
-    private static final String DAYS_WEEKS = "Days/Weeks";
-    private static final String REWORK_RATE = "Rework Rate";
-    private static final String REVERT_RATE = "Revert Rate";
-    private static final String KPI_COLUMN_CONFIG = "kpi_column_config";
-    private static final String KPI_MASTER = "kpi_master";
+	public static final String KPI_201 = "kpi201";
+	public static final String KPI_ID = "kpiId";
+	private final MongoTemplate mongoTemplate;
+	private static final String PROJECT = "Project";
+	private static final String REPO = "Repo";
+	private static final String BRANCH = "Branch";
+	private static final String DEVELOPER = "Developer";
+	private static final String DAYS_WEEKS = "Days/Weeks";
+	private static final String REWORK_RATE = "Rework Rate";
+	private static final String REVERT_RATE = "Revert Rate";
+	private static final String KPI_COLUMN_CONFIG = "kpi_column_config";
+	private static final String KPI_MASTER = "kpi_master";
 
 	public CodeQualityMetricsChangeUnit(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
@@ -54,19 +58,21 @@ public class CodeQualityMetricsChangeUnit {
 	@Execution
 	public void execution() {
 		insertKpi201();
-        insertColumnConfig(KPI_201, Arrays.asList(PROJECT, REPO, BRANCH, DEVELOPER, DAYS_WEEKS, REWORK_RATE, REVERT_RATE));
+		insertColumnConfig(
+				KPI_201,
+				Arrays.asList(PROJECT, REPO, BRANCH, DEVELOPER, DAYS_WEEKS, REWORK_RATE, REVERT_RATE));
 	}
 
-    @RollbackExecution
-    public void rollback() {
-        Bson filter = Filters.eq(KPI_ID, KPI_201);
-        mongoTemplate.getCollection(KPI_MASTER).deleteOne(filter);
-        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
-    }
+	@RollbackExecution
+	public void rollback() {
+		Bson filter = Filters.eq(KPI_ID, KPI_201);
+		mongoTemplate.getCollection(KPI_MASTER).deleteOne(filter);
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIG).deleteMany(filter);
+	}
 
 	public void insertKpi201() {
 		Map<String, Object> document = new HashMap<>();
-		document.put(KPI_ID,KPI_201 );
+		document.put(KPI_ID, KPI_201);
 		document.put("kpiName", "Code Quality Metrics");
 		document.put("maxValue", "");
 		document.put("kpiUnit", "%");
@@ -76,20 +82,34 @@ public class CodeQualityMetricsChangeUnit {
 		document.put("kpiSource", "BitBucket");
 		document.put("kanban", false);
 		document.put("chartType", "progressbar");
-		
+
 		Map<String, Object> kpiInfo = new HashMap<>();
-		kpiInfo.put("definition", "Code Quality Metrics - a combination of revert rate and rework rate percentage values");
-		
-		List<Map<String, Object>> details = Arrays.asList(
-			createDetail("paragraph", "Revert Rate: The percentage of total pull requests opened that are reverts.", null),
-			createDetail("link", "Revert Rate - Detailed Information at", "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate"),
-			createDetail("paragraph", "Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).", null),
-			createDetail("link", "Rework Rate - Detailed Information at", "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate")
-		);
-		
+		kpiInfo.put(
+				"definition",
+				"Code Quality Metrics - a combination of revert rate and rework rate percentage values");
+
+		List<Map<String, Object>> details =
+				Arrays.asList(
+						createDetail(
+								"paragraph",
+								"Revert Rate: The percentage of total pull requests opened that are reverts.",
+								null),
+						createDetail(
+								"link",
+								"Revert Rate - Detailed Information at",
+								"https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate"),
+						createDetail(
+								"paragraph",
+								"Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
+								null),
+						createDetail(
+								"link",
+								"Rework Rate - Detailed Information at",
+								"https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate"));
+
 		kpiInfo.put("details", details);
 		document.put("kpiInfo", kpiInfo);
-		
+
 		document.put("isPositiveTrend", false);
 		document.put("showTrend", true);
 		document.put("kpiFilter", "dropDown");
@@ -118,26 +138,26 @@ public class CodeQualityMetricsChangeUnit {
 		return detail;
 	}
 
-    private void insertColumnConfig(String kpiId, List<String> columnNames) {
-        Map<String, Object> document = new HashMap<>();
-        document.put("basicProjectConfigId", null);
-        document.put(KPI_ID, kpiId);
-        document.put("kpiColumnDetails", createColumns(columnNames));
-        mongoTemplate.getCollection(KPI_COLUMN_CONFIG).insertOne(new Document(document));
-    }
-    private List<Map<String, Object>> createColumns(List<String> columnNames) {
-        return columnNames.stream()
-                .map(name -> createColumn(name, columnNames.indexOf(name) + 1))
-                .toList();
-    }
-    private Map<String, Object> createColumn(String name, int order) {
-        Map<String, Object> col = new HashMap<>();
-        col.put("columnName", name);
-        col.put("order", order);
-        col.put("isShown", true);
-        col.put("isDefault", true);
-        return col;
-    }
+	private void insertColumnConfig(String kpiId, List<String> columnNames) {
+		Map<String, Object> document = new HashMap<>();
+		document.put("basicProjectConfigId", null);
+		document.put(KPI_ID, kpiId);
+		document.put("kpiColumnDetails", createColumns(columnNames));
+		mongoTemplate.getCollection(KPI_COLUMN_CONFIG).insertOne(new Document(document));
+	}
 
+	private List<Map<String, Object>> createColumns(List<String> columnNames) {
+		return columnNames.stream()
+				.map(name -> createColumn(name, columnNames.indexOf(name) + 1))
+				.toList();
+	}
 
+	private Map<String, Object> createColumn(String name, int order) {
+		Map<String, Object> col = new HashMap<>();
+		col.put("columnName", name);
+		col.put("order", order);
+		col.put("isShown", true);
+		col.put("isDefault", true);
+		return col;
+	}
 }
