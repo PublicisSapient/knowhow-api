@@ -27,7 +27,6 @@ import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
 import com.publicissapient.kpidashboard.apis.model.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
