@@ -25,6 +25,13 @@ import javax.validation.constraints.NotNull;
 
 import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
+import com.publicissapient.kpidashboard.apis.model.ErrorResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,9 +154,36 @@ public class BitBucketController {
 						new ServiceResponse(true, "", scmUserService.getScmToolUsersMailList(projectConfigId)));
 	}
 
-	@PostMapping(value = "/developer/summary", produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<PerformanceSummary>> getDeveloperDashboardSummary(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception {
+    @Operation(
+            summary = "Get Developer Dashboard Summary",
+            description = "Retrieves team performance summary data for the developer dashboard based on the provided KPI request parameters"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved performance summary",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = PerformanceSummary.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "No content - Empty performance summary list",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+	@PostMapping(value = "/team/performance/summary", produces = APPLICATION_JSON_VALUE)
+	public ResponseEntity<ServiceResponse> getDeveloperDashboardTeamPerformanceSummary(
+			@NotNull @RequestBody KpiRequest kpiRequest) {
 		log.info("Received Developer Dashboard Summary request {}", kpiRequest);
 		long bitbucketRequestStartTime = System.currentTimeMillis();
 
@@ -157,8 +191,10 @@ public class BitBucketController {
 		log.info("Total Developer Dashboard Summary Time {}", System.currentTimeMillis() - bitbucketRequestStartTime);
 
 		if (responseList.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
+			return ResponseEntity.status(HttpStatus.NO_CONTENT)
+					.body(new ServiceResponse(false, "Developer dashboard summary not found", responseList));
 		}
-		return ResponseEntity.ok().body(responseList);
+		return ResponseEntity.ok()
+				.body(new ServiceResponse(true, "Successfully retrieved developer dashboard summary", responseList));
 	}
 }

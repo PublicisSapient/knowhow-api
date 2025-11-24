@@ -17,7 +17,6 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +41,6 @@ import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
@@ -97,7 +95,7 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 
 		List<PerformanceSummary> performanceSummaries = new ArrayList<>();
 
-		Node projectNode = getProjectNode(kpiRequest);
+		Node projectNode = getProjectNodeByNodeId(kpiRequest);
 
 		if (projectNode != null) {
 
@@ -117,12 +115,14 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 
 			scmTools.forEach(tool -> performanceSummaries.add(buildPerformanceSummary(tool,
 					projectNode.getProjectFilter().getName(), allCommits, allMergeRequests, dateRange)));
-		}
+		} else {
+            log.error("[BITBUCKET-AGGREGATED-VALUE]. No project found for project ID: {}", kpiRequest.getIds()[0]);
+        }
 
 		return performanceSummaries;
 	}
 
-	private Node getProjectNode(KpiRequest kpiRequest) {
+	private Node getProjectNodeByNodeId(KpiRequest kpiRequest) {
 		String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(),
 				false);
 		if (null != groupName) {
@@ -139,10 +139,11 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 			return null;
 		}
 
-		return getFilteredNodes(kpiRequest, filteredAccountDataList);
+		return getRequiredProjectNodeFromHierarcyList(kpiRequest, filteredAccountDataList);
 	}
 
-	private Node getFilteredNodes(KpiRequest kpiRequest, List<AccountHierarchyData> filteredAccountDataList) {
+	private Node getRequiredProjectNodeFromHierarcyList(KpiRequest kpiRequest,
+			List<AccountHierarchyData> filteredAccountDataList) {
 		Node filteredNode = filteredAccountDataList.get(0).getNode().get(kpiRequest.getLevel() - 1);
 
 		if (null != filteredNode.getProjectHierarchy()) {
