@@ -528,7 +528,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 					date.isBefore(sprintEndDate);
 					date = date.plusDays(1)) {
 				DataCountGroup dataCountGroup = new DataCountGroup();
-                List<DataCount> dataCountList = new ArrayList<>();
+				List<DataCount> dataCountList = new ArrayList<>();
 				Long dueDateWiseTypeCountMap =
 						calculateOverallScopeDayWise(
 								fullSprintIssuesMap,
@@ -590,12 +590,13 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 					.ifPresent(
 							manager ->
 									manager.addForecastsToDataCount(
-											iterationKpiValue, Optional.ofNullable(dataCountGroups).orElse(Collections.emptyList())
-                                                    .stream()
-                                                    .map(dcgs-> dcgs.getValue())
-                                                    .filter(Objects::nonNull)
-                                                    .flatMap(list -> list.stream().filter(Objects::nonNull))
-                                                    .collect(Collectors.toList()), KPICode.ITERATION_BURNUP.getKpiId()));
+											iterationKpiValue,
+											Optional.ofNullable(dataCountGroups).orElse(Collections.emptyList()).stream()
+													.map(dcgs -> dcgs.getValue())
+													.filter(Objects::nonNull)
+													.flatMap(list -> list.stream().filter(Objects::nonNull))
+													.collect(Collectors.toList()),
+											KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);
