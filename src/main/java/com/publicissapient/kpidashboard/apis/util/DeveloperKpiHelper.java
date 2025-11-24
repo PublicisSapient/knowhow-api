@@ -17,20 +17,6 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.ObjectUtils;
-import org.bson.types.ObjectId;
-
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -46,8 +32,20 @@ import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ObjectUtils;
+import org.bson.types.ObjectId;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The class contains all required common methods for developer kpis
@@ -56,6 +54,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public final class DeveloperKpiHelper {
+
+    private static final String CONNECTOR = " -> ";
 
 	private DeveloperKpiHelper() {}
 
@@ -268,25 +268,18 @@ public final class DeveloperKpiHelper {
 	 * @param hoverValue Additional hover information
 	 * @param dataCountMap Map to store/update data counts
 	 */
-	public static void setDataCount(
-			String projectName,
-			String dateLabel,
-			String kpiGroup,
-			Number value,
-			Map<String, Object> hoverValue,
-			Map<String, List<DataCount>> dataCountMap) {
+	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, Number value,
+			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-		Optional<DataCount> existingDataCount =
-				dataCounts.stream().filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
+		Optional<DataCount> existingDataCount = dataCounts.stream()
+				.filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
 
 		if (existingDataCount.isPresent()) {
 			DataCount updatedDataCount = existingDataCount.get();
 			if (value instanceof Long) {
-				updatedDataCount.setValue(
-						((Number) updatedDataCount.getValue()).longValue() + value.longValue());
+				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value.longValue());
 			} else if (value instanceof Double) {
-				updatedDataCount.setValue(
-						((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
+				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
 			}
 		} else {
 			DataCount newDataCount = new DataCount();
@@ -368,13 +361,30 @@ public final class DeveloperKpiHelper {
 		cdr.setEndDate(DateUtil.getTodayDate());
 		LocalDate startDate = null;
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-			startDate = DateUtil.getTodayDate().minusWeeks(dataPoint);
-		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			startDate = DateUtil.getTodayDate().minusMonths(dataPoint);
+			startDate = DateUtil.getTodayDate().minusWeeks(dataPoint * 2L);
 		} else {
-			startDate = DateUtil.getTodayDate().minusDays(dataPoint);
+			startDate = DateUtil.getTodayDate().minusDays(dataPoint * 2L);
 		}
 		cdr.setStartDate(startDate);
 		return cdr;
 	}
+
+    /**
+     * This method creates branch filters for kpis
+     *
+     * @param repo tool repo
+     * @param projectName projectName
+     * @return branch filter
+     */
+    public static String getBranchSubFilter(Tool repo, String projectName) {
+        String subfilter = "";
+        if (null != repo.getRepoSlug()) {
+            subfilter = repo.getBranch() + CONNECTOR + repo.getRepoSlug() + CONNECTOR + projectName;
+        } else if (null != repo.getRepositoryName()) {
+            subfilter = repo.getBranch() + CONNECTOR + repo.getRepositoryName() + CONNECTOR + projectName;
+        } else {
+            subfilter = repo.getBranch() + CONNECTOR + projectName;
+        }
+        return subfilter;
+    }
 }
