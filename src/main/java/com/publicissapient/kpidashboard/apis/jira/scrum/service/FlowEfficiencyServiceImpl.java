@@ -40,6 +40,7 @@ import org.springframework.stereotype.Component;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
@@ -86,6 +87,9 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 
 	@Autowired KpiHelperService kpiHelperService;
 
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
+
 	/** {@inheritDoc} */
 	@Override
 	public String getQualifierType() {
@@ -122,6 +126,10 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 					DataCountGroup dataCountGroup = new DataCountGroup();
 					List<DataCount> dataList = new ArrayList<>();
 					projectWiseDc.entrySet().forEach(trend -> dataList.addAll(trend.getValue()));
+					// Add forecasts if configured
+					Optional.ofNullable(forecastingManager)
+							.ifPresent(manager -> manager.addForecastsToDataCount(
+									dataCountGroup, dataList, KPICode.FLOW_EFFICIENCY.getKpiId()));
 					dataCountGroup.setFilter(filter);
 					dataCountGroup.setValue(dataList);
 					dataCountGroups.add(dataCountGroup);
