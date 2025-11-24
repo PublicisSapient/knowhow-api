@@ -590,8 +590,11 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 					.ifPresent(
 							manager ->
 									manager.addForecastsToDataCount(
-											iterationKpiValue, dataCountGroups.stream().map(dcgs-> dcgs.getValue())  .filter(Objects::nonNull)
-                                                    .flatMap(List::stream)
+											iterationKpiValue, Optional.ofNullable(dataCountGroups).orElse(Collections.emptyList())
+                                                    .stream()
+                                                    .map(dcgs-> dcgs.getValue())
+                                                    .filter(Objects::nonNull)
+                                                    .flatMap(list -> list.stream().filter(Objects::nonNull))
                                                     .collect(Collectors.toList()), KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
