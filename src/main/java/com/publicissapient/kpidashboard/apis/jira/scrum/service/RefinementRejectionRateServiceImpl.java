@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,7 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.backlogdashboard.JiraBacklogKPIService;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
@@ -92,6 +94,9 @@ public class RefinementRejectionRateServiceImpl
 	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
 	@Autowired private JiraIssueRepository jiraIssueRepository;
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
 
 	/**
 	 * @return String
@@ -218,7 +223,14 @@ public class RefinementRejectionRateServiceImpl
 						weekMap,
 						trendLineName);
 			}
-			trendValueList.add(new DataCount(node.getProjectFilter().getName(), dataList));
+			DataCount trendData = new DataCount(node.getProjectFilter().getName(), dataList);
+			// Add forecasts if configured
+			Optional.ofNullable(forecastingManager)
+					.ifPresent(
+							manager ->
+									manager.addForecastsToDataCount(
+											trendData, dataList, KPICode.REFINEMENT_REJECTION_RATE.getKpiId()));
+			trendValueList.add(trendData);
 		}
 		weekAndTypeMap.keySet().stream()
 				.forEach(
