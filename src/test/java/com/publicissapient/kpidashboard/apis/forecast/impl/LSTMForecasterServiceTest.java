@@ -31,49 +31,49 @@ import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
 @RunWith(MockitoJUnitRunner.class)
-public class LSTMForecasterTest {
+public class LSTMForecasterServiceTest {
 
-	private LSTMForecaster lstmForecaster;
+	private LSTMForecasterService lstmForecasterService;
 
 	private List<DataCount> historicalData;
 	private String kpiId;
 
 	@Before
 	public void setUp() {
-		lstmForecaster = new LSTMForecaster();
+		lstmForecasterService = new LSTMForecasterService();
 		kpiId = "TEST_KPI_001";
 		historicalData = createTestData();
 	}
 
 	@Test
 	public void testGetModelType() {
-		assertEquals(ForecastingModel.LSTM, lstmForecaster.getModelType());
+		assertEquals(ForecastingModel.LSTM, lstmForecasterService.getModelType());
 	}
 
 	@Test
 	public void testCanForecast_WithSufficientData() {
-		assertTrue(lstmForecaster.canForecast(historicalData, kpiId));
+		assertTrue(lstmForecasterService.canForecast(historicalData, kpiId));
 	}
 
 	@Test
 	public void testCanForecast_WithInsufficientData() {
 		List<DataCount> insufficientData = createTestData().subList(0, 4);
-		assertFalse(lstmForecaster.canForecast(insufficientData, kpiId));
+		assertFalse(lstmForecasterService.canForecast(insufficientData, kpiId));
 	}
 
 	@Test
 	public void testCanForecast_WithNullData() {
-		assertFalse(lstmForecaster.canForecast(null, kpiId));
+		assertFalse(lstmForecasterService.canForecast(null, kpiId));
 	}
 
 	@Test
 	public void testCanForecast_WithEmptyData() {
-		assertFalse(lstmForecaster.canForecast(new ArrayList<>(), kpiId));
+		assertFalse(lstmForecasterService.canForecast(new ArrayList<>(), kpiId));
 	}
 
 	@Test
 	public void testGenerateForecast_WithValidData() {
-		List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(historicalData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -89,7 +89,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithInsufficientData() {
 		List<DataCount> insufficientData = createTestData().subList(0, 4);
-		List<DataCount> forecasts = lstmForecaster.generateForecast(insufficientData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(insufficientData, kpiId);
 
 		assertTrue(forecasts.isEmpty());
 	}
@@ -97,7 +97,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithIdenticalValues() {
 		List<DataCount> identicalData = createIdenticalValueData();
-		List<DataCount> forecasts = lstmForecaster.generateForecast(identicalData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(identicalData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -109,7 +109,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithTrendingData() {
 		List<DataCount> trendingData = createTrendingData();
-		List<DataCount> forecasts = lstmForecaster.generateForecast(trendingData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(trendingData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -121,7 +121,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithLargeValues() {
 		List<DataCount> largeValueData = createLargeValueData();
-		List<DataCount> forecasts = lstmForecaster.generateForecast(largeValueData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(largeValueData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -133,7 +133,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithMinimalData() {
 		List<DataCount> minimalData = createTestData().subList(0, 6);
-		List<DataCount> forecasts = lstmForecaster.generateForecast(minimalData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(minimalData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -142,7 +142,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithZeroValues() {
 		List<DataCount> zeroData = createZeroValueData();
-		List<DataCount> forecasts = lstmForecaster.generateForecast(zeroData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(zeroData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -154,7 +154,7 @@ public class LSTMForecasterTest {
 	@Test
 	public void testGenerateForecast_WithNegativeValues() {
 		List<DataCount> negativeData = createNegativeValueData();
-		List<DataCount> forecasts = lstmForecaster.generateForecast(negativeData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(negativeData, kpiId);
 
 		assertNotNull(forecasts);
 		assertEquals(1, forecasts.size());
@@ -165,7 +165,7 @@ public class LSTMForecasterTest {
 
 	@Test
 	public void testGenerateForecast_ForecastMetadata() {
-		List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, kpiId);
+		List<DataCount> forecasts = lstmForecasterService.generateForecast(historicalData, kpiId);
 
 		assertNotNull(forecasts);
 		assertFalse(forecasts.isEmpty());
