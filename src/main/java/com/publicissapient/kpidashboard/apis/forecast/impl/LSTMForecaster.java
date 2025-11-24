@@ -338,13 +338,14 @@ public class LSTMForecaster extends AbstractForecastService {
             double[] newCell = new double[hiddenSize];
 
             for (int i = 0; i < hiddenSize; i++) {
-                // Simplified LSTM gates
-                double inputGate = sigmoid(dotProduct(weightsInput[i], input) + biases[i]);
-                double forgetGate = sigmoid(dotProduct(weightsInput[i], input) + biases[i] * 0.5);
-                double outputGate = sigmoid(dotProduct(weightsInput[i], input) + biases[i] * 0.8);
+                // Simplified LSTM gates with hidden state connections
+                double hiddenContrib = dotProduct(weightsHidden[i], hiddenState);
+                double inputGate = sigmoid(dotProduct(weightsInput[i], input) + hiddenContrib + biases[i]);
+                double forgetGate = sigmoid(dotProduct(weightsInput[i], input) + hiddenContrib * 0.5 + biases[i] * 0.5);
+                double outputGate = sigmoid(dotProduct(weightsInput[i], input) + hiddenContrib * 0.8 + biases[i] * 0.8);
 
                 // Update cell state
-                double candidateValue = Math.tanh(dotProduct(weightsInput[i], input));
+                double candidateValue = Math.tanh(dotProduct(weightsInput[i], input) + hiddenContrib * 0.3);
                 newCell[i] = forgetGate * cellState[i] + inputGate * candidateValue;
 
                 // Update hidden state
