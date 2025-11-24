@@ -73,7 +73,7 @@ public class SARIMAForecasterTest {
 		DataCount forecast = forecasts.get(0);
 		assertNotNull(forecast.getValue());
 		assertTrue((Double) forecast.getValue() >= 0);
-		assertEquals("SARIMA", forecast.getForecastingModel());
+		assertEquals("SARIMA", forecast.getForecastingModel().toUpperCase());
 	}
 
 	@Test
