@@ -523,12 +523,11 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 			List<JiraIssue> processedPlannedIssues = new ArrayList<>();
 			List<JiraIssue> processCompletedIssues = new ArrayList<>();
 			List<JiraIssue> pcdIssues = new ArrayList<>();
-			DataCountGroup dataCountGroup = new DataCountGroup();
 			List<DataCount> dataCountList = new ArrayList<>();
 			for (LocalDateTime date = sprintStartDate;
 					date.isBefore(sprintEndDate);
 					date = date.plusDays(1)) {
-
+				DataCountGroup dataCountGroup = new DataCountGroup();
 				Long dueDateWiseTypeCountMap =
 						calculateOverallScopeDayWise(
 								fullSprintIssuesMap,
