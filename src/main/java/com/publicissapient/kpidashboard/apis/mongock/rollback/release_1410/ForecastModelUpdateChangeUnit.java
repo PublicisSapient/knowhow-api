@@ -71,6 +71,12 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.ITERATION_BURNUP.getKpiId());
 		removeForecastModel(KPICode.LATE_REFINEMENT.getKpiId());
 
+        // KPIs for Dora Board.
+        removeForecastModel(KPICode.LEAD_TIME_FOR_CHANGE.getKpiId());
+        removeForecastModel(KPICode.MEAN_TIME_TO_RECOVER.getKpiId());
+        removeForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId());
+        removeForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId());
+
 		log.info("Completed rollback of forecast model updates");
 	}
 
@@ -126,6 +132,16 @@ public class ForecastModelUpdateChangeUnit {
 				KPICode.ITERATION_BURNUP.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
 				KPICode.LATE_REFINEMENT.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+
+        // KPIs for Dora Board.
+        updateForecastModel(
+                KPICode.LEAD_TIME_FOR_CHANGE.getKpiId(), ForecastingModel.LSTM.getName());
+        updateForecastModel(
+                KPICode.MEAN_TIME_TO_RECOVER.getKpiId(), ForecastingModel.LSTM.getName());
+        updateForecastModel(
+                KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.LSTM.getName());
+        updateForecastModel(
+                KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.LSTM.getName());
 
 		log.info("Completed forecast model update for 3 KPIs");
 	}
