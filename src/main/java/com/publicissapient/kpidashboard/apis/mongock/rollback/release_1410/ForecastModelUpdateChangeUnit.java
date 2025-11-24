@@ -70,6 +70,8 @@ public class ForecastModelUpdateChangeUnit {
 		// KPIs for Iteration Board.
 		removeForecastModel(KPICode.ITERATION_BURNUP.getKpiId());
 		removeForecastModel(KPICode.LATE_REFINEMENT.getKpiId());
+		removeForecastModel(KPICode.REFINEMENT_REJECTION_RATE.getKpiId());
+		removeForecastModel(KPICode.FLOW_EFFICIENCY.getKpiId());
 
 		log.info("Completed rollback of forecast model updates");
 	}
@@ -126,8 +128,13 @@ public class ForecastModelUpdateChangeUnit {
 				KPICode.ITERATION_BURNUP.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
 				KPICode.LATE_REFINEMENT.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.REFINEMENT_REJECTION_RATE.getKpiId(),
+				ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.FLOW_EFFICIENCY.getKpiId(), ForecastingModel.ARIMA.getName());
 
-		log.info("Completed forecast model update for 3 KPIs");
+		log.info("Completed forecast model update for KPIs");
 	}
 
 	private void updateForecastModel(String kpiId, String modelName) {
