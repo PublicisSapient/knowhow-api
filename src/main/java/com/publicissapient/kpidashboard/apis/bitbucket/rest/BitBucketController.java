@@ -155,7 +155,7 @@ public class BitBucketController {
 	}
 
     @Operation(
-            summary = "Get Developer Dashboard Summary",
+            summary = "Get Developer Dashboard Team Performance Summary",
             description = "Retrieves team performance summary data for the developer dashboard based on the provided KPI request parameters"
     )
     @ApiResponses(value = {
@@ -164,13 +164,16 @@ public class BitBucketController {
                     description = "Successfully retrieved performance summary",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PerformanceSummary.class))
+                            schema = @Schema(implementation = ServiceResponse.class)
                     )
             ),
             @ApiResponse(
                     responseCode = "204",
                     description = "No content - Empty performance summary list",
-                    content = @Content
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ServiceResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
