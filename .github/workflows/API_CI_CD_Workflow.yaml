@@ -1,4 +1,4 @@
-name: API_CI_CD_Workflow  # Define the name of the workflow
+name: API_CI_CD_Workflow # Define the name of the workflow
 on:
   # push:
   #   branches:
@@ -7,23 +7,23 @@ on:
   workflow_dispatch:
     inputs:
       knowhow_common_branch:
-        description: 'Type the Branch to use from knowhow-common repo'
+        description: "Type the Branch to use from knowhow-common repo"
         required: true
-        default: 'develop'
+        default: "develop"
         type: string
 
       test:
-        description: 'Run tests'
+        description: "Run tests"
         required: true
-        default: 'true'
+        default: "true"
         type: choice
         options:
           - "false"
           - "true"
       env:
-        description: 'Environment to deploy'
+        description: "Environment to deploy"
         required: true
-        default: 'dev'
+        default: "dev"
         type: choice
         options:
           - dev
@@ -31,37 +31,36 @@ on:
           - qa
           - stage
       mongock_operation:
-        description: 'Select Operation Type to deploy'
+        description: "Select Operation Type to deploy"
         required: true
-        default: 'com.publicissapient.kpidashboard.apis.mongock.upgrade'
+        default: "com.publicissapient.kpidashboard.apis.mongock.upgrade"
         type: choice
         options:
           - com.publicissapient.kpidashboard.apis.mongock.upgrade
           - com.publicissapient.kpidashboard.apis.mongock.installation
       mongock_start_version:
-        description: 'Start version for Mongock(e.g: 1.0.0)'
+        description: "Start version for Mongock(e.g: 1.0.0)"
         required: true
-        default: '13.0.0'
+        default: "13.0.0"
         type: string
 
       mongock_end_version:
-        description: 'End version for Mongock(e.g: 1.0.0)'
+        description: "End version for Mongock(e.g: 1.0.0)"
         required: true
-        default: '14.0.0'
+        default: "14.0.0"
         type: string
 
 env:
-  IMAGE_NAME: knowhow-customapi
-  ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }}  # without .azurecr.io
-  ACR_LOGIN_SERVER: ${{ secrets.SPEEDTOOLS_ACR_LOGIN_SERVER }}  # e.g. myacr.azurecr.io
+  IMAGE_NAME: knowhow-api
+  ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }} # without .azurecr.io
+  ACR_LOGIN_SERVER: ${{ secrets.SPEEDTOOLS_ACR_LOGIN_SERVER }} # e.g. myacr.azurecr.io
   BITBUCKET_HELM_REPO: ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }} # HTTPS clone URL (without creds)
-  sonartoken: ${{ secrets.SONARQUBE_TOKEN }}  # Secret for SonarQube authentication
-  sonarurl: ${{ secrets.SONARURL }}  # SonarQube URL stored in secrets
-  GITHUB_HEAD_NAME: $GITHUB_HEAD_REF  # Store the head branch name used in sonarqube
+  sonartoken: ${{ secrets.SONARQUBE_TOKEN }} # Secret for SonarQube authentication
+  sonarurl: ${{ secrets.SONARURL }} # SonarQube URL stored in secrets
+  GITHUB_HEAD_NAME: $GITHUB_HEAD_REF # Store the head branch name used in sonarqube
 
 jobs:
-
-  # ✅ CustomAPI Build skipping test
+  # ✅ knowhow-api Build skipping test
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -75,23 +74,23 @@ jobs:
           if [[ "$ENV" == "qa" ]]; then
             echo "IMAGE_TAG=qa-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-qa.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-qa" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-qa" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-qa" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-qa" >> $GITHUB_OUTPUT
           elif [[ "$ENV" == "stage" ]]; then
             echo "IMAGE_TAG=master-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-stage.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-stage" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-stage" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-stage" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-stage" >> $GITHUB_OUTPUT
           elif [[ "$ENV" == "dev1" ]]; then
             echo "IMAGE_TAG=dev1-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev1.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-dev1" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-dev1" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-dev1" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-dev1" >> $GITHUB_OUTPUT
           else
             echo "IMAGE_TAG=dev-${GITHUB_SHA::8}" >> $GITHUB_ENV
             echo "VALUES_FILE=values-dev.yaml" >> $GITHUB_ENV
-            echo "ARGOCD_APP_NAME=knh-customapi-dev" >> $GITHUB_ENV
-            echo "argocd_app_name=knh-customapi-dev" >> $GITHUB_OUTPUT
+            echo "ARGOCD_APP_NAME=knowhow-api-dev" >> $GITHUB_ENV
+            echo "argocd_app_name=knowhow-api-dev" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout Repository
@@ -100,8 +99,8 @@ jobs:
       - name: Set Up Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
-          java-version: '17'
+          distribution: "adopt"
+          java-version: "17"
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -148,7 +147,7 @@ jobs:
           git clone --branch $BRANCH_TO_CLONE https://github.com/PublicisSapient/knowhow-common.git
           cd knowhow-common
           mvn clean install -Ddockerfile.skip=true
-      
+
       # ✅ Get common version using Maven Help Plugin
       - name: Get common version using Maven Help Plugin
         run: |
@@ -156,7 +155,7 @@ jobs:
           COMMON_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "COMMON_VERSION=$COMMON_VERSION"
           echo "COMMON_VERSION=$COMMON_VERSION" >> $GITHUB_ENV
-      
+
       # ✅ Updating the common version in api projects
       - name: Updating the common version in api project
         run: |
@@ -165,18 +164,18 @@ jobs:
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
-      # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
-      - name: Build & skip Test CustomAPI
+      # ✅ Build & Test knowhoiw-api with both dependencies: common + ai-gateway-client
+      - name: Build & skip Test knowhow-api
         if: ${{ github.event.inputs.test == 'false' }}
         run: mvn clean install -Ddockerfile.skip=true -DskipTests
 
-       # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
-      - name: Build & Test CustomAPI
+        # ✅ Build & Test knowhow-api with both dependencies: common + ai-gateway-client
+      - name: Build & Test knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: mvn clean install -Ddockerfile.skip=true
 
-      # ✅ SonarQube Analysis - CustomAPI
-      - name: SonarQube Analysis - CustomAPI
+      # ✅ SonarQube Analysis - knowhow-api
+      - name: SonarQube Analysis - knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: |
           mvn sonar:sonar -Dsonar.projectKey=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
@@ -185,20 +184,20 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} \
             -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} -f pom.xml
 
-      # ✅ Check SonarQube Quality Gate - CustomAPI
-      - name: Check SonarQube Quality Gate - CustomAPI
+      # ✅ Check SonarQube Quality Gate - knowhow-api
+      - name: Check SonarQube Quality Gate - knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: |
           chmod +x SonarQG.sh
           ./SonarQG.sh ./target/sonar/report-task.txt
-          
+
       - name: Build & Push Docker Image
         run: |
           docker login $ACR_LOGIN_SERVER --username ${{ secrets.SPEEDTOOLS_ACR_USERNAME }} --password ${{ secrets.SPEEDTOOLS_ACR_PASSWORD }}
           docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG .
           docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-      
+
       - name: Checkout Helm charts from Bitbucket
         run: |
           git clone ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }}
@@ -227,14 +226,14 @@ jobs:
           # Define a writable path within the runner's home directory
           export ARGO_PATH="$HOME/bin"
           mkdir -p $ARGO_PATH
-          
+
           # Download ArgoCD CLI to the new path
           curl -sSL -o "$ARGO_PATH/argocd" \
             https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-          
+
           # Make the downloaded file executable
           chmod +x "$ARGO_PATH/argocd"
-          
+
           # Add the new path to the shell's PATH
           echo "$ARGO_PATH" >> $GITHUB_PATH
 
@@ -244,13 +243,12 @@ jobs:
             --username ${{ secrets.SPEEDTOOLS_ARGOCD_USERNAME}} \
             --password ${{ secrets.SPEEDTOOLS_ARGOCD_PASSWORD }} \
             --plaintext
-      
-       # Sync the application
+
+        # Sync the application
       - name: Sync application
         id: sync-app
         run: argocd app sync ${{ env.ARGOCD_APP_NAME }}
-      
+
       # Wait for the application to become healthy
       - name: Wait for application health
         run: argocd app wait ${{ env.ARGOCD_APP_NAME }} --health --timeout 300
-        
