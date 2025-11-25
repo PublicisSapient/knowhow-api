@@ -19,9 +19,13 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 public abstract class AbstractKpiCalculationStrategy<T> implements KpiCalculationStrategy<T> {
+
+    private static final double PERCENTAGE_MULTIPLIER = 100.0;
 
     protected CustomDateRange getCustomDateRange(LocalDateTime currentDate, String duration, int dataPoints) {
         CustomDateRange periodRange = new CustomDateRange();
@@ -34,4 +38,21 @@ public abstract class AbstractKpiCalculationStrategy<T> implements KpiCalculatio
         }
         return periodRange;
     }
+
+    /**
+     * Calculates the deviation rate between current and previous mean time to merge.
+     *
+     * @param currentValue  current value
+     * @param previousValue previous value
+     * @return deviation rate as a percentage
+     */
+	protected double calculateDeviationRate(double currentValue, double previousValue) {
+		double sum = currentValue + previousValue;
+		if (sum == 0) {
+			return 0.0;
+		}
+
+		double value = (currentValue - previousValue) / sum * PERCENTAGE_MULTIPLIER;
+		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
+	}
 }

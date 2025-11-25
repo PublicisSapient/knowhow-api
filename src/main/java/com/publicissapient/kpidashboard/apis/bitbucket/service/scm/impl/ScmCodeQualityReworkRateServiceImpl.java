@@ -496,9 +496,6 @@ public class ScmCodeQualityReworkRateServiceImpl
 		MetricsHolder calculation = reworkMap.computeIfAbsent(kpiGroup, key -> new MetricsHolder());
 
 		calculation.addTotalChanges(totalChanges);
-		if (log.isInfoEnabled()) {
-			log.info(" KpiGroup: {} ----> totalChanges: {}", kpiGroup, totalChanges);
-		}
 
 		if (CollectionUtils.isNotEmpty(referenceLines)) {
 			Set<Integer> changedLineSet = new HashSet<>(changedLines);
@@ -506,9 +503,7 @@ public class ScmCodeQualityReworkRateServiceImpl
 			int reworkCount = changedLineSet.size();
 			calculation.addRework(reworkCount);
 			referenceLines.addAll(changedLines);
-			if (log.isInfoEnabled()) {
-				log.info(" KpiGroup: {} ----> reworkCount: {}", kpiGroup, reworkCount);
-			}
+
 		} else {
 			// New file - no rework, add to reference pool
 			referencePool.put(filePath, new HashSet<>(changedLines));

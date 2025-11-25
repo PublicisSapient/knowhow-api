@@ -49,6 +49,7 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 	private static final double INNOVATION_RATE_DIVISOR = 10.0;
 	private static final double PERCENTAGE_MULTIPLIER = 100.0;
 	private static final int DECIMAL_SCALE = 2;
+    private static final String LABEL_INFO = "pi-lightbulb";
 
 	/**
 	 * Calculates Innovation Rate KPI for all SCM tools.
@@ -109,7 +110,7 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List.of(
-				new IterationKpiData(overallKpiGroup, currentInnovationRate, deviationRate, null, "hrs", "%", null))));
+				new IterationKpiData(overallKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 		Map<String, List<ScmCommits>> userWiseCommits = DeveloperKpiHelper.groupCommitsByUser(commitsForBranch);
 		validationDataList.addAll(prepareUserValidationData(currentPeriodRange, previousPeriodRange, userWiseCommits,
@@ -139,10 +140,11 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 	 * @return average innovation rate
 	 */
 	private double getInnovationRate(List<ScmCommits> commits) {
-		return commits.stream()
+		double innovationRate = commits.stream()
 				.mapToDouble(this::calculateCommitInnovationRate)
 				.average()
 				.orElse(0.0);
+        return BigDecimal.valueOf(innovationRate).setScale(DECIMAL_SCALE, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	/**
@@ -157,24 +159,7 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 			return 0.0;
 		}
 		double percentage = (commit.getAddedLines() * PERCENTAGE_MULTIPLIER) / totalLinesAffected;
-		return BigDecimal.valueOf(percentage / INNOVATION_RATE_DIVISOR)
-				.setScale(DECIMAL_SCALE, RoundingMode.HALF_UP)
-				.doubleValue();
-	}
-
-	/**
-	 * Calculates the deviation rate between current and previous innovation rates.
-	 *
-	 * @param currentRate  current period innovation rate
-	 * @param previousRate previous period innovation rate
-	 * @return deviation rate as a percentage
-	 */
-	private double calculateDeviationRate(double currentRate, double previousRate) {
-		double sum = currentRate + previousRate;
-		if (sum == 0) {
-			return 0.0;
-		}
-		return Math.round((currentRate - previousRate) / sum * PERCENTAGE_MULTIPLIER);
+		return percentage / INNOVATION_RATE_DIVISOR;
 	}
 
 	/**
@@ -207,7 +192,7 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 
 			String userKpiGroup = branchName + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
-					List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate, null, "hrs", "%", null))));
+					List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 			double overallInnovationRate = getInnovationRate(userCommits);
 			int addedLines = userCommits.stream().mapToInt(ScmCommits::getAddedLines).sum();
