@@ -16,16 +16,22 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.repository;
+package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
-import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import net.minidev.json.annotate.JsonIgnore;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageRequest;
-
-@Repository
-public interface AIUsageUploadStatusRepository extends MongoRepository<AIUsageRequest, String> {
-	Optional<AIUsageRequest> findByRequestId(String requestId);
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class AIUsageStatisticsResponse {
+    private List<AIUsageStatisticsDTO> aiUsageStatisticsDTOS;
+    @JsonIgnore
+    private boolean isPartialContent;
 }

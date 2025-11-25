@@ -16,8 +16,16 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.dto;
+package com.publicissapient.kpidashboard.apis.aiusage.repository;
 
-import jakarta.validation.constraints.NotEmpty;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
-public record UploadAIUsageRequest(@NotEmpty String filePath) {}
+import java.time.LocalDate;
+
+@Repository
+public interface AIUsageStatisticsRepository extends MongoRepository<AIUsageStatistics, String> {
+    AIUsageStatistics findTop1ByLevelNameAndLevelTypeOrderByIngestTimestampDesc(String levelName, String levelType);
+    AIUsageStatistics findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(String levelName, LocalDate startDate, LocalDate endDate);
+}
