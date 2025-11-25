@@ -101,6 +101,10 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(
 				KPICode.FLOW_EFFICIENCY.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 
+		// KPI for Release Board.
+		updateForecastModel(
+				KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
+
 		log.info("Completed forecast model update for KPIs");
 	}
 
@@ -132,6 +136,8 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.LATE_REFINEMENT.getKpiId());
 		removeForecastModel(KPICode.REFINEMENT_REJECTION_RATE.getKpiId());
 		removeForecastModel(KPICode.FLOW_EFFICIENCY.getKpiId());
+		// KPIs for Release Board.
+		removeForecastModel(KPICode.RELEASE_PLAN.getKpiId());
 
 		log.info("Completed rollback of forecast model updates");
 	}
