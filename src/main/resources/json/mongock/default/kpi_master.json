@@ -4573,7 +4573,8 @@
     "isAdditionalFilterSupport": false,
     "kpiFilter": "radioButton",
     "boxType": "chart",
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "sarima"
   },
   {
     "kpiId": "kpi186",
