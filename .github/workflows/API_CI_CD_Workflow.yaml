@@ -202,7 +202,7 @@ jobs:
       - name: Checkout Helm charts from Bitbucket
         run: |
           git clone ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }}
-          cd build-configurations/KnowHOW-Deploy/knowhow-customapi
+          cd build-configurations/KnowHOW-Deploy/knowhow-api
           # Update values.yaml image tag
           yq -i ".image.tag = \"${IMAGE_TAG}\"" $VALUES_FILE
           # Update Mongock values
