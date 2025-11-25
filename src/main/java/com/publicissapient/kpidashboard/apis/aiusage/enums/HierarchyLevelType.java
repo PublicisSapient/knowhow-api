@@ -18,9 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
-public enum UploadStatus {
-	PENDING,
-	PROCESSING,
-	COMPLETED,
-	FAILED
+public enum HierarchyLevelType {
+    ACCOUNT("Account"),
+    VERTICAL("Vertical"),
+    BUSINESS_UNIT("Business Unit");
+
+    private final String displayName;
+
+    HierarchyLevelType(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
 }
