@@ -37,7 +37,7 @@ public class PEBConfigController {
      *
      * @return ResponseEntity containing PEB configuration parameters
      */
-    @GetMapping(value = "/economicBenefits", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/configs", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get Economic Benefits Configuration",
             description = "Retrieves Potential Economic Benefits calculator configuration parameters")
