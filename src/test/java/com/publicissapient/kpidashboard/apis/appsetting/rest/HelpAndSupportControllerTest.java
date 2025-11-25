@@ -18,82 +18,98 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.net.URI;
-import java.util.Map;
-
+import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
+
+import java.net.URI;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
- * Test class for HelpController.
+ * Test class for HelpAndSupportController.
  * 
- * @author aksshriv1
+ * @author Publicis Sapient
  */
 @RunWith(MockitoJUnitRunner.class)
-public class HelpControllerTest {
+public class HelpAndSupportControllerTest {
 
-    public static final String PRODUCT_DOCUMENTATION_URL = "productDocumentationUrl";
-    public static final String API_DOCUMENTATION_URL = "apiDocumentationUrl";
-    public static final String VIDEO_TUTORIALS_URL = "videoTutorialsUrl";
-    public static final String RAISE_TICKET_URL = "raiseTicketUrl";
-    public static final String SUPPORT_CHANNEL_URL = "supportChannelUrl";
-    public static final String PRODUCT = "https://docs.example.com/product";
-    public static final String API = "https://docs.example.com/api";
-    public static final String VIDEOS_EXAMPLE_COM = "https://videos.example.com";
-    public static final String TICKET = "https://support.example.com/ticket";
-    public static final String CHANNEL = "https://support.example.com/channel";
+    private static final String PRODUCT = "https://docs.example.com/product";
+    private static final String API = "https://docs.example.com/api";
+    private static final String VIDEOS_EXAMPLE_COM = "https://videos.example.com";
+    private static final String TICKET = "https://support.example.com/ticket";
+    private static final String CHANNEL = "https://support.example.com/channel";
+
     @InjectMocks
-    private HelpController helpController;
+    private HelpAndSupportController helpAndSupportController;
+
+    @Mock
+    private HelpConfig helpConfig;
 
     @Before
     public void setUp() {
-        ReflectionTestUtils.setField(helpController, PRODUCT_DOCUMENTATION_URL, PRODUCT);
-        ReflectionTestUtils.setField(helpController, API_DOCUMENTATION_URL, API);
-        ReflectionTestUtils.setField(helpController, VIDEO_TUTORIALS_URL, VIDEOS_EXAMPLE_COM);
-        ReflectionTestUtils.setField(helpController, RAISE_TICKET_URL, TICKET);
-        ReflectionTestUtils.setField(helpController, SUPPORT_CHANNEL_URL, CHANNEL);
+        helpConfig = HelpConfig.builder()
+                .productDocumentationUrl(PRODUCT)
+                .apiDocumentationUrl(API)
+                .videoTutorialsUrl(VIDEOS_EXAMPLE_COM)
+                .raiseTicketUrl(TICKET)
+                .supportChannelUrl(CHANNEL)
+                .build();
+
+        helpAndSupportController = new HelpAndSupportController();
+        helpAndSupportController.setHelpConfig(helpConfig);
+
     }
 
     @Test
     public void testGetHelpConfig_Success() {
-        ResponseEntity<Map<String, String>> response = helpController.getHelpConfig();
+        ResponseEntity<ServiceResponse> response = helpAndSupportController.getHelpConfig();
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(5, response.getBody().size());
-        assertEquals(PRODUCT, response.getBody().get("productDocumentation"));
-        assertEquals(API, response.getBody().get("apiDocumentation"));
-        assertEquals(VIDEOS_EXAMPLE_COM, response.getBody().get("videoTutorials"));
-        assertEquals(TICKET, response.getBody().get("raiseTicket"));
-        assertEquals(CHANNEL, response.getBody().get("supportChannel"));
+        assertEquals(true, response.getBody().getSuccess());
+        Map<String, String> data = (Map<String, String>) response.getBody().getData();
+        assertEquals(5, data.size());
+        assertEquals(PRODUCT, data.get("productDocumentation"));
+        assertEquals(API, data.get("apiDocumentation"));
+        assertEquals(VIDEOS_EXAMPLE_COM, data.get("videoTutorials"));
+        assertEquals(TICKET, data.get("raiseTicket"));
+        assertEquals(CHANNEL, data.get("supportChannel"));
     }
 
     @Test
     public void testGetHelpConfig_WithNullValues() {
-        ReflectionTestUtils.setField(helpController, PRODUCT_DOCUMENTATION_URL, null);
-        ReflectionTestUtils.setField(helpController, API_DOCUMENTATION_URL, null);
+        helpConfig = HelpConfig.builder()
+                .productDocumentationUrl(null)
+                .apiDocumentationUrl(null)
+                .videoTutorialsUrl(VIDEOS_EXAMPLE_COM)
+                .raiseTicketUrl(TICKET)
+                .supportChannelUrl(CHANNEL)
+                .build();
+        helpAndSupportController.setHelpConfig(helpConfig);
 
-        ResponseEntity<Map<String, String>> response = helpController.getHelpConfig();
+        ResponseEntity<ServiceResponse> response = helpAndSupportController.getHelpConfig();
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("", response.getBody().get("productDocumentation"));
-        assertEquals("", response.getBody().get("apiDocumentation"));
+        Map<String, String> data = (Map<String, String>) response.getBody().getData();
+        assertEquals("", data.get("productDocumentation"));
+        assertEquals("", data.get("apiDocumentation"));
     }
 
     @Test
     public void testRedirectToApiDocumentation_Success() {
-        ResponseEntity<Void> response = helpController.redirectToApiDocumentation();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToApiDocumentation();
 
         assertNotNull(response);
         assertEquals(HttpStatus.FOUND, response.getStatusCode());
@@ -102,9 +118,9 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToApiDocumentation_NotFound() {
-        ReflectionTestUtils.setField(helpController, API_DOCUMENTATION_URL, "");
+        helpConfig.setApiDocumentationUrl("");
 
-        ResponseEntity<Void> response = helpController.redirectToApiDocumentation();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToApiDocumentation();
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -112,7 +128,7 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToProductDocumentation_Success() {
-        ResponseEntity<Void> response = helpController.redirectToProductDocumentation();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToProductDocumentation();
 
         assertNotNull(response);
         assertEquals(HttpStatus.FOUND, response.getStatusCode());
@@ -121,9 +137,9 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToProductDocumentation_NullUrl() {
-        ReflectionTestUtils.setField(helpController, PRODUCT_DOCUMENTATION_URL, null);
+        helpConfig.setProductDocumentationUrl(null);
 
-        ResponseEntity<Void> response = helpController.redirectToProductDocumentation();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToProductDocumentation();
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -131,7 +147,7 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToVideoTutorials_Success() {
-        ResponseEntity<Void> response = helpController.redirectToVideoTutorials();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToVideoTutorials();
 
         assertNotNull(response);
         assertEquals(HttpStatus.FOUND, response.getStatusCode());
@@ -140,9 +156,9 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToVideoTutorials_EmptyUrl() {
-        ReflectionTestUtils.setField(helpController, VIDEO_TUTORIALS_URL, "   ");
+        helpConfig.setVideoTutorialsUrl("   ");
 
-        ResponseEntity<Void> response = helpController.redirectToVideoTutorials();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToVideoTutorials();
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -150,7 +166,7 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToRaiseTicket_Success() {
-        ResponseEntity<Void> response = helpController.redirectToRaiseTicket();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToRaiseTicket();
 
         assertNotNull(response);
         assertEquals(HttpStatus.FOUND, response.getStatusCode());
@@ -159,9 +175,9 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToRaiseTicket_NotFound() {
-        ReflectionTestUtils.setField(helpController, RAISE_TICKET_URL, "");
+        helpConfig.setRaiseTicketUrl("");
 
-        ResponseEntity<Void> response = helpController.redirectToRaiseTicket();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToRaiseTicket();
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -169,7 +185,7 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToSupportChannel_Success() {
-        ResponseEntity<Void> response = helpController.redirectToSupportChannel();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToSupportChannel();
 
         assertNotNull(response);
         assertEquals(HttpStatus.FOUND, response.getStatusCode());
@@ -178,9 +194,9 @@ public class HelpControllerTest {
 
     @Test
     public void testRedirectToSupportChannel_NotFound() {
-        ReflectionTestUtils.setField(helpController, SUPPORT_CHANNEL_URL, null);
+        helpConfig.setSupportChannelUrl(null);
 
-        ResponseEntity<Void> response = helpController.redirectToSupportChannel();
+        ResponseEntity<Void> response = helpAndSupportController.redirectToSupportChannel();
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
