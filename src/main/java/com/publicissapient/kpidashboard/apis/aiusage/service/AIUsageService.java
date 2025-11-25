@@ -77,14 +77,7 @@ public class AIUsageService {
 		validateLevelName(levelName);
 		validateDates(startDate, endDate);
 
-		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
-		accountFilterRequest.setKanban(false);
-		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
-
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo =
-				accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
-				.filter(data -> data.getLabelName().equalsIgnoreCase(levelName))
-				.collect(Collectors.toSet());
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = fetchHierarchiesForCurrentLevel(levelName);
 
 		List<AIUsageStatistics> responseList = new ArrayList<>();
 		for (AccountFilteredData hierarchy : hierarchyDataUserHasAccessTo) {
@@ -126,6 +119,16 @@ public class AIUsageService {
 		return new AIUsageStatisticsResponse(responseDTOList, false);
 	}
 
+	private Set<AccountFilteredData> fetchHierarchiesForCurrentLevel(String levelName) {
+		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
+		accountFilterRequest.setKanban(false);
+		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
+
+		return accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
+				.filter(data -> data.getLabelName().equalsIgnoreCase(levelName))
+				.collect(Collectors.toSet());
+	}
+
 	private void validateLevelName(String levelName) throws BadRequestException {
 		if (!List.of("bu", "ver", "acc").contains(levelName.toLowerCase())) {
 			throw new BadRequestException("Invalid levelName: " + levelName + ". Expected values are 'bu', 'ver', or 'acc'.");
@@ -153,14 +156,14 @@ public class AIUsageService {
 				nodeName, HierarchyLevelType.ACCOUNT.getDisplayName());
 	}
 
-	private Set<AccountFilteredData> fetchHierarchyDataUserHasAccessTo(AccountFilteredData filteredData) {
+	private Set<AccountFilteredData> fetchHierarchyDataUserHasAccessToForParentId(String nodeId) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
 		return accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
 						.filter(data -> data.getParentId() != null 
-								&& data.getParentId().equalsIgnoreCase(filteredData.getNodeId()))
+								&& data.getParentId().equalsIgnoreCase(nodeId))
 				.collect(Collectors.toSet());
 	}
 
@@ -169,7 +172,7 @@ public class AIUsageService {
 			String levelType,
 			Function<AccountFilteredData, AIUsageStatistics> childResolver
 	) {
-		Set<AccountFilteredData> children = fetchHierarchyDataUserHasAccessTo(node);
+		Set<AccountFilteredData> children = fetchHierarchyDataUserHasAccessToForParentId(node.getNodeId());
 
 		List<AIUsageStatistics> statsList = children.stream()
 				.map(childResolver)
