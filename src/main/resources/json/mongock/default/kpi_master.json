@@ -747,6 +747,7 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "hideOverallFilter": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "-60",
       "60-45",
@@ -1264,6 +1265,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "-2",
       "2-4",
@@ -3557,6 +3559,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "90-",
       "30-90",
@@ -4217,6 +4220,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "24-",
       "4-24",
