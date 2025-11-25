@@ -45,6 +45,7 @@ import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
@@ -83,6 +84,7 @@ public class FlowEfficiencyServiceImplTest {
 	@Mock FieldMappingRepository fieldMappingRepository;
 	@Mock private CommonService commonService;
 	@Mock private KpiHelperService kpiHelperService;
+	@Mock private ForecastingManager forecastingManager;
 	List<Node> leafNodeList = new ArrayList<>();
 	TreeAggregatorDetail treeAggregatorDetail;
 	private KpiRequest kpiRequest;

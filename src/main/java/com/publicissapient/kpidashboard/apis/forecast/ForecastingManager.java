@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.apis.forecast.service.ForecastService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
@@ -124,10 +125,10 @@ public class ForecastingManager {
 	 *
 	 * @param dataCount Target DataCount to add forecasts to
 	 * @param historicalData Historical data points for forecasting
-	 * @param kpiId KPI identifier
+	 * @param kpiId KPI identifier Maturity KPIs
 	 */
-	public void addForecastsToDataCount(
-			DataCount dataCount, List<DataCount> historicalData, String kpiId) {
+	public <T> void addForecastsToDataCount(
+			T dataCount, List<DataCount> historicalData, String kpiId) {
 		if (dataCount == null || historicalData == null || historicalData.isEmpty()) {
 			return;
 		}
@@ -135,7 +136,9 @@ public class ForecastingManager {
 		try {
 			List<DataCount> forecasts = generateForecasts(historicalData, kpiId);
 			if (!forecasts.isEmpty()) {
-				dataCount.setForecasts(forecasts);
+				if (dataCount instanceof DataCount dc) {
+					dc.setForecasts(forecasts);
+				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
 			}
 		} catch (Exception e) {
 			log.error("Error adding forecasts for KPI {}", kpiId, e);

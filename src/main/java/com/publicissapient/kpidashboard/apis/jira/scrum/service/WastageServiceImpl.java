@@ -80,8 +80,7 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 	private static final String FILTER_TYPE = "Multi";
 	private static final String SUM = "sum";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	/**
 	 * Check for the flag status
@@ -117,7 +116,13 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 		if (null != leafNode) {
 			log.info("Wastage -> Requested sprint : {}", leafNode.getName());
 
-			SprintDetails dbSprintDetail = getJiraIterationServiceR().getSprintRepository().findBySprintIDIn(kpiRequest.getSelectedMap().get(CommonConstant.SPRINT)).stream().findFirst().orElse(null);
+			SprintDetails dbSprintDetail =
+					getJiraIterationServiceR()
+							.getSprintRepository()
+							.findBySprintIDIn(kpiRequest.getSelectedMap().get(CommonConstant.SPRINT))
+							.stream()
+							.findFirst()
+							.orElse(null);
 			SprintDetails sprintDetails;
 			if (null != dbSprintDetail) {
 				FieldMapping fieldMapping =
@@ -129,18 +134,28 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 				Map<String, Object> mapOfFilter = new HashMap<>();
 				this.getJiraIterationServiceR().createAdditionalFilterMap(kpiRequest, mapOfFilter);
 				Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
-				uniqueProjectMap.put(leafNode.getProjectFilter().getBasicProjectConfigId().toString(), mapOfFilter);
+				uniqueProjectMap.put(
+						leafNode.getProjectFilter().getBasicProjectConfigId().toString(), mapOfFilter);
 				List<JiraIssue> totalJiraIssueList =
-						this.getJiraIterationServiceR().getJiraIssueRepository().findIssueByNumberWithAdditionalFilter(
-								new HashSet<>(createIssuesList(List.of(dbSprintDetail),
-										leafNode.getProjectFilter().getBasicProjectConfigId().toString())), uniqueProjectMap);
+						this.getJiraIterationServiceR()
+								.getJiraIssueRepository()
+								.findIssueByNumberWithAdditionalFilter(
+										new HashSet<>(
+												createIssuesList(
+														List.of(dbSprintDetail),
+														leafNode.getProjectFilter().getBasicProjectConfigId().toString())),
+										uniqueProjectMap);
 
 				Set<String> issueList =
 						totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
 
 				List<JiraIssueCustomHistory> totalHistoryList =
-						getJiraIterationServiceR().getJiraIssueCustomHistoryRepository().findByStoryIDInAndBasicProjectConfigIdIn(
-								new ArrayList<>(issueList), Collections.singletonList(leafNode.getProjectFilter().getBasicProjectConfigId().toString()));
+						getJiraIterationServiceR()
+								.getJiraIssueCustomHistoryRepository()
+								.findByStoryIDInAndBasicProjectConfigIdIn(
+										new ArrayList<>(issueList),
+										Collections.singletonList(
+												leafNode.getProjectFilter().getBasicProjectConfigId().toString()));
 
 				sprintDetails =
 						transformIterSprintdetail(
@@ -600,7 +615,8 @@ public class WastageServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
-	private static List<String> createIssuesList(List<SprintDetails> sprintDetails, String basicProjectConfigId) {
+	private static List<String> createIssuesList(
+			List<SprintDetails> sprintDetails, String basicProjectConfigId) {
 		List<String> totalIssuesList = new ArrayList<>();
 		sprintDetails.stream()
 				.filter(sd -> sd.getBasicProjectConfigId().toString().equals(basicProjectConfigId))
