@@ -3684,13 +3684,13 @@
     "maxValue": "10",
     "kpiUnit": "Hours",
     "isDeleted": "False",
-    "defaultOrder": 2,
+    "defaultOrder": 1,
     "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "thresholdValue": "55",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "MEAN TIME TO MERGE measures the efficiency of the code review process in a team",
       "details": [
@@ -3847,13 +3847,13 @@
     "maxValue": 10,
     "kpiUnit": "Hours",
     "isDeleted": false,
-    "defaultOrder": 3,
+    "defaultOrder": 2,
     "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "thresholdValue": 20,
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "Pickup time measures the time a pull request waits for someone to start reviewing it. Low pickup time represents strong teamwork and a healthy review",
       "details": [
@@ -4573,7 +4573,8 @@
     "isAdditionalFilterSupport": false,
     "kpiFilter": "radioButton",
     "boxType": "chart",
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "sarima"
   },
   {
     "kpiId": "kpi186",
@@ -4581,12 +4582,12 @@
     "maxValue": "",
     "kpiUnit": "%",
     "isDeleted": false,
-    "defaultOrder": 10,
+    "defaultOrder": 4,
     "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "The percentage of merged pull requests that are addressing defects.",
       "details": [
@@ -4620,12 +4621,12 @@
     "maxValue": "",
     "kpiUnit": "%",
     "isDeleted": false,
-    "defaultOrder": 9,
-    "groupId": 7,
+    "defaultOrder": 3,
+    "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "Innovation rate aims at identifying the volume of brand new additions to a codebase (functional and non-functional features, etc) by measuring the newly added code at repository level.\nMore precisely, the New source lines of code(LOC) from a commit. (git log stats insertions)",
       "details": [
