@@ -31,6 +31,8 @@ import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,9 @@ public class DefectRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 
 	private static final List<String> DEFECT_KEYWORDS = List.of("fix", "bug", "repair", "defect");
 	private static final double PERCENTAGE_MULTIPLIER = 100.0;
+    private static final int DECIMAL_SCALE = 2;
+    private static final String LABEL_INFO = "pi-exclamation-triangle";
+
 
 	/**
 	 * Calculates defect rate KPI for all SCM tools.
@@ -128,7 +133,7 @@ public class DefectRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List
-				.of(new IterationKpiData(overallKpiGroup, currentDefectRate, deviationRate, null, "hrs", "%", null))));
+				.of(new IterationKpiData(overallKpiGroup, currentDefectRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
 				.groupMergeRequestsByUser(mergeRequestsForBranch);
@@ -179,7 +184,7 @@ public class DefectRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 			String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
 			String userKpiGroup = branchName + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName, List
-					.of(new IterationKpiData(userKpiGroup, currentDefectRate, deviationRate, null, "hrs", "%", null))));
+					.of(new IterationKpiData(userKpiGroup, currentDefectRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 			return createValidationData(projectName, tool, developerName, null, currentDefectRate,
 					currentDefectMergeRequestsCount, currentTotalMergeRequests);
@@ -253,21 +258,8 @@ public class DefectRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 	 * @return defect rate percentage
 	 */
 	private double calculateDefectRate(long defectCount, long totalCount) {
-		return totalCount > 0 ? (defectCount * PERCENTAGE_MULTIPLIER) / totalCount : 0.0;
-	}
-
-	/**
-	 * Calculates deviation rate between current and previous periods.
-	 *
-	 * @param currentRate
-	 *            current period defect rate
-	 * @param previousRate
-	 *            previous period defect rate
-	 * @return deviation rate percentage
-	 */
-	private double calculateDeviationRate(double currentRate, double previousRate) {
-		double sum = currentRate + previousRate;
-		return sum > 0 ? Math.round((currentRate - previousRate) / sum * PERCENTAGE_MULTIPLIER) : 0.0;
+		double defectRate = totalCount > 0 ? (defectCount * PERCENTAGE_MULTIPLIER) / totalCount : 0.0;
+        return BigDecimal.valueOf(defectRate).setScale(DECIMAL_SCALE, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	@Override

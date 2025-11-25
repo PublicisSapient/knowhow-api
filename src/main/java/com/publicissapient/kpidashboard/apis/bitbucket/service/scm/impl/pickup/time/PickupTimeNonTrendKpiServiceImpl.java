@@ -32,6 +32,8 @@ import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -47,8 +49,9 @@ import java.util.Set;
 @Component
 public class PickupTimeNonTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<List<IterationKpiValue>> {
 
-	private static final double PERCENTAGE_MULTIPLIER = 100.0;
 	private static final double MILLIS_PER_SECOND = 1000.0;
+    private static final int DECIMAL_SCALE = 2;
+    private static final String LABEL_INFO = "pi-hourglass";
 
 	/**
 	 * Calculates Pickup Time KPI for all SCM tools.
@@ -110,7 +113,7 @@ public class PickupTimeNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE,
-				List.of(new IterationKpiData(overallKpiGroup, currentAveragePickUpTime, deviationRate, null, "hrs", "%", null))));
+				List.of(new IterationKpiData(overallKpiGroup, currentAveragePickUpTime, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch);
 		validationDataList.addAll(prepareUserValidationData(currentPeriodRange, previousPeriodRange, userWiseMergeRequests,
@@ -143,7 +146,8 @@ public class PickupTimeNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 		List<Long> pickUpTimes = mergeRequests.stream()
 				.map(this::calculatePickupTimeHours)
 				.toList();
-		return pickUpTimes.isEmpty() ? 0 : pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+		double pickupTime = pickUpTimes.isEmpty() ? 0 : pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        return BigDecimal.valueOf(pickupTime).setScale(DECIMAL_SCALE, RoundingMode.HALF_UP).doubleValue();
 	}
 
 	/**
@@ -156,21 +160,6 @@ public class PickupTimeNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 		LocalDateTime pickedForReviewOn = DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
 		LocalDateTime createdDate = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		return Duration.between(createdDate, pickedForReviewOn).toHours();
-	}
-
-	/**
-	 * Calculates the deviation rate between current and previous pickup times.
-	 *
-	 * @param currentTime  current period average pickup time
-	 * @param previousTime previous period average pickup time
-	 * @return deviation rate as a percentage
-	 */
-	private double calculateDeviationRate(double currentTime, double previousTime) {
-		double sum = currentTime + previousTime;
-		if (sum == 0) {
-			return 0.0;
-		}
-		return Math.round((currentTime - previousTime) / sum * PERCENTAGE_MULTIPLIER);
 	}
 
 	/**
@@ -204,7 +193,7 @@ public class PickupTimeNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 
 			String userKpiGroup = branchName + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
-					List.of(new IterationKpiData(userKpiGroup, currentAveragePickUpTime, deviationRate, null, "hrs", "%", null))));
+					List.of(new IterationKpiData(userKpiGroup, currentAveragePickUpTime, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 			return userMergeRequests.stream()
 					.filter(mr -> mr.getCreatedDate() != null && mr.getPickedForReviewOn() != null)

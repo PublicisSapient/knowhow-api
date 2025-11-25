@@ -33,6 +33,8 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,8 +51,9 @@ import java.util.stream.Collectors;
 public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<List<IterationKpiValue>> {
 
 	private static final int SECONDS_PER_HOUR = 3600;
-	private static final double PERCENTAGE_MULTIPLIER = 100.0;
 	private static final long MILLIS_PER_SECOND = 1000L;
+    private static final int DECIMAL_SCALE = 2;
+    private static final String LABEL_INFO = "pi-clock";
 
 	/**
 	 * Calculates Mean Time To Merge KPI for all SCM tools.
@@ -108,12 +111,13 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculatio
 		List<ScmMergeRequests> previousMergedRequests = filterMergedRequestsByDateRange(mergeRequestsForBranch, previousPeriodRange);
 		double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergedRequests);
 
-		double meanTimeToMergeHours = currentMeanTimeToMergeSeconds / SECONDS_PER_HOUR;
+		double meanTimeToMergeHours = BigDecimal.valueOf(currentMeanTimeToMergeSeconds / SECONDS_PER_HOUR)
+				.setScale(DECIMAL_SCALE, RoundingMode.HALF_UP).doubleValue();
 		double deviationRate = calculateDeviationRate(currentMeanTimeToMergeSeconds, previousMeanTimeToMergeSeconds);
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List.of(
-				new IterationKpiData(overallKpiGroup, meanTimeToMergeHours, deviationRate, null, "hrs", "%", null))));
+				new IterationKpiData(overallKpiGroup, meanTimeToMergeHours, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch);
 		validationDataList.addAll(prepareUserValidationData(currentPeriodRange, previousPeriodRange, userWiseMergeRequests,
@@ -133,21 +137,6 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculatio
 				.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(),
 						dateRange.getStartDateTime(), dateRange.getEndDateTime()))
 				.toList();
-	}
-
-	/**
-	 * Calculates the deviation rate between current and previous mean time to merge.
-	 *
-	 * @param currentSeconds  current period mean time in seconds
-	 * @param previousSeconds previous period mean time in seconds
-	 * @return deviation rate as a percentage
-	 */
-	private double calculateDeviationRate(double currentSeconds, double previousSeconds) {
-		double sum = currentSeconds + previousSeconds;
-		if (sum == 0) {
-			return 0.0;
-		}
-		return Math.round((currentSeconds - previousSeconds) / sum * PERCENTAGE_MULTIPLIER);
 	}
 
 	/**
@@ -173,7 +162,8 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculatio
 
 			List<ScmMergeRequests> currentMergedRequests = filterMergedRequestsByDateRange(userMergeRequests, currentPeriodRange);
 			double currentMeanTimeToMergeSeconds = calculateMeanTimeToMerge(currentMergedRequests);
-			double userAverageHrs = currentMeanTimeToMergeSeconds / SECONDS_PER_HOUR;
+			double userAverageHrs = BigDecimal.valueOf(currentMeanTimeToMergeSeconds / SECONDS_PER_HOUR)
+					.setScale(DECIMAL_SCALE, RoundingMode.HALF_UP).doubleValue();
 
 			List<ScmMergeRequests> previousMergedRequests = filterMergedRequestsByDateRange(userMergeRequests, previousPeriodRange);
 			double previousMeanTimeToMergeSeconds = calculateMeanTimeToMerge(previousMergedRequests);
@@ -181,7 +171,7 @@ public class MeanTimeToMergeNonTrendKpiServiceImpl extends AbstractKpiCalculatio
 
 			String userKpiGroup = branchName + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
-					List.of(new IterationKpiData(userKpiGroup, userAverageHrs, deviationRate, null, "hrs", "%", null))));
+					List.of(new IterationKpiData(userKpiGroup, userAverageHrs, deviationRate, LABEL_INFO, "hrs", "%", null))));
 
 			return userMergeRequests.stream()
 					.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
