@@ -21,6 +21,8 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -53,6 +55,7 @@ import com.publicissapient.kpidashboard.apis.enums.Filters;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationServiceR;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -86,6 +89,7 @@ public class IterationBurnupServiceImplTest {
 	private Map<String, Object> filterLevelMap;
 	private KpiRequest kpiRequest;
 	@Mock private JiraIterationServiceR jiraService;
+	@Mock private ForecastingManager forecastingManager;
 
 	@Before
 	public void setup() {
@@ -190,5 +194,36 @@ public class IterationBurnupServiceImplTest {
 	@Test
 	public void testGetQualifierType() {
 		assertThat(iterationBurnupService.getQualifierType(), equalTo(KPICode.ITERATION_BURNUP.name()));
+	}
+
+	@Test
+	public void testGetKpiDataProjectForForecast() throws ApplicationException {
+
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+
+		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetailsList.get(2));
+		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(jiraIssues);
+		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+				.thenReturn(kpiRequestTrackerId);
+		when(iterationBurnupService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(jiraIssuesCustomHistory);
+		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
+		try {
+			KpiElement kpiElement =
+					iterationBurnupService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			assertNotNull(kpiElement.getTrendValueList());
+
+		} catch (ApplicationException enfe) {
+
+		}
 	}
 }
