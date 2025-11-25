@@ -108,6 +108,11 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.LSTM.getName());
 
 		log.info("Completed forecast model update for 3 KPIs");
+		// KPI for Release Board.
+		updateForecastModel(
+				KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
+
+		log.info("Completed forecast model update for KPIs");
 	}
 
 	@RollbackExecution
@@ -138,6 +143,8 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.LATE_REFINEMENT.getKpiId());
 		removeForecastModel(KPICode.REFINEMENT_REJECTION_RATE.getKpiId());
 		removeForecastModel(KPICode.FLOW_EFFICIENCY.getKpiId());
+		// KPIs for Release Board.
+		removeForecastModel(KPICode.RELEASE_PLAN.getKpiId());
 
 		// KPIs for Dora Board.
 		removeForecastModel(KPICode.LEAD_TIME_FOR_CHANGE.getKpiId());

@@ -20,6 +20,8 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationServiceR;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -86,6 +89,7 @@ public class LateRefinementServiceImplTest {
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
 	private KpiRequest kpiRequest;
+	@Mock private ForecastingManager forecastingManager;
 
 	@Before
 	public void setup() {
@@ -163,5 +167,33 @@ public class LateRefinementServiceImplTest {
 	@After
 	public void cleanup() {
 		jiraIssueRepository.deleteAll();
+	}
+
+	@Test
+	public void testGetKpiDataProjectForForecast() throws ApplicationException {
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+
+		sprintDetails.setState("ACTIVE");
+		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
+
+		sprintDetails.setStartDate("2022-09-28T17:00:00.000Z");
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
+		try {
+			KpiElement kpiElement =
+					lateRefinementService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			assertNotNull(kpiElement.getTrendValueList());
+
+		} catch (ApplicationException enfe) {
+
+		}
 	}
 }

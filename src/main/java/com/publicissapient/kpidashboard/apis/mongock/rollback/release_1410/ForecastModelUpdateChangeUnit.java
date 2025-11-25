@@ -79,6 +79,8 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId());
 		removeForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId());
 
+		// KPIs for Release Board.
+		removeForecastModel(KPICode.RELEASE_PLAN.getKpiId());
 		log.info("Completed rollback of forecast model updates");
 	}
 
@@ -144,6 +146,9 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(KPICode.MEAN_TIME_TO_RECOVER.getKpiId(), ForecastingModel.LSTM.getName());
 		updateForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.LSTM.getName());
 		updateForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.LSTM.getName());
+
+		updateForecastModel(
+				KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
 
 		log.info("Completed forecast model update for KPIs");
 	}
