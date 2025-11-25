@@ -60,13 +60,13 @@ public class HelpController {
      */
     @GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> getHelpConfig() {
-        Map<String, String> map = new LinkedHashMap<>();
-        map.put("productDocumentation", productDocumentationUrl != null ? productDocumentationUrl : "");
-        map.put("apiDocumentation", apiDocumentationUrl != null ? apiDocumentationUrl : "");
-        map.put("videoTutorials", videoTutorialsUrl != null ? videoTutorialsUrl : "");
-        map.put("raiseTicket", raiseTicketUrl != null ? raiseTicketUrl : "");
-        map.put("supportChannel", supportChannelUrl != null ? supportChannelUrl : "");
-        return ResponseEntity.ok(map);
+        Map<String, String> resourceLinks = new LinkedHashMap<>();
+        resourceLinks.put("productDocumentation", productDocumentationUrl != null ? productDocumentationUrl : "");
+        resourceLinks.put("apiDocumentation", apiDocumentationUrl != null ? apiDocumentationUrl : "");
+        resourceLinks.put("videoTutorials", videoTutorialsUrl != null ? videoTutorialsUrl : "");
+        resourceLinks.put("raiseTicket", raiseTicketUrl != null ? raiseTicketUrl : "");
+        resourceLinks.put("supportChannel", supportChannelUrl != null ? supportChannelUrl : "");
+        return ResponseEntity.ok(resourceLinks);
     }
 
     /**
