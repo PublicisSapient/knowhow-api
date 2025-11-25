@@ -54,6 +54,7 @@ import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.backlogdashboard.JiraBacklogServiceR;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -94,6 +95,7 @@ public class RefinementRejectionRateServiceImplTest {
 	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	private KpiRequest kpiRequest;
 	@Mock private CacheService cacheService;
+	@Mock private ForecastingManager forecastingManager;
 
 	@Before
 	public void setup() throws ApplicationException {
@@ -199,5 +201,22 @@ public class RefinementRejectionRateServiceImplTest {
 	public void testGetQualifierType() {
 		assertThat(
 				refinementRejectionRateService.getQualifierType(), equalTo("REFINEMENT_REJECTION_RATE"));
+	}
+
+	@Test
+	public void testGetKpiDataWithForecasting() throws ApplicationException {
+		when(customApiConfig.getBacklogWeekCount()).thenReturn(5);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(cacheService.getFromApplicationCache(anyString())).thenReturn("Jira");
+		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(new JiraIssueReleaseStatus());
+
+		KpiElement responseKpiElement =
+				refinementRejectionRateService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+
+		assertNotNull(responseKpiElement);
+		assertNotNull(responseKpiElement.getTrendValueList());
 	}
 }

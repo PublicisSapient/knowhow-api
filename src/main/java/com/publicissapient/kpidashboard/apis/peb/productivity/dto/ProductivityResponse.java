@@ -22,6 +22,6 @@ import lombok.Data;
 
 @Data
 public class ProductivityResponse {
-    private OrganizationEntityProductivity summary;
-    private List<OrganizationEntityProductivity> details;
+	private OrganizationEntityProductivity summary;
+	private List<OrganizationEntityProductivity> details;
 }

@@ -51,6 +51,7 @@ import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
@@ -65,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ScmPRSizeServiceImpl
 		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
-	private static final String MR_COUNT = "No of PRs";
+	private static final String MR_SIZE = "No. of lines";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
 
@@ -84,10 +85,10 @@ public class ScmPRSizeServiceImpl
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_SIZE);
+		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_SIZE_OVERTIME);
 
 		Map<String, List<DataCount>> trendValuesMap =
-				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SIZE);
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SIZE_OVERTIME);
 		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
 		return kpiElement;
 	}
@@ -114,13 +115,12 @@ public class ScmPRSizeServiceImpl
 
 	@Override
 	public String getQualifierType() {
-		return KPICode.PR_SIZE.name();
+		return KPICode.PR_SIZE_OVERTIME.name();
 	}
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI162(), KPICode.PR_SIZE.getKpiId());
+		return null;
 	}
 
 	/**
@@ -205,30 +205,40 @@ public class ScmPRSizeServiceImpl
 			return;
 		}
 
-		String branchName = getBranchSubFilter(tool, projectName);
-		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-
 		List<ScmMergeRequests> mergeRequestsForBranch =
 				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		long totalLinesChanged =
-				mergeRequestsForBranch.stream().mapToLong(ScmMergeRequests::getLinesChanged).sum();
-		long totalMergeRequests = mergeRequestsForBranch.size();
+		String branchName = getBranchSubFilter(tool, projectName);
 
-		DeveloperKpiHelper.setDataCount(
+		List<PullRequestsValue> overAllPRValues =
+				mergeRequestsForBranch.stream()
+						.map(this::createPullRequestValue)
+						.collect(Collectors.toList());
+
+		DeveloperKpiHelper.setDataCounts(
 				projectName,
 				dateLabel,
-				overallKpiGroup,
-				totalLinesChanged,
-				Map.of(MR_COUNT, totalMergeRequests),
+				branchName + "#" + Constant.AGGREGATED_VALUE,
+				overAllPRValues,
 				kpiTrendDataByGroup);
-
-		Map<String, List<ScmMergeRequests>> userWiseMergeRequests =
-				DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch);
 
 		validationDataList.addAll(
 				prepareUserValidationData(
-						userWiseMergeRequests, assignees, tool, projectName, dateLabel, kpiTrendDataByGroup));
+						DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequestsForBranch),
+						assignees,
+						tool,
+						projectName,
+						dateLabel,
+						kpiTrendDataByGroup));
+	}
+
+	private PullRequestsValue createPullRequestValue(ScmMergeRequests scmMergeRequests) {
+		PullRequestsValue pr = new PullRequestsValue();
+		pr.setLabel(scmMergeRequests.getExternalId());
+		pr.setSize(scmMergeRequests.getLinesChanged().toString());
+		pr.setPrUrl(scmMergeRequests.getMergeRequestUrl());
+		pr.setHoverValue(Map.of(MR_SIZE, scmMergeRequests.getLinesChanged()));
+		return pr;
 	}
 
 	private List<RepoToolValidationData> prepareUserValidationData(
@@ -238,29 +248,30 @@ public class ScmPRSizeServiceImpl
 			String projectName,
 			String dateLabel,
 			Map<String, List<DataCount>> kpiTrendDataByGroup) {
+
 		return userWiseMergeRequests.entrySet().stream()
 				.map(
 						entry -> {
 							String userEmail = entry.getKey();
 							List<ScmMergeRequests> userMergeRequests = entry.getValue();
-
 							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-							long userLineChange =
-									userMergeRequests.stream().mapToLong(ScmMergeRequests::getLinesChanged).sum();
-							long userMrCount = userMergeRequests.size();
+
+							List<PullRequestsValue> userWiseMRValues =
+									userMergeRequests.stream()
+											.map(this::createPullRequestValue)
+											.collect(Collectors.toList());
 
 							String userKpiGroup = getBranchSubFilter(tool, projectName) + "#" + developerName;
-
-							DeveloperKpiHelper.setDataCount(
-									projectName,
-									dateLabel,
-									userKpiGroup,
-									userLineChange,
-									Map.of(MR_COUNT, userMrCount),
-									kpiTrendDataByGroup);
+							DeveloperKpiHelper.setDataCounts(
+									projectName, dateLabel, userKpiGroup, userWiseMRValues, kpiTrendDataByGroup);
 
 							return createValidationData(
-									projectName, tool, developerName, dateLabel, userLineChange, userMrCount);
+									projectName,
+									tool,
+									developerName,
+									dateLabel,
+									userWiseMRValues,
+									userMergeRequests.size());
 						})
 				.collect(Collectors.toList());
 	}
@@ -270,7 +281,7 @@ public class ScmPRSizeServiceImpl
 			Tool tool,
 			String developerName,
 			String dateLabel,
-			long prSize,
+			List<PullRequestsValue> pullRequests,
 			long mrCount) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
@@ -279,7 +290,7 @@ public class ScmPRSizeServiceImpl
 				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
-		validationData.setPrSize(prSize);
+		validationData.setPullRequestsValues(pullRequests);
 		validationData.setMrCount(mrCount);
 		return validationData;
 	}
@@ -292,7 +303,7 @@ public class ScmPRSizeServiceImpl
 			List<KPIExcelData> excelData = new ArrayList<>();
 			KPIExcelUtility.populatePRSizeExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.PR_SIZE.getColumns());
+			kpiElement.setExcelColumns(KPIExcelColumn.PR_SIZE_OVERTIME.getColumns());
 		}
 	}
 }
