@@ -289,7 +289,7 @@ public class RegressionPercentageKanbanServiceImpl
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-		return fetchRegressionKPIDataFromDb(leafNodeList, true);
+		return fetchRegressionKPIDataFromDb(leafNodeList);
 	}
 
 	/**

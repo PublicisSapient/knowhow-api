@@ -291,11 +291,6 @@ public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
 		fetchJiraIssuesCustomHistory(basicConfigId);
 	}
 
-	private List<SprintDetails> findSprintDetails(KpiRequest kpiRequest) {
-		return sprintRepository.findBySprintIDIn(
-				kpiRequest.getSelectedMap().get(CommonConstant.SPRINT));
-	}
-
 	public void fetchSprintDetails(List<String> sprintId) {
 		sprintDetails = sprintRepository.findBySprintIDIn(sprintId);
 	}
