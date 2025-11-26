@@ -86,7 +86,6 @@ public class TicketOpenVsClosedByTypeServiceImpl
 	private static final String RANGE = "range";
 	private static final String PROJECT_WISE_ISSUETYPES = "projectWiseIssueTypes";
 	private static final String PROJECT_WISE_CLOSED_STORY_STATUS = "projectWiseClosedStoryStatus";
-	private static final String DEV = "DeveloperKpi";
 	private static final String IN = "in";
 	private static final DateTimeFormatter DATE_TIME_FORMATTER =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");

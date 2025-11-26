@@ -67,7 +67,7 @@ public class StoriesWithoutEstimateImpl
 
 	private static final String STORY_LIST = "Total Issues";
 	private static final String STORIES_WITHOUT_ESTIMATE_KEY = "Issues Without Estimate";
-	private static final String DEV = "DeveloperKpi";
+
 	@Autowired private JiraIssueRepository jiraIssueRepository;
 	@Autowired private ConfigHelperService configHelperService;
 

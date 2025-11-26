@@ -68,7 +68,6 @@ public class MissingWorkLogsServiceImpl
 
 	private static final String STORY_LIST = "Total Issues(excluding open and dropped)";
 	private static final String TOTAL_STORY_LIST = "Total Issues(including open and dropped)";
-	private static final String DEV = "DeveloperKpi";
 	private static final String UNLOGGED_STORIES = "Issues Without Worklog";
 	private static final int UNLOGGED = 0;
 	private final DecimalFormat df2 = new DecimalFormat(".##");

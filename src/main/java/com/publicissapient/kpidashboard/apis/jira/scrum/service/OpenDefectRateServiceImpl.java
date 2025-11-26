@@ -85,12 +85,10 @@ public class OpenDefectRateServiceImpl
 	private static final String OPEN_DEFECT_DATA = "openBugKey";
 	private static final String TOTAL_DEFECT_DATA = "totalBugKey";
 	private static final String TOTAL = "Total Defects";
-	private static final String DEV = "DeveloperKpi";
 	public static final String TOTAL_DEFECTS = "totalDefects";
 	public static final String DEFECT_HISTORY = "defectHistory";
 	public static final String SPRINT_DETAILS = "sprintDetails";
 	public static final String SUB_TASK_BUGS = "subTaskBugs";
-	public static final String JIRA_ISSUE_CLOSED_DATE = "jiraIssueClosedDate";
 	public static final String STORY_LIST = "storyList";
 	public static final String OPEN_DEFECTS = "Open Defects";
 

@@ -78,7 +78,6 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
 	private static final String RANGE = "range";
-	private static final String DEV = "DeveloperKpi";
 	private static final String OPENED_TICKET = "Open tickets";
 	private static final String CLOSED_TICKET = "Closed tickets";
 	private static final String PROJECT_WISE_ISSUETYPES = "projectWiseIssueTypes";
