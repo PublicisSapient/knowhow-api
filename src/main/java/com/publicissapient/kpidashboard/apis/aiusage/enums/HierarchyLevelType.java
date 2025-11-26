@@ -16,17 +16,20 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.dto;
+package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
-import java.util.UUID;
+public enum HierarchyLevelType {
+    ACCOUNT("Account"),
+    VERTICAL("Vertical"),
+    BUSINESS_UNIT("Business Unit");
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+    private final String displayName;
 
-import jakarta.validation.constraints.NotNull;
+    HierarchyLevelType(String displayName) {
+        this.displayName = displayName;
+    }
 
-public record InitiateUploadResponse(
-		String message, @NotNull UUID requestId, @JsonIgnore String filePath) {
-	public String getMessage() {
-		return message;
-	}
+    public String getDisplayName() {
+        return displayName;
+    }
 }

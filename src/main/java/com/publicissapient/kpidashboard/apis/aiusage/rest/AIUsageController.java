@@ -18,52 +18,35 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.UUID;
-
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.publicissapient.kpidashboard.apis.aiusage.dto.InitiateUploadResponse;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadAIUsageRequest;
-import com.publicissapient.kpidashboard.apis.aiusage.dto.UploadStatusResponse;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageStatisticsDTO;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageStatisticsResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
 import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
-
-import jakarta.ws.rs.BadRequestException;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.apache.coyote.BadRequestException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
 public class AIUsageController implements AIUsageAPI {
 
-	private final AIUsageService aiUsageService;
+    private final AIUsageService aiUsageService;
 
-	@Override
-	public InitiateUploadResponse uploadAiUsageData(@RequestBody UploadAIUsageRequest inputAIUsage) {
-		UUID requestId = UUID.randomUUID();
-		Instant submittedAt = Instant.now();
-		return aiUsageService.uploadFile(inputAIUsage.filePath(), requestId, submittedAt);
-	}
-
-	@Override
-	public InitiateUploadResponse uploadAiUsageDataFile(@RequestPart MultipartFile file) {
-		UUID requestId = UUID.randomUUID();
-		Instant submittedAt = Instant.now();
-		try {
-			File tempFile = File.createTempFile("ai-usage-", ".csv");
-			file.transferTo(tempFile);
-
-			return aiUsageService.uploadFile(tempFile.getAbsolutePath(), requestId, submittedAt);
-		} catch (IOException e) {
-			throw new BadRequestException("Failed to process the uploaded file.", e);
-		}
-	}
-
-	@Override
-	public UploadStatusResponse getProcessingStatus(@PathVariable UUID requestId) {
-		return aiUsageService.getProcessingStatus(requestId);
-	}
+    @Override
+    public ResponseEntity<List<AIUsageStatisticsDTO>> getAIUsageStats(String levelName, Boolean includeUsers, LocalDate startDate,
+                                                                      LocalDate endDate, Pageable pageable)
+            throws BadRequestException, EntityNotFoundException {
+        AIUsageStatisticsResponse response = aiUsageService.getAIUsageStats(levelName, startDate, endDate, includeUsers, pageable);
+        if (response.isPartialContent()) {
+            return ResponseEntity.status(206).body(response.getAiUsageStatisticsDTOS());
+        }
+        return ResponseEntity.ok(response.getAiUsageStatisticsDTOS());
+    }
 }
+

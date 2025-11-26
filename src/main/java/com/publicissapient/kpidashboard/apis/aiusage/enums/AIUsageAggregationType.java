@@ -16,12 +16,16 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.aiusage.repository;
+package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
+import lombok.RequiredArgsConstructor;
 
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsage;
+@RequiredArgsConstructor
+public enum AIUsageAggregationType {
+    LAST_DAY("Last Uploaded Day"),
+    LAST_30_DAYS("Last Uploaded 30 Days"),
+    YTD("Year to Last Uploaded Date"),
+    TOTAL("Total");
 
-@Repository
-public interface AIUsageRepository extends MongoRepository<AIUsage, String> {}
+    private final String displayName;
+}

@@ -18,34 +18,28 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.model;
 
-import java.time.Instant;
-
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.publicissapient.kpidashboard.apis.aiusage.enums.UploadStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageSummary;
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
-
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Document(collection = "ai_usage_requests")
-public class AIUsageRequest extends BasicModel {
-	@Indexed private String requestId;
-	private String userId;
-	private Instant submittedAt;
-	private Instant completedAt;
-	private UploadStatus status;
-	private Integer totalRecords;
-	private Integer successfulRecords;
-	private Integer failedRecords;
-	private String errorMessage;
+@Document(collection = "ai_usage_statistics")
+public class AIUsageStatistics extends BasicModel {
+    private String levelType;
+    private String levelName;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant statsDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Instant ingestTimestamp;
+    private AIUsageSummary usageSummary;
 }
