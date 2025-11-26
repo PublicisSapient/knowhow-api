@@ -442,32 +442,4 @@ public class AccountHierarchyServiceImpl
 			accountHierarchyData.getNode().add(node);
 		}
 	}
-
-	private static List<TreeNode> buildTreeNode(Set<AccountFilteredData> accountFilteredData, Set<String> rootNodeIds) {
-		Map<String, TreeNode> lookup = new HashMap<>();
-		List<TreeNode> roots = new ArrayList<>();
-
-		accountFilteredData.forEach(accountData -> {
-			Node node = new Node();
-			node.setName(accountData.getNodeName());
-			node.setId(accountData.getNodeId());
-			node.setLevel(accountData.getLevel());
-
-			lookup.put(accountData.getNodeId(), new TreeNode(node));
-		});
-
-		for (AccountFilteredData accountData : accountFilteredData) {
-			TreeNode treeNode = lookup.get(accountData.getNodeId());
-			if (rootNodeIds.contains(accountData.getNodeId())) {
-				roots.add(treeNode);
-			} else {
-				TreeNode parent = lookup.get(accountData.getParentId());
-				if (parent != null) {
-					parent.getChildren().add(treeNode);
-				}
-			}
-		}
-
-		return roots;
-	}
 }

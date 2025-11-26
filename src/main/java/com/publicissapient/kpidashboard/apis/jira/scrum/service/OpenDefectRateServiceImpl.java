@@ -483,7 +483,7 @@ public class OpenDefectRateServiceImpl
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),

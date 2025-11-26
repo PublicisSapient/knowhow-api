@@ -231,7 +231,7 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),

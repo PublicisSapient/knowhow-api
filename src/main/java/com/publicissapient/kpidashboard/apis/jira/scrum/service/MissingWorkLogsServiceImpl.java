@@ -187,7 +187,7 @@ public class MissingWorkLogsServiceImpl
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(),
 				sprintList.stream().distinct().collect(Collectors.toList()));
@@ -289,9 +289,8 @@ public class MissingWorkLogsServiceImpl
 						kpiElement,
 						requestTrackerId,
 						totalStory,
-						validationDataMap,
-						kpiRequest.getFilterToShowOnTrend(),
-						node);
+						validationDataMap
+				);
 			}
 
 			log.debug(
@@ -350,16 +349,12 @@ public class MissingWorkLogsServiceImpl
 	 * @param requestTrackerId
 	 * @param sprintWiseStoriesList
 	 * @param validationDataMap
-	 * @param filterToShowOnTrend
-	 * @param node
 	 */
 	private void populateValidationDataObject(
 			KpiElement kpiElement,
 			String requestTrackerId,
 			List<JiraIssue> sprintWiseStoriesList,
-			Map<String, ValidationData> validationDataMap,
-			String filterToShowOnTrend,
-			Node node) {
+			Map<String, ValidationData> validationDataMap) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			String keyForValidation = sprintWiseStoriesList.get(0).getSprintName();
 			List<String> storyKeyList = new ArrayList<>();

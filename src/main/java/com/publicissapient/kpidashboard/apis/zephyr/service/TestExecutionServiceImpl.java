@@ -132,7 +132,7 @@ public class TestExecutionServiceImpl
 				});
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, QA, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(SPRINT_ID, sprintList.stream().distinct().collect(Collectors.toList()));
 		mapOfFilters.put(

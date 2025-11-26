@@ -124,7 +124,7 @@ public class OpenTicketAgingByPriorityServiceImpl
 		/** additional filter * */
 		String subGroupCategory =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.KANBAN, DEV, flterHelperService);
+						kpiRequest, mapOfFilters, Constant.KANBAN, flterHelperService);
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().collect(Collectors.toList()));

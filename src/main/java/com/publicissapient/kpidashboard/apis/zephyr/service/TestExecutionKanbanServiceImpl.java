@@ -144,7 +144,7 @@ public class TestExecutionKanbanServiceImpl
 		/** additional filter * */
 		String subGroupCategory =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.KANBAN, QA, flterHelperService);
+						kpiRequest, mapOfFilters, Constant.KANBAN, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),

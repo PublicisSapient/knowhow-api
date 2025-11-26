@@ -120,7 +120,7 @@ public class KpiDataHelperTest {
 
 		String actual =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.SCRUM, "", flterHelperService);
+						kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 		assertEquals("SQD", actual);
 	}
 
@@ -144,11 +144,11 @@ public class KpiDataHelperTest {
 	@Test
 	public void testCreateSubCategoryWiseMap() {
 		Map<Pair<String, String>, Map<String, List<String>>> subCategoryWiseMap =
-				KpiDataHelper.createSubCategoryWiseMap(Constant.SPRINT, sprintWiseStoryList, "");
+				KpiDataHelper.createSubCategoryWiseMap(Constant.SPRINT, sprintWiseStoryList);
 		assertEquals(5, subCategoryWiseMap.size());
 
 		Map<Pair<String, String>, Map<String, List<String>>> subCategoryWiseMapNegative =
-				KpiDataHelper.createSubCategoryWiseMap(Constant.SCRUM, sprintWiseStoryList, "");
+				KpiDataHelper.createSubCategoryWiseMap(Constant.SCRUM, sprintWiseStoryList);
 		assertEquals(5, subCategoryWiseMapNegative.size());
 	}
 

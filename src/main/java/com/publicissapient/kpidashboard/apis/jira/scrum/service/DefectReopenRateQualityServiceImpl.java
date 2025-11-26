@@ -431,7 +431,7 @@ public class DefectReopenRateQualityServiceImpl
 
 		/* * additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
