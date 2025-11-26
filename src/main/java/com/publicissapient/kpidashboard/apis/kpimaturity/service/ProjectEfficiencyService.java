@@ -34,7 +34,7 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Service for calculating project efficiency based on board maturities and weightages. */
+/** Service for calculating project efficiency based on board maturities and weightages. This service will soon be removed */
 @Service
 @Slf4j
 public class ProjectEfficiencyService {

@@ -43,7 +43,7 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiCategor
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Strategy implementation for Kanban executive dashboard. */
+/** This is a service which currently it is used for calculating the kpi maturity for the KANBAN projects and KPIS. This service will soon be removed */
 @Slf4j
 @Service
 public class KanbanExecutiveDashboardService extends AbstractExecutiveDashboardStrategy {
