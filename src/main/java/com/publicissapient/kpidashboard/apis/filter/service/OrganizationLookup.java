@@ -32,18 +32,27 @@ import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * High-performance lookup utility for navigating organizational hierarchy data structures.
+ * High-performance lookup utility for navigating organizational hierarchy data
+ * structures.
  *
- * <p>This class provides efficient access patterns for organizational hierarchy data by maintaining
- * multiple indexed views of the same dataset. It enables fast lookups by node ID, parent-child
- * relationships, and hierarchy levels, making it ideal for dashboard and reporting applications
- * that need to traverse organizational structures frequently.</p>
+ * <p>
+ * This class provides efficient access patterns for organizational hierarchy
+ * data by maintaining multiple indexed views of the same dataset. It enables
+ * fast lookups by node ID, parent-child relationships, and hierarchy levels,
+ * making it ideal for dashboard and reporting applications that need to
+ * traverse organizational structures frequently.
+ * </p>
  *
- * <p>The class builds three primary indexes during construction:</p>
+ * <p>
+ * The class builds three primary indexes during construction:
+ * </p>
  * <ul>
- *   <li><strong>Node ID Index:</strong> Direct access to entities by their unique identifiers</li>
- *   <li><strong>Parent ID Index:</strong> Fast retrieval of child entities for any parent</li>
- *   <li><strong>Level Index:</strong> Efficient access to all entities at a specific hierarchy level</li>
+ * <li><strong>Node ID Index:</strong> Direct access to entities by their unique
+ * identifiers</li>
+ * <li><strong>Parent ID Index:</strong> Fast retrieval of child entities for
+ * any parent</li>
+ * <li><strong>Level Index:</strong> Efficient access to all entities at a
+ * specific hierarchy level</li>
  * </ul>
  */
 @Slf4j
@@ -58,10 +67,11 @@ public class OrganizationLookup {
 	private final Map<Integer, List<AccountFilteredData>> byLevel;
 
 	/**
-	 * @param flatAccountFilteredData flat collection of the organization entities at which the current user has
-	 *                                   access. This is sent through the constructor because this utility class
-	 *                                   should be used to perform lookups based on a filtered data which is required
-	 *                                   for a specific use case.
+	 * @param flatAccountFilteredData
+	 *            flat collection of the organization entities at which the current
+	 *            user has access. This is sent through the constructor because this
+	 *            utility class should be used to perform lookups based on a
+	 *            filtered data which is required for a specific use case.
 	 */
 	public OrganizationLookup(Set<AccountFilteredData> flatAccountFilteredData) {
 		Objects.requireNonNull(flatAccountFilteredData, "The account filtered data cannot be null");
@@ -89,18 +99,24 @@ public class OrganizationLookup {
 	/**
 	 * Retrieves all organizational entities at the specified hierarchy level.
 	 *
-	 * <p>This method provides efficient access to entities grouped by their position
-	 * in the organizational hierarchy. Common use cases include:</p>
+	 * <p>
+	 * This method provides efficient access to entities grouped by their position
+	 * in the organizational hierarchy. Common use cases include:
+	 * </p>
 	 * <ul>
-	 *   <li>Dashboard aggregations at specific organizational levels</li>
-	 *   <li>Level-based filtering and reporting</li>
-	 *   <li>Organizational structure analysis</li>
+	 * <li>Dashboard aggregations at specific organizational levels</li>
+	 * <li>Level-based filtering and reporting</li>
+	 * <li>Organizational structure analysis</li>
 	 * </ul>
 	 *
-	 * <p>The method returns an empty list if no entities exist at the specified level,
-	 * making it safe to use in iterative operations without null checks.</p>
+	 * <p>
+	 * The method returns an empty list if no entities exist at the specified level,
+	 * making it safe to use in iterative operations without null checks.
+	 * </p>
 	 *
-	 * @param level The hierarchy level to query (e.g., 1=BU, 2=Vertical, 3=Account, 5=Project)
+	 * @param level
+	 *            The hierarchy level to query (e.g., 1=BU, 2=Vertical, 3=Account,
+	 *            5=Project)
 	 * @return List of entities at the specified level, or empty list if none exist
 	 *
 	 * @see #getChildrenGroupedByParentNodeIds(int, int)
@@ -112,12 +128,15 @@ public class OrganizationLookup {
 	/**
 	 * Retrieves organizational entities by their unique node identifier.
 	 *
-	 * <p>This method provides direct access to entities using their node ID, which is
-	 * the primary key in the organizational hierarchy. The method may return multiple
-	 * entities if the same node ID appears in different contexts (though this is rare
-	 * in well-formed hierarchies).</p>
+	 * <p>
+	 * This method provides direct access to entities using their node ID, which is
+	 * the primary key in the organizational hierarchy. The method may return
+	 * multiple entities if the same node ID appears in different contexts (though
+	 * this is rare in well-formed hierarchies).
+	 * </p>
 	 *
-	 * @param nodeId The unique identifier of the organizational entity
+	 * @param nodeId
+	 *            The unique identifier of the organizational entity
 	 * @return List of entities with the specified node ID, or null if not found
 	 */
 	public List<AccountFilteredData> getAccountDataByNodeId(String nodeId) {
@@ -125,21 +144,31 @@ public class OrganizationLookup {
 	}
 
 	/**
-	 * Finds all descendant entities at a specific level under the given parent node.
+	 * Finds all descendant entities at a specific level under the given parent
+	 * node.
 	 *
-	 * <p>This method performs a hierarchical search to find all entities at the target
+	 * <p>
+	 * This method performs a hierarchical search to find all entities at the target
 	 * level that are descendants of the specified parent. The search traverses the
 	 * organizational tree recursively, making it suitable for finding entities that
-	 * may be several levels below the parent.</p>
+	 * may be several levels below the parent.
+	 * </p>
 	 *
-	 * <p>Usage sample: Getting all projects under a specific account</p>
+	 * <p>
+	 * Usage sample: Getting all projects under a specific account
+	 * </p>
 	 *
-	 * <p>If the parent node doesn't exist or has no descendants at the target level,
-	 * an empty list is returned.</p>
+	 * <p>
+	 * If the parent node doesn't exist or has no descendants at the target level,
+	 * an empty list is returned.
+	 * </p>
 	 *
-	 * @param parentNodeId The node ID of the parent entity to search under
-	 * @param childLevel The hierarchy level of the desired descendant entities
-	 * @return List of descendant entities at the specified level, or empty list if none found
+	 * @param parentNodeId
+	 *            The node ID of the parent entity to search under
+	 * @param childLevel
+	 *            The hierarchy level of the desired descendant entities
+	 * @return List of descendant entities at the specified level, or empty list if
+	 *         none found
 	 */
 	public List<AccountFilteredData> getChildrenByParentNodeId(String parentNodeId, int childLevel) {
 		List<AccountFilteredData> parents = this.byNodeId.get(parentNodeId);
@@ -154,18 +183,28 @@ public class OrganizationLookup {
 	}
 
 	/**
-	 * Groups descendant entities by their parent nodes for multiple parent entities.
+	 * Groups descendant entities by their parent nodes for multiple parent
+	 * entities.
 	 *
-	 * <p>This method efficiently processes multiple parent nodes simultaneously,
+	 * <p>
+	 * This method efficiently processes multiple parent nodes simultaneously,
 	 * returning a map where each key is a parent node ID and the value is the list
 	 * of its descendants at the specified level. This bulk operation is more
-	 * efficient than calling {@link #getChildrenByParentNodeId(String, int)} multiple times.</p>
+	 * efficient than calling {@link #getChildrenByParentNodeId(String, int)}
+	 * multiple times.
+	 * </p>
 	 *
-	 * <p>Parents without descendants at the target level will have empty lists as values.</p>
+	 * <p>
+	 * Parents without descendants at the target level will have empty lists as
+	 * values.
+	 * </p>
 	 *
-	 * @param parentNodeIds Set of parent node IDs to process
-	 * @param childLevel The hierarchy level of the desired descendant entities
-	 * @return Map where keys are parent node IDs and values are lists of their descendants
+	 * @param parentNodeIds
+	 *            Set of parent node IDs to process
+	 * @param childLevel
+	 *            The hierarchy level of the desired descendant entities
+	 * @return Map where keys are parent node IDs and values are lists of their
+	 *         descendants
 	 */
 	public Map<String, List<AccountFilteredData>> getChildrenGroupedByParentNodeIds(Set<String> parentNodeIds,
 			int childLevel) {
@@ -179,23 +218,34 @@ public class OrganizationLookup {
 	}
 
 	/**
-	 * Groups descendant entities by their parents for all entities at a specific parent level.
+	 * Groups descendant entities by their parents for all entities at a specific
+	 * parent level.
 	 *
-	 * <p>This method finds all entities at the parent level and then groups their descendants
-	 * at the child level. It's a convenience method that combines level-based lookup with
-	 * parent-child grouping, eliminating the need to first retrieve parent entities manually.</p>
+	 * <p>
+	 * This method finds all entities at the parent level and then groups their
+	 * descendants at the child level. It's a convenience method that combines
+	 * level-based lookup with parent-child grouping, eliminating the need to first
+	 * retrieve parent entities manually.
+	 * </p>
 	 *
-	 * <p>This is particularly useful for organizational reporting where you need to see
-	 * the distribution of lower-level entities across all entities at a higher level.
-	 * For example, grouping all projects by their parent accounts.</p>
+	 * <p>
+	 * This is particularly useful for organizational reporting where you need to
+	 * see the distribution of lower-level entities across all entities at a higher
+	 * level. For example, grouping all projects by their parent accounts.
+	 * </p>
 	 *
-	 * <p><strong>Validation:</strong> The method validates that the child level is numerically
-	 * higher than the parent level, as organizational hierarchies typically use ascending
-	 * numbers for deeper levels.</p>
+	 * <p>
+	 * <strong>Validation:</strong> The method validates that the child level is
+	 * numerically higher than the parent level, as organizational hierarchies
+	 * typically use ascending numbers for deeper levels.
+	 * </p>
 	 *
-	 * @param parentLevel The hierarchy level of the parent entities
-	 * @param childLevel The hierarchy level of the descendant entities
-	 * @return Map where keys are parent node IDs and values are lists of their descendants
+	 * @param parentLevel
+	 *            The hierarchy level of the parent entities
+	 * @param childLevel
+	 *            The hierarchy level of the descendant entities
+	 * @return Map where keys are parent node IDs and values are lists of their
+	 *         descendants
 	 */
 	public Map<String, List<AccountFilteredData>> getChildrenGroupedByParentNodeIds(int parentLevel, int childLevel) {
 		if (childLevel < parentLevel) {
@@ -214,23 +264,32 @@ public class OrganizationLookup {
 	/**
 	 * Recursively finds all descendant entities at the specified target level.
 	 *
-	 * <p>This private method implements the core recursive algorithm for traversing
+	 * <p>
+	 * This private method implements the core recursive algorithm for traversing
 	 * the organizational hierarchy. It performs a depth-first search starting from
-	 * the current node and continues until it finds all entities at the target level.</p>
+	 * the current node and continues until it finds all entities at the target
+	 * level.
+	 * </p>
 	 *
-	 * <p>The algorithm works as follows:</p>
+	 * <p>
+	 * The algorithm works as follows:
+	 * </p>
 	 * <ol>
-	 *   <li>If the current node is at the target level, add it to results</li>
-	 *   <li>Otherwise, recursively search all direct children</li>
-	 *   <li>Aggregate results from all recursive calls</li>
+	 * <li>If the current node is at the target level, add it to results</li>
+	 * <li>Otherwise, recursively search all direct children</li>
+	 * <li>Aggregate results from all recursive calls</li>
 	 * </ol>
 	 *
-	 * <p><strong>Performance Note:</strong> The time complexity is O(d) where d is the
-	 * total number of descendants that need to be examined. In well-balanced hierarchies,
-	 * this is typically much smaller than the total dataset size.</p>
+	 * <p>
+	 * <strong>Performance Note:</strong> The time complexity is O(d) where d is the
+	 * total number of descendants that need to be examined. In well-balanced
+	 * hierarchies, this is typically much smaller than the total dataset size.
+	 * </p>
 	 *
-	 * @param currentNode The starting node for the recursive search
-	 * @param targetLevel The hierarchy level of entities to find
+	 * @param currentNode
+	 *            The starting node for the recursive search
+	 * @param targetLevel
+	 *            The hierarchy level of entities to find
 	 * @return List of all descendant entities at the target level
 	 */
 	private List<AccountFilteredData> findDescendantsByLevel(AccountFilteredData currentNode, int targetLevel) {

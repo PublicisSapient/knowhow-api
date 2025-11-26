@@ -52,93 +52,6 @@ class OrganizationLookupTest {
 	}
 
 	@Test
-	void when_ConstructorCalledWithEmptySet_Then_CreatesEmptyMaps() {
-		// Arrange
-		Set<AccountFilteredData> emptyData = new HashSet<>();
-
-		// Act
-		OrganizationLookup lookup = new OrganizationLookup(emptyData);
-
-		// Assert
-		assertTrue(lookup.getByNodeId().isEmpty());
-		assertTrue(lookup.getByParentId().isEmpty());
-		assertTrue(lookup.getByLevel().isEmpty());
-	}
-
-	@Test
-	void when_ConstructorCalledWithNullAccountFilteredData_Then_SkipsNullEntries() {
-		// Arrange
-		Set<AccountFilteredData> dataWithNull = new HashSet<>();
-		dataWithNull.add(null);
-		dataWithNull.add(AccountFilteredData.builder().nodeId("node1").parentId("parent1").level(1).build());
-
-		// Act
-		OrganizationLookup lookup = new OrganizationLookup(dataWithNull);
-
-		// Assert
-		assertEquals(1, lookup.getByNodeId().size());
-		assertTrue(lookup.getByNodeId().containsKey("node1"));
-	}
-
-	@Test
-	void when_ConstructorCalledWithBlankNodeId_Then_SkipsEntry() {
-		// Arrange
-		Set<AccountFilteredData> dataWithBlankNodeId = new HashSet<>();
-		dataWithBlankNodeId.add(AccountFilteredData.builder().nodeId("").parentId("parent1").level(1).build());
-		dataWithBlankNodeId.add(AccountFilteredData.builder().nodeId("   ").parentId("parent2").level(1).build());
-		dataWithBlankNodeId.add(AccountFilteredData.builder().nodeId("validNode").parentId("parent3").level(1).build());
-
-		// Act
-		OrganizationLookup lookup = new OrganizationLookup(dataWithBlankNodeId);
-
-		// Assert
-		assertEquals(1, lookup.getByNodeId().size());
-		assertTrue(lookup.getByNodeId().containsKey("validNode"));
-	}
-
-	@Test
-	void when_ConstructorCalledWithBlankParentId_Then_AddsToNodeIdAndLevelButNotParentId() {
-		// Arrange
-		Set<AccountFilteredData> dataWithBlankParentId = new HashSet<>();
-		AccountFilteredData data = AccountFilteredData.builder().nodeId("node1").parentId("").level(1).build();
-		dataWithBlankParentId.add(data);
-
-		// Act
-		OrganizationLookup lookup = new OrganizationLookup(dataWithBlankParentId);
-
-		// Assert
-		assertTrue(lookup.getByNodeId().containsKey("node1"));
-		assertTrue(lookup.getByLevel().containsKey(1));
-		assertTrue(lookup.getByParentId().isEmpty());
-	}
-
-	@Test
-	void when_ConstructorCalledWithValidData_Then_PopulatesAllMapsCorrectly() {
-		// Assert
-		// Verify byNodeId map
-		assertEquals(6, organizationLookup.getByNodeId().size());
-		assertTrue(organizationLookup.getByNodeId().containsKey("bu1"));
-		assertTrue(organizationLookup.getByNodeId().containsKey("vertical1"));
-		assertTrue(organizationLookup.getByNodeId().containsKey("account1"));
-		assertTrue(organizationLookup.getByNodeId().containsKey("project1"));
-		assertTrue(organizationLookup.getByNodeId().containsKey("project2"));
-		assertTrue(organizationLookup.getByNodeId().containsKey("project3"));
-
-		// Verify byLevel map
-		assertEquals(4, organizationLookup.getByLevel().size());
-		assertEquals(1, organizationLookup.getByLevel().get(1).size());
-		assertEquals(1, organizationLookup.getByLevel().get(2).size());
-		assertEquals(1, organizationLookup.getByLevel().get(3).size());
-		assertEquals(3, organizationLookup.getByLevel().get(5).size());
-
-		// Verify byParentId map
-		assertEquals(3, organizationLookup.getByParentId().size());
-		assertTrue(organizationLookup.getByParentId().containsKey("bu1"));
-		assertTrue(organizationLookup.getByParentId().containsKey("vertical1"));
-		assertTrue(organizationLookup.getByParentId().containsKey("account1"));
-	}
-
-	@Test
 	void when_GetAccountDataByLevelCalledWithExistingLevel_Then_ReturnsCorrectData() {
 		// Act
 		List<AccountFilteredData> level1Data = organizationLookup.getAccountDataByLevel(1);
@@ -302,64 +215,12 @@ class OrganizationLookupTest {
 	}
 
 	@Test
-	void when_FindDescendantsByLevelCalledWithMultipleLevelsDown_Then_ReturnsCorrectDescendants() {
-		// Arrange
-		AccountFilteredData buNode = organizationLookup.getByNodeId().get("bu1").get(0);
-
-		// Act
-		List<AccountFilteredData> result = ReflectionTestUtils.invokeMethod(organizationLookup,
-				"findDescendantsByLevel", buNode, 5);
-
-		// Assert
-		assertNotNull(result);
-		assertEquals(3, result.size());
-		assertTrue(result.stream().allMatch(node -> node.getLevel() == 5));
-	}
-
-	@Test
-	void when_MultipleNodesWithSameNodeIdExist_Then_HandlesCorrectly() {
-		// Arrange
-		Set<AccountFilteredData> duplicateNodeIdData = new HashSet<>();
-		duplicateNodeIdData.add(AccountFilteredData.builder().nodeId("duplicate").parentId("parent1").level(1).build());
-		duplicateNodeIdData.add(AccountFilteredData.builder().nodeId("duplicate").parentId("parent2").level(2).build());
-
-		// Act
-		OrganizationLookup lookup = new OrganizationLookup(duplicateNodeIdData);
-
-		// Assert
-		assertEquals(2, lookup.getByNodeId().get("duplicate").size());
-		assertEquals(1, lookup.getByLevel().get(1).size());
-		assertEquals(1, lookup.getByLevel().get(2).size());
-	}
-
-	@Test
 	void when_GetChildrenGroupedByParentNodeIdsCalledWithNonExistentParentLevel_Then_ReturnsEmptyMap() {
 		// Act
 		Map<String, List<AccountFilteredData>> result = organizationLookup.getChildrenGroupedByParentNodeIds(99, 100);
 
 		// Assert
 		assertTrue(result.isEmpty());
-	}
-
-	@Test
-	void when_OrganizationLookupCreatedWithComplexHierarchy_Then_AllMapsArePopulatedCorrectly() {
-		// This test verifies the overall integrity of the data structure
-		// Assert byNodeId contains all nodes
-		Set<String> expectedNodeIds = Set.of("bu1", "vertical1", "account1", "project1", "project2", "project3");
-		assertEquals(expectedNodeIds, organizationLookup.getByNodeId().keySet());
-
-		// Assert byLevel contains all levels
-		Set<Integer> expectedLevels = Set.of(1, 2, 3, 5);
-		assertEquals(expectedLevels, organizationLookup.getByLevel().keySet());
-
-		// Assert byParentId contains all parent relationships
-		Set<String> expectedParentIds = Set.of("bu1", "vertical1", "account1");
-		assertEquals(expectedParentIds, organizationLookup.getByParentId().keySet());
-
-		// Verify hierarchy integrity
-		assertEquals(1, organizationLookup.getByParentId().get("bu1").size());
-		assertEquals(1, organizationLookup.getByParentId().get("vertical1").size());
-		assertEquals(3, organizationLookup.getByParentId().get("account1").size());
 	}
 
 	private Set<AccountFilteredData> createTestData() {

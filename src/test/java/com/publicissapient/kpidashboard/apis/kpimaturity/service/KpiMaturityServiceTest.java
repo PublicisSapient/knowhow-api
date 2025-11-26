@@ -58,7 +58,6 @@ import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMetho
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.InternalServerErrorException;
 
 @ExtendWith(MockitoExtension.class)
 class KpiMaturityServiceTest {
@@ -109,9 +108,9 @@ class KpiMaturityServiceTest {
     }
 
     @Test
-    void when_GetKpiMaturityCalledWithNullRequest_Then_ThrowsInternalServerErrorException() {
+    void when_GetKpiMaturityCalledWithNullRequest_Then_ThrowsBadRequestException() {
         // Act & Assert
-        InternalServerErrorException exception = assertThrows(InternalServerErrorException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> kpiMaturityService.getKpiMaturity(null));
 
         assertEquals("Received null KPI maturity request", exception.getMessage());
@@ -216,7 +215,7 @@ class KpiMaturityServiceTest {
     }
 
     @Test
-    void when_DetermineHealthByEfficiencyPercentageCalledWithLowPercentage_Then_ReturnsUnhealthy() throws Exception {
+    void when_DetermineHealthByEfficiencyPercentageCalledWithLowPercentage_Then_ReturnsUnhealthy() {
         // Act
         String result = (String) ReflectionTestUtils.invokeMethod(
                 KpiMaturityService.class, "determineHealthByEfficiencyPercentage", 30.0);
@@ -226,13 +225,13 @@ class KpiMaturityServiceTest {
     }
 
     @Test
-    void when_RequestedLevelIsNotSupportedCalledWithUnsupportedLevel_Then_ReturnsTrue() throws Exception {
+    void when_RequestedLevelIsNotSupportedCalledWithUnsupportedLevel_Then_ReturnsTrue() {
         // Arrange
         HierarchyLevel unsupportedLevel = HierarchyLevel.builder().level(6).build();
         HierarchyLevel projectLevel = HierarchyLevel.builder().level(5).build();
 
         // Act
-        boolean result = (boolean) ReflectionTestUtils.invokeMethod(kpiMaturityService,
+        boolean result = ReflectionTestUtils.invokeMethod(kpiMaturityService,
                 "requestedLevelIsNotSupported", unsupportedLevel, projectLevel, null);
 
         // Assert
@@ -240,7 +239,7 @@ class KpiMaturityServiceTest {
     }
 
     @Test
-    void when_RequestedLevelIsNotSupportedCalledWithSupportedLevel_Then_ReturnsFalse() throws Exception {
+    void when_RequestedLevelIsNotSupportedCalledWithSupportedLevel_Then_ReturnsFalse() {
         // Arrange
         HierarchyLevel supportedLevel = HierarchyLevel.builder().level(3).build();
         HierarchyLevel projectLevel = HierarchyLevel.builder().level(5).build();
@@ -248,7 +247,7 @@ class KpiMaturityServiceTest {
                 .thenReturn(Optional.of(HierarchyLevel.builder().level(4).build()));
 
         // Act
-        boolean result = (boolean) ReflectionTestUtils.invokeMethod(kpiMaturityService,
+        boolean result = ReflectionTestUtils.invokeMethod(kpiMaturityService,
                 "requestedLevelIsNotSupported", supportedLevel, projectLevel, null);
 
         // Assert
@@ -256,7 +255,7 @@ class KpiMaturityServiceTest {
     }
 
     @Test
-    void when_MultipleLevelsAreCorrespondingToLevelNameCalledWithDuplicates_Then_ReturnsTrue() throws Exception {
+    void when_MultipleLevelsAreCorrespondingToLevelNameCalledWithDuplicates_Then_ReturnsTrue() {
         // Arrange
         Map<String, HierarchyLevel> hierarchyLevels = Map.of(
                 "level1", HierarchyLevel.builder().hierarchyLevelName("Account").build(),
@@ -264,7 +263,7 @@ class KpiMaturityServiceTest {
         );
 
         // Act
-        boolean result = (boolean) ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
+        boolean result = ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
                 "multipleLevelsAreCorrespondingToLevelName", "Account", hierarchyLevels);
 
         // Assert
@@ -272,7 +271,7 @@ class KpiMaturityServiceTest {
     }
 
     @Test
-    void when_MultipleLevelsAreCorrespondingToLevelNameCalledWithUniqueLevels_Then_ReturnsFalse() throws Exception {
+    void when_MultipleLevelsAreCorrespondingToLevelNameCalledWithUniqueLevels_Then_ReturnsFalse() {
         // Arrange
         Map<String, HierarchyLevel> hierarchyLevels = Map.of(
                 "level1", HierarchyLevel.builder().hierarchyLevelName("Account").build(),
@@ -280,7 +279,7 @@ class KpiMaturityServiceTest {
         );
 
         // Act
-        boolean result = (boolean) ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
+        boolean result = ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
                 "multipleLevelsAreCorrespondingToLevelName", "Account", hierarchyLevels);
 
         // Assert

@@ -418,7 +418,7 @@ public class KpiMaturityService {
 	 */
 	private KpiMaturityComputationData createKpiMaturityComputationData(KpiMaturityRequest kpiMaturityRequest) {
 		if (kpiMaturityRequest == null) {
-			throw new InternalServerErrorException("Received null KPI maturity request");
+			throw new BadRequestException("Received null KPI maturity request");
 		}
 		KpiMaturityComputationData.KpiMaturityComputationDataBuilder kpiMaturityComputationDataBuilder = KpiMaturityComputationData
 				.builder();

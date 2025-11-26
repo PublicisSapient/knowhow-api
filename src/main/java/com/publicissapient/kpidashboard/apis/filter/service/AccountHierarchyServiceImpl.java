@@ -443,8 +443,7 @@ public class AccountHierarchyServiceImpl
 		}
 	}
 
-	private static List<TreeNode> buildTreeNode(
-			Set<AccountFilteredData> accountFilteredData, Set<String> rootNodeIds) {
+	private static List<TreeNode> buildTreeNode(Set<AccountFilteredData> accountFilteredData, Set<String> rootNodeIds) {
 		Map<String, TreeNode> lookup = new HashMap<>();
 		List<TreeNode> roots = new ArrayList<>();
 

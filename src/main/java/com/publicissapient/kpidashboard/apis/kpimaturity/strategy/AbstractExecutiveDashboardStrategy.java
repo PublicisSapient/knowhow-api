@@ -44,6 +44,7 @@ import org.springframework.http.HttpStatus;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.errors.ExecutiveDataException;
 import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityResponseDTO;
 import com.publicissapient.kpidashboard.apis.kpimaturity.service.KanbanKpiMaturity;
@@ -317,7 +318,7 @@ public abstract class AbstractExecutiveDashboardStrategy {
 
 	public String computeBoardSummary(List<KpiElement> elements) {
 		if (CollectionUtils.isEmpty(elements)) {
-			return "NA";
+			return Constant.NOT_AVAILABLE;
 		}
 
 		return String.valueOf(elements.stream().filter(Objects::nonNull).map(KpiElement::getOverallMaturity)
