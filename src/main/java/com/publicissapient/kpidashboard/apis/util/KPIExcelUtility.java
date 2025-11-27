@@ -479,7 +479,7 @@ public class KPIExcelUtility {
 								Map<String, String> defectIdDetails = new HashMap<>();
 								defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
 								excelData.setDefectId(defectIdDetails);
-								excelData.setDefectSeverity(setSeverity(customApiConfig, jiraIssue));
+								excelData.setDefectSeverity(setSeverity(jiraIssue));
 								excelData.setRootCause(jiraIssue.getRootCauseList());
 								excelData.setDefectStatus(jiraIssue.getStatus());
 								Integer totalTimeSpentInMinutes =
@@ -533,7 +533,7 @@ public class KPIExcelUtility {
 		return issuePriority;
 	}
 
-	private static String setSeverity(CustomApiConfig customApiConfig, JiraIssue jiraIssue) {
+	private static String setSeverity(JiraIssue jiraIssue) {
 		String issueSeverity = " ";
 		if (StringUtils.isNotEmpty(jiraIssue.getSeverity())) {
 			issueSeverity = jiraIssue.getSeverity();

@@ -207,7 +207,7 @@ public final class AutomationPercentageServiceImpl
 					uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 				});
 		// additional filter
-		createAdditionalFilterMap(kpiRequest, mapOfFilters, DEV, flterHelperService);
+		createAdditionalFilterMap(kpiRequest, mapOfFilters, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(),

@@ -97,14 +97,12 @@ public final class KpiDataHelper {
 	 * @param kpiRequest
 	 * @param mapOfFilters
 	 * @param methodology
-	 * @param individualDevOrQa
 	 * @return sub group category as String
 	 */
 	public static String createAdditionalFilterMap(
 			KpiRequest kpiRequest,
 			Map<String, List<String>> mapOfFilters,
 			String methodology,
-			String individualDevOrQa,
 			FilterHelperService flterHelperService) {
 		String subGroupCategory = Constant.SPRINT;
 		if (methodology.equals(Constant.KANBAN)) {
@@ -181,8 +179,7 @@ public final class KpiDataHelper {
 	 */
 	public static Map<Pair<String, String>, Map<String, List<String>>> createSubCategoryWiseMap(
 			String subGroupCategory,
-			List<SprintWiseStory> sprintWiseStoryList,
-			String filterToShowOnTrend) {
+			List<SprintWiseStory> sprintWiseStoryList) {
 
 		Map<Pair<String, String>, Map<String, List<String>>> sprintWiseStoryMap = new HashMap<>();
 

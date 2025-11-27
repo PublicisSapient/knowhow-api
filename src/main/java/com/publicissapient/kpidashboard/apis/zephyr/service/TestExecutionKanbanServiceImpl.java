@@ -35,7 +35,6 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -70,14 +69,13 @@ import lombok.extern.slf4j.Slf4j;
 public class TestExecutionKanbanServiceImpl
 		extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final String QA = "QaKpi";
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
 	private static final String TEST_EXECUTION_DETAIL = "testExecutionDetail";
 	private static final String TOTAL = "Total Test Cases";
 	private static final String EXECUTED = "Executed Test Cases";
 	private static final String PASSED = "Passed Test Cases";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	@Autowired private CustomApiConfig customApiConfig;
+
 	@Autowired private FilterHelperService flterHelperService;
 	@Autowired private KanbanTestExecutionRepository kanbanTestExecutionRepository;
 
@@ -144,7 +142,7 @@ public class TestExecutionKanbanServiceImpl
 		/** additional filter * */
 		String subGroupCategory =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.KANBAN, QA, flterHelperService);
+						kpiRequest, mapOfFilters, Constant.KANBAN, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),

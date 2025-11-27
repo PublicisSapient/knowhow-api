@@ -674,7 +674,6 @@ public class DefectSeverityIndexImplTest {
 											any(KpiRequest.class),
 											anyMap(),
 											anyString(),
-											anyString(),
 											any(FilterHelperService.class)))
 					.thenReturn(null);
 		}
