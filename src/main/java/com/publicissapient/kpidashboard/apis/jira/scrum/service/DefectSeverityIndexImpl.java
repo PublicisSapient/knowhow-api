@@ -254,7 +254,7 @@ public class DefectSeverityIndexImpl
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEVELOPER_KPI, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(),

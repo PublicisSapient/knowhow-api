@@ -129,7 +129,6 @@ public abstract class ZephyrKPIService<R, S, T> extends ToolsKPIService<R, S>
 	public void createAdditionalFilterMap(
 			KpiRequest kpiRequest,
 			Map<String, List<String>> mapOfFilters,
-			String individualDevOrQa,
 			FilterHelperService flterHelperService) {
 		Map<String, AdditionalFilterCategory> addFilterCat =
 				flterHelperService.getAdditionalFilterHierarchyLevel();
@@ -181,7 +180,7 @@ public abstract class ZephyrKPIService<R, S, T> extends ToolsKPIService<R, S>
 	 * @return Map of automated and all regression test cases
 	 */
 	public Map<String, Object> fetchRegressionKPIDataFromDb(
-			List<Node> leafNodeList, boolean isKanban) {
+			List<Node> leafNodeList) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(leafNodeList)) {
 			Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
@@ -327,7 +326,7 @@ public abstract class ZephyrKPIService<R, S, T> extends ToolsKPIService<R, S>
 						basicProjectConfigIds.add(basicProjectConfigId.toString());
 					});
 			/** additional filter * */
-			createAdditionalFilterMap(kpiRequest, mapOfFilters, DEV, flterHelperService);
+			createAdditionalFilterMap(kpiRequest, mapOfFilters, flterHelperService);
 
 			mapOfFilters.put(SPRINT_ID, sprintList.stream().distinct().collect(Collectors.toList()));
 			mapOfFilters.put(

@@ -102,7 +102,6 @@ public class DefectReopenRateQualityServiceImpl
 	private static final String PROJECT_WISE_DEFECT_HISTORY = "projectWiseDefectHistory";
 	private static final String TOTAL_DEFECT_DATA = "totalDefectWithoutDrop";
 	public static final String STORY_LIST = "storyList";
-	private static final String DEV = "DeveloperKpi";
 
 	/** {@inheritDoc} */
 	@Override
@@ -431,7 +430,7 @@ public class DefectReopenRateQualityServiceImpl
 
 		/* * additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),

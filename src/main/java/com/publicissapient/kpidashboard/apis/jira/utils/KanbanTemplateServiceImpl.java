@@ -55,7 +55,6 @@ public class KanbanTemplateServiceImpl
 	private static final String SUBGROUPCATEGORY = "subGroupCategory";
 	private static final String RANGE = "range";
 	private static final String PROJECT_WISE_ISSUETYPES = "projectWiseIssueTypes";
-	private static final String DEV = "DeveloperKpi";
 	private static final DateTimeFormatter DATE_TIME_FORMATTER =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String PROJECT = "PROJECT";
@@ -222,7 +221,7 @@ public class KanbanTemplateServiceImpl
 		/** additional filter * */
 		String subGroupCategory =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.KANBAN, DEV, flterHelperService);
+						kpiRequest, mapOfFilters, Constant.KANBAN, flterHelperService);
 		mapOfFilters.put(
 				JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().collect(Collectors.toList()));
