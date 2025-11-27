@@ -133,7 +133,7 @@ public class DefectRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List
-				.of(new IterationKpiData(overallKpiGroup, currentDefectRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
+				.of(new IterationKpiData(overallKpiGroup, currentDefectRate, deviationRate, LABEL_INFO, "%", "%", null))));
 
 		Map<String, List<ScmMergeRequests>> userWiseMergeRequests = DeveloperKpiHelper
 				.groupMergeRequestsByUser(mergeRequestsForBranch);
@@ -184,7 +184,7 @@ public class DefectRateNonTrendKpiServiceImpl extends AbstractKpiCalculationStra
 			String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
 			String userKpiGroup = branchName + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName, List
-					.of(new IterationKpiData(userKpiGroup, currentDefectRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
+					.of(new IterationKpiData(userKpiGroup, currentDefectRate, deviationRate, LABEL_INFO, "%", "%", null))));
 
 			return createValidationData(projectName, tool, developerName, null, currentDefectRate,
 					currentDefectMergeRequestsCount, currentTotalMergeRequests);
