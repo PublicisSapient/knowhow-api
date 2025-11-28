@@ -19,132 +19,36 @@
 package com.publicissapient.kpidashboard.apis.model;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.validation.BindException;
-import org.springframework.validation.FieldError;
-import org.springframework.validation.ObjectError;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
-	private final Map<String, List<String>> globalErrors = new HashMap<>();
-	private final Map<String, List<String>> fieldErrors = new HashMap<>();
-	private long timestamp;
 	private int code;
+
+	@Builder.Default
+	private long timestamp = System.currentTimeMillis();
+
 	private String error;
 	private String message;
 
-	public ErrorResponse() {
-		timestamp = new Date().getTime();
-	}
+	private final Map<String, List<String>> fieldErrors = new HashMap<>();
 
-	/**
-	 * Iterates over list of global errors and maps errors to ObjectName
-	 *
-	 * @param bindException
-	 * @return errorResponse
-	 */
-	public static ErrorResponse fromBindException(BindException bindException) {
-		ErrorResponse errorResponse = new ErrorResponse();
-
-		for (ObjectError objectError : bindException.getGlobalErrors()) {
-			List<String> errors = errorResponse.getGlobalErrors().get(objectError.getObjectName());
-			if (errors == null) {
-				errors = new ArrayList<>();
-				errorResponse.getGlobalErrors().put(objectError.getObjectName(), errors);
-			}
-			errors.add(objectError.getDefaultMessage());
-		}
-
-		for (FieldError fieldError : bindException.getFieldErrors()) {
-			List<String> errors = errorResponse.getFieldErrors().get(fieldError.getField());
-			if (errors == null) {
-				errors = new ArrayList<>();
-				errorResponse.getFieldErrors().put(fieldError.getField(), errors);
-			}
-			errors.add(fieldError.getDefaultMessage());
-		}
-
-		return errorResponse;
-	}
-
-	/**
-	 * @return error.
-	 */
-	public String getError() {
-		return error;
-	}
-
-	/**
-	 * Sets error
-	 *
-	 * @param error
-	 */
-	public void setError(String error) {
-		this.error = error;
-	}
-
-	/**
-	 * @return code
-	 */
-	public int getCode() {
-		return code;
-	}
-
-	/**
-	 * Sets code
-	 *
-	 * @param code
-	 */
-	public void setCode(int code) {
-		this.code = code;
-	}
-
-	/**
-	 * @return globalErrors
-	 */
-	public Map<String, List<String>> getGlobalErrors() {
-		return globalErrors;
-	}
-
-	/**
-	 * @return fieldErrors
-	 */
-	public Map<String, List<String>> getFieldErrors() {
-		return fieldErrors;
-	}
-
-	/**
-	 * Adds fieldError entries to List
-	 *
-	 * @param field
-	 * @param error
-	 */
-	public void addFieldError(String field, String error) {
-		List<String> errors = getFieldErrors().get(field);
-		if (errors == null) {
-			errors = new ArrayList<>();
-			getFieldErrors().put(field, errors);
-		}
-		errors.add(error);
-	}
-
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
+	public void addFieldError(String field, String errorMessage) {
+		this.fieldErrors.computeIfAbsent(field, k -> new ArrayList<>());
+		this.fieldErrors.get(field).add(errorMessage);
 	}
 }
