@@ -17,8 +17,8 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1400;
 
-import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT;
-import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_RECOMMENDATION_PROMPT;
+import static com.publicissapient.kpidashboard.common.constant.PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT;
+import static com.publicissapient.kpidashboard.common.constant.PromptKeys.KPI_RECOMMENDATION_PROMPT;
 
 import java.util.Arrays;
 
