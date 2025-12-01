@@ -138,8 +138,11 @@ public final class DeveloperKpiHelper {
 						request -> {
 							LocalDateTime updatedDateTime =
 									DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate());
-							return DateUtil.isWithinDateTimeRange(
-									updatedDateTime, dateRange.getStartDateTime(), dateRange.getEndDateTime());
+							return updatedDateTime != null
+									&& dateRange.getStartDateTime() != null
+									&& dateRange.getEndDateTime() != null
+									&& DateUtil.isWithinDateTimeRange(
+											updatedDateTime, dateRange.getStartDateTime(), dateRange.getEndDateTime());
 						})
 				.toList();
 	}
