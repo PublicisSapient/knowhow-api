@@ -80,6 +80,11 @@ public class TestExecutionTimeServiceImpl
 	private static final String NIN = "nin";
 
 	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiId){
+		return calculateKpiValueForDouble(valueList,kpiId);
+	}
+
+	@Override
 	public String getQualifierType() {
 		return KPICode.TEST_EXECUTION_TIME.name();
 	}
