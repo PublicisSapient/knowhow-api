@@ -83,7 +83,8 @@ public class TestExecutionTimeKpi {
 						.append("isAdditionalFilterSupport", false)
 						.append("kpiFilter", "")
 						.append("boxType", "chart")
-						.append("calculateMaturity", false);
+						.append("calculateMaturity", false)
+						.append("aggregationCriteria", "average");
 
 		mongoTemplate.getCollection("kpi_master").insertOne(kpiMasterDoc);
 		log.info("Rollback executed: Inserted Test Execution Time KPI (kpi196) into kpi_master");
