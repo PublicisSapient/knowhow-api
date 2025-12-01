@@ -110,7 +110,7 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 		iterationKpiValueList.add(new IterationKpiValue(branchName, Constant.AGGREGATED_VALUE, List.of(
-				new IterationKpiData(overallKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
+				new IterationKpiData(overallKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "%", "%", null))));
 
 		Map<String, List<ScmCommits>> userWiseCommits = DeveloperKpiHelper.groupCommitsByUser(commitsForBranch);
 		validationDataList.addAll(prepareUserValidationData(currentPeriodRange, previousPeriodRange, userWiseCommits,
@@ -192,7 +192,7 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 
 			String userKpiGroup = branchName + "#" + developerName;
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
-					List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "hrs", "%", null))));
+					List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "%", "%", null))));
 
 			double overallInnovationRate = getInnovationRate(userCommits);
 			int addedLines = userCommits.stream().mapToInt(ScmCommits::getAddedLines).sum();

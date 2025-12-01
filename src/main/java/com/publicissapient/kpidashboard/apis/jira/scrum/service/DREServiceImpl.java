@@ -90,7 +90,6 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 	private static final String TOTAL_DEFECT_DATA = "totalBugKey";
 	private static final String REMOVED = "Closed Defects";
 	private static final String TOTAL = "Total Defects";
-	private static final String DEV = "DeveloperKpi";
 	public static final String TOTAL_DEFECTS = "totalDefects";
 	public static final String DEFECT_HISTORY = "defectHistory";
 	public static final String SPRINT_DETAILS = "sprintDetails";
@@ -231,7 +230,7 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
