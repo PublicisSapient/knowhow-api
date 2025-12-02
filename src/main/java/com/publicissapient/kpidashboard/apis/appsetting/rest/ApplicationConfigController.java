@@ -45,13 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ApplicationConfigController {
 
-	@Autowired private PEBConfig pebConfig;
-    @Autowired private HelpConfig helpConfig;
+	private final PEBConfig pebConfig;
+    private final HelpConfig helpConfig;
 
-	public void setPebConfig(PEBConfig pebConfig) {
-		this.pebConfig = pebConfig;
-	}
-    public void setHelpConfig(HelpConfig helpConfig) {
+    public ApplicationConfigController(PEBConfig pebConfig, HelpConfig helpConfig) {
+        this.pebConfig = pebConfig;
         this.helpConfig = helpConfig;
     }
 
