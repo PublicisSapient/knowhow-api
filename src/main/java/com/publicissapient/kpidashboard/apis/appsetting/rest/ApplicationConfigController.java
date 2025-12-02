@@ -18,9 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
