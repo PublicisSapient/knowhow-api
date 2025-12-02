@@ -223,6 +223,18 @@ public class TestExecutionTimeServiceImpl
 					executionTimeForCurrentLeaf =
 							getValueFromHoverMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
 
+					Double manualExecutionTime =
+							getValueFromHoverMap(hoverMap, "MANUAL", AVGEXECUTIONTIME, Double.class);
+					Double automatedExecutionTime =
+							getValueFromHoverMap(hoverMap, "AUTOMATED", AVGEXECUTIONTIME, Double.class);
+
+					if (manualExecutionTime == null) {
+						manualExecutionTime = 0.0;
+					}
+					if (automatedExecutionTime == null) {
+						automatedExecutionTime = 0.0;
+					}
+
 					mapTmp.get(node.getId()).setValue(executionTimeForCurrentLeaf);
 
 					log.debug(
@@ -239,7 +251,8 @@ public class TestExecutionTimeServiceImpl
 					dataCount.setSSprintID(node.getSprintFilter().getId());
 					dataCount.setSSprintName(node.getSprintFilter().getName());
 					dataCount.setHoverValue(hoverMap);
-					dataCount.setValue(executionTimeForCurrentLeaf);
+					dataCount.setValue(manualExecutionTime);
+					dataCount.setLineValue(automatedExecutionTime);
 					mapTmp.get(node.getId()).setValue(new ArrayList<>(Arrays.asList(dataCount)));
 					trendValueList.add(dataCount);
 				});
