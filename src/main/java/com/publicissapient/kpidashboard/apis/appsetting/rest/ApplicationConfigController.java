@@ -21,12 +21,15 @@ package com.publicissapient.kpidashboard.apis.appsetting.rest;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigServiceImpl;
+import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,13 +43,10 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Tag(name = "ApplicationConfiguration", description = "Endpoints for Application Configuration")
 @Slf4j
+@RequiredArgsConstructor
 public class ApplicationConfigController {
 
-	private final ApplicationConfigService applicationConfigService;
-
-	public ApplicationConfigController(ApplicationConfigService applicationConfigService) {
-		this.applicationConfigService = applicationConfigService;
-	}
+	private final ApplicationConfigServiceImpl applicationConfigService;
 
 	/**
 	 * Retrieves application configuration including Economic Benefits and Help resources. Returns
@@ -59,32 +59,34 @@ public class ApplicationConfigController {
 	 *     "https://support.example.com/tickets", "supportChannel": "https://chat.example.com/support"
 	 *     }
 	 */
-	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(
-			summary = "Get Application Configuration",
-			description =
-					"Retrieves comprehensive application configuration including economic benefits calculator parameters (team size, cost per member, time duration) and help resource URLs (documentation, tutorials, support channels) for the KnowHOW dashboard")
-	@ApiResponses(
-			value = {
-				@ApiResponse(
-						responseCode = "200",
-						description =
-								"Application configuration retrieved successfully. Returns economic benefits settings and help resource URLs in a structured format.",
-						content = {
-							@Content(
-									mediaType = "application/json",
-									schema = @Schema(implementation = ServiceResponse.class))
-						})
-			})
-	public ResponseEntity<ServiceResponse> getApplicationConfig() {
-		Map<String, Object> configData = new LinkedHashMap<>();
-		configData.putAll(applicationConfigService.getEconomicBenefitsConfigs());
-		configData.putAll(applicationConfigService.getHelpConfig());
+    @GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Get Application Configuration",
+            description =
+                    "Retrieves comprehensive application configuration including economic benefits calculator parameters (team size, cost per member, time duration) and help resource URLs (documentation, tutorials, support channels) for the KnowHOW dashboard")
+    @ApiResponses(
+            value = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description =
+                                    "Application configuration retrieved successfully. Returns economic benefits settings and help resource URLs in a structured format.",
+                            content = {
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ServiceResponse.class),
+                                            examples = @ExampleObject(
+                                                    value = "{\"success\":true,\"message\":\"Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.\",\"data\":{\"totalTeamSize\":30,\"avgCostPerTeamMember\":100000.0,\"timeDuration\":\"Per Year\",\"productDocumentation\":\"https://docs.example.com/product\",\"apiDocumentation\":\"https://docs.example.com/api\",\"videoTutorials\":\"https://videos.example.com/tutorials\",\"raiseTicket\":\"https://support.example.com/tickets\",\"supportChannel\":\"https://chat.example.com/support\"}}"
+                                            ))
+                            })
+            })
 
-		return ResponseEntity.ok(
-				new ServiceResponse(
-						true,
-						"Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.",
-						configData));
-	}
+    public ResponseEntity<ServiceResponse> getApplicationConfig() {
+        ApplicationConfigDto configData = applicationConfigService.getApplicationConfig();
+
+        return ResponseEntity.ok(
+                new ServiceResponse(
+                        true,
+                        "Application configuration retrieved successfully",
+                        configData));
+    }
 }

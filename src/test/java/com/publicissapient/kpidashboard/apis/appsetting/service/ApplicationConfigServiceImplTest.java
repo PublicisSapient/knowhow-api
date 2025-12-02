@@ -17,11 +17,8 @@
  ******************************************************************************/
 
 package com.publicissapient.kpidashboard.apis.appsetting.service;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,94 +27,103 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
 import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
+import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationConfigServiceImplTest {
 
-	private ApplicationConfigServiceImpl applicationConfigService;
-	private PEBConfig pebConfig;
-	private HelpConfig helpConfig;
+    private ApplicationConfigServiceImpl applicationConfigService;
+    private PEBConfig pebConfig;
+    private HelpConfig helpConfig;
 
-	@BeforeEach
-	void setUp() {
-		pebConfig = new PEBConfig();
-		helpConfig = new HelpConfig();
-		applicationConfigService = new ApplicationConfigServiceImpl(pebConfig, helpConfig);
-	}
+    @BeforeEach
+    void setUp() {
+        pebConfig = new PEBConfig();
+        helpConfig = new HelpConfig();
+        applicationConfigService = new ApplicationConfigServiceImpl(pebConfig, helpConfig);
+    }
 
-	@Test
-	void getEconomicBenefitsConfigs_WithConfiguredValues_ShouldReturnConfiguredValues() {
-		// Given
-		pebConfig.setTotalDevelopers(50);
-		pebConfig.setAvgCostPerDeveloper(120000.0);
-		pebConfig.setTimeDuration("Per Month");
+    @Test
+    void getApplicationConfig_WithConfiguredValues_ShouldReturnConfiguredValues() {
+        // Given
+        pebConfig.setTotalDevelopers(50);
+        pebConfig.setAvgCostPerDeveloper(120000.0);
+        pebConfig.setTimeDuration("Per Month");
 
-		// When
-		Map<String, Object> result = applicationConfigService.getEconomicBenefitsConfigs();
+        helpConfig.setProductDocumentationUrl("https://product.docs.com");
+        helpConfig.setApiDocumentationUrl("https://api.docs.com");
+        helpConfig.setVideoTutorialsUrl("https://videos.com");
+        helpConfig.setRaiseTicketUrl("https://tickets.com");
+        helpConfig.setSupportChannelUrl("https://support.com");
 
-		// Then
-		assertNotNull(result);
-		assertEquals(50, result.get("totalTeamSize"));
-		assertEquals(120000.0, result.get("avgCostPerTeamMember"));
-		assertEquals("Per Month", result.get("timeDuration"));
-	}
+        // When
+        ApplicationConfigDto result = applicationConfigService.getApplicationConfig();
 
-	@Test
-	void getEconomicBenefitsConfigs_WithNullValues_ShouldReturnDefaultValues() {
-		// Given
-		pebConfig.setTotalDevelopers(null);
-		pebConfig.setAvgCostPerDeveloper(null);
-		pebConfig.setTimeDuration(null);
+        // Then
+        assertNotNull(result);
+        assertEquals(50, result.getTotalTeamSize());
+        assertEquals(120000.0, result.getAvgCostPerTeamMember());
+        assertEquals("Per Month", result.getTimeDuration());
+        assertEquals("https://product.docs.com", result.getProductDocumentation());
+        assertEquals("https://api.docs.com", result.getApiDocumentation());
+        assertEquals("https://videos.com", result.getVideoTutorials());
+        assertEquals("https://tickets.com", result.getRaiseTicket());
+        assertEquals("https://support.com", result.getSupportChannel());
+    }
 
-		// When
-		Map<String, Object> result = applicationConfigService.getEconomicBenefitsConfigs();
+    @Test
+    void getApplicationConfig_WithNullValues_ShouldReturnDefaultValues() {
+        // Given
+        pebConfig.setTotalDevelopers(null);
+        pebConfig.setAvgCostPerDeveloper(null);
+        pebConfig.setTimeDuration(null);
 
-		// Then
-		assertNotNull(result);
-		assertEquals(30, result.get("totalTeamSize"));
-		assertEquals(100000.0, result.get("avgCostPerTeamMember"));
-		assertEquals("Per Year", result.get("timeDuration"));
-	}
+        helpConfig.setProductDocumentationUrl(null);
+        helpConfig.setApiDocumentationUrl(null);
+        helpConfig.setVideoTutorialsUrl(null);
+        helpConfig.setRaiseTicketUrl(null);
+        helpConfig.setSupportChannelUrl(null);
 
-	@Test
-	void getHelpConfig_WithConfiguredValues_ShouldReturnConfiguredValues() {
-		// Given
-		helpConfig.setProductDocumentationUrl("https://product.docs.com");
-		helpConfig.setApiDocumentationUrl("https://api.docs.com");
-		helpConfig.setVideoTutorialsUrl("https://videos.com");
-		helpConfig.setRaiseTicketUrl("https://tickets.com");
-		helpConfig.setSupportChannelUrl("https://support.com");
+        // When
+        ApplicationConfigDto result = applicationConfigService.getApplicationConfig();
 
-		// When
-		Map<String, Object> result = applicationConfigService.getHelpConfig();
+        // Then
+        assertNotNull(result);
+        assertEquals(30, result.getTotalTeamSize());
+        assertEquals(100000.0, result.getAvgCostPerTeamMember());
+        assertEquals("Per Year", result.getTimeDuration());
+        assertEquals("", result.getProductDocumentation());
+        assertEquals("", result.getApiDocumentation());
+        assertEquals("", result.getVideoTutorials());
+        assertEquals("", result.getRaiseTicket());
+        assertEquals("", result.getSupportChannel());
+    }
 
-		// Then
-		assertNotNull(result);
-		assertEquals("https://product.docs.com", result.get("productDocumentation"));
-		assertEquals("https://api.docs.com", result.get("apiDocumentation"));
-		assertEquals("https://videos.com", result.get("videoTutorials"));
-		assertEquals("https://tickets.com", result.get("raiseTicket"));
-		assertEquals("https://support.com", result.get("supportChannel"));
-	}
+    @Test
+    void getApplicationConfig_WithMixedValues_ShouldReturnCorrectValues() {
+        // Given
+        pebConfig.setTotalDevelopers(25);
+        pebConfig.setAvgCostPerDeveloper(null);
+        pebConfig.setTimeDuration("Per Quarter");
 
-	@Test
-	void getHelpConfig_WithNullValues_ShouldReturnEmptyStrings() {
-		// Given
-		helpConfig.setProductDocumentationUrl(null);
-		helpConfig.setApiDocumentationUrl(null);
-		helpConfig.setVideoTutorialsUrl(null);
-		helpConfig.setRaiseTicketUrl(null);
-		helpConfig.setSupportChannelUrl(null);
+        helpConfig.setProductDocumentationUrl("https://docs.example.com");
+        helpConfig.setApiDocumentationUrl(null);
+        helpConfig.setVideoTutorialsUrl("https://tutorials.example.com");
+        helpConfig.setRaiseTicketUrl(null);
+        helpConfig.setSupportChannelUrl("https://support.example.com");
 
-		// When
-		Map<String, Object> result = applicationConfigService.getHelpConfig();
+        // When
+        ApplicationConfigDto result = applicationConfigService.getApplicationConfig();
 
-		// Then
-		assertNotNull(result);
-		assertEquals("", result.get("productDocumentation"));
-		assertEquals("", result.get("apiDocumentation"));
-		assertEquals("", result.get("videoTutorials"));
-		assertEquals("", result.get("raiseTicket"));
-		assertEquals("", result.get("supportChannel"));
-	}
+        // Then
+        assertNotNull(result);
+        assertEquals(25, result.getTotalTeamSize());
+        assertEquals(100000.0, result.getAvgCostPerTeamMember()); // default
+        assertEquals("Per Quarter", result.getTimeDuration());
+        assertEquals("https://docs.example.com", result.getProductDocumentation());
+        assertEquals("", result.getApiDocumentation()); // default empty
+        assertEquals("https://tutorials.example.com", result.getVideoTutorials());
+        assertEquals("", result.getRaiseTicket()); // default empty
+        assertEquals("https://support.example.com", result.getSupportChannel());
+    }
 }
