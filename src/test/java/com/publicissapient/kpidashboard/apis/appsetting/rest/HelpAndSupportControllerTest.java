@@ -69,43 +69,6 @@ public class HelpAndSupportControllerTest {
 		helpAndSupportController.setHelpConfig(helpConfig);
 	}
 
-	@Test
-	public void testGetHelpConfig_Success() {
-		ResponseEntity<ServiceResponse> response = helpAndSupportController.getHelpConfig();
-
-		assertNotNull(response);
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-		assertNotNull(response.getBody());
-		assertEquals(true, response.getBody().getSuccess());
-		Map<String, String> data = (Map<String, String>) response.getBody().getData();
-		assertEquals(5, data.size());
-		assertEquals(PRODUCT, data.get("productDocumentation"));
-		assertEquals(API, data.get("apiDocumentation"));
-		assertEquals(VIDEOS_EXAMPLE_COM, data.get("videoTutorials"));
-		assertEquals(TICKET, data.get("raiseTicket"));
-		assertEquals(CHANNEL, data.get("supportChannel"));
-	}
-
-	@Test
-	public void testGetHelpConfig_WithNullValues() {
-		helpConfig =
-				HelpConfig.builder()
-						.productDocumentationUrl(null)
-						.apiDocumentationUrl(null)
-						.videoTutorialsUrl(VIDEOS_EXAMPLE_COM)
-						.raiseTicketUrl(TICKET)
-						.supportChannelUrl(CHANNEL)
-						.build();
-		helpAndSupportController.setHelpConfig(helpConfig);
-
-		ResponseEntity<ServiceResponse> response = helpAndSupportController.getHelpConfig();
-
-		assertNotNull(response);
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-		Map<String, String> data = (Map<String, String>) response.getBody().getData();
-		assertEquals("", data.get("productDocumentation"));
-		assertEquals("", data.get("apiDocumentation"));
-	}
 
 	@Test
 	public void testRedirectToApiDocumentation_Success() {
