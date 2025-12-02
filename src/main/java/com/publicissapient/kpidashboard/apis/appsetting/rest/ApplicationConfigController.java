@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
@@ -42,9 +41,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@Tag(name = "PotentialEconomicBenefit", description = "Endpoints for PEB Calculator Configuration")
+@Tag(name = "ApplicationConfiguration", description = "Endpoints for Application Configuration")
 @Slf4j
-public class PEBConfigController {
+public class ApplicationConfigController {
 
 	@Autowired private PEBConfig pebConfig;
     @Autowired private HelpConfig helpConfig;
@@ -57,55 +56,62 @@ public class PEBConfigController {
     }
 
 	/**
-	 * Retrieves Potential Economic Benefits configuration.
-     * Retrieves all configured help resource URLs. Returns a map containing URLs for product
-     * documentation, API documentation, video tutorials, ticket raising, and support channels.
+	 * Retrieves application configuration including Economic Benefits and Help resources.
+     * Returns configuration data with team size, cost parameters, and help resource URLs.
      *
-	 * @return ResponseEntity containing PEB configuration parameters & help resource names to their URLs
+	 * @return ResponseEntity with configuration data in format:
+	 * {
+	 *   "totalTeamSize": 30,
+	 *   "avgCostPerTeamMember": 100000.0,
+	 *   "timeDuration": "Per Year",
+	 *   "productDocumentation": "https://docs.example.com/product",
+	 *   "apiDocumentation": "https://docs.example.com/api",
+	 *   "videoTutorials": "https://videos.example.com/tutorials",
+	 *   "raiseTicket": "https://support.example.com/tickets",
+	 *   "supportChannel": "https://chat.example.com/support"
+	 * }
 	 */
 	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
-			summary = "Get Economic Benefits & Help Configuration",
-			description = "Retrieves Potential Economic Benefits calculator configuration parameters," +
-                    " & Retrieves all configured help resource URLs including documentation, tutorials, and support channel")
+			summary = "Get Application Configuration",
+			description = "Retrieves comprehensive application configuration including economic benefits calculator parameters (team size, cost per member, time duration) and help resource URLs (documentation, tutorials, support channels) for the KnowHOW dashboard")
 	@ApiResponses(
 			value = {
 				@ApiResponse(
 						responseCode = "200",
-						description = "Successfully retrieved PEB configuration. & Help and Support configuration retrieved successfully",
+						description = "Application configuration retrieved successfully. Returns economic benefits settings and help resource URLs in a structured format.",
 						content = {
 							@Content(
 									mediaType = "application/json",
 									schema = @Schema(implementation = ServiceResponse.class))
 						})
 			})
-	public ResponseEntity<ServiceResponse> getEconomicBenefitsConfig() {
-        Map<String, Object> pebData = new LinkedHashMap<>();
-        getEconomicBenefitsConfigs(pebData);
-        getHelpConfig(pebData);
+	public ResponseEntity<ServiceResponse> getApplicationConfig() {
+        Map<String, Object> configData = new LinkedHashMap<>();
+        getEconomicBenefitsConfigs(configData);
+        getHelpConfig(configData);
 
 		return ResponseEntity.ok(
 				new ServiceResponse(
-						true, "Economic benefits configuration retrieved successfully. & " +
-                        "Help and Support configuration retrieved successfully", pebData));
+						true, "Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.", configData));
 	}
 
 
     /**
-     * Retrieves Potential Economic Benefits configuration.
-     *
+     * Retrieves Economic Benefits configuration parameters.
+     * Populates the data map with team size, cost per member, and time duration.
      */
-    public void getEconomicBenefitsConfigs(Map<String, Object> pebData ) {
+    public void getEconomicBenefitsConfigs(Map<String, Object> configData) {
         log.info("Fetching economic benefits configuration");
-        pebData.put(
+        configData.put(
                 "totalTeamSize",
                 pebConfig.getTotalDevelopers() != null ? pebConfig.getTotalDevelopers() : 30);
-        pebData.put(
+        configData.put(
                 "avgCostPerTeamMember",
                 pebConfig.getAvgCostPerDeveloper() != null
                         ? pebConfig.getAvgCostPerDeveloper()
                         : 100000.00);
-        pebData.put(
+        configData.put(
                 "timeDuration",
                 pebConfig.getTimeDuration() != null ? pebConfig.getTimeDuration() : "Per Year");
         log.info("Economic benefits configuration retrieved successfully");
