@@ -60,54 +60,6 @@ public class HelpAndSupportController {
 	}
 
 	/**
-	 * Retrieves all configured help resource URLs. Returns a map containing URLs for product
-	 * documentation, API documentation, video tutorials, ticket raising, and support channels.
-	 *
-	 * @return ResponseEntity containing a map of help resource names to their URLs
-	 */
-	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(
-			summary = "Get Help Configuration",
-			description =
-					"Retrieves all configured help resource URLs including documentation, tutorials, and support channels")
-	@ApiResponses(
-			value = {
-				@ApiResponse(
-						responseCode = "200",
-						description = "Successfully retrieved help configuration",
-						content = {
-							@Content(
-									mediaType = "application/json",
-									schema = @Schema(implementation = ServiceResponse.class))
-						})
-			})
-	public ResponseEntity<ServiceResponse> getHelpConfig() {
-		log.info("Fetching help configuration");
-		Map<String, String> resourceLinks = new LinkedHashMap<>();
-		resourceLinks.put(
-				"productDocumentation",
-				helpConfig.getProductDocumentationUrl() != null
-						? helpConfig.getProductDocumentationUrl()
-						: "");
-		resourceLinks.put(
-				"apiDocumentation",
-				helpConfig.getApiDocumentationUrl() != null ? helpConfig.getApiDocumentationUrl() : "");
-		resourceLinks.put(
-				"videoTutorials",
-				helpConfig.getVideoTutorialsUrl() != null ? helpConfig.getVideoTutorialsUrl() : "");
-		resourceLinks.put(
-				"raiseTicket",
-				helpConfig.getRaiseTicketUrl() != null ? helpConfig.getRaiseTicketUrl() : "");
-		resourceLinks.put(
-				"supportChannel",
-				helpConfig.getSupportChannelUrl() != null ? helpConfig.getSupportChannelUrl() : "");
-		log.info("Help configuration retrieved successfully");
-		return ResponseEntity.ok(
-				new ServiceResponse(
-						true, "Help and Support configuration retrieved successfully", resourceLinks));
-	}
-
-	/**
 	 * Redirects to the API documentation URL.
 	 *
 	 * @return ResponseEntity with HTTP 302 redirect or 404 if URL is not configured
