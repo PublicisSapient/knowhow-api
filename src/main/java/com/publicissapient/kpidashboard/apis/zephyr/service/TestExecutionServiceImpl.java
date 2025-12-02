@@ -32,7 +32,6 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.Filters;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
@@ -60,13 +59,12 @@ import lombok.extern.slf4j.Slf4j;
 public class TestExecutionServiceImpl
 		extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final String QA = "QaKpi";
 	private static final String SPRINT_ID = "sprintId";
 	private static final String TEST_EXECUTION_DETAIL = "testExecutionDetail";
 	private static final String TOTAL = "Total Test Cases";
 	private static final String EXECUTED = "Executed Test Cases";
 	private static final String PASSED = "Passed Test Cases";
-	@Autowired private CustomApiConfig customApiConfig;
+
 	@Autowired private FilterHelperService flterHelperService;
 	@Autowired private TestExecutionRepository testExecutionRepository;
 
@@ -132,7 +130,7 @@ public class TestExecutionServiceImpl
 				});
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, QA, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(SPRINT_ID, sprintList.stream().distinct().collect(Collectors.toList()));
 		mapOfFilters.put(

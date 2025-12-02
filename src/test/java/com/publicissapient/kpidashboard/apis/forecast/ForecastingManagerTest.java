@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.forecast;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -40,7 +41,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.apis.forecast.service.ForecastService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
 /** Test class for ForecastingManager. */
@@ -284,6 +287,61 @@ public class ForecastingManagerTest {
 	}
 
 	@Test
+	public void testAddForecastsToDataCount_ForIterationKPI() {
+		// Arrange
+		String kpiId = "kpi125";
+		KpiMaster kpiMaster = new KpiMaster();
+		kpiMaster.setKpiId(kpiId);
+		kpiMaster.setForecastModel("linearRegression");
+		List<KpiMaster> testKpiMasterList = new ArrayList<>();
+		testKpiMasterList.add(kpiMaster);
+
+		IterationKpiValue dataCount = new IterationKpiValue();
+		List<DataCount> historicalData = createTestDataCounts(5);
+		List<DataCount> expectedForecasts = createTestDataCounts(1);
+
+		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+		when(linearRegressionForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
+
+		// Act
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+
+		// Assert
+		assertNotNull(dataCount.getForecasts());
+		assertEquals(1, dataCount.getForecasts().size());
+		verify(linearRegressionForecaster, times(1)).canForecast(historicalData, kpiId);
+		verify(linearRegressionForecaster, times(1)).generateForecast(historicalData, kpiId);
+	}
+
+	@Test
+	public void testAddForecastsToDataCount_WhenTypeIsNotSupportedClass() {
+		// Arrange
+		String kpiId = "kpi125";
+		KpiMaster kpiMaster = new KpiMaster();
+		kpiMaster.setKpiId(kpiId);
+		kpiMaster.setForecastModel("linearRegression");
+		List<KpiMaster> testKpiMasterList = new ArrayList<>();
+		testKpiMasterList.add(kpiMaster);
+
+		DataCountGroup dataCount = new DataCountGroup();
+		List<DataCount> historicalData = createTestDataCounts(5);
+		List<DataCount> expectedForecasts = createTestDataCounts(1);
+
+		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+		when(linearRegressionForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
+
+		// Act
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+
+		// Assert
+		assertNull(dataCount.getForecasts());
+	}
+
+	@Test
 	public void testAddForecastsToDataCount_WithNoForecastConfigured() {
 		// Arrange
 		String kpiId = "kpi999";
@@ -312,6 +370,68 @@ public class ForecastingManagerTest {
 
 		// Act & Assert - should not throw exception
 		forecastingManager.addForecastsToDataCount(null, historicalData, "kpi123");
+	}
+
+	@Test
+	public void testGenerateForecasts_WithRefinementRejectionRate() {
+		// Arrange
+		String kpiId = "kpi139";
+		KpiMaster kpiMaster = new KpiMaster();
+		kpiMaster.setKpiId(kpiId);
+		kpiMaster.setForecastModel("exponentialSmoothing");
+		List<KpiMaster> testKpiMasterList = new ArrayList<>();
+		testKpiMasterList.add(kpiMaster);
+
+		List<DataCount> historicalData = createTestDataCounts(5);
+		List<DataCount> expectedForecasts = createTestDataCounts(1);
+		expectedForecasts.get(0).setData("58.94");
+		expectedForecasts.get(0).setValue(58.94);
+
+		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+		when(exponentialSmoothingForecaster.canForecast(any(), anyString())).thenReturn(true);
+		when(exponentialSmoothingForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
+
+		// Act
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+
+		// Assert
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals("58.94", result.get(0).getData());
+		assertEquals(58.94, (Double) result.get(0).getValue(), 0.01);
+		verify(exponentialSmoothingForecaster, times(1)).generateForecast(historicalData, kpiId);
+	}
+
+	@Test
+	public void testGenerateForecasts_WithFlowEfficiency() {
+		// Arrange
+		String kpiId = "kpi170";
+		KpiMaster kpiMaster = new KpiMaster();
+		kpiMaster.setKpiId(kpiId);
+		kpiMaster.setForecastModel("exponentialSmoothing");
+		List<KpiMaster> testKpiMasterList = new ArrayList<>();
+		testKpiMasterList.add(kpiMaster);
+
+		List<DataCount> historicalData = createTestDataCounts(5);
+		List<DataCount> expectedForecasts = createTestDataCounts(1);
+		expectedForecasts.get(0).setData("75.2");
+		expectedForecasts.get(0).setValue(75.2);
+
+		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+		when(exponentialSmoothingForecaster.canForecast(any(), anyString())).thenReturn(true);
+		when(exponentialSmoothingForecaster.generateForecast(any(), anyString()))
+				.thenReturn(expectedForecasts);
+
+		// Act
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+
+		// Assert
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals("75.2", result.get(0).getData());
+		assertEquals(75.2, (Double) result.get(0).getValue(), 0.01);
+		verify(exponentialSmoothingForecaster, times(1)).generateForecast(historicalData, kpiId);
 	}
 
 	private List<DataCount> createTestDataCounts(int count) {

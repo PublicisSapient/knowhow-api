@@ -155,7 +155,7 @@
       "20-10",
       "10-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi35",
@@ -261,7 +261,7 @@
       "75-90",
       "90-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi37",
@@ -607,7 +607,7 @@
       "60-80",
       "80-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi38",
@@ -648,7 +648,7 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": false,
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi27",
@@ -747,6 +747,7 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "hideOverallFilter": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "-60",
       "60-45",
@@ -825,7 +826,7 @@
       "60-80",
       "80-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi40",
@@ -1264,6 +1265,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "-2",
       "2-4",
@@ -1784,7 +1786,7 @@
     "aggregationCriteria": "sum",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": false,
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi67",
@@ -1877,7 +1879,7 @@
       "60-80",
       "80-"
     ],
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi49",
@@ -2634,7 +2636,8 @@
     "kpiWidth": 66,
     "kpiHeight": 100,
     "isRawData": false,
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi131",
@@ -2952,7 +2955,7 @@
     "kpiFilter": "",
     "boxType": "chart",
     "calculateMaturity": false,
-    "forecastModel": "arima"
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi142",
@@ -3556,6 +3559,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "90-",
       "30-90",
@@ -3683,13 +3687,13 @@
     "maxValue": "10",
     "kpiUnit": "Hours",
     "isDeleted": "False",
-    "defaultOrder": 2,
+    "defaultOrder": 1,
     "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "thresholdValue": "55",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "MEAN TIME TO MERGE measures the efficiency of the code review process in a team",
       "details": [
@@ -3846,13 +3850,13 @@
     "maxValue": 10,
     "kpiUnit": "Hours",
     "isDeleted": false,
-    "defaultOrder": 3,
+    "defaultOrder": 2,
     "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "thresholdValue": 20,
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "Pickup time measures the time a pull request waits for someone to start reviewing it. Low pickup time represents strong teamwork and a healthy review",
       "details": [
@@ -3927,7 +3931,7 @@
   },
   {
     "kpiId": "kpi162",
-    "kpiName": "PR Size",
+    "kpiName": "PR Distribution",
     "maxValue": 10,
     "kpiUnit": "Lines",
     "isDeleted": false,
@@ -3937,7 +3941,7 @@
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "thresholdValue": "4",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "scatter",
     "kpiInfo": {
       "definition": "Pull request size measures the number of code lines modified in a pull request. Smaller pull requests are easier to review, safer to merge, and correlate to a lower cycle time.",
       "details": [
@@ -3953,21 +3957,12 @@
     "xaxisLabel": "Weeks",
     "yaxisLabel": "Count (No. of Lines)",
     "isPositiveTrend": false,
-    "upperThresholdBG": "red",
-    "lowerThresholdBG": "white",
     "showTrend": false,
     "kpiFilter": "dropDown",
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": false,
     "hideOverallFilter": true,
-    "maturityRange": [
-      "-16",
-      "16-8",
-      "8-4",
-      "4-2",
-      "2-"
-    ],
     "isRepoToolKpi": true,
     "kpiCategory": "Developer"
   },
@@ -4225,6 +4220,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
+    "forecastModel" : "lstm",
     "maturityRange": [
       "24-",
       "4-24",
@@ -4446,7 +4442,7 @@
     "kpiName": "Rework Rate",
     "maxValue": "",
     "kpiUnit": "%",
-    "isDeleted": false,
+    "isDeleted": true,
     "defaultOrder": 5,
     "groupId": 7,
     "kpiSource": "BitBucket",
@@ -4581,7 +4577,8 @@
     "isAdditionalFilterSupport": false,
     "kpiFilter": "radioButton",
     "boxType": "chart",
-    "calculateMaturity": false
+    "calculateMaturity": false,
+    "forecastModel": "sarima"
   },
   {
     "kpiId": "kpi186",
@@ -4589,12 +4586,12 @@
     "maxValue": "",
     "kpiUnit": "%",
     "isDeleted": false,
-    "defaultOrder": 10,
+    "defaultOrder": 4,
     "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "The percentage of merged pull requests that are addressing defects.",
       "details": [
@@ -4628,12 +4625,12 @@
     "maxValue": "",
     "kpiUnit": "%",
     "isDeleted": false,
-    "defaultOrder": 9,
-    "groupId": 7,
+    "defaultOrder": 3,
+    "groupId": 6,
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "card",
     "kpiInfo": {
       "definition": "Innovation rate aims at identifying the volume of brand new additions to a codebase (functional and non-functional features, etc) by measuring the newly added code at repository level.\nMore precisely, the New source lines of code(LOC) from a commit. (git log stats insertions)",
       "details": [
@@ -4665,7 +4662,7 @@
     "kpiName": "Revert Rate",
     "maxValue": "",
     "kpiUnit": "%",
-    "isDeleted": false,
+    "isDeleted": true,
     "defaultOrder": 5,
     "groupId": 7,
     "kpiSource": "BitBucket",
@@ -4717,7 +4714,7 @@
     "kpiSource": "BitBucket",
     "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
     "kanban": false,
-    "chartType": "line",
+    "chartType": "semi-circle-donut-chart",
     "kpiInfo": {
       "definition": "PR success rate measures the number of pull requests that went through the process without being abandoned or discarded as against the total PRs raised in a defined period  A low or declining Pull Request Success Rate represents high or increasing waste",
       "details": [
@@ -4997,7 +4994,8 @@
     "boxType": "chart",
     "calculateMaturity": false,
     "isRawData": false,
-    "kpiHeight": 100
+    "kpiHeight": 100,
+    "forecastModel": "exponentialSmoothing"
   },
   {
     "kpiId": "kpi188",
@@ -5297,5 +5295,103 @@
     "isDeleted": "False",
     "kpiName": "Sprint Analytics",
     "kpiSource": "Jira"
-  }
+  },
+  {
+    "kpiUnit" : "%",
+    "aggregationCriteria" : "average",
+    "kpiCategory" : "Developer",
+    "maxValue" : "",
+    "kpiFilter" : "dropDown",
+    "kpiId" : "kpi201",
+    "groupId" : 2,
+    "kpiName" : "Code Quality Metrics",
+    "isAdditionalFilterSupport" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "showTrend" : true,
+    "isDeleted" : false,
+    "defaultOrder" : 7,
+    "kpiInfo" : {
+      "definition" : "Code Quality Metrics - a combination of revert rate and rework rate percentage values",
+      "details" : [
+        {
+          "text" : "Revert Rate: The percentage of total pull requests opened that are reverts.",
+          "type" : "paragraph"
+        },
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate",
+            "text" : "Revert Rate - Detailed Information at"
+          }
+        },
+        {
+          "text" : "Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
+          "type" : "paragraph"
+        },
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate",
+            "text" : "Rework Rate - Detailed Information at"
+          }
+        }
+      ]
+    },
+    "kanban" : false,
+    "chartType" : "progressbar",
+    "isPositiveTrend" : false,
+    "kpiSource" : "BitBucket"
+  },
+  {
+    "kpiId" : "kpi201",
+  "kpiUnit" : "%",
+  "aggregationCriteria" : "average",
+  "kpiCategory" : "Developer",
+  "maxValue" : "",
+  "kpiFilter" : "dropDown",
+  "groupId" : 2,
+  "kpiName" : "Code Quality Metrics",
+  "isAdditionalFilterSupport" : false,
+  "calculateMaturity" : false,
+  "hideOverallFilter" : true,
+  "isRepoToolKpi" : true,
+  "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+  "showTrend" : true,
+  "isDeleted" : false,
+  "defaultOrder" : 7,
+  "kpiInfo" : {
+    "definition" : "Code Quality Metrics - a combination of revert rate and rework rate percentage values",
+    "details" : [
+      {
+        "text" : "Revert Rate: The percentage of total pull requests opened that are reverts.",
+        "type" : "paragraph"
+      },
+      {
+        "type" : "link",
+        "kpiLinkDetail" : {
+          "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate",
+          "text" : "Revert Rate - Detailed Information at"
+        }
+      },
+      {
+        "text" : "Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
+        "type" : "paragraph"
+      },
+      {
+        "type" : "link",
+        "kpiLinkDetail" : {
+          "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate",
+          "text" : "Rework Rate - Detailed Information at"
+        }
+      }
+    ]
+  },
+  "kanban" : false,
+  "chartType" : "progressbar",
+  "isPositiveTrend" : false,
+  "kpiSource" : "BitBucket"
+}
 ]

@@ -67,7 +67,7 @@ public class StoriesWithoutEstimateImpl
 
 	private static final String STORY_LIST = "Total Issues";
 	private static final String STORIES_WITHOUT_ESTIMATE_KEY = "Issues Without Estimate";
-	private static final String DEV = "DeveloperKpi";
+
 	@Autowired private JiraIssueRepository jiraIssueRepository;
 	@Autowired private ConfigHelperService configHelperService;
 
@@ -192,7 +192,7 @@ public class StoriesWithoutEstimateImpl
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(),
@@ -312,7 +312,6 @@ public class StoriesWithoutEstimateImpl
 						requestTrackerId,
 						totalIssuesOfSprint,
 						validationDataMap,
-						kpiRequest.getFilterToShowOnTrend(),
 						node);
 			}
 
@@ -357,7 +356,6 @@ public class StoriesWithoutEstimateImpl
 	 * @param requestTrackerId
 	 * @param sprintWiseStoriesList
 	 * @param validationDataMap
-	 * @param filterToShowOnTrend
 	 * @param node
 	 */
 	private void populateValidationDataObject(
@@ -365,7 +363,6 @@ public class StoriesWithoutEstimateImpl
 			String requestTrackerId,
 			List<JiraIssue> sprintWiseStoriesList,
 			Map<String, ValidationData> validationDataMap,
-			String filterToShowOnTrend,
 			Node node) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			String keyForValidation = sprintWiseStoriesList.get(0).getSprintName();

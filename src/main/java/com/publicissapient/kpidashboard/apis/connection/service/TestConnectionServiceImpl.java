@@ -44,7 +44,6 @@ import org.springframework.web.client.RestTemplate;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.repotools.repository.RepoToolsProviderRepository;
 import com.publicissapient.kpidashboard.common.client.KerberosClient;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
 
@@ -65,9 +64,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	private static final String CLOUD_BITBUCKET_IDENTIFIER = "bitbucket.org";
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private RestTemplate restTemplate;
-	@Autowired private RepoToolsProviderRepository repoToolsProviderRepository;
 
-	@Override
+    @Override
 	public ServiceResponse validateConnection(Connection connection, String toolName) {
 		String apiUrl = getApiUrl(connection, toolName);
 		if (apiUrl == null) {
@@ -242,10 +240,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	private boolean validateSonarConnection(Connection connection, String apiUrl, String password) {
 		if (connection.isCloudEnv()) {
 			return testConnectionForTools(apiUrl, password);
-		} else if (connection.isAccessTokenEnabled()) {
-			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, true);
 		} else {
-			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, false);
+			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, connection.isAccessTokenEnabled());
 		}
 	}
 

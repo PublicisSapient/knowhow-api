@@ -33,9 +33,9 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
+import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
-import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryScoresDTO;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryVariations;
@@ -58,7 +58,6 @@ import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -101,24 +100,9 @@ public class ProductivityService {
 
 	private final ProductivityCustomRepository productivityCustomRepository;
 
-	/**
-	 * Internal data structure representing a node in the organizational hierarchy
-	 * tree based on the account filtered data the current user has access to. Used
-	 * for building and traversing the hierarchical structure of organizational
-	 * entities.
-	 */
-	@Data
-	private static class TreeNode {
-		private Node data;
-		private List<TreeNode> children = new ArrayList<>();
-
-		public TreeNode(Node data) {
-			this.data = data;
-		}
-	}
-
 	@Builder
-	private record PEBProductivityRequest(HierarchyLevelsData hierarchyLevelsData, List<TreeNode> accountDataTreeNode) {
+	private record PEBProductivityRequest(HierarchyLevelsData hierarchyLevelsData,
+			OrganizationLookup organizationLookup) {
 	}
 
 	/**
@@ -127,15 +111,12 @@ public class ProductivityService {
 	 *
 	 * @param requestedLevel
 	 *            The hierarchy level requested by the user
-	 * @param firstChildHierarchyLevelAfterRequestedLevel
-	 *            The immediate child level below the requested level
 	 * @param projectLevel
 	 *            The project hierarchy level (lowest level where productivity is
 	 *            calculated)
 	 */
 	@Builder
-	private record HierarchyLevelsData(HierarchyLevel requestedLevel,
-			HierarchyLevel firstChildHierarchyLevelAfterRequestedLevel, HierarchyLevel projectLevel) {
+	private record HierarchyLevelsData(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
 	}
 
 	@Builder
@@ -152,7 +133,7 @@ public class ProductivityService {
 	 * </p>
 	 * <ol>
 	 * <li>Validates the requested hierarchy level</li>
-	 * <li>Constructs the organizational hierarchy tree user has access to</li>
+	 * <li>Constructs the organizational hierarchy search capabilities</li>
 	 * <li>Retrieves project-level productivity data</li>
 	 * <li>Aggregates productivity scores by organizational entities</li>
 	 * <li>Calculates summary statistics and KPI trends</li>
@@ -176,22 +157,18 @@ public class ProductivityService {
 
 		PEBProductivityRequest pebProductivityRequest = createPEBProductivityRequestForRequestedLevel(levelName);
 
-		// The "roots" will be the nodes corresponding to the first hierarchy child
-		// level after the requested one
-		Map<String, List<TreeNode>> rootNodeIdProjectChildren = getLevelMappingByRoot(
-				pebProductivityRequest.accountDataTreeNode,
-				pebProductivityRequest.hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel.getLevel(),
-				pebProductivityRequest.hierarchyLevelsData.projectLevel.getLevel());
+		// The "roots" will be the nodes corresponding to the requested hierarchy level
+		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds = pebProductivityRequest
+				.organizationLookup()
+				.getChildrenGroupedByParentNodeIds(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getLevel(),
+						pebProductivityRequest.hierarchyLevelsData.projectLevel.getLevel());
 
-		Set<String> projectNodeIds = rootNodeIdProjectChildren.values().stream().flatMap(Collection::stream)
-				.map(treeNode -> treeNode.getData().getId()).collect(Collectors.toSet());
+		Set<String> projectNodeIds = projectChildrenGroupedByRequestedRootNodeIds.values().stream()
+				.flatMap(Collection::stream).map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
 
 		Map<String, Productivity> productivityGroupedByNodeId = productivityCustomRepository
 				.getLatestProductivityByCalculationDateForProjects(projectNodeIds).stream()
 				.collect(Collectors.toMap(Productivity::getHierarchyEntityNodeId, productivity -> productivity));
-
-		Map<String, Node> rootHierarchyEntityNodesGroupedById = pebProductivityRequest.accountDataTreeNode.stream()
-				.map(TreeNode::getData).collect(Collectors.toMap(Node::getId, node -> node));
 
 		CategoryScoresDTO summaryCategoryScoresDTO = new CategoryScoresDTO();
 		List<OrganizationEntityProductivity> details = new ArrayList<>();
@@ -199,14 +176,14 @@ public class ProductivityService {
 		Map<String, List<Double>> kpiTrendValuesGroupedById = new HashMap<>();
 		Map<String, KPIData> kpiDataGroupedById = new HashMap<>();
 
-		for (Map.Entry<String, List<TreeNode>> nextChildHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren
+		for (Map.Entry<String, List<AccountFilteredData>> nextChildHierarchyLevelNodeIdProjectTreeNodes : projectChildrenGroupedByRequestedRootNodeIds
 				.entrySet()) {
-			Node rootNode = rootHierarchyEntityNodesGroupedById
-					.get(nextChildHierarchyLevelNodeIdProjectTreeNodes.getKey());
+			AccountFilteredData rootAccountData = pebProductivityRequest.organizationLookup
+					.getAccountDataByNodeId(nextChildHierarchyLevelNodeIdProjectTreeNodes.getKey()).get(0);
 			CategoryScoresDTO rootNodeCategoryScore = new CategoryScoresDTO();
 			int numberOfProjectsWithProductivityData = 0;
-			for (TreeNode projectTreeNode : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
-				Productivity projectProductivity = productivityGroupedByNodeId.get(projectTreeNode.data.getId());
+			for (AccountFilteredData projectAccountData : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
+				Productivity projectProductivity = productivityGroupedByNodeId.get(projectAccountData.getNodeId());
 				if (projectProductivity != null) {
 					// For calculating the break-down details
 					numberOfProjectsWithProductivityData++;
@@ -221,8 +198,8 @@ public class ProductivityService {
 						kpiDataGroupedById.computeIfAbsent(kpiData.getKpiId(), key -> kpiData);
 					});
 				} else {
-					log.info(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectTreeNode.data.getId(),
-							projectTreeNode.data.getName());
+					log.info(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectAccountData.getNodeId(),
+							projectAccountData.getNodeName());
 				}
 			}
 
@@ -230,13 +207,14 @@ public class ProductivityService {
 				setAveragedProductivityScores(rootNodeCategoryScore, numberOfProjectsWithProductivityData);
 
 				details.add(OrganizationEntityProductivity.builder()
-						.levelName(
-								pebProductivityRequest.hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel
-										.getHierarchyLevelName())
-						.organizationEntityName(rootNode.getName()).categoryScores(rootNodeCategoryScore).build());
+						.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+						.organizationEntityName(rootAccountData.getNodeName()).categoryScores(rootNodeCategoryScore)
+						.build());
 			} else {
-				log.info("The child hierarchy entity root with node id {} and name {} did not have any projects "
-						+ "containing productivity data", rootNode.getId(), rootNode.getName());
+				log.info(
+						"The child hierarchy entity root with node id {} and name {} did not have any projects "
+								+ "containing productivity data",
+						rootAccountData.getNodeId(), rootAccountData.getNodeName());
 			}
 		}
 
@@ -333,13 +311,12 @@ public class ProductivityService {
 
 		// The "roots" will be the nodes corresponding to the first hierarchy child
 		// level after the requested one
-		Map<String, List<TreeNode>> rootNodeIdProjectChildren = getLevelMappingByRoot(
-				pebProductivityRequest.accountDataTreeNode(),
-				pebProductivityRequest.hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel.getLevel(),
-				pebProductivityRequest.hierarchyLevelsData.projectLevel.getLevel());
+		Map<String, List<AccountFilteredData>> rootNodeIdProjectChildren = pebProductivityRequest.organizationLookup
+				.getChildrenGroupedByParentNodeIds(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getLevel(),
+						pebProductivityRequest.hierarchyLevelsData.projectLevel.getLevel());
 
 		Set<String> projectNodeIds = rootNodeIdProjectChildren.values().stream().flatMap(Collection::stream)
-				.map(treeNode -> treeNode.getData().getId()).collect(Collectors.toSet());
+				.map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
 
 		List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit = this.productivityCustomRepository
 				.getProductivitiesGroupedByTemporalUnit(projectNodeIds, temporalAggregationUnit, limit);
@@ -429,7 +406,7 @@ public class ProductivityService {
 	 *            Map linking root organizational entity node IDs to their
 	 *            descendant project nodes. Used to traverse the organizational
 	 *            hierarchy and identify which projects belong to each root entity.
-	 *            Keys are root node IDs, values are lists of project TreeNodes.
+	 *            Keys are root node IDs, values are lists of project nodes.
 	 *            Must not be null.
 	 * @return ProductivityTrendsProcessingResult containing three components:
 	 *         <ul>
@@ -449,7 +426,7 @@ public class ProductivityService {
 	 */
 	private ProductivityTrendsProcessingResult calculateProductivityTrends(
 			List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit,
-			Map<String, List<TreeNode>> rootNodeIdProjectChildren) {
+			Map<String, List<AccountFilteredData>> rootNodeIdProjectChildren) {
 		Map<Integer, CategoryScoresDTO> categoryScoresByDataPoints = new LinkedHashMap<>();
 		List<CategoryScoresDTO> categoryScoresTrendValues = new ArrayList<>();
 
@@ -464,18 +441,17 @@ public class ProductivityService {
 			categoryScoresDTO.setTemporalGroupingStartDate(productivityTemporalGrouping.getPeriodStart().toString());
 			categoryScoresByDataPoints.putIfAbsent(dataPoint, categoryScoresDTO);
 
-			for (Map.Entry<String, List<TreeNode>> nextChildHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren
+			for (Map.Entry<String, List<AccountFilteredData>> nextChildHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren
 					.entrySet()) {
-				for (TreeNode projectTreeNode : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
-					List<Productivity> productivities = productivitiesGroupedByNodeId
-							.get(projectTreeNode.getData().getId());
+				for (AccountFilteredData projectTreeNode : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
+					List<Productivity> productivities = productivitiesGroupedByNodeId.get(projectTreeNode.getNodeId());
 					if (CollectionUtils.isNotEmpty(productivities)) {
 						productivities.stream().filter(Objects::nonNull)
 								.forEach(productivity -> addProductivityScores(categoryScoresDTO,
 										productivity.getCategoryScores()));
 					} else {
-						log.info(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectTreeNode.data.getId(),
-								projectTreeNode.data.getName());
+						log.info(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectTreeNode.getNodeId(),
+								projectTreeNode.getNodeName());
 						projectsWithoutProductivityData++;
 					}
 				}
@@ -503,9 +479,9 @@ public class ProductivityService {
 		PEBProductivityRequest.PEBProductivityRequestBuilder pebProductivityRequestBuilder = PEBProductivityRequest
 				.builder();
 		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelName(levelName);
-		List<TreeNode> accountDataTreeNode = constructAccountDataTreeNode(hierarchyLevelsData);
+		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData);
 		return pebProductivityRequestBuilder.hierarchyLevelsData(hierarchyLevelsData)
-				.accountDataTreeNode(accountDataTreeNode).build();
+				.organizationLookup(organizationLookup).build();
 	}
 
 	/**
@@ -523,7 +499,7 @@ public class ProductivityService {
 	 * @return List of TreeNode representing the root nodes of the accessible
 	 *         hierarchy tree
 	 */
-	private List<TreeNode> constructAccountDataTreeNode(HierarchyLevelsData hierarchyLevelsData) {
+	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
@@ -532,9 +508,7 @@ public class ProductivityService {
 				.getFilteredList(accountFilterRequest).stream()
 				.filter(accountFilteredData -> accountFilteredData != null
 						&& StringUtils.isNotEmpty(accountFilteredData.getNodeId())
-						&& accountFilteredData
-								.getLevel() >= hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel
-										.getLevel()
+						&& accountFilteredData.getLevel() >= hierarchyLevelsData.requestedLevel.getLevel()
 						&& accountFilteredData.getLevel() <= hierarchyLevelsData.projectLevel.getLevel())
 				.collect(Collectors.toSet());
 
@@ -542,20 +516,7 @@ public class ProductivityService {
 			throw new ForbiddenException("Current user doesn't have access to any hierarchy data");
 		}
 
-		Set<String> rootNodeIds = hierarchyDataUserHasAccessTo.stream()
-				.filter(accountFilteredData -> accountFilteredData
-						.getLevel() == hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel.getLevel()
-						&& accountFilteredData.getLabelName().equalsIgnoreCase(
-								hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel.getHierarchyLevelId()))
-				.map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
-
-		List<TreeNode> treeNodes = buildTreeNode(hierarchyDataUserHasAccessTo, rootNodeIds);
-
-		if (CollectionUtils.isEmpty(treeNodes)) {
-			throw new InternalServerErrorException("Could not construct the hierarchical account data tree node");
-		}
-
-		return treeNodes;
+		return new OrganizationLookup(hierarchyDataUserHasAccessTo);
 	}
 
 	/**
@@ -584,13 +545,14 @@ public class ProductivityService {
 					.format("Multiple hierarchy levels were found corresponding to the level name '%s'", levelName));
 		}
 
-		Optional<HierarchyLevel> requestedHierarchyLevelOptional = getHierarchyLevelByLevelName(levelName);
+		Optional<HierarchyLevel> requestedHierarchyLevelOptional = this.accountHierarchyServiceImpl
+				.getHierarchyLevelByLevelName(levelName);
 		if (requestedHierarchyLevelOptional.isEmpty()) {
 			throw new NotFoundException(String.format("Requested level '%s' does not exist", levelName));
 		}
 
-		Optional<HierarchyLevel> projectHierarchyLevelOptional = getHierarchyLevelByLevelId(
-				CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		Optional<HierarchyLevel> projectHierarchyLevelOptional = this.accountHierarchyServiceImpl
+				.getHierarchyLevelByLevelId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 		if (projectHierarchyLevelOptional.isEmpty()) {
 			throw new InternalServerErrorException("Could not find any hierarchy level relating to a 'project' entity");
 		}
@@ -598,130 +560,11 @@ public class ProductivityService {
 		HierarchyLevel requestedLevel = requestedHierarchyLevelOptional.get();
 		HierarchyLevel projectLevel = projectHierarchyLevelOptional.get();
 
-		if (requestedLevelIsNotSupported(requestedLevel, projectLevel)) {
+		if (requestedLevel.getLevel() > projectLevel.getLevel()) {
 			throw new BadRequestException(String.format("Requested level '%s' is too low on the hierarchy", levelName));
 		}
-		HierarchyLevel firstChildHierarchyLevelAfterRequestedLevel = getHierarchyLevelByLevelNumber(
-				requestedLevel.getLevel() + 1).get();
 
-		return HierarchyLevelsData.builder().requestedLevel(requestedLevel)
-				.firstChildHierarchyLevelAfterRequestedLevel(firstChildHierarchyLevelAfterRequestedLevel)
-				.projectLevel(projectLevel).build();
-	}
-
-	private boolean requestedLevelIsNotSupported(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
-		int nextHierarchicalLevelNumber = requestedLevel.getLevel() + 1;
-
-		Optional<HierarchyLevel> nextHierarchicalLevelOptional = getHierarchyLevelByLevelNumber(
-				nextHierarchicalLevelNumber);
-
-		return nextHierarchicalLevelOptional.isEmpty()
-				|| nextHierarchicalLevelOptional.get().getLevel() > projectLevel.getLevel();
-	}
-
-	private Optional<HierarchyLevel> getHierarchyLevelByLevelNumber(int levelNumber) {
-		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
-				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == levelNumber).findAny();
-	}
-
-	private Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
-		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
-				.filter(hierarchyLevel -> StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
-						&& hierarchyLevel.getHierarchyLevelId().equalsIgnoreCase(levelId))
-				.findAny();
-	}
-
-	private Optional<HierarchyLevel> getHierarchyLevelByLevelName(String levelName) {
-		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
-				.filter(hierarchyLevel -> StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
-						&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
-				.findAny();
-	}
-
-	/**
-	 * Builds a tree structure from flat account filtered data.
-	 *
-	 * @param accountFilteredData
-	 *            Set of account data to build the tree from
-	 * @param rootNodeIds
-	 *            Set of node IDs that should be treated as root nodes
-	 * @return List of TreeNode representing the root nodes of the constructed tree
-	 */
-	private static List<TreeNode> buildTreeNode(Set<AccountFilteredData> accountFilteredData, Set<String> rootNodeIds) {
-		Map<String, TreeNode> lookup = new HashMap<>();
-		List<TreeNode> roots = new ArrayList<>();
-
-		accountFilteredData.forEach(accountData -> {
-			Node node = new Node();
-			node.setName(accountData.getNodeName());
-			node.setId(accountData.getNodeId());
-			node.setLevel(accountData.getLevel());
-
-			lookup.put(accountData.getNodeId(), new TreeNode(node));
-		});
-
-		for (AccountFilteredData accountData : accountFilteredData) {
-			TreeNode treeNode = lookup.get(accountData.getNodeId());
-			if (rootNodeIds.contains(accountData.getNodeId())) {
-				roots.add(treeNode);
-			} else {
-				TreeNode parent = lookup.get(accountData.getParentId());
-				if (parent != null) {
-					parent.getChildren().add(treeNode);
-				}
-			}
-		}
-
-		return roots;
-	}
-
-	/**
-	 * Creates a mapping of root nodes to their descendant nodes at the target
-	 * level.
-	 *
-	 * @param roots
-	 *            List of root tree nodes to start the mapping from
-	 * @param currentLevel
-	 *            The current level in the hierarchy traversal
-	 * @param targetLevel
-	 *            The target level to collect nodes from
-	 * @return Map where keys are root node IDs and values are lists of nodes at the
-	 *         target level
-	 */
-	private static Map<String, List<TreeNode>> getLevelMappingByRoot(List<TreeNode> roots, int currentLevel,
-			int targetLevel) {
-		Map<String, List<TreeNode>> mapping = new HashMap<>();
-		for (TreeNode root : roots) {
-			List<TreeNode> nodesAtLevel = new ArrayList<>();
-			collectNodesAtLevel(root, currentLevel, targetLevel, nodesAtLevel);
-			if (!nodesAtLevel.isEmpty()) {
-				mapping.put(root.getData().getId(), nodesAtLevel);
-			}
-		}
-		return mapping;
-	}
-
-	/**
-	 * Recursively collects nodes at a specific target level in the hierarchy tree.
-	 *
-	 * @param current
-	 *            The current node being processed
-	 * @param currentLevel
-	 *            The current level in the traversal
-	 * @param targetLevel
-	 *            The target level to collect nodes from
-	 * @param result
-	 *            List to collect the nodes found at the target level
-	 */
-	private static void collectNodesAtLevel(TreeNode current, int currentLevel, int targetLevel,
-			List<TreeNode> result) {
-		if (currentLevel == targetLevel) {
-			result.add(current);
-			return;
-		}
-		for (TreeNode child : current.getChildren()) {
-			collectNodesAtLevel(child, currentLevel + 1, targetLevel, result);
-		}
+		return HierarchyLevelsData.builder().requestedLevel(requestedLevel).projectLevel(projectLevel).build();
 	}
 
 	private static boolean multipleLevelsAreCorrespondingToLevelName(String levelName,

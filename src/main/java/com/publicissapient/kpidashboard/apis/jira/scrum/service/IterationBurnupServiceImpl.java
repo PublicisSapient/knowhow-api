@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.CalculatePCDHelper;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
@@ -94,6 +96,9 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 	public static final String DOTTED_LINE = "Gap Between Completed and Predicted";
 	private static final String SPRINT = "sprint";
 	private static final String ISSUES = "issues";
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
 
 	@Autowired private ConfigHelperService configHelperService;
 
@@ -580,6 +585,18 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 			IterationKpiValue iterationKpiValue = new IterationKpiValue();
 			iterationKpiValue.setDataGroup(dataCountGroups);
 			iterationKpiValue.setFilter1("OVERALL");
+			// Add forecasts if configured
+			Optional.ofNullable(forecastingManager)
+					.ifPresent(
+							manager ->
+									manager.addForecastsToDataCount(
+											iterationKpiValue,
+											Optional.ofNullable(dataCountGroups).orElse(Collections.emptyList()).stream()
+													.map(dcgs -> dcgs.getValue())
+													.filter(Objects::nonNull)
+													.flatMap(list -> list.stream().filter(Objects::nonNull))
+													.collect(Collectors.toList()),
+											KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);

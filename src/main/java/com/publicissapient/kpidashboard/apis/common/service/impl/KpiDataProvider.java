@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -173,7 +174,7 @@ public class KpiDataProvider {
 
 		// additional filter
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), basicProjectConfigIds);
@@ -226,7 +227,7 @@ public class KpiDataProvider {
 
 		// additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, CommonConstant.QA, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 		Map<String, Object> mapOfProjectFiltersForSubTask = new LinkedHashMap<>();
@@ -441,7 +442,7 @@ public class KpiDataProvider {
 
 		// additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -521,7 +522,7 @@ public class KpiDataProvider {
 
 		// additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -621,7 +622,7 @@ public class KpiDataProvider {
 
 		// additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				basicProjectConfigIds.stream().distinct().toList());
@@ -832,7 +833,7 @@ public class KpiDataProvider {
 
 		// additional filter **/
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -994,7 +995,7 @@ public class KpiDataProvider {
 
 		// additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -1129,7 +1130,7 @@ public class KpiDataProvider {
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(),
@@ -1306,7 +1307,7 @@ public class KpiDataProvider {
 
 		// additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, QA, filterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(),

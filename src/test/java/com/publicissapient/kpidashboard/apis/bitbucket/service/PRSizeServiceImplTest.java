@@ -232,7 +232,7 @@ public class PRSizeServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat("KPI name: ", prSizeService.getQualifierType(), equalTo("PR_SIZE"));
+		assertThat("KPI name: ", prSizeService.getQualifierType(), equalTo("PR_SIZE_OVERTIME"));
 	}
 
 	@Test

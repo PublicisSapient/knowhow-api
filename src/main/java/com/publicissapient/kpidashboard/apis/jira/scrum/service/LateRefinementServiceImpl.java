@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationKPIService;
 import com.publicissapient.kpidashboard.apis.model.*;
@@ -80,6 +82,9 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 	private static final String ISSUES = "issues";
 	private static final String LATE_REFINED = "Late Refined";
 	private static final String LEGEND = "Unrefined scope";
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
 
 	@Autowired private ConfigHelperService configHelperService;
 
@@ -453,12 +458,13 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			List<DataCountGroup> currentSprintDataCountGroup = new ArrayList<>();
 			List<JiraIssue> processedAllIssues = new ArrayList<>();
 			List<KPIExcelData> excelDataList = new ArrayList<>();
+			List<DataCount> dataCountList = new ArrayList<>();
 			List<IssueKpiModalValue> issueKpiModalValueList = new ArrayList<>();
 			for (LocalDateTime date = sprintStartDate;
 					date.toLocalDate().isBefore(sprintEndDate.toLocalDate());
 					date = date.plusDays(1)) {
 				DataCountGroup currentSprint = new DataCountGroup();
-				List<DataCount> dataCountList = new ArrayList<>();
+
 				List<JiraIssue> overall =
 						calculateOverallScopeDayWise(
 								fullSprintIssuesMap,
@@ -486,7 +492,12 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);
-
+			// Add forecasts if configured
+			Optional.ofNullable(forecastingManager)
+					.ifPresent(
+							manager ->
+									manager.addForecastsToDataCount(
+											iterationKpiValue, dataCountList, KPICode.LATE_REFINEMENT.getKpiId()));
 			kpiElement.setModalHeads(KPIExcelColumn.LATE_REFINEMENT.getColumns());
 			kpiElement.setExcelColumns(KPIExcelColumn.LATE_REFINEMENT.getColumns());
 			kpiElement.setExcelData(excelDataList);
