@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
-import javax.ws.rs.BadRequestException;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.http.HttpStatus;
@@ -62,7 +61,7 @@ public class GlobalExceptionHandler {
 	private static final String GENERIC_ERROR_MESSAGE = "An error occurred. Please try again later.";
 
 	@ExceptionHandler(UnsafeDeleteException.class)
-	protected ResponseEntity<Map<String, String>> handleUnsafeDelete(UnsafeDeleteException ex) {
+	public ResponseEntity<Map<String, String>> handleUnsafeDelete(UnsafeDeleteException ex) {
 		log.error(ex.getMessage());
 		Map<String, String> errorResponse = new HashMap<>();
 		errorResponse.put("errorMessage", ex.getMessage());
@@ -145,11 +144,6 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(UserNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
 		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
-	}
-
-	@ExceptionHandler(BadRequestException.class)
-	public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(jakarta.ws.rs.BadRequestException.class)
