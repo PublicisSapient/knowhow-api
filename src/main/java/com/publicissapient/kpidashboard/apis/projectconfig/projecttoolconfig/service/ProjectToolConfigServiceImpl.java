@@ -223,7 +223,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 																	.branch(branch)
 																	.repositoryName(scmtoolConfig.getRepositoryName())
 																	.toolName(projectToolConfig.getToolName())
-																	.gitFullUrl(scmtoolConfig.getGitFullUrl())
+																	.gitFullUrl(scmtoolConfig.getRepositoryUrl())
 																	.build();
 													projectToolConfigList.add(toolConfig);
 												}));
