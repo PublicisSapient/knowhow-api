@@ -45,34 +45,41 @@ public class ApplicationConfigController {
 
 	private final ApplicationConfigServiceImpl applicationConfigService;
 
-	/**
-	 * Retrieves application configuration including Economic Benefits and Help resources. Returns
-	 * configuration data with team size, cost parameters, and help resource URLs.
-	 *
-	 * @return ResponseEntity with configuration data in format: { "totalTeamSize": 30,
-	 *     "avgCostPerTeamMember": 100000.0, "timeDuration": "Per Year", "productDocumentation":
-	 *     "https://docs.example.com/product", "apiDocumentation": "https://docs.example.com/api",
-	 *     "videoTutorials": "https://videos.example.com/tutorials", "raiseTicket":
-	 *     "https://support.example.com/tickets", "supportChannel": "https://chat.example.com/support"
-	 *     }
-	 */
+    /**
+     * Retrieves comprehensive application configuration including Economic Benefits calculator parameters,
+     * Help resources, and system settings. Returns configuration data with team size, cost parameters,
+     * help resource URLs, application settings, and AI provider configuration.
+     *
+     * @return ResponseEntity with configuration data including:
+     *     - totalTeamSize: Team size for economic calculations
+     *     - avgCostPerTeamMember: Average cost per team member
+     *     - timeDuration: Time duration for cost calculations
+     *     - productDocumentation: Product documentation URL
+     *     - apiDocumentation: API documentation URL
+     *     - videoTutorials: Video tutorials URL
+     *     - raiseTicket: Support ticket URL
+     *     - supportChannel: Support channel URL
+     *     - audience: Target audience identifier
+     *     - baseUrl: Application base URL
+     *     - defaultAiProvider: Default AI provider configuration
+     */
     @GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get Application Configuration",
             description =
-                    "Retrieves comprehensive application configuration including economic benefits calculator parameters (team size, cost per member, time duration) and help resource URLs (documentation, tutorials, support channels) for the KnowHOW dashboard")
+                    "Retrieves comprehensive application configuration including economic benefits calculator parameters, help resource URLs, application settings, and AI provider configuration for the KnowHOW dashboard")
     @ApiResponses(
             value = {
                     @ApiResponse(
                             responseCode = "200",
                             description =
-                                    "Application configuration retrieved successfully. Returns economic benefits settings and help resource URLs in a structured format.",
+                                    "Application configuration retrieved successfully. Returns complete configuration including economic benefits settings, help resources, and system configuration.",
                             content = {
                                     @Content(
                                             mediaType = "application/json",
                                             schema = @Schema(implementation = ServiceResponse.class),
                                             examples = @ExampleObject(
-                                                    value = "{\"success\":true,\"message\":\"Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.\",\"data\":{\"totalTeamSize\":30,\"avgCostPerTeamMember\":100000.0,\"timeDuration\":\"Per Year\",\"productDocumentation\":\"https://docs.example.com/product\",\"apiDocumentation\":\"https://docs.example.com/api\",\"videoTutorials\":\"https://videos.example.com/tutorials\",\"raiseTicket\":\"https://support.example.com/tickets\",\"supportChannel\":\"https://chat.example.com/support\"}}"
+                                                    value = "{\"message\":\"Application configuration retrieved successfully\",\"success\":true,\"data\":{\"totalTeamSize\":30,\"avgCostPerTeamMember\":100000.0,\"timeDuration\":\"Per Year\",\"productDocumentation\":\"https://docs.example.com/product\",\"apiDocumentation\":\"https://docs.example.com/api\",\"videoTutorials\":\"https://videos.example.com/tutorials\",\"raiseTicket\":\"https://support.example.com/tickets\",\"supportChannel\":\"https://chat.example.com/support\",\"audience\":\"knowhow-api\",\"baseUrl\":\"http://localhost:8081\",\"defaultAiProvider\":\"openai\"}}"
                                             ))
                             })
             })
