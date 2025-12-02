@@ -1,4 +1,4 @@
-package com.publicissapient.kpidashboard.apis.model;
+package com.publicissapient.kpidashboard.apis.appsetting.config;
 import lombok.Data;
 
 @Data
@@ -11,5 +11,10 @@ public class ApplicationConfigDto {
     private String videoTutorials;
     private String raiseTicket;
     private String supportChannel;
+
+    private String audience;
+    private String baseUrl;
+    private String defaultAiProvider;
 }
+
 

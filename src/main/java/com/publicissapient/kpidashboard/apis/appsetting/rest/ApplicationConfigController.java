@@ -18,8 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

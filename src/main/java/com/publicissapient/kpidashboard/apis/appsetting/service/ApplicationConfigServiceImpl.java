@@ -2,7 +2,8 @@ package com.publicissapient.kpidashboard.apis.appsetting.service;
 
 import java.util.Objects;
 
-import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
+import com.publicissapient.kpidashboard.apis.appsetting.config.AIGatewayConfig;
+import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
 import org.apache.commons.lang3.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class ApplicationConfigServiceImpl {
 
     private final PEBConfig pebConfig;
     private final HelpConfig helpConfig;
+    private final AIGatewayConfig aIGatewayConfig;
 
     private static final int DEFAULT_TEAM_SIZE = 30;
     private static final double DEFAULT_COST_PER_MEMBER = 100000.00;
@@ -35,6 +37,10 @@ public class ApplicationConfigServiceImpl {
         config.setVideoTutorials(Objects.toString(helpConfig.getVideoTutorialsUrl(), StringUtils.EMPTY));
         config.setRaiseTicket(Objects.toString(helpConfig.getRaiseTicketUrl(), StringUtils.EMPTY));
         config.setSupportChannel(Objects.toString(helpConfig.getSupportChannelUrl(), StringUtils.EMPTY));
+
+        config.setAudience(Objects.toString(aIGatewayConfig.getAudience(), StringUtils.EMPTY));
+        config.setBaseUrl(Objects.toString(aIGatewayConfig.getBaseUrl(), StringUtils.EMPTY));
+        config.setDefaultAiProvider(Objects.toString(aIGatewayConfig.getDefaultAiProvider(), StringUtils.EMPTY));
 
         log.info("Application configuration retrieved successfully");
         return config;

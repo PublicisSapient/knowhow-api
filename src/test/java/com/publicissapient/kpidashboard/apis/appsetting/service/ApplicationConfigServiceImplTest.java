@@ -20,14 +20,15 @@ package com.publicissapient.kpidashboard.apis.appsetting.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.AIGatewayConfig;
 import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
 import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
-import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationConfigServiceImplTest {
@@ -35,12 +36,14 @@ class ApplicationConfigServiceImplTest {
     private ApplicationConfigServiceImpl applicationConfigService;
     private PEBConfig pebConfig;
     private HelpConfig helpConfig;
+    private AIGatewayConfig aiGatewayConfig;
 
     @BeforeEach
     void setUp() {
         pebConfig = new PEBConfig();
         helpConfig = new HelpConfig();
-        applicationConfigService = new ApplicationConfigServiceImpl(pebConfig, helpConfig);
+        aiGatewayConfig = new AIGatewayConfig();
+        applicationConfigService = new ApplicationConfigServiceImpl(pebConfig, helpConfig, aiGatewayConfig);
     }
 
     @Test
@@ -56,6 +59,10 @@ class ApplicationConfigServiceImplTest {
         helpConfig.setRaiseTicketUrl("https://tickets.com");
         helpConfig.setSupportChannelUrl("https://support.com");
 
+        aiGatewayConfig.setAudience("test-audience");
+        aiGatewayConfig.setBaseUrl("https://ai-gateway.com");
+        aiGatewayConfig.setDefaultAiProvider("openai");
+
         // When
         ApplicationConfigDto result = applicationConfigService.getApplicationConfig();
 
@@ -69,6 +76,9 @@ class ApplicationConfigServiceImplTest {
         assertEquals("https://videos.com", result.getVideoTutorials());
         assertEquals("https://tickets.com", result.getRaiseTicket());
         assertEquals("https://support.com", result.getSupportChannel());
+        assertEquals("test-audience", result.getAudience());
+        assertEquals("https://ai-gateway.com", result.getBaseUrl());
+        assertEquals("openai", result.getDefaultAiProvider());
     }
 
     @Test
@@ -84,6 +94,10 @@ class ApplicationConfigServiceImplTest {
         helpConfig.setRaiseTicketUrl(null);
         helpConfig.setSupportChannelUrl(null);
 
+        aiGatewayConfig.setAudience(null);
+        aiGatewayConfig.setBaseUrl(null);
+        aiGatewayConfig.setDefaultAiProvider(null);
+
         // When
         ApplicationConfigDto result = applicationConfigService.getApplicationConfig();
 
@@ -97,6 +111,9 @@ class ApplicationConfigServiceImplTest {
         assertEquals("", result.getVideoTutorials());
         assertEquals("", result.getRaiseTicket());
         assertEquals("", result.getSupportChannel());
+        assertEquals("", result.getAudience());
+        assertEquals("", result.getBaseUrl());
+        assertEquals("", result.getDefaultAiProvider());
     }
 
     @Test
@@ -112,6 +129,10 @@ class ApplicationConfigServiceImplTest {
         helpConfig.setRaiseTicketUrl(null);
         helpConfig.setSupportChannelUrl("https://support.example.com");
 
+        aiGatewayConfig.setAudience("mixed-audience");
+        aiGatewayConfig.setBaseUrl(null);
+        aiGatewayConfig.setDefaultAiProvider("claude");
+
         // When
         ApplicationConfigDto result = applicationConfigService.getApplicationConfig();
 
@@ -125,5 +146,8 @@ class ApplicationConfigServiceImplTest {
         assertEquals("https://tutorials.example.com", result.getVideoTutorials());
         assertEquals("", result.getRaiseTicket()); // default empty
         assertEquals("https://support.example.com", result.getSupportChannel());
+        assertEquals("mixed-audience", result.getAudience());
+        assertEquals("", result.getBaseUrl()); // default empty
+        assertEquals("claude", result.getDefaultAiProvider());
     }
 }

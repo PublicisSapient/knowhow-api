@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigServiceImpl;
-import com.publicissapient.kpidashboard.apis.model.ApplicationConfigDto;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 @RunWith(MockitoJUnitRunner.class)
