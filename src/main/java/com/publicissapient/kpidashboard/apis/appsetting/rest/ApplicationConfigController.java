@@ -18,18 +18,15 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
+import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,39 +42,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ApplicationConfigController {
 
-	private final PEBConfig pebConfig;
-    private final HelpConfig helpConfig;
+	private final ApplicationConfigService applicationConfigService;
 
-    public ApplicationConfigController(PEBConfig pebConfig, HelpConfig helpConfig) {
-        this.pebConfig = pebConfig;
-        this.helpConfig = helpConfig;
-    }
+	public ApplicationConfigController(ApplicationConfigService applicationConfigService) {
+		this.applicationConfigService = applicationConfigService;
+	}
 
 	/**
-	 * Retrieves application configuration including Economic Benefits and Help resources.
-     * Returns configuration data with team size, cost parameters, and help resource URLs.
-     *
-	 * @return ResponseEntity with configuration data in format:
-	 * {
-	 *   "totalTeamSize": 30,
-	 *   "avgCostPerTeamMember": 100000.0,
-	 *   "timeDuration": "Per Year",
-	 *   "productDocumentation": "https://docs.example.com/product",
-	 *   "apiDocumentation": "https://docs.example.com/api",
-	 *   "videoTutorials": "https://videos.example.com/tutorials",
-	 *   "raiseTicket": "https://support.example.com/tickets",
-	 *   "supportChannel": "https://chat.example.com/support"
-	 * }
+	 * Retrieves application configuration including Economic Benefits and Help resources. Returns
+	 * configuration data with team size, cost parameters, and help resource URLs.
+	 *
+	 * @return ResponseEntity with configuration data in format: { "totalTeamSize": 30,
+	 *     "avgCostPerTeamMember": 100000.0, "timeDuration": "Per Year", "productDocumentation":
+	 *     "https://docs.example.com/product", "apiDocumentation": "https://docs.example.com/api",
+	 *     "videoTutorials": "https://videos.example.com/tutorials", "raiseTicket":
+	 *     "https://support.example.com/tickets", "supportChannel": "https://chat.example.com/support"
+	 *     }
 	 */
 	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(
 			summary = "Get Application Configuration",
-			description = "Retrieves comprehensive application configuration including economic benefits calculator parameters (team size, cost per member, time duration) and help resource URLs (documentation, tutorials, support channels) for the KnowHOW dashboard")
+			description =
+					"Retrieves comprehensive application configuration including economic benefits calculator parameters (team size, cost per member, time duration) and help resource URLs (documentation, tutorials, support channels) for the KnowHOW dashboard")
 	@ApiResponses(
 			value = {
 				@ApiResponse(
 						responseCode = "200",
-						description = "Application configuration retrieved successfully. Returns economic benefits settings and help resource URLs in a structured format.",
+						description =
+								"Application configuration retrieved successfully. Returns economic benefits settings and help resource URLs in a structured format.",
 						content = {
 							@Content(
 									mediaType = "application/json",
@@ -85,61 +77,14 @@ public class ApplicationConfigController {
 						})
 			})
 	public ResponseEntity<ServiceResponse> getApplicationConfig() {
-        Map<String, Object> configData = new LinkedHashMap<>();
-        getEconomicBenefitsConfigs(configData);
-        getHelpConfig(configData);
+		Map<String, Object> configData = new LinkedHashMap<>();
+		configData.putAll(applicationConfigService.getEconomicBenefitsConfigs());
+		configData.putAll(applicationConfigService.getHelpConfig());
 
 		return ResponseEntity.ok(
 				new ServiceResponse(
-						true, "Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.", configData));
+						true,
+						"Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.",
+						configData));
 	}
-
-
-    /**
-     * Retrieves Economic Benefits configuration parameters.
-     * Populates the data map with team size, cost per member, and time duration.
-     */
-    public void getEconomicBenefitsConfigs(Map<String, Object> configData) {
-        log.info("Fetching economic benefits configuration");
-        configData.put(
-                "totalTeamSize",
-                pebConfig.getTotalDevelopers() != null ? pebConfig.getTotalDevelopers() : 30);
-        configData.put(
-                "avgCostPerTeamMember",
-                pebConfig.getAvgCostPerDeveloper() != null
-                        ? pebConfig.getAvgCostPerDeveloper()
-                        : 100000.00);
-        configData.put(
-                "timeDuration",
-                pebConfig.getTimeDuration() != null ? pebConfig.getTimeDuration() : "Per Year");
-        log.info("Economic benefits configuration retrieved successfully");
-    }
-
-
-
-    /**
-     * Retrieves all configured help resource URLs. Returns a map containing URLs for product
-     * documentation, API documentation, video tutorials, ticket raising, and support channels.
-     */
-    public void getHelpConfig(Map<String, Object> resourceLinks ) {
-        log.info("Fetching help configuration");
-        resourceLinks.put(
-                "productDocumentation",
-                helpConfig.getProductDocumentationUrl() != null
-                        ? helpConfig.getProductDocumentationUrl()
-                        : "");
-        resourceLinks.put(
-                "apiDocumentation",
-                helpConfig.getApiDocumentationUrl() != null ? helpConfig.getApiDocumentationUrl() : "");
-        resourceLinks.put(
-                "videoTutorials",
-                helpConfig.getVideoTutorialsUrl() != null ? helpConfig.getVideoTutorialsUrl() : "");
-        resourceLinks.put(
-                "raiseTicket",
-                helpConfig.getRaiseTicketUrl() != null ? helpConfig.getRaiseTicketUrl() : "");
-        resourceLinks.put(
-                "supportChannel",
-                helpConfig.getSupportChannelUrl() != null ? helpConfig.getSupportChannelUrl() : "");
-        log.info("Help configuration retrieved successfully");
-    }
 }

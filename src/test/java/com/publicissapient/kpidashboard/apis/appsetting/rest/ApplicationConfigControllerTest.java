@@ -18,80 +18,146 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
-import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
+import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
-import java.util.Map;
+/**
+ * Test class for ApplicationConfigController.
+ *
+ * @author Publicis Sapient
+ */
+@ExtendWith(MockitoExtension.class)
+class ApplicationConfigControllerTest {
 
-@RunWith(MockitoJUnitRunner.class)
-public class ApplicationConfigControllerTest {
+	@InjectMocks
+	private ApplicationConfigController applicationConfigController;
 
-    @Mock
-    private PEBConfig pebConfig;
+	@Mock
+	private ApplicationConfigService applicationConfigService;
 
-    @Mock
-    private HelpConfig helpConfig;
+	private Map<String, Object> economicBenefitsConfig;
+	private Map<String, Object> helpConfig;
 
-    @InjectMocks
-    private ApplicationConfigController applicationConfigController;
+	@BeforeEach
+	void setUp() {
+		economicBenefitsConfig = new LinkedHashMap<>();
+		economicBenefitsConfig.put("totalTeamSize", 30);
+		economicBenefitsConfig.put("avgCostPerTeamMember", 100000.0);
+		economicBenefitsConfig.put("timeDuration", "Per Year");
 
-    @Before
-    public void setUp() {
-        when(pebConfig.getTotalDevelopers()).thenReturn(25);
-        when(pebConfig.getAvgCostPerDeveloper()).thenReturn(120000.0);
-        when(pebConfig.getTimeDuration()).thenReturn("Per Year");
-        
-        when(helpConfig.getProductDocumentationUrl()).thenReturn("https://docs.example.com/product");
-        when(helpConfig.getApiDocumentationUrl()).thenReturn("https://docs.example.com/api");
-        when(helpConfig.getVideoTutorialsUrl()).thenReturn("https://videos.example.com/tutorials");
-        when(helpConfig.getRaiseTicketUrl()).thenReturn("https://support.example.com/tickets");
-        when(helpConfig.getSupportChannelUrl()).thenReturn("https://chat.example.com/support");
-    }
+		helpConfig = new LinkedHashMap<>();
+		helpConfig.put("productDocumentation", "https://docs.example.com/product");
+		helpConfig.put("apiDocumentation", "https://docs.example.com/api");
+		helpConfig.put("videoTutorials", "https://videos.example.com/tutorials");
+		helpConfig.put("raiseTicket", "https://support.example.com/tickets");
+		helpConfig.put("supportChannel", "https://chat.example.com/support");
+	}
 
-    @Test
-    public void testGetApplicationConfig() {
-        ResponseEntity<ServiceResponse> response = applicationConfigController.getApplicationConfig();
-        
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody().getSuccess());
-        assertEquals("Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.", 
-                response.getBody().getMessage());
-        
-        Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-        assertEquals(25, data.get("totalTeamSize"));
-        assertEquals(120000.0, data.get("avgCostPerTeamMember"));
-        assertEquals("Per Year", data.get("timeDuration"));
-        assertEquals("https://docs.example.com/product", data.get("productDocumentation"));
-        assertEquals("https://docs.example.com/api", data.get("apiDocumentation"));
-    }
+	@Test
+	void getApplicationConfig_Success_ShouldReturnMergedConfiguration() {
+		// Given
+		when(applicationConfigService.getEconomicBenefitsConfigs()).thenReturn(economicBenefitsConfig);
+		when(applicationConfigService.getHelpConfig()).thenReturn(helpConfig);
 
-    @Test
-    public void testGetApplicationConfigWithNullValues() {
-        when(pebConfig.getTotalDevelopers()).thenReturn(null);
-        when(pebConfig.getAvgCostPerDeveloper()).thenReturn(null);
-        when(pebConfig.getTimeDuration()).thenReturn(null);
-        when(helpConfig.getProductDocumentationUrl()).thenReturn(null);
-        
-        ResponseEntity<ServiceResponse> response = applicationConfigController.getApplicationConfig();
-        
-        Map<String, Object> data = (Map<String, Object>) response.getBody().getData();
-        assertEquals(30, data.get("totalTeamSize"));
-        assertEquals(100000.0, data.get("avgCostPerTeamMember"));
-        assertEquals("Per Year", data.get("timeDuration"));
-        assertEquals("", data.get("productDocumentation"));
-    }
+		// When
+		ResponseEntity<ServiceResponse> response = applicationConfigController.getApplicationConfig();
+
+		// Then
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		
+		ServiceResponse serviceResponse = response.getBody();
+		assertNotNull(serviceResponse);
+		assertTrue(serviceResponse.getSuccess());
+		assertEquals("Application configuration retrieved successfully. Economic benefits parameters and help resources loaded.", 
+				serviceResponse.getMessage());
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Object> responseData = (Map<String, Object>) serviceResponse.getData();
+		assertNotNull(responseData);
+		assertEquals(8, responseData.size());
+		
+		// Verify economic benefits config
+		assertEquals(30, responseData.get("totalTeamSize"));
+		assertEquals(100000.0, responseData.get("avgCostPerTeamMember"));
+		assertEquals("Per Year", responseData.get("timeDuration"));
+		
+		// Verify help config
+		assertEquals("https://docs.example.com/product", responseData.get("productDocumentation"));
+		assertEquals("https://docs.example.com/api", responseData.get("apiDocumentation"));
+		assertEquals("https://videos.example.com/tutorials", responseData.get("videoTutorials"));
+		assertEquals("https://support.example.com/tickets", responseData.get("raiseTicket"));
+		assertEquals("https://chat.example.com/support", responseData.get("supportChannel"));
+	}
+
+	@Test
+	void getApplicationConfig_WithEmptyConfigs_ShouldReturnEmptyData() {
+		// Given
+		when(applicationConfigService.getEconomicBenefitsConfigs()).thenReturn(new LinkedHashMap<>());
+		when(applicationConfigService.getHelpConfig()).thenReturn(new LinkedHashMap<>());
+
+		// When
+		ResponseEntity<ServiceResponse> response = applicationConfigController.getApplicationConfig();
+
+		// Then
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		
+		ServiceResponse serviceResponse = response.getBody();
+		assertNotNull(serviceResponse);
+		assertTrue(serviceResponse.getSuccess());
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Object> responseData = (Map<String, Object>) serviceResponse.getData();
+		assertNotNull(responseData);
+		assertTrue(responseData.isEmpty());
+	}
+
+	@Test
+	void getApplicationConfig_WithPartialData_ShouldReturnAvailableData() {
+		// Given
+		Map<String, Object> partialEconomicConfig = new LinkedHashMap<>();
+		partialEconomicConfig.put("totalTeamSize", 50);
+		
+		Map<String, Object> partialHelpConfig = new LinkedHashMap<>();
+		partialHelpConfig.put("productDocumentation", "https://docs.example.com/product");
+		
+		when(applicationConfigService.getEconomicBenefitsConfigs()).thenReturn(partialEconomicConfig);
+		when(applicationConfigService.getHelpConfig()).thenReturn(partialHelpConfig);
+
+		// When
+		ResponseEntity<ServiceResponse> response = applicationConfigController.getApplicationConfig();
+
+		// Then
+		assertNotNull(response);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		
+		ServiceResponse serviceResponse = response.getBody();
+		assertNotNull(serviceResponse);
+		assertTrue(serviceResponse.getSuccess());
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Object> responseData = (Map<String, Object>) serviceResponse.getData();
+		assertNotNull(responseData);
+		assertEquals(2, responseData.size());
+		assertEquals(50, responseData.get("totalTeamSize"));
+		assertEquals("https://docs.example.com/product", responseData.get("productDocumentation"));
+	}
 }
