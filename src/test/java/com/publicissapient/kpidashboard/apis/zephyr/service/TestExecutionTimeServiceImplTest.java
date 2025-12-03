@@ -240,4 +240,24 @@ public class TestExecutionTimeServiceImplTest {
 		fieldMappingList.add(projectTwo);
 		fieldMappingList.add(projectThree);
 	}
+
+	@Test
+	public void testCalculateHoverMap() {
+		List<Map<String, Object>> hoverMapValues = new ArrayList<>();
+		Map<String, Object> hoverMap1 = new HashMap<>();
+		Map<String, Object> totalData1 = new HashMap<>();
+		totalData1.put("count", 10L);
+		totalData1.put("avgExecutionTimeSec", 5.0);
+		hoverMap1.put("TOTAL", totalData1);
+		hoverMapValues.add(hoverMap1);
+
+		Map<String, Object> result = testExecutionTimeServiceImpl.calculateHoverMap(hoverMapValues);
+		assertThat("Hover map should contain TOTAL", result.containsKey("TOTAL"), equalTo(true));
+	}
+
+	@Test
+	public void testCalculateHoverMapEmpty() {
+		Map<String, Object> result = testExecutionTimeServiceImpl.calculateHoverMap(new ArrayList<>());
+		assertThat("Empty hover map should have 3 categories", result.size(), equalTo(3));
+	}
 }
