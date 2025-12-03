@@ -913,7 +913,7 @@ public enum KPIExcelColumn {
 					"Author",
 					"Days/Weeks",
 					"Merge Request Url",
-					"PR Size (No. of lines)")),
+					"Total Lines Changed")),
 
 	EPIC_PROGRESS(
 			"kpi165",
