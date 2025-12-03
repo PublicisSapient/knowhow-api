@@ -166,22 +166,21 @@ class ProductivityServiceTest {
 
 	@Test
 	void when_RequestedLevelIsNotSupported_Expect_GetProductivityDataAndTrendsThrowsBadRequestException() {
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(constructTestHierarchyLevelMap());
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName(anyString()))
-				.thenReturn(Optional.of(HierarchyLevel.builder().build()));
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId(anyString()))
-				.thenReturn(Optional.of(HierarchyLevel.builder().build()));
+		Map<String, HierarchyLevel> hierarchyLevelMap = constructTestHierarchyLevelMap();
+		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevelMap);
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId(anyString())).thenAnswer(
+				invocationMock -> Optional.of(hierarchyLevelMap.get((String) invocationMock.getArgument(0))));
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName(anyString())).thenAnswer(
+				invocationOnMock -> hierarchyLevelMap.values().stream().filter(hierarchyLevel -> hierarchyLevel
+						.getHierarchyLevelName().equalsIgnoreCase(invocationOnMock.getArgument(0))).findFirst());
 
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("squad"));
 		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("sprint"));
-		assertThrows(BadRequestException.class, () -> productivityService.getProductivityForLevel("project"));
 
 		assertThrows(BadRequestException.class,
 				() -> productivityService.getProductivityTrendsForLevel("squad", TemporalAggregationUnit.WEEK, 0));
 		assertThrows(BadRequestException.class,
 				() -> productivityService.getProductivityTrendsForLevel("sprint", TemporalAggregationUnit.WEEK, 0));
-		assertThrows(BadRequestException.class,
-				() -> productivityService.getProductivityTrendsForLevel("project", TemporalAggregationUnit.WEEK, 0));
 	}
 
 	@Test
@@ -191,8 +190,6 @@ class ProductivityServiceTest {
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName(anyString()))
 				.thenReturn(Optional.of(HierarchyLevel.builder().build()));
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId(anyString()))
-				.thenReturn(Optional.of(HierarchyLevel.builder().build()));
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelNumber(anyInt()))
 				.thenReturn(Optional.of(HierarchyLevel.builder().build()));
 
 		assertThrows(ForbiddenException.class, () -> productivityService.getProductivityForLevel("engagement"));
@@ -215,10 +212,6 @@ class ProductivityServiceTest {
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName(anyString())).thenAnswer(
 				invocationOnMock -> hierarchyLevelMap.values().stream().filter(hierarchyLevel -> hierarchyLevel
 						.getHierarchyLevelName().equalsIgnoreCase(invocationOnMock.getArgument(0))).findFirst());
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelNumber(anyInt()))
-				.thenAnswer(invocationOnMock -> hierarchyLevelMap.values().stream().filter(
-						hierarchyLevel -> hierarchyLevel.getLevel() == (Integer) invocationOnMock.getArgument(0))
-						.findFirst());
 
 		ServiceResponse serviceResponse = productivityService.getProductivityForLevel(levelName);
 		assertNotNull(serviceResponse);
@@ -273,10 +266,6 @@ class ProductivityServiceTest {
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName(anyString())).thenAnswer(
 				invocationOnMock -> hierarchyLevelMap.values().stream().filter(hierarchyLevel -> hierarchyLevel
 						.getHierarchyLevelName().equalsIgnoreCase(invocationOnMock.getArgument(0))).findFirst());
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelNumber(anyInt()))
-				.thenAnswer(invocationOnMock -> hierarchyLevelMap.values().stream().filter(
-								hierarchyLevel -> hierarchyLevel.getLevel() == (Integer) invocationOnMock.getArgument(0))
-						.findFirst());
 
 		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
 				any(TemporalAggregationUnit.class), anyInt())).thenReturn(Collections.emptyList());
@@ -307,10 +296,6 @@ class ProductivityServiceTest {
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName(anyString())).thenAnswer(
 				invocationOnMock -> hierarchyLevelMap.values().stream().filter(hierarchyLevel -> hierarchyLevel
 						.getHierarchyLevelName().equalsIgnoreCase(invocationOnMock.getArgument(0))).findFirst());
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelNumber(anyInt()))
-				.thenAnswer(invocationOnMock -> hierarchyLevelMap.values().stream().filter(
-								hierarchyLevel -> hierarchyLevel.getLevel() == (Integer) invocationOnMock.getArgument(0))
-						.findFirst());
 
 		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
 				any(TemporalAggregationUnit.class), anyInt())).thenReturn(constructProductivityTemporalGroupingList());
@@ -486,16 +471,17 @@ class ProductivityServiceTest {
 		List<String> expectedOrganizationUnitNames;
 
 		switch (levelName) {
-		case "engagement" -> expectedOrganizationUnitNames = List.of("test-project-1", "test-project-2");
-		case "account" -> expectedOrganizationUnitNames = List.of("test-port-1", "test-port-2");
-		case "vertical" -> expectedOrganizationUnitNames = List.of("test-acc-1", "test-acc-2");
-		case "bu" -> expectedOrganizationUnitNames = List.of("test-ver-1", "test-ver-2");
+			case "project" -> expectedOrganizationUnitNames = List.of("test-project-1", "test-project-2");
+		case "engagement" -> expectedOrganizationUnitNames = List.of("test-port-1", "test-port-2");
+		case "account" -> expectedOrganizationUnitNames = List.of("test-acc-1", "test-acc-2");
+		case "vertical" -> expectedOrganizationUnitNames = List.of("test-ver-1", "test-ver-2");
+		case "bu" -> expectedOrganizationUnitNames = List.of("test-bu");
 		default -> expectedOrganizationUnitNames = Collections.emptyList();
 		}
 		return expectedOrganizationUnitNames;
 	}
 
 	private static List<String> provideTestLevelNames() {
-		return List.of("engagement", "account", "vertical", "bu");
+		return List.of("project", "engagement", "account", "vertical", "bu");
 	}
 }
