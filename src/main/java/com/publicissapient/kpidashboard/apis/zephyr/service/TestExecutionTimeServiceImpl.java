@@ -74,6 +74,9 @@ public class TestExecutionTimeServiceImpl
 	private static final String MANUALTESTCASEKEY = "manualTestCaseData";
 	private static final String AVGEXECUTIONTIME = "avgExecutionTimeSec";
 	private static final String COUNT = "count";
+	private static final String TOTAL = "TOTAL";
+	private static final String MANUAL = "MANUAL";
+	private static final String AUTOMATED = "AUTOMATED";
 	private static final String TOOL_ZEPHYR = ProcessorConstants.ZEPHYR;
 	private static final String TOOL_JIRA_TEST = ProcessorConstants.JIRA_TEST;
 	private static final String DEVELOPER_KPI = "DeveloperKpi";
@@ -161,74 +164,88 @@ public class TestExecutionTimeServiceImpl
 		Map<String, List<DataCount>> projectWiseDataCount =
 				dataCounts.stream().collect(Collectors.groupingBy(DataCount::getSProjectName));
 
-		List<DataCount> result = new ArrayList<>();
-		if (projectWiseDataCount.size() <= 1) {
-			dataCounts.forEach(
-					dc -> {
-						DataCount newDc = new DataCount();
-						newDc.setData(dc.getData());
-						newDc.setValue(dc.getValue());
-						newDc.setHoverValue(dc.getHoverValue());
-						newDc.setSprintIds(dc.getSprintIds());
-						newDc.setSprintNames(dc.getSprintNames());
-						newDc.setProjectNames(dc.getProjectNames());
-						newDc.setSProjectName(node.getName());
-						newDc.setDate(dc.getDate());
-						result.add(newDc);
-					});
-		} else {
-			List<List<DataCount>> indexWiseValuesList = new ArrayList<>();
-			for (Map.Entry<String, List<DataCount>> entry : projectWiseDataCount.entrySet()) {
-				for (int i = 0; i < entry.getValue().size(); i++) {
-					DataCount dataCount = entry.getValue().get(i);
-					if (indexWiseValuesList.size() < (i + 1)) {
-						indexWiseValuesList.add(i, new ArrayList<>(Collections.singletonList(dataCount)));
-					} else {
-						indexWiseValuesList.get(i).add(dataCount);
-					}
+		return projectWiseDataCount.size() <= 1
+				? createSingleProjectResult(dataCounts, node)
+				: createMultiProjectResult(projectWiseDataCount, node);
+	}
+
+	private List<DataCount> createSingleProjectResult(List<DataCount> dataCounts, Node node) {
+		return dataCounts.stream()
+				.map(dc -> copyDataCountWithNodeName(dc, node.getName()))
+				.collect(Collectors.toList());
+	}
+
+	private DataCount copyDataCountWithNodeName(DataCount dc, String nodeName) {
+		DataCount newDc = new DataCount();
+		newDc.setData(dc.getData());
+		newDc.setValue(dc.getValue());
+		newDc.setHoverValue(dc.getHoverValue());
+		newDc.setSprintIds(dc.getSprintIds());
+		newDc.setSprintNames(dc.getSprintNames());
+		newDc.setProjectNames(dc.getProjectNames());
+		newDc.setSProjectName(nodeName);
+		newDc.setDate(dc.getDate());
+		return newDc;
+	}
+
+	private List<DataCount> createMultiProjectResult(
+			Map<String, List<DataCount>> projectWiseDataCount, Node node) {
+		List<List<DataCount>> indexWiseValuesList = groupByIndex(projectWiseDataCount);
+		return indexWiseValuesList.stream()
+				.map(indexValues -> aggregateIndexValues(indexValues, node))
+				.collect(Collectors.toList());
+	}
+
+	private List<List<DataCount>> groupByIndex(Map<String, List<DataCount>> projectWiseDataCount) {
+		List<List<DataCount>> indexWiseValuesList = new ArrayList<>();
+		for (List<DataCount> dataCountList : projectWiseDataCount.values()) {
+			for (int i = 0; i < dataCountList.size(); i++) {
+				if (indexWiseValuesList.size() <= i) {
+					indexWiseValuesList.add(new ArrayList<>());
 				}
-			}
-
-			for (List<DataCount> indexValues : indexWiseValuesList) {
-				DataCount aggregated = new DataCount();
-				List<String> sprintIds = new ArrayList<>();
-				List<String> sprintNames = new ArrayList<>();
-				List<String> projectNames = new ArrayList<>();
-				List<Double> values = new ArrayList<>();
-				List<Map<String, Object>> hoverValues = new ArrayList<>();
-				String date = null;
-
-				for (DataCount dc : indexValues) {
-					if (CollectionUtils.isNotEmpty(dc.getSprintIds())) {
-						sprintIds.addAll(dc.getSprintIds());
-						sprintNames.addAll(dc.getSprintNames());
-					}
-					projectNames.add(dc.getSProjectName());
-					if (dc.getValue() != null) {
-						values.add((Double) dc.getValue());
-					}
-					if (dc.getHoverValue() != null) {
-						hoverValues.add(dc.getHoverValue());
-					}
-					date = dc.getDate();
-				}
-
-				Double avgValue = calculateKpiValue(values, KPICode.TEST_EXECUTION_TIME.getKpiId());
-				Map<String, Object> aggregatedHover = calculateHoverMap(hoverValues);
-				syncHoverValueWithCalculatedValue(aggregatedHover, avgValue);
-
-				aggregated.setData(String.valueOf(avgValue));
-				aggregated.setValue(avgValue);
-				aggregated.setHoverValue(aggregatedHover);
-				aggregated.setSprintIds(sprintIds);
-				aggregated.setSprintNames(sprintNames);
-				aggregated.setProjectNames(projectNames);
-				aggregated.setSProjectName(node.getName());
-				aggregated.setDate(date);
-				result.add(aggregated);
+				indexWiseValuesList.get(i).add(dataCountList.get(i));
 			}
 		}
-		return result;
+		return indexWiseValuesList;
+	}
+
+	private DataCount aggregateIndexValues(List<DataCount> indexValues, Node node) {
+		DataCount aggregated = new DataCount();
+		List<String> sprintIds = new ArrayList<>();
+		List<String> sprintNames = new ArrayList<>();
+		List<String> projectNames = new ArrayList<>();
+		List<Double> values = new ArrayList<>();
+		List<Map<String, Object>> hoverValues = new ArrayList<>();
+		String date = null;
+
+		for (DataCount dc : indexValues) {
+			if (CollectionUtils.isNotEmpty(dc.getSprintIds())) {
+				sprintIds.addAll(dc.getSprintIds());
+				sprintNames.addAll(dc.getSprintNames());
+			}
+			projectNames.add(dc.getSProjectName());
+			if (dc.getValue() != null) {
+				values.add((Double) dc.getValue());
+			}
+			if (dc.getHoverValue() != null) {
+				hoverValues.add(dc.getHoverValue());
+			}
+			date = dc.getDate();
+		}
+
+		Double avgValue = calculateKpiValue(values, KPICode.TEST_EXECUTION_TIME.getKpiId());
+		Map<String, Object> aggregatedHover = calculateHoverMap(hoverValues);
+		syncHoverValueWithCalculatedValue(aggregatedHover, avgValue);
+
+		aggregated.setData(String.valueOf(avgValue));
+		aggregated.setValue(avgValue);
+		aggregated.setHoverValue(aggregatedHover);
+		aggregated.setSprintIds(sprintIds);
+		aggregated.setSprintNames(sprintNames);
+		aggregated.setProjectNames(projectNames);
+		aggregated.setSProjectName(node.getName());
+		aggregated.setDate(date);
+		return aggregated;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -237,9 +254,9 @@ public class TestExecutionTimeServiceImpl
 		if (hoverMap == null) {
 			return;
 		}
-		updateCategoryValue(hoverMap, "TOTAL", calculatedValue, false);
-		updateCategoryValue(hoverMap, "MANUAL", calculatedValue, true);
-		updateCategoryValue(hoverMap, "AUTOMATED", calculatedValue, true);
+		updateCategoryValue(hoverMap, TOTAL, calculatedValue, false);
+		updateCategoryValue(hoverMap, MANUAL, calculatedValue, true);
+		updateCategoryValue(hoverMap, AUTOMATED, calculatedValue, true);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -357,7 +374,7 @@ public class TestExecutionTimeServiceImpl
 
 					double executionTimeForCurrentLeaf = 0.0;
 					executionTimeForCurrentLeaf =
-							getValueFromHoverMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
+							getValueFromHoverMap(hoverMap, TOTAL, AVGEXECUTIONTIME, Double.class);
 
 					mapTmp.get(node.getId()).setValue(executionTimeForCurrentLeaf);
 
@@ -399,14 +416,9 @@ public class TestExecutionTimeServiceImpl
 			Pair<String, String> sprintId,
 			Map<String, Object> hoverMap) {
 
-		// Automated test cases
-		populateCategoryData("AUTOMATED", sprintWiseAutomatedMap.get(sprintId), hoverMap);
-
-		// Manual test cases
-		populateCategoryData("MANUAL", sprintWiseManualMap.get(sprintId), hoverMap);
-
-		// Total test cases
-		populateCategoryData("TOTAL", sprintWiseTotalMap.get(sprintId), hoverMap);
+		populateCategoryData(AUTOMATED, sprintWiseAutomatedMap.get(sprintId), hoverMap);
+		populateCategoryData(MANUAL, sprintWiseManualMap.get(sprintId), hoverMap);
+		populateCategoryData(TOTAL, sprintWiseTotalMap.get(sprintId), hoverMap);
 	}
 
 	private void populateCategoryData(
@@ -576,7 +588,7 @@ public class TestExecutionTimeServiceImpl
 		}
 
 		Map<String, Object> aggregatedHoverMap = new LinkedHashMap<>();
-		for (String category : Arrays.asList("TOTAL", "AUTOMATED", "MANUAL")) {
+		for (String category : Arrays.asList(TOTAL, AUTOMATED, MANUAL)) {
 			aggregatedHoverMap.put(category, aggregateCategoryData(category, hoverMapValues));
 		}
 		return aggregatedHoverMap;
@@ -627,7 +639,7 @@ public class TestExecutionTimeServiceImpl
 
 	private Map<String, Object> createEmptyHoverMap() {
 		Map<String, Object> emptyMap = new LinkedHashMap<>();
-		for (String category : Arrays.asList("TOTAL", "AUTOMATED", "MANUAL")) {
+		for (String category : Arrays.asList(TOTAL, AUTOMATED, MANUAL)) {
 			Map<String, Object> categoryMap = new HashMap<>();
 			categoryMap.put(COUNT, 0);
 			categoryMap.put(AVGEXECUTIONTIME, 0.0);
