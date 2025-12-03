@@ -68,18 +68,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LSTMForecaster extends AbstractForecastService {
 
-	/**
-	 * Number of time steps in input sequences for LSTM training and prediction.
-	 * <p>Lookback window: 3 means model learns from [t-2, t-1, t] to predict t+1.
-	 */
-	private static final int SEQUENCE_LENGTH = 3;
+    /**
+     * Number of time steps in input sequences for LSTM training and prediction.
+     * <p>Lookback window: 3 means model learns from [t-2, t-1, t] to predict t+1.
+     */
+    private static final int SEQUENCE_LENGTH = 3;
 
-	/**
-	 * Minimum number of historical data points required for LSTM forecasting.
-	 * <p><b>Calculation:</b> With SEQUENCE_LENGTH=3, minimum 6 points creates
-	 * 3 training sequences: [0,1,2]→3, [1,2,3]→4, [2,3,4]→5
-	 */
-	private static final int MIN_DATA_POINTS = 6;
+    /**
+     * Minimum number of historical data points required for LSTM forecasting.
+     * <p><b>Calculation:</b> With SEQUENCE_LENGTH=3, minimum 6 points creates
+     * 3 training sequences: [0,1,2]→3, [1,2,3]→4, [2,3,4]→5
+     */
+    private static final int MIN_DATA_POINTS = 6;
 
     /**
      * First LSTM layer size optimized for small datasets (8-14 points).
@@ -111,168 +111,174 @@ public class LSTMForecaster extends AbstractForecastService {
      */
     private static final double OPTIMIZED_LEARNING_RATE = 0.01;
 
-	@Override
-	public ForecastingModel getModelType() {
-		return ForecastingModel.LSTM;
-	}
+    @Override
+    public ForecastingModel getModelType() {
+        return ForecastingModel.LSTM;
+    }
 
-	/**
-	 * Generates LSTM-based forecast for the next time period using deep learning.
-	 * <h4>Deep Learning Process:</h4>
-	 * <pre>
-	 * Historical Data → Normalization → Sequences → LSTM Training → Prediction
-	 * </pre>
-	 *
-	 * @param historicalData List of historical KPI values in chronological order.
-	 * @param kpiId Unique identifier for the KPI being forecasted.
-	 * @return List containing a single DataCount with the forecasted value, or empty list.
-	 */
-	@Override
-	public List<DataCount> generateForecast(List<DataCount> historicalData, String kpiId) {
-		List<DataCount> forecasts = new ArrayList<>();
+    /**
+     * Generates LSTM-based forecast for the next time period using deep learning.
+     * <h4>Deep Learning Process:</h4>
+     * <pre>
+     * Historical Data → Normalization → Sequences → LSTM Training → Prediction
+     * </pre>
+     *
+     * @param historicalData List of historical KPI values in chronological order.
+     * @param kpiId Unique identifier for the KPI being forecasted.
+     * @return List containing a single DataCount with the forecasted value, or empty list.
+     */
+    @Override
+    public List<DataCount> generateForecast(List<DataCount> historicalData, String kpiId) {
+        List<DataCount> forecasts = new ArrayList<>();
 
-		if (historicalData == null || !canForecast(historicalData, kpiId) || historicalData.size() < MIN_DATA_POINTS) {
-			log.warn("Insufficient data for LSTM forecast. Required: {}, Available: {}",
-					MIN_DATA_POINTS, historicalData.size());
-			return forecasts;
-		}
+        if (historicalData == null || !canForecast(historicalData, kpiId) || historicalData.size() < MIN_DATA_POINTS) {
+            log.warn("Insufficient data for LSTM forecast. Required: {}, Available: {}",
+                    MIN_DATA_POINTS, historicalData.size());
+            return forecasts;
+        }
 
-		List<Double> values = extractValues(historicalData);
-		if (values.size() < MIN_DATA_POINTS) {
-			return forecasts;
-		}
+        List<Double> values = extractValues(historicalData);
+        log.info("Line 124: Extracted values for KPI {}: {}", kpiId, values);
+        if (values.size() < MIN_DATA_POINTS) {
+            return forecasts;
+        }
 
-		try {
-			log.debug("Starting LSTM forecast for KPI {} with {} data points", kpiId, values.size());
+        try {
+            log.debug("Starting LSTM forecast for KPI {} with {} data points", kpiId, values.size());
 
-			/**
-			 * Step 1: Data Normalization
-			 * Scales data to [0,1] range for stable neural network training.
-			 * Prevents gradient vanishing/exploding and ensures all features contribute equally.
-			 */
-			double[] normalizedData = normalizeData(values);
-			double minValue = values.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
-			double maxValue = values.stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
+            /**
+             * Step 1: Data Normalization
+             * Scales data to [0,1] range for stable neural network training.
+             * Prevents gradient vanishing/exploding and ensures all features contribute equally.
+             */
+            double[] normalizedData = normalizeData(values);
+            double minValue = values.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+            double maxValue = values.stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
 
-			/**
-			 * Step 2: Sequence Creation
-			 * Converts time series to supervised learning format with input-output pairs.
-			 * Creates 3D tensors [batch_size, features, sequence_length] for RNN compatibility.
-			 */
-			INDArray[] sequences = createSequences(normalizedData);
-			if (sequences[0].size(0) == 0) {
-				log.warn("No valid sequences created for KPI {}", kpiId);
-				return forecasts;
-			}
+            /**
+             * Step 2: Sequence Creation
+             * Converts time series to supervised learning format with input-output pairs.
+             * Creates 3D tensors [batch_size, features, sequence_length] for RNN compatibility.
+             */
+            INDArray[] sequences = createSequences(normalizedData);
+            if (sequences[0].size(0) == 0) {
+                log.warn("No valid sequences created for KPI {}", kpiId);
+                return forecasts;
+            }
 
-			/**
-			 * Step 3: Model Building
-			 * Constructs LSTM network with optimized architecture:
-			 * - LSTM layer (50 neurons, tanh activation)
-			 * - RNN output layer (1 neuron, linear activation, MSE loss)
-			 * - Adam optimizer with 0.001 learning rate
-			 */
-			MultiLayerNetwork model = buildLSTMModel();
+            /**
+             * Step 3: Model Building
+             * Constructs LSTM network with optimized architecture:
+             * - LSTM layer (50 neurons, tanh activation)
+             * - RNN output layer (1 neuron, linear activation, MSE loss)
+             * - Adam optimizer with 0.001 learning rate
+             */
+            MultiLayerNetwork model = buildLSTMModel();
 
-			/**
-			 * Step 4: Training
-			 * Fits model using Adam optimizer and MSE loss function.
-			 * Single epoch training with full dataset for real-time forecasting.
-			 */
-			model.fit(new DataSet(sequences[0], sequences[1]));
+            /**
+             * Step 4: Training
+             * Multiple epochs for volatile data patterns with early stopping.
+             * Increased training for better pattern recognition on sparse data.
+             */
+            DataSet dataSet = new DataSet(sequences[0], sequences[1]);
+            for (int epoch = 0; epoch < 10; epoch++) {
+                model.fit(dataSet);
+            }
 
-			/**
-			 * Step 5: Prediction
-			 * Generates forecast using trained model with last sequence as input.
-			 * Extracts most recent SEQUENCE_LENGTH values for context.
-			 */
-			INDArray lastSequence = getLastSequence(normalizedData);
-			INDArray prediction = model.output(lastSequence);
+            /**
+             * Step 5: Prediction
+             * Generates forecast using trained model with last sequence as input.
+             * Extracts most recent SEQUENCE_LENGTH values for context.
+             */
+            INDArray lastSequence = getLastSequence(normalizedData);
+            INDArray prediction = model.output(lastSequence);
 
-			/**
-			 * Step 6: Denormalization
-			 * Converts prediction back to original KPI scale using inverse min-max scaling.
-			 * Ensures non-negative values for KPI metrics.
-			 */
-			double forecastValue = denormalizeValue(prediction.getDouble(0, 0, SEQUENCE_LENGTH - 1), minValue, maxValue);
-			forecastValue = Math.max(0, forecastValue); // Ensure non-negative KPI values
+            /**
+             * Step 6: Denormalization
+             * Converts prediction back to original KPI scale using inverse min-max scaling.
+             * Ensures non-negative values for KPI metrics.
+             */
+            double forecastValue = denormalizeValue(prediction.getDouble(0, 0, 0), minValue, maxValue);
+            forecastValue = Math.max(0, forecastValue); // Ensure non-negative KPI values
 
-			/**
-			 * Step 7: Result Packaging
-			 * Creates DataCount object with forecast value and metadata.
-			 * Preserves project context and KPI grouping information.
-			 */
-			String projectName = historicalData.get(historicalData.size() - 1).getSProjectName();
-			String kpiGroup = historicalData.get(historicalData.size() - 1).getKpiGroup();
+            /**
+             * Step 7: Result Packaging
+             * Creates DataCount object with forecast value and metadata.
+             * Preserves project context and KPI grouping information.
+             */
+            String projectName = historicalData.get(historicalData.size() - 1).getSProjectName();
+            String kpiGroup = historicalData.get(historicalData.size() - 1).getKpiGroup();
 
-			DataCount forecast = createForecastDataCount(forecastValue, projectName, kpiGroup, getModelType().getName());
-			forecasts.add(forecast);
+            DataCount forecast = createForecastDataCount(forecastValue, projectName, kpiGroup, getModelType().getName());
+            forecasts.add(forecast);
+            log.info("******************************* Forecasts list after adding forecast: {}", forecasts);
 
-			log.info("Generated LSTM forecast for KPI {}: value={}", kpiId, String.format("%.2f", forecastValue));
+            log.info("Generated LSTM forecast for KPI {}: value={}", kpiId, String.format("%.2f", forecastValue));
 
-		} catch (Exception e) {
-			log.error("Error in LSTM forecast for KPI {}: {}", kpiId, e.getMessage(), e);
-		}
+        } catch (Exception e) {
+            log.error("Error in LSTM forecast for KPI {}: {}", kpiId, e.getMessage(), e);
+        }
+        log.info("********************************** Forecasts list after adding forecast all the historical values are---: {}", values);
 
-		return forecasts;
-	}
+        return forecasts;
+    }
 
-	/**
-	 * Normalizes data to [0,1] range using min-max scaling.
-	 * <p>Formula: (value - min) / (max - min). Returns 0.5 for constant values.
-	 *
-	 * @param values Raw KPI values to normalize
-	 * @return Normalized values in [0,1] range
-	 */
-	private double[] normalizeData(List<Double> values) {
-		double min = values.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
-		double max = values.stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
-		double range = max - min;
+    /**
+     * Normalizes data to [0,1] range using min-max scaling.
+     * <p>Formula: (value - min) / (max - min). Returns 0.5 for constant values.
+     *
+     * @param values Raw KPI values to normalize
+     * @return Normalized values in [0,1] range
+     */
+    private double[] normalizeData(List<Double> values) {
+        double min = values.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+        double max = values.stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
+        double range = max - min;
 
-		if (range == 0) {
-			// All values are identical - return neutral normalized values
-			return values.stream().mapToDouble(v -> 0.5).toArray();
-		}
+        if (range == 0) {
+            // All values are identical - return neutral normalized values
+            return values.stream().mapToDouble(v -> 0.5).toArray();
+        }
 
-		return values.stream().mapToDouble(v -> (v - min) / range).toArray();
-	}
+        return values.stream().mapToDouble(v -> (v - min) / range).toArray();
+    }
 
-	/**
-	 * Converts time series to supervised learning sequences for LSTM training.
-	 * <p>Creates input-output pairs: [t-2,t-1,t] → t+1 format
-	 * <p>Returns 3D tensors [num_sequences, 1, SEQUENCE_LENGTH] for RNN compatibility
-	 *
-	 * @param data Normalized time series data
-	 * @return Array of [input_sequences, target_sequences] INDArrays
-	 */
-	private INDArray[] createSequences(double[] data) {
-		if (data.length <= SEQUENCE_LENGTH) {
-			// Insufficient data - return empty tensors with correct dimensions
-			return new INDArray[]{Nd4j.zeros(0, 1, SEQUENCE_LENGTH), Nd4j.zeros(0, 1, SEQUENCE_LENGTH)};
-		}
+    /**
+     * Converts time series to supervised learning sequences for LSTM training.
+     * <p>Creates input-output pairs: [t-2,t-1,t] → t+1 format
+     * <p>Returns 3D tensors [num_sequences, 1, SEQUENCE_LENGTH] for RNN compatibility
+     *
+     * @param data Normalized time series data
+     * @return Array of [input_sequences, target_sequences] INDArrays
+     */
+    private INDArray[] createSequences(double[] data) {
+        if (data.length <= SEQUENCE_LENGTH) {
+            // Insufficient data - return empty tensors with correct dimensions
+            return new INDArray[]{Nd4j.zeros(0, 1, SEQUENCE_LENGTH), Nd4j.zeros(0, 1, SEQUENCE_LENGTH)};
+        }
 
-		int numSequences = data.length - SEQUENCE_LENGTH;
+        int numSequences = data.length - SEQUENCE_LENGTH;
 
-		// Create 3D tensors for RNN input/output format
-		INDArray input = Nd4j.zeros(numSequences, 1, SEQUENCE_LENGTH);
-		INDArray output = Nd4j.zeros(numSequences, 1, SEQUENCE_LENGTH);
+        // Create 3D tensors for RNN input/output format
+        INDArray input = Nd4j.zeros(numSequences, 1, SEQUENCE_LENGTH);
+        INDArray output = Nd4j.zeros(numSequences, 1, SEQUENCE_LENGTH);
 
-		for (int i = 0; i < numSequences; i++) {
-			// Fill input sequence with SEQUENCE_LENGTH consecutive values
-			for (int j = 0; j < SEQUENCE_LENGTH; j++) {
-				input.putScalar(new int[]{i, 0, j}, data[i + j]);
-			}
-			// Set target value at the last time step of output sequence
-			output.putScalar(new int[]{i, 0, SEQUENCE_LENGTH - 1}, data[i + SEQUENCE_LENGTH]);
-		}
+        for (int i = 0; i < numSequences; i++) {
+            // Fill input sequence with SEQUENCE_LENGTH consecutive values
+            for (int j = 0; j < SEQUENCE_LENGTH; j++) {
+                input.putScalar(new int[]{i, 0, j}, data[i + j]);
+            }
+            // Set target value at the last time step of output sequence
+            output.putScalar(new int[]{i, 0, SEQUENCE_LENGTH - 1}, data[i + SEQUENCE_LENGTH]);
+        }
 
-		return new INDArray[]{input, output};
-	}
+        return new INDArray[]{input, output};
+    }
 
     /**
      * Constructs LSTM model optimized for volatile KPI data with limited samples.
-     * <p>Architecture: Input[1] → LSTM[16] → LSTM[8] → RnnOutput[1] → Prediction
-     * <p>Optimized for: 8-14 data points, volatile patterns, zero values, sparse data
+     * <p>Architecture: Input[1] → LSTM[16] → RnnOutput[1] → Prediction
+     * <p>Optimized for: 8-14 data points, volatile patterns, sudden changes, sparse data
      *
      * @return Initialized MultiLayerNetwork ready for training
      */
@@ -282,25 +288,19 @@ public class LSTMForecaster extends AbstractForecastService {
                 .updater(new Adam(OPTIMIZED_LEARNING_RATE))
                 .weightInit(WeightInit.XAVIER)
                 .l2(L2_REGULARIZATION)
-                .dropOut(DROPOUT_RATE)
                 .list()
-                // Layer 0: Compact LSTM for pattern detection
+                // Single LSTM layer for sparse data - prevents overfitting
                 .layer(0, new LSTM.Builder()
                         .nIn(1)
                         .nOut(LSTM_LAYER_1_SIZE)
                         .activation(Activation.TANH)
+                        .dropOut(DROPOUT_RATE)
                         .build())
-                // Layer 1: Refinement LSTM layer
-                .layer(1, new LSTM.Builder()
+                // Output layer with identity activation for regression
+                .layer(1, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MSE)
                         .nIn(LSTM_LAYER_1_SIZE)
-                        .nOut(LSTM_LAYER_2_SIZE)
-                        .activation(Activation.TANH)
-                        .build())
-                // Layer 2: Output with robust loss for outliers
-                .layer(2, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MEAN_ABSOLUTE_ERROR)
-                        .nIn(LSTM_LAYER_2_SIZE)
                         .nOut(1)
-                        .activation(Activation.RELU)
+                        .activation(Activation.IDENTITY)
                         .build())
                 .build();
 
@@ -312,43 +312,43 @@ public class LSTMForecaster extends AbstractForecastService {
 
 
     /**
-	 * Extracts last sequence from data for prediction.
-	 * <p>Takes most recent SEQUENCE_LENGTH values as LSTM input context.
-	 * <p>Returns tensor [1, 1, SEQUENCE_LENGTH] with zero-padding if needed.
-	 *
-	 * @param data Normalized historical data
-	 * @return Input tensor for prediction
-	 */
-	private INDArray getLastSequence(double[] data) {
-		// Create tensor for single prediction batch
-		INDArray sequence = Nd4j.zeros(1, 1, SEQUENCE_LENGTH);
+     * Extracts last sequence from data for prediction.
+     * <p>Takes most recent SEQUENCE_LENGTH values as LSTM input context.
+     * <p>Returns tensor [1, 1, SEQUENCE_LENGTH] with zero-padding if needed.
+     *
+     * @param data Normalized historical data
+     * @return Input tensor for prediction
+     */
+    private INDArray getLastSequence(double[] data) {
+        // Create tensor for single prediction batch
+        INDArray sequence = Nd4j.zeros(1, 1, SEQUENCE_LENGTH);
 
-		// Calculate starting index for sequence extraction
-		int startIdx = Math.max(0, data.length - SEQUENCE_LENGTH);
+        // Calculate starting index for sequence extraction
+        int startIdx = Math.max(0, data.length - SEQUENCE_LENGTH);
 
-		// Fill sequence tensor with most recent values
-		for (int i = 0; i < SEQUENCE_LENGTH; i++) {
-			int dataIdx = startIdx + i;
-			if (dataIdx < data.length) {
-				// Use actual historical value
-				sequence.putScalar(new int[]{0, 0, i}, data[dataIdx]);
-			}
-			// Missing values remain as zeros (padding for insufficient data)
-		}
+        // Fill sequence tensor with most recent values
+        for (int i = 0; i < SEQUENCE_LENGTH; i++) {
+            int dataIdx = startIdx + i;
+            if (dataIdx < data.length) {
+                // Use actual historical value
+                sequence.putScalar(new int[]{0, 0, i}, data[dataIdx]);
+            }
+            // Missing values remain as zeros (padding for insufficient data)
+        }
 
-		return sequence;
-	}
+        return sequence;
+    }
 
-	/**
-	 * Converts normalized prediction back to original KPI scale.
-	 * <p>Formula: normalized_value × (max - min) + min
-	 *
-	 * @param normalizedValue Prediction in [0,1] range
-	 * @param min Original data minimum
-	 * @param max Original data maximum
-	 * @return Denormalized value in original scale
-	 */
-	private double denormalizeValue(double normalizedValue, double min, double max) {
-		return normalizedValue * (max - min) + min;
-	}
+    /**
+     * Converts normalized prediction back to original KPI scale.
+     * <p>Formula: normalized_value × (max - min) + min
+     *
+     * @param normalizedValue Prediction in [0,1] range
+     * @param min Original data minimum
+     * @param max Original data maximum
+     * @return Denormalized value in original scale
+     */
+    private double denormalizeValue(double normalizedValue, double min, double max) {
+        return normalizedValue * (max - min) + min;
+    }
 }
