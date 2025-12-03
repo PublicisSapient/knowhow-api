@@ -112,7 +112,7 @@ public class TestExecutionTimeServiceImpl
 				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueWithHover(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
+		calculateAggregatedValueWithHover(root, nodeWiseKPIValue);
 
 		List<DataCount> trendValues =
 				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
@@ -122,7 +122,7 @@ public class TestExecutionTimeServiceImpl
 
 	@SuppressWarnings("unchecked")
 	private Object calculateAggregatedValueWithHover(
-			Node node, Map<Pair<String, String>, Node> nodeWiseKPIValue, KPICode kpiCode) {
+			Node node, Map<Pair<String, String>, Node> nodeWiseKPIValue) {
 		if (node == null || node.getValue() == null) {
 			return new ArrayList<>();
 		}
@@ -133,7 +133,7 @@ public class TestExecutionTimeServiceImpl
 			return node.getValue();
 		}
 
-		List<DataCount> aggregatedValueList = collectChildValues(children, nodeWiseKPIValue, kpiCode, node);
+		List<DataCount> aggregatedValueList = collectChildValues(children, nodeWiseKPIValue, node);
 
 		if (CollectionUtils.isNotEmpty(aggregatedValueList)) {
 			List<DataCount> aggregated = aggregateDataCountsWithHover(aggregatedValueList, node);
@@ -145,11 +145,11 @@ public class TestExecutionTimeServiceImpl
 
 	@SuppressWarnings("unchecked")
 	private List<DataCount> collectChildValues(
-			List<Node> children, Map<Pair<String, String>, Node> nodeWiseKPIValue, KPICode kpiCode, Node node) {
+			List<Node> children, Map<Pair<String, String>, Node> nodeWiseKPIValue, Node node) {
 		List<DataCount> aggregatedValueList = new ArrayList<>();
 		for (Node child : children) {
 			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
-			Object obj = calculateAggregatedValueWithHover(child, nodeWiseKPIValue, kpiCode);
+			Object obj = calculateAggregatedValueWithHover(child, nodeWiseKPIValue);
 			if (obj instanceof List<?>) {
 				aggregatedValueList.addAll((List<DataCount>) obj);
 			}
@@ -409,56 +409,47 @@ public class TestExecutionTimeServiceImpl
 		populateCategoryData("TOTAL", sprintWiseTotalMap.get(sprintId), hoverMap);
 	}
 
-	/** Helper method to compute count & average execution time for a category */
 	private void populateCategoryData(
 			String category, List<TestCaseDetails> testCases, Map<String, Object> hoverMap) {
-		if (CollectionUtils.isNotEmpty(testCases)) {
-			// Count test cases that have executions
-			long totalCount =
-					testCases.stream().filter(tc -> CollectionUtils.isNotEmpty(tc.getExecutions())).count();
-
-			// Compute per-test average execution time in **minutes**
-			double avgExecTimeMin =
-					BigDecimal.valueOf(
-									testCases.stream()
-													.mapToDouble(
-															tc -> {
-																if (CollectionUtils.isEmpty(tc.getExecutions())) {
-																	return 0.0;
-																}
-																double sum =
-																		tc.getExecutions().stream()
-																				.filter(exec -> exec.getExecutionTime() != null)
-																				.mapToDouble(TestCaseExecutionData::getExecutionTime)
-																				.sum();
-
-																long count =
-																		tc.getExecutions().stream()
-																				.filter(exec -> exec.getExecutionTime() != null)
-																				.count();
-
-																return count > 0 ? (sum / count) : 0.0;
-															})
-													.average()
-													.orElse(0.0)
-											/ 1000.0
-											/ 60.0 // ms → sec → min
-									)
-							.setScale(2, RoundingMode.HALF_UP)
-							.doubleValue();
-
-			// Put results into hover map
-			Map<String, Object> categoryData = new HashMap<>();
-			categoryData.put(COUNT, totalCount);
-			categoryData.put(AVGEXECUTIONTIME, avgExecTimeMin); // in minutes
-
-			hoverMap.put(category, categoryData);
-		} else {
-			Map<String, Object> categoryData = new HashMap<>();
+		Map<String, Object> categoryData = new HashMap<>();
+		if (CollectionUtils.isEmpty(testCases)) {
 			categoryData.put(COUNT, 0);
-			categoryData.put(AVGEXECUTIONTIME, 0.0); // 0 minutes as double
+			categoryData.put(AVGEXECUTIONTIME, 0.0);
 			hoverMap.put(category, categoryData);
+			return;
 		}
+
+		long totalCount =
+				testCases.stream().filter(tc -> CollectionUtils.isNotEmpty(tc.getExecutions())).count();
+
+		double avgExecTimeMin = calculateAverageExecutionTime(testCases);
+
+		categoryData.put(COUNT, totalCount);
+		categoryData.put(AVGEXECUTIONTIME, avgExecTimeMin);
+		hoverMap.put(category, categoryData);
+	}
+
+	private double calculateAverageExecutionTime(List<TestCaseDetails> testCases) {
+		double avgTimeMs =
+				testCases.stream()
+						.mapToDouble(this::getAverageExecutionTimeForTestCase)
+						.average()
+						.orElse(0.0);
+		return BigDecimal.valueOf(avgTimeMs / 60000.0).setScale(2, RoundingMode.HALF_UP).doubleValue();
+	}
+
+	private double getAverageExecutionTimeForTestCase(TestCaseDetails tc) {
+		if (CollectionUtils.isEmpty(tc.getExecutions())) {
+			return 0.0;
+		}
+		double sum =
+				tc.getExecutions().stream()
+						.filter(exec -> exec.getExecutionTime() != null)
+						.mapToDouble(TestCaseExecutionData::getExecutionTime)
+						.sum();
+		long count =
+				tc.getExecutions().stream().filter(exec -> exec.getExecutionTime() != null).count();
+		return count > 0 ? (sum / count) : 0.0;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -525,12 +516,14 @@ public class TestExecutionTimeServiceImpl
 
 	private List<TestCaseDetails> getAutomatedTestCases(
 			List<TestCaseDetails> testCaseList, List<SprintWiseStory> sprintWiseStory) {
-		return filterTestCasesByAutomation(testCaseList, sprintWiseStory, NormalizedJira.YES_VALUE.getValue());
+		return filterTestCasesByAutomation(
+				testCaseList, sprintWiseStory, NormalizedJira.YES_VALUE.getValue());
 	}
 
 	private List<TestCaseDetails> getManualTestCases(
 			List<TestCaseDetails> testCaseList, List<SprintWiseStory> sprintWiseStory) {
-		return filterTestCasesByAutomation(testCaseList, sprintWiseStory, NormalizedJira.NO_VALUE.getValue());
+		return filterTestCasesByAutomation(
+				testCaseList, sprintWiseStory, NormalizedJira.NO_VALUE.getValue());
 	}
 
 	private List<TestCaseDetails> getTotalTestCases(
@@ -539,7 +532,9 @@ public class TestExecutionTimeServiceImpl
 	}
 
 	private List<TestCaseDetails> filterTestCasesByAutomation(
-			List<TestCaseDetails> testCaseList, List<SprintWiseStory> sprintWiseStory, String automationValue) {
+			List<TestCaseDetails> testCaseList,
+			List<SprintWiseStory> sprintWiseStory,
+			String automationValue) {
 		return testCaseList.stream()
 				.filter(tc -> matchesSprintAndAutomation(tc, sprintWiseStory, automationValue))
 				.toList();
@@ -547,15 +542,15 @@ public class TestExecutionTimeServiceImpl
 
 	private boolean matchesSprintAndAutomation(
 			TestCaseDetails tc, List<SprintWiseStory> sprintWiseStory, String automationValue) {
-		return sprintWiseStory.stream()
-				.anyMatch(st -> matchesStory(tc, st, automationValue));
+		return sprintWiseStory.stream().anyMatch(st -> matchesStory(tc, st, automationValue));
 	}
 
 	private boolean matchesStory(TestCaseDetails tc, SprintWiseStory st, String automationValue) {
-		boolean basicMatch = st.getBasicProjectConfigId().equals(tc.getBasicProjectConfigId())
-				&& CollectionUtils.isNotEmpty(tc.getDefectStoryID())
-				&& CollectionUtils.containsAny(tc.getDefectStoryID(), st.getStoryList());
-		
+		boolean basicMatch =
+				st.getBasicProjectConfigId().equals(tc.getBasicProjectConfigId())
+						&& CollectionUtils.isNotEmpty(tc.getDefectStoryID())
+						&& CollectionUtils.containsAny(tc.getDefectStoryID(), st.getStoryList());
+
 		if (automationValue == null) {
 			return basicMatch;
 		}
