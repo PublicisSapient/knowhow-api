@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,12 +112,141 @@ public class TestExecutionTimeServiceImpl
 				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
+		calculateAggregatedValueWithHover(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
 
 		List<DataCount> trendValues =
 				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
 		kpiElement.setTrendValueList(trendValues);
 		return kpiElement;
+	}
+
+	private Object calculateAggregatedValueWithHover(
+			Node node, Map<Pair<String, String>, Node> nodeWiseKPIValue, KPICode kpiCode) {
+		if (node == null || node.getValue() == null) {
+			return new ArrayList<>();
+		}
+
+		List<Node> children = node.getChildren();
+		if (CollectionUtils.isEmpty(children)) {
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+			return node.getValue();
+		}
+
+		List<DataCount> aggregatedValueList = new ArrayList<>();
+		for (Node child : children) {
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+			Object obj = calculateAggregatedValueWithHover(child, nodeWiseKPIValue, kpiCode);
+			List<DataCount> value = obj instanceof List<?> ? (List<DataCount>) obj : null;
+			if (value != null) {
+				aggregatedValueList.addAll(value);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(aggregatedValueList)) {
+			List<DataCount> aggregated = aggregateDataCountsWithHover(aggregatedValueList, node);
+			node.setValue(aggregated);
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+		}
+		return node.getValue();
+	}
+
+	private List<DataCount> aggregateDataCountsWithHover(List<DataCount> dataCounts, Node node) {
+		Map<String, List<DataCount>> projectWiseDataCount = dataCounts.stream()
+				.collect(Collectors.groupingBy(DataCount::getSProjectName));
+
+		List<DataCount> result = new ArrayList<>();
+		if (projectWiseDataCount.size() <= 1) {
+			dataCounts.forEach(dc -> {
+				DataCount newDc = new DataCount();
+				newDc.setData(dc.getData());
+				newDc.setValue(dc.getValue());
+				newDc.setHoverValue(dc.getHoverValue());
+				newDc.setSprintIds(dc.getSprintIds());
+				newDc.setSprintNames(dc.getSprintNames());
+				newDc.setProjectNames(dc.getProjectNames());
+				newDc.setSProjectName(node.getName());
+				newDc.setDate(dc.getDate());
+				result.add(newDc);
+			});
+		} else {
+			List<List<DataCount>> indexWiseValuesList = new ArrayList<>();
+			for (Map.Entry<String, List<DataCount>> entry : projectWiseDataCount.entrySet()) {
+				for (int i = 0; i < entry.getValue().size(); i++) {
+					DataCount dataCount = entry.getValue().get(i);
+					if (indexWiseValuesList.size() < (i + 1)) {
+						indexWiseValuesList.add(i, new ArrayList<>(Collections.singletonList(dataCount)));
+					} else {
+						indexWiseValuesList.get(i).add(dataCount);
+					}
+				}
+			}
+
+			for (List<DataCount> indexValues : indexWiseValuesList) {
+				DataCount aggregated = new DataCount();
+				List<String> sprintIds = new ArrayList<>();
+				List<String> sprintNames = new ArrayList<>();
+				List<String> projectNames = new ArrayList<>();
+				List<Double> values = new ArrayList<>();
+				List<Map<String, Object>> hoverValues = new ArrayList<>();
+				String date = null;
+
+				for (DataCount dc : indexValues) {
+					if (CollectionUtils.isNotEmpty(dc.getSprintIds())) {
+						sprintIds.addAll(dc.getSprintIds());
+						sprintNames.addAll(dc.getSprintNames());
+					}
+					projectNames.add(dc.getSProjectName());
+					if (dc.getValue() != null) {
+						values.add((Double) dc.getValue());
+					}
+					if (dc.getHoverValue() != null) {
+						hoverValues.add(dc.getHoverValue());
+					}
+					date = dc.getDate();
+				}
+
+				Double avgValue = calculateKpiValue(values, KPICode.TEST_EXECUTION_TIME.getKpiId());
+				Map<String, Object> aggregatedHover = calculateHoverMap(hoverValues);
+				syncHoverValueWithCalculatedValue(aggregatedHover, avgValue);
+
+				aggregated.setData(String.valueOf(avgValue));
+				aggregated.setValue(avgValue);
+				aggregated.setHoverValue(aggregatedHover);
+				aggregated.setSprintIds(sprintIds);
+				aggregated.setSprintNames(sprintNames);
+				aggregated.setProjectNames(projectNames);
+				aggregated.setSProjectName(node.getName());
+				aggregated.setDate(date);
+				result.add(aggregated);
+			}
+		}
+		return result;
+	}
+
+	private void syncHoverValueWithCalculatedValue(Map<String, Object> hoverMap, Double calculatedValue) {
+		if (hoverMap == null) {
+			return;
+		}
+		// Update TOTAL to match the calculated value
+		if (hoverMap.containsKey("TOTAL")) {
+			Object totalObj = hoverMap.get("TOTAL");
+			if (totalObj instanceof Map) {
+				((Map<String, Object>) totalObj).put(AVGEXECUTIONTIME, calculatedValue);
+			}
+		}
+		// Also update MANUAL and AUTOMATED if they have counts
+		for (String category : Arrays.asList("MANUAL", "AUTOMATED")) {
+			if (hoverMap.containsKey(category)) {
+				Object catObj = hoverMap.get(category);
+				if (catObj instanceof Map) {
+					Map<String, Object> catMap = (Map<String, Object>) catObj;
+					long count = getNumberValue(catMap.get(COUNT));
+					if (count > 0) {
+						catMap.put(AVGEXECUTIONTIME, calculatedValue);
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -224,18 +352,6 @@ public class TestExecutionTimeServiceImpl
 					executionTimeForCurrentLeaf =
 							getValueFromHoverMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
 
-					Double manualExecutionTime =
-							getValueFromHoverMap(hoverMap, "MANUAL", AVGEXECUTIONTIME, Double.class);
-					Double automatedExecutionTime =
-							getValueFromHoverMap(hoverMap, "AUTOMATED", AVGEXECUTIONTIME, Double.class);
-
-					if (manualExecutionTime == null) {
-						manualExecutionTime = 0.0;
-					}
-					if (automatedExecutionTime == null) {
-						automatedExecutionTime = 0.0;
-					}
-
 					mapTmp.get(node.getId()).setValue(executionTimeForCurrentLeaf);
 
 					log.debug(
@@ -252,8 +368,7 @@ public class TestExecutionTimeServiceImpl
 					dataCount.setSSprintID(node.getSprintFilter().getId());
 					dataCount.setSSprintName(node.getSprintFilter().getName());
 					dataCount.setHoverValue(hoverMap);
-					dataCount.setValue(manualExecutionTime);
-					dataCount.setLineValue(automatedExecutionTime);
+					dataCount.setValue(executionTimeForCurrentLeaf);
 					mapTmp.get(node.getId()).setValue(new ArrayList<>(Arrays.asList(dataCount)));
 					trendValueList.add(dataCount);
 				});
@@ -291,7 +406,10 @@ public class TestExecutionTimeServiceImpl
 	private void populateCategoryData(
 			String category, List<TestCaseDetails> testCases, Map<String, Object> hoverMap) {
 		if (CollectionUtils.isNotEmpty(testCases)) {
-			int totalCount = testCases.size();
+			// Count test cases that have executions
+			long totalCount = testCases.stream()
+					.filter(tc -> CollectionUtils.isNotEmpty(tc.getExecutions()))
+					.count();
 
 			// Compute per-test average execution time in **minutes**
 			double avgExecTimeMin =
@@ -332,7 +450,7 @@ public class TestExecutionTimeServiceImpl
 		} else {
 			Map<String, Object> categoryData = new HashMap<>();
 			categoryData.put(COUNT, 0);
-			categoryData.put(AVGEXECUTIONTIME, 0L); // 0 minutes
+			categoryData.put(AVGEXECUTIONTIME, 0.0); // 0 minutes as double
 			hoverMap.put(category, categoryData);
 		}
 	}
@@ -467,170 +585,87 @@ public class TestExecutionTimeServiceImpl
 		return 0.0;
 	}
 
+	/**
+	 * Aggregates hover values from multiple child nodes for hierarchy level aggregation
+	 * Overrides the default behavior to handle nested hover value structure
+	 *
+	 * @param hoverMapValues list of hover maps from child nodes
+	 * @return aggregated hover map
+	 */
 	@Override
-	public List<DataCount> calculateAggregatedValue(
-			List<DataCount> aggregatedValueList, Node node, KPICode kpiCode) {
-		Map<String, List<DataCount>> projectWiseDataCount =
-				aggregatedValueList.stream()
-						.collect(Collectors.groupingBy(DataCount::getSProjectName, Collectors.toList()));
-
-		return projectWiseDataCount.size() <= 1
-				? copySingleProjectData(aggregatedValueList, node)
-				: aggregateMultiProjectData(projectWiseDataCount, node, kpiCode);
-	}
-
-	private List<DataCount> copySingleProjectData(List<DataCount> aggregatedValueList, Node node) {
-		return aggregatedValueList.stream()
-				.map(dc -> createDataCount(dc, node.getName()))
-				.collect(Collectors.toList());
-	}
-
-	private DataCount createDataCount(DataCount source, String projectName) {
-		DataCount dataCount = new DataCount();
-		dataCount.setSprintIds(source.getSprintIds());
-		dataCount.setSprintNames(source.getSprintNames());
-		dataCount.setProjectNames(source.getProjectNames());
-		dataCount.setSProjectName(projectName);
-		dataCount.setValue(source.getValue());
-		dataCount.setLineValue(source.getLineValue());
-		dataCount.setData(source.getData());
-		dataCount.setHoverValue(source.getHoverValue());
-		dataCount.setDate(source.getDate());
-		return dataCount;
-	}
-
-	private List<DataCount> aggregateMultiProjectData(
-			Map<String, List<DataCount>> projectWiseDataCount, Node node, KPICode kpiCode) {
-		List<List<DataCount>> indexWiseValuesList = groupByIndex(projectWiseDataCount);
-		return indexWiseValuesList.stream()
-				.map(dataCountList -> aggregateDataCountList(dataCountList, node, kpiCode))
-				.collect(Collectors.toList());
-	}
-
-	private List<List<DataCount>> groupByIndex(Map<String, List<DataCount>> projectWiseDataCount) {
-		List<List<DataCount>> indexWiseValuesList = new ArrayList<>();
-		for (List<DataCount> dataCountList : projectWiseDataCount.values()) {
-			for (int i = 0; i < dataCountList.size(); i++) {
-				if (indexWiseValuesList.size() <= i) {
-					indexWiseValuesList.add(new ArrayList<>());
-				}
-				indexWiseValuesList.get(i).add(dataCountList.get(i));
-			}
-		}
-		return indexWiseValuesList;
-	}
-
-	private DataCount aggregateDataCountList(List<DataCount> dataCountList, Node node, KPICode kpiCode) {
-		DataCount dataCount = new DataCount();
-		List<String> sprintIds = new ArrayList<>();
-		List<String> sprintNames = new ArrayList<>();
-		List<String> projectNames = new ArrayList<>();
-		List<Double> values = new ArrayList<>();
-		List<Double> lineValues = new ArrayList<>();
-		List<Map<String, Object>> hoverMaps = new ArrayList<>();
-
-		for (DataCount dc : dataCountList) {
-			collectDataFromDataCount(dc, sprintIds, sprintNames, projectNames, values, lineValues, hoverMaps);
+	public Map<String, Object> calculateHoverMap(List<Map<String, Object>> hoverMapValues) {
+		if (CollectionUtils.isEmpty(hoverMapValues)) {
+			return createEmptyHoverMap();
 		}
 
-		setAggregatedValues(dataCount, values, lineValues, kpiCode);
-		setAggregatedHoverMap(dataCount, hoverMaps);
-		updateDataFieldFromHoverMap(dataCount);
-		setDataCountMetadata(dataCount, sprintIds, sprintNames, projectNames, node.getName());
-
-		return dataCount;
-	}
-
-	private void collectDataFromDataCount(DataCount dc, List<String> sprintIds, List<String> sprintNames,
-										  List<String> projectNames, List<Double> values,
-										  List<Double> lineValues, List<Map<String, Object>> hoverMaps) {
-		if (CollectionUtils.isNotEmpty(dc.getSprintIds())) {
-			sprintIds.addAll(dc.getSprintIds());
-			sprintNames.addAll(dc.getSprintNames());
-		}
-		projectNames.add(dc.getSProjectName());
-		if (dc.getValue() != null) values.add((Double) dc.getValue());
-		if (dc.getLineValue() != null) lineValues.add((Double) dc.getLineValue());
-		if (dc.getHoverValue() != null) hoverMaps.add(dc.getHoverValue());
-	}
-
-	private void setAggregatedValues(DataCount dataCount, List<Double> values,
-									 List<Double> lineValues, KPICode kpiCode) {
-		if (CollectionUtils.isNotEmpty(values)) {
-			Double aggregatedValue = calculateKpiValue(values, kpiCode.getKpiId());
-			dataCount.setValue(aggregatedValue);
-		}
-		if (CollectionUtils.isNotEmpty(lineValues)) {
-			dataCount.setLineValue(calculateKpiValue(lineValues, kpiCode.getKpiId()));
-		}
-	}
-
-	private void updateDataFieldFromHoverMap(DataCount dataCount) {
-		if (dataCount.getHoverValue() != null && dataCount.getHoverValue().get("TOTAL") instanceof Map) {
-			Map<String, Object> totalData = (Map<String, Object>) dataCount.getHoverValue().get("TOTAL");
-			Object avgTime = totalData.get(AVGEXECUTIONTIME);
-			if (avgTime instanceof Number) {
-				Double avgTimeValue = ((Number) avgTime).doubleValue();
-				dataCount.setData(String.valueOf(avgTimeValue));
-				dataCount.setValue(avgTimeValue);
-			}
-		}
-	}
-
-	private void setAggregatedHoverMap(DataCount dataCount, List<Map<String, Object>> hoverMaps) {
-		if (CollectionUtils.isEmpty(hoverMaps)) return;
-
-		Map<String, Integer> totalCounts = new HashMap<>();
-		Map<String, Double> totalWeightedTime = new HashMap<>();
-
-		hoverMaps.forEach(hoverMap -> aggregateHoverMapData(hoverMap, totalCounts, totalWeightedTime));
-		dataCount.setHoverValue(buildAggregatedHoverMap(totalCounts, totalWeightedTime));
-	}
-
-	private void aggregateHoverMapData(Map<String, Object> hoverMap,
-									   Map<String, Integer> totalCounts,
-									   Map<String, Double> totalWeightedTime) {
-		if (MapUtils.isEmpty(hoverMap)) return;
-
-		hoverMap.forEach((category, value) -> {
-			if (value instanceof Map) {
-				Map<String, Object> categoryData = (Map<String, Object>) value;
-				Integer count = (Integer) categoryData.getOrDefault(COUNT, 0);
-				Double avgTime = getAvgTime(categoryData);
-
-				totalCounts.merge(category, count, Integer::sum);
-				totalWeightedTime.merge(category, avgTime * count, Double::sum);
-			}
-		});
-	}
-
-	private Double getAvgTime(Map<String, Object> categoryData) {
-		Object avgTimeObj = categoryData.get(AVGEXECUTIONTIME);
-		return avgTimeObj instanceof Number ? ((Number) avgTimeObj).doubleValue() : 0.0;
-	}
-
-	private Map<String, Object> buildAggregatedHoverMap(Map<String, Integer> totalCounts,
-														Map<String, Double> totalWeightedTime) {
 		Map<String, Object> aggregatedHoverMap = new LinkedHashMap<>();
-		totalCounts.forEach((category, totalCount) -> {
-			Double weightedAvg = totalCount > 0 ? totalWeightedTime.get(category) / totalCount : 0.0;
-			Map<String, Object> categoryData = new HashMap<>();
-			categoryData.put(COUNT, totalCount);
-			categoryData.put(AVGEXECUTIONTIME,
-					BigDecimal.valueOf(weightedAvg).setScale(2, RoundingMode.HALF_UP).doubleValue());
-			aggregatedHoverMap.put(category, categoryData);
-		});
+		for (String category : Arrays.asList("TOTAL", "AUTOMATED", "MANUAL")) {
+			aggregatedHoverMap.put(category, aggregateCategoryData(category, hoverMapValues));
+		}
 		return aggregatedHoverMap;
 	}
 
-	private void setDataCountMetadata(DataCount dataCount, List<String> sprintIds,
-									  List<String> sprintNames, List<String> projectNames,
-									  String projectName) {
-		dataCount.setSprintIds(sprintIds);
-		dataCount.setSprintNames(sprintNames);
-		dataCount.setProjectNames(projectNames);
-		dataCount.setSProjectName(projectName);
-		dataCount.setDate("TEST EXECUTION TIME");
+	private Map<String, Object> aggregateCategoryData(String category, List<Map<String, Object>> hoverMapValues) {
+		long totalCount = 0;
+		double totalWeightedTime = 0.0;
+		long totalCountForAvg = 0;
+
+		for (Map<String, Object> hoverMap : hoverMapValues) {
+			Map<String, Object> categoryData = extractCategoryData(hoverMap, category);
+			if (categoryData != null) {
+				long count = getNumberValue(categoryData.get(COUNT));
+				double avgTime = getDoubleValue(categoryData.get(AVGEXECUTIONTIME));
+				totalCount += count;
+				if (count > 0) {
+					totalWeightedTime += (avgTime * count);
+					totalCountForAvg += count;
+				}
+			}
+		}
+
+		double aggregatedAvgTime = totalCountForAvg > 0
+				? BigDecimal.valueOf(totalWeightedTime / totalCountForAvg).setScale(2, RoundingMode.HALF_UP).doubleValue()
+				: 0.0;
+
+		Map<String, Object> result = new HashMap<>();
+		result.put(COUNT, totalCount);
+		result.put(AVGEXECUTIONTIME, aggregatedAvgTime);
+		return result;
+	}
+
+	private Map<String, Object> extractCategoryData(Map<String, Object> hoverMap, String category) {
+		if (hoverMap != null && hoverMap.containsKey(category)) {
+			Object categoryObj = hoverMap.get(category);
+			if (categoryObj instanceof Map) {
+				return (Map<String, Object>) categoryObj;
+			}
+		}
+		return null;
+	}
+
+	private Map<String, Object> createEmptyHoverMap() {
+		Map<String, Object> emptyMap = new LinkedHashMap<>();
+		for (String category : Arrays.asList("TOTAL", "AUTOMATED", "MANUAL")) {
+			Map<String, Object> categoryMap = new HashMap<>();
+			categoryMap.put(COUNT, 0);
+			categoryMap.put(AVGEXECUTIONTIME, 0.0);
+			emptyMap.put(category, categoryMap);
+		}
+		return emptyMap;
+	}
+
+	private long getNumberValue(Object obj) {
+		if (obj instanceof Number) {
+			return ((Number) obj).longValue();
+		}
+		return 0;
+	}
+
+	private double getDoubleValue(Object obj) {
+		if (obj instanceof Number) {
+			return ((Number) obj).doubleValue();
+		}
+		return 0.0;
 	}
 
 	@Override
