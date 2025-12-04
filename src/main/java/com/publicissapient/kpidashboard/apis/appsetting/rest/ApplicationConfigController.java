@@ -18,23 +18,23 @@
 
 package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
-import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigServiceImpl;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
+import com.publicissapient.kpidashboard.apis.appsetting.service.ApplicationConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -45,52 +45,31 @@ public class ApplicationConfigController {
 
 	private final ApplicationConfigServiceImpl applicationConfigService;
 
-    /**
-     * Retrieves comprehensive application configuration including Economic Benefits calculator parameters,
-     * Help resources, and system settings. Returns configuration data with team size, cost parameters,
-     * help resource URLs, application settings, and AI provider configuration.
-     *
-     * @return ResponseEntity with configuration data including:
-     *     - totalTeamSize: Team size for economic calculations
-     *     - avgCostPerTeamMember: Average cost per team member
-     *     - timeDuration: Time duration for cost calculations
-     *     - productDocumentation: Product documentation URL
-     *     - apiDocumentation: API documentation URL
-     *     - videoTutorials: Video tutorials URL
-     *     - raiseTicket: Support ticket URL
-     *     - supportChannel: Support channel URL
-     *     - audience: Target audience identifier
-     *     - baseUrl: Application base URL
-     *     - defaultAiProvider: Default AI provider configuration
-     */
-    @GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Get Application Configuration",
-            description =
-                    "Retrieves comprehensive application configuration including economic benefits calculator parameters, help resource URLs, application settings, and AI provider configuration for the KnowHOW dashboard")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description =
-                                    "Application configuration retrieved successfully. Returns complete configuration including economic benefits settings, help resources, and system configuration.",
-                            content = {
-                                    @Content(
-                                            mediaType = "application/json",
-                                            schema = @Schema(implementation = ServiceResponse.class),
-                                            examples = @ExampleObject(
-                                                    value = "{\"message\":\"Application configuration retrieved successfully\",\"success\":true,\"data\":{\"totalTeamSize\":30,\"avgCostPerTeamMember\":100000.0,\"timeDuration\":\"Per Year\",\"productDocumentation\":\"https://docs.example.com/product\",\"apiDocumentation\":\"https://docs.example.com/api\",\"videoTutorials\":\"https://videos.example.com/tutorials\",\"raiseTicket\":\"https://support.example.com/tickets\",\"supportChannel\":\"https://chat.example.com/support\",\"audience\":\"knowhow-api\",\"baseUrl\":\"http://localhost:8081\",\"defaultAiProvider\":\"openai\"}}"
-                                            ))
-                            })
-            })
+	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(
+			summary = "Get Application Configuration",
+			description =
+					"Retrieves comprehensive application configuration including economic benefits calculator parameters, help resource URLs, application settings, and AI provider configuration for the KnowHOW dashboard")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description =
+								"Application configuration retrieved successfully. Returns complete configuration including economic benefits settings, help resources, and system configuration.",
+						content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = ServiceResponse.class),
+									examples =
+											@ExampleObject(
+													value =
+															"{\"message\":\"Application configuration retrieved successfully\",\"success\":true,\"data\":{\"totalTeamSize\":30,\"avgCostPerTeamMember\":100000.0,\"timeDuration\":\"Per Year\",\"productDocumentation\":\"https://docs.example.com/product\",\"apiDocumentation\":\"https://docs.example.com/api\",\"videoTutorials\":\"https://videos.example.com/tutorials\",\"raiseTicket\":\"https://support.example.com/tickets\",\"supportChannel\":\"https://chat.example.com/support\",\"audience\":\"knowhow-api\",\"baseUrl\":\"http://localhost:8081\",\"defaultAiProvider\":\"openai\"}}"))
+						})
+			})
+	public ResponseEntity<ServiceResponse> getApplicationConfig() {
+		ApplicationConfigDto configData = applicationConfigService.getApplicationConfig();
 
-    public ResponseEntity<ServiceResponse> getApplicationConfig() {
-        ApplicationConfigDto configData = applicationConfigService.getApplicationConfig();
-
-        return ResponseEntity.ok(
-                new ServiceResponse(
-                        true,
-                        "Application configuration retrieved successfully",
-                        configData));
-    }
+		return ResponseEntity.ok(
+				new ServiceResponse(true, "Application configuration retrieved successfully", configData));
+	}
 }

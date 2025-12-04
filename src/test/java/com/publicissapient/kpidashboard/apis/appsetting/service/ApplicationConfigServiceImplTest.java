@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.AIGatewayConfig;
 import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
 import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
+import com.knowhow.retro.aigatewayclient.client.config.AiGatewayConfig;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationConfigServiceImplTest {
@@ -36,13 +36,13 @@ class ApplicationConfigServiceImplTest {
     private ApplicationConfigServiceImpl applicationConfigService;
     private PEBConfig pebConfig;
     private HelpConfig helpConfig;
-    private AIGatewayConfig aiGatewayConfig;
+    private AiGatewayConfig aiGatewayConfig;
 
     @BeforeEach
     void setUp() {
         pebConfig = new PEBConfig();
         helpConfig = new HelpConfig();
-        aiGatewayConfig = new AIGatewayConfig();
+        aiGatewayConfig = new AiGatewayConfig();
         applicationConfigService = new ApplicationConfigServiceImpl(pebConfig, helpConfig, aiGatewayConfig);
     }
 

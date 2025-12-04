@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
@@ -19,47 +18,61 @@ package com.publicissapient.kpidashboard.apis.appsetting.service;
 
 import java.util.Objects;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.AIGatewayConfig;
-import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
 import org.apache.commons.lang3.StringUtils;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+
+import com.knowhow.retro.aigatewayclient.client.config.AiGatewayConfig;
+import com.publicissapient.kpidashboard.apis.appsetting.config.ApplicationConfigDto;
 import com.publicissapient.kpidashboard.apis.appsetting.config.HelpConfig;
 import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ApplicationConfigServiceImpl {
+	private static final int DEFAULT_TEAM_SIZE = 30;
+	private static final double DEFAULT_COST_PER_MEMBER = 100000.00;
+	private static final String DEFAULT_TIME_DURATION = "Per Year";
 
-    private final PEBConfig pebConfig;
-    private final HelpConfig helpConfig;
-    private final AIGatewayConfig aIGatewayConfig;
+	private final PEBConfig pebConfig;
+	private final HelpConfig helpConfig;
+	private final AiGatewayConfig aIGatewayConfig;
 
-    private static final int DEFAULT_TEAM_SIZE = 30;
-    private static final double DEFAULT_COST_PER_MEMBER = 100000.00;
-    private static final String DEFAULT_TIME_DURATION = "Per Year";
+	public ApplicationConfigDto getApplicationConfig() {
+		log.info("Fetching application configuration");
 
-    public ApplicationConfigDto getApplicationConfig() {
-        log.info("Fetching application configuration");
-        ApplicationConfigDto config = new ApplicationConfigDto();
+		ApplicationConfigDto config =
+				ApplicationConfigDto.builder()
+						.totalTeamSize(
+								pebConfig.getTotalDevelopers() != null
+										? pebConfig.getTotalDevelopers()
+										: DEFAULT_TEAM_SIZE)
+						.avgCostPerTeamMember(
+								pebConfig.getAvgCostPerDeveloper() != null
+										? pebConfig.getAvgCostPerDeveloper()
+										: DEFAULT_COST_PER_MEMBER)
+						.timeDuration(
+								pebConfig.getTimeDuration() != null
+										? pebConfig.getTimeDuration()
+										: DEFAULT_TIME_DURATION)
+						.productDocumentation(
+								Objects.toString(helpConfig.getProductDocumentationUrl(), StringUtils.EMPTY))
+						.apiDocumentation(
+								Objects.toString(helpConfig.getApiDocumentationUrl(), StringUtils.EMPTY))
+						.videoTutorials(Objects.toString(helpConfig.getVideoTutorialsUrl(), StringUtils.EMPTY))
+						.raiseTicket(Objects.toString(helpConfig.getRaiseTicketUrl(), StringUtils.EMPTY))
+						.supportChannel(Objects.toString(helpConfig.getSupportChannelUrl(), StringUtils.EMPTY))
+						.audience(Objects.toString(aIGatewayConfig.getAudience(), StringUtils.EMPTY))
+						.baseUrl(Objects.toString(aIGatewayConfig.getBaseUrl(), StringUtils.EMPTY))
+						.defaultAiProvider(
+								Objects.toString(aIGatewayConfig.getDefaultAiProvider(), StringUtils.EMPTY))
+						.build();
 
-        config.setTotalTeamSize(pebConfig.getTotalDevelopers() != null ? pebConfig.getTotalDevelopers() : DEFAULT_TEAM_SIZE);
-        config.setAvgCostPerTeamMember(pebConfig.getAvgCostPerDeveloper() != null ? pebConfig.getAvgCostPerDeveloper() : DEFAULT_COST_PER_MEMBER);
-        config.setTimeDuration(pebConfig.getTimeDuration() != null ? pebConfig.getTimeDuration() : DEFAULT_TIME_DURATION);
-
-        config.setProductDocumentation(Objects.toString(helpConfig.getProductDocumentationUrl(), StringUtils.EMPTY));
-        config.setApiDocumentation(Objects.toString(helpConfig.getApiDocumentationUrl(), StringUtils.EMPTY));
-        config.setVideoTutorials(Objects.toString(helpConfig.getVideoTutorialsUrl(), StringUtils.EMPTY));
-        config.setRaiseTicket(Objects.toString(helpConfig.getRaiseTicketUrl(), StringUtils.EMPTY));
-        config.setSupportChannel(Objects.toString(helpConfig.getSupportChannelUrl(), StringUtils.EMPTY));
-
-        config.setAudience(Objects.toString(aIGatewayConfig.getAudience(), StringUtils.EMPTY));
-        config.setBaseUrl(Objects.toString(aIGatewayConfig.getBaseUrl(), StringUtils.EMPTY));
-        config.setDefaultAiProvider(Objects.toString(aIGatewayConfig.getDefaultAiProvider(), StringUtils.EMPTY));
-
-        log.info("Application configuration retrieved successfully");
-        return config;
-    }
+		log.info("Application configuration retrieved successfully");
+		return config;
+	}
 }
