@@ -165,6 +165,12 @@ public class DefectsBreachedSlasServiceImpl
 	}
 
 	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI195(), KPICode.DEFECTS_BREACHED_SLAS.getKpiId());
+	}
+
+	@Override
 	public KpiElement getKpiData(
 			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
