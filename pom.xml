@@ -357,7 +357,6 @@
       <version>3.0.2</version>
     </dependency>
       <!-- DeepLearning4J dependencies for LSTM forecasting -->
-      <!-- DeepLearning4J dependencies for LSTM forecasting -->
       <dependency>
           <groupId>org.deeplearning4j</groupId>
           <artifactId>deeplearning4j-core</artifactId>
