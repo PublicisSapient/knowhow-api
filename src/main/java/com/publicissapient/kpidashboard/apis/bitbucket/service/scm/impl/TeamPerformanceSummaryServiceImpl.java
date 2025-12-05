@@ -171,6 +171,10 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 	 */
 	private PerformanceSummary buildPerformanceSummary(Tool tool, String projectName, List<ScmCommits> allCommits,
 			List<ScmMergeRequests> allMergeRequests, CustomDateRange dateRange) {
+        if (!DeveloperKpiHelper.isValidTool(tool)) {
+            log.error("[BITBUCKET-AGGREGATED-VALUE]. Invalid tool config");
+            return null;
+        }
 		String branchName = DeveloperKpiHelper.getBranchSubFilter(tool, projectName);
 		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(allCommits, tool);
 		List<ScmMergeRequests> mergeRequestsForBranch = DeveloperKpiHelper

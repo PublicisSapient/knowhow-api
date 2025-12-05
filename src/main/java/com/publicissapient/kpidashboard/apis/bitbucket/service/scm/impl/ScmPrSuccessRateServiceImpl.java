@@ -17,6 +17,7 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +55,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,7 +140,7 @@ public class ScmPrSuccessRateServiceImpl
 
 		String requestTrackerId = getRequestTrackerId();
 		String duration = kpiRequest.getDuration();
-
+		LocalDateTime currentDate = DateUtil.getTodayTime();
 		List<Tool> scmTools =
 				DeveloperKpiHelper.getScmToolsForProject(
 						projectLeafNode, configHelperService, kpiHelperService);
@@ -164,7 +167,8 @@ public class ScmPrSuccessRateServiceImpl
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-		CustomDateRange periodRange = KpiDataHelper.getStartAndEndDatesForCumulative(kpiRequest);
+		int dataPoints = (int) ObjectUtils.defaultIfNull(kpiRequest.getKanbanXaxisDataPoints(), 7);
+		CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
 		String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 		List<ScmMergeRequests> mergeRequestsInRange =
 				DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);

@@ -18,11 +18,14 @@
 
 package com.publicissapient.kpidashboard.apis.auth.exceptions;
 
+import java.io.Serial;
+
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 
 /** Can be thrown if user does not exists. */
 public class UserNotFoundException extends RuntimeException {
 
+	@Serial
 	private static final long serialVersionUID = -8596676033217258687L;
 
 	private static final String MESSAGE =
