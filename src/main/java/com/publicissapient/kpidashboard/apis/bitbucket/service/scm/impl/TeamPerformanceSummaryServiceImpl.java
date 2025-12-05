@@ -28,6 +28,7 @@ import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -107,7 +108,7 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 				return Collections.emptyList();
 			}
 
-			CustomDateRange dateRange = getStartAndEndDate(durationValue, duration);
+			CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(LocalDateTime.now(), duration, durationValue);
 			Map<String, Object> scmDataMap = fetchFromDb(dateRange,
 					projectNode.getProjectFilter().getBasicProjectConfigId());
 			List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
@@ -250,26 +251,4 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 		return Map.of(MR_LIST, mergeRequestsList, COMMIT_LIST, commitsList);
 	}
 
-	/**
-	 * Calculates start and end date based on duration type and value.
-	 * 
-	 * @param dataPoint
-	 *            the duration value
-	 * @param duration
-	 *            the duration type (WEEK or DAYS)
-	 * @return custom date range with start and end dates
-	 */
-	private CustomDateRange getStartAndEndDate(int dataPoint, String duration) {
-		CustomDateRange dateRange = new CustomDateRange();
-		LocalDateTime endDate = DateUtil.getTodayTime();
-		LocalDateTime startDate = CommonConstant.WEEK.equalsIgnoreCase(duration) ? endDate.minusWeeks(dataPoint)
-				: endDate.minusDays(dataPoint);
-		dateRange.setStartDateTime(startDate);
-		dateRange.setEndDateTime(endDate);
-		dateRange.setEndDate(DateUtil.getTodayDate());
-		dateRange.setStartDate(
-				CommonConstant.WEEK.equalsIgnoreCase(duration) ? DateUtil.getTodayDate().minusWeeks(dataPoint)
-						: DateUtil.getTodayDate().minusDays(dataPoint));
-		return dateRange;
-	}
 }
