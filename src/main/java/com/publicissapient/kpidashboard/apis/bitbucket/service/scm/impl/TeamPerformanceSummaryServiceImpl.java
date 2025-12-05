@@ -28,6 +28,7 @@ import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -107,7 +108,7 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 				return Collections.emptyList();
 			}
 
-			CustomDateRange dateRange = getStartAndEndDate(durationValue, duration);
+			CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(LocalDateTime.now(), duration, durationValue);
 			Map<String, Object> scmDataMap = fetchFromDb(dateRange,
 					projectNode.getProjectFilter().getBasicProjectConfigId());
 			List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
