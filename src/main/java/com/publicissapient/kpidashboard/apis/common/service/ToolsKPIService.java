@@ -672,7 +672,7 @@ public abstract class ToolsKPIService<R, S> {
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
 
 		for (String selectedId : selectedIds) {
-			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
+			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 
@@ -720,7 +720,7 @@ public abstract class ToolsKPIService<R, S> {
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
 		for (String selectedId : selectedIds) {
-			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
+			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				List<DataCount> dataCounts = obj instanceof List<?> ? (List<DataCount>) obj : null;
@@ -814,7 +814,7 @@ public abstract class ToolsKPIService<R, S> {
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
-							Pair.of(kpiRequest.getSelecedHierarchyLabel().toUpperCase(), selectedId));
+							Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				Map<String, List<DataCount>> valueMap =
@@ -875,7 +875,7 @@ public abstract class ToolsKPIService<R, S> {
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
-							Pair.of(kpiRequest.getSelecedHierarchyLabel().toUpperCase(), selectedId));
+							Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				Map<String, List<DataCount>> valueMap =
@@ -957,7 +957,7 @@ public abstract class ToolsKPIService<R, S> {
 
 		if (Constant.SPRINT.equalsIgnoreCase(kpiRequest.getLabel())) {
 			populateSelectedIdInSprintSelection(kpiRequest, selectedIds);
-			kpiRequest.setSelecedHierarchyLabel(Constant.PROJECT.toUpperCase());
+			kpiRequest.setLabel(Constant.PROJECT.toUpperCase());
 		} else if (MapUtils.isNotEmpty(addFilterCat)
 				&& null != addFilterCat.get(kpiRequest.getLabel().toUpperCase())) {
 			Map<String, List<String>> kpiRequestSelectedMap = new HashMap<>();
@@ -972,10 +972,10 @@ public abstract class ToolsKPIService<R, S> {
 			} else {
 				selectedIds.addAll(kpiRequestSelectedMap.get(Constant.PROJECT.toUpperCase()));
 			}
-			kpiRequest.setSelecedHierarchyLabel(Constant.PROJECT.toUpperCase());
+			kpiRequest.setLabel(Constant.PROJECT.toUpperCase());
 		} else {
 			selectedIds = new HashSet<>(Arrays.asList(kpiRequest.getIds()));
-			kpiRequest.setSelecedHierarchyLabel(kpiRequest.getLabel());
+			kpiRequest.setLabel(kpiRequest.getLabel());
 		}
 		return selectedIds;
 	}

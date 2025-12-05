@@ -293,19 +293,19 @@ public class FilterHelperServiceImplTest {
 	}
 
 	@Test
-	public void getHierarachyLevelId() {
+	public void getHierarchyLevelId() {
 		when(cacheService.getFullHierarchyLevelMap())
 				.thenReturn(
 						hierarchyLevels2.stream()
 								.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x)));
 		Assert.assertEquals(
-				filterHelperService.getHierarachyLevelId(4, "project", projectConfigScrum.isKanban()),
+				filterHelperService.getHierarchyLevelId(4, "project", projectConfigScrum.isKanban()),
 				"project");
 	}
 
 	@Test
-	public void getFirstHierarachyLevel() {
-		Assert.assertEquals(filterHelperService.getFirstHierarachyLevel(), "project");
+	public void getFirstHierarchyLevel() {
+		Assert.assertEquals(filterHelperService.getFirstHierarchyLevel(), "project");
 	}
 
 	@Test
