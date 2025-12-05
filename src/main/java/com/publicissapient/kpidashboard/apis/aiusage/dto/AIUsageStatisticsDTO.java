@@ -18,11 +18,10 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
-import java.time.Instant;
-import java.util.Objects;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.HierarchyLevelType;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
 
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -30,6 +29,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
+
+import java.time.Instant;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -60,7 +62,8 @@ public class AIUsageStatisticsDTO {
 			return;
 		}
 
-		this.levelName = Objects.toString(aiUsageStatistics.getLevelType(), StringUtils.EMPTY);
+		this.levelName = Objects.toString(HierarchyLevelType.valueOf(aiUsageStatistics.getLevelType()).getLevelName(),
+				StringUtils.EMPTY);
 		this.organizationEntityName = Objects.toString(aiUsageStatistics.getLevelName(), StringUtils.EMPTY);
 		this.statsDate = aiUsageStatistics.getStatsDate();
 		this.ingestTimestamp = aiUsageStatistics.getIngestTimestamp();

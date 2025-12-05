@@ -18,17 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest;
 
-import java.time.LocalDate;
-
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
+import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
-import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
-import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
 

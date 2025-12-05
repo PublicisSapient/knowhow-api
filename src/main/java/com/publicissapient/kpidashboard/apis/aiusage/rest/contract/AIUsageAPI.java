@@ -18,7 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest.contract;
 
-import java.time.LocalDate;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import org.apache.coyote.BadRequestException;
@@ -30,14 +31,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpServerErrorException;
 
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
-import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
+import java.time.LocalDate;
 
 @RequestMapping("/v1/ai-usage")
 public interface AIUsageAPI {

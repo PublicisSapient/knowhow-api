@@ -18,19 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.service;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import org.apache.coyote.BadRequestException;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageStatisticsDTO;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageStatisticsResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageSummary;
@@ -41,10 +28,23 @@ import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+
+import org.apache.coyote.BadRequestException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -97,15 +97,18 @@ public class AIUsageService {
 		ServiceResponse response = new ServiceResponse();
 		response.setMessage("AI usage statistics retrieved successfully");
 		response.setSuccess(true);
-		AIUsageStatisticsDTO dto = new AIUsageStatisticsDTO();
-		dto.setLevelName(levelName);
-		dto.setUsageSummary(aggregateSummaries(responseList));
-		response.setData(new AIUsageStatisticsResponse(dto, responseDTOList));
+		AIUsageStatisticsDTO totalSummaryDto = new AIUsageStatisticsDTO();
+		totalSummaryDto.setLevelName(levelName);
+		totalSummaryDto.setUsageSummary(aggregateSummaries(responseList));
+		response.setData(new AIUsageStatisticsResponse(totalSummaryDto, responseDTOList));
 
 		return response;
 	}
 
-	private void computeValuesForExpectedLevelName(LocalDate startDate, LocalDate endDate, AccountFilteredData hierarchy, List<AIUsageStatistics> responseList) {
+	private void computeValuesForExpectedLevelName(LocalDate startDate,
+												   LocalDate endDate,
+												   AccountFilteredData hierarchy,
+												   List<AIUsageStatistics> responseList) {
 		if (hierarchy.getLabelName() != null) {
 			switch (HierarchyLevelType.fromLevelName(hierarchy.getLabelName().toLowerCase())) {
 				case BUSINESS_UNIT -> {
