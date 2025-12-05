@@ -147,8 +147,7 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.LSTM.getName());
 		updateForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.LSTM.getName());
 
-		updateForecastModel(
-				KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
+		updateForecastModel(KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
 
 		log.info("Completed forecast model update for KPIs");
 	}

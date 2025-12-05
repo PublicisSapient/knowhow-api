@@ -325,14 +325,8 @@ public class ForecastingManagerTest {
 		List<KpiMaster> testKpiMasterList = new ArrayList<>();
 		testKpiMasterList.add(kpiMaster);
 
-		DataCountGroup dataCount = new DataCountGroup();
-		List<DataCount> historicalData = createTestDataCounts(5);
-		List<DataCount> expectedForecasts = createTestDataCounts(1);
-
-		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
-		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
-		when(linearRegressionForecaster.generateForecast(any(), anyString()))
-				.thenReturn(expectedForecasts);
+		DataCount dataCount = new DataCount();
+		List<DataCount> historicalData = createTestDataCounts(-1);
 
 		// Act
 		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
