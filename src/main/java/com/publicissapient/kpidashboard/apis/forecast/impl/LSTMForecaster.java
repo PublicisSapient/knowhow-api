@@ -19,7 +19,11 @@ package com.publicissapient.kpidashboard.apis.forecast.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -66,6 +70,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
+@NoArgsConstructor
+@AllArgsConstructor
 public class LSTMForecaster extends AbstractForecastService {
 
 	/**
@@ -110,6 +116,8 @@ public class LSTMForecaster extends AbstractForecastService {
      * <p>0.01 enables faster convergence with limited training data.
      */
     private static final double OPTIMIZED_LEARNING_RATE = 0.01;
+    private Function<int[], INDArray> nd4jZeros= Nd4j::zeros;
+
 
 	@Override
 	public ForecastingModel getModelType() {
@@ -245,29 +253,29 @@ public class LSTMForecaster extends AbstractForecastService {
 	 * @param data Normalized time series data
 	 * @return Array of [input_sequences, target_sequences] INDArrays
 	 */
-	private INDArray[] createSequences(double[] data) {
-		if (data.length <= SEQUENCE_LENGTH) {
-			// Insufficient data - return empty tensors with correct dimensions
-			return new INDArray[]{Nd4j.zeros(0, 1, SEQUENCE_LENGTH), Nd4j.zeros(0, 1, SEQUENCE_LENGTH)};
-		}
+    private INDArray[] createSequences(double[] data) {
+        if (data.length <= SEQUENCE_LENGTH) {
+            // Insufficient data - return empty tensors with correct dimensions
+            return new INDArray[] {nd4jZeros.apply(new int[]{0, 1, SEQUENCE_LENGTH}), nd4jZeros.apply(new int[]{0, 1, SEQUENCE_LENGTH})};
+        }
 
-		int numSequences = data.length - SEQUENCE_LENGTH;
+        int numSequences = data.length - SEQUENCE_LENGTH;
 
-		// Create 3D tensors for RNN input/output format
-		INDArray input = Nd4j.zeros(numSequences, 1, SEQUENCE_LENGTH);
-		INDArray output = Nd4j.zeros(numSequences, 1, SEQUENCE_LENGTH);
+        // Create 3D tensors for RNN input/output format
+        INDArray input = nd4jZeros.apply(new int[]{numSequences, 1, SEQUENCE_LENGTH});
+        INDArray output = nd4jZeros.apply(new int[]{numSequences, 1, SEQUENCE_LENGTH});
 
-		for (int i = 0; i < numSequences; i++) {
-			// Fill input sequence with SEQUENCE_LENGTH consecutive values
-			for (int j = 0; j < SEQUENCE_LENGTH; j++) {
-				input.putScalar(new int[]{i, 0, j}, data[i + j]);
-			}
-			// Set target value at the last time step of output sequence
-			output.putScalar(new int[]{i, 0, SEQUENCE_LENGTH - 1}, data[i + SEQUENCE_LENGTH]);
-		}
+        for (int i = 0; i < numSequences; i++) {
+            // Fill input sequence with SEQUENCE_LENGTH consecutive values
+            for (int j = 0; j < SEQUENCE_LENGTH; j++) {
+                input.putScalar(new int[] {i, 0, j}, data[i + j]);
+            }
+            // Set target value at the last time step of output sequence
+            output.putScalar(new int[] {i, 0, SEQUENCE_LENGTH - 1}, data[i + SEQUENCE_LENGTH]);
+        }
 
-		return new INDArray[]{input, output};
-	}
+        return new INDArray[] {input, output};
+    }
 
     /**
      * Constructs LSTM model optimized for volatile KPI data with limited samples.
@@ -320,8 +328,9 @@ public class LSTMForecaster extends AbstractForecastService {
 	 * @return Input tensor for prediction
 	 */
 	private INDArray getLastSequence(double[] data) {
-		// Create tensor for single prediction batch
-		INDArray sequence = Nd4j.zeros(1, 1, SEQUENCE_LENGTH);
+
+        // Create tensor for single prediction batch
+        INDArray sequence = nd4jZeros.apply(new int[]{1, 1, SEQUENCE_LENGTH});
 
 		// Calculate starting index for sequence extraction
 		int startIdx = Math.max(0, data.length - SEQUENCE_LENGTH);
