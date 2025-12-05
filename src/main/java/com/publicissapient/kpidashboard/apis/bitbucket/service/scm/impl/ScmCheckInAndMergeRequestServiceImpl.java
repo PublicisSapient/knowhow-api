@@ -102,7 +102,8 @@ public class ScmCheckInAndMergeRequestServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.REPO_TOOL_CODE_COMMIT);
 
-		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+		kpiElement.setTrendValueList(
+				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(), true));
 		return kpiElement;
 	}
 

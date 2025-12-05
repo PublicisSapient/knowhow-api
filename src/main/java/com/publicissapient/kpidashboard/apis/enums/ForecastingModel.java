@@ -74,7 +74,9 @@ public enum ForecastingModel {
 
 	/** Logistic Growth: For data with saturation/ceiling effects */
 	LOGISTIC_GROWTH(
-			"logisticGrowth", "Logistic Growth", "S-shaped growth model for saturation effects");
+			"logisticGrowth", "Logistic Growth", "S-shaped growth model for saturation effects"),
+
+	THETA_METHOD("thetaMethod", "Theta Method", "");
 
 	private final String name;
 	private final String displayName;

@@ -82,9 +82,10 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 			Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 			calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.DEFECT_RATE);
 
-			Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-					KPICode.DEFECT_RATE);
-			kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+			Map<String, List<DataCount>> trendValuesMap =
+					getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEFECT_RATE);
+			kpiElement.setTrendValueList(
+					DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, "", false));
 		} else {
 			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
 		}
