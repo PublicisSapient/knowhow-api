@@ -141,7 +141,9 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 
         KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
                 KPICode.INNOVATION_RATE, kpiElement.getChartType());
-        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, null, commits, scmTools,
+		List<ScmCommits> filteredNonMergeCommits = commits.stream().filter(commit -> !commit.getIsMergeCommit())
+				.toList();
+        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, null, filteredNonMergeCommits, scmTools,
                 validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
