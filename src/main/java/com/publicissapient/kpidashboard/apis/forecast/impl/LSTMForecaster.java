@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -116,7 +117,30 @@ public class LSTMForecaster extends AbstractForecastService {
      * <p>0.01 enables faster convergence with limited training data.
      */
     private static final double OPTIMIZED_LEARNING_RATE = 0.01;
-    private Function<int[], INDArray> nd4jZeros= Nd4j::zeros;
+    static {
+        System.setProperty("org.nd4j.linalg.factory.Nd4jBackend",
+                          "org.nd4j.linalg.cpu.nativecpu.CpuBackend");
+    }
+    @PostConstruct
+    public void validateEnvironment() {
+        try {
+            Nd4j.zeros(1);
+            log.info("ND4J initialized successfully -- lstm forecaster");
+        } catch (Exception | Error e) {
+            log.error("ND4J unavailable - LSTM forecasting disabled: {}", e.getMessage());
+        }
+    }
+
+    private Function<int[], INDArray> nd4jZeros = shape -> {
+        try {
+            return Nd4j.zeros(shape);
+        } catch (NoClassDefFoundError e) {
+            log.error("ND4J not available in this environment: {}", e.getMessage());
+            throw new RuntimeException("LSTM forecasting unavailable", e);
+        }
+    };
+
+
 
 
 	@Override
