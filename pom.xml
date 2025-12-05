@@ -590,9 +590,9 @@
         <executions>
           <execution>
             <id>build</id>
-            <!-- <goals>
+             <goals>
               <goal>build</goal>
-            </goals>-->
+            </goals>
             <phase>install</phase>
             <configuration>
               <dockerfile>Dockerfile</dockerfile>
