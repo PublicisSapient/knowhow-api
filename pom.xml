@@ -29,7 +29,11 @@
     <url>https://github.com/PublicisSapient/knowhow-api.git</url>
   </scm>
   <properties>
-    <java.version>17</java.version>
+      <!-- ND4J Configuration Properties -->
+      <nd4j.backend>nd4j-native-platform</nd4j.backend>
+      <nd4j.chip>cpu</nd4j.chip>
+
+      <java.version>17</java.version>
     <guava.version>33.0.0-jre</guava.version>
     <lombok.version>1.18.30</lombok.version>
     <application.version.number>2.5.0</application.version.number>
@@ -568,7 +572,14 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
+          <configuration>
+              <jvmArguments>
+                  -Dorg.nd4j.linalg.factory.Nd4jBackend=org.nd4j.linalg.cpu.nativecpu.CpuBackend
+                  -Dorg.nd4j.linalg.primaryopstimeout=30000
+                  -Xmx1536m
+              </jvmArguments>
+          </configuration>
+          <executions>
           <execution>
             <id>repackage</id>
             <configuration>
@@ -717,6 +728,10 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>${maven-surefire-plugin.version}</version>
             <configuration>
+                <systemPropertyVariables>
+                    <org.nd4j.linalg.factory.Nd4jBackend>org.nd4j.linalg.cpu.nativecpu.CpuBackend</org.nd4j.linalg.factory.Nd4jBackend>
+                    <org.nd4j.linalg.primaryopstimeout>30000</org.nd4j.linalg.primaryopstimeout>
+                </systemPropertyVariables>
               <suiteXmlFiles>
                 <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
               </suiteXmlFiles>

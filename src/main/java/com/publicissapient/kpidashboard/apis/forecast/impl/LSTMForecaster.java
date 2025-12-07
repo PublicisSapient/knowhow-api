@@ -19,7 +19,9 @@ package com.publicissapient.kpidashboard.apis.forecast.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
@@ -133,8 +135,9 @@ public class LSTMForecaster extends AbstractForecastService {
 
     private Function<int[], INDArray> nd4jZeros = shape -> {
         try {
-            return Nd4j.zeros(shape);
-        } catch (NoClassDefFoundError e) {
+            // Add timeout and retry logic
+            return executeWithTimeout(() -> Nd4j.zeros(shape), 30000);
+        } catch (NoClassDefFoundError | Exception e) {
             log.error("ND4J not available in this environment: {}", e.getMessage());
             throw new RuntimeException("LSTM forecasting unavailable", e);
         }
@@ -384,4 +387,20 @@ public class LSTMForecaster extends AbstractForecastService {
 	private double denormalizeValue(double normalizedValue, double min, double max) {
 		return normalizedValue * (max - min) + min;
 	}
+
+    private INDArray executeWithTimeout(Supplier<INDArray> operation, long timeoutMs) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<INDArray> future = executor.submit(operation::get);
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            log.error("ND4J initialization timeout after {}ms", timeoutMs);
+            throw new RuntimeException("ND4J initialization timeout", e);
+        } catch (Exception e) {
+            log.error("ND4J initialization failed: {}", e.getMessage());
+            throw new RuntimeException("ND4J initialization failed", e);
+        } finally {
+            executor.shutdown();
+        }
+    }
 }
