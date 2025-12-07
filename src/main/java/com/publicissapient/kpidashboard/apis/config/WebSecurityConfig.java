@@ -150,6 +150,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 										.requestMatchers("/basicconfigs/hierarchyResponses")
 										.permitAll()
 
+                                        .requestMatchers("/config")
+                                        .permitAll()
+
 										// management metrics
 										.requestMatchers("/info")
 										.permitAll()
