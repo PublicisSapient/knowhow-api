@@ -135,11 +135,16 @@ public class LSTMForecaster extends AbstractForecastService {
 
     private Function<int[], INDArray> nd4jZeros = shape -> {
         try {
-            // Add timeout and retry logic
             return executeWithTimeout(() -> Nd4j.zeros(shape), 30000);
-        } catch (NoClassDefFoundError | Exception e) {
+        } catch (NoClassDefFoundError e) {
             log.error("ND4J not available in this environment: {}", e.getMessage());
-            throw new RuntimeException("LSTM forecasting unavailable", e);
+            throw new IllegalStateException("LSTM forecasting unavailable", e);
+        } catch (TimeoutException e) {
+            log.error("ND4J initialization timeout: {}", e.getMessage());
+            throw new IllegalStateException("ND4J initialization timeout", e);
+        } catch (Exception e) {
+            log.error("ND4J execution failed: {}", e.getMessage());
+            throw new IllegalStateException("ND4J execution failed", e);
         }
     };
 
@@ -388,19 +393,19 @@ public class LSTMForecaster extends AbstractForecastService {
 		return normalizedValue * (max - min) + min;
 	}
 
-    private INDArray executeWithTimeout(Supplier<INDArray> operation, long timeoutMs) {
+    private INDArray executeWithTimeout(Supplier<INDArray> operation, long timeoutMs) throws TimeoutException {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
             Future<INDArray> future = executor.submit(operation::get);
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            log.error("ND4J initialization timeout after {}ms", timeoutMs);
-            throw new RuntimeException("ND4J initialization timeout", e);
-        } catch (Exception e) {
-            log.error("ND4J initialization failed: {}", e.getMessage());
-            throw new RuntimeException("ND4J initialization failed", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Thread interrupted during ND4J initialization", e);
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("ND4J initialization failed", e.getCause());
         } finally {
             executor.shutdown();
         }
     }
-}
+
+    }
