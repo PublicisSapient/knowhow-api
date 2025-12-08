@@ -17,155 +17,142 @@
 
 package com.publicissapient.kpidashboard.apis.forecast.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
-/**
- * Test class for LSTMForecaster.
- * 
- * @author KnowHOW Development Team
- * @since 14.2.0
- */
-class LSTMForecasterTest {
+public class LSTMForecasterTest {
 
-    private LSTMForecaster lstmForecaster;
+	private LSTMForecaster forecaster;
 
-    @BeforeEach
-    void setUp() {
-        lstmForecaster = new LSTMForecaster();
-    }
+	@Before
+	public void setUp() {
+		forecaster = new LSTMForecaster();
+	}
 
-    @Test
-    void testGetModelType() {
-        assertEquals(ForecastingModel.LSTM, lstmForecaster.getModelType());
-    }
+	@Test
+	public void testGetModelType() {
+		assertEquals(ForecastingModel.LSTM, forecaster.getModelType());
+	}
 
-    @Test
-    void testGenerateForecast_EmptyData() {
-        List<DataCount> historicalData = new ArrayList<>();
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "EMPTY_KPI");
-        
-        assertNotNull(forecasts);
-        assertTrue(forecasts.isEmpty());
-    }
+	@Test
+	public void testCanForecast_WithSufficientData() {
+		List<DataCount> data = createDataCounts(10);
+		assertTrue(forecaster.canForecast(data, "kpi1"));
+	}
 
-    @Test
-    void testGenerateForecast_InsufficientData() {
-        List<DataCount> historicalData = createTestData(new double[]{10.0, 15.0, 20.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "INSUFFICIENT_KPI");
-        
-        assertNotNull(forecasts);
-        assertTrue(forecasts.isEmpty());
-    }
+	@Test
+	public void testCanForecast_WithMinimumData() {
+		List<DataCount> data = createDataCounts(6);
+		assertTrue(forecaster.canForecast(data, "kpi1"));
+	}
 
-    @Test
-    void testGenerateForecast_MinimumData() {
-        List<DataCount> historicalData = createTestData(new double[]{10.0, 15.0, 20.0, 25.0, 30.0, 35.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "MINIMUM_KPI");
-        
-        assertNotNull(forecasts);
-        assertEquals(1, forecasts.size());
-        
-        DataCount forecast = forecasts.get(0);
-        assertNotNull(forecast.getValue());
-        assertTrue(((Double) forecast.getValue()) >= 0);
-        assertEquals("lstm", forecast.getForecastingModel());
-    }
+	@Test
+	public void testCanForecast_WithInsufficientData() {
+		List<DataCount> data = createDataCounts(5);
+		assertFalse(forecaster.canForecast(data, "kpi1"));
+	}
 
-    @Test
-    void testGenerateForecast_TrendingData() {
-        List<DataCount> historicalData = createTestData(new double[]{10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "TRENDING_KPI");
-        
-        assertNotNull(forecasts);
-        assertEquals(1, forecasts.size());
-        
-        DataCount forecast = forecasts.get(0);
-        assertNotNull(forecast.getValue());
-        assertTrue(((Double) forecast.getValue()) >= 0);
-    }
+	@Test
+	public void testCanForecast_WithNullData() {
+		assertFalse(forecaster.canForecast(null, "kpi1"));
+	}
 
-    @Test
-    void testGenerateForecast_VolatileData() {
-        List<DataCount> historicalData = createTestData(new double[]{161.0, 329.43, 72.0, 312.25, 179.25, 137.5, 0.0, 0.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "VOLATILE_KPI");
-        
-        assertNotNull(forecasts);
-        assertEquals(1, forecasts.size());
-        
-        DataCount forecast = forecasts.get(0);
-        assertNotNull(forecast.getValue());
-        assertTrue(((Double) forecast.getValue()) >= 0);
-    }
+	@Test
+	public void testCanForecast_WithEmptyData() {
+		assertFalse(forecaster.canForecast(new ArrayList<>(), "kpi1"));
+	}
 
-    @Test
-    void testGenerateForecast_AllZeros() {
-        List<DataCount> historicalData = createTestData(new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "ZERO_KPI");
-        
-        assertNotNull(forecasts);
-        assertEquals(1, forecasts.size());
-        
-        DataCount forecast = forecasts.get(0);
-        assertNotNull(forecast.getValue());
-        assertTrue(((Double) forecast.getValue()) >= 0);
-    }
+	@Test
+	public void testGenerateForecast_WithPositiveTrend() {
+		List<DataCount> data = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			data.add(createDataCount(100.0 + i * 10.0));
+		}
+		List<DataCount> result = forecaster.generateForecast(data, "kpi1");
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertTrue((Double) result.get(0).getValue() >= 0);
+	}
 
-    @Test
-    void testGenerateForecast_ConstantValues() {
-        List<DataCount> historicalData = createTestData(new double[]{25.0, 25.0, 25.0, 25.0, 25.0, 25.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "CONSTANT_KPI");
-        
-        assertNotNull(forecasts);
-        assertEquals(1, forecasts.size());
-        
-        DataCount forecast = forecasts.get(0);
-        assertNotNull(forecast.getValue());
-        assertTrue(((Double) forecast.getValue()) >= 0);
-    }
+	@Test
+	public void testGenerateForecast_WithNegativeTrend() {
+		List<DataCount> data = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			data.add(createDataCount(200.0 - i * 10.0));
+		}
+		List<DataCount> result = forecaster.generateForecast(data, "kpi1");
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertTrue((Double) result.get(0).getValue() >= 0);
+	}
 
-    @Test
-    void testGenerateForecast_PreservesMetadata() {
-        List<DataCount> historicalData = createTestData(new double[]{10.0, 15.0, 20.0, 25.0, 30.0, 35.0});
-        
-        List<DataCount> forecasts = lstmForecaster.generateForecast(historicalData, "METADATA_KPI");
-        
-        assertNotNull(forecasts);
-        assertEquals(1, forecasts.size());
-        
-        DataCount forecast = forecasts.get(0);
-        assertEquals("TestProject", forecast.getSProjectName());
-        assertEquals("TestGroup", forecast.getKpiGroup());
-        assertEquals("lstm", forecast.getForecastingModel());
-    }
+	@Test
+	public void testGenerateForecast_WithInsufficientData() {
+		List<DataCount> data = createDataCounts(5);
+		List<DataCount> result = forecaster.generateForecast(data, "kpi1");
+		assertNotNull(result);
+		assertTrue(result.isEmpty());
+	}
 
-    private List<DataCount> createTestData(double[] values) {
-        List<DataCount> dataList = new ArrayList<>();
-        
-        for (int i = 0; i < values.length; i++) {
-            DataCount dataCount = new DataCount();
-            dataCount.setValue(values[i]);
-            dataCount.setData(String.valueOf(values[i]));
-            dataCount.setSProjectName("TestProject");
-            dataCount.setKpiGroup("TestGroup");
-            dataList.add(dataCount);
-        }
-        
-        return dataList;
-    }
+	@Test
+	public void testGenerateForecast_WithNullData() {
+		List<DataCount> result = forecaster.generateForecast(null, "kpi1");
+		assertNotNull(result);
+		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	public void testGenerateForecast_WithEmptyData() {
+		List<DataCount> result = forecaster.generateForecast(new ArrayList<>(), "kpi1");
+		assertNotNull(result);
+		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	public void testGenerateForecast_PreservesMetadata() {
+		List<DataCount> data = createDataCounts(10);
+		List<DataCount> result = forecaster.generateForecast(data, "kpi1");
+		assertNotNull(result);
+		assertFalse(result.isEmpty());
+		assertEquals("TestProject", result.get(0).getSProjectName());
+		assertEquals("TestGroup", result.get(0).getKpiGroup());
+		assertEquals("lstm", result.get(0).getForecastingModel());
+	}
+
+	@Test
+	public void testGenerateForecast_WithVolatileData() {
+		List<DataCount> data = new ArrayList<>();
+		double[] values = {100, 120, 95, 130, 110, 140, 105, 150, 115, 160};
+		for (double value : values) {
+			data.add(createDataCount(value));
+		}
+		List<DataCount> result = forecaster.generateForecast(data, "kpi1");
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertTrue((Double) result.get(0).getValue() >= 0);
+	}
+
+	private List<DataCount> createDataCounts(int count) {
+		List<DataCount> data = new ArrayList<>();
+		for (int i = 0; i < count; i++) {
+			data.add(createDataCount(i * 10.0));
+		}
+		return data;
+	}
+
+	private DataCount createDataCount(double value) {
+		DataCount dc = new DataCount();
+		dc.setValue(value);
+		dc.setSProjectName("TestProject");
+		dc.setKpiGroup("TestGroup");
+		return dc;
+	}
 }

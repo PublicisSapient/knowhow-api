@@ -356,24 +356,37 @@
       <artifactId>smile-core</artifactId>
       <version>3.0.2</version>
     </dependency>
-      <!-- DeepLearning4J dependencies for LSTM forecasting -->
+
+      <!-- DJL Core -->
       <dependency>
-          <groupId>org.deeplearning4j</groupId>
-          <artifactId>deeplearning4j-core</artifactId>
-          <version>1.0.0-M2.1</version>
+          <groupId>ai.djl</groupId>
+          <artifactId>api</artifactId>
+          <version>0.26.0</version>
       </dependency>
+
+      <!-- DJL PyTorch Engine -->
       <dependency>
-          <groupId>org.nd4j</groupId>
-          <artifactId>nd4j-native-platform</artifactId>
-          <version>1.0.0-M2.1</version>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-engine</artifactId>
+          <version>0.26.0</version>
+          <scope>runtime</scope>
       </dependency>
-      <!-- ND4J API -->
+
+      <!-- DJL PyTorch Native Library -->
       <dependency>
-          <groupId>org.nd4j</groupId>
-          <artifactId>nd4j-api</artifactId>
-          <version>1.0.0-M2.1</version>
+          <groupId>ai.djl.pytorch</groupId>
+          <artifactId>pytorch-native-cpu</artifactId>
+<!--          for windows machine-->
+<!--          <classifier>win-x86_64</classifier>-->
+<!--                    for linux machine-->
+          <classifier>linux-x86_64</classifier>
+          <version>2.0.1</version>
+          <scope>runtime</scope>
       </dependency>
-    <dependency>
+
+
+
+      <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
       <version>${logstash-logback-encoder.version}</version>
@@ -544,7 +557,7 @@
     <repository>
       <id>github</id>
       <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/PublicisSapient/knowhow-ai-gateway-client</url>
+        <url>https://maven.pkg.github.com/PublicisSapient/knowhow-ai-gateway-client</url>
     </repository>
   </repositories>
   <build>
