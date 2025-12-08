@@ -25,10 +25,10 @@ import lombok.Data;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrganizationEntityProductivity {
-    private String levelName;
-    private String organizationEntityName;
+	private String levelName;
+	private String organizationEntityName;
 
-    private CategoryScoresDTO categoryScores;
+	private CategoryScoresDTO categoryScores;
 
-    private KPITrends trends;
+	private KPITrends trends;
 }

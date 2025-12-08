@@ -904,7 +904,7 @@ public enum KPIExcelColumn {
 					"PR Status",
 					"Pickup Time (In Hours)")),
 
-	PR_SIZE(
+	PR_SIZE_OVERTIME(
 			"kpi162",
 			Arrays.asList(
 					"Project",
@@ -912,8 +912,8 @@ public enum KPIExcelColumn {
 					"Branch",
 					"Author",
 					"Days/Weeks",
-					"No of Merge",
-					"PR Size (No. of lines)")),
+					"Merge Request Url",
+					"Total Lines Changed")),
 
 	EPIC_PROGRESS(
 			"kpi165",
@@ -977,6 +977,10 @@ public enum KPIExcelColumn {
 	REWORK_RATE(
 			"kpi173",
 			Arrays.asList("Project", "Repo", "Branch", "Developer", "Days/Weeks", "Rework Rate")),
+	CODE_QUALITY_METRICS(
+			"kpi201",
+			Arrays.asList(
+					"Project", "Repo", "Branch", "Developer", "Days/Weeks", "Rework Rate", "Revert Rate")),
 
 	REVERT_RATE(
 			"kpi180",

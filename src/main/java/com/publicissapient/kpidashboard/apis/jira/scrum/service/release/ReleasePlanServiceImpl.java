@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -44,6 +45,7 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.model.JiraIssueReferTime;
 import com.publicissapient.kpidashboard.apis.jira.service.releasedashboard.JiraReleaseKPIService;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -93,6 +95,7 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 	private final List<JiraIssue> allReleaseTaggedIssue = new ArrayList<>();
 	@Autowired private JiraIssueRepository jiraIssueRepository;
 	@Autowired private ConfigHelperService configHelperService;
+	@Autowired(required = false) private ForecastingManager forecastingManager;
 	private LocalDateTime tempStartDate = null;
 
 	@Override
@@ -223,6 +226,10 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 				kpiValueSizeCount.setFilter1(STORY_POINT);
 				kpiValueSizeCount.setYAxisLabel(CommonConstant.SP);
 				kpiValueSizeCount.setAdditionalInfo(additionalInfoMap);
+
+				// Add forecasts for Release planned trend line
+				addForecastsToReleasePlanned(kpiValueIssueCount, issueCountDataGroup);
+				addForecastsToReleasePlanned(kpiValueSizeCount, issueSizeCountDataGroup);
 
 				iterationKpiValueList.add(kpiValueSizeCount);
 				iterationKpiValueList.add(kpiValueIssueCount);
@@ -651,5 +658,27 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 
 			KPIExcelUtility.populateReleasePlanExcelData(jiraIssueList, excelData, fieldMapping);
 		}
+	}
+
+	/**
+	 * Add forecasts to Release planned trend line if forecasting is configured
+	 *
+	 * @param kpiValue IterationKpiValue to add forecasts to
+	 * @param dataGroups List of DataCountGroup containing historical data
+	 */
+	private void addForecastsToReleasePlanned(IterationKpiValue kpiValue, List<DataCountGroup> dataGroups) {
+		Optional.ofNullable(forecastingManager)
+				.filter(manager -> CollectionUtils.isNotEmpty(dataGroups))
+				.ifPresent(manager -> {
+					List<DataCount> releasePlannedData = dataGroups.stream()
+							.flatMap(group -> group.getValue().stream())
+							.filter(dataCount -> RELEASE_PLANNED.equals(dataCount.getKpiGroup()))
+							.collect(Collectors.toList());
+
+					if (CollectionUtils.isNotEmpty(releasePlannedData)) {
+						manager.addForecastsToDataCount(
+								kpiValue, releasePlannedData, KPICode.RELEASE_PLAN.getKpiId());
+					}
+				});
 	}
 }

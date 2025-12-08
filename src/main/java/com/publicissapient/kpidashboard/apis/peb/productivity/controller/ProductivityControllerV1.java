@@ -18,8 +18,8 @@ package com.publicissapient.kpidashboard.apis.peb.productivity.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -65,10 +66,10 @@ public class ProductivityControllerV1 {
 					- no organizational level could be found relating to a 'project' entity
 					- an unexpected error occurred when processing the request
 					""", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))) })
-	@GetMapping("/{levelName}")
+	@GetMapping({ "", "/" })
 	public ResponseEntity<ServiceResponse> getPebProductivityData(
 			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to retrieve productivity "
-					+ "data", required = true, example = "project") @PathVariable String levelName) {
+					+ "data", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName) {
 		return ResponseEntity.ok(this.productivityService.getProductivityForLevel(levelName));
 	}
 
@@ -93,10 +94,10 @@ public class ProductivityControllerV1 {
 					- no organizational level could be found relating to a 'project' entity
 					- an unexpected error occurred when processing the request
 					""") })
-	@GetMapping("/{levelName}/trends")
+	@GetMapping("/trends")
 	public ResponseEntity<ServiceResponse> getPebProductivityTrends(
 			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to"
-					+ " retrieve productivity trends data", required = true, example = "project") @PathVariable String levelName) {
+					+ " retrieve productivity trends data", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName) {
 		return ResponseEntity.ok(this.productivityService.getProductivityTrendsForLevel(levelName,
 				TemporalAggregationUnit.WEEK, ProductivityService.DEFAULT_NUMBER_OF_TREND_DATA_POINTS));
 	}

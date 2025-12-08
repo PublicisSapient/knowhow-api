@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -29,6 +28,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
@@ -686,12 +686,13 @@ public abstract class ToolsKPIService<R, S> {
 						maturity = maturityValue.getKey();
 					}
 
-					DataCount maturityDataCount = new DataCount(node.getName(), maturity, aggregateValue,
-							getList(dataCounts, kpiName));
+					DataCount maturityDataCount =
+							new DataCount(node.getName(), maturity, aggregateValue, getList(dataCounts, kpiName));
 
 					// Add forecasts if configured
-					Optional.ofNullable(forecastingManager).ifPresent(
-							manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+					Optional.ofNullable(forecastingManager)
+							.ifPresent(
+									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
 
 					trendValues.add(maturityDataCount);
 				}
@@ -716,15 +717,12 @@ public abstract class ToolsKPIService<R, S> {
 		String kpiName = kpiCode.name();
 		String kpiId = kpiCode.getKpiId();
 		List<DataCount> trendValues = new ArrayList<>();
-
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
-
 				List<DataCount> dataCounts = obj instanceof List<?> ? (List<DataCount>) obj : null;
 				if (CollectionUtils.isNotEmpty(dataCounts)) {
 					List<R> aggValues =
@@ -744,13 +742,21 @@ public abstract class ToolsKPIService<R, S> {
 					if (StringUtils.isNotEmpty(maturity)) {
 						aggregateValue = String.valueOf(calculatedAggValue);
 					}
-					trendValues.add(
+
+					DataCount maturityDataCount =
 							new DataCount(
 									node.getName(),
 									maturity,
 									aggregateValue,
 									getList(dataCounts, kpiName),
-									calculatedAggValue));
+									calculatedAggValue);
+
+					// Add forecasts if configured
+					Optional.ofNullable(forecastingManager)
+							.ifPresent(
+									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+
+					trendValues.add(maturityDataCount);
 				}
 			}
 		}
@@ -826,12 +832,15 @@ public abstract class ToolsKPIService<R, S> {
 									maturity = maturityValue.getKey();
 								}
 
-								DataCount maturityDataCount = new DataCount(node.getName(), maturity, aggregateValue,
-										getList(value, kpiName));
+								DataCount maturityDataCount =
+										new DataCount(
+												node.getName(), maturity, aggregateValue, getList(value, kpiName));
 
 								// Add forecasts if configured
-								Optional.ofNullable(forecastingManager).ifPresent(
-										manager -> manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
+								Optional.ofNullable(forecastingManager)
+										.ifPresent(
+												manager ->
+														manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
 
 								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
@@ -892,13 +901,20 @@ public abstract class ToolsKPIService<R, S> {
 								if (StringUtils.isNotEmpty(maturity)) {
 									aggregateValue = String.valueOf(calculatedAggValue);
 								}
-								trendValues.add(
+								DataCount maturityDataCount =
 										new DataCount(
 												node.getName(),
 												maturity,
 												aggregateValue,
 												getList(value, kpiCode.name()),
-												calculatedAggValue));
+												calculatedAggValue);
+
+								// Add forecasts if configured
+								Optional.ofNullable(forecastingManager)
+										.ifPresent(
+												manager ->
+														manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
+								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
 							});
 				}

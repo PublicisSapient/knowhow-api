@@ -57,6 +57,7 @@ import com.publicissapient.kpidashboard.apis.model.DeploymentFrequencyInfo;
 import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiModalValue;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.LeadTimeChangeData;
 import com.publicissapient.kpidashboard.apis.model.MeanTimeRecoverData;
 import com.publicissapient.kpidashboard.apis.model.Node;
@@ -64,6 +65,8 @@ import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationD
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterValue;
 import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
@@ -83,11 +86,14 @@ import com.publicissapient.kpidashboard.common.model.testexecution.TestExecution
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The class contains mapping of kpi and Excel columns.
  *
  * @author pkum34
  */
+@Slf4j
 public class KPIExcelUtility {
 
 	public static final String TIME = "0d ";
@@ -473,7 +479,7 @@ public class KPIExcelUtility {
 								Map<String, String> defectIdDetails = new HashMap<>();
 								defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
 								excelData.setDefectId(defectIdDetails);
-								excelData.setDefectSeverity(setSeverity(customApiConfig, jiraIssue));
+								excelData.setDefectSeverity(setSeverity(jiraIssue));
 								excelData.setRootCause(jiraIssue.getRootCauseList());
 								excelData.setDefectStatus(jiraIssue.getStatus());
 								Integer totalTimeSpentInMinutes =
@@ -527,7 +533,7 @@ public class KPIExcelUtility {
 		return issuePriority;
 	}
 
-	private static String setSeverity(CustomApiConfig customApiConfig, JiraIssue jiraIssue) {
+	private static String setSeverity(JiraIssue jiraIssue) {
 		String issueSeverity = " ";
 		if (StringUtils.isNotEmpty(jiraIssue.getSeverity())) {
 			issueSeverity = jiraIssue.getSeverity();
@@ -1537,15 +1543,37 @@ public class KPIExcelUtility {
 		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
 			repoToolValidationDataList.forEach(
 					repoToolValidationData -> {
-						KPIExcelData excelData = new KPIExcelData();
-						excelData.setProject(repoToolValidationData.getProjectName());
-						excelData.setRepo(repoToolValidationData.getRepoUrl());
-						excelData.setBranch(repoToolValidationData.getBranchName());
-						excelData.setAuthor(repoToolValidationData.getDeveloperName());
-						excelData.setDaysWeeks(repoToolValidationData.getDate());
-						excelData.setPrSize(String.valueOf(repoToolValidationData.getPrSize()));
-						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
-						kpiExcelData.add(excelData);
+						if (CollectionUtils.isNotEmpty(repoToolValidationData.getPullRequestsValues())) {
+							repoToolValidationData.getPullRequestsValues().stream()
+									.filter(pr -> pr.getPrUrl() != null)
+									.forEach(
+											pr -> {
+												KPIExcelData excelData = new KPIExcelData();
+												excelData.setProject(repoToolValidationData.getProjectName());
+												excelData.setRepo(repoToolValidationData.getRepoUrl());
+												excelData.setBranch(repoToolValidationData.getBranchName());
+												excelData.setAuthor(repoToolValidationData.getDeveloperName());
+												excelData.setDaysWeeks(repoToolValidationData.getDate());
+												excelData.setMergeRequestUrl(
+														Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
+												try {
+													excelData.setTotalLineChanges(Long.parseLong(pr.getSize()));
+												} catch (NumberFormatException e) {
+													excelData.setTotalLineChanges(0L);
+												}
+												kpiExcelData.add(excelData);
+											});
+						} else {
+							KPIExcelData excelData = new KPIExcelData();
+							excelData.setProject(repoToolValidationData.getProjectName());
+							excelData.setRepo(repoToolValidationData.getRepoUrl());
+							excelData.setBranch(repoToolValidationData.getBranchName());
+							excelData.setAuthor(repoToolValidationData.getDeveloperName());
+							excelData.setDaysWeeks(repoToolValidationData.getDate());
+							excelData.setMergeRequestUrl(Collections.emptyMap());
+							excelData.setTotalLineChanges(0L);
+							kpiExcelData.add(excelData);
+						}
 					});
 		}
 	}
@@ -2863,6 +2891,122 @@ public class KPIExcelUtility {
 										excelData.setDurationToReopen(defectTransitionInfo.getReopenDuration() + "Hrs");
 										kpiExcelData.add(excelData);
 									}));
+		}
+	}
+
+	public static void populateCodeQualityMetricsExcelData(
+			List<DataCountGroup> dataCountGroups, List<KPIExcelData> kpiExcelDataList, String dateLabel) {
+		for (DataCountGroup dataCountGroup : dataCountGroups) {
+			KPIExcelData excelData = new KPIExcelData();
+			String repBranchName = dataCountGroup.getFilter1();
+			excelData.setProject(extractProjectName(repBranchName));
+			excelData.setRepo(extractRepositoryName(repBranchName));
+			excelData.setBranch(extractBranchName(repBranchName));
+			excelData.setDeveloper(dataCountGroup.getFilter2());
+			excelData.setDaysWeeks(dateLabel);
+			excelData.setReworkRate(
+					String.format("%.2f", extractValueRate(dataCountGroup, "Rework Rate")));
+			double revertRate = extractValueRate(dataCountGroup, "Revert Rate");
+			double formattedRevertRate = Double.parseDouble(String.format("%.2f", revertRate));
+			excelData.setRevertRate(formattedRevertRate);
+			kpiExcelDataList.add(excelData);
+		}
+	}
+
+	/**
+	 * Extracts filters from a given key string. Splits the input key string using "#" as a delimiter
+	 * to extract two potential filters. - The first part is considered as `filter1`. - The second
+	 * part is `filter2`, and if it is not present, it defaults to "Unknown".
+	 *
+	 * @param key the input string containing delimited filter values ---> Expected format:
+	 *     "filter1#filter2"
+	 * @return an array containing the extracted filters; if a filter is missing, "Unknown" is
+	 *     substituted
+	 */
+	public static String[] extractFilters(String key) {
+		String[] keyParts = key.split("#");
+		String filter1 = keyParts.length > 0 ? keyParts[0] : key;
+		String filter2 = keyParts.length > 1 ? keyParts[1] : "Unknown";
+		return new String[] {filter1, filter2};
+	}
+
+	/**
+	 * Extracts project name from filter string. Expected format: "branch -> repository -> project"
+	 *
+	 * @param filter1 the filter string containing branch, repository, and project
+	 * @return project name or empty string if not found
+	 */
+	public static String extractProjectName(String filter1) {
+		String[] parts = filter1.split(" -> ");
+		return parts.length >= 3 ? parts[2] : "";
+	}
+
+	/**
+	 * Extracts repository name from filter string. Expected format: "branch -> repository -> project"
+	 *
+	 * @param filter1 the filter string containing branch, repository, and project
+	 * @return repository name or empty string if not found
+	 */
+	public static String extractRepositoryName(String filter1) {
+		String[] parts = filter1.split(" -> ");
+		return parts.length >= 2 ? parts[1] : "";
+	}
+
+	/**
+	 * Extracts branch name from filter string. Expected format: "branch -> repository -> project"
+	 *
+	 * @param filter1 the filter string containing branch, repository, and project
+	 * @return branch name or empty string if not found
+	 */
+	public static String extractBranchName(String filter1) {
+		String[] parts = filter1.split(" -> ");
+		return parts.length >= 1 ? parts[0] : "";
+	}
+
+	public static String getDateLabel(KpiRequest kpiRequest) {
+		String duration = kpiRequest.getDuration();
+		int dataPoints = kpiRequest.getXAxisDataPoints();
+		LocalDateTime currentDate = DateUtil.getTodayTime();
+
+		CustomDateRange periodRange =
+				KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
+
+		return DateUtil.dateTimeConverter(
+						periodRange.getStartDate().toString(),
+						DateUtil.DATE_FORMAT,
+						DateUtil.DISPLAY_DATE_FORMAT)
+				+ " to "
+				+ DateUtil.dateTimeConverter(
+						periodRange.getEndDate().toString(),
+						DateUtil.DATE_FORMAT,
+						DateUtil.DISPLAY_DATE_FORMAT);
+	}
+
+	/**
+	 * Extracts the value rate of a specified data type from a DataCountGroup.
+	 *
+	 * @param dataCountGroup the group containing a list of DataCount objects
+	 * @param dataType the type of data to search for within the group
+	 * @return the found value as a double, restricted to 0.0 if not found or upon error
+	 */
+	public static double extractValueRate(DataCountGroup dataCountGroup, String dataType) {
+		try {
+			if (dataCountGroup != null
+					&& dataCountGroup.getValue() != null
+					&& !dataCountGroup.getValue().isEmpty()) {
+				for (DataCount dataCount : dataCountGroup.getValue()) {
+					if (dataCount != null
+							&& dataCount.getValue() != null
+							&& dataCount.getData() != null
+							&& dataCount.getData().equals(dataType)) {
+						return ((Number) dataCount.getValue()).doubleValue();
+					}
+				}
+			}
+			return 0.0;
+		} catch (Exception e) {
+			log.warn("Failed to extract value for dataType: {} - {}", dataType, e.getMessage());
+			return 0.0;
 		}
 	}
 }

@@ -20,6 +20,8 @@ package com.publicissapient.kpidashboard.apis.repotools.model;
 
 import java.util.List;
 
+import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -61,4 +63,5 @@ public class RepoToolValidationData {
 	private String prActivityTime;
 	private String prStatus;
 	private List<String> mergeRequestComment;
+	private List<PullRequestsValue> pullRequestsValues;
 }

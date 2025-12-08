@@ -496,7 +496,7 @@ public class KpiHelperService { // NOPMD
 				fieldMapping.getJiraDefectRejectionStatusKPI14());
 
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
@@ -608,7 +608,7 @@ public class KpiHelperService { // NOPMD
 				fieldMapping.getJiraDefectRejectionStatusQAKPI111());
 
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
@@ -742,7 +742,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -836,7 +836,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, DEV, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -877,7 +877,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, CommonConstant.QA, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 		leafNodeList.forEach(
 				leaf -> {
 					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
@@ -1117,7 +1117,7 @@ public class KpiHelperService { // NOPMD
 				});
 		String subGroupCategory =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.KANBAN, DEV, flterHelperService);
+						kpiRequest, mapOfFilters, Constant.KANBAN, flterHelperService);
 		mapOfFilters.put(
 				JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().toList());

@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -404,6 +405,14 @@ public class BitBucketServiceR {
 
 			if (Objects.nonNull(nodeDataClone)
 					&& kpiHelperService.isToolConfigured(kpi, kpiElement, nodeDataClone)) {
+
+				kpiRequest.setKanbanXaxisDataPoints(
+						Optional.ofNullable(kpiRequest.getIds())
+								.filter(ids -> ids.length > 0)
+								.map(ids -> ids[0])
+								.filter(id -> id.matches("\\d+"))
+								.map(Integer::parseInt)
+								.orElse(5));
 				kpiElement = bitBucketKPIService.getKpiData(kpiRequest, kpiElement, nodeDataClone);
 				kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 				kpiHelperService.isMandatoryFieldSet(kpi, kpiElement, nodeDataClone);

@@ -356,6 +356,23 @@
       <artifactId>smile-core</artifactId>
       <version>3.0.2</version>
     </dependency>
+      <!-- DeepLearning4J dependencies for LSTM forecasting -->
+      <dependency>
+          <groupId>org.deeplearning4j</groupId>
+          <artifactId>deeplearning4j-core</artifactId>
+          <version>1.0.0-M2.1</version>
+      </dependency>
+      <dependency>
+          <groupId>org.nd4j</groupId>
+          <artifactId>nd4j-native-platform</artifactId>
+          <version>1.0.0-M2.1</version>
+      </dependency>
+      <!-- ND4J API -->
+      <dependency>
+          <groupId>org.nd4j</groupId>
+          <artifactId>nd4j-api</artifactId>
+          <version>1.0.0-M2.1</version>
+      </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
@@ -658,6 +675,11 @@
             <phase>validate</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>3.11.0.3922</version>
       </plugin>
     </plugins>
   </build>
