@@ -369,7 +369,6 @@
           <groupId>ai.djl.pytorch</groupId>
           <artifactId>pytorch-engine</artifactId>
           <version>0.26.0</version>
-          <scope>runtime</scope>
       </dependency>
 
       <!-- DJL PyTorch Native Library -->
