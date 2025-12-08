@@ -159,7 +159,7 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.MEAN_TIME_TO_RECOVER.getKpiId());
 		removeForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId());
 		removeForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId());
-
+        
 		// KPIs for Developer Dashboard
 		removeForecastModel(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
 		removeForecastModel(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId());

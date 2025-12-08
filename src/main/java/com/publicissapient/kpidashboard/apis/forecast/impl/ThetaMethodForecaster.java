@@ -92,6 +92,7 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 		return finalForecast;
 	}
 
+
 	/** Extract values from bubble points or direct DataCount value */
 	@Override
 	protected List<Double> extractValues(List<DataCount> dataCounts) {
@@ -99,10 +100,12 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 		for (DataCount dataCount : dataCounts) {
 			// Try bubble points first
 			if (dataCount.getBubblePoints() != null && !dataCount.getBubblePoints().isEmpty()) {
+
 				List<Double> bubbleSizes =
 						dataCount.getBubblePoints().stream()
 								.map(bp -> Double.parseDouble(bp.getSize()))
 								.toList();
+
 				values.addAll(bubbleSizes);
 			} else {
 				// Fallback to direct value extraction
