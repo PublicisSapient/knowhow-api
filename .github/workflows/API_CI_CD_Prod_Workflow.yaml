@@ -4,34 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Select the Git tag for knowhow-api (e.g. 14.0.0)"
+        description: "Select Git tag (applies to both knowhow-api & knowhow-common)"
         required: true
         type: string
         default: "14.0.0"
-
-      knowhow_common_tag:
-        description: "Select the Git tag for knowhow-common (e.g. 14.0.0)"
-        required: true
-        type: string
-        default: "14.0.0"
-
-      test:
-        description: "Run tests"
-        required: true
-        default: "true"
-        type: choice
-        options:
-          - "false"
-          - "true"
 
       mongock_operation:
-        description: "Select Operation Type to deploy"
+        description: "Operation Type (Prod always uses upgrade)"
         required: true
         default: "com.publicissapient.kpidashboard.apis.mongock.upgrade"
         type: choice
         options:
           - com.publicissapient.kpidashboard.apis.mongock.upgrade
-          - com.publicissapient.kpidashboard.apis.mongock.installation
 
       mongock_start_version:
         description: "Start version for Mongock (e.g. 13.0.0)"
@@ -60,6 +44,7 @@ jobs:
     timeout-minutes: 40
     outputs:
       argocd_app_name: ${{ steps.set_env.outputs.argocd_app_name }}
+
     steps:
       - name: Set IMAGE_TAG and Values file for Prod
         id: set_env
@@ -73,7 +58,7 @@ jobs:
       - name: Checkout knowhow-api Repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0 # Needed to fetch tags
+          fetch-depth: 0
           ref: ${{ github.event.inputs.release_tag }}
 
       - name: Set Up Java
@@ -119,12 +104,13 @@ jobs:
           </settings>
           EOF
 
-      - name: Clone & Build knowhow-common dependency by Tag
+      - name: Clone knowhow-common (same tag as knowhow-api)
         run: |
-          COMMON_TAG="${{ github.event.inputs.knowhow_common_tag }}"
-          git clone --branch $COMMON_TAG https://github.com/PublicisSapient/knowhow-common.git
+          TAG="${{ github.event.inputs.release_tag }}"
+          git clone --branch "$TAG" https://github.com/PublicisSapient/knowhow-common.git
           cd knowhow-common
           mvn clean install -Ddockerfile.skip=true
+
 
       - name: Get common version from Maven
         run: |
@@ -139,16 +125,10 @@ jobs:
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
-      - name: Build & skip Test knowhow-api
-        if: ${{ github.event.inputs.test == 'false' }}
-        run: mvn clean install -Ddockerfile.skip=true -DskipTests
-
-      - name: Build & Test knowhow-api
-        if: ${{ github.event.inputs.test == 'true' }}
+      - name: Build knowhow-api (Always With Tests)
         run: mvn clean install -Ddockerfile.skip=true
 
-      - name: SonarQube Analysis - knowhow-api
-        if: ${{ github.event.inputs.test == 'true' }}
+      - name: SonarQube Analysis
         run: |
           mvn sonar:sonar -Dsonar.projectKey=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
             -Dsonar.projectName=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
@@ -200,7 +180,6 @@ jobs:
             --plaintext
 
       - name: Sync application
-        id: sync-app
         run: argocd app sync ${{ env.ARGOCD_APP_NAME }}
 
       - name: Wait for application health
