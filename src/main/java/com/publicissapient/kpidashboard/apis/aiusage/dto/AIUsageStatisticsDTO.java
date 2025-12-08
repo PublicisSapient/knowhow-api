@@ -28,7 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -62,8 +62,13 @@ public class AIUsageStatisticsDTO {
 			return;
 		}
 
-		this.levelName = Objects.toString(HierarchyLevelType.valueOf(aiUsageStatistics.getLevelType()).getLevelName(),
-				StringUtils.EMPTY);
+		if (aiUsageStatistics.getLevelType() == null) {
+			this.levelName = StringUtils.EMPTY;
+		} else {
+			this.levelName = Objects.toString(
+					HierarchyLevelType.valueOf(aiUsageStatistics.getLevelType()).getLevelName(),
+					StringUtils.EMPTY);
+		}
 		this.organizationEntityName = Objects.toString(aiUsageStatistics.getLevelName(), StringUtils.EMPTY);
 		this.statsDate = aiUsageStatistics.getStatsDate();
 		this.ingestTimestamp = aiUsageStatistics.getIngestTimestamp();

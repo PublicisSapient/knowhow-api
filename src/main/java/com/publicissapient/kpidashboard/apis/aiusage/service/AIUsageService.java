@@ -31,7 +31,7 @@ import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
-import org.apache.coyote.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +56,7 @@ public class AIUsageService {
 
 	/**
 	 * Retrieves AI usage statistics for the hierarchy level specified by {@code levelName},
-	 * imited to the hierarchy elements the user has access to. For each matching item,
+	 * limited to the hierarchy elements the user has access to. For each matching item,
 	 * this method builds an {@link AIUsageStatistics} object based on the hierarchy type:
 	 * business unit ("bu"), vertical or account.
 	 *

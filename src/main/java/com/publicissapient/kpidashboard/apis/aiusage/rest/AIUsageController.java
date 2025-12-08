@@ -23,7 +23,7 @@ import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
 import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 
-import org.apache.coyote.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
