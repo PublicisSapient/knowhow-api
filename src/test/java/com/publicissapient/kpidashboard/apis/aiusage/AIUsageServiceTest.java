@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import org.apache.coyote.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -54,14 +54,14 @@ class AIUsageServiceTest {
 		AccountFilteredData accData = new AccountFilteredData();
 		accData.setNodeId("acc");
 		accData.setNodeName("Account1");
-		accData.setLabelName("acc");
+		accData.setLabelName("account");
 		Set<AccountFilteredData> hierarchyData = Set.of(accData);
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(hierarchyData);
 		when(aiUsageStatisticsRepository
 						.findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(
 								anyString(), any(), any()))
 				.thenReturn(
-						new AIUsageStatistics("Account1", "acc", Instant.now(), Instant.now(), summary));
+						new AIUsageStatistics("ACCOUNT", "Account1", Instant.now(), Instant.now(), summary));
 
 		ServiceResponse response = null;
 		try {
