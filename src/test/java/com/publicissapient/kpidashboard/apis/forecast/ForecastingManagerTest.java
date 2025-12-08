@@ -315,6 +315,113 @@ public class ForecastingManagerTest {
 		verify(linearRegressionForecaster, times(1)).generateForecast(historicalData, kpiId);
 	}
 
+    @Test
+    public void testAddForecastsToDataCount_WithException() {
+        // Arrange
+        String kpiId = "kpi113";
+        KpiMaster kpiMaster = new KpiMaster();
+        kpiMaster.setKpiId(kpiId);
+        kpiMaster.setForecastModel("linearRegression");
+        List<KpiMaster> testKpiMasterList = new ArrayList<>();
+        testKpiMasterList.add(kpiMaster);
+
+        DataCount dataCount = new DataCount();
+        List<DataCount> historicalData = createTestDataCounts(5);
+
+        when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+        when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+        when(linearRegressionForecaster.generateForecast(any(), anyString()))
+                .thenThrow(new RuntimeException("Test exception"));
+
+        // Act
+        forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+
+        // Assert
+        assertNull(dataCount.getForecasts());
+    }
+
+    @Test
+    public void testGenerateForecasts_WithExceptionInGeneration() {
+        // Arrange
+        String kpiId = "kpi113";
+        KpiMaster kpiMaster = new KpiMaster();
+        kpiMaster.setKpiId(kpiId);
+        kpiMaster.setForecastModel("linearRegression");
+        List<KpiMaster> testKpiMasterList = new ArrayList<>();
+        testKpiMasterList.add(kpiMaster);
+
+        List<DataCount> historicalData = createTestDataCounts(5);
+
+        when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+        when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+        when(linearRegressionForecaster.generateForecast(any(), anyString()))
+                .thenThrow(new RuntimeException("Forecast generation failed"));
+
+        // Act
+        List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+
+    @Test
+    public void testGenerateForecasts_WithNoForecasterImplementation() {
+        // Arrange
+        String kpiId = "kpi113";
+        KpiMaster kpiMaster = new KpiMaster();
+        kpiMaster.setKpiId(kpiId);
+        kpiMaster.setForecastModel("thetaMethod"); // Valid model but no implementation registered
+        List<KpiMaster> testKpiMasterList = new ArrayList<>();
+        testKpiMasterList.add(kpiMaster);
+
+        List<DataCount> historicalData = createTestDataCounts(5);
+
+        when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+
+        // Act
+        List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(linearRegressionForecaster, never()).generateForecast(any(), anyString());
+        verify(exponentialSmoothingForecaster, never()).generateForecast(any(), anyString());
+        verify(arimaForecaster, never()).generateForecast(any(), anyString());
+    }
+
+
+
+    @Test
+    public void testAddForecastsToDataCount_ForDataCountGroup() {
+        // Arrange
+        String kpiId = "kpi125";
+        KpiMaster kpiMaster = new KpiMaster();
+        kpiMaster.setKpiId(kpiId);
+        kpiMaster.setForecastModel("linearRegression");
+        List<KpiMaster> testKpiMasterList = new ArrayList<>();
+        testKpiMasterList.add(kpiMaster);
+
+        DataCountGroup dataCount = new DataCountGroup();
+        List<DataCount> historicalData = createTestDataCounts(5);
+        List<DataCount> expectedForecasts = createTestDataCounts(1);
+
+        when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
+        when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(true);
+        when(linearRegressionForecaster.generateForecast(any(), anyString()))
+                .thenReturn(expectedForecasts);
+
+        // Act
+        forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+
+        // Assert
+        assertNotNull(dataCount.getForecasts());
+        assertEquals(1, dataCount.getForecasts().size());
+        verify(linearRegressionForecaster, times(1)).canForecast(historicalData, kpiId);
+        verify(linearRegressionForecaster, times(1)).generateForecast(historicalData, kpiId);
+    }
+
 	@Test
 	public void testAddForecastsToDataCount_WhenTypeIsNotSupportedClass() {
 		// Arrange
