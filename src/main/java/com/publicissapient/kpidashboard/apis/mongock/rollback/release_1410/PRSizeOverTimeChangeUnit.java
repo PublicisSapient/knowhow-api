@@ -34,7 +34,7 @@ import io.mongock.api.annotations.RollbackExecution;
 @ChangeUnit(id = "r_pr_size_kpi", order = "014106", author = "aksshriv1", systemVersion = "14.1.0")
 public class PRSizeOverTimeChangeUnit {
 
-	public static final String KPI_COLUMN_CONFIG = "kpi_column_config";
+	public static final String KPI_COLUMN_CONFIG = "kpi_column_configs";
 	public static final String KPI_ID = "kpiId";
 	public static final String KPI_162 = "kpi162";
 	private final MongoTemplate mongoTemplate;
@@ -81,7 +81,7 @@ public class PRSizeOverTimeChangeUnit {
 						createColumn("Author", 4),
 						createColumn("Days/Weeks", 5),
 						createColumn("Merge Request Url", 6),
-						createColumn("PR Size (No. of lines)", 7));
+						createColumn("Total Lines Changed", 7));
 
 		document.put("kpiColumnDetails", kpiColumnDetails);
 

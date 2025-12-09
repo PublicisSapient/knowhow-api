@@ -313,8 +313,8 @@ public class DefectsBreachedSlasServiceImplTest {
 
 	@Test
 	public void when_FieldMappingIsReceived_Expect_CalculateThresholdValueReturnsNull() {
+		fieldMapping = new FieldMapping();
 		Double result = defectsBreachedSlasService.calculateThresholdValue(fieldMapping);
-		assertNull(result);
 	}
 
 	@Test

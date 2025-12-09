@@ -36,7 +36,7 @@ public class PRSizeOverTimeChangeUnit {
 
 	public static final String KPI_ID = "kpiId";
 	public static final String KPI_162 = "kpi162";
-	public static final String KPI_COLUMN_CONFIG = "kpi_column_config";
+	public static final String KPI_COLUMN_CONFIG = "kpi_column_configs";
 	private final MongoTemplate mongoTemplate;
 
 	public PRSizeOverTimeChangeUnit(MongoTemplate mongoTemplate) {
@@ -76,7 +76,7 @@ public class PRSizeOverTimeChangeUnit {
 						createColumn("Author", 4),
 						createColumn("Days/Weeks", 5),
 						createColumn("Merge Request Url", 6),
-						createColumn("PR Size (No. of lines)", 7));
+						createColumn("Total Lines Changed", 7));
 
 		document.put("kpiColumnDetails", kpiColumnDetails);
 

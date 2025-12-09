@@ -135,6 +135,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 										.requestMatchers("/v1/kpi/{kpiID}")
 										.permitAll()
 
+                                        .requestMatchers("/config")
+                                        .permitAll()
+
 										// management metrics
 										.requestMatchers("/info")
 										.permitAll()

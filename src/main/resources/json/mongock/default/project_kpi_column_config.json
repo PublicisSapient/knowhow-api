@@ -3097,7 +3097,7 @@
         "isDefault": true
       },
       {
-        "columnName": "PR Size (No. of lines)",
+        "columnName": "Total Lines Changed",
         "order": 6,
         "isShown": true,
         "isDefault": true
