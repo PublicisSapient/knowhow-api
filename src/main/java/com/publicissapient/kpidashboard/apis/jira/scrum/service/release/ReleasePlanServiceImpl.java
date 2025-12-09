@@ -677,7 +677,7 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 
 					if (CollectionUtils.isNotEmpty(releasePlannedData)) {
 						manager.addForecastsToDataCount(
-								kpiValue, releasePlannedData, KPICode.RELEASE_PLAN.getKpiId(), null);
+								kpiValue, releasePlannedData, KPICode.RELEASE_PLAN.getKpiId());
 					}
 				});
 	}

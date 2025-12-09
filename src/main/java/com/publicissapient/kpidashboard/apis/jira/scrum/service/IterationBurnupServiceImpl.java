@@ -596,8 +596,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 													.filter(Objects::nonNull)
 													.flatMap(list -> list.stream().filter(Objects::nonNull))
 													.toList(),
-											KPICode.ITERATION_BURNUP.getKpiId(),
-											null));
+											KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);

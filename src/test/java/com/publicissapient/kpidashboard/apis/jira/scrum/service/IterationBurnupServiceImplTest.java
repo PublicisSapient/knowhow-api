@@ -212,7 +212,7 @@ public class IterationBurnupServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
 				.thenReturn(jiraIssuesCustomHistory);
-		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any(), any());
+		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
 		try {
 			KpiElement kpiElement =
 					iterationBurnupService.getKpiData(

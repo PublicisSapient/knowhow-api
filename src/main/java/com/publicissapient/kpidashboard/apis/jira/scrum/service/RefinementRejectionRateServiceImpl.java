@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
@@ -229,7 +228,7 @@ public class RefinementRejectionRateServiceImpl
 					.ifPresent(
 							manager ->
 									manager.addForecastsToDataCount(
-											trendData, dataList, KPICode.REFINEMENT_REJECTION_RATE.getKpiId(), null));
+											trendData, dataList, KPICode.REFINEMENT_REJECTION_RATE.getKpiId()));
 			trendValueList.add(trendData);
 		}
 		weekAndTypeMap.keySet().stream()

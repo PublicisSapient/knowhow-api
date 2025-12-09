@@ -129,7 +129,7 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(manager -> manager.addForecastsToDataCount(
-									dataCountGroup, dataList, KPICode.FLOW_EFFICIENCY.getKpiId(), null));
+									dataCountGroup, dataList, KPICode.FLOW_EFFICIENCY.getKpiId()));
 					dataCountGroup.setFilter(filter);
 					dataCountGroup.setValue(dataList);
 					dataCountGroups.add(dataCountGroup);

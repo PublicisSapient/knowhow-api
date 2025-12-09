@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -183,7 +182,7 @@ public class LateRefinementServiceImplTest {
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
 				.thenReturn(jiraIssueCustomHistoryList);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any(), any());
+		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
 		try {
 			KpiElement kpiElement =
 					lateRefinementService.getKpiData(

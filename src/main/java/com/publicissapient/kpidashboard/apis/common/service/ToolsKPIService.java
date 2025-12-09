@@ -692,7 +692,7 @@ public abstract class ToolsKPIService<R, S> {
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
-									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId, null));
+									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
 
 					trendValues.add(maturityDataCount);
 				}
@@ -754,7 +754,7 @@ public abstract class ToolsKPIService<R, S> {
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
-									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId, null));
+									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
 
 					trendValues.add(maturityDataCount);
 				}
@@ -840,7 +840,7 @@ public abstract class ToolsKPIService<R, S> {
 								Optional.ofNullable(forecastingManager)
 										.ifPresent(
 												manager ->
-														manager.addForecastsToDataCount(maturityDataCount, value, kpiId, null));
+														manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
 
 								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
@@ -913,7 +913,7 @@ public abstract class ToolsKPIService<R, S> {
 								Optional.ofNullable(forecastingManager)
 										.ifPresent(
 												manager ->
-														manager.addForecastsToDataCount(maturityDataCount, value, kpiId, null));
+														manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
 								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
 							});

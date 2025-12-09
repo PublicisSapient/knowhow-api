@@ -406,8 +406,8 @@ public class ProductivityService {
 		Optional.ofNullable(forecastingManager)
 				.ifPresent(
 						manager ->
-								manager.addForecastsToDataCount(
-										productivityForecastDataCount, dataCounts, null, PRODUCTIVITY_FORECASTING_MODEL));
+								manager.addForecastsToDataCountForNonKPI(
+										productivityForecastDataCount, dataCounts, PRODUCTIVITY_FORECASTING_MODEL));
 		return productivityForecastDataCount;
 	}
 
