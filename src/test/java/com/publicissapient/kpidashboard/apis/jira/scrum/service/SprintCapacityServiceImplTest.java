@@ -240,7 +240,7 @@ public class SprintCapacityServiceImplTest {
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
 					"Capacity estimateTimeCount :",
-					((ArrayList) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
+					((List<?>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
 					equalTo(5));
 		} catch (ApplicationException enfe) {
 
