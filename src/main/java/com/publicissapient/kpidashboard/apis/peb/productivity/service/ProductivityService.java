@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
+import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
 import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ForecastData;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
@@ -98,13 +98,13 @@ public class ProductivityService {
 	private static final String PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE = "Productivity trends"
 			+ " were successfully calculated";
 
-	private static final ForecastingModel PRODUCTIVITY_FORECASTING_MODEL = ForecastingModel.EXPONENTIAL_SMOOTHING;
-
 	private final FilterHelperService filterHelperService;
 
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
 	private final ProductivityCustomRepository productivityCustomRepository;
+
+	private final PEBConfig pebConfig;
 
 	private final ForecastingManager forecastingManager;
 
@@ -361,7 +361,7 @@ public class ProductivityService {
 			log.debug("No productivity forecast could be generated for level: {}", levelName);
 		} else {
 			overallForecast = ForecastData.builder()
-					.forecastingModel(PRODUCTIVITY_FORECASTING_MODEL.getDisplayName())
+					.forecastingModel(pebConfig.getForecastingModel().getDisplayName())
 					.value((Double) productivityForecastDataCount.getForecasts().get(0).getValue())
 					.category("overall")
 					.build();
@@ -400,14 +400,14 @@ public class ProductivityService {
 				});
 
 		DataCount productivityForecastDataCount = DataCount.builder()
-				.forecastingModel(PRODUCTIVITY_FORECASTING_MODEL.getName())
+				.forecastingModel(pebConfig.getForecastingModel().getName())
 				.build();
 
 		Optional.ofNullable(forecastingManager)
 				.ifPresent(
 						manager ->
 								manager.addForecastsToDataCountForNonKPI(
-										productivityForecastDataCount, dataCounts, PRODUCTIVITY_FORECASTING_MODEL));
+										productivityForecastDataCount, dataCounts, pebConfig.getForecastingModel()));
 		return productivityForecastDataCount;
 	}
 
