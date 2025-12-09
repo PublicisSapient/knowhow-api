@@ -115,10 +115,9 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(
 				KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(), ForecastingModel.THETA_METHOD.getName());
 		updateForecastModel(
-				KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId(), ForecastingModel.THETA_METHOD.getName());
+				KPICode.CODE_QUALITY_REVERT_RATE.getKpiId(), ForecastingModel.THETA_METHOD.getName());
 		updateForecastModel(
 				KPICode.PR_SIZE_OVERTIME.getKpiId(), ForecastingModel.THETA_METHOD.getName());
-		updateForecastModel(KPICode.REWORK_RATE.getKpiId(), ForecastingModel.THETA_METHOD.getName());
 
 		log.info("Completed forecast model update for KPIs");
 	}
@@ -162,9 +161,8 @@ public class ForecastModelUpdateChangeUnit {
         
 		// KPIs for Developer Dashboard
 		removeForecastModel(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
-		removeForecastModel(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId());
 		removeForecastModel(KPICode.PR_SIZE_OVERTIME.getKpiId());
-		removeForecastModel(KPICode.REWORK_RATE.getKpiId());
+		removeForecastModel(KPICode.CODE_QUALITY_REVERT_RATE.getKpiId());
 
 		log.info("Completed rollback of forecast model updates");
 	}

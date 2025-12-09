@@ -88,7 +88,7 @@ public class ScmMeanTimeToMergeServiceImpl
 							kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE);
 			kpiElement.setTrendValueList(
 					DeveloperKpiHelper.prepareDataCountGroups(
-							trendValuesMap, KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId(), true));
+							trendValuesMap, KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE.getKpiId()));
 		} else {
 			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
 		}

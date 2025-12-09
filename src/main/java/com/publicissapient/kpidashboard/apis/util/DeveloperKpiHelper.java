@@ -20,8 +20,13 @@ package com.publicissapient.kpidashboard.apis.util;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.ArrayList;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -70,7 +75,7 @@ public final class DeveloperKpiHelper {
 	 * @return List of DataCountGroup objects with separated filters
 	 */
 	public static List<DataCountGroup> prepareDataCountGroups(
-			Map<String, List<DataCount>> trendValuesMap, String kpiId, boolean isEnabled) {
+            Map<String, List<DataCount>> trendValuesMap, String kpiId) {
 		return trendValuesMap.entrySet().stream()
 				.map(
 						entry -> {
@@ -79,8 +84,6 @@ public final class DeveloperKpiHelper {
 							group.setFilter1(filters[0]);
 							group.setFilter2(filters[1]);
 							group.setValue(entry.getValue());
-
-							if (isEnabled) {
 								// Add forecasts if configured
 								Optional.ofNullable(forecastingManager)
 										.ifPresent(
@@ -90,7 +93,7 @@ public final class DeveloperKpiHelper {
 																Optional.ofNullable(entry.getValue())
 																		.orElse(Collections.emptyList()),
 																kpiId));
-							}
+
 							return group;
 						})
 				.collect(Collectors.toList());

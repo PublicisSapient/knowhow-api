@@ -15,12 +15,6 @@
  *    limitations under the License.
  */
 
-/*
- * Sample Usage:
- * Input: [10, 12, 11, 13, 15] (historical KPI values)
- * Process: Exponential smoothing + Linear trend
- * Output: 16.2 (next forecasted value)
- */
 package com.publicissapient.kpidashboard.apis.forecast.impl;
 
 import java.util.ArrayList;
@@ -34,6 +28,13 @@ import com.publicissapient.kpidashboard.apis.forecast.AbstractForecastService;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
 import lombok.extern.slf4j.Slf4j;
+
+/*
+ * Sample Usage:
+ * Input: [10, 12, 11, 13, 15] (historical KPI values)
+ * Process: Exponential smoothing + Linear trend
+ * Output: 16.2 (next forecasted value)
+ */
 
 @Slf4j
 @Service

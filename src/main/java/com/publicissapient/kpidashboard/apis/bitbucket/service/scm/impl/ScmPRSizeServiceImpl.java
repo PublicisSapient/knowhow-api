@@ -91,9 +91,7 @@ public class ScmPRSizeServiceImpl
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SIZE_OVERTIME);
 		kpiElement.setTrendValueList(
 				DeveloperKpiHelper.prepareDataCountGroups(
-						trendValuesMap, KPICode.PR_SIZE_OVERTIME.getKpiId(), true));
-		kpiElement.setTrendValueList(
-				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.PR_SIZE_OVERTIME.getKpiId(), true));
+						trendValuesMap, KPICode.PR_SIZE_OVERTIME.getKpiId()));
 		return kpiElement;
 	}
 

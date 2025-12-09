@@ -89,7 +89,7 @@ public class ScmPrSuccessRateServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SUCCESS_RATE);
 		kpiElement.setTrendValueList(
-				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, "", false));
+				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.PR_SUCCESS_RATE.getKpiId()));
 		return kpiElement;
 	}
 

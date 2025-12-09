@@ -94,7 +94,7 @@ public class ScmRevertRateServiceImpl
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.REVERT_RATE);
 
 		kpiElement.setTrendValueList(
-				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, "", false));
+				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.REVERT_RATE.getKpiId()));
 		return kpiElement;
 	}
 

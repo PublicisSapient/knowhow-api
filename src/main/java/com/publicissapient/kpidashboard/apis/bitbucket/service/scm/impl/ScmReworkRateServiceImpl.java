@@ -165,7 +165,7 @@ public class ScmReworkRateServiceImpl
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.REWORK_RATE);
 
 		kpiElement.setTrendValueList(
-				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.REWORK_RATE.getKpiId(), true));
+				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.REWORK_RATE.getKpiId()));
 		return kpiElement;
 	}
 
