@@ -109,7 +109,7 @@ public class LateRefinementServiceImplTest {
 						.filter(Objects::nonNull)
 						.map(SprintIssue::getNumber)
 						.distinct()
-						.collect(Collectors.toList());
+						.toList();
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
@@ -183,7 +183,7 @@ public class LateRefinementServiceImplTest {
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
 				.thenReturn(jiraIssueCustomHistoryList);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
+		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any(), any());
 		try {
 			KpiElement kpiElement =
 					lateRefinementService.getKpiData(

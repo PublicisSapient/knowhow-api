@@ -497,7 +497,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 					.ifPresent(
 							manager ->
 									manager.addForecastsToDataCount(
-											iterationKpiValue, dataCountList, KPICode.LATE_REFINEMENT.getKpiId()));
+											iterationKpiValue, dataCountList, KPICode.LATE_REFINEMENT.getKpiId(), null));
 			kpiElement.setModalHeads(KPIExcelColumn.LATE_REFINEMENT.getColumns());
 			kpiElement.setExcelColumns(KPIExcelColumn.LATE_REFINEMENT.getColumns());
 			kpiElement.setExcelData(excelDataList);

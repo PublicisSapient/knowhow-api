@@ -16,25 +16,13 @@
 
 package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
-
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProductivityTrendsResponse {
-	private String levelName;
-
-	private TemporalAggregationUnit temporalGrouping;
-
-	private CategoryVariations categoryVariations;
-
-	private List<CategoryScoresDTO> categoryScores;
-
-	private List<ForecastData> forecasts;
+public class ForecastData {
+    private String category;
+    private String forecastingModel;
+    private Double value;
 }

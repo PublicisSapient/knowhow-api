@@ -70,7 +70,7 @@ public class ForecastingManager {
 	 * @param kpiId KPI identifier
 	 * @return List of forecast DataCount objects
 	 */
-	public List<DataCount> generateForecasts(List<DataCount> dataCounts, String kpiId) {
+	public List<DataCount> generateForecasts(List<DataCount> dataCounts, String kpiId, ForecastingModel forecastingModel) {
 		List<DataCount> forecasts = new ArrayList<>();
 
 		if (dataCounts == null || dataCounts.isEmpty()) {
@@ -80,27 +80,50 @@ public class ForecastingManager {
 		try {
 			// Get KPI master configuration
 			KpiMaster kpiMaster = getKpiMaster(kpiId);
-			if (kpiMaster == null || StringUtils.isEmpty(kpiMaster.getForecastModel())) {
-				log.debug("No forecast model configured for KPI {}", kpiId);
-				return forecasts;
-			}
 
-			// Get forecast model from configuration
-			Optional<ForecastingModel> modelOpt = ForecastingModel.fromName(kpiMaster.getForecastModel());
-			if (modelOpt.isEmpty()) {
-				log.warn(
-						"Invalid forecast model '{}' configured for KPI {}",
-						kpiMaster.getForecastModel(),
-						kpiId);
-				return forecasts;
-			}
+			ForecastService forecaster = null;
+			ForecastingModel model = forecastingModel;
 
-			ForecastingModel model = modelOpt.get();
-			ForecastService forecaster = forecasterMap.get(model);
+			if (kpiMaster == null) {
+				log.debug("Generating forecast for non configured KPI {}", kpiId);
+				forecaster = forecasterMap.get(forecastingModel);
 
-			if (forecaster == null) {
-				log.warn("No forecaster implementation found for model {}", model.getDisplayName());
-				return forecasts;
+				if (forecaster == null) {
+					log.warn("No forecaster implementation found for model {}", forecastingModel.getDisplayName());
+					return forecasts;
+				}
+
+				if (forecaster.canForecast(dataCounts, kpiId)) {
+					forecasts = forecaster.generateForecast(dataCounts, kpiId);
+					log.debug(
+							"Generated {} forecast(s) for KPI {} using {}",
+							forecasts.size(),
+							kpiId,
+							forecastingModel.getDisplayName());
+				}
+			} else {
+				if (StringUtils.isEmpty(kpiMaster.getForecastModel())) {
+					log.debug("No forecast model configured for KPI {}", kpiId);
+					return forecasts;
+				}
+
+				// Get forecast model from configuration
+				Optional<ForecastingModel> modelOpt = ForecastingModel.fromName(kpiMaster.getForecastModel());
+				if (modelOpt.isEmpty()) {
+					log.warn(
+							"Invalid forecast model '{}' configured for KPI {}",
+							kpiMaster.getForecastModel(),
+							kpiId);
+					return forecasts;
+				}
+
+				model = modelOpt.get();
+				forecaster = forecasterMap.get(model);
+
+				if (forecaster == null) {
+					log.warn("No forecaster implementation found for model {}", model.getDisplayName());
+					return forecasts;
+				}
 			}
 
 			// Generate forecasts
@@ -128,17 +151,19 @@ public class ForecastingManager {
 	 * @param kpiId KPI identifier Maturity KPIs
 	 */
 	public <T> void addForecastsToDataCount(
-			T dataCount, List<DataCount> historicalData, String kpiId) {
+			T dataCount, List<DataCount> historicalData, String kpiId, ForecastingModel model) {
 		if (dataCount == null || historicalData == null || historicalData.isEmpty()) {
 			return;
 		}
 
 		try {
-			List<DataCount> forecasts = generateForecasts(historicalData, kpiId);
+			List<DataCount> forecasts = generateForecasts(historicalData, kpiId, model);
 			if (!forecasts.isEmpty()) {
 				if (dataCount instanceof DataCount dc) {
 					dc.setForecasts(forecasts);
-				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
+				} else if (dataCount instanceof IterationKpiValue ikv) {
+					ikv.setForecasts(forecasts);
+				}
 			}
 		} catch (Exception e) {
 			log.error("Error adding forecasts for KPI {}", kpiId, e);

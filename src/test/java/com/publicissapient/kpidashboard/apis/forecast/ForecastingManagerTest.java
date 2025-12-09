@@ -97,7 +97,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -125,7 +125,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -148,7 +148,7 @@ public class ForecastingManagerTest {
 		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -172,7 +172,7 @@ public class ForecastingManagerTest {
 		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -185,7 +185,7 @@ public class ForecastingManagerTest {
 		String kpiId = "kpi113";
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(null, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(null, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -199,7 +199,7 @@ public class ForecastingManagerTest {
 		List<DataCount> historicalData = new ArrayList<>();
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -222,7 +222,7 @@ public class ForecastingManagerTest {
 		when(linearRegressionForecaster.canForecast(any(), anyString())).thenReturn(false);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -239,7 +239,7 @@ public class ForecastingManagerTest {
 		when(configHelperService.loadKpiMaster()).thenThrow(new RuntimeException("Test exception"));
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -277,7 +277,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(dataCount.getForecasts());
@@ -306,7 +306,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(dataCount.getForecasts());
@@ -335,7 +335,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId, null);
 
 		// Assert
 		assertNull(dataCount.getForecasts());
@@ -357,7 +357,7 @@ public class ForecastingManagerTest {
 		when(configHelperService.loadKpiMaster()).thenReturn(testKpiMasterList);
 
 		// Act
-		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId);
+		forecastingManager.addForecastsToDataCount(dataCount, historicalData, kpiId, null);
 
 		// Assert
 		assertTrue(dataCount.getForecasts() == null || dataCount.getForecasts().isEmpty());
@@ -369,7 +369,7 @@ public class ForecastingManagerTest {
 		List<DataCount> historicalData = createTestDataCounts(5);
 
 		// Act & Assert - should not throw exception
-		forecastingManager.addForecastsToDataCount(null, historicalData, "kpi123");
+		forecastingManager.addForecastsToDataCount(null, historicalData, "kpi123", null);
 	}
 
 	@Test
@@ -393,7 +393,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);
@@ -424,7 +424,7 @@ public class ForecastingManagerTest {
 				.thenReturn(expectedForecasts);
 
 		// Act
-		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId);
+		List<DataCount> result = forecastingManager.generateForecasts(historicalData, kpiId, null);
 
 		// Assert
 		assertNotNull(result);

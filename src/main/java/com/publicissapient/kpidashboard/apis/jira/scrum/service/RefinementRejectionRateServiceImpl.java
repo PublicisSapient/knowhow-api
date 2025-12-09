@@ -229,7 +229,7 @@ public class RefinementRejectionRateServiceImpl
 					.ifPresent(
 							manager ->
 									manager.addForecastsToDataCount(
-											trendData, dataList, KPICode.REFINEMENT_REJECTION_RATE.getKpiId()));
+											trendData, dataList, KPICode.REFINEMENT_REJECTION_RATE.getKpiId(), null));
 			trendValueList.add(trendData);
 		}
 		weekAndTypeMap.keySet().stream()
@@ -272,7 +272,7 @@ public class RefinementRejectionRateServiceImpl
 					unAssignedJiraIssues.stream()
 							.filter(f -> f.getNumber().equalsIgnoreCase(hist.getStoryID()))
 							.map(Function.identity())
-							.collect(Collectors.toList());
+							.toList();
 			String status = getStatusAndUpdateJiraDateMap(fieldMapping, jiraDateMap, hist);
 			if (status.equalsIgnoreCase(ACCEPTED_IN_REFINEMENT_ISSUE)) {
 				acceptedInRefinementJiraIssues.addAll(jiraIssue);
@@ -498,7 +498,7 @@ public class RefinementRejectionRateServiceImpl
 													f.getBasicProjectConfigId()
 															.equalsIgnoreCase(
 																	node.getProjectFilter().getBasicProjectConfigId().toString()))
-									.collect(Collectors.toList());
+									.toList();
 
 			Map<String, Object> subMap = new HashMap<>();
 			subMap.put(key, dataList);
@@ -526,13 +526,13 @@ public class RefinementRejectionRateServiceImpl
 
 		if (doneStatusMap != null) {
 			doneStatus =
-					doneStatusMap.values().stream().map(String::toLowerCase).collect(Collectors.toList());
+					doneStatusMap.values().stream().map(String::toLowerCase).toList();
 		}
 		ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
 		projectList.add(basicProjectConfigId.toString());
 		mapOfFilters.put(
 				JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				projectList.stream().distinct().collect(Collectors.toList()));
+				projectList.stream().distinct().toList());
 		List<JiraIssue> filteredJiraIssue =
 				filterProjectJiraIssues(getBackLogJiraIssuesFromBaseClass(), startDate, endDate);
 		List<String> finalDoneStatus = doneStatus;
@@ -543,9 +543,9 @@ public class RefinementRejectionRateServiceImpl
 										issue.getSprintAssetState() == null
 												|| !issue.getSprintAssetState().equalsIgnoreCase(CommonConstant.CLOSED)
 												|| !finalDoneStatus.contains(issue.getStatus().toLowerCase()))
-						.collect(Collectors.toList());
+						.toList();
 		List<String> historyData =
-				unAssignedJiraIssues.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
+				unAssignedJiraIssues.stream().map(JiraIssue::getNumber).toList();
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = new ArrayList<>();
 		getJiraIssuesCustomHistoryFromBaseClass().stream()
 				.filter(his -> historyData.contains(his.getStoryID()))
@@ -585,6 +585,6 @@ public class RefinementRejectionRateServiceImpl
 										|| issue.getSprintAssetState().isEmpty()
 										|| issue.getSprintAssetState().equalsIgnoreCase("FUTURE")
 										|| issue.getSprintAssetState().equalsIgnoreCase("CLOSED"))
-				.collect(Collectors.toList());
+				.toList();
 	}
 }

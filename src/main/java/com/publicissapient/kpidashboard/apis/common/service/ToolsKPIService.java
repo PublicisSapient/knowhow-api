@@ -692,7 +692,7 @@ public abstract class ToolsKPIService<R, S> {
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
-									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId, null));
 
 					trendValues.add(maturityDataCount);
 				}
@@ -729,7 +729,7 @@ public abstract class ToolsKPIService<R, S> {
 							dataCounts.stream()
 									.filter(val -> val.getValue() != null)
 									.map(val -> (R) val.getValue())
-									.collect(Collectors.toList());
+									.toList();
 
 					R calculatedAggValue = getCalculatedAggValue(aggValues, kpiId);
 					String maturity =
@@ -754,7 +754,7 @@ public abstract class ToolsKPIService<R, S> {
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
-									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId, null));
 
 					trendValues.add(maturityDataCount);
 				}
@@ -840,7 +840,7 @@ public abstract class ToolsKPIService<R, S> {
 								Optional.ofNullable(forecastingManager)
 										.ifPresent(
 												manager ->
-														manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
+														manager.addForecastsToDataCount(maturityDataCount, value, kpiId, null));
 
 								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
@@ -890,7 +890,7 @@ public abstract class ToolsKPIService<R, S> {
 										value.stream()
 												.filter(val -> val.getValue() != null)
 												.map(val -> (R) val.getValue())
-												.collect(Collectors.toList());
+												.toList();
 								R calculatedAggValue = getCalculatedAggValue(aggValues, kpiId);
 								String aggregateValue = null;
 								String maturity =
@@ -913,7 +913,7 @@ public abstract class ToolsKPIService<R, S> {
 								Optional.ofNullable(forecastingManager)
 										.ifPresent(
 												manager ->
-														manager.addForecastsToDataCount(maturityDataCount, value, kpiId));
+														manager.addForecastsToDataCount(maturityDataCount, value, kpiId, null));
 								trendValues.add(maturityDataCount);
 								trendMap.computeIfAbsent(key, k -> new ArrayList<>()).addAll(trendValues);
 							});
@@ -933,9 +933,9 @@ public abstract class ToolsKPIService<R, S> {
 	 */
 	private List<DataCount> getList(List<DataCount> value, String kpiName) {
 		if (reverseTrendList.contains(kpiName)) {
-			return value.stream().limit(Constant.TREND_LIMIT).collect(Collectors.toList());
+			return value.stream().limit(Constant.TREND_LIMIT).toList();
 		} else {
-			return Lists.reverse(value).stream().limit(Constant.TREND_LIMIT).collect(Collectors.toList());
+			return Lists.reverse(value).stream().limit(Constant.TREND_LIMIT).toList();
 		}
 	}
 
@@ -1318,7 +1318,7 @@ public abstract class ToolsKPIService<R, S> {
 		aggMap.forEach(
 				(key, objectList) -> {
 					List<Integer> value =
-							objectList.stream().map(Integer.class::cast).collect(Collectors.toList());
+							objectList.stream().map(Integer.class::cast).toList();
 					if (Constant.PERCENTILE.equalsIgnoreCase(aggregationCriteria)) {
 						if (null == customApiConfig.getPercentileValue()) {
 							resultMap.put(key, AggregationUtils.percentilesInteger(value, 90.0D));
