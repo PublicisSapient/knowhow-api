@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
+import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
@@ -82,6 +84,9 @@ class ProductivityServiceTest {
 
 	@Mock
 	private ProductivityCustomRepository productivityCustomRepository;
+
+	@Mock
+	private PEBConfig pebConfig;
 
 	@InjectMocks
 	private ProductivityService productivityService;
@@ -299,6 +304,7 @@ class ProductivityServiceTest {
 
 		when(productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(anySet(),
 				any(TemporalAggregationUnit.class), anyInt())).thenReturn(constructProductivityTemporalGroupingList());
+		when(pebConfig.getForecastingModel()).thenReturn(ForecastingModel.EXPONENTIAL_SMOOTHING);
 
 		ServiceResponse serviceResponse = productivityService.getProductivityTrendsForLevel(testLevelName,
 				TemporalAggregationUnit.WEEK, 6);

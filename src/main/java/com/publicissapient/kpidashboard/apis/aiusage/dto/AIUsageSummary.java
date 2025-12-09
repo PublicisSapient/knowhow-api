@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
 import com.publicissapient.kpidashboard.apis.aiusage.enums.AIUsageAggregationType;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,9 +28,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AIUsageSummary {
-    private Long totalLocGenerated;
-    private Long totalPrompts;
-    private Long userCount;
-    private Long otherMetrics;
-    private AIUsageAggregationType aggregationType;
+	private Long totalLocGenerated;
+	private Long totalPrompts;
+	private Long userCount;
+	private Long otherMetrics;
+	private AIUsageAggregationType aggregationType;
 }
