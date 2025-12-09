@@ -18,20 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.minidev.json.annotate.JsonIgnore;
-
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class AIUsageStatisticsResponse {
-    private List<AIUsageStatisticsDTO> aiUsageStatisticsDTOS;
-    @JsonIgnore
-    private boolean isPartialContent;
+	private AIUsageStatisticsDTO summary;
+	private List<AIUsageStatisticsDTO> details;
 }
