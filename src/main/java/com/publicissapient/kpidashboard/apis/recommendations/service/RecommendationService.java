@@ -97,6 +97,38 @@ public class RecommendationService {
 		log.info("Processing recommendation request for level: {}", levelName);
 
 		try {
+			// TODO: TEMPORARY MOCK IMPLEMENTATION FOR UI TESTING - REMOVE THIS BLOCK AND UNCOMMENT BELOW
+			// Currently returning all recommendations using findAll() to bypass validation issues
+			// Once hierarchy validation logic is fixed, remove this block and uncomment the original logic below
+			log.warn("TEMPORARY: Using findAll() - returning all recommendations for UI testing");
+			
+			List<RecommendationsActionPlan> allRecommendations = recommendationRepository.findAll();
+			List<ProjectRecommendationDTO> recommendationDTOs = allRecommendations.stream()
+					.map(this::mapToProjectRecommendationDTO)
+					.collect(Collectors.toList());
+
+			RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder()
+					.levelName(levelName)
+					.totalProjectsWithRecommendations(recommendationDTOs.size())
+					.totalProjectsQueried(recommendationDTOs.size())
+					.totalRecommendations(recommendationDTOs.size())
+					.message(String.format("TEMPORARY: Retrieved %d recommendations (all data for UI testing)",
+							recommendationDTOs.size()))
+					.build();
+
+			RecommendationResponseDTO response = RecommendationResponseDTO.builder()
+					.summary(summary)
+					.details(recommendationDTOs)
+					.build();
+
+			long duration = System.currentTimeMillis() - startTime;
+			log.info("TEMPORARY: Retrieved {} recommendations using findAll(). Duration: {} ms",
+					recommendationDTOs.size(), duration);
+
+			return new ServiceResponse(true, "Recommendation data was successfully retrieved (TEMPORARY)", response);
+			// TODO: END OF TEMPORARY MOCK - REMOVE ABOVE AND UNCOMMENT BELOW
+
+			/* TODO: UNCOMMENT THIS BLOCK AFTER FIXING VALIDATION LOGIC
 			// Create request data with hierarchy levels and organization lookup
 			RecommendationRequestData requestData = createRecommendationRequestData(levelName);
 
@@ -142,6 +174,7 @@ public class RecommendationService {
 					totalRecommendations, recommendationDTOs.size(), levelName, projectNodeIds.size(), duration);
 
 			return new ServiceResponse(true, "Recommendation data was successfully retrieved", response);
+			*/
 
 		} catch (BadRequestException | IllegalArgumentException e) {
 			log.error("Bad request for recommendation retrieval: {}", e.getMessage());
