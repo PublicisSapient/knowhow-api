@@ -29,12 +29,63 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 
 import lombok.extern.slf4j.Slf4j;
 
-/*
- * Sample Usage:
- * Input: [10, 12, 11, 13, 15] (historical KPI values)
- * Process: Exponential smoothing + Linear trend
- * Output: 16.2 (next forecasted value)
+/**
+ * Theta Method forecaster for time series forecasting.
+ *
+ * This implementation follows the simplified practical Theta Method by
+ * combining:
+ * 1) Simple Exponential Smoothing (SES)
+ * 2) Linear trend projection
+ *
+ * and averaging their results.
+ *
+ * <h3>Algorithm:</h3>
+ *
+ * <pre>
+ * 1. Simple Exponential Smoothing (SES):
+ *    S(t) = α * Y(t) + (1 - α) * S(t-1)
+ *
+ * 2. Linear Trend:
+ *    Trend = (Y(n) - Y(1)) / (n - 1)
+ *    TrendForecast(h) = Y(n) + h * Trend
+ *
+ * 3. Final Forecast:
+ *    F(h) = ( S(n) + TrendForecast(h) ) / 2
+ *
+ * Where:
+ *   α = 0.2 (fixed smoothing factor)
+ *   h = forecast horizon (default = 1)
+ * </pre>
+ *
+ * <h3>Example:</h3>
+ *
+ * <pre>
+ * Input Series:
+ *   Y = [10, 12, 11, 13, 15]
+ *
+ * Step 1 – Exponential Smoothing (α = 0.2):
+ *   S(1) = 10
+ *   S(2) = 0.2 * 12 + 0.8 * 10   = 10.40
+ *   S(3) = 0.2 * 11 + 0.8 * 10.40 = 10.52
+ *   S(4) = 0.2 * 13 + 0.8 * 10.52 = 11.02
+ *   S(5) = 0.2 * 15 + 0.8 * 11.02 = 11.82
+ *
+ * Step 2 – Linear Trend:
+ *   Trend = (15 - 10) / (5 - 1) = 1.25
+ *   TrendForecast(1) = 15 + 1.25 = 16.25
+ *
+ * Step 3 – Final Forecast:
+ *   F(1) = (11.82 + 16.25) / 2 = 14.04
+ * </pre>
+ *
+ * <h3>Characteristics:</h3>
+ * <ul>
+ *   <li>Works well with small datasets</li>
+ *   <li>Captures both short-term smoothing and long-term trend</li>
+ *   <li>Open-source friendly and easy to implement in Java</li>
+ * </ul>
  */
+
 
 @Slf4j
 @Service
@@ -43,8 +94,13 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 	private static final int MIN_DATA_POINTS = 2;
 
 	/**
-	 * Generates forecast using Theta Method algorithm Flow: Validate data -> Extract values -> Apply
-	 * Theta algorithm -> Create forecast object
+	 * Generates forecast using Theta Method algorithm.
+	 *
+	 * <p>Flow: Validate data → Extract values → Apply Theta algorithm → Create forecast object
+	 *
+	 * @param historicalData List of historical DataCount objects containing KPI values
+	 * @param kpiId KPI identifier for logging and tracking
+	 * @return List containing single forecast DataCount, or empty list if forecasting not possible
 	 */
 	@Override
 	public List<DataCount> generateForecast(List<DataCount> historicalData, String kpiId) {
@@ -85,8 +141,12 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 	}
 
 	/**
-	 * Theta Method implementation: Combines exponential smoothing with linear trend Flow: Smooth data
-	 * (Θ=0) -> Calculate trend (Θ=2) -> Average both components
+	 * Theta Method implementation: Combines exponential smoothing with linear trend.
+	 *
+	 * <p>Flow: Smooth data (Θ=0) → Calculate trend (Θ=2) → Average both components
+	 *
+	 * @param data Array of historical values to forecast from
+	 * @return Forecasted value for next time period
 	 */
 	private double thetaForecastNext(double[] data) {
 		int n = data.length;
@@ -111,7 +171,14 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 	}
 
 
-	/** Extract values from bubble points or direct DataCount value */
+	/**
+	 * Extracts numerical values from DataCount objects.
+	 *
+	 * <p>Attempts to extract from bubble points first, falls back to direct value extraction.
+	 *
+	 * @param dataCounts List of DataCount objects to extract values from
+	 * @return List of extracted numerical values
+	 */
 	@Override
 	protected List<Double> extractValues(List<DataCount> dataCounts) {
 		List<Double> values = new ArrayList<>();
@@ -139,14 +206,26 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 	/**
 	 * Returns the forecasting model type identifier for this implementation.
 	 *
-	 * @return ForecastingModel.THETA_METHOD indicating this uses Theta Method algorithm
+	 * @return {@link ForecastingModel#THETA_METHOD} indicating this uses Theta Method algorithm
 	 */
 	@Override
 	public ForecastingModel getModelType() {
 		return ForecastingModel.THETA_METHOD;
 	}
 
-	/** Data count validation */
+	/**
+	 * Validates if forecasting is possible with given historical data.
+	 *
+	 * <p>Checks for:
+	 * <ul>
+	 *   <li>Non-null and non-empty historical data
+	 *   <li>Minimum required data points (> 2)
+	 * </ul>
+	 *
+	 * @param historicalData List of historical DataCount objects
+	 * @param kpiId KPI identifier for logging
+	 * @return true if forecasting is possible, false otherwise
+	 */
 	@Override
 	public boolean canForecast(List<DataCount> historicalData, String kpiId) {
 		if (CollectionUtils.isEmpty(historicalData)) {
