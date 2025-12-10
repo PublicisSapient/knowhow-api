@@ -27,28 +27,29 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
-import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
-import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ForecastData;
-import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryScoresDTO;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryVariations;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ForecastData;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.KPITrend;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.KPITrends;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.OrganizationEntityProductivity;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityRequest;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityTrendsResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.CategoryScores;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.KPIData;
@@ -109,7 +110,7 @@ public class ProductivityService {
 	private final ForecastingManager forecastingManager;
 
 	@Builder
-	private record PEBProductivityRequest(HierarchyLevelsData hierarchyLevelsData,
+	private record PEBProductivityCalculationContext(HierarchyLevelsData hierarchyLevelsData,
 			OrganizationLookup organizationLookup) {
 	}
 
@@ -154,22 +155,21 @@ public class ProductivityService {
 	 * indicators.
 	 * </p>
 	 *
-	 * @param levelName
-	 *            The name of the organizational hierarchy level (e.g., "project"))
+	 * @param productivityRequest class representing the starting input required for generating the productivity response
 	 * @return ServiceResponse containing ProductivityResponse with summary and
 	 *         detailed productivity metrics
 	 */
-	public ServiceResponse getProductivityForLevel(String levelName) {
-		log.info("Started getting productivity data for level {}", levelName);
+	public ServiceResponse getProductivityForLevel(ProductivityRequest productivityRequest) {
+		validateProductivityCalculationRequest(productivityRequest);
+		log.info("Started getting productivity data for level {}", productivityRequest.levelName());
 		long startTime = System.currentTimeMillis();
 
-		PEBProductivityRequest pebProductivityRequest = createPEBProductivityRequestForRequestedLevel(levelName);
+		PEBProductivityCalculationContext pebProductivityCalculationContext = createPEBProductivityRequestForRequestedLevel(
+				productivityRequest.levelName(), productivityRequest.parentNodeId());
 
 		// The "roots" will be the nodes corresponding to the requested hierarchy level
-		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds = pebProductivityRequest
-				.organizationLookup()
-				.getChildrenGroupedByParentNodeIds(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getLevel(),
-						pebProductivityRequest.hierarchyLevelsData.projectLevel.getLevel());
+		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds = createProjectChildrenGroupedByRequestedRootNodeIdsMap(
+				productivityRequest, pebProductivityCalculationContext);
 
 		Set<String> projectNodeIds = projectChildrenGroupedByRequestedRootNodeIds.values().stream()
 				.flatMap(Collection::stream).map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
@@ -186,7 +186,7 @@ public class ProductivityService {
 
 		for (Map.Entry<String, List<AccountFilteredData>> nextChildHierarchyLevelNodeIdProjectTreeNodes : projectChildrenGroupedByRequestedRootNodeIds
 				.entrySet()) {
-			AccountFilteredData rootAccountData = pebProductivityRequest.organizationLookup
+			AccountFilteredData rootAccountData = pebProductivityCalculationContext.organizationLookup
 					.getAccountDataByNodeId(nextChildHierarchyLevelNodeIdProjectTreeNodes.getKey()).get(0);
 			CategoryScoresDTO rootNodeCategoryScore = new CategoryScoresDTO();
 			int numberOfProjectsWithProductivityData = 0;
@@ -215,7 +215,8 @@ public class ProductivityService {
 				setAveragedProductivityScores(rootNodeCategoryScore, numberOfProjectsWithProductivityData);
 
 				details.add(OrganizationEntityProductivity.builder()
-						.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+						.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+								.getHierarchyLevelName())
 						.organizationEntityName(rootAccountData.getNodeName()).categoryScores(rootNodeCategoryScore)
 						.build());
 			} else {
@@ -232,7 +233,7 @@ public class ProductivityService {
 		ProductivityResponse productivityResponse = new ProductivityResponse();
 		productivityResponse.setDetails(details);
 		productivityResponse.setSummary(OrganizationEntityProductivity.builder()
-				.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+				.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
 				.categoryScores(summaryCategoryScoresDTO)
 				.trends(constructKPITrends(kpiTrendValuesGroupedById, kpiDataGroupedById)).build());
 
@@ -241,7 +242,7 @@ public class ProductivityService {
 						Successfully retrieved the productivity data for level {}. Total projects found under requested level: {}
 						Projects without productivity data: {}. Duration: {} ms
 						""",
-				levelName, projectNodeIds.size(), (projectNodeIds.size() - totalProjectsNumber),
+				productivityRequest.levelName(), projectNodeIds.size(), (projectNodeIds.size() - totalProjectsNumber),
 				System.currentTimeMillis() - startTime);
 		return new ServiceResponse(Boolean.TRUE, "Productivity data was successfully retrieved", productivityResponse);
 	}
@@ -315,13 +316,15 @@ public class ProductivityService {
 				levelName, temporalAggregationUnit, limit);
 		long startTime = System.currentTimeMillis();
 
-		PEBProductivityRequest pebProductivityRequest = createPEBProductivityRequestForRequestedLevel(levelName);
+		PEBProductivityCalculationContext pebProductivityCalculationContext = createPEBProductivityRequestForRequestedLevel(
+				levelName, StringUtils.EMPTY);
 
 		// The "roots" will be the nodes corresponding to the first hierarchy child
 		// level after the requested one
-		Map<String, List<AccountFilteredData>> rootNodeIdProjectChildren = pebProductivityRequest.organizationLookup
-				.getChildrenGroupedByParentNodeIds(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getLevel(),
-						pebProductivityRequest.hierarchyLevelsData.projectLevel.getLevel());
+		Map<String, List<AccountFilteredData>> rootNodeIdProjectChildren = pebProductivityCalculationContext.organizationLookup
+				.getChildrenGroupedByParentNodeIds(
+						pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel(),
+						pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
 
 		Set<String> projectNodeIds = rootNodeIdProjectChildren.values().stream().flatMap(Collection::stream)
 				.map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
@@ -335,8 +338,8 @@ public class ProductivityService {
 
 			return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
 					ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit)
-							.levelName(
-									pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+							.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+									.getHierarchyLevelName())
 							.build());
 		}
 
@@ -370,7 +373,7 @@ public class ProductivityService {
 		return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
 				ProductivityTrendsResponse.builder()
 						.temporalGrouping(temporalAggregationUnit)
-						.levelName(pebProductivityRequest.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+						.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
 						.categoryVariations(categoryVariations)
 						.categoryScores(productivityTrendsProcessingResult.categoryScoresTrendValues)
 						.forecasts(List.of(overallForecast))
@@ -453,7 +456,7 @@ public class ProductivityService {
 	 * the period start date in the resulting DTOs for client-side temporal
 	 * visualization.
 	 * </p>
-	 * 
+	 *
 	 * @param productivitiesGroupedByTemporalUnit
 	 *            List of temporal groupings containing productivity data organized
 	 *            by time periods. Each grouping contains all productivity
@@ -464,8 +467,8 @@ public class ProductivityService {
 	 *            Map linking root organizational entity node IDs to their
 	 *            descendant project nodes. Used to traverse the organizational
 	 *            hierarchy and identify which projects belong to each root entity.
-	 *            Keys are root node IDs, values are lists of project nodes.
-	 *            Must not be null.
+	 *            Keys are root node IDs, values are lists of project nodes. Must
+	 *            not be null.
 	 * @return ProductivityTrendsProcessingResult containing three components:
 	 *         <ul>
 	 *         <li>categoryScoresByDataPoints: LinkedHashMap indexed by data point
@@ -533,11 +536,13 @@ public class ProductivityService {
 	 * @return PEBProductivityRequest containing hierarchy data and account tree
 	 *         structure
 	 */
-	private PEBProductivityRequest createPEBProductivityRequestForRequestedLevel(String levelName) {
-		PEBProductivityRequest.PEBProductivityRequestBuilder pebProductivityRequestBuilder = PEBProductivityRequest
+	private PEBProductivityCalculationContext createPEBProductivityRequestForRequestedLevel(String levelName,
+			String parentNodeId) {
+		PEBProductivityCalculationContext.PEBProductivityCalculationContextBuilder pebProductivityRequestBuilder = PEBProductivityCalculationContext
 				.builder();
 		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelName(levelName);
-		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData);
+		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData,
+				parentNodeId);
 		return pebProductivityRequestBuilder.hierarchyLevelsData(hierarchyLevelsData)
 				.organizationLookup(organizationLookup).build();
 	}
@@ -552,12 +557,13 @@ public class ProductivityService {
 	 * child level after the requested level down to the project level.
 	 * </p>
 	 *
-	 * @param hierarchyLevelsData
-	 *            Information about the hierarchy levels involved
+	 * @param hierarchyLevelsData Data structure containing hierarchy level information required for productivity calculations
+	 * @param parentNodeId String representing the parent organization entity node id for which to retrieve the productivity data
 	 * @return List of TreeNode representing the root nodes of the accessible
 	 *         hierarchy tree
 	 */
-	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData) {
+	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData,
+			String parentNodeId) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
@@ -566,7 +572,6 @@ public class ProductivityService {
 				.getFilteredList(accountFilterRequest).stream()
 				.filter(accountFilteredData -> accountFilteredData != null
 						&& StringUtils.isNotEmpty(accountFilteredData.getNodeId())
-						&& accountFilteredData.getLevel() >= hierarchyLevelsData.requestedLevel.getLevel()
 						&& accountFilteredData.getLevel() <= hierarchyLevelsData.projectLevel.getLevel())
 				.collect(Collectors.toSet());
 
@@ -574,7 +579,28 @@ public class ProductivityService {
 			throw new ForbiddenException("Current user doesn't have access to any hierarchy data");
 		}
 
-		return new OrganizationLookup(hierarchyDataUserHasAccessTo);
+		OrganizationLookup organizationLookup = new OrganizationLookup(hierarchyDataUserHasAccessTo);
+
+		if (StringUtils.isNotBlank(parentNodeId)) {
+			List<AccountFilteredData> accountFilteredData = organizationLookup.getAccountDataByNodeId(parentNodeId);
+			if (CollectionUtils.isEmpty(accountFilteredData)) {
+				throw new BadRequestException(
+						String.format("Current user doesn't have access to the parent node id %s or it does not exist",
+								parentNodeId));
+			}
+			if (accountFilteredData.size() > 1) {
+				throw new BadRequestException(String.format(
+						"Multiple organization entities are corresponding with the parent node id '%s'", parentNodeId));
+			}
+			if (accountFilteredData.stream().anyMatch(
+					parentNodeData -> hierarchyLevelsData.requestedLevel.getLevel() <= parentNodeData.getLevel())) {
+				throw new BadRequestException(String.format(
+						"The requested level name '%s' is not corresponding to a " + "child level of the parent node",
+						hierarchyLevelsData.requestedLevel.getHierarchyLevelName()));
+			}
+		}
+
+		return organizationLookup;
 	}
 
 	/**
@@ -739,5 +765,34 @@ public class ProductivityService {
 		}
 		return roundToTwoDecimals(
 				((lastPointValue - firstPointValue) / Math.abs(firstPointValue)) * PERCENTAGE_MULTIPLIER);
+	}
+
+	private static void validateProductivityCalculationRequest(ProductivityRequest productivityRequest) {
+		if (productivityRequest == null) {
+			throw new BadRequestException("Productivity calculation request cannot be null");
+		}
+		if (StringUtils.isBlank(productivityRequest.levelName())) {
+			throw new BadRequestException("The productivity calculation 'levelName' is required");
+		}
+	}
+
+	private static Map<String, List<AccountFilteredData>> createProjectChildrenGroupedByRequestedRootNodeIdsMap(
+			ProductivityRequest productivityRequest,
+			PEBProductivityCalculationContext pebProductivityCalculationContext) {
+
+		if (StringUtils.isNotBlank(productivityRequest.parentNodeId())) {
+			List<AccountFilteredData> childrenByParentNodeId = pebProductivityCalculationContext.organizationLookup()
+					.getChildrenByParentNodeId(productivityRequest.parentNodeId(),
+							pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel());
+
+			Set<String> childrenNodeIds = childrenByParentNodeId.stream().map(AccountFilteredData::getNodeId)
+					.collect(Collectors.toSet());
+			return pebProductivityCalculationContext.organizationLookup().getChildrenGroupedByParentNodeIds(
+					childrenNodeIds, pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
+		}
+
+		return pebProductivityCalculationContext.organizationLookup().getChildrenGroupedByParentNodeIds(
+				pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel(),
+				pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
 	}
 }
