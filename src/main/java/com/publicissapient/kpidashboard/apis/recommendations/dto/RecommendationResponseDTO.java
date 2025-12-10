@@ -20,6 +20,8 @@ package com.publicissapient.kpidashboard.apis.recommendations.dto;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,25 +29,21 @@ import lombok.NoArgsConstructor;
 
 /**
  * Response DTO for project recommendations API.
- * Follows the same pattern as ProductivityResponse with summary and details structure.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Response containing batch-calculated project recommendations")
+@Schema(description = "Response containing batch-calculated project recommendations with summary and details")
 public class RecommendationResponseDTO {
 
-	@Schema(description = "List of project recommendations for the requested organizational level")
-	private List<ProjectRecommendationDTO> recommendations;
+	@NotNull(message = "Summary must not be null")
+	@Valid
+	@Schema(description = "Summary with basic statistics and aggregated recommendation counts")
+	private RecommendationSummaryDTO summary;
 
-	@Schema(description = "Total number of projects with recommendations", example = "15")
-	private int totalProjects;
-
-	@Schema(description = "Total number of projects queried", example = "20")
-	private int totalProjectsQueried;
-
-	@Schema(description = "Additional metadata about the recommendation retrieval", 
-		example = "Retrieved 15 recommendations from 20 projects at project level")
-	private String message;
+	@NotNull(message = "Details list must not be null")
+	@Valid
+	@Schema(description = "Detailed list of recommendations for each project")
+	private List<ProjectRecommendationDTO> details;
 }

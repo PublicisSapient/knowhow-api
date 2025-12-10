@@ -25,10 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationRequest;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationResponseDTO;
 import com.publicissapient.kpidashboard.apis.recommendations.service.RecommendationService;
-import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,24 +55,15 @@ public class RecommendationController {
 			+ "Response includes project-level recommendations with AI-generated action plans, severity ratings, and metadata about the analysis.", operationId = "getProjectRecommendations")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Project recommendations retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = RecommendationResponseDTO.class))),
-			@ApiResponse(responseCode = "400", description = "Bad Request - Invalid parameters provided (empty levelName, invalid methodology)"),
+			@ApiResponse(responseCode = "400", description = "Bad Request - Invalid levelName parameter"),
 			@ApiResponse(responseCode = "403", description = "Forbidden - User doesn't have access to the requested data"),
 			@ApiResponse(responseCode = "404", description = "Not Found - Hierarchy level not found for the specified levelName"),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error - Unexpected error occurred during recommendation retrieval") })
 	@GetMapping({ "", "/" })
 	public ResponseEntity<ServiceResponse> getProjectRecommendations(
 			@Parameter(name = "levelName", description = "The organizational hierarchy level name for which to retrieve recommendations. "
-					+ "Must correspond to a valid hierarchy level name (not ID).", required = true, example = "project") @RequestParam @NotBlank(message = "The 'levelName' is required") String levelName,
+					+ "Must correspond to a valid hierarchy level name (not ID).", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName) {
 
-			@Parameter(name = "deliveryMethodology", description = "The project delivery methodology used for recommendations. "
-					+ "Determines which recommendation frameworks and best practices to apply.", required = true, schema = @Schema(implementation = ProjectDeliveryMethodology.class)) @RequestParam ProjectDeliveryMethodology deliveryMethodology,
-
-			@Parameter(name = "parentNodeId", description = "Optional identifier of the parent organizational node. "
-					+ "Used for hierarchical recommendation analysis and filtering. "
-					+ "If not provided, returns recommendations for all accessible projects at the specified level.") @RequestParam(required = false) String parentNodeId) {
-		RecommendationRequest request = RecommendationRequest.builder().levelName(levelName)
-				.deliveryMethodology(deliveryMethodology).parentNodeId(parentNodeId).build();
-
-		return ResponseEntity.ok(recommendationService.getRecommendationsForLevel(request));
+		return ResponseEntity.ok(recommendationService.getRecommendationsForLevel(levelName));
 	}
 }

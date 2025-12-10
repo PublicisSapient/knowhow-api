@@ -29,7 +29,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
@@ -37,13 +36,12 @@ import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.ProjectRecommendationDTO;
-import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationRequest;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationResponseDTO;
+import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationSummaryDTO;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.recommendation.batch.RecommendationsActionPlan;
 import com.publicissapient.kpidashboard.common.repository.recommendation.RecommendationRepository;
-import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
@@ -54,18 +52,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for retrieving batch-calculated project recommendations.
- * Follows the same pattern as ProductivityService and KpiMaturityService.
+ * Service for retrieving batch-calculated AI recommendations.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecommendationService {
 
+	private static final int DEFAULT_RECOMMENDATIONS_LIMIT_PER_PROJECT = 1;
+
 	private final RecommendationRepository recommendationRepository;
 	private final AccountHierarchyServiceImpl accountHierarchyService;
 	private final FilterHelperService filterHelperService;
-
 	/**
 	 * Internal record to hold hierarchy levels data for recommendation calculations.
 	 */
@@ -79,97 +77,105 @@ public class RecommendationService {
 	 */
 	@Builder
 	private record RecommendationRequestData(HierarchyLevelsData hierarchyLevelsData,
-			OrganizationLookup organizationLookup, String parentNodeId) {
+			OrganizationLookup organizationLookup) {
 	}
 
 	/**
-	 * Retrieves recommendations for projects at the specified organizational level.
-	 * Follows the same pattern as ProductivityService and KpiMaturityService.
+	 * Retrieves batch-calculated AI recommendations for the specified organizational hierarchy level.
+	 * Filters by user access permissions and returns only the most recent recommendation per project.
 	 *
-	 * @param request containing levelName, deliveryMethodology, and optional parentNodeId
-	 * @return ServiceResponse containing RecommendationResponseDTO with list of project recommendations
+	 * @param levelName the organizational hierarchy level name (e.g., "project", "portfolio")
+	 * @return ServiceResponse containing recommendations with summary metadata
+	 * @throws BadRequestException if levelName is empty or unsupported
+	 * @throws NotFoundException if the hierarchy level does not exist
+	 * @throws ForbiddenException if user has no access to hierarchy data
+	 * @throws InternalServerErrorException if multiple levels match or unexpected errors occur
 	 */
-	public ServiceResponse getRecommendationsForLevel(RecommendationRequest request) {
+	public ServiceResponse getRecommendationsForLevel(String levelName) {
 		long startTime = System.currentTimeMillis();
-		
-		log.info("Processing recommendation request for level: {}, methodology: {}, parentNodeId: {}",
-			request.levelName(), request.deliveryMethodology(), request.parentNodeId());
+
+		log.info("Processing recommendation request for level: {}", levelName);
 
 		try {
 			// Create request data with hierarchy levels and organization lookup
-			RecommendationRequestData requestData = createRecommendationRequestData(
-					request.levelName(), request.deliveryMethodology(), request.parentNodeId());
-			
+			RecommendationRequestData requestData = createRecommendationRequestData(levelName);
+
 			// Extract project node IDs using OrganizationLookup
 			Set<String> projectNodeIds = extractProjectNodeIds(requestData);
-			
-			if (projectNodeIds.isEmpty()) {
-				log.warn("No projects found for level: {} with parentNodeId: {}", request.levelName(), request.parentNodeId());
-				return buildEmptyResponse();
+
+			if (CollectionUtils.isEmpty(projectNodeIds)) {
+				log.warn("No projects found for level: {}", levelName);
+				return buildEmptyResponse(levelName);
 			}
-			
+
 			// Retrieve recommendations from batch data
 			List<RecommendationsActionPlan> recommendations = getLatestRecommendationsForProjects(projectNodeIds);
-			
+
 			// Map entities to DTOs
 			List<ProjectRecommendationDTO> recommendationDTOs = recommendations.stream()
 					.map(this::mapToProjectRecommendationDTO)
 					.collect(Collectors.toList());
-			
-			// Build response with metadata
-			RecommendationResponseDTO response = RecommendationResponseDTO.builder()
-					.recommendations(recommendationDTOs)
-					.totalProjects(recommendationDTOs.size())
+
+			// Calculate total recommendations: each project has exactly 1 recommendation (the latest)
+			// Note: recommendations field in DTO is a single Recommendation object, not a Collection
+			int totalRecommendations = recommendationDTOs.size();
+
+			// Build summary
+			RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder()
+					.levelName(levelName)
+					.totalProjectsWithRecommendations(recommendationDTOs.size())
 					.totalProjectsQueried(projectNodeIds.size())
-					.message(String.format("Retrieved %d recommendations from %d projects at %s level", 
-							recommendationDTOs.size(), projectNodeIds.size(), request.levelName()))
+					.totalRecommendations(totalRecommendations)
+					.message(String.format("Retrieved %d recommendations from %d projects at %s level",
+							totalRecommendations, recommendationDTOs.size(), levelName))
 					.build();
-			
+
+			// Build response with summary and details
+			RecommendationResponseDTO response = RecommendationResponseDTO.builder()
+					.summary(summary)
+					.details(recommendationDTOs)
+					.build();
+
 			long duration = System.currentTimeMillis() - startTime;
-			log.info("Successfully retrieved {} recommendations for level: {}. Total projects queried: {}. Duration: {} ms", 
-				recommendationDTOs.size(), request.levelName(), projectNodeIds.size(), duration);
-			
-			return new ServiceResponse(true, "Recommendations retrieved successfully", response);
-			
+			log.info(
+					"Successfully retrieved {} recommendations from {} projects for level: {}. Total projects queried: {}. Duration: {} ms",
+					totalRecommendations, recommendationDTOs.size(), levelName, projectNodeIds.size(), duration);
+
+			return new ServiceResponse(true, "Recommendation data was successfully retrieved", response);
+
 		} catch (BadRequestException | IllegalArgumentException e) {
 			log.error("Bad request for recommendation retrieval: {}", e.getMessage());
-			throw new BadRequestException(e.getMessage());
-		} catch (NotFoundException e) {
-			log.error("Resource not found: {}", e.getMessage());
-			throw new NotFoundException(e.getMessage());
-		} catch (ForbiddenException e) {
-			log.error("Access forbidden: {}", e.getMessage());
-			throw new ForbiddenException(e.getMessage());
+			throw e;
+		} catch (NotFoundException | ForbiddenException e) {
+			log.error("Error retrieving recommendations: {}", e.getMessage());
+			throw e;
 		} catch (Exception e) {
-			log.error("Unexpected error retrieving recommendations for level: {}", request.levelName(), e);
-			throw new InternalServerErrorException("Internal server error occurred while retrieving recommendations");
+			log.error("Unexpected error retrieving recommendations for level: {}", levelName, e);
+			throw new InternalServerErrorException(
+					"Internal server error occurred while retrieving recommendations", e);
 		}
 	}
 
 	/**
-	 * Creates recommendation request data with hierarchy levels and organization lookup.
-	 * Follows the pattern from ProductivityService.createPEBProductivityRequestForRequestedLevel
+	 * Prepares request context with hierarchy metadata and organization lookup.
 	 *
-	 * @param levelName The name of the hierarchy level
-	 * @param deliveryMethodology The project delivery methodology
-	 * @param parentNodeId Optional parent node ID for filtering
-	 * @return RecommendationRequestData containing all necessary data for recommendation retrieval
+	 * @param levelName the hierarchy level name
+	 * @return RecommendationRequestData with hierarchy levels and organization lookup
 	 */
-	private RecommendationRequestData createRecommendationRequestData(String levelName,
-			ProjectDeliveryMethodology deliveryMethodology, String parentNodeId) {
-		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelName(levelName,
-				deliveryMethodology, parentNodeId);
+	private RecommendationRequestData createRecommendationRequestData(String levelName) {
+		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelName(levelName);
 		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData);
 		return RecommendationRequestData.builder().hierarchyLevelsData(hierarchyLevelsData)
-				.organizationLookup(organizationLookup).parentNodeId(parentNodeId).build();
+				.organizationLookup(organizationLookup).build();
 	}
 
 	/**
-	 * Constructs the organizational hierarchy tree structure based on user access permissions.
-	 * Follows the pattern from ProductivityService.constructOrganizationLookupBasedOnAccountData
+	 * Builds organizational hierarchy structure filtered by user access permissions.
+	 * Uses cached data for Scrum projects with closed sprints only.
 	 *
-	 * @param hierarchyLevelsData Information about the hierarchy levels involved
-	 * @return OrganizationLookup for efficient hierarchy data access
+	 * @param hierarchyLevelsData hierarchy level metadata
+	 * @return OrganizationLookup for hierarchy traversal
+	 * @throws ForbiddenException if user has no access to hierarchy data
 	 */
 	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
@@ -177,7 +183,7 @@ public class RecommendationService {
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
 		// getFilteredList uses cacheService.cacheAccountHierarchyData() internally - no DB hit
-		log.debug("Fetching hierarchy data from cache for user access filtering");
+		log.info("Fetching hierarchy data from cache for user access filtering");
 		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = accountHierarchyService.getFilteredList(accountFilterRequest)
 				.stream()
 				.filter(accountFilteredData -> accountFilteredData != null
@@ -194,30 +200,21 @@ public class RecommendationService {
 	}
 
 	/**
-	 * Constructs hierarchy levels data required for recommendation calculations.
-	 * Follows the pattern from ProductivityService.constructHierarchyLevelsDataByRequestedLevelName
-	 * and KpiMaturityService.constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology
+	 * Constructs and validates hierarchy level metadata for the requested level.
+	 * Ensures the level exists, is unique, and is at or above project level.
 	 *
-	 * @param levelName The name of the requested hierarchy level
-	 * @param deliveryMethodology The project delivery methodology
-	 * @param parentNodeId Optional parent node ID for validation
-	 * @return HierarchyLevelsData containing the requested level, its child level, and project level
+	 * @param levelName the requested hierarchy level name (case-insensitive)
+	 * @return HierarchyLevelsData with requested level, child level, and project level
+	 * @throws NotFoundException if level does not exist
+	 * @throws InternalServerErrorException if multiple levels match or project level not found
 	 */
-	private HierarchyLevelsData constructHierarchyLevelsDataByRequestedLevelName(String levelName,
-			ProjectDeliveryMethodology deliveryMethodology, String parentNodeId) {
-		if (StringUtils.isEmpty(levelName)) {
-			throw new BadRequestException("Level name must not be empty");
-		}
+	private HierarchyLevelsData constructHierarchyLevelsDataByRequestedLevelName(String levelName) {
+		// Note: levelName is already validated by @NotBlank in controller
 
-		if (deliveryMethodology == null) {
-			throw new BadRequestException("Delivery methodology must not be null");
-		}
-
-		// Using cached hierarchy level map - no DB hit
-		Map<String, HierarchyLevel> allHierarchyLevels = filterHelperService
-				.getHierarchyLevelMap(deliveryMethodology == ProjectDeliveryMethodology.KANBAN);
-		log.debug("Retrieved {} hierarchy levels from cache for methodology: {}", 
-				allHierarchyLevels.size(), deliveryMethodology);
+		// Using cached hierarchy level map - no DB hit (assuming Scrum for
+		// recommendations)
+		Map<String, HierarchyLevel> allHierarchyLevels = filterHelperService.getHierarchyLevelMap(false);
+		log.debug("Retrieved {} hierarchy levels from cache", allHierarchyLevels.size());
 
 		if (multipleLevelsCorrespondToLevelName(levelName, allHierarchyLevels)) {
 			throw new InternalServerErrorException(String
@@ -241,7 +238,7 @@ public class RecommendationService {
 		HierarchyLevel requestedLevel = requestedHierarchyLevelOptional.get();
 		HierarchyLevel projectLevel = projectHierarchyLevelOptional.get();
 
-		if (requestedLevelIsNotSupported(requestedLevel, projectLevel, parentNodeId)) {
+		if (requestedLevelIsNotSupported(requestedLevel, projectLevel)) {
 			throw new BadRequestException(String.format("Requested level '%s' is too low on the hierarchy", levelName));
 		}
 
@@ -254,19 +251,14 @@ public class RecommendationService {
 	}
 
 	/**
-	 * Checks if the requested level is supported for recommendation retrieval.
-	 * Follows the pattern from KpiMaturityService.requestedLevelIsNotSupported
+	 * Validates if the requested level supports recommendations.
+	 * Levels below project level are not supported.
 	 *
-	 * @param requestedLevel The requested hierarchy level
-	 * @param projectLevel The project hierarchy level
-	 * @param parentNodeId Optional parent node ID
-	 * @return true if the level is not supported, false otherwise
+	 * @param requestedLevel the requested hierarchy level
+	 * @param projectLevel the project hierarchy level
+	 * @return true if level is not supported, false otherwise
 	 */
-	private boolean requestedLevelIsNotSupported(HierarchyLevel requestedLevel, HierarchyLevel projectLevel,
-			String parentNodeId) {
-		if (StringUtils.isNotBlank(parentNodeId)) {
-			return requestedLevel.getLevel() > projectLevel.getLevel();
-		}
+	private boolean requestedLevelIsNotSupported(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
 		int nextHierarchicalLevelNumber = requestedLevel.getLevel() + 1;
 
 		Optional<HierarchyLevel> nextHierarchicalLevelOptional = accountHierarchyService
@@ -277,12 +269,11 @@ public class RecommendationService {
 	}
 
 	/**
-	 * Checks if multiple hierarchy levels correspond to the same level name.
-	 * Follows the pattern from ProductivityService and KpiMaturityService.
+	 * Checks if multiple hierarchy levels match the given name.
 	 *
-	 * @param levelName The level name to check
-	 * @param allHierarchyLevels All hierarchy levels in the system
-	 * @return true if multiple levels correspond to the name, false otherwise
+	 * @param levelName the level name to check
+	 * @param allHierarchyLevels all hierarchy levels in the system
+	 * @return true if multiple levels match, false otherwise
 	 */
 	private boolean multipleLevelsCorrespondToLevelName(String levelName, Map<String, HierarchyLevel> allHierarchyLevels) {
 		return allHierarchyLevels.values().stream()
@@ -292,11 +283,10 @@ public class RecommendationService {
 	}
 
 	/**
-	 * Extracts project node IDs using OrganizationLookup.
-	 * Follows the pattern from ProductivityService.getProductivityForLevel
+	 * Extracts all project node IDs under the requested hierarchy level.
 	 *
-	 * @param requestData The recommendation request data with hierarchy and organization lookup
-	 * @return Set of project node IDs
+	 * @param requestData recommendation request data with hierarchy and organization lookup
+	 * @return Set of project node IDs, or empty set if none found
 	 */
 	private Set<String> extractProjectNodeIds(RecommendationRequestData requestData) {
 		// Get project children grouped by parent node IDs using OrganizationLookup
@@ -305,67 +295,74 @@ public class RecommendationService {
 						requestData.hierarchyLevelsData.firstChildHierarchyLevelAfterRequestedLevel.getLevel(),
 						requestData.hierarchyLevelsData.projectLevel.getLevel());
 
-		// Filter by parentNodeId if provided
-		if (StringUtils.isNotBlank(requestData.parentNodeId())) {
-			List<AccountFilteredData> filteredProjects = projectChildrenGroupedByParentNodeIds.get(requestData.parentNodeId());
-			if (CollectionUtils.isEmpty(filteredProjects)) {
-				return Set.of();
-			}
-			return filteredProjects.stream().map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
-		}
-
 		// Extract all project node IDs
 		return projectChildrenGroupedByParentNodeIds.values().stream().flatMap(Collection::stream)
 				.map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
 	}
 
 	/**
-	 * Builds an empty response when no projects are found.
+	 * Creates an empty response structure when no projects match the specified criteria.
 	 *
-	 * @return ServiceResponse with empty recommendation list
+	 * @param levelName the organizational level
+	 * @return ServiceResponse with empty recommendation list and zero counts
 	 */
-	private ServiceResponse buildEmptyResponse() {
-		RecommendationResponseDTO emptyResponse = RecommendationResponseDTO.builder().recommendations(new ArrayList<>())
-				.totalProjects(0).totalProjectsQueried(0).message("No projects found for the specified criteria")
+	private ServiceResponse buildEmptyResponse(String levelName) {
+		RecommendationSummaryDTO emptySummary = RecommendationSummaryDTO.builder()
+				.levelName(levelName)
+				.totalProjectsWithRecommendations(0)
+				.totalProjectsQueried(0)
+				.totalRecommendations(0)
+				.message("No projects found for the specified criteria")
 				.build();
-		return new ServiceResponse(true, "No projects found", emptyResponse);
+		RecommendationResponseDTO emptyResponse = RecommendationResponseDTO.builder()
+				.summary(emptySummary)
+				.details(new ArrayList<>())
+				.build();
+		return new ServiceResponse(Boolean.TRUE, "No projects found for the specified criteria", emptyResponse);
 	}
 
 	/**
-	 * Gets the latest recommendations for the specified projects.
-	 * Filters to return only one (the latest) recommendation per project.
+	 * Retrieves the most recent recommendation for each project using database-level optimization.
+	 * Leverages MongoDB aggregation pipeline to fetch only the latest 1 recommendation per project,
+	 * eliminating the need for in-memory deduplication.
 	 *
 	 * @param projectNodeIds Set of project node IDs
-	 * @return List of latest recommendations per project
+	 * @return List of latest recommendations, one per project
 	 */
 	private List<RecommendationsActionPlan> getLatestRecommendationsForProjects(Set<String> projectNodeIds) {
-		List<String> projectNodeIdList = new ArrayList<>(projectNodeIds);
+		log.debug("Fetching latest 1 recommendation for {} projects using database optimization",
+			projectNodeIds.size());
 
-		// Get the latest recommendations for all projects
+		// Use MongoDB aggregation for efficient database-level filtering
+		// Repository accepts Collection interface - no need to convert Set to ArrayList
 		List<RecommendationsActionPlan> recommendations = recommendationRepository
-				.findByProjectIdInOrderByCreatedAtDesc(projectNodeIdList);
+				.findLatestRecommendationsByProjectIds(new ArrayList<>(projectNodeIds), DEFAULT_RECOMMENDATIONS_LIMIT_PER_PROJECT);
 
-		// Filter to get only the latest recommendation per project
-		Map<String, RecommendationsActionPlan> latestRecommendationsByProject = recommendations.stream()
-				.collect(Collectors.toMap(RecommendationsActionPlan::getProjectId, recommendation -> recommendation,
-						(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt())
-								? existing
-								: replacement));
+		log.debug("Retrieved {} recommendation(s) from database using optimized aggregation pipeline",
+			recommendations.size());
 
-		return new ArrayList<>(latestRecommendationsByProject.values());
+		return recommendations;
 	}
 
 	/**
-	 * Maps RecommendationsActionPlan entity to ProjectRecommendationDTO.
-	 * Excludes internal fields like expiresOn for API response.
+	 * Maps recommendation entity to API response DTO.
+	 * Note: recommendations field in entity is a single Recommendation object (not a collection).
 	 *
-	 * @param entity the RecommendationsActionPlan entity from batch processing
+	 * @param entity the RecommendationsActionPlan entity
 	 * @return ProjectRecommendationDTO for API response
+	 * @throws IllegalStateException if entity has null recommendations field
 	 */
 	private ProjectRecommendationDTO mapToProjectRecommendationDTO(RecommendationsActionPlan entity) {
+		if (entity.getRecommendations() == null) {
+			log.error("Entity with id {} has null recommendations field. Project: {}",
+					entity.getId(), entity.getBasicProjectConfigId());
+			throw new IllegalStateException(
+					String.format("Recommendations data is missing for project %s", entity.getBasicProjectConfigId()));
+		}
+
 		return ProjectRecommendationDTO.builder()
 				.id(entity.getId().toString())
-				.projectId(entity.getProjectId())
+				.projectId(entity.getBasicProjectConfigId())
 				.projectName(entity.getProjectName())
 				.persona(entity.getPersona())
 				.level(entity.getLevel())

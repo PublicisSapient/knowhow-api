@@ -25,6 +25,7 @@ import com.publicissapient.kpidashboard.common.model.recommendation.batch.Recomm
 import com.publicissapient.kpidashboard.common.model.recommendation.batch.RecommendationMetadata;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,28 +33,31 @@ import lombok.NoArgsConstructor;
 
 /**
  * DTO representing a project's AI-generated recommendations.
- * Maps from RecommendationsActionPlan entity but excludes internal fields like expiresOn.
+ * Maps from RecommendationsActionPlan entity excluding internal fields.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Project-level AI-generated recommendation with action plans")
+@Schema(description = "Project-level AI-generated recommendations with action plans")
 public class ProjectRecommendationDTO {
 
+	@NotBlank(message = "Recommendation ID must not be blank")
 	@Schema(description = "MongoDB ID of the recommendation document", example = "507f1f77bcf86cd799439011")
 	private String id;
 
+	@NotBlank(message = "Project ID must not be blank")
 	@Schema(description = "Project identifier from hierarchy", example = "507f1f77bcf86cd799439011")
 	private String projectId;
 
-	@Schema(description = "Human-readable project name", example = "knowhow")
+	@NotBlank(message = "Project name must not be blank")
+	@Schema(description = "Human-readable project name", example = "KnowHOW")
 	private String projectName;
 
-	@Schema(description = "Target persona for the recommendations", example = "EXECUTIVE_SPONSOR")
+	@Schema(description = "Target persona for the recommendations")
 	private Persona persona;
 
-	@Schema(description = "Organizational level of the recommendation", example = "project")
+	@Schema(description = "Organizational level of the recommendation")
 	private RecommendationLevel level;
 
 	@Schema(description = "Main recommendation with action plans and severity")
