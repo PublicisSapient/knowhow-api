@@ -3679,7 +3679,9 @@
       "16-"
     ],
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
+
   },
   {
     "kpiId": "kpi158",
@@ -3764,7 +3766,8 @@
       "2-"
     ],
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi159",
@@ -3964,7 +3967,8 @@
     "calculateMaturity": false,
     "hideOverallFilter": true,
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi164",
@@ -4511,7 +4515,8 @@
     },
     "kpiWidth": 33,
     "kpiHeight": 50,
-    "isRawData": false
+    "isRawData": false,
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi178",
