@@ -122,6 +122,42 @@ public class ForecastingManager {
 	}
 
 	/**
+	 * Generate forecasts for given data for non KPI specific scenario.
+	 *
+	 * @param dataCounts Historical data points
+	 * @param forecastingModel Forecasting model to use
+	 * @return List of forecast DataCount objects
+	 */
+	public List<DataCount> generateForecastsForNonKPI(List<DataCount> dataCounts, ForecastingModel forecastingModel) {
+		List<DataCount> forecasts = new ArrayList<>();
+
+		if (dataCounts == null || dataCounts.isEmpty()) {
+			return forecasts;
+		}
+
+		try {
+			log.debug("Generating forecast for non configured KPI with model {}", forecastingModel.getDisplayName());
+			ForecastService	forecaster = forecasterMap.get(forecastingModel);
+
+			if (forecaster == null) {
+				log.warn("No forecaster implementation found for model {}", forecastingModel.getDisplayName());
+				return forecasts;
+			}
+
+			if (forecaster.canForecast(dataCounts,null)) {
+				forecasts = forecaster.generateForecast(dataCounts, null);
+				log.debug(
+						"Generated {} forecast(s) using {}",
+						forecasts.size(),
+						forecastingModel.getDisplayName());
+			}
+		} catch (Exception e) {
+			log.error("Error generating forecasts for model {}", forecastingModel.getDisplayName(), e);
+		}
+		return forecasts;
+	}
+
+	/**
 	 * Add forecasts to DataCount if forecasting is configured for the KPI.
 	 *
 	 * @param dataCount Target DataCount to add forecasts to
@@ -139,11 +175,34 @@ public class ForecastingManager {
 			if (!forecasts.isEmpty()) {
 				if (dataCount instanceof DataCount dc) {
 					dc.setForecasts(forecasts);
-				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
+f				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
 				else if (dataCount instanceof DataCountGroup dcg) dcg.setForecasts(forecasts);
 			}
 		} catch (Exception e) {
 			log.error("Error adding forecasts for KPI {}", kpiId, e);
+		}
+	}
+
+	/**
+	 * Add forecasts to DataCount for non KPI specific scenario.
+	 *
+	 * @param dataCount Target DataCount to add forecasts to
+	 * @param historicalData Historical data points for forecasting
+	 * @param model Forecasting model to use
+	 */
+	public <T> void addForecastsToDataCountForNonKPI(
+			T dataCount, List<DataCount> historicalData, ForecastingModel model) {
+		if (dataCount == null || historicalData == null || historicalData.isEmpty()) {
+			return;
+		}
+
+		try {
+			List<DataCount> forecasts = generateForecastsForNonKPI(historicalData, model);
+			if (!forecasts.isEmpty() && dataCount instanceof DataCount dc) {
+				dc.setForecasts(forecasts);
+			}
+		} catch (Exception e) {
+			log.error("Error adding forecasts for forecasting model {}", model.getDisplayName(), e);
 		}
 	}
 

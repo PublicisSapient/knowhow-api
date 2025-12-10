@@ -259,7 +259,7 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 						jiraIssueRepository.findByNumberInAndBasicProjectConfigId(
 								allIssuesHistory.stream()
 										.map(JiraIssueCustomHistory::getStoryID)
-										.collect(Collectors.toList()),
+										.toList(),
 								basicProjConfigId);
 
 				Map<LocalDate, List<JiraIssueReferTime>> addedIssuesMap = new HashMap<>();
@@ -398,7 +398,7 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 			List<JiraIssue> totalIssueList, JiraIssueCustomHistory issueHistory) {
 		return totalIssueList.stream()
 				.filter(jiraIssue -> jiraIssue.getNumber().equalsIgnoreCase(issueHistory.getStoryID()))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	/**
@@ -673,7 +673,7 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 					List<DataCount> releasePlannedData = dataGroups.stream()
 							.flatMap(group -> group.getValue().stream())
 							.filter(dataCount -> RELEASE_PLANNED.equals(dataCount.getKpiGroup()))
-							.collect(Collectors.toList());
+							.toList();
 
 					if (CollectionUtils.isNotEmpty(releasePlannedData)) {
 						manager.addForecastsToDataCount(

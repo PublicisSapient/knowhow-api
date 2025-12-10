@@ -369,7 +369,7 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 						.flatMap(innerMap -> innerMap.values().stream().flatMap(List::stream))
 						.map(JiraIssueCustomHistory::getStoryType)
 						.distinct()
-						.collect(Collectors.toList());
+						.toList();
 		rangeAndStatusWiseJiraIssueMap.forEach(
 				(dateRange, statusWiseJiraIssues) -> {
 					totalIssueTypeString.forEach(
@@ -389,7 +389,7 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 					List<JiraIssueCustomHistory> totalRangeWiseIssues =
 							statusWiseJiraIssues.values().stream()
 									.flatMap(List::stream)
-									.collect(Collectors.toList());
+									.toList();
 					double average = calculateAverage(totalRangeWiseIssues, flowEfficiencyMap);
 					setDataCount(
 							leafNode.getProjectFilter().getName(),
