@@ -32,8 +32,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO representing a project's AI-generated recommendations.
- * Maps from RecommendationsActionPlan entity excluding internal fields.
+ * DTO representing a project's AI-generated recommendations. Maps from
+ * RecommendationsActionPlan entity excluding internal fields.
  */
 @Data
 @Builder

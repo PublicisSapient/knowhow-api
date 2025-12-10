@@ -53,7 +53,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for retrieving batch-calculated AI recommendations at organizational hierarchy levels.
+ * Service for retrieving batch-calculated AI recommendations at organizational
+ * hierarchy levels.
  * 
  */
 @Slf4j
@@ -70,18 +71,23 @@ public class RecommendationService {
 	/**
 	 * Holds hierarchy level metadata for recommendation queries.
 	 *
-	 * @param requestedLevel the hierarchy level requested by user
-	 * @param projectLevel the project hierarchy level (lowest supported level)
+	 * @param requestedLevel
+	 *            the hierarchy level requested by user
+	 * @param projectLevel
+	 *            the project hierarchy level (lowest supported level)
 	 */
 	@Builder
 	private record HierarchyLevelsData(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
 	}
 
 	/**
-	 * Encapsulates recommendation request context with hierarchy and organization data.
+	 * Encapsulates recommendation request context with hierarchy and organization
+	 * data.
 	 *
-	 * @param hierarchyLevelsData hierarchy level information
-	 * @param organizationLookup filtered organizational hierarchy for lookups
+	 * @param hierarchyLevelsData
+	 *            hierarchy level information
+	 * @param organizationLookup
+	 *            filtered organizational hierarchy for lookups
 	 */
 	@Builder
 	private record RecommendationRequestData(HierarchyLevelsData hierarchyLevelsData,
@@ -92,12 +98,19 @@ public class RecommendationService {
 	 * Retrieves AI-generated recommendations for projects within a hierarchy level.
 	 * 
 	 *
-	 * @param levelName the organizational hierarchy level name (e.g., "project", "account")
-	 * @return ServiceResponse containing RecommendationResponseDTO with summary and project details
-	 * @throws BadRequestException if levelName is below project level
-	 * @throws NotFoundException if the hierarchy level does not exist
-	 * @throws ForbiddenException if user lacks access to hierarchy data
-	 * @throws InternalServerErrorException if multiple levels match or unexpected errors occur
+	 * @param levelName
+	 *            the organizational hierarchy level name (e.g., "project",
+	 *            "account")
+	 * @return ServiceResponse containing RecommendationResponseDTO with summary and
+	 *         project details
+	 * @throws BadRequestException
+	 *             if levelName is below project level
+	 * @throws NotFoundException
+	 *             if the hierarchy level does not exist
+	 * @throws ForbiddenException
+	 *             if user lacks access to hierarchy data
+	 * @throws InternalServerErrorException
+	 *             if multiple levels match or unexpected errors occur
 	 */
 	public ServiceResponse getRecommendationsForLevel(String levelName) {
 		long startTime = System.currentTimeMillis();
@@ -120,23 +133,18 @@ public class RecommendationService {
 
 			// Map entities to DTOs
 			List<ProjectRecommendationDTO> recommendationDTOs = recommendations.stream()
-					.map(this::mapToProjectRecommendationDTO)
-					.collect(Collectors.toList());
+					.map(this::mapToProjectRecommendationDTO).collect(Collectors.toList());
 
 			// Build response with summary statistics
-			RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder()
-					.levelName(levelName)
+			RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder().levelName(levelName)
 					.totalProjectsWithRecommendations(recommendationDTOs.size())
-					.totalProjectsQueried(projectConfigIds.size())
-					.totalRecommendations(recommendationDTOs.size())
+					.totalProjectsQueried(projectConfigIds.size()).totalRecommendations(recommendationDTOs.size())
 					.message(String.format("Retrieved %d recommendations from %d projects at %s level",
 							recommendationDTOs.size(), recommendationDTOs.size(), levelName))
 					.build();
 
-			RecommendationResponseDTO response = RecommendationResponseDTO.builder()
-					.summary(summary)
-					.details(recommendationDTOs)
-					.build();
+			RecommendationResponseDTO response = RecommendationResponseDTO.builder().summary(summary)
+					.details(recommendationDTOs).build();
 
 			long duration = System.currentTimeMillis() - startTime;
 			log.info("Successfully retrieved {} recommendations for {} projects at level: {}. Duration: {} ms",
@@ -152,33 +160,36 @@ public class RecommendationService {
 			throw e;
 		} catch (Exception e) {
 			log.error("Unexpected error retrieving recommendations for level: {}", levelName, e);
-			throw new InternalServerErrorException(
-					"Internal server error occurred while retrieving recommendations", e);
+			throw new InternalServerErrorException("Internal server error occurred while retrieving recommendations",
+					e);
 		}
 	}
 
 	/**
-	 * Creates recommendation request context with hierarchy validation and user access filtering.
+	 * Creates recommendation request context with hierarchy validation and user
+	 * access filtering.
 	 *
-	 * @param levelName the hierarchy level name
-	 * @return RecommendationRequestData with validated hierarchy and filtered organization lookup
+	 * @param levelName
+	 *            the hierarchy level name
+	 * @return RecommendationRequestData with validated hierarchy and filtered
+	 *         organization lookup
 	 */
 	private RecommendationRequestData createRecommendationRequestData(String levelName) {
 		HierarchyLevelsData hierarchyLevelsData = validateAndConstructHierarchyLevels(levelName);
 		OrganizationLookup organizationLookup = buildOrganizationLookupWithUserAccess(hierarchyLevelsData);
-		return RecommendationRequestData.builder()
-				.hierarchyLevelsData(hierarchyLevelsData)
-				.organizationLookup(organizationLookup)
-				.build();
+		return RecommendationRequestData.builder().hierarchyLevelsData(hierarchyLevelsData)
+				.organizationLookup(organizationLookup).build();
 	}
 
 	/**
 	 * Constructs organizational hierarchy filtered by user access permissions.
 	 * Retrieves cached Scrum project data with closed sprints only.
 	 *
-	 * @param hierarchyLevelsData hierarchy level metadata
+	 * @param hierarchyLevelsData
+	 *            hierarchy level metadata
 	 * @return OrganizationLookup for hierarchy traversal
-	 * @throws ForbiddenException if user has no access to hierarchy data
+	 * @throws ForbiddenException
+	 *             if user has no access to hierarchy data
 	 */
 	private OrganizationLookup buildOrganizationLookupWithUserAccess(HierarchyLevelsData hierarchyLevelsData) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
@@ -187,10 +198,8 @@ public class RecommendationService {
 
 		log.debug("Fetching hierarchy data from cache with user access filtering");
 		Set<AccountFilteredData> userAccessibleHierarchyData = accountHierarchyService
-				.getFilteredList(accountFilterRequest)
-				.stream()
-				.filter(data -> data != null
-						&& StringUtils.isNotEmpty(data.getNodeId())
+				.getFilteredList(accountFilterRequest).stream()
+				.filter(data -> data != null && StringUtils.isNotEmpty(data.getNodeId())
 						&& data.getLevel() >= hierarchyLevelsData.requestedLevel.getLevel()
 						&& data.getLevel() <= hierarchyLevelsData.projectLevel.getLevel())
 				.collect(Collectors.toSet());
@@ -206,11 +215,15 @@ public class RecommendationService {
 	 * Validates and constructs hierarchy level metadata for the requested level.
 	 * Ensures level exists, is unique, and is at or above project level.
 	 *
-	 * @param levelName the requested hierarchy level name
+	 * @param levelName
+	 *            the requested hierarchy level name
 	 * @return HierarchyLevelsData with requested and project levels
-	 * @throws BadRequestException if level is below project level
-	 * @throws NotFoundException if level does not exist
-	 * @throws InternalServerErrorException if multiple levels match or project level not found
+	 * @throws BadRequestException
+	 *             if level is below project level
+	 * @throws NotFoundException
+	 *             if level does not exist
+	 * @throws InternalServerErrorException
+	 *             if multiple levels match or project level not found
 	 */
 	private HierarchyLevelsData validateAndConstructHierarchyLevels(String levelName) {
 		Map<String, HierarchyLevel> allHierarchyLevels = filterHelperService.getHierarchyLevelMap(false);
@@ -226,26 +239,24 @@ public class RecommendationService {
 
 		HierarchyLevel projectLevel = accountHierarchyService
 				.getHierarchyLevelByLevelId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)
-				.orElseThrow(() -> new InternalServerErrorException(
-						"Could not find project hierarchy level"));
+				.orElseThrow(() -> new InternalServerErrorException("Could not find project hierarchy level"));
 
 		if (isLevelBelowProject(requestedLevel, projectLevel)) {
 			throw new BadRequestException(
 					String.format("Level '%s' is below project level and not supported", levelName));
 		}
 
-		return HierarchyLevelsData.builder()
-				.requestedLevel(requestedLevel)
-				.projectLevel(projectLevel)
-				.build();
+		return HierarchyLevelsData.builder().requestedLevel(requestedLevel).projectLevel(projectLevel).build();
 	}
 
 	/**
-	 * Checks if requested level is below project level in hierarchy.
-	 * Lower numbers = higher in hierarchy (e.g., 1=org, 5=project, 6=sprint).
+	 * Checks if requested level is below project level in hierarchy. Lower numbers
+	 * = higher in hierarchy (e.g., 1=org, 5=project, 6=sprint).
 	 *
-	 * @param requestedLevel the requested hierarchy level
-	 * @param projectLevel the project hierarchy level
+	 * @param requestedLevel
+	 *            the requested hierarchy level
+	 * @param projectLevel
+	 *            the project hierarchy level
 	 * @return true if requested level is below project (not supported)
 	 */
 	private boolean isLevelBelowProject(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
@@ -255,8 +266,10 @@ public class RecommendationService {
 	/**
 	 * Checks if multiple hierarchy levels have the same name.
 	 *
-	 * @param levelName the level name to check
-	 * @param allHierarchyLevels all hierarchy levels in the system
+	 * @param levelName
+	 *            the level name to check
+	 * @param allHierarchyLevels
+	 *            all hierarchy levels in the system
 	 * @return true if multiple levels match the name
 	 */
 	private boolean hasMultipleLevelsWithSameName(String levelName, Map<String, HierarchyLevel> allHierarchyLevels) {
@@ -267,63 +280,56 @@ public class RecommendationService {
 	}
 
 	/**
-	 * Extracts project configuration IDs from organizational hierarchy.
-	 * Converts AccountFilteredData.basicProjectConfigId to hex strings for repository queries.
+	 * Extracts project configuration IDs from organizational hierarchy. Converts
+	 * AccountFilteredData.basicProjectConfigId to hex strings for repository
+	 * queries.
 	 *
-	 * @param requestData recommendation request with hierarchy and organization data
+	 * @param requestData
+	 *            recommendation request with hierarchy and organization data
 	 * @return Set of basicProjectConfigId strings (ObjectId hex format)
 	 */
 	private Set<String> extractProjectConfigIds(RecommendationRequestData requestData) {
 		Map<String, List<AccountFilteredData>> projectsByParentNode = requestData.organizationLookup()
-				.getChildrenGroupedByParentNodeIds(
-						requestData.hierarchyLevelsData.requestedLevel.getLevel(),
+				.getChildrenGroupedByParentNodeIds(requestData.hierarchyLevelsData.requestedLevel.getLevel(),
 						requestData.hierarchyLevelsData.projectLevel.getLevel());
 
-		return projectsByParentNode.values().stream()
-				.flatMap(Collection::stream)
-				.map(AccountFilteredData::getBasicProjectConfigId)
-				.filter(Objects::nonNull)
-				.map(ObjectId::toHexString)
+		return projectsByParentNode.values().stream().flatMap(Collection::stream)
+				.map(AccountFilteredData::getBasicProjectConfigId).filter(Objects::nonNull).map(ObjectId::toHexString)
 				.collect(Collectors.toSet());
 	}
 
 	/**
 	 * Creates empty response when no projects are found.
 	 *
-	 * @param levelName the organizational level name
+	 * @param levelName
+	 *            the organizational level name
 	 * @return ServiceResponse with zero counts and empty details list
 	 */
 	private ServiceResponse buildEmptyResponse(String levelName) {
-		RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder()
-				.levelName(levelName)
-				.totalProjectsWithRecommendations(0)
-				.totalProjectsQueried(0)
-				.totalRecommendations(0)
-				.message("No projects found for the specified criteria")
-				.build();
+		RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder().levelName(levelName)
+				.totalProjectsWithRecommendations(0).totalProjectsQueried(0).totalRecommendations(0)
+				.message("No projects found for the specified criteria").build();
 
-		RecommendationResponseDTO response = RecommendationResponseDTO.builder()
-				.summary(summary)
-				.details(new ArrayList<>())
-				.build();
+		RecommendationResponseDTO response = RecommendationResponseDTO.builder().summary(summary)
+				.details(new ArrayList<>()).build();
 
 		return new ServiceResponse(true, "No projects found", response);
 	}
 
 	/**
 	 * Retrieves latest recommendation per project using MongoDB aggregation.
-	 * Optimized to fetch only the most recent recommendation per project at database level.
+	 * Optimized to fetch only the most recent recommendation per project at
+	 * database level.
 	 *
-	 * @param projectConfigIds Set of project configuration IDs
+	 * @param projectConfigIds
+	 *            Set of project configuration IDs
 	 * @return List of RecommendationsActionPlan (one per project)
 	 */
 	private List<RecommendationsActionPlan> getLatestRecommendationsForProjects(Set<String> projectConfigIds) {
 		log.debug("Fetching latest recommendation for {} projects", projectConfigIds.size());
 
 		List<RecommendationsActionPlan> recommendations = recommendationRepository
-				.findLatestRecommendationsByProjectIds(
-						new ArrayList<>(projectConfigIds),
-						LATEST_RECOMMENDATION_LIMIT);
+				.findLatestRecommendationsByProjectIds(new ArrayList<>(projectConfigIds), LATEST_RECOMMENDATION_LIMIT);
 
 		log.debug("Retrieved {} recommendations from database", recommendations.size());
 		return recommendations;
@@ -332,27 +338,23 @@ public class RecommendationService {
 	/**
 	 * Maps recommendation entity to API response DTO.
 	 *
-	 * @param entity the RecommendationsActionPlan entity from database
+	 * @param entity
+	 *            the RecommendationsActionPlan entity from database
 	 * @return ProjectRecommendationDTO for API response
-	 * @throws IllegalStateException if entity has null recommendations field
+	 * @throws IllegalStateException
+	 *             if entity has null recommendations field
 	 */
 	private ProjectRecommendationDTO mapToProjectRecommendationDTO(RecommendationsActionPlan entity) {
 		if (entity.getRecommendations() == null) {
-			log.error("Entity {} has null recommendations field for project {}",
-					entity.getId(), entity.getBasicProjectConfigId());
+			log.error("Entity {} has null recommendations field for project {}", entity.getId(),
+					entity.getBasicProjectConfigId());
 			throw new IllegalStateException(
 					String.format("Missing recommendations for project %s", entity.getBasicProjectConfigId()));
 		}
 
-		return ProjectRecommendationDTO.builder()
-				.id(entity.getId().toString())
-				.projectId(entity.getBasicProjectConfigId())
-				.projectName(entity.getProjectName())
-				.persona(entity.getPersona())
-				.level(entity.getLevel())
-				.recommendations(entity.getRecommendations())
-				.metadata(entity.getMetadata())
-				.createdAt(entity.getCreatedAt())
-				.build();
+		return ProjectRecommendationDTO.builder().id(entity.getId().toString())
+				.projectId(entity.getBasicProjectConfigId()).projectName(entity.getProjectName())
+				.persona(entity.getPersona()).level(entity.getLevel()).recommendations(entity.getRecommendations())
+				.metadata(entity.getMetadata()).createdAt(entity.getCreatedAt()).build();
 	}
 }
