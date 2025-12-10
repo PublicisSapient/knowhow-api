@@ -175,7 +175,7 @@ public class ForecastingManager {
 			if (!forecasts.isEmpty()) {
 				if (dataCount instanceof DataCount dc) {
 					dc.setForecasts(forecasts);
-f				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
+				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
 				else if (dataCount instanceof DataCountGroup dcg) dcg.setForecasts(forecasts);
 			}
 		} catch (Exception e) {
