@@ -39,7 +39,7 @@ import java.util.Arrays;
  */
 @Slf4j
 @RequiredArgsConstructor
-@ChangeUnit(id = "recommendation_batch_change_unit", order = "15000", author = "shunaray", systemVersion = "15.0.0")
+@ChangeUnit(id = "recommendation_batch_change_unit", order = "15111", author = "shunaray", systemVersion = "15.0.0")
 public class RecommendationBatchChangeUnit {
 
 	private static final String PROMPT_DETAILS_COLLECTION = "prompt_details";
@@ -144,9 +144,9 @@ public class RecommendationBatchChangeUnit {
 
 		IndexOperations indexOps = mongoTemplate.indexOps(RECOMMENDATIONS_ACTION_PLAN_COLLECTION);
 
-		// Compound index for projectId with createdAt (supports findByProjectIdInOrderByCreatedAtDesc)
-		indexOps.ensureIndex(new Index().on("projectId", Sort.Direction.ASC).on("createdAt", Sort.Direction.DESC)
-				.named("projectId_1_createdAt_-1"));
+		// Compound index: basicProjectConfigId (ASC) + createdAt (DESC)
+		indexOps.ensureIndex(new Index().on("basicProjectConfigId", Sort.Direction.ASC).on("createdAt", Sort.Direction.DESC)
+				.named("basicProjectConfigId_1_createdAt_-1"));
 
 		log.info("Successfully created indexes on recommendations_action_plan collection");
 	}
@@ -160,7 +160,7 @@ public class RecommendationBatchChangeUnit {
 		IndexOperations indexOps = mongoTemplate.indexOps(RECOMMENDATIONS_ACTION_PLAN_COLLECTION);
 
 		// Drop created index
-		indexOps.dropIndex("projectId_1_createdAt_-1");
+		indexOps.dropIndex("basicProjectConfigId_1_createdAt_-1");
 
 		log.info("Successfully dropped indexes on recommendations_action_plan collection");
 	}
