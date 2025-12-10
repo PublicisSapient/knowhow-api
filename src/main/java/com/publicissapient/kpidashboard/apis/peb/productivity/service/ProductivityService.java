@@ -31,14 +31,17 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryScoresDTO;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.CategoryVariations;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ForecastData;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.KPITrend;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.KPITrends;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.OrganizationEntityProductivity;
@@ -46,6 +49,7 @@ import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityRe
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityTrendsResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.CategoryScores;
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.KPIData;
@@ -100,6 +104,10 @@ public class ProductivityService {
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
 	private final ProductivityCustomRepository productivityCustomRepository;
+
+	private final PEBConfig pebConfig;
+
+	private final ForecastingManager forecastingManager;
 
 	@Builder
 	private record PEBProductivityCalculationContext(HierarchyLevelsData hierarchyLevelsData,
@@ -325,7 +333,7 @@ public class ProductivityService {
 				.getProductivitiesGroupedByTemporalUnit(projectNodeIds, temporalAggregationUnit, limit);
 
 		if (CollectionUtils.isEmpty(productivitiesGroupedByTemporalUnit)) {
-			log.info("No productivity data could be found for level: {}, temporalAggregationUnit: {} and limit: {}",
+			log.debug("No productivity data could be found for level: {}, temporalAggregationUnit: {} and limit: {}",
 					levelName, temporalAggregationUnit, limit);
 
 			return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
@@ -349,12 +357,61 @@ public class ProductivityService {
 				levelName, projectNodeIds.size(), productivityTrendsProcessingResult.projectsWithoutProductivityData,
 				System.currentTimeMillis() - startTime);
 
+		DataCount productivityForecastDataCount = forecastTheNextOverallValue(productivityTrendsProcessingResult);
+
+		ForecastData overallForecast = ForecastData.builder().build();
+		if (CollectionUtils.isEmpty(productivityForecastDataCount.getForecasts())) {
+			log.debug("No productivity forecast could be generated for level: {}", levelName);
+		} else {
+			overallForecast = ForecastData.builder()
+					.forecastingModel(pebConfig.getForecastingModel().getDisplayName())
+					.value((Double) productivityForecastDataCount.getForecasts().get(0).getValue())
+					.category("overall")
+					.build();
+		}
+
 		return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
-				ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit)
-						.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
-								.getHierarchyLevelName())
+				ProductivityTrendsResponse.builder()
+						.temporalGrouping(temporalAggregationUnit)
+						.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
 						.categoryVariations(categoryVariations)
-						.categoryScores(productivityTrendsProcessingResult.categoryScoresTrendValues).build());
+						.categoryScores(productivityTrendsProcessingResult.categoryScoresTrendValues)
+						.forecasts(List.of(overallForecast))
+						.build());
+	}
+
+	/**
+	 * Forecasts the next overall productivity value based on historical trend data.
+	 *
+	 * <p>This method processes a list of category scores from the productivity trends
+	 * and uses a forecasting manager to predict the next overall productivity value.
+	 * It constructs a list of {@link DataCount} objects from the trend values, then
+	 * uses the forecasting manager to add forecast data to a new {@link DataCount}
+	 * object, which is returned as the result.</p>
+	 *
+	 * @param productivityTrendsProcessingResult the result object containing historical
+	 *                                           productivity trend data
+	 * @return a {@link DataCount} object containing the forecasted overall productivity value
+	 */
+	private DataCount forecastTheNextOverallValue(ProductivityTrendsProcessingResult productivityTrendsProcessingResult) {
+		List<DataCount> dataCounts = new ArrayList<>();
+		productivityTrendsProcessingResult.categoryScoresTrendValues().forEach(
+				categoryScoresDTO -> {
+					DataCount dataCount = new DataCount();
+					dataCount.setValue(categoryScoresDTO.getOverall());
+					dataCounts.add(dataCount);
+				});
+
+		DataCount productivityForecastDataCount = DataCount.builder()
+				.forecastingModel(pebConfig.getForecastingModel().getName())
+				.build();
+
+		Optional.ofNullable(forecastingManager)
+				.ifPresent(
+						manager ->
+								manager.addForecastsToDataCountForNonKPI(
+										productivityForecastDataCount, dataCounts, pebConfig.getForecastingModel()));
+		return productivityForecastDataCount;
 	}
 
 	/**
@@ -454,7 +511,7 @@ public class ProductivityService {
 								.forEach(productivity -> addProductivityScores(categoryScoresDTO,
 										productivity.getCategoryScores()));
 					} else {
-						log.info(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectTreeNode.getNodeId(),
+						log.debug(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectTreeNode.getNodeId(),
 								projectTreeNode.getNodeName());
 						projectsWithoutProductivityData++;
 					}

@@ -238,7 +238,7 @@ public class AutomationPercentageServiceImplTest {
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
 					"Automated Percentage Value :",
-					((ArrayList) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
+					((List<?>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
 					equalTo(5));
 		} catch (ApplicationException enfe) {
 
@@ -269,7 +269,7 @@ public class AutomationPercentageServiceImplTest {
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
 					"Automated Percentage Value :",
-					((ArrayList) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
+					((List<?>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
 					equalTo(5));
 		} catch (ApplicationException enfe) {
 
@@ -308,7 +308,7 @@ public class AutomationPercentageServiceImplTest {
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
 					"Automated Percentage Value :",
-					((ArrayList) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
+					((List<?>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
 					equalTo(5));
 		} catch (ApplicationException enfe) {
 
