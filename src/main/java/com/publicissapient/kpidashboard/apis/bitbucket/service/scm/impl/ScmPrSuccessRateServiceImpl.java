@@ -88,7 +88,8 @@ public class ScmPrSuccessRateServiceImpl
 
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_SUCCESS_RATE);
-		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+		kpiElement.setTrendValueList(
+				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.PR_SUCCESS_RATE.getKpiId()));
 		return kpiElement;
 	}
 
@@ -168,7 +169,8 @@ public class ScmPrSuccessRateServiceImpl
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		int dataPoints = (int) ObjectUtils.defaultIfNull(kpiRequest.getKanbanXaxisDataPoints(), 7);
-		CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
+		CustomDateRange periodRange =
+				KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration, dataPoints);
 		String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 		List<ScmMergeRequests> mergeRequestsInRange =
 				DeveloperKpiHelper.filterMergeRequestsByUpdateDate(mergeRequests, periodRange);
