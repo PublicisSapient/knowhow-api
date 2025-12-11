@@ -35,6 +35,7 @@ import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.apis.forecast.service.ForecastService;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 
 import lombok.RequiredArgsConstructor;
@@ -174,9 +175,8 @@ public class ForecastingManager {
 			if (!forecasts.isEmpty()) {
 				if (dataCount instanceof DataCount dc) {
 					dc.setForecasts(forecasts);
-				} else if (dataCount instanceof IterationKpiValue ikv) {
-					ikv.setForecasts(forecasts);
-				}
+				} else if (dataCount instanceof IterationKpiValue ikv) ikv.setForecasts(forecasts);
+				else if (dataCount instanceof DataCountGroup dcg) dcg.setForecasts(forecasts);
 			}
 		} catch (Exception e) {
 			log.error("Error adding forecasts for KPI {}", kpiId, e);

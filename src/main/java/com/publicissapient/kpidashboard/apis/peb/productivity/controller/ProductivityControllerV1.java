@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityRequest;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.service.ProductivityService;
 import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
@@ -69,8 +70,13 @@ public class ProductivityControllerV1 {
 	@GetMapping({ "", "/" })
 	public ResponseEntity<ServiceResponse> getPebProductivityData(
 			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to retrieve productivity "
-					+ "data", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName) {
-		return ResponseEntity.ok(this.productivityService.getProductivityForLevel(levelName));
+					+ "data", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName,
+			@Parameter(name = "parentNodeId", description = "The node id of the organizational entity parent for " +
+					"which to retrieve productivity data", example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
+			@RequestParam(required = false) String parentNodeId) {
+
+		return ResponseEntity.ok(this.productivityService
+				.getProductivityForLevel(new ProductivityRequest(levelName, parentNodeId)));
 	}
 
 	@Operation(summary = "Get productivity trends by hierarchy level", description = """
