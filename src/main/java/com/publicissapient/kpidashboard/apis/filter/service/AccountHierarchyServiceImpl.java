@@ -58,7 +58,6 @@ import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import jakarta.ws.rs.InternalServerErrorException;
-import lombok.Data;
 
 /**
  * Implementation of {@link AccountHierarchyService} to managing all requests to
@@ -69,16 +68,6 @@ import lombok.Data;
 @Service
 public class AccountHierarchyServiceImpl
 		implements AccountHierarchyService<List<AccountHierarchyData>, Set<AccountFilteredData>> {
-
-	@Data
-	private static class TreeNode {
-		private Node data;
-		private List<TreeNode> children = new ArrayList<>();
-
-		public TreeNode(Node data) {
-			this.data = data;
-		}
-	}
 
 	@Autowired
 	private CacheService cacheService;
@@ -129,7 +118,7 @@ public class AccountHierarchyServiceImpl
 				.filter(fd -> fd.getParentId() != null).collect(Collectors.groupingBy(ProjectHierarchy::getParentId));
 
 		List<AccountHierarchyData> listHierarchyData = new ArrayList<>();
-		String firstLevel = filterHelperService.getFirstHierarachyLevel();
+		String firstLevel = filterHelperService.getFirstHierarchyLevel();
 
 		Map<String, Integer> hierarchyLevelIdMap = filterHelperService.getHierarchyIdLevelMap(false);
 

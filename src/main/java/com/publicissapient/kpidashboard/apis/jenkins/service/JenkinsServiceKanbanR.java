@@ -24,14 +24,13 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
@@ -46,21 +45,18 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class JenkinsServiceKanbanR {
 
-	@Autowired private KpiHelperService kpiHelperService;
-
-	@Autowired private FilterHelperService filterHelperService;
-
-	@Autowired private CacheService cacheService;
-
-	@Autowired private CustomApiConfig customApiConfig;
-
-	@Autowired private UserAuthorizedProjectsService authorizedProjectsService;
+	private final CacheService cacheService;
+	private final KpiHelperService kpiHelperService;
+	private final FilterHelperService filterHelperService;
+	private final UserAuthorizedProjectsService authorizedProjectsService;
 
 	@SuppressWarnings({"unchecked", "PMD.AvoidCatchingGenericException"})
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
@@ -70,10 +66,10 @@ public class JenkinsServiceKanbanR {
 				kpiRequest.getRequestTrackerId(),
 				kpiRequest.getKpiList());
 		List<KpiElement> responseList = new ArrayList<>();
-		String[] kanbanProjectKeyCache = null;
+		String[] kanbanProjectKeyCache;
 		try {
 			String groupName =
-					filterHelperService.getHierarachyLevelId(
+					filterHelperService.getHierarchyLevelId(
 							kpiRequest.getLevel(), kpiRequest.getLabel(), true);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
@@ -90,22 +86,25 @@ public class JenkinsServiceKanbanR {
 				return responseList;
 			}
 
-			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-
 			populateKanbanKpiRequest(kpiRequest);
-			Object cachedData =
-					cacheService.getFromApplicationCache(
-							kanbanProjectKeyCache, KPISource.JENKINSKANBAN.name(), groupId, null);
-			if (!kpiRequest
-							.getRequestTrackerId()
-							.toLowerCase()
-							.contains(KPISource.EXCEL.name().toLowerCase())
-					&& null != cachedData) {
-				log.info(
-						"[JENKINS KANBAN][{}]. Fetching value from cache for {}",
-						kpiRequest.getRequestTrackerId(),
-						kpiRequest.getIds());
-				return (List<KpiElement>) cachedData;
+
+			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
+			//skip using cache when the request is made with an api key and also processing by group id will be disabled
+			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				Object cachedData =
+						cacheService.getFromApplicationCache(
+								kanbanProjectKeyCache, KPISource.JENKINSKANBAN.name(), groupId, null);
+				if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+						&& null != cachedData) {
+					log.info(
+							"[JENKINS KANBAN][{}]. Fetching value from cache for {}",
+							kpiRequest.getRequestTrackerId(),
+							kpiRequest.getIds());
+					return (List<KpiElement>) cachedData;
+				}
 			}
 
 			TreeAggregatorDetail treeAggregatorDetail =
@@ -113,26 +112,26 @@ public class JenkinsServiceKanbanR {
 							kpiRequest,
 							null,
 							filteredAccountDataList,
-							filterHelperService.getFirstHierarachyLevel(),
+							filterHelperService.getFirstHierarchyLevel(),
 							filterHelperService
 									.getHierarchyIdLevelMap(false)
 									.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
 
 			for (KpiElement kpiEle : kpiRequest.getKpiList()) {
-
 				responseList.add(
 						calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
 			}
-
-			setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
+			//skip using cache when the request is made with an api key and also processing by group id will be disabled
+			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
+			}
 
 		} catch (EntityNotFoundException enfe) {
-
 			log.error(
 					"[JENKINS KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
 					kpiRequest.getRequestTrackerId(),
 					kpiRequest.getKpiList(),
-					enfe);
+					enfe.getMessage());
 			throw enfe;
 
 		} catch (Exception e) {
@@ -140,7 +139,7 @@ public class JenkinsServiceKanbanR {
 					"[JENKINS KANBAN][{}]. Error while KPI calculation for data {} {}",
 					kpiRequest.getRequestTrackerId(),
 					kpiRequest.getKpiList(),
-					e);
+					e.getMessage());
 			throw new HttpMessageNotWritableException(e.getMessage(), e);
 		}
 
@@ -166,12 +165,10 @@ public class JenkinsServiceKanbanR {
 	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(
 			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 		kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-		if (!authorizedProjectsService.ifSuperAdminUser()) {
-			filteredAccountDataList =
-					authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
+		if(Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser()) || ApiKeyAuthenticationService.isApiKeyRequest()) {
+			return filteredAccountDataList;
 		}
-
-		return filteredAccountDataList;
+		return authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
 	}
 
 	/**
@@ -219,7 +216,7 @@ public class JenkinsServiceKanbanR {
 					"[JENKINS KANBAN][{}]. Error while KPI calculation for data {} {}",
 					kpiRequest.getRequestTrackerId(),
 					kpiRequest.getKpiList(),
-					exception);
+					exception.getMessage());
 			return kpiElement;
 		}
 		return kpiElement;
@@ -253,7 +250,7 @@ public class JenkinsServiceKanbanR {
 		}
 	}
 
-	private void populateKanbanKpiRequest(KpiRequest kpiRequest) {
+	private static void populateKanbanKpiRequest(KpiRequest kpiRequest) {
 		String id = kpiRequest.getIds()[0];
 		if (NumberUtils.isCreatable(id)) {
 			kpiRequest.setKanbanXaxisDataPoints(Integer.parseInt(id));

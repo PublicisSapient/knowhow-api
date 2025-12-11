@@ -23,12 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
-import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
-import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
-import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
-import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -37,10 +31,16 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.bitbucket.model.MetricItem;
 import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
+import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
@@ -124,7 +124,7 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 	}
 
 	private Node getProjectNodeByNodeId(KpiRequest kpiRequest) {
-		String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(),
+		String groupName = filterHelperService.getHierarchyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(),
 				false);
 		if (null != groupName) {
 			kpiRequest.setLabel(groupName.toUpperCase());

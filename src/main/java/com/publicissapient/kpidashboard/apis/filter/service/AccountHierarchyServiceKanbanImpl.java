@@ -147,7 +147,7 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 						.filter(fd -> fd.getParentId() != null)
 						.collect(Collectors.groupingBy(ProjectHierarchy::getParentId));
 		// Java 8 merge function is used to handle duplicates in the map
-		String firstLevel = filterHelperService.getFirstHierarachyLevel();
+		String firstLevel = filterHelperService.getFirstHierarchyLevel();
 
 		Map<String, Integer> hierarchyLevelIdMap = filterHelperService.getHierarchyIdLevelMap(true);
 

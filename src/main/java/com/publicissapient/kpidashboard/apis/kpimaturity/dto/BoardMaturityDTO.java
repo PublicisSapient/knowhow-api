@@ -34,16 +34,6 @@ public class BoardMaturityDTO {
 	/** Map of board names to their maturity levels. Example: {"speed": "M1", "quality": "M3"} */
 	@Builder.Default private Map<String, String> metrics = new HashMap<>();
 
-	/**
-	 * Adds a board metric to the maturity map.
-	 *
-	 * @param boardName The name of the board (e.g., "speed", "quality")
-	 * @param maturityLevel The maturity level (e.g., "M1", "M2")
-	 */
-	public void addMetric(String boardName, String maturityLevel) {
-		metrics.put(boardName, maturityLevel);
-	}
-
 	/** Jackson annotation to serialize the metrics map as top-level properties. */
 	@JsonAnyGetter
 	public Map<String, String> getMetrics() {

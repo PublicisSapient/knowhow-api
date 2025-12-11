@@ -113,10 +113,10 @@ public class ZephyrServiceTest {
 
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -144,10 +144,10 @@ public class ZephyrServiceTest {
 		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -174,10 +174,10 @@ public class ZephyrServiceTest {
 		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -198,10 +198,10 @@ public class ZephyrServiceTest {
 		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
