@@ -26,12 +26,13 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public enum HierarchyLevelType {
-    ACCOUNT("Account", "account"),
-    VERTICAL("Vertical", "vertical"),
-    BUSINESS_UNIT("Business Unit", "bu");
+    ACCOUNT("Account", "account", "acc"),
+    VERTICAL("Vertical", "vertical", "ver"),
+    BUSINESS_UNIT("Business Unit", "bu", "bu");
 
 	private final String displayName;
 	private final String levelName;
+	private final String hierarchyLabel;
 
 	public static HierarchyLevelType fromLevelName(String lowerCase) {
 		for (HierarchyLevelType type : values()) {
@@ -40,6 +41,15 @@ public enum HierarchyLevelType {
 			}
 		}
 		throw new IllegalArgumentException("No matching HierarchyLevelType for level name: " + lowerCase);
+	}
+
+	public static HierarchyLevelType fromHierarchyLevel(String lowerCase) {
+		for (HierarchyLevelType type : values()) {
+			if (type.getHierarchyLabel().equalsIgnoreCase(lowerCase)) {
+				return type;
+			}
+		}
+		throw new IllegalArgumentException("No matching HierarchyLevelType for hierarchy level name: " + lowerCase);
 	}
 
 	public static List<String> getLevelNameValues() {
