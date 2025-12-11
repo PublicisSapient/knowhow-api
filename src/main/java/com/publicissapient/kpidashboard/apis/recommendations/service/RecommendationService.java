@@ -37,6 +37,7 @@ import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.ProjectRecommendationDTO;
+import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationRequest;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationResponseDTO;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationSummaryDTO;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -98,11 +99,10 @@ public class RecommendationService {
 	 * Retrieves AI-generated recommendations for projects within a hierarchy level.
 	 * 
 	 *
-	 * @param levelName
-	 *            the organizational hierarchy level name (e.g., "project",
-	 *            "account")
-	 * @return ServiceResponse containing RecommendationResponseDTO with summary and
-	 *         project details
+	 * @param recommendationRequest
+	 *            request containing levelName and optional parentNodeId
+	 *
+	 * @return ServiceResponse containing RecommendationResponseDTO
 	 * @throws BadRequestException
 	 *             if levelName is below project level
 	 * @throws NotFoundException
@@ -112,18 +112,23 @@ public class RecommendationService {
 	 * @throws InternalServerErrorException
 	 *             if multiple levels match or unexpected errors occur
 	 */
-	public ServiceResponse getRecommendationsForLevel(String levelName) {
-		log.info("Started getting recommendations for level: {}", levelName);
+	public ServiceResponse getRecommendationsForLevel(RecommendationRequest recommendationRequest) {
+		validateRecommendationRequest(recommendationRequest);
+		long startTime = System.currentTimeMillis();
+
+		log.info("Started getting recommendations for level: {} with parentNodeId: {}",
+				recommendationRequest.levelName(), recommendationRequest.parentNodeId());
 
 		// Build request context with hierarchy metadata and organization lookup
-		RecommendationRequestData requestData = createRecommendationRequestData(levelName);
+		RecommendationRequestData requestData = createRecommendationRequestData(recommendationRequest.levelName(),
+				recommendationRequest.parentNodeId());
 
 		// Extract project config IDs from organizational hierarchy
-		Set<String> projectConfigIds = extractProjectConfigIds(requestData);
+		Set<String> projectConfigIds = extractProjectConfigIds(requestData, recommendationRequest.parentNodeId());
 
 		if (CollectionUtils.isEmpty(projectConfigIds)) {
-			log.warn("No projects found for level: {}", levelName);
-			return buildEmptyResponse(levelName);
+			log.warn("No projects found for level: {}", recommendationRequest.levelName());
+			return buildEmptyResponse(recommendationRequest.levelName());
 		}
 
 		// Retrieve latest recommendation per project from batch data
@@ -134,20 +139,38 @@ public class RecommendationService {
 				.map(this::mapToProjectRecommendationDTO).collect(Collectors.toList());
 
 		// Build response with summary statistics
-		RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder().levelName(levelName)
+		RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder()
+				.levelName(recommendationRequest.levelName())
 				.totalProjectsWithRecommendations(recommendationDTOs.size())
 				.totalProjectsQueried(projectConfigIds.size()).totalRecommendations(recommendationDTOs.size())
 				.message(String.format("Retrieved %d recommendations from %d projects at %s level",
-						recommendationDTOs.size(), recommendationDTOs.size(), levelName))
+						recommendationDTOs.size(), recommendationDTOs.size(), recommendationRequest.levelName()))
 				.build();
 
 		RecommendationResponseDTO response = RecommendationResponseDTO.builder().summary(summary)
 				.details(recommendationDTOs).build();
 
 		log.info("Successfully retrieved {} recommendations for {} projects at level: {}", recommendationDTOs.size(),
-				projectConfigIds.size(), levelName);
+				projectConfigIds.size(), recommendationRequest.levelName());
 
 		return new ServiceResponse(true, "Recommendations retrieved successfully", response);
+	}
+
+	/**
+	 * Validates the recommendation request parameters.
+	 *
+	 * @param recommendationRequest
+	 *            the request to validate
+	 * @throws BadRequestException
+	 *             if request is null or levelName is blank
+	 */
+	private void validateRecommendationRequest(RecommendationRequest recommendationRequest) {
+		if (recommendationRequest == null) {
+			throw new BadRequestException("Recommendation request cannot be null");
+		}
+		if (StringUtils.isBlank(recommendationRequest.levelName())) {
+			throw new BadRequestException("The recommendation request 'levelName' is required");
+		}
 	}
 
 	/**
@@ -156,12 +179,15 @@ public class RecommendationService {
 	 *
 	 * @param levelName
 	 *            the hierarchy level name
+	 * @param parentNodeId
+	 *            optional parent node ID for filtering to specific subtree
 	 * @return RecommendationRequestData with validated hierarchy and filtered
 	 *         organization lookup
 	 */
-	private RecommendationRequestData createRecommendationRequestData(String levelName) {
+	private RecommendationRequestData createRecommendationRequestData(String levelName, String parentNodeId) {
 		HierarchyLevelsData hierarchyLevelsData = validateAndConstructHierarchyLevels(levelName);
-		OrganizationLookup organizationLookup = buildOrganizationLookupWithUserAccess(hierarchyLevelsData);
+		OrganizationLookup organizationLookup = buildOrganizationLookupWithUserAccess(hierarchyLevelsData,
+				parentNodeId);
 		return RecommendationRequestData.builder().hierarchyLevelsData(hierarchyLevelsData)
 				.organizationLookup(organizationLookup).build();
 	}
@@ -172,11 +198,16 @@ public class RecommendationService {
 	 *
 	 * @param hierarchyLevelsData
 	 *            hierarchy level metadata
+	 * @param parentNodeId
+	 *            optional parent node ID for filtering to specific subtree
 	 * @return OrganizationLookup for hierarchy traversal
 	 * @throws ForbiddenException
 	 *             if user has no access to hierarchy data
+	 * @throws BadRequestException
+	 *             if parentNodeId is invalid or user lacks access to it
 	 */
-	private OrganizationLookup buildOrganizationLookupWithUserAccess(HierarchyLevelsData hierarchyLevelsData) {
+	private OrganizationLookup buildOrganizationLookupWithUserAccess(HierarchyLevelsData hierarchyLevelsData,
+			String parentNodeId) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
@@ -185,7 +216,6 @@ public class RecommendationService {
 		Set<AccountFilteredData> userAccessibleHierarchyData = accountHierarchyService
 				.getFilteredList(accountFilterRequest).stream()
 				.filter(data -> data != null && StringUtils.isNotEmpty(data.getNodeId())
-						&& data.getLevel() >= hierarchyLevelsData.requestedLevel.getLevel()
 						&& data.getLevel() <= hierarchyLevelsData.projectLevel.getLevel())
 				.collect(Collectors.toSet());
 
@@ -193,7 +223,29 @@ public class RecommendationService {
 			throw new ForbiddenException("Current user doesn't have access to any hierarchy data");
 		}
 
-		return new OrganizationLookup(userAccessibleHierarchyData);
+		OrganizationLookup organizationLookup = new OrganizationLookup(userAccessibleHierarchyData);
+
+		// Validate parentNodeId if provided
+		if (StringUtils.isNotBlank(parentNodeId)) {
+			List<AccountFilteredData> parentNodeData = organizationLookup.getAccountDataByNodeId(parentNodeId);
+			if (CollectionUtils.isEmpty(parentNodeData)) {
+				throw new BadRequestException(
+						String.format("Current user doesn't have access to the parent node id %s or it does not exist",
+								parentNodeId));
+			}
+			if (parentNodeData.size() > 1) {
+				throw new BadRequestException(String.format(
+						"Multiple organization entities are corresponding with the parent node id '%s'", parentNodeId));
+			}
+			if (parentNodeData.stream()
+					.anyMatch(data -> hierarchyLevelsData.requestedLevel.getLevel() <= data.getLevel())) {
+				throw new BadRequestException(String.format(
+						"The requested level name '%s' is not corresponding to a child level of the parent node",
+						hierarchyLevelsData.requestedLevel.getHierarchyLevelName()));
+			}
+		}
+
+		return organizationLookup;
 	}
 
 	/**
@@ -267,16 +319,34 @@ public class RecommendationService {
 	/**
 	 * Extracts project configuration IDs from organizational hierarchy. Converts
 	 * AccountFilteredData.basicProjectConfigId to hex strings for repository
-	 * queries.
+	 * queries. When parentNodeId is provided, only returns projects under that
+	 * parent node.
 	 *
 	 * @param requestData
 	 *            recommendation request with hierarchy and organization data
+	 * @param parentNodeId
+	 *            optional parent node ID for filtering to specific subtree
 	 * @return Set of basicProjectConfigId strings (ObjectId hex format)
 	 */
-	private Set<String> extractProjectConfigIds(RecommendationRequestData requestData) {
-		Map<String, List<AccountFilteredData>> projectsByParentNode = requestData.organizationLookup()
-				.getChildrenGroupedByParentNodeIds(requestData.hierarchyLevelsData.requestedLevel.getLevel(),
-						requestData.hierarchyLevelsData.projectLevel.getLevel());
+	private Set<String> extractProjectConfigIds(RecommendationRequestData requestData, String parentNodeId) {
+		Map<String, List<AccountFilteredData>> projectsByParentNode;
+
+		if (StringUtils.isNotBlank(parentNodeId)) {
+			// Get children of specific parent node at requested level
+			List<AccountFilteredData> childrenAtRequestedLevel = requestData.organizationLookup()
+					.getChildrenByParentNodeId(parentNodeId, requestData.hierarchyLevelsData.requestedLevel.getLevel());
+
+			// Get all projects under those children nodes
+			Set<String> childrenNodeIds = childrenAtRequestedLevel.stream().map(AccountFilteredData::getNodeId)
+					.collect(Collectors.toSet());
+			projectsByParentNode = requestData.organizationLookup().getChildrenGroupedByParentNodeIds(childrenNodeIds,
+					requestData.hierarchyLevelsData.projectLevel.getLevel());
+		} else {
+			// Get all projects at requested level
+			projectsByParentNode = requestData.organizationLookup().getChildrenGroupedByParentNodeIds(
+					requestData.hierarchyLevelsData.requestedLevel.getLevel(),
+					requestData.hierarchyLevelsData.projectLevel.getLevel());
+		}
 
 		return projectsByParentNode.values().stream().flatMap(Collection::stream)
 				.map(AccountFilteredData::getBasicProjectConfigId).filter(Objects::nonNull).map(ObjectId::toHexString)
