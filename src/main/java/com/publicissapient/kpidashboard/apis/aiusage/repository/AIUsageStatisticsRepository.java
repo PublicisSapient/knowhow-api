@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.aiusage.repository;
 
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -26,6 +27,9 @@ import java.time.LocalDate;
 
 @Repository
 public interface AIUsageStatisticsRepository extends MongoRepository<AIUsageStatistics, String> {
-    AIUsageStatistics findTop1ByLevelNameAndLevelTypeOrderByIngestTimestampDesc(String levelName, String levelType);
-    AIUsageStatistics findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(String levelName, LocalDate startDate, LocalDate endDate);
+	AIUsageStatistics findTop1ByLevelNameAndLevelTypeOrderByIngestTimestampDesc(
+			String levelName, String levelType);
+
+	AIUsageStatistics findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(
+			String levelName, LocalDate startDate, LocalDate endDate);
 }

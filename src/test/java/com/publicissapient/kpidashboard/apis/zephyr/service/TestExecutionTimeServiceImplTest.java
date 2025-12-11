@@ -191,13 +191,13 @@ public class TestExecutionTimeServiceImplTest {
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
 					"Test Execution Data Trend Value :",
-					((ArrayList) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
+					((List<?>) ((List<DataCount>) kpiElement.getTrendValueList()).get(0).getValue()).size(),
 					equalTo(5));
 			assertThat(
 					"Test Execution Time Hower Value :",
 					((DataCount)
-									((ArrayList)
-													((DataCount) ((ArrayList) kpiElement.getTrendValueList()).get(0))
+									((List<?>)
+													((DataCount) ((List<?>) kpiElement.getTrendValueList()).get(0))
 															.getValue())
 											.get(0))
 							.getHoverValue()
