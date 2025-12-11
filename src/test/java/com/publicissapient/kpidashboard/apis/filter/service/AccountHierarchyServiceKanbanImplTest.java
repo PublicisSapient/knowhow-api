@@ -172,7 +172,7 @@ public class AccountHierarchyServiceKanbanImplTest {
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 
 		when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(map);
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 
 		List<AccountHierarchyDataKanban> accountHierarchies =
 				accountHierarchyServiceImpl.createHierarchyData();

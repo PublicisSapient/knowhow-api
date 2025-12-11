@@ -124,10 +124,10 @@ public class JenkinsServiceRTest {
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		List<HierarchyLevel> hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
 
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -139,7 +139,7 @@ public class JenkinsServiceRTest {
 		when(authorizedProjectsService.filterProjects(accountHierarchyDataList))
 				.thenReturn(accountHierarchyDataList);
 
-		when(filterHelperService.getHierarachyLevelId(4, "project", false)).thenReturn("project");
+		when(filterHelperService.getHierarchyLevelId(4, "project", false)).thenReturn("project");
 
 		buildKpiElement = setKpiElement(KPICode.CODE_BUILD_TIME.getKpiId(), "CODE_BUILD_TIME");
 		when(codeBuildTimeServiceImpl.getKpiData(any(), any(), any())).thenReturn(buildKpiElement);

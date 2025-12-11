@@ -38,7 +38,6 @@ import org.springframework.stereotype.Service;
 import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import com.publicissapient.kpidashboard.apis.ai.service.prompt.PromptDetailsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
@@ -65,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CacheServiceImpl implements CacheService {
 
-	@Autowired HierarchyLevelService hierarchyLevelService;
+	@Autowired private HierarchyLevelService hierarchyLevelService;
 	@Autowired private AccountHierarchyServiceImpl accountHierarchyService;
 	@Autowired private AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanban;
 
@@ -75,10 +74,10 @@ public class CacheServiceImpl implements CacheService {
 
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-	@Autowired private AuthenticationService authNAuthService;
-	@Autowired private ProjectHierarchyService projectHierarchyService;
-	List<AccountHierarchyData> accountHierarchyDataList;
+    @Autowired private ProjectHierarchyService projectHierarchyService;
 	@Autowired private PromptDetailsService promptDetailsService;
+
+	List<AccountHierarchyData> accountHierarchyDataList;
 
 	@Override
 	public void clearCache(String cacheName) {
@@ -263,7 +262,7 @@ public class CacheServiceImpl implements CacheService {
 			keyBuilder.append(kpiSource);
 		}
 		if (groupId != null) {
-			keyBuilder.append(groupId.toString());
+			keyBuilder.append(groupId);
 		}
 		if (CollectionUtils.isNotEmpty(sprintIncluded)) {
 			sprintIncluded =

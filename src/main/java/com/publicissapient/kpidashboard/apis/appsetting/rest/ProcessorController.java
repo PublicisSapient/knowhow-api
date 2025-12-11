@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +34,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ProcessorService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolsStatusResponse;
 import com.publicissapient.kpidashboard.common.context.ExecutionLogContext;
@@ -45,6 +43,7 @@ import com.publicissapient.kpidashboard.common.service.ProcessorExecutionTraceLo
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -52,16 +51,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author pansharm5, swati.lamba
  */
+@Slf4j
 @RestController
 @RequestMapping("/processor")
-@Slf4j
+@RequiredArgsConstructor
 public class ProcessorController {
 
-	@Autowired private ProcessorService processorService;
+	private final CustomApiConfig customApiConfig;
 
-	@Autowired private ProcessorExecutionTraceLogService processorExecutionTraceLogService;
-
-	@Autowired private CustomApiConfig customApiConfig;
+	private final ProcessorService processorService;
+	private final ProcessorExecutionTraceLogService processorExecutionTraceLogService;
 
 	/**
 	 * Gets details of all processors on the running instance including: Last executed time of the
@@ -162,11 +161,6 @@ public class ProcessorController {
 			HttpServletRequest request,
 			@NonNull @RequestBody RepoToolsStatusResponse repoToolsStatusResponse) {
 		log.info("Received {} request for /saveRepoToolsStatus", request.getMethod());
-		Boolean isApiAuth =
-				customApiConfig.getxApiKey().equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
-		if (Boolean.FALSE.equals(isApiAuth)) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-		}
 		processorService.saveRepoToolTraceLogs(repoToolsStatusResponse);
 		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
