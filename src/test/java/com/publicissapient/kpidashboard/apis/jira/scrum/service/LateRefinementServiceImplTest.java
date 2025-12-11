@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -109,7 +108,7 @@ public class LateRefinementServiceImplTest {
 						.filter(Objects::nonNull)
 						.map(SprintIssue::getNumber)
 						.distinct()
-						.collect(Collectors.toList());
+						.toList();
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
