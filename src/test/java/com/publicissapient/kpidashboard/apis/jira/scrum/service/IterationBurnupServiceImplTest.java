@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.junit.After;
@@ -118,7 +117,7 @@ public class IterationBurnupServiceImplTest {
 										sprintDetails
 												.getBasicProjectConfigId()
 												.equals(new ObjectId("63d9280d5ce3ee7d77551313")))
-						.collect(Collectors.toList());
+						.toList();
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
 				JiraIssueHistoryDataFactory.newInstance(
 						"/json/default/iteration/jira_issue_custom_history_new_structure.json");

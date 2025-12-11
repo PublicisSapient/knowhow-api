@@ -93,7 +93,8 @@ public class ScmRevertRateServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.REVERT_RATE);
 
-		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+		kpiElement.setTrendValueList(
+				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.REVERT_RATE.getKpiId()));
 		return kpiElement;
 	}
 

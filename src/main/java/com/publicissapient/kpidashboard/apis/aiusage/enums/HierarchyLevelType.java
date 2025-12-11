@@ -18,18 +18,35 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.util.List;
+
+@Getter
+@AllArgsConstructor
 public enum HierarchyLevelType {
-    ACCOUNT("Account"),
-    VERTICAL("Vertical"),
-    BUSINESS_UNIT("Business Unit");
+    ACCOUNT("Account", "account"),
+    VERTICAL("Vertical", "vertical"),
+    BUSINESS_UNIT("Business Unit", "bu");
 
-    private final String displayName;
+	private final String displayName;
+	private final String levelName;
 
-    HierarchyLevelType(String displayName) {
-        this.displayName = displayName;
-    }
+	public static HierarchyLevelType fromLevelName(String lowerCase) {
+		for (HierarchyLevelType type : values()) {
+			if (type.getLevelName().equalsIgnoreCase(lowerCase)) {
+				return type;
+			}
+		}
+		throw new IllegalArgumentException("No matching HierarchyLevelType for level name: " + lowerCase);
+	}
 
-    public String getDisplayName() {
-        return displayName;
-    }
+	public static List<String> getLevelNameValues() {
+		return List.of(
+				ACCOUNT.getLevelName(),
+				VERTICAL.getLevelName(),
+				BUSINESS_UNIT.getLevelName()
+		);
+	}
 }
