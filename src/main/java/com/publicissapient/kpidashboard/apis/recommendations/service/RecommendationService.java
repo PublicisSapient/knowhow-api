@@ -113,56 +113,41 @@ public class RecommendationService {
 	 *             if multiple levels match or unexpected errors occur
 	 */
 	public ServiceResponse getRecommendationsForLevel(String levelName) {
-		long startTime = System.currentTimeMillis();
 		log.info("Started getting recommendations for level: {}", levelName);
 
-		try {
-			// Build request context with hierarchy metadata and organization lookup
-			RecommendationRequestData requestData = createRecommendationRequestData(levelName);
+		// Build request context with hierarchy metadata and organization lookup
+		RecommendationRequestData requestData = createRecommendationRequestData(levelName);
 
-			// Extract project config IDs from organizational hierarchy
-			Set<String> projectConfigIds = extractProjectConfigIds(requestData);
+		// Extract project config IDs from organizational hierarchy
+		Set<String> projectConfigIds = extractProjectConfigIds(requestData);
 
-			if (CollectionUtils.isEmpty(projectConfigIds)) {
-				log.warn("No projects found for level: {}", levelName);
-				return buildEmptyResponse(levelName);
-			}
-
-			// Retrieve latest recommendation per project from batch data
-			List<RecommendationsActionPlan> recommendations = getLatestRecommendationsForProjects(projectConfigIds);
-
-			// Map entities to DTOs
-			List<ProjectRecommendationDTO> recommendationDTOs = recommendations.stream()
-					.map(this::mapToProjectRecommendationDTO).collect(Collectors.toList());
-
-			// Build response with summary statistics
-			RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder().levelName(levelName)
-					.totalProjectsWithRecommendations(recommendationDTOs.size())
-					.totalProjectsQueried(projectConfigIds.size()).totalRecommendations(recommendationDTOs.size())
-					.message(String.format("Retrieved %d recommendations from %d projects at %s level",
-							recommendationDTOs.size(), recommendationDTOs.size(), levelName))
-					.build();
-
-			RecommendationResponseDTO response = RecommendationResponseDTO.builder().summary(summary)
-					.details(recommendationDTOs).build();
-
-			long duration = System.currentTimeMillis() - startTime;
-			log.info("Successfully retrieved {} recommendations for {} projects at level: {}. Duration: {} ms",
-					recommendationDTOs.size(), projectConfigIds.size(), levelName, duration);
-
-			return new ServiceResponse(true, "Recommendations retrieved successfully", response);
-
-		} catch (BadRequestException | IllegalArgumentException e) {
-			log.error("Bad request for recommendations at level '{}': {}", levelName, e.getMessage());
-			throw e;
-		} catch (NotFoundException | ForbiddenException e) {
-			log.error("Error retrieving recommendations for level '{}': {}", levelName, e.getMessage());
-			throw e;
-		} catch (Exception e) {
-			log.error("Unexpected error retrieving recommendations for level: {}", levelName, e);
-			throw new InternalServerErrorException("Internal server error occurred while retrieving recommendations",
-					e);
+		if (CollectionUtils.isEmpty(projectConfigIds)) {
+			log.warn("No projects found for level: {}", levelName);
+			return buildEmptyResponse(levelName);
 		}
+
+		// Retrieve latest recommendation per project from batch data
+		List<RecommendationsActionPlan> recommendations = getLatestRecommendationsForProjects(projectConfigIds);
+
+		// Map entities to DTOs
+		List<ProjectRecommendationDTO> recommendationDTOs = recommendations.stream()
+				.map(this::mapToProjectRecommendationDTO).collect(Collectors.toList());
+
+		// Build response with summary statistics
+		RecommendationSummaryDTO summary = RecommendationSummaryDTO.builder().levelName(levelName)
+				.totalProjectsWithRecommendations(recommendationDTOs.size())
+				.totalProjectsQueried(projectConfigIds.size()).totalRecommendations(recommendationDTOs.size())
+				.message(String.format("Retrieved %d recommendations from %d projects at %s level",
+						recommendationDTOs.size(), recommendationDTOs.size(), levelName))
+				.build();
+
+		RecommendationResponseDTO response = RecommendationResponseDTO.builder().summary(summary)
+				.details(recommendationDTOs).build();
+
+		log.info("Successfully retrieved {} recommendations for {} projects at level: {}", recommendationDTOs.size(),
+				projectConfigIds.size(), levelName);
+
+		return new ServiceResponse(true, "Recommendations retrieved successfully", response);
 	}
 
 	/**

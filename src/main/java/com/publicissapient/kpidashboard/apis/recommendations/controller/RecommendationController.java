@@ -60,7 +60,7 @@ public class RecommendationController {
 			@ApiResponse(responseCode = "404", description = "Not Found - Hierarchy level not found for the specified levelName"),
 			@ApiResponse(responseCode = "500", description = "Internal Server Error - Unexpected error occurred during recommendation retrieval") })
 	@GetMapping({ "", "/" })
-	public ResponseEntity<ServiceResponse> getProjectRecommendations(
+	public ResponseEntity<ServiceResponse> getRecommendations(
 			@Parameter(name = "levelName", description = "The organizational hierarchy level name for which to retrieve recommendations. "
 					+ "Must correspond to a valid hierarchy level name (not ID).", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName) {
 
