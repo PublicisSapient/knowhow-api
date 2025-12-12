@@ -194,11 +194,10 @@ public class InnovationRateNonTrendKpiServiceImpl extends AbstractKpiCalculation
 			iterationKpiValueList.add(new IterationKpiValue(branchName, developerName,
 					List.of(new IterationKpiData(userKpiGroup, currentInnovationRate, deviationRate, LABEL_INFO, "%", "%", null))));
 
-			double overallInnovationRate = getInnovationRate(userCommits);
 			int addedLines = userCommits.stream().mapToInt(ScmCommits::getAddedLines).sum();
 			int changedLines = userCommits.stream().mapToInt(ScmCommits::getChangedLines).sum();
 
-			return createValidationData(projectName, tool, developerName, null, overallInnovationRate, addedLines, changedLines);
+			return createValidationData(projectName, tool, developerName, null, currentInnovationRate, addedLines, changedLines);
 		}).toList();
 	}
 
