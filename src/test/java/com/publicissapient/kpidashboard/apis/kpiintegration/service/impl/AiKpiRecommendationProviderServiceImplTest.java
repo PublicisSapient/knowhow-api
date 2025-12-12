@@ -86,7 +86,7 @@ class AiKpiRecommendationProviderServiceImplTest {
 		kpiElement2 = new KpiElement();
 		kpiElement2.setTrendValueList(Arrays.asList(dataCountGroup));
 		when(customApiConfig.getAiRecommendationKpiList()).thenReturn(Arrays.asList("KPI1", "KPI2"));
-		when(kpiIntegrationService.getKpiResponses(any()))
+		when(kpiIntegrationService.processScrumKpiRequest(any()))
 				.thenReturn(Collections.singletonList(kpiElement1));
 		when(promptGenerator.getKpiRecommendationPrompt(any(), any())).thenReturn("Generated Prompt");
 	}

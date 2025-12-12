@@ -131,7 +131,7 @@ public class JiraServiceRTest {
 		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
 				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
 		when(filterHelperService.getFilteredBuilds(ArgumentMatchers.any(), Mockito.anyString()))
@@ -161,7 +161,7 @@ public class JiraServiceRTest {
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(cacheService.getFromApplicationCache(any(), any(), any(), any())).thenReturn(null);
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 				.thenReturn(accountHierarchyDataList);
 	}

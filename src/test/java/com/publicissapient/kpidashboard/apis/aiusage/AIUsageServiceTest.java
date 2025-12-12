@@ -54,14 +54,14 @@ class AIUsageServiceTest {
 		AccountFilteredData accData = new AccountFilteredData();
 		accData.setNodeId("acc");
 		accData.setNodeName("Account1");
-		accData.setLabelName("account");
+		accData.setLabelName("acc");
 		Set<AccountFilteredData> hierarchyData = Set.of(accData);
 		when(accountHierarchyServiceImpl.getFilteredList(any())).thenReturn(hierarchyData);
 		when(aiUsageStatisticsRepository
 						.findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(
 								anyString(), any(), any()))
 				.thenReturn(
-						new AIUsageStatistics("ACCOUNT", "Account1", Instant.now(), Instant.now(), summary));
+						new AIUsageStatistics("Account", "Account1", Instant.now(), Instant.now(), summary));
 
 		ServiceResponse response = null;
 		try {

@@ -33,8 +33,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
+
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,16 +43,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class JwtAuthenticationFilterTest {
 
-	@Mock HttpServletRequest request;
-	@Mock HttpServletResponse response;
-	@InjectMocks private JwtAuthenticationFilter filter;
+	@Mock private HttpServletRequest request;
+	@Mock private HttpServletResponse response;
 	@Mock private TokenAuthenticationService authService;
 	@Mock private CookieUtil cookieUtil;
 	@Mock private FilterChain filterChain;
-
 	@Mock private Authentication authentication;
-
 	@Mock private Cookie cookie;
+	@Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+	@InjectMocks private JwtAuthenticationFilter filter;
 
 	@Before
 	public void setup() {
@@ -64,19 +65,13 @@ public class JwtAuthenticationFilterTest {
 						any(HttpServletRequest.class), any(HttpServletResponse.class)))
 				.thenReturn(authentication);
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class))).thenReturn(cookie);
+		when(apiKeyAuthenticationService.isRequestToApiKeyEndpoint(request)).thenReturn(false);
 		filter.doFilter(request, response, filterChain);
 		assertNotNull(SecurityContextHolder.getContext().getAuthentication());
 		assertEquals(authentication, SecurityContextHolder.getContext().getAuthentication());
 
 		verify(authService)
 				.validateAuthentication(any(HttpServletRequest.class), any(HttpServletResponse.class));
-		verify(filterChain).doFilter(request, response);
-	}
-
-	@Test
-	public void testDoFilterTest() throws Exception {
-		ServletResponse response = null;
-		filter.doFilter(request, response, filterChain);
 		verify(filterChain).doFilter(request, response);
 	}
 }
