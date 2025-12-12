@@ -21,8 +21,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
+import com.publicissapient.kpidashboard.common.constant.PromptKeys;
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 

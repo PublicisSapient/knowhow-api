@@ -747,7 +747,7 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "hideOverallFilter": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "-60",
       "60-45",
@@ -1265,7 +1265,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "-2",
       "2-4",
@@ -3559,7 +3559,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "90-",
       "30-90",
@@ -3679,7 +3679,9 @@
       "16-"
     ],
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
+
   },
   {
     "kpiId": "kpi158",
@@ -3764,7 +3766,8 @@
       "2-"
     ],
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi159",
@@ -3964,7 +3967,8 @@
     "calculateMaturity": false,
     "hideOverallFilter": true,
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi164",
@@ -4220,7 +4224,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "24-",
       "4-24",
@@ -4511,7 +4515,8 @@
     },
     "kpiWidth": 33,
     "kpiHeight": 50,
-    "isRawData": false
+    "isRawData": false,
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi178",

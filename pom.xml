@@ -356,17 +356,23 @@
       <artifactId>smile-core</artifactId>
       <version>3.0.2</version>
     </dependency>
-      <!-- DeepLearning4J dependencies for LSTM forecasting -->
-      <dependency>
-          <groupId>org.deeplearning4j</groupId>
-          <artifactId>deeplearning4j-core</artifactId>
-          <version>1.0.0-M2.1</version>
-      </dependency>
-      <dependency>
-          <groupId>org.nd4j</groupId>
-          <artifactId>nd4j-native-platform</artifactId>
-          <version>1.0.0-M2.1</version>
-      </dependency>
+    <!-- DeepLearning4J dependencies for LSTM forecasting -->
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-core</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native-platform</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <!-- ND4J API -->
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-api</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
@@ -584,7 +590,7 @@
         <executions>
           <execution>
             <id>build</id>
-            <goals>
+             <goals>
               <goal>build</goal>
             </goals>
             <phase>install</phase>

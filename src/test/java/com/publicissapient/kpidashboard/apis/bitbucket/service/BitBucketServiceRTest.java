@@ -19,13 +19,30 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +52,12 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentMatchers;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
@@ -52,7 +74,11 @@ import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
-import com.publicissapient.kpidashboard.apis.model.*;
+import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
+import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -67,21 +93,19 @@ public class BitBucketServiceRTest {
 
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
+
 	@Mock KpiHelperService kpiHelperService;
 	@Mock FilterHelperService filterHelperService;
 	@Mock ScmKpiHelperService scmKpiHelperService;
-	@InjectMocks private BitBucketServiceR bitBucketServiceR;
 	@Mock private CacheService cacheService;
 	@Mock private BitBucketKPIService<?, ?, ?> bitBucketKPIService;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@SuppressWarnings("rawtypes")
-	@Mock
-	private List<BitBucketKPIService> services;
+	@InjectMocks private BitBucketServiceR bitBucketServiceR;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
 	private Map<String, BitBucketKPIService> bitBucketServiceCache = new HashMap<>();
-	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	private KpiRequest kpiRequest;
 
@@ -133,7 +157,7 @@ public class BitBucketServiceRTest {
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
-		when(filterHelperService.getHierarachyLevelId(5, "project", false)).thenReturn("project");
+		when(filterHelperService.getHierarchyLevelId(5, "project", false)).thenReturn("project");
 		when(filterHelperService.getFilteredBuilds(any(), anyString()))
 				.thenReturn(accountHierarchyDataList);
 		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))

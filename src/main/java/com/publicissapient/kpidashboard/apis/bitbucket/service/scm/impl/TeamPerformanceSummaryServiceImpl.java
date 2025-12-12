@@ -23,11 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
-import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
-import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
-import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -36,10 +31,16 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.bitbucket.model.MetricItem;
 import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.TeamPerformanceSummaryService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
+import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
+import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
@@ -107,7 +108,7 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 				return Collections.emptyList();
 			}
 
-			CustomDateRange dateRange = getStartAndEndDate(durationValue, duration);
+			CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(LocalDateTime.now(), duration, durationValue);
 			Map<String, Object> scmDataMap = fetchFromDb(dateRange,
 					projectNode.getProjectFilter().getBasicProjectConfigId());
 			List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
@@ -123,7 +124,7 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 	}
 
 	private Node getProjectNodeByNodeId(KpiRequest kpiRequest) {
-		String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(),
+		String groupName = filterHelperService.getHierarchyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(),
 				false);
 		if (null != groupName) {
 			kpiRequest.setLabel(groupName.toUpperCase());
@@ -250,26 +251,4 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 		return Map.of(MR_LIST, mergeRequestsList, COMMIT_LIST, commitsList);
 	}
 
-	/**
-	 * Calculates start and end date based on duration type and value.
-	 * 
-	 * @param dataPoint
-	 *            the duration value
-	 * @param duration
-	 *            the duration type (WEEK or DAYS)
-	 * @return custom date range with start and end dates
-	 */
-	private CustomDateRange getStartAndEndDate(int dataPoint, String duration) {
-		CustomDateRange dateRange = new CustomDateRange();
-		LocalDateTime endDate = DateUtil.getTodayTime();
-		LocalDateTime startDate = CommonConstant.WEEK.equalsIgnoreCase(duration) ? endDate.minusWeeks(dataPoint)
-				: endDate.minusDays(dataPoint);
-		dateRange.setStartDateTime(startDate);
-		dateRange.setEndDateTime(endDate);
-		dateRange.setEndDate(DateUtil.getTodayDate());
-		dateRange.setStartDate(
-				CommonConstant.WEEK.equalsIgnoreCase(duration) ? DateUtil.getTodayDate().minusWeeks(dataPoint)
-						: DateUtil.getTodayDate().minusDays(dataPoint));
-		return dateRange;
-	}
 }

@@ -35,4 +35,6 @@ public class ProductivityTrendsResponse {
 	private CategoryVariations categoryVariations;
 
 	private List<CategoryScoresDTO> categoryScores;
+
+	private List<ForecastData> forecasts;
 }

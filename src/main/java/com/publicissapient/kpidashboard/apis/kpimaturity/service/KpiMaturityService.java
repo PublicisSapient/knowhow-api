@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.util.MapUtils;
 
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
+import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceKanbanImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
 import com.publicissapient.kpidashboard.apis.kpimaturity.dto.BoardMaturityDTO;
@@ -56,22 +57,27 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-
 /**
- * Service for managing and calculating KPI maturity metrics across organizational hierarchies.
+ * Service for managing and calculating KPI maturity metrics across
+ * organizational hierarchies.
  *
- * <p>This service provides comprehensive KPI maturity analysis for both Kanban and Scrum delivery
- * methodologies. It processes organizational hierarchy data to calculate maturity scores, efficiency
- * percentages, and health indicators at various organizational levels (Business Unit, Vertical,
- * Account, Engagement, Project).</p>
+ * <p>
+ * This service provides comprehensive KPI maturity analysis for both Kanban and
+ * Scrum delivery methodologies. It processes organizational hierarchy data to
+ * calculate maturity scores, efficiency percentages, and health indicators at
+ * various organizational levels (Business Unit, Vertical, Account, Engagement,
+ * Project).
+ * </p>
  *
- * <p>The service supports:</p>
+ * <p>
+ * The service supports:
+ * </p>
  * <ul>
- *   <li>Multi-level organizational hierarchy analysis</li>
- *   <li>Kanban and Scrum delivery methodology processing</li>
- *   <li>User access permission validation</li>
- *   <li>Maturity score aggregation and health classification</li>
- *   <li>Dynamic dashboard matrix generation</li>
+ * <li>Multi-level organizational hierarchy analysis</li>
+ * <li>Kanban and Scrum delivery methodology processing</li>
+ * <li>User access permission validation</li>
+ * <li>Maturity score aggregation and health classification</li>
+ * <li>Dynamic dashboard matrix generation</li>
  * </ul>
  */
 @Slf4j
@@ -89,15 +95,17 @@ public class KpiMaturityService {
 
 	private final KpiMaturityCustomRepository kpiMaturityCustomRepository;
 
-	private final KpiMaturityDashboardService kpiMaturityDashboardService;
 	private final FilterHelperService filterHelperService;
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	private final AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanbanImpl;
 
 	/**
 	 * Internal data structure for holding KPI maturity computation data.
 	 *
-	 * @param hierarchyLevelsData Information about hierarchy levels involved in computation
-	 * @param organizationLookup Lookup structure for organizational hierarchy navigation
+	 * @param hierarchyLevelsData
+	 *            Information about hierarchy levels involved in computation
+	 * @param organizationLookup
+	 *            Lookup structure for organizational hierarchy navigation
 	 */
 	@Builder
 	private record KpiMaturityComputationData(HierarchyLevelsData hierarchyLevelsData,
@@ -107,58 +115,58 @@ public class KpiMaturityService {
 	/**
 	 * Internal data structure for holding hierarchy level information.
 	 *
-	 * @param requestedLevel The organizational level requested by the user
-	 * @param projectLevel The project level in the organizational hierarchy
+	 * @param requestedLevel
+	 *            The organizational level requested by the user
+	 * @param projectLevel
+	 *            The project level in the organizational hierarchy
 	 */
 	@Builder
 	private record HierarchyLevelsData(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
 	}
 
 	/**
-	 * Retrieves KPI maturity data for the specified organizational level and delivery methodology.
+	 * Retrieves KPI maturity data for the specified organizational level and
+	 * delivery methodology.
 	 *
-	 * <p>This is the main entry point for KPI maturity analysis. The method handles both Kanban
-	 * and Scrum delivery methodologies, delegating to appropriate processing logic based on the
-	 * methodology specified in the request.</p>
+	 * <p>
+	 * This is the main entry point for KPI maturity analysis. The method handles
+	 * both Kanban and Scrum delivery methodologies, delegating to appropriate
+	 * processing logic based on the methodology specified in the request.
+	 * </p>
 	 *
-	 * <p>For Kanban methodology, the request is forwarded to the specialized Kanban dashboard service.
-	 * For Scrum methodology, the service performs comprehensive hierarchy analysis, data aggregation,
-	 * and matrix generation. The Kanban processing will soon be handled by this service as well.</p>
-	 *
-	 * @param kpiMaturityRequest The request containing level name, delivery methodology, and optional parent node ID
-	 * @return KpiMaturityResponseDTO containing maturity metrics, health indicators, and dashboard data
+	 * @param kpiMaturityRequest
+	 *            The request containing level name, delivery methodology, and
+	 *            optional parent node ID
+	 * @return KpiMaturityResponseDTO containing maturity metrics, health
+	 *         indicators, and dashboard data
 	 */
 	public KpiMaturityResponseDTO getKpiMaturity(KpiMaturityRequest kpiMaturityRequest) {
 		KpiMaturityComputationData kpiMaturityComputationData = createKpiMaturityComputationData(kpiMaturityRequest);
-		if (kpiMaturityRequest.deliveryMethodology() == ProjectDeliveryMethodology.KANBAN) {
-			return this.kpiMaturityDashboardService.getExecutiveDashboardKanban(KpiMaturityRequest.builder()
-					.parentNodeId(kpiMaturityRequest.parentNodeId())
-					.levelName(kpiMaturityComputationData.hierarchyLevelsData.requestedLevel.getHierarchyLevelId())
-					.levelNumber(kpiMaturityComputationData.hierarchyLevelsData.requestedLevel.getLevel()).build());
-		} else {
-			return getKpiMaturityForScrum(kpiMaturityRequest, kpiMaturityComputationData);
-		}
+		return processKpiMaturityRequest(kpiMaturityRequest, kpiMaturityComputationData);
 	}
 
 	/**
-	 * Processes KPI maturity data specifically for Scrum delivery methodology.
-	 *
-	 * <p>This method performs the core Scrum-specific processing including:</p>
+	 * This method performs the kpi maturity request processing including:
 	 * <ul>
-	 *   <li>Organizational hierarchy traversal and project identification</li>
-	 *   <li>KPI maturity data retrieval for identified projects</li>
-	 *   <li>Maturity metrics computation and aggregation</li>
-	 *   <li>Dashboard matrix construction with dynamic columns</li>
+	 * <li>Organizational hierarchy traversal and project identification</li>
+	 * <li>KPI maturity data retrieval for identified projects</li>
+	 * <li>Maturity metrics computation and aggregation</li>
+	 * <li>Dashboard matrix construction with dynamic columns</li>
 	 * </ul>
 	 *
-	 * <p>If no KPI maturity data is found for the requested projects, an empty response is returned
-	 * with appropriate logging for troubleshooting.</p>
+	 * <p>
+	 * If no KPI maturity data is found for the requested projects, an empty
+	 * response is returned with appropriate logging for troubleshooting.
+	 * </p>
 	 *
-	 * @param kpiMaturityRequest The original request containing filtering criteria
-	 * @param kpiMaturityComputationData Pre-computed hierarchy and lookup data
-	 * @return KpiMaturityResponseDTO with matrix data containing rows and columns for dashboard display
+	 * @param kpiMaturityRequest
+	 *            The original request containing filtering criteria
+	 * @param kpiMaturityComputationData
+	 *            Pre-computed hierarchy and lookup data
+	 * @return KpiMaturityResponseDTO with matrix data containing rows and columns
+	 *         for dashboard display
 	 */
-	private KpiMaturityResponseDTO getKpiMaturityForScrum(KpiMaturityRequest kpiMaturityRequest,
+	private KpiMaturityResponseDTO processKpiMaturityRequest(KpiMaturityRequest kpiMaturityRequest,
 			KpiMaturityComputationData kpiMaturityComputationData) {
 		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds = createProjectChildrenGroupedByRequestedRootNodeIdsMap(
 				kpiMaturityRequest, kpiMaturityComputationData);
@@ -201,27 +209,39 @@ public class KpiMaturityService {
 	}
 
 	/**
-	 * Computes maturity metrics for a specific organizational entity based on its child projects.
+	 * Computes maturity metrics for a specific organizational entity based on its
+	 * child projects.
 	 *
-	 * <p>This method aggregates KPI maturity data from multiple projects under an organizational
-	 * entity to calculate overall maturity scores, efficiency percentages, and health indicators.
-	 * The computation includes:</p>
+	 * <p>
+	 * This method aggregates KPI maturity data from multiple projects under an
+	 * organizational entity to calculate overall maturity scores, efficiency
+	 * percentages, and health indicators. The computation includes:
+	 * </p>
 	 *
 	 * <ul>
-	 *   <li>Efficiency percentage averaging across projects with data</li>
-	 *   <li>Maturity score aggregation by KPI category (speed, quality, efficiency, etc.)</li>
-	 *   <li>Health classification based on overall efficiency</li>
-	 *   <li>Board maturity metrics calculation using ceiling function</li>
+	 * <li>Efficiency percentage averaging across projects with data</li>
+	 * <li>Maturity score aggregation by KPI category (speed, quality, efficiency,
+	 * etc.)</li>
+	 * <li>Health classification based on overall efficiency</li>
+	 * <li>Board maturity metrics calculation using ceiling function</li>
 	 * </ul>
 	 *
-	 * <p>Projects without KPI maturity data are logged but do not contribute to calculations.
-	 * If no projects have maturity data, an empty Optional is returned.</p>
+	 * <p>
+	 * Projects without KPI maturity data are logged but do not contribute to
+	 * calculations. If no projects have maturity data, an empty Optional is
+	 * returned.
+	 * </p>
 	 *
-	 * @param kpiMaturityComputationData Computation context with hierarchy and lookup data
-	 * @param rootNodeId The ID of the organizational entity being analyzed
-	 * @param projectEntities List of project entities under the organizational entity
-	 * @param kpiMaturityGroupedByNodeId Map of project node IDs to their KPI maturity data
-	 * @return Optional containing computed maturity metrics, or empty if no data available
+	 * @param kpiMaturityComputationData
+	 *            Computation context with hierarchy and lookup data
+	 * @param rootNodeId
+	 *            The ID of the organizational entity being analyzed
+	 * @param projectEntities
+	 *            List of project entities under the organizational entity
+	 * @param kpiMaturityGroupedByNodeId
+	 *            Map of project node IDs to their KPI maturity data
+	 * @return Optional containing computed maturity metrics, or empty if no data
+	 *         available
 	 */
 	private Optional<OrganizationEntityMaturityMetricsDTO> computeOrganizationEntityMaturityMetrics(
 			KpiMaturityComputationData kpiMaturityComputationData, String rootNodeId,
@@ -273,22 +293,31 @@ public class KpiMaturityService {
 	}
 
 	/**
-	 * Creates a mapping of organizational entities to their child projects based on the request parameters.
+	 * Creates a mapping of organizational entities to their child projects based on
+	 * the request parameters.
 	 *
-	 * <p>This method handles two scenarios:</p>
+	 * <p>
+	 * This method handles two scenarios:
+	 * </p>
 	 * <ol>
-	 *   <li><strong>Filtered by Parent:</strong> When a parent node ID is provided, it finds children
-	 *       at the requested level under that parent, then maps each to their project children</li>
-	 *   <li><strong>Unfiltered:</strong> When no parent is specified, it finds all entities at the
-	 *       requested level and maps each to their project children</li>
+	 * <li><strong>Filtered by Parent:</strong> When a parent node ID is provided,
+	 * it finds children at the requested level under that parent, then maps each to
+	 * their project children</li>
+	 * <li><strong>Unfiltered:</strong> When no parent is specified, it finds all
+	 * entities at the requested level and maps each to their project children</li>
 	 * </ol>
 	 *
-	 * <p>The resulting map structure enables efficient processing of organizational hierarchies
-	 * by grouping projects under their parent organizational entities.</p>
+	 * <p>
+	 * The resulting map structure enables efficient processing of organizational
+	 * hierarchies by grouping projects under their parent organizational entities.
+	 * </p>
 	 *
-	 * @param kpiMaturityRequest The request containing optional parent node filtering
-	 * @param kpiMaturityComputationData Computation context with hierarchy levels and organization lookup
-	 * @return Map where keys are organizational entity node IDs and values are lists of their child projects
+	 * @param kpiMaturityRequest
+	 *            The request containing optional parent node filtering
+	 * @param kpiMaturityComputationData
+	 *            Computation context with hierarchy levels and organization lookup
+	 * @return Map where keys are organizational entity node IDs and values are
+	 *         lists of their child projects
 	 */
 	private static Map<String, List<AccountFilteredData>> createProjectChildrenGroupedByRequestedRootNodeIdsMap(
 			KpiMaturityRequest kpiMaturityRequest, KpiMaturityComputationData kpiMaturityComputationData) {
@@ -309,22 +338,33 @@ public class KpiMaturityService {
 				kpiMaturityComputationData.hierarchyLevelsData.projectLevel.getLevel());
 	}
 
-
 	/**
-	 * Computes board maturity metrics by aggregating and averaging maturity scores across categories.
+	 * Computes board maturity metrics by aggregating and averaging maturity scores
+	 * across categories.
 	 *
-	 * <p>This method calculates maturity levels for each KPI category (e.g., speed, quality, efficiency)
-	 * using the formula: <code>M[score] = ceil(sum_of_category_scores / number_of_projects)</code></p>
+	 * <p>
+	 * This method calculates maturity levels for each KPI category (e.g., speed,
+	 * quality, efficiency) using the formula:
+	 * <code>M[score] = ceil(sum_of_category_scores / number_of_projects)</code>
+	 * </p>
 	 *
-	 * <p>The resulting metrics use the "M" prefix followed by the calculated maturity level,
-	 * providing a standardized representation of organizational maturity across different KPI categories.</p>
+	 * <p>
+	 * The resulting metrics use the "M" prefix followed by the calculated maturity
+	 * level, providing a standardized representation of organizational maturity
+	 * across different KPI categories.
+	 * </p>
 	 *
-	 * <p><strong>Example:</strong> If speed scores are [3.0, 4.0, 5.0] across 2 projects,
-	 * the result would be "M6" (ceil((3+4+5)/2) = ceil(6) = 6)</p>
+	 * <p>
+	 * <strong>Example:</strong> If speed scores are [3.0, 4.0, 5.0] across 2
+	 * projects, the result would be "M6" (ceil((3+4+5)/2) = ceil(6) = 6)
+	 * </p>
 	 *
-	 * @param maturityScoresGroupedByCategory Map of KPI categories to their score lists
-	 * @param numberOfProjectsWithKpiMaturityData Number of projects contributing to the calculation
-	 * @return Map of KPI categories to their computed maturity metrics (e.g., "speed" -> "M4")
+	 * @param maturityScoresGroupedByCategory
+	 *            Map of KPI categories to their score lists
+	 * @param numberOfProjectsWithKpiMaturityData
+	 *            Number of projects contributing to the calculation
+	 * @return Map of KPI categories to their computed maturity metrics (e.g.,
+	 *         "speed" -> "M4")
 	 */
 	private static Map<String, String> computeBoardMaturityMetrics(
 			Map<String, List<Double>> maturityScoresGroupedByCategory, int numberOfProjectsWithKpiMaturityData) {
@@ -353,25 +393,33 @@ public class KpiMaturityService {
 	/**
 	 * Constructs column definitions for the KPI maturity dashboard matrix.
 	 *
-	 * <p>This method creates both static and dynamic columns for the dashboard display:</p>
+	 * <p>
+	 * This method creates both static and dynamic columns for the dashboard
+	 * display:
+	 * </p>
 	 *
 	 * <h4>Static Columns (always present):</h4>
 	 * <ul>
-	 *   <li><strong>Project ID:</strong> Unique identifier for the organizational entity</li>
-	 *   <li><strong>[Level] Name:</strong> Name of the entity at the requested hierarchy level</li>
-	 *   <li><strong>Efficiency(%):</strong> Overall efficiency percentage</li>
-	 *   <li><strong>Overall Health:</strong> Health classification (Healthy/Moderate/Unhealthy)</li>
+	 * <li><strong>Project ID:</strong> Unique identifier for the organizational
+	 * entity</li>
+	 * <li><strong>[Level] Name:</strong> Name of the entity at the requested
+	 * hierarchy level</li>
+	 * <li><strong>Efficiency(%):</strong> Overall efficiency percentage</li>
+	 * <li><strong>Overall Health:</strong> Health classification
+	 * (Healthy/Moderate/Unhealthy)</li>
 	 * </ul>
 	 *
 	 * <h4>Dynamic Columns (based on available KPI categories):</h4>
 	 * <ul>
-	 *   <li>Generated from maturity score categories in the KPI data</li>
-	 *   <li>Special handling for "DORA" category (displayed as uppercase)</li>
-	 *   <li>Other categories are capitalized (e.g., "speed" -> "Speed")</li>
+	 * <li>Generated from maturity score categories in the KPI data</li>
+	 * <li>Special handling for "DORA" category (displayed as uppercase)</li>
+	 * <li>Other categories are capitalized (e.g., "speed" -> "Speed")</li>
 	 * </ul>
 	 *
-	 * @param kpiMaturity Sample KPI maturity data used to determine available categories
-	 * @param hierarchyLevelsData Hierarchy information for generating level-specific headers
+	 * @param kpiMaturity
+	 *            Sample KPI maturity data used to determine available categories
+	 * @param hierarchyLevelsData
+	 *            Hierarchy information for generating level-specific headers
 	 * @return List of column definitions for dashboard matrix display
 	 */
 	private static List<ColumnDefinitionDTO> constructColumnDefinitions(KpiMaturity kpiMaturity,
@@ -400,21 +448,33 @@ public class KpiMaturityService {
 	}
 
 	/**
-	 * Creates and validates the computation data required for KPI maturity analysis.
+	 * Creates and validates the computation data required for KPI maturity
+	 * analysis.
 	 *
-	 * <p>This method performs comprehensive validation and setup including:</p>
+	 * <p>
+	 * This method performs comprehensive validation and setup including:
+	 * </p>
 	 * <ul>
-	 *   <li><strong>Request Validation:</strong> Ensures request is not null</li>
-	 *   <li><strong>Hierarchy Setup:</strong> Constructs hierarchy levels data with validation</li>
-	 *   <li><strong>Access Control:</strong> Creates organization lookup with user permission filtering</li>
-	 *   <li><strong>Parent Node Validation:</strong> Validates parent node access and hierarchy relationships</li>
+	 * <li><strong>Request Validation:</strong> Ensures request is not null</li>
+	 * <li><strong>Hierarchy Setup:</strong> Constructs hierarchy levels data with
+	 * validation</li>
+	 * <li><strong>Access Control:</strong> Creates organization lookup with user
+	 * permission filtering</li>
+	 * <li><strong>Parent Node Validation:</strong> Validates parent node access and
+	 * hierarchy relationships</li>
 	 * </ul>
 	 *
-	 * <p>The method enforces business rules such as ensuring the requested level is not higher
-	 * than or equal to the parent node level in the organizational hierarchy.</p>
+	 * <p>
+	 * The method enforces business rules such as ensuring the requested level is
+	 * not higher than or equal to the parent node level in the organizational
+	 * hierarchy.
+	 * </p>
 	 *
-	 * @param kpiMaturityRequest The request containing level name, methodology, and optional parent node
-	 * @return KpiMaturityComputationData containing validated hierarchy and lookup structures
+	 * @param kpiMaturityRequest
+	 *            The request containing level name, methodology, and optional
+	 *            parent node
+	 * @return KpiMaturityComputationData containing validated hierarchy and lookup
+	 *         structures
 	 */
 	private KpiMaturityComputationData createKpiMaturityComputationData(KpiMaturityRequest kpiMaturityRequest) {
 		if (kpiMaturityRequest == null) {
@@ -425,20 +485,22 @@ public class KpiMaturityService {
 		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(
 				kpiMaturityRequest.levelName(), kpiMaturityRequest.deliveryMethodology(),
 				kpiMaturityRequest.parentNodeId());
-		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData);
+		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData,
+				kpiMaturityRequest.deliveryMethodology());
 
-		if(StringUtils.isNotBlank(kpiMaturityRequest.parentNodeId())) {
-			List<AccountFilteredData> requestedParentNodes =
-					organizationLookup.getAccountDataByNodeId((kpiMaturityRequest.parentNodeId()));
+		if (StringUtils.isNotBlank(kpiMaturityRequest.parentNodeId())) {
+			List<AccountFilteredData> requestedParentNodes = organizationLookup
+					.getAccountDataByNodeId((kpiMaturityRequest.parentNodeId()));
 
-			if(CollectionUtils.isEmpty(requestedParentNodes)) {
-				throw new BadRequestException(String.format("Current user does not have access to the organization " +
-						"entity with node id %s or it does not exist", kpiMaturityRequest.parentNodeId()));
+			if (CollectionUtils.isEmpty(requestedParentNodes)) {
+				throw new BadRequestException(String.format("Current user does not have access to the organization "
+						+ "entity with node id %s or it does not exist", kpiMaturityRequest.parentNodeId()));
 			}
 
-			if(requestedParentNodes.stream().anyMatch(parentNode -> hierarchyLevelsData.requestedLevel.getLevel() <= parentNode.getLevel())) {
-				throw new BadRequestException("The requested level name should not correspond to an organization " +
-						"level higher or equal than the one of the requested parent node");
+			if (requestedParentNodes.stream()
+					.anyMatch(parentNode -> hierarchyLevelsData.requestedLevel.getLevel() <= parentNode.getLevel())) {
+				throw new BadRequestException("The requested level name should not correspond to an organization "
+						+ "level higher or equal than the one of the requested parent node");
 			}
 		}
 
@@ -461,13 +523,19 @@ public class KpiMaturityService {
 	 * @return List of TreeNode representing the root nodes of the accessible
 	 *         hierarchy tree
 	 */
-	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData) {
+	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData,
+			ProjectDeliveryMethodology deliveryMethodology) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
-		accountFilterRequest.setKanban(false);
-		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = accountHierarchyServiceImpl
-				.getFilteredList(accountFilterRequest).stream()
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = Set.of();
+		if (deliveryMethodology == ProjectDeliveryMethodology.KANBAN) {
+			hierarchyDataUserHasAccessTo = this.accountHierarchyServiceKanbanImpl.getFilteredList(accountFilterRequest);
+		} else if (deliveryMethodology == ProjectDeliveryMethodology.SCRUM) {
+			accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
+			hierarchyDataUserHasAccessTo = this.accountHierarchyServiceImpl.getFilteredList(accountFilterRequest);
+		}
+
+		hierarchyDataUserHasAccessTo = hierarchyDataUserHasAccessTo.stream()
 				.filter(accountFilteredData -> accountFilteredData != null
 						&& StringUtils.isNotEmpty(accountFilteredData.getNodeId())
 						&& accountFilteredData.getLevel() <= hierarchyLevelsData.projectLevel.getLevel())

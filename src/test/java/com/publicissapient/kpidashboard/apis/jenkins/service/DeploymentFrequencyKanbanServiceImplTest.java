@@ -170,14 +170,14 @@ public class DeploymentFrequencyKanbanServiceImplTest {
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(deploymentRepository.findDeploymentList(anyMap(), anySet(), anyString(), anyString()))
-				.thenReturn(deploymentList);
+				.thenReturn(new ArrayList<>(deploymentList));
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINSKANBAN.name()))
 				.thenReturn(kpiRequest.getRequestTrackerId());
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put(
 				KPICode.DEPLOYMENT_FREQUENCY_KANBAN.name(),
-				Arrays.asList("-1", "1-2", "2-5", "5-10", "10-"));
+				new ArrayList<>(Arrays.asList("-1", "1-2", "2-5", "5-10", "10-")));
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
@@ -207,7 +207,7 @@ public class DeploymentFrequencyKanbanServiceImplTest {
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(deploymentRepository.findDeploymentList(anyMap(), anySet(), anyString(), anyString()))
-				.thenReturn(deploymentList);
+				.thenReturn(new ArrayList<>(deploymentList));
 
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINSKANBAN.name()))
@@ -216,9 +216,9 @@ public class DeploymentFrequencyKanbanServiceImplTest {
 		Map<String, List<String>> maturityRangeMap = new HashMap<>();
 		maturityRangeMap.put(
 				KPICode.DEPLOYMENT_FREQUENCY_KANBAN.name(),
-				Arrays.asList("-1", "1-2", "2-5", "5-10", "10-"));
+				new ArrayList<>(Arrays.asList("-1", "1-2", "2-5", "5-10", "10-")));
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
-		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
+		when(commonService.sortTrendValueMap(anyMap())).thenReturn(new HashMap<>(trendValueMap));
 
 		Map<String, String> kpiWiseAggregation = new HashMap<>();
 		kpiWiseAggregation.put(KPICode.DEPLOYMENT_FREQUENCY_KANBAN.name(), "sum");

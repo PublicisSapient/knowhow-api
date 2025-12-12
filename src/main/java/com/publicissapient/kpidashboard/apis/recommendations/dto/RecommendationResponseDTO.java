@@ -15,51 +15,35 @@
  *    limitations under the License.
  */
 
-package com.publicissapient.kpidashboard.apis.ai.model;
+package com.publicissapient.kpidashboard.apis.recommendations.dto;
 
 import java.util.List;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
-
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @author shunaray
+ * Response DTO for project recommendations API.
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "prompt_details")
-public class PromptDetails extends BasicModel {
-	private String key;
-	private String context;
-	private String task;
-	private List<String> instructions;
-	private String input;
-	private String outputFormat;
-	private List<String> placeHolders;
+@Schema(description = "Response containing batch-calculated project recommendations with summary and details")
+public class RecommendationResponseDTO {
 
-	@Override
-	public String toString() {
-		return "{"
-				+ "context='"
-				+ context
-				+ '\''
-				+ ", task='"
-				+ task
-				+ '\''
-				+ ", instructions="
-				+ instructions
-				+ ", input='"
-				+ input
-				+ '\''
-				+ ", outputFormat='"
-				+ outputFormat
-				+ '\''
-				+ '}';
-	}
+	@NotNull(message = "Summary must not be null")
+	@Valid
+	@Schema(description = "Summary with basic statistics and aggregated recommendation counts")
+	private RecommendationSummaryDTO summary;
+
+	@NotNull(message = "Details list must not be null")
+	@Valid
+	@Schema(description = "Detailed list of recommendations for each project")
+	private List<ProjectRecommendationDTO> details;
 }

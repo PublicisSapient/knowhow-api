@@ -268,7 +268,7 @@ public class UserAuthorizedProjectsService {
 
 		Set<String> projects = getSelectedIds(kpiRequest);
 		List<String> ids = Arrays.asList(kpiRequest.getIds());
-		log.debug("{}" + filteredAccountDataList.size());
+		log.debug("{}", filteredAccountDataList.size());
 		List<String> keys = Stream.concat(projects.stream(), ids.stream()).collect(Collectors.toList());
 		List<String> dateFilters = new ArrayList<>();
 		dateFilters.add(LocalDate.now().toString());

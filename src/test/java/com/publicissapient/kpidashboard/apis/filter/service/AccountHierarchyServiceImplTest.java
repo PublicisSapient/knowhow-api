@@ -22,10 +22,22 @@ package com.publicissapient.kpidashboard.apis.filter.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -43,7 +55,11 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.data.*;
+import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
+import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
+import com.publicissapient.kpidashboard.apis.data.OrganizationHierarchyDataFactory;
+import com.publicissapient.kpidashboard.apis.data.ProjectBasicConfigDataFactory;
+import com.publicissapient.kpidashboard.apis.data.ProjectHierarchyDataFactory;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
@@ -189,7 +205,7 @@ public class AccountHierarchyServiceImplTest {
 						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		List<AccountHierarchyData> accountHierarchies =
 				accountHierarchyServiceImpl.createHierarchyData();
 

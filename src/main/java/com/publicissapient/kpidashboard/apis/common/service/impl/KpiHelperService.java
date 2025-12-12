@@ -166,7 +166,7 @@ public class KpiHelperService { // NOPMD
 
 	private final SprintRepository sprintRepository;
 
-	private final FilterHelperService flterHelperService;
+	private final FilterHelperService filterHelperService;
 
 	private final CacheService cacheService;
 
@@ -236,11 +236,6 @@ public class KpiHelperService { // NOPMD
 
 	/**
 	 * exclude defects with priority and Filter RCA based on fieldMapping
-	 *
-	 * @param allDefects
-	 * @param projectWisePriority
-	 * @param projectWiseRCA
-	 * @return
 	 */
 	public static List<JiraIssue> excludePriorityAndIncludeRCA(
 			List<JiraIssue> allDefects,
@@ -299,12 +294,6 @@ public class KpiHelperService { // NOPMD
 		}
 	}
 
-	/**
-	 * @param projectWisePriority
-	 * @param configPriority
-	 * @param basicProjectConfigId
-	 * @param defectPriority
-	 */
 	public static void addPriorityProjectWise(
 			Map<String, List<String>> projectWisePriority,
 			Map<String, List<String>> configPriority,
@@ -382,7 +371,7 @@ public class KpiHelperService { // NOPMD
 		return masterResponse;
 	}
 
-	private KPIVideoLink findKpiVideoLink(String kpiId, List<KPIVideoLink> videos) {
+	private static KPIVideoLink findKpiVideoLink(String kpiId, List<KPIVideoLink> videos) {
 		if (CollectionUtils.isEmpty(videos)) {
 			return null;
 		}
@@ -496,7 +485,7 @@ public class KpiHelperService { // NOPMD
 				fieldMapping.getJiraDefectRejectionStatusKPI14());
 
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
@@ -608,7 +597,7 @@ public class KpiHelperService { // NOPMD
 				fieldMapping.getJiraDefectRejectionStatusQAKPI111());
 
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
@@ -742,7 +731,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -836,7 +825,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
@@ -877,7 +866,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
+				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
 		leafNodeList.forEach(
 				leaf -> {
 					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
@@ -965,7 +954,7 @@ public class KpiHelperService { // NOPMD
 
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMapForCapacity(
-				kpiRequest, mapOfFilters, flterHelperService);
+				kpiRequest, mapOfFilters, filterHelperService);
 
 		mapOfFilters.put(
 				JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
@@ -1050,7 +1039,7 @@ public class KpiHelperService { // NOPMD
 				leaf -> projectList.add(leaf.getProjectFilter().getBasicProjectConfigId()));
 		/** additional filter * */
 		KpiDataHelper.createAdditionalFilterMapForCapacity(
-				kpiRequest, mapOfFilters, flterHelperService);
+				kpiRequest, mapOfFilters, filterHelperService);
 		mapOfFilters.put(
 				JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().toList());
@@ -1117,7 +1106,7 @@ public class KpiHelperService { // NOPMD
 				});
 		String subGroupCategory =
 				KpiDataHelper.createAdditionalFilterMap(
-						kpiRequest, mapOfFilters, Constant.KANBAN, flterHelperService);
+						kpiRequest, mapOfFilters, Constant.KANBAN, filterHelperService);
 		mapOfFilters.put(
 				JiraFeatureHistory.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().toList());
@@ -1234,7 +1223,7 @@ public class KpiHelperService { // NOPMD
 							}
 						});
 		return KpiDataHelper.createProjectWiseMapKanbanHistory(
-				nonClosedTicketsList, (String) resultListMap.get(SUBGROUPCATEGORY), flterHelperService);
+				nonClosedTicketsList, (String) resultListMap.get(SUBGROUPCATEGORY), filterHelperService);
 	}
 
 	/**
@@ -2160,7 +2149,7 @@ public class KpiHelperService { // NOPMD
 	public void setIntoApplicationCache(
 			KpiRequest kpiRequest, List<KpiElement> responseList, Integer groupId, String[] projects) {
 		Integer sprintLevel =
-				flterHelperService
+				filterHelperService
 						.getHierarchyIdLevelMap(false)
 						.get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT);
 
