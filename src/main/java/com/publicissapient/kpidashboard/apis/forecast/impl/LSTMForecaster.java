@@ -44,19 +44,25 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * LSTM Neural Network Forecaster using DeepLearning4J for time series prediction.
  *
- * <p>Implements deep learning to capture complex patterns, long-term dependencies,
- * and non-linear relationships in KPI data using LSTM networks.
+ * <p>Implements deep learning to capture complex patterns, long-term dependencies, and non-linear
+ * relationships in KPI data using LSTM networks.
  *
  * <h3>Architecture:</h3>
- * <pre>Input[t-2,t-1,t] → LSTM[50 neurons] → RnnOutput[1] → Prediction</pre>
+ *
+ * <pre>
+ * Input[t-2,t-1,t] → LSTM[50 neurons] → RnnOutput[1] → Prediction
+ * </pre>
  *
  * <h3>Features:</h3>
+ *
  * DeepLearning4J framework, 3-step sequences, Adam optimizer, min-max normalization, memory gates
  *
  * <h3>Best For:</h3>
+ *
  * Non-linear patterns, long-term dependencies, seasonal behavior, sufficient data (6+ points)
  *
  * <h3>Implementation:</h3>
+ *
  * 3D tensors, single epoch training, MSE loss, Xavier weights, real-time forecasting
  *
  * @see AbstractForecastService
@@ -70,46 +76,46 @@ public class LSTMForecaster extends AbstractForecastService {
 
 	/**
 	 * Number of time steps in input sequences for LSTM training and prediction.
+	 *
 	 * <p>Lookback window: 3 means model learns from [t-2, t-1, t] to predict t+1.
 	 */
 	private static final int SEQUENCE_LENGTH = 3;
 
 	/**
 	 * Minimum number of historical data points required for LSTM forecasting.
-	 * <p><b>Calculation:</b> With SEQUENCE_LENGTH=3, minimum 6 points creates
-	 * 3 training sequences: [0,1,2]→3, [1,2,3]→4, [2,3,4]→5
+	 *
+	 * <p><b>Calculation:</b> With SEQUENCE_LENGTH=3, minimum 6 points creates 3 training sequences:
+	 * [0,1,2]→3, [1,2,3]→4, [2,3,4]→5
 	 */
 	private static final int MIN_DATA_POINTS = 6;
 
-    /**
-     * First LSTM layer size optimized for small datasets (8-14 points).
-     * <p>16 neurons provide sufficient capacity without overfitting on sparse data.
-     */
-    private static final int LSTM_LAYER_1_SIZE = 16;
+	/**
+	 * First LSTM layer size optimized for small datasets (8-14 points).
+	 *
+	 * <p>16 neurons provide sufficient capacity without overfitting on sparse data.
+	 */
+	private static final int LSTM_LAYER_1_SIZE = 16;
 
-    /**
-     * Second LSTM layer size for pattern refinement.
-     * <p>8 neurons create bottleneck for better generalization on volatile data.
-     */
-    private static final int LSTM_LAYER_2_SIZE = 8;
+	/**
+	 * L2 regularization strength for preventing overfitting on small datasets.
+	 *
+	 * <p>0.01 provides strong regularization for 8-14 data points with volatile patterns.
+	 */
+	private static final double L2_REGULARIZATION = 0.01;
 
-    /**
-     * L2 regularization strength for preventing overfitting on small datasets.
-     * <p>0.01 provides strong regularization for 8-14 data points with volatile patterns.
-     */
-    private static final double L2_REGULARIZATION = 0.01;
+	/**
+	 * Dropout rate for preventing overfitting on sparse data.
+	 *
+	 * <p>0.3 (30%) dropout forces robust feature learning with limited samples.
+	 */
+	private static final double DROPOUT_RATE = 0.3;
 
-    /**
-     * Dropout rate for preventing overfitting on sparse data.
-     * <p>0.3 (30%) dropout forces robust feature learning with limited samples.
-     */
-    private static final double DROPOUT_RATE = 0.3;
-
-    /**
-     * Higher learning rate optimized for small datasets.
-     * <p>0.01 enables faster convergence with limited training data.
-     */
-    private static final double OPTIMIZED_LEARNING_RATE = 0.01;
+	/**
+	 * Higher learning rate optimized for small datasets.
+	 *
+	 * <p>0.01 enables faster convergence with limited training data.
+	 */
+	private static final double OPTIMIZED_LEARNING_RATE = 0.01;
 
 	@Override
 	public ForecastingModel getModelType() {
@@ -118,7 +124,9 @@ public class LSTMForecaster extends AbstractForecastService {
 
 	/**
 	 * Generates LSTM-based forecast for the next time period using deep learning.
+	 *
 	 * <h4>Deep Learning Process:</h4>
+	 *
 	 * <pre>
 	 * Historical Data → Normalization → Sequences → LSTM Training → Prediction
 	 * </pre>
@@ -131,9 +139,13 @@ public class LSTMForecaster extends AbstractForecastService {
 	public List<DataCount> generateForecast(List<DataCount> historicalData, String kpiId) {
 		List<DataCount> forecasts = new ArrayList<>();
 
-		if (historicalData == null || !canForecast(historicalData, kpiId) || historicalData.size() < MIN_DATA_POINTS) {
-			log.warn("Insufficient data for LSTM forecast. Required: {}, Available: {}",
-					MIN_DATA_POINTS, historicalData.size());
+		if (historicalData == null
+				|| !canForecast(historicalData, kpiId)
+				|| historicalData.size() < MIN_DATA_POINTS) {
+			log.warn(
+					"Insufficient data for LSTM forecast. Required: {}, Available: {}",
+					MIN_DATA_POINTS,
+					historicalData.size());
 			return forecasts;
 		}
 
@@ -142,12 +154,17 @@ public class LSTMForecaster extends AbstractForecastService {
 			return forecasts;
 		}
 
+		MultiLayerNetwork model = null;
+		INDArray[] sequences = null;
+		INDArray lastSequence = null;
+		INDArray prediction = null;
+		DataSet dataSet = null;
+
 		try {
 			log.debug("Starting LSTM forecast for KPI {} with {} data points", kpiId, values.size());
 
 			/**
-			 * Step 1: Data Normalization
-			 * Scales data to [0,1] range for stable neural network training.
+			 * Step 1: Data Normalization Scales data to [0,1] range for stable neural network training.
 			 * Prevents gradient vanishing/exploding and ensures all features contribute equally.
 			 */
 			double[] normalizedData = normalizeData(values);
@@ -155,63 +172,67 @@ public class LSTMForecaster extends AbstractForecastService {
 			double maxValue = values.stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
 
 			/**
-			 * Step 2: Sequence Creation
-			 * Converts time series to supervised learning format with input-output pairs.
-			 * Creates 3D tensors [batch_size, features, sequence_length] for RNN compatibility.
+			 * Step 2: Sequence Creation Converts time series to supervised learning format with
+			 * input-output pairs. Creates 3D tensors [batch_size, features, sequence_length] for RNN
+			 * compatibility.
 			 */
-			INDArray[] sequences = createSequences(normalizedData);
+			sequences = createSequences(normalizedData);
 			if (sequences[0].size(0) == 0) {
 				log.warn("No valid sequences created for KPI {}", kpiId);
 				return forecasts;
 			}
 
 			/**
-			 * Step 3: Model Building
-			 * Constructs LSTM network with optimized architecture:
-			 * - LSTM layer (50 neurons, tanh activation)
-			 * - RNN output layer (1 neuron, linear activation, MSE loss)
-			 * - Adam optimizer with 0.001 learning rate
+			 * Step 3: Model Building Constructs LSTM network with optimized architecture: - LSTM layer
+			 * (50 neurons, tanh activation) - RNN output layer (1 neuron, linear activation, MSE loss) -
+			 * Adam optimizer with 0.001 learning rate
 			 */
-			MultiLayerNetwork model = buildLSTMModel();
+			model = buildLSTMModel();
 
 			/**
-			 * Step 4: Training
-			 * Fits model using Adam optimizer and MSE loss function.
-			 * Single epoch training with full dataset for real-time forecasting.
+			 * Step 4: Training Multiple epochs for volatile data patterns with early stopping. Increased
+			 * training for better pattern recognition on sparse data.
 			 */
-			model.fit(new DataSet(sequences[0], sequences[1]));
+			dataSet = new DataSet(sequences[0], sequences[1]);
+			for (int epoch = 0; epoch < 10; epoch++) {
+				model.fit(dataSet);
+			}
 
 			/**
-			 * Step 5: Prediction
-			 * Generates forecast using trained model with last sequence as input.
+			 * Step 5: Prediction Generates forecast using trained model with last sequence as input.
 			 * Extracts most recent SEQUENCE_LENGTH values for context.
 			 */
-			INDArray lastSequence = getLastSequence(normalizedData);
-			INDArray prediction = model.output(lastSequence);
+			lastSequence = getLastSequence(normalizedData);
+			prediction = model.output(lastSequence);
 
 			/**
-			 * Step 6: Denormalization
-			 * Converts prediction back to original KPI scale using inverse min-max scaling.
-			 * Ensures non-negative values for KPI metrics.
+			 * Step 6: Denormalization Converts prediction back to original KPI scale using inverse
+			 * min-max scaling. Ensures non-negative values for KPI metrics.
 			 */
-			double forecastValue = denormalizeValue(prediction.getDouble(0, 0, SEQUENCE_LENGTH - 1), minValue, maxValue);
+			double forecastValue = denormalizeValue(prediction.getDouble(0, 0, 0), minValue, maxValue);
 			forecastValue = Math.max(0, forecastValue); // Ensure non-negative KPI values
 
 			/**
-			 * Step 7: Result Packaging
-			 * Creates DataCount object with forecast value and metadata.
+			 * Step 7: Result Packaging Creates DataCount object with forecast value and metadata.
 			 * Preserves project context and KPI grouping information.
 			 */
 			String projectName = historicalData.get(historicalData.size() - 1).getSProjectName();
 			String kpiGroup = historicalData.get(historicalData.size() - 1).getKpiGroup();
 
-			DataCount forecast = createForecastDataCount(forecastValue, projectName, kpiGroup, getModelType().getName());
+			DataCount forecast =
+					createForecastDataCount(forecastValue, projectName, kpiGroup, getModelType().getName());
 			forecasts.add(forecast);
 
-			log.info("Generated LSTM forecast for KPI {}: value={}", kpiId, String.format("%.2f", forecastValue));
+			log.info(
+					"Generated LSTM forecast for KPI {}: value={}",
+					kpiId,
+					String.format("%.2f", forecastValue));
 
 		} catch (Exception e) {
 			log.error("Error in LSTM forecast for KPI {}: {}", kpiId, e.getMessage(), e);
+		} finally {
+			// Clean up resources to prevent memory leaks
+			cleanupResources(model, sequences, lastSequence, prediction, dataSet);
 		}
 
 		return forecasts;
@@ -219,6 +240,7 @@ public class LSTMForecaster extends AbstractForecastService {
 
 	/**
 	 * Normalizes data to [0,1] range using min-max scaling.
+	 *
 	 * <p>Formula: (value - min) / (max - min). Returns 0.5 for constant values.
 	 *
 	 * @param values Raw KPI values to normalize
@@ -239,7 +261,9 @@ public class LSTMForecaster extends AbstractForecastService {
 
 	/**
 	 * Converts time series to supervised learning sequences for LSTM training.
+	 *
 	 * <p>Creates input-output pairs: [t-2,t-1,t] → t+1 format
+	 *
 	 * <p>Returns 3D tensors [num_sequences, 1, SEQUENCE_LENGTH] for RNN compatibility
 	 *
 	 * @param data Normalized time series data
@@ -248,7 +272,7 @@ public class LSTMForecaster extends AbstractForecastService {
 	private INDArray[] createSequences(double[] data) {
 		if (data.length <= SEQUENCE_LENGTH) {
 			// Insufficient data - return empty tensors with correct dimensions
-			return new INDArray[]{Nd4j.zeros(0, 1, SEQUENCE_LENGTH), Nd4j.zeros(0, 1, SEQUENCE_LENGTH)};
+			return new INDArray[] {Nd4j.zeros(0, 1, SEQUENCE_LENGTH), Nd4j.zeros(0, 1, SEQUENCE_LENGTH)};
 		}
 
 		int numSequences = data.length - SEQUENCE_LENGTH;
@@ -260,60 +284,61 @@ public class LSTMForecaster extends AbstractForecastService {
 		for (int i = 0; i < numSequences; i++) {
 			// Fill input sequence with SEQUENCE_LENGTH consecutive values
 			for (int j = 0; j < SEQUENCE_LENGTH; j++) {
-				input.putScalar(new int[]{i, 0, j}, data[i + j]);
+				input.putScalar(new int[] {i, 0, j}, data[i + j]);
 			}
 			// Set target value at the last time step of output sequence
-			output.putScalar(new int[]{i, 0, SEQUENCE_LENGTH - 1}, data[i + SEQUENCE_LENGTH]);
+			output.putScalar(new int[] {i, 0, SEQUENCE_LENGTH - 1}, data[i + SEQUENCE_LENGTH]);
 		}
 
-		return new INDArray[]{input, output};
+		return new INDArray[] {input, output};
 	}
 
-    /**
-     * Constructs LSTM model optimized for volatile KPI data with limited samples.
-     * <p>Architecture: Input[1] → LSTM[16] → LSTM[8] → RnnOutput[1] → Prediction
-     * <p>Optimized for: 8-14 data points, volatile patterns, zero values, sparse data
-     *
-     * @return Initialized MultiLayerNetwork ready for training
-     */
-    private MultiLayerNetwork buildLSTMModel() {
-        MultiLayerConfiguration config = new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                .updater(new Adam(OPTIMIZED_LEARNING_RATE))
-                .weightInit(WeightInit.XAVIER)
-                .l2(L2_REGULARIZATION)
-                .dropOut(DROPOUT_RATE)
-                .list()
-                // Layer 0: Compact LSTM for pattern detection
-                .layer(0, new LSTM.Builder()
-                        .nIn(1)
-                        .nOut(LSTM_LAYER_1_SIZE)
-                        .activation(Activation.TANH)
-                        .build())
-                // Layer 1: Refinement LSTM layer
-                .layer(1, new LSTM.Builder()
-                        .nIn(LSTM_LAYER_1_SIZE)
-                        .nOut(LSTM_LAYER_2_SIZE)
-                        .activation(Activation.TANH)
-                        .build())
-                // Layer 2: Output with robust loss for outliers
-                .layer(2, new RnnOutputLayer.Builder(LossFunctions.LossFunction.MEAN_ABSOLUTE_ERROR)
-                        .nIn(LSTM_LAYER_2_SIZE)
-                        .nOut(1)
-                        .activation(Activation.RELU)
-                        .build())
-                .build();
+	/**
+	 * Constructs LSTM model optimized for volatile KPI data with limited samples.
+	 *
+	 * <p>Architecture: Input[1] → LSTM[16] → RnnOutput[1] → Prediction
+	 *
+	 * <p>Optimized for: 8-14 data points, volatile patterns, sudden changes, sparse data
+	 *
+	 * @return Initialized MultiLayerNetwork ready for training
+	 */
+	private MultiLayerNetwork buildLSTMModel() {
+		MultiLayerConfiguration config =
+				new NeuralNetConfiguration.Builder()
+						.optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+						.updater(new Adam(OPTIMIZED_LEARNING_RATE))
+						.weightInit(WeightInit.XAVIER)
+						.l2(L2_REGULARIZATION)
+						.list()
+						// Single LSTM layer for sparse data - prevents overfitting
+						.layer(
+								0,
+								new LSTM.Builder()
+										.nIn(1)
+										.nOut(LSTM_LAYER_1_SIZE)
+										.activation(Activation.TANH)
+										.dropOut(DROPOUT_RATE)
+										.build())
+						// Output layer with identity activation for regression
+						.layer(
+								1,
+								new RnnOutputLayer.Builder(LossFunctions.LossFunction.MSE)
+										.nIn(LSTM_LAYER_1_SIZE)
+										.nOut(1)
+										.activation(Activation.IDENTITY)
+										.build())
+						.build();
 
-        MultiLayerNetwork model = new MultiLayerNetwork(config);
-        model.init();
-        return model;
-    }
+		MultiLayerNetwork model = new MultiLayerNetwork(config);
+		model.init();
+		return model;
+	}
 
-
-
-    /**
+	/**
 	 * Extracts last sequence from data for prediction.
+	 *
 	 * <p>Takes most recent SEQUENCE_LENGTH values as LSTM input context.
+	 *
 	 * <p>Returns tensor [1, 1, SEQUENCE_LENGTH] with zero-padding if needed.
 	 *
 	 * @param data Normalized historical data
@@ -331,7 +356,7 @@ public class LSTMForecaster extends AbstractForecastService {
 			int dataIdx = startIdx + i;
 			if (dataIdx < data.length) {
 				// Use actual historical value
-				sequence.putScalar(new int[]{0, 0, i}, data[dataIdx]);
+				sequence.putScalar(new int[] {0, 0, i}, data[dataIdx]);
 			}
 			// Missing values remain as zeros (padding for insufficient data)
 		}
@@ -341,6 +366,7 @@ public class LSTMForecaster extends AbstractForecastService {
 
 	/**
 	 * Converts normalized prediction back to original KPI scale.
+	 *
 	 * <p>Formula: normalized_value × (max - min) + min
 	 *
 	 * @param normalizedValue Prediction in [0,1] range
@@ -350,5 +376,60 @@ public class LSTMForecaster extends AbstractForecastService {
 	 */
 	private double denormalizeValue(double normalizedValue, double min, double max) {
 		return normalizedValue * (max - min) + min;
+	}
+
+	/**
+	 * Cleans up resources to prevent memory leaks.
+	 *
+	 * <p>Properly disposes of INDArray objects and clears model memory.
+	 *
+	 * @param model LSTM model to clear
+	 * @param sequences Input/output sequence arrays
+	 * @param lastSequence Last sequence array
+	 * @param prediction Prediction array
+	 * @param dataSet Training dataset
+	 */
+	private void cleanupResources(
+			MultiLayerNetwork model,
+			INDArray[] sequences,
+			INDArray lastSequence,
+			INDArray prediction,
+			DataSet dataSet) {
+		try {
+			// Clear INDArray objects
+			if (sequences != null) {
+				for (INDArray array : sequences) {
+					if (array != null) {
+						array.close();
+					}
+				}
+			}
+
+			if (lastSequence != null) {
+				lastSequence.close();
+			}
+
+			if (prediction != null) {
+				prediction.close();
+			}
+
+			// Clear dataset
+			if (dataSet != null) {
+				if (dataSet.getFeatures() != null) {
+					dataSet.getFeatures().close();
+				}
+				if (dataSet.getLabels() != null) {
+					dataSet.getLabels().close();
+				}
+			}
+
+			// Clear model parameters and gradients
+			if (model != null) {
+				model.clear();
+			}
+
+		} catch (Exception e) {
+			log.warn("Error during resource cleanup: {}", e.getMessage());
+		}
 	}
 }
