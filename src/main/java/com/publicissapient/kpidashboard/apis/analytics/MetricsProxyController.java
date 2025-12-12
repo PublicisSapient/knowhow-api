@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.analytics;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -39,6 +40,9 @@ public class MetricsProxyController {
 
 	@Autowired private RestTemplate restTemplate;
 
+	@Value("${analytics.pushgateway.url:http://localhost:9092}")
+	private String pushgatewayBaseUrl;
+
 	/**
 	 * Proxy endpoint to send metrics to Pushgateway This avoids CORS issues when sending directly
 	 * from frontend
@@ -50,7 +54,8 @@ public class MetricsProxyController {
 			log.debug("Metrics data: {}", request.getMetrics());
 
 			// Forward to Pushgateway
-			String pushgatewayUrl = "http://localhost:9092/metrics/job/knowhow/instance/frontend";
+			String pushgatewayUrl = pushgatewayBaseUrl + "/metrics/job/knowhow_ui";
+			log.info("Pushgateway URL: {}", pushgatewayUrl);
 
 			ResponseEntity<String> response =
 					restTemplate.postForEntity(pushgatewayUrl, request.getMetrics(), String.class);
