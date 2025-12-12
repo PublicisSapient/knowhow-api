@@ -132,7 +132,7 @@ public class JiraReleaseServiceRTest {
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
-		when(filterHelperService.getHierarachyLevelId(5, "release", false)).thenReturn("release");
+		when(filterHelperService.getHierarchyLevelId(5, "release", false)).thenReturn("release");
 
 		kpiRequest = createKpiRequest(5);
 
@@ -165,7 +165,7 @@ public class JiraReleaseServiceRTest {
 												s.getLeafNodeId()
 														.equalsIgnoreCase("38296_Scrum Project_6335363749794a18e8a4479b"))
 								.collect(Collectors.toList()));
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		when(cacheService.cacheFieldMappingMapData()).thenReturn(fieldMappingMap);
 		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 				.thenReturn(accountHierarchyDataList);

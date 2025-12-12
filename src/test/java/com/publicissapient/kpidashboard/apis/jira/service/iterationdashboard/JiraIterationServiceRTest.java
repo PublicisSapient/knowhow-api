@@ -141,7 +141,7 @@ public class JiraIterationServiceRTest {
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
-		when(filterHelperService.getHierarachyLevelId(5, "sprint", false)).thenReturn("sprint");
+		when(filterHelperService.getHierarchyLevelId(5, "sprint", false)).thenReturn("sprint");
 
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		List<SprintDetails> sprintDetails = sprintDetailsDataFactory.getSprintDetails();
