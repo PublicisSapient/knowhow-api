@@ -89,7 +89,15 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithScrumMethodology_Then_ReturnsScrumMaturityResponse() {
 		// Arrange
-		mockValidScrumScenario();
+		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
+		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
+				.thenReturn(Optional.of(testRequestedLevel));
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId("project"))
+				.thenReturn(Optional.of(testProjectLevel));
+		mockValidAccountData();
+		when(kpiMaturityCustomRepository.getLatestKpiMaturityByCalculationDateForProjects(anySet()))
+				.thenReturn(testKpiMaturityList);
 
 		// Act
 		KpiMaturityResponseDTO result = kpiMaturityService.getKpiMaturity(testKpiMaturityRequest);
@@ -142,7 +150,14 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithNoUserAccess_Then_ThrowsForbiddenException() {
 		// Arrange
-		mockNoUserAccessScenario();
+		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
+		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
+				.thenReturn(Optional.of(testRequestedLevel));
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId("project"))
+				.thenReturn(Optional.of(testProjectLevel));
+		when(accountHierarchyServiceImpl.getFilteredList(any(AccountFilterRequest.class)))
+				.thenReturn(Collections.emptySet());
 
 		// Act & Assert
 		ForbiddenException exception = assertThrows(ForbiddenException.class,
@@ -154,7 +169,12 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithNoKpiMaturityData_Then_ReturnsEmptyResponse() {
 		// Arrange
-		mockValidHierarchyData();
+		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
+		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
+				.thenReturn(Optional.of(testRequestedLevel));
+		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId("project"))
+				.thenReturn(Optional.of(testProjectLevel));
 		mockValidAccountData();
 		when(kpiMaturityCustomRepository.getLatestKpiMaturityByCalculationDateForProjects(anySet()))
 				.thenReturn(Collections.emptyList());
@@ -212,36 +232,6 @@ class KpiMaturityServiceTest {
 
 		// Assert
 		assertEquals("Unhealthy", result);
-	}
-
-	@Test
-	void when_RequestedLevelIsNotSupportedCalledWithUnsupportedLevel_Then_ReturnsTrue() {
-		// Arrange
-		HierarchyLevel unsupportedLevel = HierarchyLevel.builder().level(6).build();
-		HierarchyLevel projectLevel = HierarchyLevel.builder().level(5).build();
-
-		// Act
-		boolean result = Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(kpiMaturityService,
-				"requestedLevelIsNotSupported", unsupportedLevel, projectLevel, null));
-
-		// Assert
-		assertTrue(result);
-	}
-
-	@Test
-	void when_RequestedLevelIsNotSupportedCalledWithSupportedLevel_Then_ReturnsFalse() {
-		// Arrange
-		HierarchyLevel supportedLevel = HierarchyLevel.builder().level(3).build();
-		HierarchyLevel projectLevel = HierarchyLevel.builder().level(5).build();
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelNumber(4))
-				.thenReturn(Optional.of(HierarchyLevel.builder().level(4).build()));
-
-		// Act
-		boolean result = Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(kpiMaturityService,
-				"requestedLevelIsNotSupported", supportedLevel, projectLevel, null));
-
-		// Assert
-		assertFalse(result);
 	}
 
 	@Test
@@ -311,32 +301,8 @@ class KpiMaturityServiceTest {
 		return List.of(kpiMaturity1, kpiMaturity2);
 	}
 
-	private void mockValidScrumScenario() {
-		mockValidHierarchyData();
-		mockValidAccountData();
-		when(kpiMaturityCustomRepository.getLatestKpiMaturityByCalculationDateForProjects(anySet()))
-				.thenReturn(testKpiMaturityList);
-	}
-
-	private void mockValidHierarchyData() {
-		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
-		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
-				.thenReturn(Optional.of(testRequestedLevel));
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelId("project"))
-				.thenReturn(Optional.of(testProjectLevel));
-		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelNumber(4))
-				.thenReturn(Optional.of(HierarchyLevel.builder().level(4).build()));
-	}
-
 	private void mockValidAccountData() {
 		when(accountHierarchyServiceImpl.getFilteredList(any(AccountFilterRequest.class)))
 				.thenReturn(testAccountFilteredData);
-	}
-
-	private void mockNoUserAccessScenario() {
-		mockValidHierarchyData();
-		when(accountHierarchyServiceImpl.getFilteredList(any(AccountFilterRequest.class)))
-				.thenReturn(Collections.emptySet());
 	}
 }
