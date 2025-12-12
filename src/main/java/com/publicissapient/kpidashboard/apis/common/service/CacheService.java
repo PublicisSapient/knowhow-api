@@ -78,7 +78,7 @@ public interface CacheService {
 	 * @param sprintIncluded sprintIncluded
 	 * @return
 	 */
-	public Object getFromApplicationCache(
+	Object getFromApplicationCache(
 			String[] keyList, String kpiSource, Integer groupId, List<String> sprintIncluded);
 
 	Object cacheProjectConfigMapData();

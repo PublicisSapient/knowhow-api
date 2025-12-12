@@ -82,7 +82,9 @@ public class AIUsageService {
 		validateLevelName(levelName);
 		validateDates(startDate, endDate);
 
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = fetchHierarchiesForCurrentLevel(levelName);
+		HierarchyLevelType level = HierarchyLevelType.fromLevelName(levelName.toLowerCase());
+
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = fetchHierarchiesForCurrentLevel(level.getHierarchyLabel());
 
 		List<AIUsageStatistics> responseList = new ArrayList<>();
 		for (AccountFilteredData hierarchy : hierarchyDataUserHasAccessTo) {
@@ -110,7 +112,7 @@ public class AIUsageService {
 												   AccountFilteredData hierarchy,
 												   List<AIUsageStatistics> responseList) {
 		if (hierarchy.getLabelName() != null) {
-			switch (HierarchyLevelType.fromLevelName(hierarchy.getLabelName().toLowerCase())) {
+			switch (HierarchyLevelType.fromHierarchyLevel(hierarchy.getLabelName().toLowerCase())) {
 				case BUSINESS_UNIT -> {
 					AIUsageStatistics buStats = constructResponseForBusinessUnit(hierarchy, startDate, endDate);
 					if (buStats != null) {

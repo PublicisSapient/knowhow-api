@@ -99,7 +99,7 @@ public class JiraServiceR {
 		try {
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
 			String groupName =
-					filterHelperService.getHierarachyLevelId(
+					filterHelperService.getHierarchyLevelId(
 							kpiRequest.getLevel(), kpiRequest.getLabel(), false);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
@@ -127,7 +127,7 @@ public class JiraServiceR {
 								kpiRequest,
 								filteredAccountDataList,
 								null,
-								filterHelperService.getFirstHierarachyLevel(),
+								filterHelperService.getFirstHierarchyLevel(),
 								filterHelperService
 										.getHierarchyIdLevelMap(false)
 										.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, 0));

@@ -65,9 +65,7 @@ public class AIUsageStatisticsDTO {
 		if (aiUsageStatistics.getLevelType() == null) {
 			this.levelName = StringUtils.EMPTY;
 		} else {
-			this.levelName = Objects.toString(
-					HierarchyLevelType.valueOf(aiUsageStatistics.getLevelType()).getLevelName(),
-					StringUtils.EMPTY);
+			this.levelName = aiUsageStatistics.getLevelType();
 		}
 		this.organizationEntityName = Objects.toString(aiUsageStatistics.getLevelName(), StringUtils.EMPTY);
 		this.statsDate = aiUsageStatistics.getStatsDate();

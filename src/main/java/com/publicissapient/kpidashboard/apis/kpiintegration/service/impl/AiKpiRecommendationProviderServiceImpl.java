@@ -108,7 +108,7 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 	 *     prompts.
 	 */
 	private Map<String, Object> extractKpiData(KpiRequest kpiRequest) {
-		List<KpiElement> kpiElements = kpiIntegrationService.getKpiResponses(kpiRequest);
+		List<KpiElement> kpiElements = kpiIntegrationService.processScrumKpiRequest(kpiRequest);
 		Map<String, Object> kpiDataMap = new HashMap<>();
 
 		kpiElements.forEach(
