@@ -114,7 +114,6 @@ public class RecommendationService {
 	 */
 	public ServiceResponse getRecommendationsForLevel(RecommendationRequest recommendationRequest) {
 		validateRecommendationRequest(recommendationRequest);
-		long startTime = System.currentTimeMillis();
 
 		log.info("Started getting recommendations for level: {} with parentNodeId: {}",
 				recommendationRequest.levelName(), recommendationRequest.parentNodeId());
@@ -348,8 +347,26 @@ public class RecommendationService {
 					requestData.hierarchyLevelsData.projectLevel.getLevel());
 		}
 
-		return projectsByParentNode.values().stream().flatMap(Collection::stream)
-				.map(AccountFilteredData::getBasicProjectConfigId).filter(Objects::nonNull).map(ObjectId::toHexString)
+		List<AccountFilteredData> allProjects = projectsByParentNode.values().stream()
+				.flatMap(Collection::stream).toList();
+		
+		List<String> onHoldProjectIds = allProjects.stream()
+				.filter(AccountFilteredData::isOnHold)
+				.map(AccountFilteredData::getBasicProjectConfigId)
+				.filter(Objects::nonNull)
+				.map(ObjectId::toHexString)
+				.toList();
+		
+		if (CollectionUtils.isNotEmpty(onHoldProjectIds)) {
+			log.info("Filtered out {} on-hold projects from recommendations: {}", 
+					onHoldProjectIds.size(), onHoldProjectIds);
+		}
+		
+		return allProjects.stream()
+				.filter(project -> !project.isOnHold())
+				.map(AccountFilteredData::getBasicProjectConfigId)
+				.filter(Objects::nonNull)
+				.map(ObjectId::toHexString)
 				.collect(Collectors.toSet());
 	}
 
