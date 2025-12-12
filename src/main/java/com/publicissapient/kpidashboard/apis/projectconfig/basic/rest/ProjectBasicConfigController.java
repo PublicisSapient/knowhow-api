@@ -18,7 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.projectconfig.basic.rest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,8 +42,6 @@ import com.publicissapient.kpidashboard.apis.abac.ContextAwarePolicyEnforcement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ProjectConfigResponse;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.model.HierarchyResponseDTO;
@@ -81,8 +78,6 @@ public class ProjectBasicConfigController {
 	@Autowired private ProjectAccessManager projectAccessManager;
 
 	@Autowired private AuthenticationService authenticationService;
-
-	@Autowired private CustomApiConfig customApiConfig;
 
 	/**
 	 * Returns the list of project's basic configuration.
@@ -252,19 +247,10 @@ public class ProjectBasicConfigController {
 	 * @return list of Scrum project list with hierarchy details at least one connected tool
 	 */
 	@GetMapping(value = "/hierarchyResponses")
-	public ResponseEntity<List<HierarchyResponseDTO>> getAllHierarchyResponse(
-			HttpServletRequest request) {
-		String apiKey = customApiConfig.getxApiKey();
-		boolean isApiAuth =
-				StringUtils.isNotEmpty(apiKey)
-						&& apiKey.equalsIgnoreCase(request.getHeader(Constant.TOKEN_KEY));
-		if (isApiAuth) {
-			List<HierarchyResponseDTO> hierarchyData = projectBasicConfigService.getHierarchyData();
-			List<HierarchyResponseDTO> filteredHierarchyData =
-					projectBasicConfigService.filterHierarchyDTOsWithConnectedTools(hierarchyData);
-			return ResponseEntity.status(HttpStatus.OK).body(filteredHierarchyData);
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.emptyList());
-		}
+	public ResponseEntity<List<HierarchyResponseDTO>> getAllHierarchyResponse() {
+		List<HierarchyResponseDTO> hierarchyData = projectBasicConfigService.getHierarchyData();
+		List<HierarchyResponseDTO> filteredHierarchyData =
+				projectBasicConfigService.filterHierarchyDTOsWithConnectedTools(hierarchyData);
+		return ResponseEntity.status(HttpStatus.OK).body(filteredHierarchyData);
 	}
 }
