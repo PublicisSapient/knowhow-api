@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityRequest;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityResponseDTO;
 import com.publicissapient.kpidashboard.apis.kpimaturity.service.KpiMaturityService;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,12 +50,12 @@ public class KpiMaturityController {
 	@Operation(summary = "Retrieve KPI Maturity Assessment", description = "Fetches KPI maturity data based on organizational level, delivery methodology, and optional parent node. "
 			+ "This endpoint provides comprehensive maturity metrics for performance indicators at different organizational levels.", operationId = "getKpiMaturity")
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved KPI maturity data", content = @Content(mediaType = "application/json", schema = @Schema(implementation = KpiMaturityResponseDTO.class))),
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved KPI maturity data", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
 			@ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(mediaType = "application/json")),
 			@ApiResponse(responseCode = "404", description = "KPI maturity data not found for the specified parameters", content = @Content(mediaType = "application/json")),
 			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json")) })
 	@GetMapping({ "", "/" })
-	public ResponseEntity<KpiMaturityResponseDTO> getKpiMaturity(
+	public ResponseEntity<ServiceResponse> getKpiMaturity(
 			@Parameter(name = "levelName", description = "The organizational level name for which KPI maturity is "
 					+ "requested", required = true, example = "engagement") @RequestParam @NotBlank(message = "The 'levelName' is required") String levelName,
 

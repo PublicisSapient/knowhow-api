@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.MapUtils;
 
@@ -34,15 +35,13 @@ import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServ
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceKanbanImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.BoardMaturityDTO;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.ColumnDefinitionDTO;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityDashboardDataDTO;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityMatrixDTO;
 import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityRequest;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityResponseDTO;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.OrganizationEntityMaturityMetricsDTO;
+import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityResponse;
+import com.publicissapient.kpidashboard.apis.kpimaturity.dto.MaturityScore;
+import com.publicissapient.kpidashboard.apis.kpimaturity.dto.OrganizationEntityKpiMaturity;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.kpimaturity.organization.KpiMaturity;
@@ -89,9 +88,11 @@ public class KpiMaturityService {
 	private static final int EFFICIENCY_PERCENTAGE_HEALTHY = 80;
 	/** Efficiency percentage threshold for moderate classification (50%) */
 	private static final int EFFICIENCY_PERCENTAGE_MODERATE = 50;
+	private static final int ROUNDING_SCALE_2 = 2;
 
 	private static final String PROJECT_HAS_NO_KPI_MATURITY_DATA_L0G_MESSAGE = "No kpi maturity data was found for "
 			+ "project with node id {} and name {}";
+	private static final String ORGANIZATION_KPI_MATURITY_SUCCESSFULLY_RETRIEVED_MESSAGE = "Successfully retrieved the organization kpi maturity data";
 
 	private final KpiMaturityCustomRepository kpiMaturityCustomRepository;
 
@@ -108,7 +109,7 @@ public class KpiMaturityService {
 	 *            Lookup structure for organizational hierarchy navigation
 	 */
 	@Builder
-	private record KpiMaturityComputationData(HierarchyLevelsData hierarchyLevelsData,
+	private record KpiMaturityCalculationContext(HierarchyLevelsData hierarchyLevelsData,
 			OrganizationLookup organizationLookup) {
 	}
 
@@ -140,9 +141,10 @@ public class KpiMaturityService {
 	 * @return KpiMaturityResponseDTO containing maturity metrics, health
 	 *         indicators, and dashboard data
 	 */
-	public KpiMaturityResponseDTO getKpiMaturity(KpiMaturityRequest kpiMaturityRequest) {
-		KpiMaturityComputationData kpiMaturityComputationData = createKpiMaturityComputationData(kpiMaturityRequest);
-		return processKpiMaturityRequest(kpiMaturityRequest, kpiMaturityComputationData);
+	public ServiceResponse getKpiMaturity(KpiMaturityRequest kpiMaturityRequest) {
+		KpiMaturityCalculationContext kpiMaturityCalculationContext = createKpiMaturityComputationData(
+				kpiMaturityRequest);
+		return processKpiMaturityRequest(kpiMaturityRequest, kpiMaturityCalculationContext);
 	}
 
 	/**
@@ -161,15 +163,15 @@ public class KpiMaturityService {
 	 *
 	 * @param kpiMaturityRequest
 	 *            The original request containing filtering criteria
-	 * @param kpiMaturityComputationData
+	 * @param kpiMaturityCalculationContext
 	 *            Pre-computed hierarchy and lookup data
 	 * @return KpiMaturityResponseDTO with matrix data containing rows and columns
 	 *         for dashboard display
 	 */
-	private KpiMaturityResponseDTO processKpiMaturityRequest(KpiMaturityRequest kpiMaturityRequest,
-			KpiMaturityComputationData kpiMaturityComputationData) {
+	private ServiceResponse processKpiMaturityRequest(KpiMaturityRequest kpiMaturityRequest,
+			KpiMaturityCalculationContext kpiMaturityCalculationContext) {
 		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds = createProjectChildrenGroupedByRequestedRootNodeIdsMap(
-				kpiMaturityRequest, kpiMaturityComputationData);
+				kpiMaturityRequest, kpiMaturityCalculationContext);
 
 		Set<String> projectNodeIds = projectChildrenGroupedByRequestedRootNodeIds.values().stream()
 				.flatMap(Collection::stream).map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
@@ -181,270 +183,92 @@ public class KpiMaturityService {
 		if (MapUtils.isEmpty(kpiMaturityGroupedByNodeId)) {
 			log.info("No kpi maturity data could be found for requested projects {}",
 					projectChildrenGroupedByRequestedRootNodeIds.keySet());
-			return KpiMaturityResponseDTO.builder().build();
+			return new ServiceResponse(Boolean.TRUE, ORGANIZATION_KPI_MATURITY_SUCCESSFULLY_RETRIEVED_MESSAGE,
+					new KpiMaturityResponse());
 		}
 
 		Map<String, AccountFilteredData> rootNodesGroupedById = new HashMap<>();
 
 		projectChildrenGroupedByRequestedRootNodeIds.keySet().forEach(rootNodeId -> {
-			if (kpiMaturityComputationData.organizationLookup.getAccountDataByNodeId(rootNodeId) != null) {
-				rootNodesGroupedById.computeIfAbsent(rootNodeId, value -> kpiMaturityComputationData.organizationLookup
-						.getAccountDataByNodeId(rootNodeId).get(0));
+			if (kpiMaturityCalculationContext.organizationLookup.getAccountDataByNodeId(rootNodeId) != null) {
+				rootNodesGroupedById.computeIfAbsent(rootNodeId,
+						value -> kpiMaturityCalculationContext.organizationLookup.getAccountDataByNodeId(rootNodeId)
+								.get(0));
 			}
 		});
+		return new ServiceResponse(Boolean.TRUE, ORGANIZATION_KPI_MATURITY_SUCCESSFULLY_RETRIEVED_MESSAGE,
+				computeKpiMaturityResponse(projectChildrenGroupedByRequestedRootNodeIds, kpiMaturityCalculationContext,
+						kpiMaturityGroupedByNodeId));
+	}
 
-		List<OrganizationEntityMaturityMetricsDTO> rows = new ArrayList<>();
-
-		List<ColumnDefinitionDTO> columns = constructColumnDefinitions(
-				kpiMaturityGroupedByNodeId.values().stream().toList().get(0),
-				kpiMaturityComputationData.hierarchyLevelsData);
-
+	@SuppressWarnings("java:S1774")
+	private KpiMaturityResponse computeKpiMaturityResponse(
+			Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds,
+			KpiMaturityCalculationContext kpiMaturityCalculationContext,
+			Map<String, KpiMaturity> kpiMaturityGroupedByNodeId) {
+		List<OrganizationEntityKpiMaturity> details = new ArrayList<>();
+		Map<String, List<Double>> maturityScoresGroupedByCategoryForSummaryComputation = new HashMap<>();
+		double efficiencyPercentagesForSummaryComputation = 0.0D;
+		int totalNumberOfProjectsWithKpiMaturityData = 0;
 		for (Map.Entry<String, List<AccountFilteredData>> projectsGroupedByRootNodeId : projectChildrenGroupedByRequestedRootNodeIds
 				.entrySet()) {
-			computeOrganizationEntityMaturityMetrics(kpiMaturityComputationData, projectsGroupedByRootNodeId.getKey(),
-					projectsGroupedByRootNodeId.getValue(), kpiMaturityGroupedByNodeId).ifPresent(rows::add);
-		}
-		return KpiMaturityResponseDTO.builder().data(KpiMaturityDashboardDataDTO.builder()
-				.matrix(KpiMaturityMatrixDTO.builder().rows(rows).columns(columns).build()).build()).build();
-	}
+			AccountFilteredData rootNode = kpiMaturityCalculationContext.organizationLookup
+					.getAccountDataByNodeId(projectsGroupedByRootNodeId.getKey()).get(0);
 
-	/**
-	 * Computes maturity metrics for a specific organizational entity based on its
-	 * child projects.
-	 *
-	 * <p>
-	 * This method aggregates KPI maturity data from multiple projects under an
-	 * organizational entity to calculate overall maturity scores, efficiency
-	 * percentages, and health indicators. The computation includes:
-	 * </p>
-	 *
-	 * <ul>
-	 * <li>Efficiency percentage averaging across projects with data</li>
-	 * <li>Maturity score aggregation by KPI category (speed, quality, efficiency,
-	 * etc.)</li>
-	 * <li>Health classification based on overall efficiency</li>
-	 * <li>Board maturity metrics calculation using ceiling function</li>
-	 * </ul>
-	 *
-	 * <p>
-	 * Projects without KPI maturity data are logged but do not contribute to
-	 * calculations. If no projects have maturity data, an empty Optional is
-	 * returned.
-	 * </p>
-	 *
-	 * @param kpiMaturityComputationData
-	 *            Computation context with hierarchy and lookup data
-	 * @param rootNodeId
-	 *            The ID of the organizational entity being analyzed
-	 * @param projectEntities
-	 *            List of project entities under the organizational entity
-	 * @param kpiMaturityGroupedByNodeId
-	 *            Map of project node IDs to their KPI maturity data
-	 * @return Optional containing computed maturity metrics, or empty if no data
-	 *         available
-	 */
-	private Optional<OrganizationEntityMaturityMetricsDTO> computeOrganizationEntityMaturityMetrics(
-			KpiMaturityComputationData kpiMaturityComputationData, String rootNodeId,
-			List<AccountFilteredData> projectEntities, Map<String, KpiMaturity> kpiMaturityGroupedByNodeId) {
+			int numberOfProjectsWithKpiMaturityData = 0;
+			double efficiencyPercentages = 0.0D;
 
-		AccountFilteredData rootNode = kpiMaturityComputationData.organizationLookup.getAccountDataByNodeId(rootNodeId)
-				.get(0);
+			Map<String, List<Double>> maturityScoresGroupedByCategory = new HashMap<>();
+			for (AccountFilteredData projectAccountData : projectsGroupedByRootNodeId.getValue()) {
+				KpiMaturity kpiMaturity = kpiMaturityGroupedByNodeId.get(projectAccountData.getNodeId());
+				if (kpiMaturity != null) {
+					numberOfProjectsWithKpiMaturityData++;
+					totalNumberOfProjectsWithKpiMaturityData++;
+					efficiencyPercentages += kpiMaturity.getEfficiency().getPercentage();
+					efficiencyPercentagesForSummaryComputation += kpiMaturity.getEfficiency().getPercentage();
+					kpiMaturity.getMaturityScores().forEach(maturityScore -> {
+						maturityScoresGroupedByCategory.computeIfAbsent(maturityScore.getKpiCategory(),
+								value -> new ArrayList<>());
+						maturityScoresGroupedByCategoryForSummaryComputation
+								.computeIfAbsent(maturityScore.getKpiCategory(), value -> new ArrayList<>());
+						double score = maturityScore.getScore() == null ? 0.0D : maturityScore.getScore();
+						maturityScoresGroupedByCategory.get(maturityScore.getKpiCategory()).add(score);
+						maturityScoresGroupedByCategoryForSummaryComputation.get(maturityScore.getKpiCategory())
+								.add(score);
+					});
+				} else {
+					log.info(PROJECT_HAS_NO_KPI_MATURITY_DATA_L0G_MESSAGE, projectAccountData.getNodeId(),
+							projectAccountData.getNodeName());
+				}
+			}
+			if (numberOfProjectsWithKpiMaturityData != 0) {
+				List<MaturityScore> maturityScores = computeMaturityScores(maturityScoresGroupedByCategory,
+						numberOfProjectsWithKpiMaturityData);
 
-		int numberOfProjectsWithKpiMaturityData = 0;
-		double efficiencyPercentages = 0.0D;
+				double overallEfficiencyPercentage = efficiencyPercentages / numberOfProjectsWithKpiMaturityData;
 
-		Map<String, List<Double>> maturityScoresGroupedByCategory = new HashMap<>();
-		for (AccountFilteredData projectAccountData : projectEntities) {
-			KpiMaturity kpiMaturity = kpiMaturityGroupedByNodeId.get(projectAccountData.getNodeId());
-			if (kpiMaturity != null) {
-				numberOfProjectsWithKpiMaturityData++;
-				efficiencyPercentages += kpiMaturity.getEfficiency().getPercentage();
-				kpiMaturity.getMaturityScores().forEach(maturityScore -> {
-					maturityScoresGroupedByCategory.computeIfAbsent(maturityScore.getKpiCategory(),
-							value -> new ArrayList<>());
-					double score;
-					if (maturityScore.getScore() == null) {
-						score = 0.0D;
-					} else {
-						score = maturityScore.getScore();
-					}
-					maturityScoresGroupedByCategory.get(maturityScore.getKpiCategory()).add(score);
-				});
+				details.add(OrganizationEntityKpiMaturity.builder().organizationEntityNodeId(rootNode.getNodeId())
+						.levelName(kpiMaturityCalculationContext.hierarchyLevelsData.requestedLevel
+								.getHierarchyLevelName())
+						.organizationEntityName(rootNode.getNodeName()).maturityScores(maturityScores)
+						.health(determineHealthByEfficiencyPercentage(overallEfficiencyPercentage))
+						.completionPercentage((double) Math.round(overallEfficiencyPercentage)).build());
 			} else {
-				log.info(PROJECT_HAS_NO_KPI_MATURITY_DATA_L0G_MESSAGE, projectAccountData.getNodeId(),
-						projectAccountData.getNodeName());
+				log.info("The organization entity root with node id {} and name {} did not have any projects "
+						+ "containing productivity data", rootNode.getNodeId(), rootNode.getNodeName());
 			}
 		}
-		if (numberOfProjectsWithKpiMaturityData != 0) {
-			Map<String, String> metrics = computeBoardMaturityMetrics(maturityScoresGroupedByCategory,
-					numberOfProjectsWithKpiMaturityData);
-
-			double overallEfficiencyPercentage = efficiencyPercentages / numberOfProjectsWithKpiMaturityData;
-
-			return Optional.of(OrganizationEntityMaturityMetricsDTO.builder().id(rootNode.getNodeId())
-					.name(rootNode.getNodeName()).boardMaturity(BoardMaturityDTO.builder().metrics(metrics).build())
-					.health(determineHealthByEfficiencyPercentage(overallEfficiencyPercentage))
-					.completion((Math.round(overallEfficiencyPercentage) + "%")).build());
-		} else {
-			log.info("The organization entity root with node id {} and name {} did not have any projects "
-					+ "containing productivity data", rootNode.getNodeId(), rootNode.getNodeName());
-		}
-		return Optional.empty();
-	}
-
-	/**
-	 * Creates a mapping of organizational entities to their child projects based on
-	 * the request parameters.
-	 *
-	 * <p>
-	 * This method handles two scenarios:
-	 * </p>
-	 * <ol>
-	 * <li><strong>Filtered by Parent:</strong> When a parent node ID is provided,
-	 * it finds children at the requested level under that parent, then maps each to
-	 * their project children</li>
-	 * <li><strong>Unfiltered:</strong> When no parent is specified, it finds all
-	 * entities at the requested level and maps each to their project children</li>
-	 * </ol>
-	 *
-	 * <p>
-	 * The resulting map structure enables efficient processing of organizational
-	 * hierarchies by grouping projects under their parent organizational entities.
-	 * </p>
-	 *
-	 * @param kpiMaturityRequest
-	 *            The request containing optional parent node filtering
-	 * @param kpiMaturityComputationData
-	 *            Computation context with hierarchy levels and organization lookup
-	 * @return Map where keys are organizational entity node IDs and values are
-	 *         lists of their child projects
-	 */
-	private static Map<String, List<AccountFilteredData>> createProjectChildrenGroupedByRequestedRootNodeIdsMap(
-			KpiMaturityRequest kpiMaturityRequest, KpiMaturityComputationData kpiMaturityComputationData) {
-
-		if (StringUtils.isNotBlank(kpiMaturityRequest.parentNodeId())) {
-			List<AccountFilteredData> childrenByParentNodeId = kpiMaturityComputationData.organizationLookup()
-					.getChildrenByParentNodeId(kpiMaturityRequest.parentNodeId(),
-							kpiMaturityComputationData.hierarchyLevelsData.requestedLevel.getLevel());
-
-			Set<String> childrenNodeIds = childrenByParentNodeId.stream().map(AccountFilteredData::getNodeId)
-					.collect(Collectors.toSet());
-			return kpiMaturityComputationData.organizationLookup().getChildrenGroupedByParentNodeIds(childrenNodeIds,
-					kpiMaturityComputationData.hierarchyLevelsData.projectLevel.getLevel());
-		}
-
-		return kpiMaturityComputationData.organizationLookup().getChildrenGroupedByParentNodeIds(
-				kpiMaturityComputationData.hierarchyLevelsData.requestedLevel.getLevel(),
-				kpiMaturityComputationData.hierarchyLevelsData.projectLevel.getLevel());
-	}
-
-	/**
-	 * Computes board maturity metrics by aggregating and averaging maturity scores
-	 * across categories.
-	 *
-	 * <p>
-	 * This method calculates maturity levels for each KPI category (e.g., speed,
-	 * quality, efficiency) using the formula:
-	 * <code>M[score] = ceil(sum_of_category_scores / number_of_projects)</code>
-	 * </p>
-	 *
-	 * <p>
-	 * The resulting metrics use the "M" prefix followed by the calculated maturity
-	 * level, providing a standardized representation of organizational maturity
-	 * across different KPI categories.
-	 * </p>
-	 *
-	 * <p>
-	 * <strong>Example:</strong> If speed scores are [3.0, 4.0, 5.0] across 2
-	 * projects, the result would be "M6" (ceil((3+4+5)/2) = ceil(6) = 6)
-	 * </p>
-	 *
-	 * @param maturityScoresGroupedByCategory
-	 *            Map of KPI categories to their score lists
-	 * @param numberOfProjectsWithKpiMaturityData
-	 *            Number of projects contributing to the calculation
-	 * @return Map of KPI categories to their computed maturity metrics (e.g.,
-	 *         "speed" -> "M4")
-	 */
-	private static Map<String, String> computeBoardMaturityMetrics(
-			Map<String, List<Double>> maturityScoresGroupedByCategory, int numberOfProjectsWithKpiMaturityData) {
-		Map<String, String> metrics = new HashMap<>();
-		for (Map.Entry<String, List<Double>> categoryMaturityScoreEntry : maturityScoresGroupedByCategory.entrySet()) {
-			if (CollectionUtils.isNotEmpty(categoryMaturityScoreEntry.getValue())) {
-				metrics.put(categoryMaturityScoreEntry.getKey(),
-						"M" + (int) Math
-								.ceil(categoryMaturityScoreEntry.getValue().stream().mapToDouble(score -> score).sum()
-										/ numberOfProjectsWithKpiMaturityData));
-			}
-		}
-		return metrics;
-	}
-
-	private static String determineHealthByEfficiencyPercentage(double overallEfficiencyPercentage) {
-		if (overallEfficiencyPercentage >= EFFICIENCY_PERCENTAGE_HEALTHY) {
-			return "Healthy";
-		}
-		if (overallEfficiencyPercentage >= EFFICIENCY_PERCENTAGE_MODERATE) {
-			return "Moderate";
-		}
-		return "Unhealthy";
-	}
-
-	/**
-	 * Constructs column definitions for the KPI maturity dashboard matrix.
-	 *
-	 * <p>
-	 * This method creates both static and dynamic columns for the dashboard
-	 * display:
-	 * </p>
-	 *
-	 * <h4>Static Columns (always present):</h4>
-	 * <ul>
-	 * <li><strong>Project ID:</strong> Unique identifier for the organizational
-	 * entity</li>
-	 * <li><strong>[Level] Name:</strong> Name of the entity at the requested
-	 * hierarchy level</li>
-	 * <li><strong>Efficiency(%):</strong> Overall efficiency percentage</li>
-	 * <li><strong>Overall Health:</strong> Health classification
-	 * (Healthy/Moderate/Unhealthy)</li>
-	 * </ul>
-	 *
-	 * <h4>Dynamic Columns (based on available KPI categories):</h4>
-	 * <ul>
-	 * <li>Generated from maturity score categories in the KPI data</li>
-	 * <li>Special handling for "DORA" category (displayed as uppercase)</li>
-	 * <li>Other categories are capitalized (e.g., "speed" -> "Speed")</li>
-	 * </ul>
-	 *
-	 * @param kpiMaturity
-	 *            Sample KPI maturity data used to determine available categories
-	 * @param hierarchyLevelsData
-	 *            Hierarchy information for generating level-specific headers
-	 * @return List of column definitions for dashboard matrix display
-	 */
-	private static List<ColumnDefinitionDTO> constructColumnDefinitions(KpiMaturity kpiMaturity,
-			HierarchyLevelsData hierarchyLevelsData) {
-		List<ColumnDefinitionDTO> columns = new ArrayList<>();
-
-		// Add static columns
-		columns.add(ColumnDefinitionDTO.builder().field("id").header("Project ID").build());
-		columns.add(ColumnDefinitionDTO.builder().field("name")
-				.header(hierarchyLevelsData.requestedLevel.getHierarchyLevelName() + " Name").build());
-		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Efficiency(%)").build());
-		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall Health").build());
-
-		// Add dynamic board columns
-		kpiMaturity.getMaturityScores().forEach(maturityScore -> {
-			String fieldName = maturityScore.getKpiCategory().toLowerCase();
-			String header;
-			if ("dora".equalsIgnoreCase(maturityScore.getKpiCategory())) {
-				header = "DORA";
-			} else {
-				header = StringUtils.capitalize(maturityScore.getKpiCategory());
-			}
-			columns.add(ColumnDefinitionDTO.builder().field(fieldName).header(header).build());
-		});
-		return columns;
+		double overallEfficiencyPercentage = efficiencyPercentagesForSummaryComputation
+				/ totalNumberOfProjectsWithKpiMaturityData;
+		KpiMaturityResponse kpiMaturityResponse = new KpiMaturityResponse();
+		kpiMaturityResponse.setSummary(OrganizationEntityKpiMaturity.builder()
+				.levelName(kpiMaturityCalculationContext.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+				.maturityScores(computeMaturityScores(maturityScoresGroupedByCategoryForSummaryComputation,
+						totalNumberOfProjectsWithKpiMaturityData))
+				.health(determineHealthByEfficiencyPercentage(overallEfficiencyPercentage))
+				.completionPercentage((double) Math.round(overallEfficiencyPercentage)).build());
+		kpiMaturityResponse.setDetails(details);
+		return kpiMaturityResponse;
 	}
 
 	/**
@@ -476,15 +300,14 @@ public class KpiMaturityService {
 	 * @return KpiMaturityComputationData containing validated hierarchy and lookup
 	 *         structures
 	 */
-	private KpiMaturityComputationData createKpiMaturityComputationData(KpiMaturityRequest kpiMaturityRequest) {
+	private KpiMaturityCalculationContext createKpiMaturityComputationData(KpiMaturityRequest kpiMaturityRequest) {
 		if (kpiMaturityRequest == null) {
 			throw new BadRequestException("Received null KPI maturity request");
 		}
-		KpiMaturityComputationData.KpiMaturityComputationDataBuilder kpiMaturityComputationDataBuilder = KpiMaturityComputationData
+		KpiMaturityCalculationContext.KpiMaturityCalculationContextBuilder kpiMaturityComputationDataBuilder = KpiMaturityCalculationContext
 				.builder();
 		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(
-				kpiMaturityRequest.levelName(), kpiMaturityRequest.deliveryMethodology()
-		);
+				kpiMaturityRequest.levelName(), kpiMaturityRequest.deliveryMethodology());
 		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData,
 				kpiMaturityRequest.deliveryMethodology());
 
@@ -580,14 +403,24 @@ public class KpiMaturityService {
 					.format("Multiple hierarchy levels were found corresponding to the level name '%s'", levelName));
 		}
 
-		Optional<HierarchyLevel> requestedHierarchyLevelOptional = this.accountHierarchyServiceImpl
-				.getHierarchyLevelByLevelName(levelName);
+		Optional<HierarchyLevel> requestedHierarchyLevelOptional = Optional.empty();
+		Optional<HierarchyLevel> projectHierarchyLevelOptional = Optional.empty();
+
+		if (deliveryMethodology == ProjectDeliveryMethodology.KANBAN) {
+			requestedHierarchyLevelOptional = this.accountHierarchyServiceKanbanImpl
+					.getHierarchyLevelByLevelName(levelName);
+			projectHierarchyLevelOptional = this.accountHierarchyServiceKanbanImpl
+					.getHierarchyLevelByLevelId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		} else if (deliveryMethodology == ProjectDeliveryMethodology.SCRUM) {
+			requestedHierarchyLevelOptional = this.accountHierarchyServiceImpl.getHierarchyLevelByLevelName(levelName);
+			projectHierarchyLevelOptional = this.accountHierarchyServiceImpl
+					.getHierarchyLevelByLevelId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		}
+
 		if (requestedHierarchyLevelOptional.isEmpty()) {
 			throw new NotFoundException(String.format("Requested level '%s' does not exist", levelName));
 		}
 
-		Optional<HierarchyLevel> projectHierarchyLevelOptional = this.accountHierarchyServiceImpl
-				.getHierarchyLevelByLevelId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 		if (projectHierarchyLevelOptional.isEmpty()) {
 			throw new InternalServerErrorException("Could not find any hierarchy level relating to a 'project' entity");
 		}
@@ -600,6 +433,80 @@ public class KpiMaturityService {
 		}
 
 		return HierarchyLevelsData.builder().requestedLevel(requestedLevel).projectLevel(projectLevel).build();
+	}
+
+	/**
+	 * Creates a mapping of organizational entities to their child projects based on
+	 * the request parameters.
+	 *
+	 * <p>
+	 * This method handles two scenarios:
+	 * </p>
+	 * <ol>
+	 * <li><strong>Filtered by Parent:</strong> When a parent node ID is provided,
+	 * it finds children at the requested level under that parent, then maps each to
+	 * their project children</li>
+	 * <li><strong>Unfiltered:</strong> When no parent is specified, it finds all
+	 * entities at the requested level and maps each to their project children</li>
+	 * </ol>
+	 *
+	 * <p>
+	 * The resulting map structure enables efficient processing of organizational
+	 * hierarchies by grouping projects under their parent organizational entities.
+	 * </p>
+	 *
+	 * @param kpiMaturityRequest
+	 *            The request containing optional parent node filtering
+	 * @param kpiMaturityCalculationContext
+	 *            Computation context with hierarchy levels and organization lookup
+	 * @return Map where keys are organizational entity node IDs and values are
+	 *         lists of their child projects
+	 */
+	private static Map<String, List<AccountFilteredData>> createProjectChildrenGroupedByRequestedRootNodeIdsMap(
+			KpiMaturityRequest kpiMaturityRequest, KpiMaturityCalculationContext kpiMaturityCalculationContext) {
+
+		if (StringUtils.isNotBlank(kpiMaturityRequest.parentNodeId())) {
+			List<AccountFilteredData> childrenByParentNodeId = kpiMaturityCalculationContext.organizationLookup()
+					.getChildrenByParentNodeId(kpiMaturityRequest.parentNodeId(),
+							kpiMaturityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel());
+
+			Set<String> childrenNodeIds = childrenByParentNodeId.stream().map(AccountFilteredData::getNodeId)
+					.collect(Collectors.toSet());
+			return kpiMaturityCalculationContext.organizationLookup().getChildrenGroupedByParentNodeIds(childrenNodeIds,
+					kpiMaturityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
+		}
+
+		return kpiMaturityCalculationContext.organizationLookup().getChildrenGroupedByParentNodeIds(
+				kpiMaturityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel(),
+				kpiMaturityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
+	}
+
+	private static List<MaturityScore> computeMaturityScores(Map<String, List<Double>> maturityScoresGroupedByCategory,
+			int numberOfProjectsWithKpiMaturityData) {
+		List<MaturityScore> maturityScores = new ArrayList<>();
+		for (Map.Entry<String, List<Double>> categoryMaturityScoreEntry : maturityScoresGroupedByCategory.entrySet()) {
+			if (CollectionUtils.isNotEmpty(categoryMaturityScoreEntry.getValue())) {
+				double maturityScore = categoryMaturityScoreEntry.getValue().stream().mapToDouble(score -> score).sum()
+						/ numberOfProjectsWithKpiMaturityData;
+
+				double roundedMaturityScore = Precision.round(maturityScore, ROUNDING_SCALE_2);
+
+				maturityScores.add(MaturityScore.builder().kpiCategory(categoryMaturityScoreEntry.getKey())
+						.level(String.format("M%s (%s)", (int) Math.ceil(maturityScore), roundedMaturityScore))
+						.score(roundedMaturityScore).build());
+			}
+		}
+		return maturityScores;
+	}
+
+	private static String determineHealthByEfficiencyPercentage(double overallEfficiencyPercentage) {
+		if (overallEfficiencyPercentage >= EFFICIENCY_PERCENTAGE_HEALTHY) {
+			return "Healthy";
+		}
+		if (overallEfficiencyPercentage >= EFFICIENCY_PERCENTAGE_MODERATE) {
+			return "Moderate";
+		}
+		return "Unhealthy";
 	}
 
 	private static boolean multipleLevelsAreCorrespondingToLevelName(String levelName,

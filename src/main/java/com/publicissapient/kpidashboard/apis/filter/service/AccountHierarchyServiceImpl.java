@@ -202,11 +202,6 @@ public class AccountHierarchyServiceImpl
 				.toList();
 	}
 
-	public Optional<HierarchyLevel> getHierarchyLevelByLevelNumber(int levelNumber) {
-		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
-				.filter(hierarchyLevel -> hierarchyLevel.getLevel() == levelNumber).findAny();
-	}
-
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
 		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
 				.filter(hierarchyLevel -> StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
