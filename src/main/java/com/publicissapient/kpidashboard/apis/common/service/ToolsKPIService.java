@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -670,7 +671,7 @@ public abstract class ToolsKPIService<R, S> {
 		List<DataCount> trendValues = new ArrayList<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
+        setKpiBenchmarkValues(kpiElement);
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel(), selectedId));
 			if (null != node) {
@@ -810,7 +811,7 @@ public abstract class ToolsKPIService<R, S> {
 		Map<String, List<DataCount>> trendMap = new HashMap<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
+        setKpiBenchmarkValues(kpiElement);
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
@@ -850,6 +851,13 @@ public abstract class ToolsKPIService<R, S> {
 		}
 		return commonService.sortTrendValueMap(trendMap);
 	}
+
+    public void setKpiBenchmarkValues(KpiElement kpiElement) {
+        KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiElement.getKpiId());
+        if (null != kpiBenchmarkValues) {
+            kpiElement.setKpiBenchmarkValues(kpiBenchmarkValues);
+        }
+    }
 
 	/**
 	 * This method return trend value for KPIs containing filter or map as value and circle KPI (like
