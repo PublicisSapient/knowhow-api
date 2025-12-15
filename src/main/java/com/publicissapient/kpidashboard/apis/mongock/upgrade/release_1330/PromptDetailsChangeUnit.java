@@ -17,9 +17,9 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1330;
 
-import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT;
-import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.KPI_RECOMMENDATION_PROMPT;
-import static com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys.SPRINT_GOALS_SUMMARY;
+import static com.publicissapient.kpidashboard.common.constant.PromptKeys.KPI_CORRELATION_ANALYSIS_REPORT;
+import static com.publicissapient.kpidashboard.common.constant.PromptKeys.KPI_RECOMMENDATION_PROMPT;
+import static com.publicissapient.kpidashboard.common.constant.PromptKeys.SPRINT_GOALS_SUMMARY;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +28,7 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.client.MongoCollection;
-import com.publicissapient.kpidashboard.apis.ai.constants.PromptKeys;
+import com.publicissapient.kpidashboard.common.constant.PromptKeys;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;

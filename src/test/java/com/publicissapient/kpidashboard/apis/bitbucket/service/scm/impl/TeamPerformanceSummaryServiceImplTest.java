@@ -16,7 +16,9 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -29,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +52,7 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
@@ -147,7 +149,7 @@ public class TeamPerformanceSummaryServiceImplTest {
 			accountHierarchyData.setNode(nodeList);
 			accountHierarchyDataList.add(accountHierarchyData);
 
-			when(filterHelperService.getHierarachyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
 			when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(accountHierarchyDataList);
 			when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 					.thenReturn(accountHierarchyDataList);
@@ -185,7 +187,7 @@ public class TeamPerformanceSummaryServiceImplTest {
 			accountHierarchyData.setNode(nodeList);
 			accountHierarchyDataList.add(accountHierarchyData);
 
-			when(filterHelperService.getHierarachyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
 			when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(accountHierarchyDataList);
 			when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 					.thenReturn(accountHierarchyDataList);
@@ -202,7 +204,7 @@ public class TeamPerformanceSummaryServiceImplTest {
 
 	@Test
 	public void testGetTeamPerformanceSummary_NoFilteredData() {
-		when(filterHelperService.getHierarachyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
+		when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
 		when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(Collections.emptyList());
 
 		List<PerformanceSummary> result = teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
@@ -222,7 +224,7 @@ public class TeamPerformanceSummaryServiceImplTest {
 		accountHierarchyData.setNode(nodeList);
 		accountHierarchyDataList.add(accountHierarchyData);
 
-		when(filterHelperService.getHierarachyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
+		when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
 		when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(accountHierarchyDataList);
 		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 				.thenReturn(Collections.emptyList());

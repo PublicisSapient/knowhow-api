@@ -471,13 +471,13 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 			List<String> totalSprintDetailsIssues =
 					sprintDetails.getTotalIssues().stream()
 							.map(SprintIssue::getNumber)
-							.collect(Collectors.toList());
+							.toList();
 
 			// CALCULATION OF PCDS OF ALL ISSUES
 			List<JiraIssue> totalJiraIssueList =
 					totalIssueList.stream()
 							.filter(issue -> totalSprintDetailsIssues.contains(issue.getNumber()))
-							.collect(Collectors.toList());
+							.toList();
 			List<IterationPotentialDelay> iterationPotentialDelayList =
 					calculatePotentialDelay(sprintDetails, totalJiraIssueList, fieldMapping);
 			Map<String, IterationPotentialDelay> issueWiseDelay =
@@ -556,7 +556,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 							completedIssues,
 							sprintDetails.getNotCompletedIssues().stream()
 									.map(SprintIssue::getNumber)
-									.collect(Collectors.toList()));
+									.toList());
 					completedIssues.removeAll(
 							removedFromClosed.getOrDefault(date.toLocalDate(), new HashSet<>()));
 					Long closedDateWiseCount =
@@ -595,7 +595,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 													.map(dcgs -> dcgs.getValue())
 													.filter(Objects::nonNull)
 													.flatMap(list -> list.stream().filter(Objects::nonNull))
-													.collect(Collectors.toList()),
+													.toList(),
 											KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
@@ -619,7 +619,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 																	f.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
 															.isEqual(date.toLocalDate()))
 							.distinct()
-							.collect(Collectors.toList()));
+							.toList());
 			return (long) processedPlannedIssues.size();
 
 		} else if (keyCheck.equalsIgnoreCase(UPDATE_DATE)) {
@@ -632,7 +632,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 															.toLocalDate()
 															.isEqual(date.toLocalDate()))
 							.distinct()
-							.collect(Collectors.toList()));
+							.toList());
 			return (long) processedAllIssues.size();
 		}
 		return 0L;
@@ -660,7 +660,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 				removedJiraIssues,
 				sprintDetails.getTotalIssues().stream()
 						.map(SprintIssue::getNumber)
-						.collect(Collectors.toList()));
+						.toList());
 
 		// if an issue is present in both on the same day, then whatever in the punted
 		// issues those should be removed once and for all
@@ -751,7 +751,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 													&& (fieldMapping
 															.getJiraStatusForInProgressKPI125()
 															.contains(jiraIssue.getStatus())))
-							.collect(Collectors.toList());
+							.toList();
 
 			List<JiraIssue> openIssues = new ArrayList<>();
 			iterationPotentialDelayList.addAll(

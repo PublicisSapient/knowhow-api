@@ -18,44 +18,60 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.publicissapient.kpidashboard.apis.aiusage.enums.HierarchyLevelType;
 import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class AIUsageStatisticsDTO {
-    private String levelType;
-    private String levelName;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Instant statsDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Instant ingestTimestamp;
-    private AIUsageSummary usageSummary;
+	@Size(max = 100)
+	private String levelName;
 
-    public AIUsageStatisticsDTO(AIUsageStatistics aiUsageStatistics) {
-        if (aiUsageStatistics == null) {
-            this.levelType = "";
-            this.levelName = "";
-            this.statsDate = null;
-            this.ingestTimestamp = null;
-            this.usageSummary = new AIUsageSummary(0L, 0L, 0L, 0L, null);
-            return;
-        }
+	@Size(max = 100)
+	private String organizationEntityName;
 
-        this.levelType = aiUsageStatistics.getLevelType() != null ? aiUsageStatistics.getLevelType() : "";
-        this.levelName = aiUsageStatistics.getLevelName() != null ? aiUsageStatistics.getLevelName() : "";
-        this.statsDate = aiUsageStatistics.getStatsDate();
-        this.ingestTimestamp = aiUsageStatistics.getIngestTimestamp();
-        this.usageSummary = aiUsageStatistics.getUsageSummary() != null
-                ? aiUsageStatistics.getUsageSummary()
-                : new AIUsageSummary(0L, 0L, 0L, 0L, null);
-    }
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private Instant statsDate;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private Instant ingestTimestamp;
+
+	private AIUsageSummary usageSummary;
+
+	public AIUsageStatisticsDTO(AIUsageStatistics aiUsageStatistics) {
+		if (aiUsageStatistics == null) {
+			this.levelName = "";
+			this.organizationEntityName = "";
+			this.statsDate = null;
+			this.ingestTimestamp = null;
+			this.usageSummary = new AIUsageSummary(0L, 0L, 0L, 0L, null);
+			return;
+		}
+
+		if (aiUsageStatistics.getLevelType() == null) {
+			this.levelName = StringUtils.EMPTY;
+		} else {
+			this.levelName = aiUsageStatistics.getLevelType();
+		}
+		this.organizationEntityName = Objects.toString(aiUsageStatistics.getLevelName(), StringUtils.EMPTY);
+		this.statsDate = aiUsageStatistics.getStatsDate();
+		this.ingestTimestamp = aiUsageStatistics.getIngestTimestamp();
+		this.usageSummary = aiUsageStatistics.getUsageSummary() != null
+						? aiUsageStatistics.getUsageSummary()
+						: new AIUsageSummary(0L, 0L, 0L, 0L, null);
+	}
 }
