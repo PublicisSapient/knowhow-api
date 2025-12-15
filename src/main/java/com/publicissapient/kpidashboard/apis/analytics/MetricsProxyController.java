@@ -61,15 +61,15 @@ public class MetricsProxyController {
 					restTemplate.postForEntity(pushgatewayUrl, request.getMetrics(), String.class);
 
 			if (response.getStatusCode().is2xxSuccessful()) {
-				log.info("✅ Successfully forwarded metrics to Pushgateway");
+				log.info("Successfully forwarded metrics to Pushgateway");
 				return ResponseEntity.ok("Metrics sent successfully");
 			} else {
-				log.error("❌ Failed to forward metrics to Pushgateway: {}", response.getStatusCode());
+				log.error("Failed to forward metrics to Pushgateway: {}", response.getStatusCode());
 				return ResponseEntity.status(response.getStatusCode()).body("Failed to send metrics");
 			}
 
 		} catch (Exception e) {
-			log.error("❌ Error forwarding metrics to Pushgateway", e);
+			log.error("Error forwarding metrics to Pushgateway", e);
 			return ResponseEntity.internalServerError().body("Error sending metrics: " + e.getMessage());
 		}
 	}
