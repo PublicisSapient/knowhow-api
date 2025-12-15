@@ -5398,5 +5398,37 @@
   "chartType" : "progressbar",
   "isPositiveTrend" : false,
   "kpiSource" : "BitBucket"
-}
+},
+  {
+    "kpiId" : "kpi196",
+    "kpiName" : "Test Execution Time",
+    "isDeleted" : false,
+    "defaultOrder" : 1,
+    "kpiSubCategory" : "Quality",
+    "kpiSource" : "Zypher",
+    "combinedKpiSource" : "Zephyr/Zypher/JiraTest",
+    "groupId" : 9,
+    "kpiUnit" : "min",
+    "kanban" : false,
+    "chartType" : "stacked-bar-chart",
+    "kpiInfo" : {
+      "definition" : " The Test Execution Time metric measures the average duration between the start and end of test executions. It helps QA leads track how long it takes to run test cases and identify delays or inconsistencies in execution speed across teams, test types, or modules.",
+      "details" : [
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at",
+            "link" : "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/272465922/Test+Execution+Time"
+          }
+        }
+      ]
+    },
+    "xaxisLabel" : "Sprints",
+    "yaxisLabel" : "Avg. Execution Time (in minutes)",
+    "isAdditionalFilterSupport" : false,
+    "kpiFilter" : "",
+    "boxType" : "chart",
+    "calculateMaturity" : false,
+    "aggregationCriteria" : "average"
+  }
 ]
