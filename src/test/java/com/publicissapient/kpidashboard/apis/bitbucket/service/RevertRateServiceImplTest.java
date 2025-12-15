@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -73,6 +74,7 @@ import com.publicissapient.kpidashboard.common.model.jira.AssigneeDetails;
 import com.publicissapient.kpidashboard.common.service.AssigneeDetailsServiceImpl;
 
 @RunWith(MockitoJUnitRunner.class)
+@Ignore("Skipping test cases since it Removed due KPI outdated")
 public class RevertRateServiceImplTest {
 
 	private static final String OVERALL = "Overall";
