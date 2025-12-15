@@ -26,8 +26,16 @@ env:
   ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }}
   ACR_LOGIN_SERVER: ${{ secrets.SPEEDTOOLS_ACR_LOGIN_SERVER }}
   BITBUCKET_HELM_REPO: ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }}
-  sonartoken: ${{ secrets.SONARQUBE_TOKEN }}
-  sonarurl: ${{ secrets.SONARURL }}
+
+  # 🔐 Sonar
+  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+  SONAR_URL: ${{ secrets.SONARURL }}
+  SONAR_PROJECT_KEY: ENGINEERING.KPIDASHBOARD.CUSTOMAPI
+  SONAR_PROJECT_NAME: ENGINEERING.KPIDASHBOARD.CUSTOMAPI
+
+  # 🔥 ArgoCD
+  ARGOCD_APP_NAME: knowhow-api-prod
+
   GITHUB_HEAD_NAME: $GITHUB_REF_NAME
 
   # 🔥 Hardcoded because Prod always uses upgrade
@@ -38,17 +46,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     outputs:
-      argocd_app_name: ${{ steps.set_env.outputs.argocd_app_name }}
+      argocd_app_name: ${{ env.ARGOCD_APP_NAME }}
 
     steps:
       - name: Set IMAGE_TAG and Values file for Prod
-        id: set_env
         run: |
-          RELEASE_TAG="${{ github.event.inputs.release_tag }}"
-          echo "IMAGE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
           echo "VALUES_FILE=values-prod.yaml" >> $GITHUB_ENV
-          echo "ARGOCD_APP_NAME=knowhow-api-prod" >> $GITHUB_ENV
-          echo "argocd_app_name=knowhow-api-prod" >> $GITHUB_OUTPUT
 
       - name: Checkout knowhow-api Repository
         uses: actions/checkout@v2
@@ -124,27 +128,32 @@ jobs:
 
       - name: SonarQube Analysis
         run: |
-          mvn sonar:sonar -Dsonar.projectKey=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
-            -Dsonar.projectName=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
+          mvn sonar:sonar \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.projectName=${{ env.SONAR_PROJECT_NAME }} \
             -Dsonar.branch.name=${{ env.GITHUB_HEAD_NAME }} \
-            -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} \
-            -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} -f pom.xml
+            -Dsonar.host.url=${{ env.SONAR_URL }} \
+            -Dsonar.login=${{ env.SONAR_TOKEN }}
 
       - name: Build & Push Docker Image
         run: |
-          docker login $ACR_LOGIN_SERVER --username ${{ secrets.SPEEDTOOLS_ACR_USERNAME }} --password ${{ secrets.SPEEDTOOLS_ACR_PASSWORD }}
+          docker login $ACR_LOGIN_SERVER \
+            --username ${{ secrets.SPEEDTOOLS_ACR_USERNAME }} \
+            --password ${{ secrets.SPEEDTOOLS_ACR_PASSWORD }}
+
           docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG .
           docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Checkout Helm charts from Bitbucket
         run: |
-          git clone ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }}
+          git clone $BITBUCKET_HELM_REPO
           cd build-configurations/KnowHOW-Deploy/knowhow-api
+
           yq -i ".image.tag = \"${IMAGE_TAG}\"" $VALUES_FILE
           yq -i ".mongock.startversion = \"${{ github.event.inputs.mongock_start_version }}\"" $VALUES_FILE
           yq -i ".mongock.endversion = \"${{ github.event.inputs.mongock_end_version }}\"" $VALUES_FILE
           yq -i ".mongock.migrationpackage = \"${MONGOCK_OPERATION}\"" $VALUES_FILE
+
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add $VALUES_FILE
@@ -161,21 +170,20 @@ jobs:
     steps:
       - name: Install ArgoCD CLI
         run: |
-          export ARGO_PATH="$HOME/bin"
-          mkdir -p $ARGO_PATH
-          curl -sSL -o "$ARGO_PATH/argocd" https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-          chmod +x "$ARGO_PATH/argocd"
-          echo "$ARGO_PATH" >> $GITHUB_PATH
+          mkdir -p $HOME/bin
+          curl -sSL -o "$HOME/bin/argocd" https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x "$HOME/bin/argocd"
+          echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: ArgoCD CLI Login
         run: |
           argocd login argocd-server \
-            --username ${{ secrets.SPEEDTOOLS_ARGOCD_USERNAME}} \
+            --username ${{ secrets.SPEEDTOOLS_ARGOCD_USERNAME }} \
             --password ${{ secrets.SPEEDTOOLS_ARGOCD_PASSWORD }} \
             --plaintext
 
       - name: Sync application
-        run: argocd app sync ${{ env.ARGOCD_APP_NAME }}
+        run: argocd app sync $ARGOCD_APP_NAME
 
       - name: Wait for application health
-        run: argocd app wait ${{ env.ARGOCD_APP_NAME }} --health --timeout 600
+        run: argocd app wait $ARGOCD_APP_NAME --health --timeout 600
