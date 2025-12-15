@@ -9,14 +9,6 @@ on:
         type: string
         default: "14.0.0"
 
-      mongock_operation:
-        description: "Operation Type (Prod always uses upgrade)"
-        required: true
-        default: "com.publicissapient.kpidashboard.apis.mongock.upgrade"
-        type: choice
-        options:
-          - com.publicissapient.kpidashboard.apis.mongock.upgrade
-
       mongock_start_version:
         description: "Start version for Mongock (e.g. 13.0.0)"
         required: true
@@ -37,6 +29,9 @@ env:
   sonartoken: ${{ secrets.SONARQUBE_TOKEN }}
   sonarurl: ${{ secrets.SONARURL }}
   GITHUB_HEAD_NAME: $GITHUB_REF_NAME
+
+  # 🔥 Hardcoded because Prod always uses upgrade
+  MONGOCK_OPERATION: com.publicissapient.kpidashboard.apis.mongock.upgrade
 
 jobs:
   build:
@@ -111,7 +106,6 @@ jobs:
           cd knowhow-common
           mvn clean install -Ddockerfile.skip=true
 
-
       - name: Get common version from Maven
         run: |
           cd knowhow-common
@@ -150,7 +144,7 @@ jobs:
           yq -i ".image.tag = \"${IMAGE_TAG}\"" $VALUES_FILE
           yq -i ".mongock.startversion = \"${{ github.event.inputs.mongock_start_version }}\"" $VALUES_FILE
           yq -i ".mongock.endversion = \"${{ github.event.inputs.mongock_end_version }}\"" $VALUES_FILE
-          yq -i ".mongock.migrationpackage = \"${{ github.event.inputs.mongock_operation }}\"" $VALUES_FILE
+          yq -i ".mongock.migrationpackage = \"${MONGOCK_OPERATION}\"" $VALUES_FILE
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add $VALUES_FILE
@@ -163,6 +157,7 @@ jobs:
     needs: build
     env:
       ARGOCD_APP_NAME: ${{ needs.build.outputs.argocd_app_name }}
+
     steps:
       - name: Install ArgoCD CLI
         run: |
