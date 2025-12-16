@@ -306,13 +306,13 @@
   },
   {
     "kpiId" : "kpi196",
-    "categoryId" : "quality",
+    "categoryId" : "categoryTwo",
     "kpiOrder" : 4,
     "kanban" : false
   },
   {
     "kpiId" : "kpi197",
-    "categoryId" : "quality",
+    "categoryId" : "categoryTwo",
     "kpiOrder" : 4,
     "kanban" : true
   }
