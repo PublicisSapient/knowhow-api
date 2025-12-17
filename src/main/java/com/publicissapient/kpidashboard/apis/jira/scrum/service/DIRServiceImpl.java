@@ -38,7 +38,6 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiDataProvider;
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.Filters;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -75,7 +74,6 @@ public class DIRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 	private static final String DEFECT = "Defects";
 	private static final String ISSUE_DATA = "issueData";
 
-	@Autowired private KpiHelperService kpiHelperService;
 	@Autowired private CacheService cacheService;
 	@Autowired private FilterHelperService flterHelperService;
 	@Autowired private ConfigHelperService configHelperService;
