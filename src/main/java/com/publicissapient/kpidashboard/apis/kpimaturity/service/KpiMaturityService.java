@@ -483,8 +483,8 @@ public class KpiMaturityService {
 		KpiMaturityComputationData.KpiMaturityComputationDataBuilder kpiMaturityComputationDataBuilder = KpiMaturityComputationData
 				.builder();
 		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(
-				kpiMaturityRequest.levelName(), kpiMaturityRequest.deliveryMethodology()
-		);
+				kpiMaturityRequest.levelName(), kpiMaturityRequest.deliveryMethodology(),
+				kpiMaturityRequest.parentNodeId());
 		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData,
 				kpiMaturityRequest.deliveryMethodology());
 
@@ -564,7 +564,7 @@ public class KpiMaturityService {
 	 *         and project level
 	 */
 	private HierarchyLevelsData constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(String levelName,
-			ProjectDeliveryMethodology deliveryMethodology) {
+			ProjectDeliveryMethodology deliveryMethodology, String parentNodeId) {
 		if (StringUtils.isEmpty(levelName)) {
 			throw new BadRequestException("Level name must not be empty");
 		}
@@ -595,11 +595,25 @@ public class KpiMaturityService {
 		HierarchyLevel requestedLevel = requestedHierarchyLevelOptional.get();
 		HierarchyLevel projectLevel = projectHierarchyLevelOptional.get();
 
-		if (requestedLevel.getLevel() > projectLevel.getLevel()) {
+		if (requestedLevelIsNotSupported(requestedLevel, projectLevel, parentNodeId)) {
 			throw new BadRequestException(String.format("Requested level '%s' is too low on the hierarchy", levelName));
 		}
 
 		return HierarchyLevelsData.builder().requestedLevel(requestedLevel).projectLevel(projectLevel).build();
+	}
+
+	private boolean requestedLevelIsNotSupported(HierarchyLevel requestedLevel, HierarchyLevel projectLevel,
+			String parentNodeId) {
+		if (StringUtils.isNotBlank(parentNodeId)) {
+			return requestedLevel.getLevel() > projectLevel.getLevel();
+		}
+		int nextHierarchicalLevelNumber = requestedLevel.getLevel() + 1;
+
+		Optional<HierarchyLevel> nextHierarchicalLevelOptional = this.accountHierarchyServiceImpl
+				.getHierarchyLevelByLevelNumber(nextHierarchicalLevelNumber);
+
+		return nextHierarchicalLevelOptional.isEmpty()
+				|| nextHierarchicalLevelOptional.get().getLevel() > projectLevel.getLevel();
 	}
 
 	private static boolean multipleLevelsAreCorrespondingToLevelName(String levelName,
