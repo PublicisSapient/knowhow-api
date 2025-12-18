@@ -16,27 +16,12 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.model; // NOPMD
-
-// Do not remove NOPMD comment. This will ignore ExcessivePublicCount Violations
-// these are just getter and setter methods and required
-
-import java.util.List;
-
-import org.bson.types.ObjectId;
-
-import com.publicissapient.kpidashboard.common.model.sonar.SonarMetric;
+package com.publicissapient.kpidashboard.apis.analytics;
 
 import lombok.Data;
 
-/** The Sonar History data. */
+/** Request DTO for metrics proxy endpoint */
 @Data
-public class SonarHistoryData {
-	private ObjectId processorItemId;
-	private Long timestamp;
-	private String name;
-	private String key;
-	private Long date;
-	private String branch;
-	private List<SonarMetric> metrics;
+public class MetricsRequest {
+	private String metrics;
 }

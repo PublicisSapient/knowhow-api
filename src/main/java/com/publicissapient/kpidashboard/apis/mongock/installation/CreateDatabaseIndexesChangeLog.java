@@ -481,7 +481,7 @@ public class CreateDatabaseIndexesChangeLog {
         IndexOperations indexOps = mongoTemplate.indexOps("recommendations_action_plan");
 
         // Compound index: basicProjectConfigId (ASC) + createdAt (DESC)
-        indexOps.ensureIndex(new Index().on("basicProjectConfigId", Sort.Direction.ASC).on("createdAt", Sort.Direction.DESC)
+        indexOps.ensureIndex(new Index().on(BASIC_PROJECT_CONFIG_ID, Sort.Direction.ASC).on("createdAt", Sort.Direction.DESC)
                 .named("basicProjectConfigId_1_createdAt_-1"));
 
     }
