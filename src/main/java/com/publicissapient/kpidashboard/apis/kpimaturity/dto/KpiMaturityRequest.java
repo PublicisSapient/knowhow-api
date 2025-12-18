@@ -20,6 +20,6 @@ import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMetho
 import lombok.Builder;
 
 @Builder
-public record KpiMaturityRequest(String levelName, Integer levelNumber, String parentNodeId,
+public record KpiMaturityRequest(String levelName, String parentNodeId,
 		ProjectDeliveryMethodology deliveryMethodology) {
 }

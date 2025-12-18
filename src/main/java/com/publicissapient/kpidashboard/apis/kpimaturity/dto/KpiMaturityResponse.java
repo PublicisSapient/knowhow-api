@@ -16,23 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.kpimaturity.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import java.util.List;
+
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-/**
- * DTO representing a column definition for the executive dashboard. Defines the structure and
- * display properties of a column.
- */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class ColumnDefinitionDTO {
-	/** The field name that maps to the data property in the row. */
-	private String field;
-
-	/** The display header text for the column. */
-	private String header;
+public class KpiMaturityResponse {
+    private OrganizationEntityKpiMaturity summary;
+    private List<OrganizationEntityKpiMaturity> details;
 }

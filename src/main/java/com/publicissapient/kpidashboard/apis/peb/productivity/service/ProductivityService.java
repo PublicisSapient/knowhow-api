@@ -184,6 +184,7 @@ public class ProductivityService {
 		Map<String, List<Double>> kpiTrendValuesGroupedById = new HashMap<>();
 		Map<String, KPIData> kpiDataGroupedById = new HashMap<>();
 
+		int totalNumberOfProjectsWithProductivityData = 0;
 		for (Map.Entry<String, List<AccountFilteredData>> nextChildHierarchyLevelNodeIdProjectTreeNodes : projectChildrenGroupedByRequestedRootNodeIds
 				.entrySet()) {
 			AccountFilteredData rootAccountData = pebProductivityCalculationContext.organizationLookup
@@ -195,6 +196,7 @@ public class ProductivityService {
 				if (projectProductivity != null) {
 					// For calculating the break-down details
 					numberOfProjectsWithProductivityData++;
+					totalNumberOfProjectsWithProductivityData++;
 					addProductivityScores(rootNodeCategoryScore, projectProductivity.getCategoryScores());
 
 					// For calculating the summary
@@ -226,9 +228,7 @@ public class ProductivityService {
 						rootAccountData.getNodeId(), rootAccountData.getNodeName());
 			}
 		}
-
-		int totalProjectsNumber = productivityGroupedByNodeId.values().size();
-		setAveragedProductivityScores(summaryCategoryScoresDTO, totalProjectsNumber);
+		setAveragedProductivityScores(summaryCategoryScoresDTO, totalNumberOfProjectsWithProductivityData);
 
 		ProductivityResponse productivityResponse = new ProductivityResponse();
 		productivityResponse.setDetails(details);
@@ -242,7 +242,7 @@ public class ProductivityService {
 						Successfully retrieved the productivity data for level {}. Total projects found under requested level: {}
 						Projects without productivity data: {}. Duration: {} ms
 						""",
-				productivityRequest.levelName(), projectNodeIds.size(), (projectNodeIds.size() - totalProjectsNumber),
+				productivityRequest.levelName(), projectNodeIds.size(), (projectNodeIds.size() - totalNumberOfProjectsWithProductivityData),
 				System.currentTimeMillis() - startTime);
 		return new ServiceResponse(Boolean.TRUE, "Productivity data was successfully retrieved", productivityResponse);
 	}
