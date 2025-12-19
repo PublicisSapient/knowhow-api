@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -136,8 +135,6 @@ public class KpiElement implements Serializable { // NOPMD
 	private transient KpiDataGroup dataGroup;
 	private transient CategoryData categoryData;
 	private String responseCode;
-    private transient KpiBenchmarkValues kpiBenchmarkValues;
-
 
 	/** Instantiates a new Kpi element. */
 	public KpiElement() {}
@@ -934,12 +931,4 @@ public class KpiElement implements Serializable { // NOPMD
 	public void setCategoryData(CategoryData categoryData) {
 		this.categoryData = categoryData;
 	}
-
-    public KpiBenchmarkValues getKpiBenchmarkValues() {
-        return this.kpiBenchmarkValues;
-    }
-
-    public void setKpiBenchmarkValues(KpiBenchmarkValues kpiBenchmarkValues) {
-        this.kpiBenchmarkValues = kpiBenchmarkValues;
-    }
 }
