@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
+import com.publicissapient.kpidashboard.common.repository.kpibenchmark.KpiBenchmarkValuesRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -76,6 +78,7 @@ public class CacheServiceImpl implements CacheService {
 	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
     @Autowired private ProjectHierarchyService projectHierarchyService;
 	@Autowired private PromptDetailsService promptDetailsService;
+    @Autowired private KpiBenchmarkValuesRepository kpiBenchmarkValuesRepository;
 
 	List<AccountHierarchyData> accountHierarchyDataList;
 
@@ -350,5 +353,14 @@ public class CacheServiceImpl implements CacheService {
 		List<PromptDetails> promptDetailsList = promptDetailsService.getAllPrompts();
 		return promptDetailsList.stream()
 				.collect(Collectors.toMap(PromptDetails::getKey, Function.identity()));
+	}
+
+    @Cacheable(CommonConstant.CACHE_KPI_BENCHMARK_TARGETS)
+	@Override
+	public Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets() {
+		log.info("Caching Kpi Benchmark Targets Map");
+		List<KpiBenchmarkValues> kpiBenchmarkValuesList = kpiBenchmarkValuesRepository.findAll();
+        return kpiBenchmarkValuesList.stream()
+				.collect(Collectors.toMap(KpiBenchmarkValues::getKpiId, Function.identity()));
 	}
 }

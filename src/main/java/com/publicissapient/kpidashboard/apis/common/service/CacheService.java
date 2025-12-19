@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.common.service;
 import java.util.List;
 import java.util.Map;
 
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
@@ -112,4 +113,6 @@ public interface CacheService {
 	Map<String, PromptDetails> getPromptDetails();
 
 	Object filterOnHoldProjectBasicConfig();
+
+    Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets();
 }
