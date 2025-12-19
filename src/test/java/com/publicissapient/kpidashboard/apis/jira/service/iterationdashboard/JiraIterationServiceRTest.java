@@ -79,22 +79,14 @@ public class JiraIterationServiceRTest {
 
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	SprintRepository sprintRepository;
-	@Mock
-	JiraIssueRepository jiraIssueRepository;
-	@Mock
-	JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@InjectMocks
-	private JiraIterationServiceR jiraServiceR;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private IterationBurnupServiceImpl iterationBurnupService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock SprintRepository sprintRepository;
+	@Mock JiraIssueRepository jiraIssueRepository;
+	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@InjectMocks private JiraIterationServiceR jiraServiceR;
+	@Mock private CacheService cacheService;
+	@Mock private IterationBurnupServiceImpl iterationBurnupService;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -111,10 +103,8 @@ public class JiraIterationServiceRTest {
 	private KpiElement ibKpiElement;
 	private Map<String, JiraIterationKPIService> jiraServiceCache = new HashMap<>();
 	private Map<String, AdditionalFilterCategory> additonalFilterMap;
-	@Mock
-	private JiraNonTrendKPIServiceFactory jiraKPIServiceFactory;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private JiraNonTrendKPIServiceFactory jiraKPIServiceFactory;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	private KpiRequest kpiRequest;
 
@@ -122,14 +112,15 @@ public class JiraIterationServiceRTest {
 	public void setup() throws ApplicationException {
 		MockitoAnnotations.openMocks(this);
 		List<NonTrendKPIService> mockServices = Arrays.asList(iterationBurnupService);
-		JiraNonTrendKPIServiceFactory serviceFactory = JiraNonTrendKPIServiceFactory.builder().services(mockServices)
-				.build();
+		JiraNonTrendKPIServiceFactory serviceFactory =
+				JiraNonTrendKPIServiceFactory.builder().services(mockServices).build();
 		doReturn(KPICode.ITERATION_BURNUP.name()).when(iterationBurnupService).getQualifierType();
 		doReturn(new KpiElement()).when(iterationBurnupService).getKpiData(any(), any(), any());
 		serviceFactory.initMyServiceCache();
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance("/json/default/project_hierarchy_filter_data.json");
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance(
+						"/json/default/project_hierarchy_filter_data.json");
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
@@ -145,26 +136,30 @@ public class JiraIterationServiceRTest {
 		projectConfig.setProjectName("Scrum Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
-		when(filterHelperService.getHierarachyLevelId(5, "sprint", false)).thenReturn("sprint");
+		when(filterHelperService.getHierarchyLevelId(5, "sprint", false)).thenReturn("sprint");
 
 		SprintDetailsDataFactory sprintDetailsDataFactory = SprintDetailsDataFactory.newInstance();
 		List<SprintDetails> sprintDetails = sprintDetailsDataFactory.getSprintDetails();
 		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(sprintDetails);
 
-		AdditionalFilterCategoryFactory additionalFilterCategoryFactory = AdditionalFilterCategoryFactory.newInstance();
-		List<AdditionalFilterCategory> additionalFilterCategoryList = additionalFilterCategoryFactory
-				.getAdditionalFilterCategoryList();
-		additonalFilterMap = additionalFilterCategoryList.stream()
-				.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
+		AdditionalFilterCategoryFactory additionalFilterCategoryFactory =
+				AdditionalFilterCategoryFactory.newInstance();
+		List<AdditionalFilterCategory> additionalFilterCategoryList =
+				additionalFilterCategoryFactory.getAdditionalFilterCategoryList();
+		additonalFilterMap =
+				additionalFilterCategoryList.stream()
+						.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
 		when(filterHelperService.getAdditionalFilterHierarchyLevel()).thenReturn(additonalFilterMap);
 		when(cacheService.cacheSprintLevelData()).thenReturn(accountHierarchyDataList);
-		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean())).thenReturn(accountHierarchyDataList);
-		when(kpiHelperService.getProjectKeyCache(any(), any(), anyBoolean())).thenReturn(kpiRequest.getIds());
+		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
+				.thenReturn(accountHierarchyDataList);
+		when(kpiHelperService.getProjectKeyCache(any(), any(), anyBoolean()))
+				.thenReturn(kpiRequest.getIds());
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
 		when(cacheService.cacheSprintLevelData()).thenReturn(accountHierarchyDataList);
 	}
@@ -175,7 +170,8 @@ public class JiraIterationServiceRTest {
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
 		List<KpiElement> resultList = jiraServiceR.process(kpiRequest);
 
-		MatcherAssert.assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
+		MatcherAssert.assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
 	}
 
 	@Test
@@ -190,15 +186,15 @@ public class JiraIterationServiceRTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 
 	@Test
 	public void TestProcess_pickFromCache() throws Exception {
 
 		KpiRequest kpiRequest = createKpiRequest(5);
 
-		when(cacheService.getFromApplicationCache(any(), Mockito.anyString(), any(), ArgumentMatchers.anyList()))
+		when(cacheService.getFromApplicationCache(
+						any(), Mockito.anyString(), any(), ArgumentMatchers.anyList()))
 				.thenReturn(new ArrayList<KpiElement>());
 
 		List<KpiElement> resultList = jiraServiceR.process(kpiRequest);
@@ -229,7 +225,8 @@ public class JiraIterationServiceRTest {
 	@Test
 	public void processWithExposedApiToken() throws EntityNotFoundException {
 		KpiRequest kpiRequest = createKpiRequest(5);
-		when(cacheService.getFromApplicationCache(any(), Mockito.anyString(), any(), ArgumentMatchers.anyList()))
+		when(cacheService.getFromApplicationCache(
+						any(), Mockito.anyString(), any(), ArgumentMatchers.anyList()))
 				.thenReturn(new ArrayList<KpiElement>());
 		List<KpiElement> resultList = jiraServiceR.processWithExposedApiToken(kpiRequest);
 		assertEquals(0, resultList.size());
@@ -249,9 +246,14 @@ public class JiraIterationServiceRTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.ITERATION_BURNUP.getKpiId(), KPICode.ITERATION_BURNUP.name(), "Iteration", "");
+		addKpiElement(
+				kpiList,
+				KPICode.ITERATION_BURNUP.getKpiId(),
+				KPICode.ITERATION_BURNUP.name(),
+				"Iteration",
+				"");
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"38296_Scrum Project_6335363749794a18e8a4479b"});
+		kpiRequest.setIds(new String[] {"38296_Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		kpiRequest.setLabel("sprint");
@@ -262,7 +264,8 @@ public class JiraIterationServiceRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit) {
+	private void addKpiElement(
+			List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);
 		kpiElement.setKpiName(kpiName);

@@ -3067,7 +3067,7 @@
         "isDefault": true
       },
       {
-        "columnName": "Repository Url",
+        "columnName": "Repo",
         "order": 1,
         "isShown": true,
         "isDefault": true
@@ -3079,14 +3079,26 @@
         "isDefault": true
       },
       {
-        "columnName": "Weeks",
+        "columnName": "Author",
         "order": 3,
         "isShown": true,
         "isDefault": true
       },
       {
-        "columnName": "PR Size",
+        "columnName": "Days/Weeks",
         "order": 4,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Merge Request Url",
+        "order": 5,
+        "isShown": true,
+        "isDefault": true
+      },
+      {
+        "columnName": "Total Lines Changed",
+        "order": 6,
         "isShown": true,
         "isDefault": true
       }
@@ -3615,6 +3627,114 @@
       "isShown": true,
       "isDefault": false
     }]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi196",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Sprint Name",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case Type",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Execution Time",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi201",
+    "kpiColumnDetails" : [
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Project",
+        "order" : 1
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Repo",
+        "order" : 2
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Branch",
+        "order" : 3
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Developer",
+        "order" : 4
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Days/Weeks",
+        "order" : 5
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Rework Rate",
+        "order" : 6
+      },
+      {
+        "isDefault" : true,
+        "isShown" : true,
+        "columnName" : "Revert Rate",
+        "order" : 7
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi197",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Project Name",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Test Case Type",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Execution Time",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 

@@ -45,6 +45,7 @@ import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
@@ -73,26 +74,17 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHi
 @RunWith(MockitoJUnitRunner.class)
 public class FlowEfficiencyServiceImplTest {
 
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	JiraBacklogServiceR jiraService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	ConfigHelperService configHelperService;
-	@InjectMocks
-	FlowEfficiencyServiceImpl flowEfficiencyService;
-	@Mock
-	ProjectBasicConfigRepository projectConfigRepository;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@Mock
-	FieldMappingRepository fieldMappingRepository;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock JiraBacklogServiceR jiraService;
+	@Mock CacheService cacheService;
+	@Mock ConfigHelperService configHelperService;
+	@InjectMocks FlowEfficiencyServiceImpl flowEfficiencyService;
+	@Mock ProjectBasicConfigRepository projectConfigRepository;
+	@Mock CustomApiConfig customApiConfig;
+	@Mock FieldMappingRepository fieldMappingRepository;
+	@Mock private CommonService commonService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private ForecastingManager forecastingManager;
 	List<Node> leafNodeList = new ArrayList<>();
 	TreeAggregatorDetail treeAggregatorDetail;
 	private KpiRequest kpiRequest;
@@ -102,8 +94,8 @@ public class FlowEfficiencyServiceImplTest {
 
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
-	private static List<String> xAxisRange = Arrays.asList("< 16 Months", "< 3 Months", "< 1 Months", "< 2 Weeks",
-			"< 1 Week");
+	private static List<String> xAxisRange =
+			Arrays.asList("< 16 Months", "< 3 Months", "< 1 Months", "< 2 Weeks", "< 1 Week");
 	private static String HISTORY = "history";
 
 	@Before
@@ -121,35 +113,46 @@ public class FlowEfficiencyServiceImplTest {
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
 
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(new ObjectId("6335363749794a18e8a4479b"), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 
 		leafNodeList = new ArrayList<>();
-		treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, accountHierarchyDataList,
-				new ArrayList<>(), "hierarchyLevelOne", 4);
-		treeAggregatorDetail.getMapOfListOfProjectNodes().forEach((k, v) -> {
-			leafNodeList.addAll(v);
-		});
+		treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
+		treeAggregatorDetail
+				.getMapOfListOfProjectNodes()
+				.forEach(
+						(k, v) -> {
+							leafNodeList.addAll(v);
+						});
 
-		issueBacklogHistoryDataList = JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		issueBacklogHistoryDataList =
+				JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 
 		issueBacklogHistoryDataList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
-		issueBacklogHistoryDataList.get(0).getStatusUpdationLog().get(0).setUpdatedOn(LocalDateTime.now().minusMonths(1));
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(issueBacklogHistoryDataList);
-
+		issueBacklogHistoryDataList
+				.get(0)
+				.getStatusUpdationLog()
+				.get(0)
+				.setUpdatedOn(LocalDateTime.now().minusMonths(1));
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(issueBacklogHistoryDataList);
 	}
 
 	@Test

@@ -68,23 +68,16 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReposito
 @RunWith(MockitoJUnitRunner.class)
 public class MissingWorkLogsServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private ProjectBasicConfigRepository projectConfigRepository;
+	@Mock CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private ProjectBasicConfigRepository projectConfigRepository;
 
-	@Mock
-	private FieldMappingRepository fieldMappingRepository;
+	@Mock private FieldMappingRepository fieldMappingRepository;
 
-	@InjectMocks
-	private MissingWorkLogsServiceImpl missingWorkLogsServiceImpl;
+	@InjectMocks private MissingWorkLogsServiceImpl missingWorkLogsServiceImpl;
 
-	@Mock
-	private FilterHelperService flterHelperService;
+	@Mock private FilterHelperService flterHelperService;
 
 	private List<JiraIssue> totalStoryList = new ArrayList<>();
 	private List<JiraIssue> storyList = new ArrayList<>();
@@ -100,16 +93,18 @@ public class MissingWorkLogsServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi119");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
-		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory
-				.newInstance("/json/filters/extra_jira_issues.json");
+		JiraIssueDataFactory jiraIssueDataFactory =
+				JiraIssueDataFactory.newInstance("/json/filters/extra_jira_issues.json");
 		totalStoryList = jiraIssueDataFactory.findIssueInTypeNames(Arrays.asList("Story"));
 
-		storyList = totalStoryList.stream().filter(filter -> !Arrays.asList("Open", "Dropped").contains(filter.getStatus()))
-				.collect(Collectors.toList());
+		storyList =
+				totalStoryList.stream()
+						.filter(filter -> !Arrays.asList("Open", "Dropped").contains(filter.getStatus()))
+						.collect(Collectors.toList());
 
 		setMockProjectConfig();
 		setMockFieldMapping();
@@ -124,8 +119,8 @@ public class MissingWorkLogsServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -134,20 +129,27 @@ public class MissingWorkLogsServiceImplTest {
 	/** Project to show on trend line. */
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		when(jiraIssueRepository.findIssuesBySprintAndType(Mockito.any(), Mockito.any(), Mockito.any()))
 				.thenReturn(storyList);
-		when(jiraIssueRepository.findIssuesBySprintAndType(Mockito.any(), Mockito.any())).thenReturn(totalStoryList);
+		when(jiraIssueRepository.findIssuesBySprintAndType(Mockito.any(), Mockito.any()))
+				.thenReturn(totalStoryList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(missingWorkLogsServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		try {
-			KpiElement kpiElement = missingWorkLogsServiceImpl.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail);
-			assertThat("Project Count : ", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
+			KpiElement kpiElement =
+					missingWorkLogsServiceImpl.getKpiData(
+							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+			assertThat(
+					"Project Count : ",
+					((List<DataCount>) kpiElement.getTrendValueList()).size(),
+					equalTo(1));
 		} catch (ApplicationException enfe) {
 
 		}

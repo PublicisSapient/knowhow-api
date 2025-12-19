@@ -52,8 +52,7 @@ public class BuildFrequencyInfo {
 	/**
 	 * Add buid url.
 	 *
-	 * @param buildUrl
-	 *          the build url
+	 * @param buildUrl the build url
 	 */
 	public void addBuildUrl(String buildUrl) {
 		buildUrlList.add(buildUrl);
@@ -62,8 +61,7 @@ public class BuildFrequencyInfo {
 	/**
 	 * Add buidbuild start time.
 	 *
-	 * @param startTime
-	 *          the start time
+	 * @param startTime the start time
 	 */
 	public void addBuildStartTime(String startTime) {
 		buildStartDate.add(startTime);
@@ -81,8 +79,7 @@ public class BuildFrequencyInfo {
 	/**
 	 * Sets build job list.
 	 *
-	 * @param buildJobNameList
-	 *          the build job list
+	 * @param buildJobNameList the build job list
 	 */
 	public void setBuildJobList(List<String> buildJobNameList) {
 		this.buildJobNameList = buildJobNameList;
@@ -100,8 +97,7 @@ public class BuildFrequencyInfo {
 	/**
 	 * Sets build url list.
 	 *
-	 * @param buildUrlList
-	 *          the build url list
+	 * @param buildUrlList the build url list
 	 */
 	public void setBuildUrlList(List<String> buildUrlList) {
 		this.buildUrlList = buildUrlList;
@@ -119,8 +115,7 @@ public class BuildFrequencyInfo {
 	/**
 	 * Sets build start time list.
 	 *
-	 * @param buildStartDate
-	 *          the build start time list
+	 * @param buildStartDate the build start time list
 	 */
 	public void setBuildStartTimeList(List<String> buildStartDate) {
 		this.buildStartDate = buildStartDate;
@@ -136,8 +131,7 @@ public class BuildFrequencyInfo {
 	/**
 	 * set week list
 	 *
-	 * @param weeksList
-	 *          weeksList
+	 * @param weeksList weeksList
 	 */
 	public void setWeeksList(List<String> weeksList) {
 		this.weeksList = weeksList;

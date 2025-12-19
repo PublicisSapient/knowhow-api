@@ -74,20 +74,13 @@ public class JenkinsServiceRTest {
 	private static String GROUP_PROJECT = "PROJECT";
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	KpiHelperService kpiHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@InjectMocks
-	private JenkinsServiceR jenkinsServiceR;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CodeBuildTimeServiceImpl codeBuildTimeServiceImpl;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock KpiHelperService kpiHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@InjectMocks private JenkinsServiceR jenkinsServiceR;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CacheService cacheService;
+	@Mock private CodeBuildTimeServiceImpl codeBuildTimeServiceImpl;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
 	@SuppressWarnings("rawtypes")
 	@Mock
@@ -99,8 +92,7 @@ public class JenkinsServiceRTest {
 	private Set<String> projects;
 	private KpiElement buildKpiElement;
 	private Map<String, JenkinsKPIService<?, ?, ?>> jenkinsServiceCache = new HashMap<>();
-	@Mock
-	private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
+	@Mock private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
 
 	@Before
 	public void setup() throws ApplicationException {
@@ -111,8 +103,8 @@ public class JenkinsServiceRTest {
 		when(codeBuildTimeServiceImpl.getQualifierType()).thenReturn(KPICode.CODE_BUILD_TIME.name());
 		jenkinsKPIServiceFactory.initMyServiceCache();
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		filterLevelMap = new LinkedHashMap<>();
@@ -124,27 +116,30 @@ public class JenkinsServiceRTest {
 		projectConfig.setProjectName("Scrum Project");
 		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		List<HierarchyLevel> hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
 
-		when(filterHelperService.getHierarachyLevelId(Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
+		when(filterHelperService.getHierarchyLevelId(
+						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(filterHelperService.getFilteredBuilds(ArgumentMatchers.any(), Mockito.anyString()))
 				.thenReturn(accountHierarchyDataList);
-		when(authorizedProjectsService.filterProjects(accountHierarchyDataList)).thenReturn(accountHierarchyDataList);
+		when(authorizedProjectsService.filterProjects(accountHierarchyDataList))
+				.thenReturn(accountHierarchyDataList);
 
-		when(filterHelperService.getHierarachyLevelId(4, "project", false)).thenReturn("project");
+		when(filterHelperService.getHierarchyLevelId(4, "project", false)).thenReturn("project");
 
 		buildKpiElement = setKpiElement(KPICode.CODE_BUILD_TIME.getKpiId(), "CODE_BUILD_TIME");
 		when(codeBuildTimeServiceImpl.getKpiData(any(), any(), any())).thenReturn(buildKpiElement);
@@ -212,8 +207,10 @@ public class JenkinsServiceRTest {
 	public void testProcessCachedData() throws Exception {
 
 		KpiRequest kpiRequest = createKpiRequest(4, "Jenkins");
-		when(filterHelperService.getFilteredBuilds(kpiRequest, "project")).thenReturn(accountHierarchyDataList);
-		when(cacheService.getFromApplicationCache(any(), any(), any(), any())).thenReturn(Arrays.asList(buildKpiElement));
+		when(filterHelperService.getFilteredBuilds(kpiRequest, "project"))
+				.thenReturn(accountHierarchyDataList);
+		when(cacheService.getFromApplicationCache(any(), any(), any(), any()))
+				.thenReturn(Arrays.asList(buildKpiElement));
 
 		List<KpiElement> resultList = jenkinsServiceR.process(kpiRequest);
 		assertThat("Kpi list :", resultList.size(), equalTo(1));
@@ -222,8 +219,10 @@ public class JenkinsServiceRTest {
 	@Test
 	public void processWithExposedApiToken() throws EntityNotFoundException {
 		KpiRequest kpiRequest = createKpiRequest(4, "Jenkins");
-		when(filterHelperService.getFilteredBuilds(kpiRequest, "project")).thenReturn(accountHierarchyDataList);
-		when(cacheService.getFromApplicationCache(any(), any(), any(), any())).thenReturn(Arrays.asList(buildKpiElement));
+		when(filterHelperService.getFilteredBuilds(kpiRequest, "project"))
+				.thenReturn(accountHierarchyDataList);
+		when(cacheService.getFromApplicationCache(any(), any(), any(), any()))
+				.thenReturn(Arrays.asList(buildKpiElement));
 		List<KpiElement> resultList = jenkinsServiceR.processWithExposedApiToken(kpiRequest, false);
 		assertEquals(1, resultList.size());
 	}
@@ -232,17 +231,27 @@ public class JenkinsServiceRTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.CODE_BUILD_TIME.getKpiId(), KPICode.CODE_BUILD_TIME.name(), "Productivity", "mins",
+		addKpiElement(
+				kpiList,
+				KPICode.CODE_BUILD_TIME.getKpiId(),
+				KPICode.CODE_BUILD_TIME.name(),
+				"Productivity",
+				"mins",
 				source);
 		kpiRequest.setLevel(level);
 		kpiRequest.setLabel("project");
-		kpiRequest.setIds(new String[]{"Scrum Project_6335363749794a18e8a4479b"});
+		kpiRequest.setIds(new String[] {"Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);
@@ -265,6 +274,5 @@ public class JenkinsServiceRTest {
 	}
 
 	@After
-	public void cleanup() {
-	}
+	public void cleanup() {}
 }

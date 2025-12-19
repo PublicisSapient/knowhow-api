@@ -36,27 +36,34 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
-
-/**
- * Controller for handling user information operations
- */
+/** Controller for handling user information operations */
 @AllArgsConstructor
 @RestController
 @RequestMapping("/usermanagement")
 @Tag(name = "User Management", description = "Endpoints for managing user information")
 public class UserController {
 
-    private final UserService userService;
+	private final UserService userService;
 
-    @PostMapping("/save")
-    @Operation(summary = "Save User Information", description = "Saves user information with SAML authentication type")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully saved user information", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class)) }),
-            @ApiResponse(responseCode = "400", description = "Bad request. Username is required"),
-            @ApiResponse(responseCode = "500", description = "Unexpected server error occurred") })
-    @PreAuthorize("hasPermission(null, 'ADD_USER')")
-    public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        return userService.saveUserInfo(userRequestDTO.getUsername());
-    }
+	@PostMapping("/save")
+	@Operation(
+			summary = "Save User Information",
+			description = "Saves user information with SAML authentication type")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully saved user information",
+						content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = UserResponseDTO.class))
+						}),
+				@ApiResponse(responseCode = "400", description = "Bad request. Username is required"),
+				@ApiResponse(responseCode = "500", description = "Unexpected server error occurred")
+			})
+	@PreAuthorize("hasPermission(null, 'ADD_USER') or hasPermission(null, 'GRANT_ACCESS')")
+	public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+		return userService.saveUserInfo(userRequestDTO.getUsername());
+	}
 }

@@ -62,13 +62,14 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This service is used to calculate the SCM Check-in and Merge Request KPI.
- * 
+ *
  * @author shunaray
  */
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
+public class ScmCheckInAndMergeRequestServiceImpl
+		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String NO_CHECKIN = "No. of Check in";
 	private static final String NO_MERGE = "No. of Merge Requests";
@@ -90,16 +91,20 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.REPO_TOOL_CODE_COMMIT);
 
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.REPO_TOOL_CODE_COMMIT);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.REPO_TOOL_CODE_COMMIT);
 
-		kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
+		kpiElement.setTrendValueList(
+				DeveloperKpiHelper.prepareDataCountGroups(
+						trendValuesMap, KPICode.REPO_TOOL_CODE_COMMIT.getKpiId()));
 		return kpiElement;
 	}
 
@@ -111,8 +116,8 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 
 	/** {@inheritDoc} */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
 
 		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
@@ -130,35 +135,35 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 	/** {@inheritDoc} */
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI157(),
-				KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI157(), KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *            kpi element
-	 * @param mapTmp
-	 *            node map
-	 * @param projectLeafNode
-	 *            leaf node of project
-	 * @param kpiRequest
-	 *            kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void calculateProjectKpiTrendData(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
-		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
-				kpiHelperService);
+		List<Tool> scmTools =
+				DeveloperKpiHelper.getScmToolsForProject(
+						projectLeafNode, configHelperService, kpiHelperService);
 		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
 			return;
 		}
@@ -176,14 +181,23 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			CustomDateRange periodRange =
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
-			List<ScmCommits> commitsInRange = DeveloperKpiHelper.filterCommitsByCommitTimeStamp(allCommits,
-					periodRange);
+			List<ScmCommits> commitsInRange =
+					DeveloperKpiHelper.filterCommitsByCommitTimeStamp(allCommits, periodRange);
 
-			scmTools.forEach(tool -> processToolData(tool, commitsInRange, assignees, dateLabel,
-					projectLeafNode.getProjectFilter().getName(), kpiTrendDataByGroup, validationDataList));
+			scmTools.forEach(
+					tool ->
+							processToolData(
+									tool,
+									commitsInRange,
+									assignees,
+									dateLabel,
+									projectLeafNode.getProjectFilter().getName(),
+									kpiTrendDataByGroup,
+									validationDataList));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
@@ -192,8 +206,13 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-	private void processToolData(Tool tool, List<ScmCommits> commits, Set<Assignee> assignees, String dateLabel,
-			String projectName, Map<String, List<DataCount>> kpiTrendDataByGroup,
+	private void processToolData(
+			Tool tool,
+			List<ScmCommits> commits,
+			Set<Assignee> assignees,
+			String dateLabel,
+			String projectName,
+			Map<String, List<DataCount>> kpiTrendDataByGroup,
 			List<RepoToolValidationData> validationDataList) {
 
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
@@ -205,33 +224,50 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 
 		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(commits, tool);
 
-		List<ScmCommits> mergeCommits = commitsForBranch.stream()
-				.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit())).collect(Collectors.toList());
+		List<ScmCommits> mergeCommits =
+				commitsForBranch.stream()
+						.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit()))
+						.collect(Collectors.toList());
 
 		long totalCommits = commitsForBranch.size();
 		long totalMergeRequests = mergeCommits.size();
 
-		setDataCount(projectName, dateLabel, overallKpiGroup, totalCommits, totalMergeRequests, kpiTrendDataByGroup);
+		setDataCount(
+				projectName,
+				dateLabel,
+				overallKpiGroup,
+				totalCommits,
+				totalMergeRequests,
+				kpiTrendDataByGroup);
 
-		Map<String, List<ScmCommits>> userWiseAllCommits = DeveloperKpiHelper.groupCommitsByUser(commitsForBranch);
-		Map<String, List<ScmCommits>> userWiseMergeCommits = DeveloperKpiHelper.groupCommitsByUser(mergeCommits);
+		Map<String, List<ScmCommits>> userWiseAllCommits =
+				DeveloperKpiHelper.groupCommitsByUser(commitsForBranch);
+		Map<String, List<ScmCommits>> userWiseMergeCommits =
+				DeveloperKpiHelper.groupCommitsByUser(mergeCommits);
 
 		Set<String> allUsers = userWiseAllCommits.keySet();
 
-		allUsers.forEach(userEmail -> {
-			String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-			List<ScmCommits> userCommits = userWiseAllCommits.getOrDefault(userEmail, Collections.emptyList());
-			List<ScmCommits> userMergeCommits = userWiseMergeCommits.getOrDefault(userEmail, Collections.emptyList());
-			long commitCount = userCommits.size();
-			long mrCount = userMergeCommits.size();
-			String userKpiGroup = branchName + "#" + developerName;
-			setDataCount(projectName, dateLabel, userKpiGroup, commitCount, mrCount, kpiTrendDataByGroup);
-			validationDataList
-					.add(createValidationData(projectName, tool, developerName, dateLabel, commitCount, mrCount));
-		});
+		allUsers.forEach(
+				userEmail -> {
+					String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
+					List<ScmCommits> userCommits =
+							userWiseAllCommits.getOrDefault(userEmail, Collections.emptyList());
+					List<ScmCommits> userMergeCommits =
+							userWiseMergeCommits.getOrDefault(userEmail, Collections.emptyList());
+					long commitCount = userCommits.size();
+					long mrCount = userMergeCommits.size();
+					String userKpiGroup = branchName + "#" + developerName;
+					setDataCount(
+							projectName, dateLabel, userKpiGroup, commitCount, mrCount, kpiTrendDataByGroup);
+					validationDataList.add(
+							createValidationData(
+									projectName, tool, developerName, dateLabel, commitCount, mrCount));
+				});
 	}
 
-	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
+	private void populateExcelData(
+			String requestTrackerId,
+			List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
@@ -241,21 +277,31 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		}
 	}
 
-	private void setDataCount(String projectName, String week, String kpiGroup, Long commitValue, Long mrCount,
+	private void setDataCount(
+			String projectName,
+			String week,
+			String kpiGroup,
+			Long commitValue,
+			Long mrCount,
 			Map<String, List<DataCount>> dataCountMap) {
 
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
 
-		DataCount dataCount = dataCounts.stream().filter(dc -> dc.getDate().equals(week)).findFirst().orElseGet(() -> {
-			DataCount newDataCount = new DataCount();
-			newDataCount.setSProjectName(projectName);
-			newDataCount.setDate(week);
-			newDataCount.setKpiGroup(kpiGroup);
-			newDataCount.setValue(0L);
-			newDataCount.setLineValue(0L);
-			dataCounts.add(newDataCount);
-			return newDataCount;
-		});
+		DataCount dataCount =
+				dataCounts.stream()
+						.filter(dc -> dc.getDate().equals(week))
+						.findFirst()
+						.orElseGet(
+								() -> {
+									DataCount newDataCount = new DataCount();
+									newDataCount.setSProjectName(projectName);
+									newDataCount.setDate(week);
+									newDataCount.setKpiGroup(kpiGroup);
+									newDataCount.setValue(0L);
+									newDataCount.setLineValue(0L);
+									dataCounts.add(newDataCount);
+									return newDataCount;
+								});
 
 		dataCount.setValue(((Number) dataCount.getValue()).longValue() + commitValue);
 		dataCount.setLineValue(((Number) dataCount.getLineValue()).longValue() + mrCount);
@@ -266,12 +312,18 @@ public class ScmCheckInAndMergeRequestServiceImpl extends BitBucketKPIService<Lo
 		dataCount.setHoverValue(hoverValues);
 	}
 
-	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, long commitCount, long mrCount) {
+	private RepoToolValidationData createValidationData(
+			String projectName,
+			Tool tool,
+			String developerName,
+			String dateLabel,
+			long commitCount,
+			long mrCount) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(
+				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setCommitCount(commitCount);

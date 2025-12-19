@@ -44,7 +44,6 @@ import org.springframework.web.client.RestTemplate;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.repotools.repository.RepoToolsProviderRepository;
 import com.publicissapient.kpidashboard.common.client.KerberosClient;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
 
@@ -63,14 +62,10 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	private static final String WRONG_JIRA_BEARER = "{\"expand\":\"projects\",\"projects\":[]}";
 	private static final String APPICATION_JSON = "application/json";
 	private static final String CLOUD_BITBUCKET_IDENTIFIER = "bitbucket.org";
-	@Autowired
-	private CustomApiConfig customApiConfig;
-	@Autowired
-	private RestTemplate restTemplate;
-	@Autowired
-	private RepoToolsProviderRepository repoToolsProviderRepository;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private RestTemplate restTemplate;
 
-	@Override
+    @Override
 	public ServiceResponse validateConnection(Connection connection, String toolName) {
 		String apiUrl = getApiUrl(connection, toolName);
 		if (apiUrl == null) {
@@ -95,18 +90,22 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		return switch (toolName) {
 			case Constant.TOOL_BITBUCKET -> createBitBucketUrl(connection);
 			case Constant.TOOL_AZURE, Constant.TOOL_AZUREREPO, Constant.TOOL_AZUREPIPELINE ->
-				createAzureApiUrl(connection.getBaseUrl(), toolName);
+					createAzureApiUrl(connection.getBaseUrl(), toolName);
 			case Constant.TOOL_GITHUB -> createGitHubTestConnectionUrl(connection);
-			case Constant.TOOL_SONAR,
-					Constant.TOOL_ZEPHYR ->
-				connection.isCloudEnv()
-						? createCloudApiUrl(connection.getBaseUrl(), toolName)
-						: createApiUrl(connection.getBaseUrl(), toolName);
-			case Constant.TOOL_JIRA, Constant.TOOL_TEAMCITY, Constant.TOOL_BAMBOO, Constant.TOOL_JENKINS,
-                 Constant.TOOL_ARGOCD, Constant.TOOL_GITLAB, Constant.TOOL_RALLY ->
-				createApiUrl(connection.getBaseUrl(), toolName);
+			case Constant.TOOL_SONAR, Constant.TOOL_ZEPHYR ->
+					connection.isCloudEnv()
+							? createCloudApiUrl(connection.getBaseUrl(), toolName)
+							: createApiUrl(connection.getBaseUrl(), toolName);
+			case Constant.TOOL_JIRA,
+							Constant.TOOL_TEAMCITY,
+							Constant.TOOL_BAMBOO,
+							Constant.TOOL_JENKINS,
+							Constant.TOOL_ARGOCD,
+							Constant.TOOL_GITLAB,
+							Constant.TOOL_RALLY ->
+					createApiUrl(connection.getBaseUrl(), toolName);
 			case Constant.REPO_TOOLS -> getApiForRepoTool(connection);
-            default -> null;
+			default -> null;
 		};
 	}
 
@@ -128,16 +127,27 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		return apiUrl != null ? apiUrl.trim() : "";
 	}
 
-	private boolean testConnection(Connection connection, String toolName, String apiUrl, String password,
+	private boolean testConnection(
+			Connection connection,
+			String toolName,
+			String apiUrl,
+			String password,
 			boolean isSonarWithAccessToken) {
 		boolean isValidConnection = false;
 		if (connection.isJaasKrbAuth()) {
 			try {
-				KerberosClient client = new KerberosClient(connection.getJaasConfigFilePath(),
-						connection.getKrb5ConfigFilePath(), connection.getJaasUser(), connection.getSamlEndPoint(),
-						connection.getBaseUrl());
-				client.login(customApiConfig.getSamlTokenStartString(), customApiConfig.getSamlTokenEndString(),
-						customApiConfig.getSamlUrlStartString(), customApiConfig.getSamlUrlEndString());
+				KerberosClient client =
+						new KerberosClient(
+								connection.getJaasConfigFilePath(),
+								connection.getKrb5ConfigFilePath(),
+								connection.getJaasUser(),
+								connection.getSamlEndPoint(),
+								connection.getBaseUrl());
+				client.login(
+						customApiConfig.getSamlTokenStartString(),
+						customApiConfig.getSamlTokenEndString(),
+						customApiConfig.getSamlUrlStartString(),
+						customApiConfig.getSamlUrlEndString());
 				HttpResponse response = getApiResponseWithKerbAuth(client, apiUrl);
 				if (null != response && response.getStatusLine().getStatusCode() == 200) {
 					isValidConnection = true;
@@ -146,8 +156,9 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 				log.error("exception occured while trying to hit api.");
 			}
 		} else {
-			HttpStatusCode status = getApiResponseWithBasicAuth(connection.getUsername(), password, apiUrl, toolName,
-					isSonarWithAccessToken);
+			HttpStatusCode status =
+					getApiResponseWithBasicAuth(
+							connection.getUsername(), password, apiUrl, toolName, isSonarWithAccessToken);
 			isValidConnection = status.is2xxSuccessful();
 		}
 		return isValidConnection;
@@ -166,20 +177,24 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		return isValidConnection;
 	}
 
-	private boolean checkDetails(String apiUrl, String password, Connection connection, String toolName) {
-		if (toolName.equals(Constant.TOOL_SONAR) || toolName.equals(Constant.TOOL_ZEPHYR) ||
-				toolName.equals(Constant.TOOL_GITLAB)) {
+	private boolean checkDetails(
+			String apiUrl, String password, Connection connection, String toolName) {
+		if (toolName.equals(Constant.TOOL_SONAR)
+				|| toolName.equals(Constant.TOOL_ZEPHYR)
+				|| toolName.equals(Constant.TOOL_GITLAB)) {
 			return checkDetailsForTool(apiUrl, password);
-		} else if(toolName.equals(Constant.TOOL_RALLY)){
+		} else if (toolName.equals(Constant.TOOL_RALLY)) {
 			return true;
-		}
-		else {
-			return apiUrl != null && isUrlValid(apiUrl) && (StringUtils.isNotEmpty(password) || connection.isJaasKrbAuth()) &&
-					StringUtils.isNotEmpty(connection.getUsername());
+		} else {
+			return apiUrl != null
+					&& isUrlValid(apiUrl)
+					&& (StringUtils.isNotEmpty(password) || connection.isJaasKrbAuth())
+					&& StringUtils.isNotEmpty(connection.getUsername());
 		}
 	}
 
-	private int testConnectionDetails(Connection connection, String apiUrl, String password, String toolName) {
+	private int testConnectionDetails(
+			Connection connection, String apiUrl, String password, String toolName) {
 		int status = 0;
 		if (checkDetails(apiUrl, password, connection, toolName)) {
 			status = validateTestConn(connection, apiUrl, password, toolName);
@@ -187,7 +202,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		return status;
 	}
 
-	private int validateTestConn(Connection connection, String apiUrl, String password, String toolName) {
+	private int validateTestConn(
+			Connection connection, String apiUrl, String password, String toolName) {
 		boolean isValid;
 
 		return switch (toolName) {
@@ -208,9 +224,10 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 				yield getStatusCode(isValid);
 			}
 			default -> {
-				isValid = connection.isBearerToken()
-						? testConnectionWithBearerToken(apiUrl, password)
-						: testConnection(connection, toolName, apiUrl, password, false);
+				isValid =
+						connection.isBearerToken()
+								? testConnectionWithBearerToken(apiUrl, password)
+								: testConnection(connection, toolName, apiUrl, password, false);
 				yield getStatusCode(isValid);
 			}
 		};
@@ -223,10 +240,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	private boolean validateSonarConnection(Connection connection, String apiUrl, String password) {
 		if (connection.isCloudEnv()) {
 			return testConnectionForTools(apiUrl, password);
-		} else if (connection.isAccessTokenEnabled()) {
-			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, true);
 		} else {
-			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, false);
+			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, connection.isAccessTokenEnabled());
 		}
 	}
 
@@ -234,7 +249,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("ZSESSIONID", token != null ? token : connection.getAccessToken());
 		HttpEntity<String> entity = new HttpEntity<>(headers);
-		ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
+		ResponseEntity<String> response =
+				restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
 		return response.getStatusCode().is2xxSuccessful();
 	}
 
@@ -242,12 +258,13 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 
 		HttpHeaders httpHeaders = createHeadersWithAuthentication(username, password, false);
 		HttpEntity<?> requestEntity = new HttpEntity<>(httpHeaders);
-		ResponseEntity<String> result = restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity,
-				String.class);
+		ResponseEntity<String> result =
+				restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity, String.class);
 		if (result.getStatusCode().is2xxSuccessful()) {
 			HttpHeaders headers = result.getHeaders();
 			List<String> rateLimits = headers.get("X-RateLimit-Limit");
-			return CollectionUtils.isNotEmpty(rateLimits) && Integer.valueOf(rateLimits.get(0)) > GITHUB_RATE_LIMIT_PER_HOUR;
+			return CollectionUtils.isNotEmpty(rateLimits)
+					&& Integer.valueOf(rateLimits.get(0)) > GITHUB_RATE_LIMIT_PER_HOUR;
 		} else {
 			return false;
 		}
@@ -257,8 +274,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		HttpHeaders headers = createHeadersWithBearer(accessToken);
 		HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 		try {
-			ResponseEntity<String> result = restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity,
-					String.class);
+			ResponseEntity<String> result =
+					restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity, String.class);
 			String body = result.getBody();
 			if (body != null && body.trim().equals("[]")) {
 				return result.getStatusCode().is4xxClientError();
@@ -273,27 +290,32 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 
 	private String createGitHubTestConnectionUrl(Connection connection) {
 
-		return connection.getBaseUrl() + URL_SAPERATOR + "users" + URL_SAPERATOR + connection.getUsername();
+		return connection.getBaseUrl()
+				+ URL_SAPERATOR
+				+ "users"
+				+ URL_SAPERATOR
+				+ connection.getUsername();
 	}
 
 	private String createAzureApiUrl(String baseUrl, String toolName) {
 		String resultUrl = "";
 
 		String baseUrlWithoutTrailingSlash = StringUtils.removeEnd(baseUrl, URL_SAPERATOR);
-		String baseUrlWithEncodedSpace = StringUtils.replace(baseUrlWithoutTrailingSlash, SPACE, ENCODED_SPACE);
+		String baseUrlWithEncodedSpace =
+				StringUtils.replace(baseUrlWithoutTrailingSlash, SPACE, ENCODED_SPACE);
 		String apiEndPoint = "";
 		switch (toolName) {
-			case Constant.TOOL_AZURE :
+			case Constant.TOOL_AZURE:
 				apiEndPoint = customApiConfig.getAzureBoardApi();
 				break;
-			case Constant.TOOL_AZUREREPO :
+			case Constant.TOOL_AZUREREPO:
 				apiEndPoint = customApiConfig.getAzureRepoApi();
 				break;
-			case Constant.TOOL_AZUREPIPELINE :
+			case Constant.TOOL_AZUREPIPELINE:
 				apiEndPoint = customApiConfig.getAzurePipelineApi();
 				break;
 
-			default :
+			default:
 				log.info("Tool name is invalid or empty");
 				break;
 		}
@@ -308,19 +330,24 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	/**
 	 * Create API URL using base URL and API path for bitbucket
 	 *
-	 * @param connection
-	 *          connection
+	 * @param connection connection
 	 * @param connection
 	 * @return apiURL
 	 */
 	private String createBitBucketUrl(Connection connection) {
 		URI uri = URI.create(connection.getBaseUrl().replace(SPACE, ENCODED_SPACE));
 		if (connection.isCloudEnv()) {
-			return uri.getScheme() + "://" + uri.getHost() + StringUtils.removeEnd(connection.getApiEndPoint(), "/") +
-					"/workspaces/";
+			return uri.getScheme()
+					+ "://"
+					+ uri.getHost()
+					+ StringUtils.removeEnd(connection.getApiEndPoint(), "/")
+					+ "/workspaces/";
 		} else {
-			return uri.getScheme() + "://" + uri.getHost() + StringUtils.removeEnd(connection.getApiEndPoint(), "/") +
-					"/projects/";
+			return uri.getScheme()
+					+ "://"
+					+ uri.getHost()
+					+ StringUtils.removeEnd(connection.getApiEndPoint(), "/")
+					+ "/projects/";
 		}
 	}
 
@@ -331,8 +358,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	 * @param password
 	 * @return
 	 */
-	private HttpHeaders createHeadersWithAuthentication(String username, String password,
-			boolean isSonarWithAccessToken) {
+	private HttpHeaders createHeadersWithAuthentication(
+			String username, String password, boolean isSonarWithAccessToken) {
 		String plainCreds = null;
 
 		if (isSonarWithAccessToken) {
@@ -361,25 +388,33 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	 * @param apiUrl
 	 * @return API response
 	 */
-	private HttpStatusCode getApiResponseWithBasicAuth(String username, String password, String apiUrl, String toolName,
+	private HttpStatusCode getApiResponseWithBasicAuth(
+			String username,
+			String password,
+			String apiUrl,
+			String toolName,
 			boolean isSonarWithAccessToken) {
 		HttpHeaders httpHeaders;
 		ResponseEntity<?> responseEntity;
 		httpHeaders = createHeadersWithAuthentication(username, password, isSonarWithAccessToken);
 		HttpEntity<?> requestEntity = new HttpEntity<>(httpHeaders);
 		try {
-			responseEntity = restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity, String.class);
+			responseEntity =
+					restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity, String.class);
 		} catch (HttpClientErrorException e) {
 			log.error("Invalid login credentials");
 			return e.getStatusCode();
 		}
 
 		Object responseBody = responseEntity.getBody();
-		if (toolName.equalsIgnoreCase(Constant.TOOL_SONAR) && (responseBody != null &&
-				(responseBody.toString().contains("false") || responseBody.toString().contains("</html>")))) {
+		if (toolName.equalsIgnoreCase(Constant.TOOL_SONAR)
+				&& (responseBody != null
+						&& (responseBody.toString().contains("false")
+								|| responseBody.toString().contains("</html>")))) {
 			return HttpStatus.UNAUTHORIZED;
 		}
-		if (toolName.equalsIgnoreCase(Constant.TOOL_BITBUCKET) && responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+		if (toolName.equalsIgnoreCase(Constant.TOOL_BITBUCKET)
+				&& responseEntity.getStatusCode().equals(HttpStatus.OK)) {
 			return HttpStatus.OK;
 		}
 		if (responseBody != null && responseBody.toString().trim().equals("[]")) {
@@ -395,7 +430,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		httpHeaders = createHeadersWithBearer(pat);
 		HttpEntity<?> requestEntity = new HttpEntity<>(httpHeaders);
 		try {
-			responseEntity = restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity, String.class);
+			responseEntity =
+					restTemplate.exchange(URI.create(apiUrl), HttpMethod.GET, requestEntity, String.class);
 		} catch (HttpClientErrorException e) {
 			log.error("Invalid login credentials");
 			return e.getStatusCode();
@@ -403,8 +439,9 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		HttpStatusCode responseCode = responseEntity.getStatusCode();
 
 		Object responseBody = responseEntity.getBody();
-		if (responseCode.is2xxSuccessful() && responseBody != null &&
-				WRONG_JIRA_BEARER.equalsIgnoreCase(responseBody.toString())) {
+		if (responseCode.is2xxSuccessful()
+				&& responseBody != null
+				&& WRONG_JIRA_BEARER.equalsIgnoreCase(responseBody.toString())) {
 			responseCode = HttpStatus.UNAUTHORIZED;
 		}
 
@@ -419,9 +456,12 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	 * @return apiURL
 	 */
 	private HttpResponse getApiResponseWithKerbAuth(KerberosClient client, String apiUrl) {
-		HttpUriRequest request = RequestBuilder.get().setUri(apiUrl)
-				.setHeader(org.apache.http.HttpHeaders.ACCEPT, APPICATION_JSON)
-				.setHeader(org.apache.http.HttpHeaders.CONTENT_TYPE, APPICATION_JSON).build();
+		HttpUriRequest request =
+				RequestBuilder.get()
+						.setUri(apiUrl)
+						.setHeader(org.apache.http.HttpHeaders.ACCEPT, APPICATION_JSON)
+						.setHeader(org.apache.http.HttpHeaders.CONTENT_TYPE, APPICATION_JSON)
+						.build();
 		try {
 			return client.getHttpResponse(request);
 		} catch (IOException e) {
@@ -441,13 +481,17 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	private String createCloudApiUrl(String baseUrl, String toolName) {
 		String apiPath = "healthcheck";
 		String endpoint = "api/favorites/search";
-		if (Constant.TOOL_ZEPHYR.equalsIgnoreCase(toolName) && StringUtils.isNotEmpty(baseUrl) &&
-				StringUtils.isNotEmpty(apiPath)) {
+		if (Constant.TOOL_ZEPHYR.equalsIgnoreCase(toolName)
+				&& StringUtils.isNotEmpty(baseUrl)
+				&& StringUtils.isNotEmpty(apiPath)) {
 			return baseUrl.endsWith("/") ? baseUrl.concat(apiPath) : baseUrl.concat("/").concat(apiPath);
 		}
-		if (Constant.TOOL_SONAR.equalsIgnoreCase(toolName) && StringUtils.isNotEmpty(baseUrl) &&
-				StringUtils.isNotEmpty(endpoint)) {
-			return baseUrl.endsWith("/") ? baseUrl.concat(endpoint) : baseUrl.concat("/").concat(endpoint);
+		if (Constant.TOOL_SONAR.equalsIgnoreCase(toolName)
+				&& StringUtils.isNotEmpty(baseUrl)
+				&& StringUtils.isNotEmpty(endpoint)) {
+			return baseUrl.endsWith("/")
+					? baseUrl.concat(endpoint)
+					: baseUrl.concat("/").concat(endpoint);
 		}
 		return null;
 	}
@@ -460,27 +504,27 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	 */
 	private String getApiPath(String toolName) {
 		switch (toolName) {
-			case Constant.TOOL_JIRA :
+			case Constant.TOOL_JIRA:
 				return customApiConfig.getJiraTestConnection();
-			case Constant.TOOL_SONAR :
+			case Constant.TOOL_SONAR:
 				return customApiConfig.getSonarTestConnection();
-			case Constant.TOOL_TEAMCITY :
+			case Constant.TOOL_TEAMCITY:
 				return customApiConfig.getTeamcityTestConnection();
-			case Constant.TOOL_BAMBOO :
+			case Constant.TOOL_BAMBOO:
 				return customApiConfig.getBambooTestConnection();
-			case Constant.TOOL_JENKINS :
+			case Constant.TOOL_JENKINS:
 				return customApiConfig.getJenkinsTestConnection();
-			case Constant.TOOL_GITLAB :
+			case Constant.TOOL_GITLAB:
 				return customApiConfig.getGitlabTestConnection();
-			case Constant.TOOL_BITBUCKET :
+			case Constant.TOOL_BITBUCKET:
 				return customApiConfig.getBitbucketTestConnection();
-			case Constant.TOOL_ZEPHYR :
+			case Constant.TOOL_ZEPHYR:
 				return customApiConfig.getZephyrTestConnection();
-			case Constant.TOOL_ARGOCD :
+			case Constant.TOOL_ARGOCD:
 				return customApiConfig.getArgoCDTestConnection();
 			case Constant.TOOL_RALLY:
 				return customApiConfig.getRallyTestConnection();
-			default :
+			default:
 				return null;
 		}
 	}
@@ -502,13 +546,13 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		}
 		return switch (toolName) {
 			case Constant.TOOL_GITHUB, Constant.TOOL_GITLAB, Constant.TOOL_ARGOCD, Constant.REPO_TOOLS ->
-				connection.getAccessToken();
+					connection.getAccessToken();
 			case Constant.TOOL_ZEPHYR -> {
 				if (connection.isCloudEnv()) {
 					yield connection.getAccessToken();
-				} else if(connection.isBearerToken()){
+				} else if (connection.isBearerToken()) {
 					yield connection.getPatOAuthToken();
-				}else {
+				} else {
 					yield connection.getPassword();
 				}
 			}
@@ -524,7 +568,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 				}
 				yield connection.getPassword();
 			}
-			default -> connection.getPassword() != null ? connection.getPassword() : connection.getApiKey();
+			default ->
+					connection.getPassword() != null ? connection.getPassword() : connection.getApiKey();
 		};
 	}
 
@@ -536,7 +581,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 			success = true;
 		}
 
-		return new ServiceResponse(success, "Fetched Zephyr Cloud Base Url successfully", zephyrCloudUrl);
+		return new ServiceResponse(
+				success, "Fetched Zephyr Cloud Base Url successfully", zephyrCloudUrl);
 	}
 
 	private boolean checkDetailsForTool(String apiUrl, String password) {

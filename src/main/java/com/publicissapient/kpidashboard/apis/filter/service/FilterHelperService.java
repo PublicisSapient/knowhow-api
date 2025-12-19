@@ -60,69 +60,74 @@ import com.publicissapient.kpidashboard.common.repository.application.KanbanAcco
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author tauakram
  */
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class FilterHelperService {
 
-	private static final int SINGLECHILD = 1;
+	private static final int SINGLE_CHILD = 1;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private AccountHierarchyRepository accountHierarchyRepository;
+	@Autowired private AccountHierarchyRepository accountHierarchyRepository;
 
-	@Autowired
-	private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepo;
+	@Autowired private KanbanAccountHierarchyRepository kanbanAccountHierarchyRepository;
 
-	@Autowired
-	private HierarchyLevelService hierarchyLevelService;
+	@Autowired private HierarchyLevelService hierarchyLevelService;
 
-	@Autowired
-	private OrganizationHierarchyService organizationHierarchyService;
+	@Autowired private OrganizationHierarchyService organizationHierarchyService;
 
-	@Autowired
-	private ProjectHierarchyService projectHierarchyService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private ProjectHierarchyService projectHierarchyService;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	public List<AccountHierarchyData> getFilteredBuilds(KpiRequest kpiRequest, String groupName) {
 
-		List<AccountHierarchyData> accountDataListAll = (List<AccountHierarchyData>) cacheService
-				.cacheAccountHierarchyData();
+		List<AccountHierarchyData> accountDataListAll =
+				(List<AccountHierarchyData>) cacheService.cacheAccountHierarchyData();
 
-		List<AccountHierarchyData> dataList = getAccountHierarchyDataForRequest(
-				new HashSet<>(kpiRequest.getSprintIncluded()), accountDataListAll);
-		List<AccountHierarchyData> filteredDataSetNew = null;
+		List<AccountHierarchyData> dataList =
+				getAccountHierarchyDataForRequest(
+						new HashSet<>(kpiRequest.getSprintIncluded()), accountDataListAll);
+		List<AccountHierarchyData> filteredDataSetNew;
 		filteredDataSetNew = filter(dataList, groupName, kpiRequest);
-		if (CollectionUtils.isNotEmpty(kpiRequest.getSelectedMap()
-				.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, new ArrayList<>()))) {
-			filteredDataSetNew = filter(filteredDataSetNew, CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, kpiRequest);
+		if (CollectionUtils.isNotEmpty(
+				kpiRequest
+						.getSelectedMap()
+						.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, new ArrayList<>()))) {
+			filteredDataSetNew =
+					filter(filteredDataSetNew, CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, kpiRequest);
 		}
 
-		if (CollectionUtils.isNotEmpty(kpiRequest.getSelectedMap()
-				.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, new ArrayList<>()))) {
-			filteredDataSetNew = filter(filteredDataSetNew, CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, kpiRequest);
+		if (CollectionUtils.isNotEmpty(
+				kpiRequest
+						.getSelectedMap()
+						.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, new ArrayList<>()))) {
+			filteredDataSetNew =
+					filter(filteredDataSetNew, CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, kpiRequest);
 		}
 		return filteredDataSetNew;
 	}
 
-	private List<AccountHierarchyData> filter(List<AccountHierarchyData> dataList, String groupName,
-			KpiRequest kpiRequest) {
-		Set<String> str = new HashSet<>(kpiRequest.getSelectedMap().getOrDefault(groupName, new ArrayList<>()));
+	private static List<AccountHierarchyData> filter(
+			List<AccountHierarchyData> dataList, String groupName, KpiRequest kpiRequest) {
+		Set<String> str =
+				new HashSet<>(kpiRequest.getSelectedMap().getOrDefault(groupName, new ArrayList<>()));
 		List<AccountHierarchyData> filteredDataSetNew = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(str)) {
-			dataList.forEach(data -> {
-				if (data.getNode().stream()
-						.anyMatch(d -> d.getGroupName().equalsIgnoreCase(groupName) && str.contains(d.getId()))) {
-					filteredDataSetNew.add(data);
-				}
-			});
+			dataList.forEach(
+					data -> {
+						if (data.getNode().stream()
+								.anyMatch(
+										d -> d.getGroupName().equalsIgnoreCase(groupName) && str.contains(d.getId()))) {
+							filteredDataSetNew.add(data);
+						}
+					});
 		}
 		return filteredDataSetNew;
 	}
@@ -130,102 +135,119 @@ public class FilterHelperService {
 	/**
 	 * filter data based on sprint state
 	 *
-	 * @param sprintStateList
-	 *            sprintStateList
-	 * @param hierarchyDataAll
-	 *            hierarchyDataAll
+	 * @param sprintStateList sprintStateList
+	 * @param hierarchyDataAll hierarchyDataAll
 	 * @return List<AccountHierarchyData>
 	 */
-	public List<AccountHierarchyData> getAccountHierarchyDataForRequest(Set<String> sprintStateList,
-			List<AccountHierarchyData> hierarchyDataAll) {
-		Set<String> nsprintStateList = sprintStateList.stream().map(String::toLowerCase).collect(Collectors.toSet());
+	public List<AccountHierarchyData> getAccountHierarchyDataForRequest(
+			Set<String> sprintStateList, List<AccountHierarchyData> hierarchyDataAll) {
+		Set<String> nsprintStateList =
+				sprintStateList.stream().map(String::toLowerCase).collect(Collectors.toSet());
 
 		List<AccountHierarchyData> hierarchyData = new ArrayList<>();
 
-		hierarchyDataAll.forEach(data -> {
-			// add all which donot have sprint level
-			if (data.getLabelName().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)
-					|| data.getNode().stream()
-							.anyMatch(node -> node.getGroupName().equals(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
-									&& node.getProjectHierarchy().getSprintState() != null
-									&& nsprintStateList
-											.contains(node.getProjectHierarchy().getSprintState().toLowerCase()))
-					|| data.getNode().stream()
-							.anyMatch(node -> node.getGroupName().equals(CommonConstant.HIERARCHY_LEVEL_ID_RELEASE))) {
-				hierarchyData.add(data);
-			}
-		});
+		hierarchyDataAll.forEach(
+				data -> {
+					// add all which donot have sprint level
+					if (data.getLabelName().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)
+							|| data.getNode().stream()
+									.anyMatch(
+											node ->
+													node.getGroupName().equals(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
+															&& node.getProjectHierarchy().getSprintState() != null
+															&& nsprintStateList.contains(
+																	node.getProjectHierarchy().getSprintState().toLowerCase()))
+							|| data.getNode().stream()
+									.anyMatch(
+											node ->
+													node.getGroupName().equals(CommonConstant.HIERARCHY_LEVEL_ID_RELEASE))) {
+						hierarchyData.add(data);
+					}
+				});
 		return hierarchyData;
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<AccountHierarchyDataKanban> getFilteredBuildsKanban(KpiRequest kpiRequest, String groupName) // NOPMD
+	public List<AccountHierarchyDataKanban> getFilteredBuildsKanban(
+			KpiRequest kpiRequest, String groupName) // NOPMD
 			throws EntityNotFoundException { // NOPMD
 		// Do not remove NOPMD comment. This is required to ignore nthcomplexity
 		// and
 		// cyclomatic Complexity.
 
-		List<AccountHierarchyDataKanban> accountDataList = (List<AccountHierarchyDataKanban>) cacheService
-				.cacheAccountHierarchyKanbanData();
-		List<AccountHierarchyDataKanban> filteredDataSetNew = null;
+		List<AccountHierarchyDataKanban> accountDataList =
+				(List<AccountHierarchyDataKanban>) cacheService.cacheAccountHierarchyKanbanData();
+		List<AccountHierarchyDataKanban> filteredDataSetNew;
 
 		filteredDataSetNew = filterKanban(accountDataList, groupName, kpiRequest);
 
-		if (CollectionUtils.isNotEmpty(kpiRequest.getSelectedMap()
-				.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, new ArrayList<>()))) {
-			filteredDataSetNew = filterKanban(filteredDataSetNew, CommonConstant.HIERARCHY_LEVEL_ID_PROJECT,
-					kpiRequest);
+		if (CollectionUtils.isNotEmpty(
+				kpiRequest
+						.getSelectedMap()
+						.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, new ArrayList<>()))) {
+			filteredDataSetNew =
+					filterKanban(filteredDataSetNew, CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, kpiRequest);
 		}
 
 		if (filteredDataSetNew.isEmpty()) {
-			log.error("[FILTERED-DATA][{}]. No filtered data found  in the cache for the filter level{} and id{}",
-					kpiRequest.getRequestTrackerId(), kpiRequest.getLevel(), kpiRequest.getIds());
-			throw new EntityNotFoundException(KpiRequest.class, "kpiId", Arrays.deepToString(kpiRequest.getIds()));
+			log.error(
+					"[FILTERED-DATA][{}]. No filtered data found  in the cache for the filter level{} and id{}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getLevel(),
+					kpiRequest.getIds());
+			throw new EntityNotFoundException(
+					KpiRequest.class, "kpiId", Arrays.deepToString(kpiRequest.getIds()));
 		}
 
 		return filteredDataSetNew;
 	}
 
-	private List<AccountHierarchyDataKanban> filterKanban(List<AccountHierarchyDataKanban> dataList, String groupName,
-			KpiRequest kpiRequest) {
-		Set<String> str = new HashSet<>(kpiRequest.getSelectedMap().getOrDefault(groupName, new ArrayList<>()));
+	private List<AccountHierarchyDataKanban> filterKanban(
+			List<AccountHierarchyDataKanban> dataList, String groupName, KpiRequest kpiRequest) {
+		Set<String> str =
+				new HashSet<>(kpiRequest.getSelectedMap().getOrDefault(groupName, new ArrayList<>()));
 		List<AccountHierarchyDataKanban> filteredDataSetNew = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(str)) {
-			dataList.forEach(data -> {
-				if (data.getNode().stream()
-						.anyMatch(d -> d.getGroupName().equalsIgnoreCase(groupName) && str.contains(d.getId()))) {
-					filteredDataSetNew.add(data);
-				}
-			});
+			dataList.forEach(
+					data -> {
+						if (data.getNode().stream()
+								.anyMatch(
+										d -> d.getGroupName().equalsIgnoreCase(groupName) && str.contains(d.getId()))) {
+							filteredDataSetNew.add(data);
+						}
+					});
 		}
 		return filteredDataSetNew;
 	}
 
 	// todo remove
-	/**
-	 * @param projectConfig
-	 *            for filter creation
-	 */
 	public void filterCreation(final ProjectBasicConfigDTO projectConfig) {
 		try {
 			/*
 			 * created a set in correct hierarchical order for easy computation
 			 */
-			List<HierarchyLevel> filterCategoryLevels = hierarchyLevelService
-					.getFullHierarchyLevels(projectConfig.getIsKanban());
-			int projectLevel = filterCategoryLevels.stream()
-					.filter(x -> x.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
-					.collect(Collectors.toList()).get(0).getLevel();
+			List<HierarchyLevel> filterCategoryLevels =
+					hierarchyLevelService.getFullHierarchyLevels(projectConfig.getIsKanban());
+			int projectLevel =
+					filterCategoryLevels.stream()
+							.filter(
+									x ->
+											x.getHierarchyLevelId()
+													.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+							.collect(Collectors.toList())
+							.get(0)
+							.getLevel();
 			List<AccountHierarchy> accountHierarchyList = Lists.newArrayList();
 			List<String> pathList = Lists.newLinkedList();
 
-			Map<Pair<String, String>, AccountHierarchy> existingHierarchyMap = getExistingAccountHierarchy(
-					projectConfig.getIsKanban());
+			Map<Pair<String, String>, AccountHierarchy> existingHierarchyMap =
+					getExistingAccountHierarchy(projectConfig.getIsKanban());
 			for (HierarchyLevel filter : filterCategoryLevels) {
 				if (filter.getLevel() <= projectLevel) {
 					AccountHierarchy accountHierarchy = createFilterObject(projectConfig, filter);
 
-					accountHierarchy.setPath(String.join(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER, pathList));
+					accountHierarchy.setPath(
+							String.join(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER, pathList));
 					// filter parent_id
 					if (StringUtils.isNotBlank(accountHierarchy.getPath())) {
 						accountHierarchy.setParentId(
@@ -233,8 +255,9 @@ public class FilterHelperService {
 					}
 
 					pathList.add(0, accountHierarchy.getNodeId());
-					AccountHierarchy exHiery = existingHierarchyMap
-							.get(Pair.of(accountHierarchy.getNodeId(), accountHierarchy.getPath()));
+					AccountHierarchy exHiery =
+							existingHierarchyMap.get(
+									Pair.of(accountHierarchy.getNodeId(), accountHierarchy.getPath()));
 
 					if (null == exHiery) {
 						accountHierarchy.setCreatedDate(LocalDateTime.now());
@@ -244,8 +267,10 @@ public class FilterHelperService {
 			}
 			if (projectConfig.getIsKanban()) {
 				final ModelMapper modelMapper = new ModelMapper();
-				kanbanAccountHierarchyRepo.saveAll(accountHierarchyList.stream()
-						.map(h1 -> modelMapper.map(h1, KanbanAccountHierarchy.class)).collect(Collectors.toList()));
+				kanbanAccountHierarchyRepository.saveAll(
+						accountHierarchyList.stream()
+								.map(h1 -> modelMapper.map(h1, KanbanAccountHierarchy.class))
+								.collect(Collectors.toList()));
 			} else {
 				accountHierarchyRepository.saveAll(accountHierarchyList);
 			}
@@ -254,7 +279,8 @@ public class FilterHelperService {
 		}
 	}
 
-	private AccountHierarchy createFilterObject(ProjectBasicConfigDTO projectConfig, HierarchyLevel filter) {
+	private static AccountHierarchy createFilterObject(
+			ProjectBasicConfigDTO projectConfig, HierarchyLevel filter) {
 		AccountHierarchy accountHierarchy = new AccountHierarchy();
 		accountHierarchy.setBasicProjectConfigId(projectConfig.getId());
 		accountHierarchy.setIsDeleted(Constant.FALSE);
@@ -262,20 +288,26 @@ public class FilterHelperService {
 		// filter based on hierarchy and prepare account hierarchy
 		List<HierarchyValueDTO> hierarchy = projectConfig.getHierarchy();
 		if (CollectionUtils.isNotEmpty(hierarchy)) {
-			hierarchy.stream().forEach(hierarchyValueDTO -> {
-				if (hierarchyValueDTO.getHierarchyLevel().getLevel() == filter.getLevel()) {
-					String nodeId = new StringBuffer(hierarchyValueDTO.getValue()).append(Constant.UNDERSCORE)
-							.append(filter.getHierarchyLevelId()).toString();
-					accountHierarchy.setNodeName(hierarchyValueDTO.getValue());
-					accountHierarchy.setNodeId(nodeId);
-					accountHierarchy.setFilterCategoryId(filter.getId());
-					accountHierarchy.setLabelName(filter.getHierarchyLevelId());
-				}
-			});
+			hierarchy.stream()
+					.forEach(
+							hierarchyValueDTO -> {
+								if (hierarchyValueDTO.getHierarchyLevel().getLevel() == filter.getLevel()) {
+									String nodeId =
+                                            hierarchyValueDTO.getValue() +
+                                                    Constant.UNDERSCORE +
+                                                    filter.getHierarchyLevelId();
+									accountHierarchy.setNodeName(hierarchyValueDTO.getValue());
+									accountHierarchy.setNodeId(nodeId);
+									accountHierarchy.setFilterCategoryId(filter.getId());
+									accountHierarchy.setLabelName(filter.getHierarchyLevelId());
+								}
+							});
 		}
 		if (filter.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)) {
-			String nodeId = new StringBuffer(projectConfig.getProjectName()).append(Constant.UNDERSCORE)
-					.append(projectConfig.getId().toString()).toString();
+			String nodeId =
+                    projectConfig.getProjectName() +
+                            Constant.UNDERSCORE +
+                            projectConfig.getId().toString();
 			accountHierarchy.setNodeName(projectConfig.getProjectName());
 			accountHierarchy.setFilterCategoryId(filter.getId());
 			accountHierarchy.setLabelName(filter.getHierarchyLevelId());
@@ -285,37 +317,38 @@ public class FilterHelperService {
 		return accountHierarchy;
 	}
 
-	private Map<Pair<String, String>, AccountHierarchy> getExistingAccountHierarchy(boolean isKanban) {
+	private Map<Pair<String, String>, AccountHierarchy> getExistingAccountHierarchy(
+			boolean isKanban) {
 		Map<Pair<String, String>, AccountHierarchy> existingHierarchy = null;
 		if (isKanban) {
-			List<KanbanAccountHierarchy> accountHierarchyList = kanbanAccountHierarchyRepo.findAll();
+			List<KanbanAccountHierarchy> accountHierarchyList = kanbanAccountHierarchyRepository.findAll();
 			ModelMapper modelMapper = new ModelMapper();
-			existingHierarchy = accountHierarchyList.stream().map(h1 -> modelMapper.map(h1, AccountHierarchy.class))
-					.collect(Collectors.toMap(p -> Pair.of(p.getNodeId(), p.getPath()), p -> p));
+			existingHierarchy =
+					accountHierarchyList.stream()
+							.map(h1 -> modelMapper.map(h1, AccountHierarchy.class))
+							.collect(Collectors.toMap(p -> Pair.of(p.getNodeId(), p.getPath()), p -> p));
 		} else {
 			List<AccountHierarchy> accountHierarchyList = accountHierarchyRepository.findAll();
-			existingHierarchy = accountHierarchyList.stream()
-					.collect(Collectors.toMap(p -> Pair.of(p.getNodeId(), p.getPath()), p -> p));
+			existingHierarchy =
+					accountHierarchyList.stream()
+							.collect(Collectors.toMap(p -> Pair.of(p.getNodeId(), p.getPath()), p -> p));
 		}
 		return existingHierarchy;
 	}
-
-	/**
-	 * clean filter data
-	 *
-	 * @param basicConfig
-	 *            id
-	 */
+	
 	public void cleanFilterData(ProjectBasicConfigDTO basicConfig) {
 		ObjectId basicProjectConfigId = basicConfig.getId();
 		log.info("cleaning filter data for {}", basicProjectConfigId.toHexString());
 		List<HierarchyValueDTO> hierarchyLevelValues = basicConfig.getHierarchy();
-		List<String> reverseOrderHierarchy = CollectionUtils.emptyIfNull(hierarchyLevelValues).stream()
-				.sorted(Comparator
-						.comparing((HierarchyValueDTO hierarchyValue) -> hierarchyValue.getHierarchyLevel().getLevel())
-						.reversed())
-				.map(hierarchyValue -> hierarchyValue.getHierarchyLevel().getHierarchyLevelId())
-				.collect(Collectors.toList());
+		List<String> reverseOrderHierarchy =
+				CollectionUtils.emptyIfNull(hierarchyLevelValues).stream()
+						.sorted(
+								Comparator.comparing(
+												(HierarchyValueDTO hierarchyValue) ->
+														hierarchyValue.getHierarchyLevel().getLevel())
+										.reversed())
+						.map(hierarchyValue -> hierarchyValue.getHierarchyLevel().getHierarchyLevelId())
+						.collect(Collectors.toList());
 
 		if (basicConfig.getIsKanban()) {
 			cleanKanbanFilterData(reverseOrderHierarchy, basicProjectConfigId);
@@ -323,36 +356,37 @@ public class FilterHelperService {
 			cleanScrumFilterData(reverseOrderHierarchy, basicProjectConfigId);
 		}
 	}
-
-	/**
-	 * @param reversehierarchy
-	 * @param projId
-	 */
+	
 	private void cleanScrumFilterData(List<String> reversehierarchy, ObjectId projId) {
-		List<AccountHierarchy> projectDataList = accountHierarchyRepository
-				.findByLabelNameAndBasicProjectConfigId(Constant.PROJECT, projId);
-		if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(projectDataList)) {
+		List<AccountHierarchy> projectDataList =
+				accountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(Constant.PROJECT, projId);
+		if (CollectionUtils.isNotEmpty(projectDataList)) {
 			String childNodesPath = StringUtils.EMPTY;
 			AccountHierarchy projectData = projectDataList.get(0);
 			String path = projectData.getPath();
 			for (String hier : reversehierarchy) {
 				List<AccountHierarchy> list = accountHierarchyRepository.findByLabelNameAndPath(hier, path);
-				if (list.size() > SINGLECHILD) {
+				if (list.size() > SINGLE_CHILD) {
 					break;
 				}
 				childNodesPath = path;
-				path = path.substring(path.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1, path.length())
-						.trim();
+				path =
+						path.substring(
+										path.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1)
+								.trim();
 			}
 
 			if (childNodesPath.isEmpty()) {
-				childNodesPath = projectData.getNodeId() + CommonConstant.ACC_HIERARCHY_PATH_SPLITTER + path;
+				childNodesPath =
+						projectData.getNodeId() + CommonConstant.ACC_HIERARCHY_PATH_SPLITTER + path;
 				accountHierarchyRepository.deleteByNodeIdAndPath(projectData.getNodeId(), path);
-			} else if (childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) > -1) {
+			} else if (childNodesPath.contains(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER)) {
 				accountHierarchyRepository.deleteByNodeIdAndPath(
-						childNodesPath.substring(0, childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER)),
-						childNodesPath.substring(childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1,
-								childNodesPath.length()));
+						childNodesPath.substring(
+								0, childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER)),
+						childNodesPath.substring(
+								childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1
+                        ));
 			}
 			accountHierarchyRepository.deleteByPathEndsWith(childNodesPath);
 		}
@@ -364,33 +398,39 @@ public class FilterHelperService {
 	 */
 	private void cleanKanbanFilterData(List<String> reversehierarchy, ObjectId projId) {
 
-		List<KanbanAccountHierarchy> projectDataList = kanbanAccountHierarchyRepo
-				.findByLabelNameAndBasicProjectConfigId(Constant.PROJECT, projId);
+		List<KanbanAccountHierarchy> projectDataList =
+				kanbanAccountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(Constant.PROJECT, projId);
 
-		if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(projectDataList)) {
+		if (CollectionUtils.isNotEmpty(projectDataList)) {
 			KanbanAccountHierarchy projectData = projectDataList.get(0);
 			String childNodesPath = StringUtils.EMPTY;
 			String path = projectData.getPath();
 			for (String hier : reversehierarchy) {
-				List<KanbanAccountHierarchy> list = kanbanAccountHierarchyRepo.findByLabelNameAndPath(hier, path);
-				if (list.size() > SINGLECHILD) {
+				List<KanbanAccountHierarchy> list =
+						kanbanAccountHierarchyRepository.findByLabelNameAndPath(hier, path);
+				if (list.size() > SINGLE_CHILD) {
 					break;
 				}
 				childNodesPath = path;
-				path = path.substring(path.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1, path.length())
-						.trim();
+				path =
+						path.substring(
+										path.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1)
+								.trim();
 			}
 
 			if (childNodesPath.isEmpty()) {
-				childNodesPath = projectData.getNodeId() + CommonConstant.ACC_HIERARCHY_PATH_SPLITTER + path;
-				kanbanAccountHierarchyRepo.deleteByNodeIdAndPath(projectData.getNodeId(), path);
-			} else if (childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) > -1) {
-				kanbanAccountHierarchyRepo.deleteByNodeIdAndPath(
-						childNodesPath.substring(0, childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER)),
-						childNodesPath.substring(childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1,
-								childNodesPath.length()));
+				childNodesPath =
+						projectData.getNodeId() + CommonConstant.ACC_HIERARCHY_PATH_SPLITTER + path;
+				kanbanAccountHierarchyRepository.deleteByNodeIdAndPath(projectData.getNodeId(), path);
+			} else if (childNodesPath.contains(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER)) {
+				kanbanAccountHierarchyRepository.deleteByNodeIdAndPath(
+						childNodesPath.substring(
+								0, childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER)),
+						childNodesPath.substring(
+								childNodesPath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER) + 1
+                        ));
 			}
-			kanbanAccountHierarchyRepo.deleteByPathEndsWith(childNodesPath);
+			kanbanAccountHierarchyRepository.deleteByPathEndsWith(childNodesPath);
 		}
 	}
 
@@ -414,13 +454,13 @@ public class FilterHelperService {
 		if (ahProjetLabel != null) {
 			// find all the items below project including project
 			idsForDeletion.add(ahProjetLabel.getId());
-			List<AccountHierarchy> ahBellowProjectLabel = findAccountHierarchiesBellowProjectLevelForDeletion(
-					ahProjetLabel);
+			List<AccountHierarchy> ahBellowProjectLabel =
+					findAccountHierarchiesBellowProjectLevelForDeletion(ahProjetLabel);
 			ahBellowProjectLabel.forEach(ah -> idsForDeletion.add(ah.getId()));
 
 			// find all the items above project label
-			List<AccountHierarchy> ahAboveProjectLevel = findAccountHierarchiesAboveProvidedForDeletion(ahProjetLabel,
-					null);
+			List<AccountHierarchy> ahAboveProjectLevel =
+					findAccountHierarchiesAboveProvidedForDeletion(ahProjetLabel, null);
 			ahAboveProjectLevel.forEach(ah -> idsForDeletion.add(ah.getId()));
 		}
 
@@ -435,26 +475,29 @@ public class FilterHelperService {
 
 		List<AccountHierarchy> resultAccountHierarchies = new ArrayList<>();
 		List<HierarchyLevel> hierarchyList = hierarchyLevelService.getFullHierarchyLevels(false);
-		HierarchyLevel projectHierarchyLevel = getHierarchyLevelMap(false)
-				.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, null);
+		HierarchyLevel projectHierarchyLevel =
+				getHierarchyLevelMap(false).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, null);
 		if (CollectionUtils.isNotEmpty(hierarchyList) && null != projectHierarchyLevel) {
-			List<HierarchyLevel> filterCategoryBellowProjectLevel = hierarchyList.stream()
-					.filter(filterCategory -> filterCategory.getLevel() > projectHierarchyLevel.getLevel())
-					.collect(Collectors.toList());
+			List<HierarchyLevel> filterCategoryBellowProjectLevel =
+					hierarchyList.stream()
+							.filter(
+									filterCategory -> filterCategory.getLevel() > projectHierarchyLevel.getLevel())
+							.collect(Collectors.toList());
 
-			filterCategoryBellowProjectLevel.forEach(filterCategory -> {
-				List<AccountHierarchy> ahBellowProjectLevel = accountHierarchyRepository
-						.findByLabelNameAndBasicProjectConfigId(filterCategory.getHierarchyLevelId(),
-								ahProjectLevel.getBasicProjectConfigId());
-				resultAccountHierarchies.addAll(ahBellowProjectLevel);
-			});
+			filterCategoryBellowProjectLevel.forEach(
+					filterCategory -> {
+						List<AccountHierarchy> ahBellowProjectLevel =
+								accountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(
+										filterCategory.getHierarchyLevelId(), ahProjectLevel.getBasicProjectConfigId());
+						resultAccountHierarchies.addAll(ahBellowProjectLevel);
+					});
 		}
 
 		return resultAccountHierarchies;
 	}
 
-	private List<AccountHierarchy> findAccountHierarchiesAboveProvidedForDeletion(AccountHierarchy ah,
-			List<AccountHierarchy> toBeDeleted) {
+	private List<AccountHierarchy> findAccountHierarchiesAboveProvidedForDeletion(
+			AccountHierarchy ah, List<AccountHierarchy> toBeDeleted) {
 
 		if (toBeDeleted == null) {
 			toBeDeleted = new ArrayList<>();
@@ -463,9 +506,10 @@ public class FilterHelperService {
 		String path = ah.getPath();
 		String parentNodeId = ah.getParentId();
 		String parentNodePath = getParentNodePath(path);
-		List<AccountHierarchy> parentNodes = accountHierarchyRepository.findByNodeIdAndPath(parentNodeId,
-				parentNodePath);
-		AccountHierarchy parentNode = CollectionUtils.isNotEmpty(parentNodes) ? parentNodes.get(0) : null;
+		List<AccountHierarchy> parentNodes =
+				accountHierarchyRepository.findByNodeIdAndPath(parentNodeId, parentNodePath);
+		AccountHierarchy parentNode =
+				CollectionUtils.isNotEmpty(parentNodes) ? parentNodes.get(0) : null;
 
 		if (parentNode != null && isOnlyNode(ah)) {
 			toBeDeleted.add(parentNode);
@@ -474,66 +518,74 @@ public class FilterHelperService {
 		return toBeDeleted;
 	}
 
-	private String getParentNodePath(String nodePath) {
+	private static String getParentNodePath(String nodePath) {
 		if (nodePath == null) {
 			return null;
 		}
 		int splitterIndex = nodePath.indexOf(CommonConstant.ACC_HIERARCHY_PATH_SPLITTER);
 
-		return splitterIndex == -1 ? ""
-				: nodePath.substring(splitterIndex + CommonConstant.ACC_HIERARCHY_PATH_SPLITTER.length()).trim();
+		return splitterIndex == -1
+				? ""
+				: nodePath
+						.substring(splitterIndex + CommonConstant.ACC_HIERARCHY_PATH_SPLITTER.length())
+						.trim();
 	}
 
 	private boolean isOnlyNode(AccountHierarchy node) {
-		List<AccountHierarchy> accountHierarchies = accountHierarchyRepository
-				.findByLabelNameAndPath(node.getLabelName(), node.getPath());
+		List<AccountHierarchy> accountHierarchies =
+				accountHierarchyRepository.findByLabelNameAndPath(node.getLabelName(), node.getPath());
 		return CollectionUtils.isNotEmpty(accountHierarchies) && accountHierarchies.size() == 1;
 	}
 
 	private AccountHierarchy getAccountHierarchyProjectLevel(ObjectId projectBasicConfigId) {
-		List<AccountHierarchy> accountHierarchiesProjectLabel = accountHierarchyRepository
-				.findByLabelNameAndBasicProjectConfigId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT,
-						projectBasicConfigId);
+		List<AccountHierarchy> accountHierarchiesProjectLabel =
+				accountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(
+						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, projectBasicConfigId);
 
-		return CollectionUtils.isNotEmpty(accountHierarchiesProjectLabel) ? accountHierarchiesProjectLabel.get(0)
+		return CollectionUtils.isNotEmpty(accountHierarchiesProjectLabel)
+				? accountHierarchiesProjectLabel.get(0)
 				: null;
 	}
 
 	private void deleteAccountHierarchiesOfProjectKanban(ObjectId projectBasicConfigId) {
-		KanbanAccountHierarchy ahProjetLabel = getAccountHierarchyProjectLevelKanban(projectBasicConfigId);
+		KanbanAccountHierarchy ahProjetLabel =
+				getAccountHierarchyProjectLevelKanban(projectBasicConfigId);
 		final List<ObjectId> idsForDeletion = new ArrayList<>();
 
 		if (ahProjetLabel != null) {
 			// find all the items below project including project
 			idsForDeletion.add(ahProjetLabel.getId());
-			List<KanbanAccountHierarchy> ahBellowProjectLabel = findAccountHierarchiesBellowProjectLevelForDeletionKanban(
-					ahProjetLabel);
+			List<KanbanAccountHierarchy> ahBellowProjectLabel =
+					findAccountHierarchiesBellowProjectLevelForDeletionKanban(ahProjetLabel);
 			ahBellowProjectLabel.forEach(ah -> idsForDeletion.add(ah.getId()));
 
 			// find all the items above project label
-			List<KanbanAccountHierarchy> ahAboveProjectLevel = findAccountHierarchiesAboveProvidedForDeletionKanban(
-					ahProjetLabel, null);
+			List<KanbanAccountHierarchy> ahAboveProjectLevel =
+					findAccountHierarchiesAboveProvidedForDeletionKanban(ahProjetLabel, null);
 			ahAboveProjectLevel.forEach(ah -> idsForDeletion.add(ah.getId()));
 		}
 
 		if (CollectionUtils.isNotEmpty(idsForDeletion)) {
 
-			kanbanAccountHierarchyRepo.deleteByIdIn(idsForDeletion);
+			kanbanAccountHierarchyRepository.deleteByIdIn(idsForDeletion);
 		}
 	}
 
 	private boolean isOnlyNodeKanban(KanbanAccountHierarchy parentNode) {
-		List<KanbanAccountHierarchy> accountHierarchies = kanbanAccountHierarchyRepo
-				.findByLabelNameAndPath(parentNode.getLabelName(), parentNode.getPath());
+		List<KanbanAccountHierarchy> accountHierarchies =
+				kanbanAccountHierarchyRepository.findByLabelNameAndPath(
+						parentNode.getLabelName(), parentNode.getPath());
 		return CollectionUtils.isNotEmpty(accountHierarchies) && accountHierarchies.size() == 1;
 	}
 
-	private KanbanAccountHierarchy getAccountHierarchyProjectLevelKanban(ObjectId projectBasicConfigId) {
-		List<KanbanAccountHierarchy> accountHierarchiesProjectLabel = kanbanAccountHierarchyRepo
-				.findByLabelNameAndBasicProjectConfigId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT,
-						projectBasicConfigId);
+	private KanbanAccountHierarchy getAccountHierarchyProjectLevelKanban(
+			ObjectId projectBasicConfigId) {
+		List<KanbanAccountHierarchy> accountHierarchiesProjectLabel =
+				kanbanAccountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(
+						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, projectBasicConfigId);
 
-		return CollectionUtils.isNotEmpty(accountHierarchiesProjectLabel) ? accountHierarchiesProjectLabel.get(0)
+		return CollectionUtils.isNotEmpty(accountHierarchiesProjectLabel)
+				? accountHierarchiesProjectLabel.get(0)
 				: null;
 	}
 
@@ -543,26 +595,29 @@ public class FilterHelperService {
 		List<KanbanAccountHierarchy> resultAccountHierarchies = new ArrayList<>();
 
 		List<HierarchyLevel> hierarchyList = hierarchyLevelService.getFullHierarchyLevels(true);
-		HierarchyLevel projectHierarchyLevel = getHierarchyLevelMap(true)
-				.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, null);
+		HierarchyLevel projectHierarchyLevel =
+				getHierarchyLevelMap(true).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, null);
 		if (CollectionUtils.isNotEmpty(hierarchyList) && null != projectHierarchyLevel) {
-			List<HierarchyLevel> filterCategoryBellowProjectLevel = hierarchyList.stream()
-					.filter(filterCategory -> filterCategory.getLevel() > projectHierarchyLevel.getLevel())
-					.collect(Collectors.toList());
+			List<HierarchyLevel> filterCategoryBellowProjectLevel =
+					hierarchyList.stream()
+							.filter(
+									filterCategory -> filterCategory.getLevel() > projectHierarchyLevel.getLevel())
+							.collect(Collectors.toList());
 
-			filterCategoryBellowProjectLevel.forEach(filterCategory -> {
-				List<KanbanAccountHierarchy> ahBellowProjectLevel = kanbanAccountHierarchyRepo
-						.findByLabelNameAndBasicProjectConfigId(filterCategory.getHierarchyLevelId(),
-								ahProjectLevel.getBasicProjectConfigId());
-				resultAccountHierarchies.addAll(ahBellowProjectLevel);
-			});
+			filterCategoryBellowProjectLevel.forEach(
+					filterCategory -> {
+						List<KanbanAccountHierarchy> ahBellowProjectLevel =
+								kanbanAccountHierarchyRepository.findByLabelNameAndBasicProjectConfigId(
+										filterCategory.getHierarchyLevelId(), ahProjectLevel.getBasicProjectConfigId());
+						resultAccountHierarchies.addAll(ahBellowProjectLevel);
+					});
 		}
 
 		return resultAccountHierarchies;
 	}
 
-	private List<KanbanAccountHierarchy> findAccountHierarchiesAboveProvidedForDeletionKanban(KanbanAccountHierarchy ah,
-			List<KanbanAccountHierarchy> toBeDeleted) {
+	private List<KanbanAccountHierarchy> findAccountHierarchiesAboveProvidedForDeletionKanban(
+			KanbanAccountHierarchy ah, List<KanbanAccountHierarchy> toBeDeleted) {
 
 		if (toBeDeleted == null) {
 			toBeDeleted = new ArrayList<>();
@@ -571,9 +626,10 @@ public class FilterHelperService {
 		String path = ah.getPath();
 		String parentNodeId = ah.getParentId();
 		String parentNodePath = getParentNodePath(path);
-		List<KanbanAccountHierarchy> parentNodes = kanbanAccountHierarchyRepo.findByNodeIdAndPath(parentNodeId,
-				parentNodePath);
-		KanbanAccountHierarchy parentNode = CollectionUtils.isNotEmpty(parentNodes) ? parentNodes.get(0) : null;
+		List<KanbanAccountHierarchy> parentNodes =
+				kanbanAccountHierarchyRepository.findByNodeIdAndPath(parentNodeId, parentNodePath);
+		KanbanAccountHierarchy parentNode =
+				CollectionUtils.isNotEmpty(parentNodes) ? parentNodes.get(0) : null;
 
 		if (parentNode != null && isOnlyNodeKanban(ah)) {
 			toBeDeleted.add(parentNode);
@@ -590,31 +646,41 @@ public class FilterHelperService {
 		}
 	}
 
-	public String getHierarachyLevelId(int level, String label, boolean isKanban) {
+	public String getHierarchyLevelId(int level, String label, boolean isKanban) {
 		String hierarchyId = CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 		Map<String, HierarchyLevel> map = getHierarchyLevelMap(isKanban);
 		if (MapUtils.isNotEmpty(map)) {
 			if (StringUtils.isNotEmpty(label)) {
-				hierarchyId = map.values().stream().filter(hlevel -> (hlevel.getLevel() == level)
-						&& (StringUtils.isNotEmpty(label) && hlevel.getHierarchyLevelId().equalsIgnoreCase(label)))
-						.map(HierarchyLevel::getHierarchyLevelId).findFirst()
-						.orElse(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+				hierarchyId =
+						map.values().stream()
+								.filter(
+										hlevel ->
+												(hlevel.getLevel() == level)
+														&& (StringUtils.isNotEmpty(label)
+																&& hlevel.getHierarchyLevelId().equalsIgnoreCase(label)))
+								.map(HierarchyLevel::getHierarchyLevelId)
+								.findFirst()
+								.orElse(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 			} else {
-				hierarchyId = map.values().stream().filter(hlevel -> (hlevel.getLevel() == level))
-						.map(HierarchyLevel::getHierarchyLevelId).findFirst()
-						.orElse(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+				hierarchyId =
+						map.values().stream()
+								.filter(hlevel -> (hlevel.getLevel() == level))
+								.map(HierarchyLevel::getHierarchyLevelId)
+								.findFirst()
+								.orElse(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 			}
 		}
 		return hierarchyId;
 	}
 
-	public String getFirstHierarachyLevel() {
-		return getHierarachyLevelId(1, "", true);
+	public String getFirstHierarchyLevel() {
+		return getHierarchyLevelId(1, "", true);
 	}
 
 	public Map<String, Integer> getHierarchyIdLevelMap(boolean isKanban) {
 		Map<String, Integer> hierarchyLevelMap = new HashMap<>();
-		getHierarchyLevelMap(isKanban).forEach((key, value) -> hierarchyLevelMap.put(key, value.getLevel()));
+		getHierarchyLevelMap(isKanban)
+				.forEach((key, value) -> hierarchyLevelMap.put(key, value.getLevel()));
 		return hierarchyLevelMap;
 	}
 
@@ -625,17 +691,16 @@ public class FilterHelperService {
 	/**
 	 * Checks if filter level selected is upto project level or below project level.
 	 *
-	 * @param level
-	 *            filter level selected
-	 * @param isKanban
-	 *            if scrum or kanban
+	 * @param level filter level selected
+	 * @param isKanban if scrum or kanban
 	 * @return true or false
 	 */
 	public boolean isFilterSelectedTillSprintLevel(int level, boolean isKanban) {
-		if (CollectionUtils.isEmpty(customApiConfig.getGroupIdsToExcludeFromCache()))
+		if (CollectionUtils.isEmpty(customApiConfig.getGroupIdsToExcludeFromCache())){
 			return false;
-		HierarchyLevel projectHierarchyLevel = getHierarchyLevelMap(isKanban)
-				.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, null);
+		}
+		HierarchyLevel projectHierarchyLevel =
+				getHierarchyLevelMap(isKanban).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, null);
 		return null != projectHierarchyLevel && projectHierarchyLevel.getLevel() >= level;
 	}
 }

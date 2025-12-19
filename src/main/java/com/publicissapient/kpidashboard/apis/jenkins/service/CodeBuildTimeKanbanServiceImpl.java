@@ -64,16 +64,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List<Object>, Map<ObjectId, List<Build>>> {
+public class CodeBuildTimeKanbanServiceImpl
+		extends JenkinsKPIService<Long, List<Object>, Map<ObjectId, List<Build>>> {
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private KpiHelperService kpiHelperService;
-	@Autowired
-	private BuildRepository buildRepository;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
+	@Autowired private BuildRepository buildRepository;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	@Override
 	public String getQualifierType() {
@@ -81,12 +78,14 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
 		log.info("CODE-BUILD-TIME-LEAF-NODE-VALUE", kpiRequest.getRequestTrackerId());
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		List<Node> projectList = treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
+		List<Node> projectList =
+				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
 
 		// This method will contain the main logic to fetch data from db and set it in
 		// aggregation tree
@@ -95,22 +94,25 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 
 		calculateAggregatedValueMap(root, nodeWiseKPIValue, KPICode.CODE_BUILD_TIME_KANBAN);
-		Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.CODE_BUILD_TIME_KANBAN);
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CODE_BUILD_TIME_KANBAN);
 
 		List<DataCountGroup> dataCountGroups = new ArrayList<>();
-		trendValuesMap.forEach((key, dateWiseDataCount) -> {
-			DataCountGroup dataCountGroup = new DataCountGroup();
-			dataCountGroup.setFilter(key);
-			dataCountGroup.setValue(dateWiseDataCount);
-			dataCountGroups.add(dataCountGroup);
-		});
+		trendValuesMap.forEach(
+				(key, dateWiseDataCount) -> {
+					DataCountGroup dataCountGroup = new DataCountGroup();
+					dataCountGroup.setFilter(key);
+					dataCountGroup.setValue(dateWiseDataCount);
+					dataCountGroups.add(dataCountGroup);
+				});
 
 		kpiElement.setTrendValueList(dataCountGroups);
 
 		kpiElement.setNodeWiseKPIValue(nodeWiseKPIValue);
-		log.debug("[CODE-BUILD-TIME-LEAF-NODE-VALUE][{}]. Aggregated Value at each level in the tree {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[CODE-BUILD-TIME-LEAF-NODE-VALUE][{}]. Aggregated Value at each level in the tree {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 		return kpiElement;
 	}
 
@@ -120,26 +122,32 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 	}
 
 	@Override
-	public Map<ObjectId, List<Build>> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<ObjectId, List<Build>> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Set<ObjectId> projectBasicConfigIds = new HashSet<>();
 		List<String> statusList = new ArrayList<>();
 		Map<String, List<String>> mapOfFilters = new HashMap<>();
-		leafNodeList.forEach(node -> {
-			ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
-			projectBasicConfigIds.add(basicProjectConfigId);
-		});
+		leafNodeList.forEach(
+				node -> {
+					ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
+					projectBasicConfigIds.add(basicProjectConfigId);
+				});
 
 		statusList.add(BuildStatus.SUCCESS.name());
 		mapOfFilters.put("buildStatus", statusList);
-		List<Build> buildList = buildRepository.findBuildList(mapOfFilters, projectBasicConfigIds, startDate, endDate);
+		List<Build> buildList =
+				buildRepository.findBuildList(mapOfFilters, projectBasicConfigIds, startDate, endDate);
 		if (CollectionUtils.isEmpty(buildList)) {
 			return new HashMap<>();
 		}
-		return buildList.stream().collect(Collectors.groupingBy(Build::getBasicProjectConfigId, Collectors.toList()));
+		return buildList.stream()
+				.collect(Collectors.groupingBy(Build::getBasicProjectConfigId, Collectors.toList()));
 	}
 
-	private void dateWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> leafNodeList, KpiElement kpiElement,
+	private void dateWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
 			KpiRequest kpiRequest) {
 
 		// this method fetch start and end date to fetch data.
@@ -149,7 +157,8 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 		String startDate = dateRange.getStartDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		String endDate = dateRange.getEndDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-		Map<ObjectId, List<Build>> resultMap = fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
+		Map<ObjectId, List<Build>> resultMap =
+				fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
 
 		if (MapUtils.isEmpty(resultMap)) {
 			return;
@@ -158,49 +167,64 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 		kpiWithFilter(resultMap, mapTmp, leafNodeList, kpiElement, kpiRequest);
 	}
 
-	private void kpiWithFilter(Map<ObjectId, List<Build>> resultMap, Map<String, Node> mapTmp, List<Node> leafNodeList,
-			KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void kpiWithFilter(
+			Map<ObjectId, List<Build>> resultMap,
+			Map<String, Node> mapTmp,
+			List<Node> leafNodeList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 		String requestTrackerId = getKanbanRequestTrackerId();
 		List<KPIExcelData> excelData = new ArrayList<>();
-		leafNodeList.forEach(node -> {
-			Map<String, List<DataCount>> trendValueMap = new HashMap<>();
-			CodeBuildTimeInfo codeBuildTimeInfo = new CodeBuildTimeInfo();
-			List<DataCount> dataCountAggList = new ArrayList<>();
-			String projectNodeId = node.getId();
-			ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
-			List<Build> buildListProjectWise = resultMap.get(basicProjectConfigId);
+		leafNodeList.forEach(
+				node -> {
+					Map<String, List<DataCount>> trendValueMap = new HashMap<>();
+					CodeBuildTimeInfo codeBuildTimeInfo = new CodeBuildTimeInfo();
+					List<DataCount> dataCountAggList = new ArrayList<>();
+					ObjectId basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId();
+					List<Build> buildListProjectWise = resultMap.get(basicProjectConfigId);
 
-			if (CollectionUtils.isNotEmpty(buildListProjectWise)) {
+					if (CollectionUtils.isNotEmpty(buildListProjectWise)) {
 
-				Map<String, List<Build>> buildMapJobWise = buildListProjectWise.stream()
-						.collect(Collectors.groupingBy(Build::getBuildJob, Collectors.toList()));
+						Map<String, List<Build>> buildMapJobWise =
+								buildListProjectWise.stream()
+										.collect(Collectors.groupingBy(Build::getBuildJob, Collectors.toList()));
 
-				filterDataBasedOnJobAndRangeWise(kpiRequest, trendValueMap, codeBuildTimeInfo, dataCountAggList, node,
-						buildMapJobWise);
+						filterDataBasedOnJobAndRangeWise(
+								kpiRequest,
+								trendValueMap,
+								codeBuildTimeInfo,
+								dataCountAggList,
+								node,
+								buildMapJobWise);
 
-				List<DataCount> aggData = calculateAggregatedRangeWise(KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(),
-						dataCountAggList);
+						List<DataCount> aggData =
+								calculateAggregatedRangeWise(
+										KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(), dataCountAggList);
 
-				if (CollectionUtils.isNotEmpty(aggData)) {
-					trendValueMap.put(CommonConstant.OVERALL, aggData);
-				}
-				if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+						if (CollectionUtils.isNotEmpty(aggData)) {
+							trendValueMap.put(CommonConstant.OVERALL, aggData);
+						}
+						if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 
-					KPIExcelUtility.populateCodeBuildTimeExcelData(codeBuildTimeInfo, node.getProjectFilter().getName(),
-							excelData);
-				}
-				mapTmp.get(node.getId()).setValue(trendValueMap);
-			} else {
-				mapTmp.get(node.getId()).setValue(null);
-				return;
-			}
-		});
+							KPIExcelUtility.populateCodeBuildTimeExcelData(
+									codeBuildTimeInfo, node.getProjectFilter().getName(), excelData);
+						}
+						mapTmp.get(node.getId()).setValue(trendValueMap);
+					} else {
+						mapTmp.get(node.getId()).setValue(null);
+						return;
+					}
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.CODE_BUILD_TIME_KANBAN.getColumns());
 	}
 
-	private void filterDataBasedOnJobAndRangeWise(KpiRequest kpiRequest, Map<String, List<DataCount>> trendValueMap,
-			CodeBuildTimeInfo codeBuildTimeInfo, List<DataCount> dataCountAggList, Node node,
+	private void filterDataBasedOnJobAndRangeWise(
+			KpiRequest kpiRequest,
+			Map<String, List<DataCount>> trendValueMap,
+			CodeBuildTimeInfo codeBuildTimeInfo,
+			List<DataCount> dataCountAggList,
+			Node node,
 			Map<String, List<Build>> buildMapJobWise) {
 
 		String projectName = node.getProjectFilter().getName();
@@ -215,16 +239,22 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 			LocalDate currentDate = LocalDate.now();
 			for (int i = 0; i < kpiRequest.getKanbanXaxisDataPoints(); i++) {
 
-				CustomDateRange dateRange = KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate,
-						kpiRequest.getDuration());
+				CustomDateRange dateRange =
+						KpiDataHelper.getStartAndEndDateForDataFiltering(currentDate, kpiRequest.getDuration());
 
 				String date = getRange(dateRange, kpiRequest);
 
-				Map<String, Long> projectWiseBuildTimeCountMap = filterKanbanDataBasedOnDateAndBuildTimeWise(buildList,
-						dateRange, date, codeBuildTimeInfo, jobName, projectName);
+				Map<String, Long> projectWiseBuildTimeCountMap =
+						filterKanbanDataBasedOnDateAndBuildTimeWise(
+								buildList, dateRange, date, codeBuildTimeInfo, jobName, projectName);
 
-				populateProjectFilterWiseDataMap(projectWiseBuildTimeCountMap, trendValueMap, projectName,
-						node.getProjectFilter().getId(), date, dataCountAggList);
+				populateProjectFilterWiseDataMap(
+						projectWiseBuildTimeCountMap,
+						trendValueMap,
+						projectName,
+						node.getProjectFilter().getId(),
+						date,
+						dataCountAggList);
 
 				currentDate = getNextRangeDate(kpiRequest, currentDate);
 			}
@@ -236,23 +266,35 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 		return calculateKpiValueForLong(valueList, kpiId);
 	}
 
-	public Map<String, Long> filterKanbanDataBasedOnDateAndBuildTimeWise(List<Build> buildList, CustomDateRange dateRange,
-			String date, CodeBuildTimeInfo codeBuildTimeInfo, String jobName, String projectName) {
+	public Map<String, Long> filterKanbanDataBasedOnDateAndBuildTimeWise(
+			List<Build> buildList,
+			CustomDateRange dateRange,
+			String date,
+			CodeBuildTimeInfo codeBuildTimeInfo,
+			String jobName,
+			String projectName) {
 		Map<String, Long> projectBuildTimeMap = new HashMap<>();
 		Long valueForCurrentRange = 0l;
 		List<Long> durationList = new ArrayList<>();
-		buildList.forEach(build -> {
-			LocalDate buildTime = Instant.ofEpochMilli(build.getStartTime()).atZone(ZoneId.systemDefault()).toLocalDate();
-			if ((buildTime.isAfter(dateRange.getStartDate()) || buildTime.isEqual(dateRange.getStartDate())) &&
-					(buildTime.isBefore(dateRange.getEndDate()) || buildTime.isEqual(dateRange.getEndDate()))) {
-				durationList.add(build.getDuration());
-				prepareCodeBuildTimeInfo(codeBuildTimeInfo, build, date);
-			}
-		});
+		buildList.forEach(
+				build -> {
+					LocalDate buildTime =
+							Instant.ofEpochMilli(build.getStartTime())
+									.atZone(ZoneId.systemDefault())
+									.toLocalDate();
+					if ((buildTime.isAfter(dateRange.getStartDate())
+									|| buildTime.isEqual(dateRange.getStartDate()))
+							&& (buildTime.isBefore(dateRange.getEndDate())
+									|| buildTime.isEqual(dateRange.getEndDate()))) {
+						durationList.add(build.getDuration());
+						prepareCodeBuildTimeInfo(codeBuildTimeInfo, build, date);
+					}
+				});
 		if (CollectionUtils.isNotEmpty(durationList)) {
 			valueForCurrentRange = AggregationUtils.averageLong(durationList);
 		}
-		projectBuildTimeMap.put(jobName + CommonUtils.getStringWithDelimiters(projectName), valueForCurrentRange);
+		projectBuildTimeMap.put(
+				jobName + CommonUtils.getStringWithDelimiters(projectName), valueForCurrentRange);
 		return projectBuildTimeMap;
 	}
 
@@ -264,15 +306,20 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 	 * @param projectNodeId
 	 * @param date
 	 */
-	private void populateProjectFilterWiseDataMap(Map<String, Long> projectWiseBuildTimeCountMap,
-			Map<String, List<DataCount>> projectFilterWiseDataMap, String projectName, String projectNodeId, String date,
+	private void populateProjectFilterWiseDataMap(
+			Map<String, Long> projectWiseBuildTimeCountMap,
+			Map<String, List<DataCount>> projectFilterWiseDataMap,
+			String projectName,
+			String projectNodeId,
+			String date,
 			List<DataCount> dataCountAggList) {
 
-		projectWiseBuildTimeCountMap.forEach((key, value) -> {
-			DataCount dcObj = getDataCountObject(value, projectName, date, projectNodeId, key);
-			dataCountAggList.add(dcObj);
-			projectFilterWiseDataMap.computeIfAbsent(key, k -> new ArrayList<>()).add(dcObj);
-		});
+		projectWiseBuildTimeCountMap.forEach(
+				(key, value) -> {
+					DataCount dcObj = getDataCountObject(value, projectName, date, projectNodeId, key);
+					dataCountAggList.add(dcObj);
+					projectFilterWiseDataMap.computeIfAbsent(key, k -> new ArrayList<>()).add(dcObj);
+				});
 	}
 
 	/**
@@ -304,7 +351,8 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
 			range = dateRange.getStartDate().toString() + " to " + dateRange.getEndDate().toString();
 		} else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-			range = dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
+			range =
+					dateRange.getStartDate().getMonth().toString() + " " + dateRange.getStartDate().getYear();
 		} else {
 			range = dateRange.getStartDate().toString();
 		}
@@ -321,8 +369,8 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 	 * @param jobName
 	 * @param
 	 */
-	private DataCount getDataCountObject(Long value, String projectName, String date, String projectNodeId,
-			String jobName) {
+	private DataCount getDataCountObject(
+			Long value, String projectName, String date, String projectNodeId, String jobName) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(String.valueOf(value == null ? 0L : TimeUnit.MILLISECONDS.toMinutes(value)));
 		dataCount.setSProjectName(projectName);
@@ -342,7 +390,8 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 		return dataCount;
 	}
 
-	private void prepareCodeBuildTimeInfo(CodeBuildTimeInfo codeBuildTimeInfo, Build build, String date) {
+	private void prepareCodeBuildTimeInfo(
+			CodeBuildTimeInfo codeBuildTimeInfo, Build build, String date) {
 		if (null != codeBuildTimeInfo) {
 			long minutes = TimeUnit.MILLISECONDS.toMinutes(build.getDuration());
 			long seconds = TimeUnit.MILLISECONDS.toSeconds(build.getDuration());
@@ -354,45 +403,51 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 			}
 			codeBuildTimeInfo.addBuildUrl(build.getBuildUrl());
 			codeBuildTimeInfo.addBuildStartTime(
-					DateUtil.dateTimeFormatter(new Date(build.getStartTime()), DateUtil.DISPLAY_DATE_TIME_FORMAT));
+					DateUtil.dateTimeFormatter(
+							new Date(build.getStartTime()), DateUtil.DISPLAY_DATE_TIME_FORMAT));
 			codeBuildTimeInfo.addWeeks(date);
-			codeBuildTimeInfo
-					.addBuildEndTime(DateUtil.dateTimeFormatter(new Date(build.getEndTime()), DateUtil.DISPLAY_DATE_TIME_FORMAT));
+			codeBuildTimeInfo.addBuildEndTime(
+					DateUtil.dateTimeFormatter(
+							new Date(build.getEndTime()), DateUtil.DISPLAY_DATE_TIME_FORMAT));
 			codeBuildTimeInfo.addDuration(createDurationString(minutes, seconds));
 			codeBuildTimeInfo.addBuildStatus(build.getBuildStatus().toString());
 			codeBuildTimeInfo.addStartedBy(build.getStartedBy());
 		}
 	}
 
-	public List<DataCount> calculateAggregatedRangeWise(String kpiId, List<DataCount> jobsAggregatedValueList) {
+	public List<DataCount> calculateAggregatedRangeWise(
+			String kpiId, List<DataCount> jobsAggregatedValueList) {
 
-		Map<String, List<DataCount>> weeksWiseDataCount = jobsAggregatedValueList.stream()
-				.collect(Collectors.groupingBy(DataCount::getDate, LinkedHashMap::new, Collectors.toList()));
+		Map<String, List<DataCount>> weeksWiseDataCount =
+				jobsAggregatedValueList.stream()
+						.collect(
+								Collectors.groupingBy(DataCount::getDate, LinkedHashMap::new, Collectors.toList()));
 
 		List<DataCount> aggregatedDataCount = new ArrayList<>();
-		weeksWiseDataCount.forEach((date, data) -> {
-			Set<String> projectNames = new HashSet<>();
-			DataCount dataCount = new DataCount();
-			List<Long> values = new ArrayList<>();
-			for (DataCount dc : data) {
-				projectNames.add(dc.getSProjectName());
-				Object obj = dc.getValue();
-				Long value = obj instanceof Long ? (Long) obj : 0L;
-				values.add(value);
-			}
-			Long aggregatedValue = calculateKpiValue(values, kpiId);
-			dataCount.setProjectNames(new ArrayList<>(projectNames));
-			dataCount.setSSprintID(date);
-			dataCount.setSSprintName(date);
-			dataCount.setSprintIds(Arrays.asList(date));
-			dataCount.setSprintNames(Arrays.asList(date));
-			dataCount.setSProjectName(projectNames.stream().collect(Collectors.joining(" ")));
-			dataCount.setValue(aggregatedValue);
-			dataCount.setData(aggregatedValue.toString());
-			dataCount.setDate(date);
-			dataCount.setHoverValue(new HashMap<>());
-			aggregatedDataCount.add(dataCount);
-		});
+		weeksWiseDataCount.forEach(
+				(date, data) -> {
+					Set<String> projectNames = new HashSet<>();
+					DataCount dataCount = new DataCount();
+					List<Long> values = new ArrayList<>();
+					for (DataCount dc : data) {
+						projectNames.add(dc.getSProjectName());
+						Object obj = dc.getValue();
+						Long value = obj instanceof Long ? (Long) obj : 0L;
+						values.add(value);
+					}
+					Long aggregatedValue = calculateKpiValue(values, kpiId);
+					dataCount.setProjectNames(new ArrayList<>(projectNames));
+					dataCount.setSSprintID(date);
+					dataCount.setSSprintName(date);
+					dataCount.setSprintIds(Arrays.asList(date));
+					dataCount.setSprintNames(Arrays.asList(date));
+					dataCount.setSProjectName(projectNames.stream().collect(Collectors.joining(" ")));
+					dataCount.setValue(aggregatedValue);
+					dataCount.setData(aggregatedValue.toString());
+					dataCount.setDate(date);
+					dataCount.setHoverValue(new HashMap<>());
+					aggregatedDataCount.add(dataCount);
+				});
 		return aggregatedDataCount;
 	}
 
@@ -409,6 +464,7 @@ public class CodeBuildTimeKanbanServiceImpl extends JenkinsKPIService<Long, List
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI66(), KPICode.CODE_BUILD_TIME_KANBAN.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI66(), KPICode.CODE_BUILD_TIME_KANBAN.getKpiId());
 	}
 }

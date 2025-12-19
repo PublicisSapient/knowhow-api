@@ -41,11 +41,9 @@ import com.publicissapient.kpidashboard.common.repository.jira.MetadataIdentifie
 @RunWith(MockitoJUnitRunner.class)
 public class MetadataIdentifierServiceImplTest {
 
-	@InjectMocks
-	private MetadataIdentifierServiceImpl metadataIdentifierService;
+	@InjectMocks private MetadataIdentifierServiceImpl metadataIdentifierService;
 
-	@Mock
-	private MetadataIdentifierRepository metadataIdentifierRepository;
+	@Mock private MetadataIdentifierRepository metadataIdentifierRepository;
 
 	@BeforeEach
 	void setUp() {

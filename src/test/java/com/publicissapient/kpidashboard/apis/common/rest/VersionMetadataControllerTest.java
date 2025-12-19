@@ -37,10 +37,8 @@ import com.publicissapient.kpidashboard.apis.util.TestUtil;
 @RunWith(MockitoJUnitRunner.class)
 public class VersionMetadataControllerTest {
 
-	@InjectMocks
-	VersionMetadataController versionMetadataController;
-	@Mock
-	private VersionMetadataService versionMetadataService;
+	@InjectMocks VersionMetadataController versionMetadataController;
+	@Mock private VersionMetadataService versionMetadataService;
 	private MockMvc mockMvc;
 
 	@Before
@@ -56,7 +54,10 @@ public class VersionMetadataControllerTest {
 	@Test
 	public void getTestGetAllAccount() throws Exception {
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/getversionmetadata").contentType(TestUtil.APPLICATION_JSON_UTF8))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/getversionmetadata")
+								.contentType(TestUtil.APPLICATION_JSON_UTF8))
 				.andExpect(status().isOk());
 	}
 }

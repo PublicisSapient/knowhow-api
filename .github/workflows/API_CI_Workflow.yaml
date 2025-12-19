@@ -1,33 +1,32 @@
-name: API_CI_Workflow  # Define the name of the workflows
+name: API_CI_Workflow # Define the name of the workflows
 
 # Define when the workflow should trigger
 on:
   pull_request:
     types:
-      - labeled  # Trigger when a label is added
-      - unlabeled  # Trigger when a label is removed
-      - synchronize  # Trigger when commits are pushed to the PR
-      - opened  # Trigger when a PR is opened
-      - edited  # Trigger when a PR title or description is edited
-      - ready_for_review  # Trigger when a draft PR is marked as ready
-      - reopened  # Trigger when a closed PR is reopened
-      - unlocked  # Trigger when a locked PR is unlocked
-    branches: [master, develop, qa-master]  # Apply to these branches
+      - labeled # Trigger when a label is added
+      - unlabeled # Trigger when a label is removed
+      - synchronize # Trigger when commits are pushed to the PR
+      - opened # Trigger when a PR is opened
+      - edited # Trigger when a PR title or description is edited
+      - ready_for_review # Trigger when a draft PR is marked as ready
+      - reopened # Trigger when a closed PR is reopened
+      - unlocked # Trigger when a locked PR is unlocked
+    branches: [master, develop, qa-master] # Apply to these branches
   pull_request_review:
-    types: [edited, dismissed]  # Trigger when a review is edited or dismissed
+    types: [edited, dismissed] # Trigger when a review is edited or dismissed
     branches: [master, develop, qa-master]
-  workflow_dispatch:  # Allow manual triggering of the workflow
+  workflow_dispatch: # Allow manual triggering of the workflow
 
 # Define environment variables
 env:
-  GITHUB_HEAD_NAME: $GITHUB_HEAD_REF  # Store the head branch name
-  sonartoken: ${{ secrets.SONARQUBE_TOKEN }}  # Secret for SonarQube authentication
-  sonarurl: ${{ secrets.SONARURL }}  # SonarQube URL stored in secrets
+  GITHUB_HEAD_NAME: $GITHUB_HEAD_REF # Store the head branch name
+  sonartoken: ${{ secrets.SONARQUBE_TOKEN }} # Secret for SonarQube authentication
+  sonarurl: ${{ secrets.SONARURL }} # SonarQube URL stored in secrets
   #MAVEN_GH_TOKEN: ${{ secrets.MAVEN_TOKEN }} # Use the maven_token for authentication
 
 jobs:
-
-  # ✅ CustomAPI Build & SonarQube Analysis
+  # ✅ knowhow-api Build & SonarQube Analysis
   api_ci:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -38,8 +37,8 @@ jobs:
       - name: Set Up Java
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
-          java-version: '17'
+          distribution: "adopt"
+          java-version: "17"
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -84,7 +83,7 @@ jobs:
         run: |
           SOURCE_BRANCH="${{ github.head_ref }}"
           TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
-          
+
           echo "Checking if branch '$SOURCE_BRANCH' exists in knowhow-common repo..."
           if git ls-remote --heads https://github.com/PublicisSapient/knowhow-common.git $SOURCE_BRANCH | grep $SOURCE_BRANCH; then
             BRANCH_TO_CLONE=$SOURCE_BRANCH
@@ -95,7 +94,7 @@ jobs:
           git clone --branch $BRANCH_TO_CLONE https://github.com/PublicisSapient/knowhow-common.git
           cd knowhow-common
           mvn clean install -Ddockerfile.skip=true -X
-      
+
       # ✅ Get common version using Maven Help Plugin
       - name: Get common version using Maven Help Plugin
         run: |
@@ -103,7 +102,7 @@ jobs:
           COMMON_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "COMMON_VERSION=$COMMON_VERSION"
           echo "COMMON_VERSION=$COMMON_VERSION" >> $GITHUB_ENV
-      
+
       # ✅ Updating the common version in api projects
       - name: Updating the common version in api project
         run: |
@@ -112,12 +111,12 @@ jobs:
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
-      # ✅ Build & Test CustomAPI with both dependencies: common + ai-gateway-client
-      - name: Build & Test CustomAPI
+      # ✅ Build & Test knowhow-api with both dependencies: common + ai-gateway-client
+      - name: Build & Test knowhow-api
         run: mvn clean install -Ddockerfile.skip=true
 
-      # ✅ SonarQube Analysis - CustomAPI
-      - name: SonarQube Analysis - CustomAPI
+      # ✅ SonarQube Analysis - knowhow-api
+      - name: SonarQube Analysis - knowhow-api
         run: |
           mvn sonar:sonar -Dsonar.projectKey=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
             -Dsonar.projectName=ENGINEERING.KPIDASHBOARD.CUSTOMAPI \
@@ -125,8 +124,8 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} \
             -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} -f pom.xml
 
-      # ✅ Check SonarQube Quality Gate - CustomAPI
-      - name: Check SonarQube Quality Gate - CustomAPI
+      # ✅ Check SonarQube Quality Gate - knowhow-api
+      - name: Check SonarQube Quality Gate - knowhow-api
         run: |
           chmod +x SonarQG.sh
           ./SonarQG.sh ./target/sonar/report-task.txt

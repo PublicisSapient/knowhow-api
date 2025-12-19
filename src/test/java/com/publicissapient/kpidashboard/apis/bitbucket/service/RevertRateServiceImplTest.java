@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -73,6 +74,7 @@ import com.publicissapient.kpidashboard.common.model.jira.AssigneeDetails;
 import com.publicissapient.kpidashboard.common.service.AssigneeDetailsServiceImpl;
 
 @RunWith(MockitoJUnitRunner.class)
+@Ignore("Skipping test cases since it Removed due KPI outdated")
 public class RevertRateServiceImplTest {
 
 	private static final String OVERALL = "Overall";
@@ -97,22 +99,14 @@ public class RevertRateServiceImplTest {
 	private List<DataCount> trendValues = new ArrayList<>();
 	private List<RepoToolKpiMetricResponse> repoToolKpiMetricResponseList = new ArrayList<>();
 
-	@InjectMocks
-	RevertRateServiceImpl revertRateService;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private RepoToolsConfigServiceImpl repoToolsConfigService;
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private CommonService commonService;
-	@Mock
-	private AssigneeDetailsServiceImpl assigneeDetailsRepository;
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@InjectMocks RevertRateServiceImpl revertRateService;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private RepoToolsConfigServiceImpl repoToolsConfigService;
+	@Mock CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private AssigneeDetailsServiceImpl assigneeDetailsRepository;
+	@Mock private KpiHelperService kpiHelperService;
 
 	@Before
 	public void setup() {
@@ -129,10 +123,11 @@ public class RevertRateServiceImplTest {
 		kpiRequest.setXAxisDataPoints(5);
 		kpiRequest.setDuration("WEEKS");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
-		RepoToolsKpiRequestDataFactory repoToolsKpiRequestDataFactory = RepoToolsKpiRequestDataFactory.newInstance();
+		RepoToolsKpiRequestDataFactory repoToolsKpiRequestDataFactory =
+				RepoToolsKpiRequestDataFactory.newInstance();
 		repoToolKpiMetricResponseList = repoToolsKpiRequestDataFactory.getRepoToolsRevertRate();
 		LocalDate monday = LocalDate.now();
 		while (monday.getDayOfWeek() != DayOfWeek.MONDAY) {
@@ -146,13 +141,15 @@ public class RevertRateServiceImplTest {
 		projectBasicConfig.setProjectName("Scrum Project");
 		projectBasicConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
 		projectConfigList.add(projectBasicConfig);
-		projectConfigList.forEach(projectConfig -> {
-			projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		});
+		projectConfigList.forEach(
+				projectConfig -> {
+					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+				});
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		fieldMappingList.forEach(fieldMapping -> {
-			fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
-		});
+		fieldMappingList.forEach(
+				fieldMapping -> {
+					fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
+				});
 
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -161,7 +158,8 @@ public class RevertRateServiceImplTest {
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 		String kpiRequestTrackerId = "Bitbucket-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		AssigneeDetails assigneeDetails = new AssigneeDetails();
@@ -182,22 +180,27 @@ public class RevertRateServiceImplTest {
 
 	@Test
 	public void getKpiData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
 
 		when(configHelperService.getToolItemMap()).thenReturn(toolMap);
 
 		String kpiRequestTrackerId = "Bitbucket-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn(kpiRequestTrackerId);
 
 		when(kpiHelperService.getRepoToolsKpiMetricResponse(any(), any(), any(), any(), any(), any()))
 				.thenReturn(repoToolKpiMetricResponseList);
 		try {
-			KpiElement kpiElement = revertRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					revertRateService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertThat("Trend Size: ", ((List) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
@@ -207,11 +210,15 @@ public class RevertRateServiceImplTest {
 	@Test
 	public void getKpiDataDays() throws ApplicationException {
 		kpiRequest.setDuration(Constant.DAYS);
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		try {
-			KpiElement kpiElement = revertRateService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+			KpiElement kpiElement =
+					revertRateService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
 			assertThat("Trend Size: ", ((List) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (ApplicationException e) {
 			e.printStackTrace();
@@ -274,7 +281,8 @@ public class RevertRateServiceImplTest {
 		trendValueMap.put("Overall#Hiren", trendValues);
 	}
 
-	private DataCount setDataCountValues(String data, String maturity, Object maturityValue, Object value) {
+	private DataCount setDataCountValues(
+			String data, String maturity, Object maturityValue, Object value) {
 		DataCount dataCount = new DataCount();
 		dataCount.setData(data);
 		dataCount.setMaturity(maturity);

@@ -34,13 +34,10 @@ import com.publicissapient.kpidashboard.apis.auth.model.SystemUser;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultAuthenticationServiceImplTest {
-	@InjectMocks
-	DefaultAuthenticationServiceImpl yourService;
-	@Mock
-	private SecurityContext securityContext;
+	@InjectMocks DefaultAuthenticationServiceImpl yourService;
+	@Mock private SecurityContext securityContext;
 
-	@Mock
-	private Authentication authentication;
+	@Mock private Authentication authentication;
 
 	@Test
 	public void testGetLoggedInUser_AuthenticatedUser() {
@@ -86,5 +83,4 @@ public class DefaultAuthenticationServiceImplTest {
 		// Assert
 		assertEquals(SystemUser.SYSTEM.getName(), loggedInUser);
 	}
-
 }

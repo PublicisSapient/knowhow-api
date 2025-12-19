@@ -30,8 +30,7 @@ import com.publicissapient.kpidashboard.common.constant.AuthType;
  */
 public final class AuthenticationUtil {
 
-	private AuthenticationUtil() {
-	}
+	private AuthenticationUtil() {}
 
 	/**
 	 * Gets username from context.
@@ -63,7 +62,7 @@ public final class AuthenticationUtil {
 		return null;
 	}
 
-	private static Authentication getAuthentication() {
+	public static Authentication getAuthentication() {
 		return SecurityContextHolder.getContext().getAuthentication();
 	}
 }

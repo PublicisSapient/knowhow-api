@@ -43,6 +43,8 @@ public interface ReportRepository extends MongoRepository<Report, String> {
 	Optional<Report> findByNameAndCreatedByAndKpis(String name, List<KPI> kpis, String createdBy);
 
 	Optional<Report> findByNameAndCreatedBy(
-			@NotNull(message = "Report name cannot be null") @NotEmpty(message = "Report name cannot be empty") String name,
+			@NotNull(message = "Report name cannot be null")
+					@NotEmpty(message = "Report name cannot be empty")
+					String name,
 			String createdBy);
 }

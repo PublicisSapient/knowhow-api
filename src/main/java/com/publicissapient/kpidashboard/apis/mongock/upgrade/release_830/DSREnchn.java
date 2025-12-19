@@ -56,44 +56,73 @@ public class DSREnchn {
 
 	@Execution
 	public void execution() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
 		Document filter = new Document(FIELD_NAME, UAT_IDENTIFICATION);
 
 		// Specify the update operation
 		Document update = new Document("$set", new Document(PROCESSOR_COMMON, true));
 		fieldMappingStructure.updateOne(filter, update);
 
-		List<Document> documents = Arrays.asList(
-				new Document(FIELD_NAME, "includeRCAForKPI35").append(FIELD_LABEL, "Root cause values to be included")
-						.append(FIELD_TYPE, "chips").append(SECTION, "Defects Mapping")
-						.append(TOOL_TIP,
-								new Document(DEFINITION,
-										"Root cause reasons for defects which are to be included in 'DSR' calculation")),
-				new Document(FIELD_NAME, "defectPriorityKPI35").append(FIELD_LABEL, "Priority to be excluded")
-						.append(FIELD_TYPE, "multiselect").append(SECTION, "Defects Mapping")
-						.append(TOOL_TIP,
-								new Document(DEFINITION, "Priority values of defects which are to be excluded in 'DSR' calculation"))
-						.append("options",
-								Arrays.asList(new Document(LABEL, "p1").append(VALUE, "p1"),
-										new Document(LABEL, "p2").append(VALUE, "p2"), new Document(LABEL, "p3").append(VALUE, "p3"),
-										new Document(LABEL, "p4").append(VALUE, "p4"), new Document(LABEL, "p5").append(VALUE, "p5"))),
-				new Document().append(FIELD_NAME, "excludeUnlinkedDefects").append(FIELD_LABEL, "Exclude Unlinked Defects")
-						.append(FIELD_TYPE, "toggle").append(SECTION, "WorkFlow Status Mapping").append(PROCESSOR_COMMON, false)
-						.append(TOOL_TIP, new Document(DEFINITION, "Disable Toggle to see calculations on unlinked defects too.")));
+		List<Document> documents =
+				Arrays.asList(
+						new Document(FIELD_NAME, "includeRCAForKPI35")
+								.append(FIELD_LABEL, "Root cause values to be included")
+								.append(FIELD_TYPE, "chips")
+								.append(SECTION, "Defects Mapping")
+								.append(
+										TOOL_TIP,
+										new Document(
+												DEFINITION,
+												"Root cause reasons for defects which are to be included in 'DSR' calculation")),
+						new Document(FIELD_NAME, "defectPriorityKPI35")
+								.append(FIELD_LABEL, "Priority to be excluded")
+								.append(FIELD_TYPE, "multiselect")
+								.append(SECTION, "Defects Mapping")
+								.append(
+										TOOL_TIP,
+										new Document(
+												DEFINITION,
+												"Priority values of defects which are to be excluded in 'DSR' calculation"))
+								.append(
+										"options",
+										Arrays.asList(
+												new Document(LABEL, "p1").append(VALUE, "p1"),
+												new Document(LABEL, "p2").append(VALUE, "p2"),
+												new Document(LABEL, "p3").append(VALUE, "p3"),
+												new Document(LABEL, "p4").append(VALUE, "p4"),
+												new Document(LABEL, "p5").append(VALUE, "p5"))),
+						new Document()
+								.append(FIELD_NAME, "excludeUnlinkedDefects")
+								.append(FIELD_LABEL, "Exclude Unlinked Defects")
+								.append(FIELD_TYPE, "toggle")
+								.append(SECTION, "WorkFlow Status Mapping")
+								.append(PROCESSOR_COMMON, false)
+								.append(
+										TOOL_TIP,
+										new Document(
+												DEFINITION,
+												"Disable Toggle to see calculations on unlinked defects too.")));
 
 		fieldMappingStructure.insertMany(documents);
 
 		// Update the document in the collection
-		fieldMappingStructure.updateOne(new Document(FIELD_NAME, UAT_IDENTIFICATION),
-				new Document("$set", new Document(FIELD_LABEL, "Escaped defects identification (Processor Run)")));
+		fieldMappingStructure.updateOne(
+				new Document(FIELD_NAME, UAT_IDENTIFICATION),
+				new Document(
+						"$set", new Document(FIELD_LABEL, "Escaped defects identification (Processor Run)")));
 
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi35"),
-				new Document("$set", new Document("kpiFilter", "dropDown")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi35"),
+						new Document("$set", new Document("kpiFilter", "dropDown")));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		MongoCollection<Document> fieldMappingStruture = mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
+		MongoCollection<Document> fieldMappingStruture =
+				mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
 		Document filter = new Document(FIELD_NAME, UAT_IDENTIFICATION);
 
 		// Specify the rollback operation
@@ -102,12 +131,17 @@ public class DSREnchn {
 		// Perform the rollback
 		fieldMappingStruture.updateOne(filter, rollback);
 
-		List<String> fieldNamesToDelete = Arrays.asList("includeRCAForKPI35", "defectPriorityKPI135", "useUnLinkedDefect");
+		List<String> fieldNamesToDelete =
+				Arrays.asList("includeRCAForKPI35", "defectPriorityKPI135", "useUnLinkedDefect");
 		// Delete documents that match the filter
-		fieldMappingStruture.deleteMany(new Document(FIELD_NAME, new Document("$in", fieldNamesToDelete)));
-		fieldMappingStruture.updateOne(new Document(FIELD_NAME, UAT_IDENTIFICATION),
+		fieldMappingStruture.deleteMany(
+				new Document(FIELD_NAME, new Document("$in", fieldNamesToDelete)));
+		fieldMappingStruture.updateOne(
+				new Document(FIELD_NAME, UAT_IDENTIFICATION),
 				new Document("$set", new Document(FIELD_LABEL, "UAT Defect Identification")));
-		mongoTemplate.getCollection("kpi_master").updateOne(new Document("kpiId", "kpi35"),
-				new Document("$set", new Document("kpiFilter", "")));
+		mongoTemplate
+				.getCollection("kpi_master")
+				.updateOne(
+						new Document("kpiId", "kpi35"), new Document("$set", new Document("kpiFilter", "")));
 	}
 }

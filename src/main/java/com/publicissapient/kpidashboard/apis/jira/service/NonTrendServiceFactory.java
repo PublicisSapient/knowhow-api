@@ -14,7 +14,6 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.jira.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.jira.service.backlogdashboard.JiraBacklogServiceR;
@@ -22,20 +21,18 @@ import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.Jir
 import com.publicissapient.kpidashboard.apis.jira.service.releasedashboard.JiraReleaseServiceR;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * @author purgupta2
  */
 @Service
+@RequiredArgsConstructor
 public class NonTrendServiceFactory {
 
-	@Autowired
-	private JiraIterationServiceR jiraIterationService;
-
-	@Autowired
-	private JiraReleaseServiceR jiraReleaseService;
-
-	@Autowired
-	private JiraBacklogServiceR jiraBacklogService;
+	private final JiraIterationServiceR jiraIterationService;
+	private final JiraReleaseServiceR jiraReleaseService;
+	private final JiraBacklogServiceR jiraBacklogService;
 
 	public JiraNonTrendKPIServiceR getService(String factoryType) {
 		if (CommonConstant.ITERATION.equals(factoryType)) {

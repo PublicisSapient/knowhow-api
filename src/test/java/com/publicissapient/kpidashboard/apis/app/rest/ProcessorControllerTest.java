@@ -53,11 +53,9 @@ public class ProcessorControllerTest {
 
 	private MockMvc mockMvc;
 
-	@InjectMocks
-	private ProcessorController processorController;
+	@InjectMocks private ProcessorController processorController;
 
-	@Mock
-	private ProcessorService processorService;
+	@Mock private ProcessorService processorService;
 
 	/** method includes preprocesses for test cases */
 	@Before
@@ -78,7 +76,9 @@ public class ProcessorControllerTest {
 	 */
 	@Test
 	public void test_getData() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/processor").contentType(TestUtil.APPLICATION_JSON_UTF8))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/processor").contentType(TestUtil.APPLICATION_JSON_UTF8))
 				.andExpect(status().is5xxServerError());
 	}
 
@@ -92,7 +92,9 @@ public class ProcessorControllerTest {
 		List<Processor> listProcessor = new ArrayList<>();
 		when(processorService.getAllProcessorDetails())
 				.thenReturn(new ServiceResponse(true, StringUtils.EMPTY, listProcessor));
-		mockMvc.perform(MockMvcRequestBuilders.get("/processor").contentType(TestUtil.APPLICATION_JSON_UTF8))
+		mockMvc
+				.perform(
+						MockMvcRequestBuilders.get("/processor").contentType(TestUtil.APPLICATION_JSON_UTF8))
 				.andExpect(status().is2xxSuccessful());
 	}
 
@@ -108,7 +110,8 @@ public class ProcessorControllerTest {
 				.thenReturn(new ServiceResponse(true, StringUtils.EMPTY, listProcessor));
 		mockMvc
 				.perform(
-						MockMvcRequestBuilders.post("/processor/metadata/step/abc").contentType(TestUtil.APPLICATION_JSON_UTF8))
+						MockMvcRequestBuilders.post("/processor/metadata/step/abc")
+								.contentType(TestUtil.APPLICATION_JSON_UTF8))
 				.andExpect(status().is2xxSuccessful());
 	}
 }

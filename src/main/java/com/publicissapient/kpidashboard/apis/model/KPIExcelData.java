@@ -157,9 +157,6 @@ public class KPIExcelData {
 	@JsonProperty("Test Case Type")
 	private String testCaseType;
 
-	@JsonProperty("Test Case Status")
-	private String testCaseStatus;
-
 	@JsonProperty("Execution Time")
 	private String executionTime;
 
@@ -523,8 +520,8 @@ public class KPIExcelData {
 	@JsonProperty("MR Comments")
 	private List<String> mrComments;
 
-    @JsonProperty("Un-Refined")
-    private String unRefined;
+	@JsonProperty("Un-Refined")
+	private String unRefined;
 
 	@JsonProperty("Labels")
 	private List<String> labels;

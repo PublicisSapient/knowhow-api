@@ -20,11 +20,20 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
@@ -62,26 +71,24 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WorkStatusServiceImplTest {
 
-	@Mock
-	CacheService cacheService;
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private ConfigHelperService configHelperService;
-	@InjectMocks
-	private WorkStatusServiceImpl workStatusService;
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Mock
-	private JiraIterationServiceR jiraService;
+	@Mock private SprintRepository sprintRepository;
+	@Mock private CacheService cacheService;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private ConfigHelperService configHelperService;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIterationServiceR jiraService;
+
+	@InjectMocks private WorkStatusServiceImpl workStatusService;
+
 	private List<JiraIssue> storyList = new ArrayList<>();
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
-	private Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
-	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
+	private final Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
+	private final Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private SprintDetails sprintDetails = new SprintDetails();
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
@@ -92,19 +99,24 @@ public class WorkStatusServiceImplTest {
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi128");
 		kpiRequest.setLabel("PROJECT");
 
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		setMockProjectConfig();
 		setMockFieldMapping();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails().get(0);
 
-		List<String> jiraIssueList = sprintDetails.getTotalIssues().stream().filter(Objects::nonNull)
-				.map(SprintIssue::getNumber).distinct().collect(Collectors.toList());
+		List<String> jiraIssueList =
+				sprintDetails.getTotalIssues().stream()
+						.filter(Objects::nonNull)
+						.map(SprintIssue::getNumber)
+						.distinct()
+						.collect(Collectors.toList());
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.findIssueByNumberList(jiraIssueList);
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory.newInstance();
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
 	}
 
@@ -116,8 +128,8 @@ public class WorkStatusServiceImplTest {
 	}
 
 	private void setMockFieldMapping() {
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -126,20 +138,34 @@ public class WorkStatusServiceImplTest {
 	@Test
 	public void testGetKpiDataProject() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
+
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(workStatusService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		try {
-			KpiElement kpiElement = workStatusService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					workStatusService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {
@@ -150,22 +176,40 @@ public class WorkStatusServiceImplTest {
 	@Test
 	public void testGetKpiDataProject_active() throws ApplicationException {
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		storyList.stream().filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768")).findFirst().get()
-				.setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		storyList.stream()
+				.filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768"))
+				.findFirst()
+				.get()
+				.setDueDate(LocalDate.now().plusDays(3) + "T00:00:00.000Z");
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
+
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
+
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(workStatusService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		try {
-			KpiElement kpiElement = workStatusService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					workStatusService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {
@@ -175,25 +219,43 @@ public class WorkStatusServiceImplTest {
 
 	@Test
 	public void testGetKpiDataProjectOriginalEstimate() throws ApplicationException {
-		fieldMappingMap.forEach((projectId, mapping) -> mapping.setEstimationCriteria("Original Estimate"));
+		fieldMappingMap.forEach(
+				(projectId, mapping) -> mapping.setEstimationCriteria("Original Estimate"));
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		storyList.stream().filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768")).findFirst().get()
-				.setDueDate(String.valueOf(LocalDate.now().plusDays(3) + "T00:00:00.000Z"));
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		storyList.stream()
+				.filter(jiraIssue -> jiraIssue.getNumber().equals("TEST-17768"))
+				.findFirst()
+				.get()
+				.setDueDate(LocalDate.now().plusDays(3) + "T00:00:00.000Z");
 		sprintDetails.setState(SprintDetails.SPRINT_STATE_ACTIVE);
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
+
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
-		when(cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(workStatusService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		try {
-			KpiElement kpiElement = workStatusService.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0),
-					treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
+			KpiElement kpiElement =
+					workStatusService.getKpiData(
+							kpiRequest,
+							kpiRequest.getKpiList().get(0),
+							treeAggregatorDetail.getMapOfListOfLeafNodes().get("sprint").get(0));
 			assertNotNull(kpiElement.getIssueData());
 
 		} catch (ApplicationException enfe) {
@@ -208,18 +270,28 @@ public class WorkStatusServiceImplTest {
 
 	@Test
 	public void testFetchKPIDataFromDbData() throws ApplicationException {
-		TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-				accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
 		String startDate = leafNodeList.get(0).getSprintFilter().getStartDate();
 		String endDate = leafNodeList.get(leafNodeList.size() - 1).getSprintFilter().getEndDate();
-		when(jiraService.getCurrentSprintDetails()).thenReturn(sprintDetails);
-		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(jiraIssueCustomHistoryList);
+		when(jiraService.getSprintRepository()).thenReturn(sprintRepository);
+		when(jiraService.getJiraIssueRepository()).thenReturn(jiraIssueRepository);
+		when(jiraService.getJiraIssueCustomHistoryRepository())
+				.thenReturn(jiraIssueCustomHistoryRepository);
+
+		when(sprintRepository.findBySprintIDIn(anyList())).thenReturn(List.of(sprintDetails));
+		when(jiraIssueRepository.findIssueByNumberWithAdditionalFilter(anySet(), any()))
+				.thenReturn(storyList);
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						anyList(), anyList()))
+				.thenReturn(jiraIssueCustomHistoryList);
+
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		Map<String, Object> returnMap = workStatusService.fetchKPIDataFromDb(leafNodeList.get(0), startDate, endDate,
-				kpiRequest);
+		Map<String, Object> returnMap =
+				workStatusService.fetchKPIDataFromDb(leafNodeList.get(0), startDate, endDate, kpiRequest);
 		assertNotNull(returnMap);
 	}
 
@@ -271,7 +343,8 @@ public class WorkStatusServiceImplTest {
 
 		assertNotNull(devStatusList);
 		assertFalse(devStatusList.isEmpty());
-//		assertTrue(devStatusList.contains("DELAYED")); // or whatever value is expected
+		// assertTrue(devStatusList.contains("DELAYED")); // or whatever value is
+		// expected
 	}
 
 	@Test

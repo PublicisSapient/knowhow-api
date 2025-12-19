@@ -69,14 +69,12 @@ public final class CommonUtils {
 	private static final String POSITIVE_CASE = "PositiveCase";
 	private static final String NEGATIVE_CASE = "NegativeCase";
 
-	private CommonUtils() {
-	}
+	private CommonUtils() {}
 
 	/**
 	 * Gets the list from string.
 	 *
-	 * @param input
-	 *          the input
+	 * @param input the input
 	 * @return the list from string
 	 */
 	public static List<String> getListFromString(String input) {
@@ -87,12 +85,9 @@ public final class CommonUtils {
 	/**
 	 * Gets the symbol value unit.
 	 *
-	 * @param symbol
-	 *          the symbol
-	 * @param value
-	 *          the value
-	 * @param unit
-	 *          the unit
+	 * @param symbol the symbol
+	 * @param value the value
+	 * @param unit the unit
 	 * @return the symbol value unit
 	 */
 	public static SymbolValueUnit getSymbolValueUnit(String symbol, String value, String unit) {
@@ -106,10 +101,8 @@ public final class CommonUtils {
 	/**
 	 * Gets the days between date.
 	 *
-	 * @param beginDate
-	 *          the begin date
-	 * @param endDate
-	 *          the end date
+	 * @param beginDate the begin date
+	 * @param endDate the end date
 	 * @return the days between date
 	 */
 	public static Map<String, Integer> getDaysBetweenDate(DateTime beginDate, DateTime endDate) {
@@ -129,10 +122,13 @@ public final class CommonUtils {
 
 	public static Integer closedStoryAndPotentialDelays(DateTime beginDate, DateTime endDate) {
 		Integer count = 0;
-		LocalDate startLocalDate = new LocalDate(
-				DateUtil.dateTimeConverter(beginDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
-		LocalDate endLocalDate = new LocalDate(
-				DateUtil.dateTimeConverter(endDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
+		LocalDate startLocalDate =
+				new LocalDate(
+						DateUtil.dateTimeConverter(
+								beginDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
+		LocalDate endLocalDate =
+				new LocalDate(
+						DateUtil.dateTimeConverter(endDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
 		if (startLocalDate.compareTo(endLocalDate) > 0) {
 			// positive case
 			while (!endLocalDate.isEqual(startLocalDate)) {
@@ -157,21 +153,28 @@ public final class CommonUtils {
 		Integer count = 1;
 		Integer count1 = 0;
 
-		LocalDate startLocalDate = new LocalDate(
-				DateUtil.dateTimeConverter(beginDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
-		LocalDate endLocalDate = new LocalDate(
-				DateUtil.dateTimeConverter(endDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
+		LocalDate startLocalDate =
+				new LocalDate(
+						DateUtil.dateTimeConverter(
+								beginDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
+		LocalDate endLocalDate =
+				new LocalDate(
+						DateUtil.dateTimeConverter(endDate.toString(), DateUtil.TIME_FORMAT, DELAY_FORMATTER));
 		if (startLocalDate.compareTo(endLocalDate) > 0) {
 			// positive case
 			while (endLocalDate.isBefore(startLocalDate)) {
-				count1 = getCounter(endLocalDate.getDayOfWeek() <= FIFTH_DAY_OF_WEEK, null, count1, POSITIVE_CASE);
+				count1 =
+						getCounter(
+								endLocalDate.getDayOfWeek() <= FIFTH_DAY_OF_WEEK, null, count1, POSITIVE_CASE);
 				endLocalDate = endLocalDate.plusDays(1);
 			}
 			count = count1;
 		} else if (startLocalDate.compareTo(endLocalDate) < 0) {
 			// negative case
 			while (endLocalDate.isBefore(startLocalDate)) {
-				count = getCounter(endLocalDate.getDayOfWeek() <= FIFTH_DAY_OF_WEEK, count, null, NEGATIVE_CASE);
+				count =
+						getCounter(
+								endLocalDate.getDayOfWeek() <= FIFTH_DAY_OF_WEEK, count, null, NEGATIVE_CASE);
 				endLocalDate = endLocalDate.minusDays(1);
 			}
 		}
@@ -182,17 +185,18 @@ public final class CommonUtils {
 		return count;
 	}
 
-	private static Integer getCounter(boolean isWeekDay, Integer count, Integer count1, String caseDetails) {
+	private static Integer getCounter(
+			boolean isWeekDay, Integer count, Integer count1, String caseDetails) {
 		int counter = 0;
 		if (isWeekDay) {
 			switch (caseDetails) {
-				case POSITIVE_CASE :
+				case POSITIVE_CASE:
 					counter = count1 + 1;
 					return counter;
-				case NEGATIVE_CASE :
+				case NEGATIVE_CASE:
 					counter = count - 1;
 					return counter;
-				default :
+				default:
 			}
 		}
 		return (count == null) ? count1 : count;
@@ -201,10 +205,8 @@ public final class CommonUtils {
 	/**
 	 * Gets the string date.
 	 *
-	 * @param date
-	 *          the date
-	 * @param separator
-	 *          the separator
+	 * @param date the date
+	 * @param separator the separator
 	 * @return the string date
 	 */
 	public static String getStringDate(DateTime date, String separator) {
@@ -214,10 +216,8 @@ public final class CommonUtils {
 	/**
 	 * Round to certain number of decimals.
 	 *
-	 * @param unroundedNumber
-	 *          the unrounded number
-	 * @param decimalPlaces
-	 *          the decimal places
+	 * @param unroundedNumber the unrounded number
+	 * @param decimalPlaces the decimal places
 	 * @return the double
 	 */
 	public static double truncateTo(double unroundedNumber, int decimalPlaces) {
@@ -246,13 +246,12 @@ public final class CommonUtils {
 	/**
 	 * Builds the date count map for xdays.
 	 *
-	 * @param lastXdays
-	 *          the last xdays
-	 * @param allFixDates
-	 *          the all fix dates
+	 * @param lastXdays the last xdays
+	 * @param allFixDates the all fix dates
 	 * @return the map
 	 */
-	public static Map<String, Integer> buildDateCountMapForXdays(Integer lastXdays, List<DateTime> allFixDates) {
+	public static Map<String, Integer> buildDateCountMapForXdays(
+			Integer lastXdays, List<DateTime> allFixDates) {
 		int lastXdaysIntVal = Constant.LAST_X_DAYS_INTERVAL;
 		if (null != lastXdays) {
 			lastXdaysIntVal = lastXdays.intValue();
@@ -280,14 +279,14 @@ public final class CommonUtils {
 	/**
 	 * Convert from ISO format.
 	 *
-	 * @param source
-	 *          the source
-	 * @param renderFormat
-	 *          the render format
+	 * @param source the source
+	 * @param renderFormat the render format
 	 * @return the string
 	 */
 	public static String convertFromISOFormat(String source, String renderFormat) { // dd-MMM
-		return DateTimeFormat.forPattern(Constant.ISO_DATE_FORMAT).parseDateTime(source).toString(renderFormat);
+		return DateTimeFormat.forPattern(Constant.ISO_DATE_FORMAT)
+				.parseDateTime(source)
+				.toString(renderFormat);
 	}
 
 	/**
@@ -304,8 +303,7 @@ public final class CommonUtils {
 	}
 
 	/**
-	 * This method used to convert string list to pattern list to support ignore
-	 * case
+	 * This method used to convert string list to pattern list to support ignore case
 	 *
 	 * @param stringList
 	 * @return return list of patttern
@@ -315,8 +313,10 @@ public final class CommonUtils {
 		if (CollectionUtils.isNotEmpty(stringList)) {
 			for (String value : stringList) {
 				if (StringUtils.isNotEmpty(value)) {
-					regexList.add(Pattern.compile(Constant.TILDA_SYMBOL + Pattern.quote(value) + Constant.DOLLAR_SYMBOL,
-							Pattern.CASE_INSENSITIVE));
+					regexList.add(
+							Pattern.compile(
+									Constant.TILDA_SYMBOL + Pattern.quote(value) + Constant.DOLLAR_SYMBOL,
+									Pattern.CASE_INSENSITIVE));
 				}
 			}
 		}
@@ -325,13 +325,22 @@ public final class CommonUtils {
 
 	public static List<Pattern> convertToPatternListForSubString(List<String> stringList) {
 
-		return stringList.stream().map(value -> convertToPatternText(Constant.TILDA_SYMBOL + Constant.DOT + Constant.STAR +
-				value + Constant.DOT + Constant.STAR + Constant.DOLLAR_SYMBOL)).collect(Collectors.toList());
+		return stringList.stream()
+				.map(
+						value ->
+								convertToPatternText(
+										Constant.TILDA_SYMBOL
+												+ Constant.DOT
+												+ Constant.STAR
+												+ value
+												+ Constant.DOT
+												+ Constant.STAR
+												+ Constant.DOLLAR_SYMBOL))
+				.collect(Collectors.toList());
 	}
 
 	/**
-	 * This method used to convert string list to pattern list to support ignore
-	 * case
+	 * This method used to convert string list to pattern list to support ignore case
 	 *
 	 * @param stringList
 	 * @return return list of pattern
@@ -365,8 +374,7 @@ public final class CommonUtils {
 	/**
 	 * Gets the cache name based on key.
 	 *
-	 * @param key
-	 *          key
+	 * @param key key
 	 * @return cache manager name
 	 */
 	public static String getCacheName(String key) {
@@ -388,11 +396,15 @@ public final class CommonUtils {
 
 		cacheManagerMap.put(Constant.KPI_REQUEST_TRACKER_ID_KEY, "requestTrackerCache");
 
-		cacheManagerMap.put(CommonConstant.CACHE_FIELD_MAPPING_MAP, CommonConstant.CACHE_FIELD_MAPPING_MAP);
-		cacheManagerMap.put(CommonConstant.CACHE_BOARD_META_DATA_MAP, CommonConstant.CACHE_BOARD_META_DATA_MAP);
+		cacheManagerMap.put(
+				CommonConstant.CACHE_FIELD_MAPPING_MAP, CommonConstant.CACHE_FIELD_MAPPING_MAP);
+		cacheManagerMap.put(
+				CommonConstant.CACHE_BOARD_META_DATA_MAP, CommonConstant.CACHE_BOARD_META_DATA_MAP);
 		cacheManagerMap.put(CommonConstant.CACHE_TOOL_CONFIG_MAP, CommonConstant.CACHE_TOOL_CONFIG_MAP);
-		cacheManagerMap.put(CommonConstant.CACHE_PROJECT_CONFIG_MAP, CommonConstant.CACHE_PROJECT_CONFIG_MAP);
-		cacheManagerMap.put(CommonConstant.CACHE_ALL_PROJECT_CONFIG_MAP, CommonConstant.CACHE_ALL_PROJECT_CONFIG_MAP);
+		cacheManagerMap.put(
+				CommonConstant.CACHE_PROJECT_CONFIG_MAP, CommonConstant.CACHE_PROJECT_CONFIG_MAP);
+		cacheManagerMap.put(
+				CommonConstant.CACHE_ALL_PROJECT_CONFIG_MAP, CommonConstant.CACHE_ALL_PROJECT_CONFIG_MAP);
 
 		if (cacheManagerMap.containsKey(key)) {
 			return cacheManagerMap.get(key);
@@ -404,8 +416,7 @@ public final class CommonUtils {
 	/**
 	 * handle taint value propagation vulnerability
 	 *
-	 * @param value
-	 *          taintedValue
+	 * @param value taintedValue
 	 * @return string response
 	 */
 	public static String handleCrossScriptingTaintedValue(String value) {
@@ -413,8 +424,7 @@ public final class CommonUtils {
 	}
 
 	/**
-	 * This method used to convert string list to pattern list to support ignore
-	 * case
+	 * This method used to convert string list to pattern list to support ignore case
 	 *
 	 * @param stringList
 	 * @return return list of patttern
@@ -424,16 +434,16 @@ public final class CommonUtils {
 		if (CollectionUtils.isNotEmpty(stringList)) {
 			for (String value : stringList) {
 				value = appendbackSlash(value);
-				regexList
-						.add(Pattern.compile(Constant.TILDA_SYMBOL + value + Constant.DOLLAR_SYMBOL, Pattern.CASE_INSENSITIVE));
+				regexList.add(
+						Pattern.compile(
+								Constant.TILDA_SYMBOL + value + Constant.DOLLAR_SYMBOL, Pattern.CASE_INSENSITIVE));
 			}
 		}
 		return regexList;
 	}
 
 	/**
-	 * This method used to convert string list to pattern list to support ignore
-	 * case
+	 * This method used to convert string list to pattern list to support ignore case
 	 *
 	 * @param value
 	 * @return return String
@@ -443,7 +453,8 @@ public final class CommonUtils {
 		return value.replaceAll(Constant.ROUND_OPEN_BRACKET, Constant.BACKWARD_SLASH_OPEN);
 	}
 
-	public static LocalDateTime getWorkingDayAfterAdditionofDays(LocalDateTime startDate, int timeToAddInDays) {
+	public static LocalDateTime getWorkingDayAfterAdditionofDays(
+			LocalDateTime startDate, int timeToAddInDays) {
 		LocalDateTime localDate = null;
 		int dayToAdd = 0;
 		if (startDate != null) {
@@ -507,16 +518,16 @@ public final class CommonUtils {
 	/**
 	 * Method to get next working date i.e excluding sat sun
 	 *
-	 * @param currentDate
-	 *          currentDate
-	 * @param daysToAdd
-	 *          count of days to add
+	 * @param currentDate currentDate
+	 * @param daysToAdd count of days to add
 	 * @return
 	 */
-	public static java.time.LocalDate getNextWorkingDate(java.time.LocalDate currentDate, long daysToAdd) {
+	public static java.time.LocalDate getNextWorkingDate(
+			java.time.LocalDate currentDate, long daysToAdd) {
 		java.time.LocalDate resultDate = currentDate.plusDays(daysToAdd);
 
-		while (resultDate.getDayOfWeek() == DayOfWeek.SATURDAY || resultDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+		while (resultDate.getDayOfWeek() == DayOfWeek.SATURDAY
+				|| resultDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
 			resultDate = resultDate.plusDays(1);
 		}
 
@@ -567,7 +578,8 @@ public final class CommonUtils {
 	 *
 	 * @return api end Point
 	 */
-	public static String getAPIEndPointURL(String centralAuthEndPoint, String resourceEndPoint, String username) {
+	public static String getAPIEndPointURL(
+			String centralAuthEndPoint, String resourceEndPoint, String username) {
 
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(centralAuthEndPoint);
 		uriBuilder.path(resourceEndPoint);
@@ -598,8 +610,7 @@ public final class CommonUtils {
 	/**
 	 * Sanitizes input by removing newline characters.
 	 *
-	 * @param input
-	 *          the input string
+	 * @param input the input string
 	 * @return the sanitized string
 	 */
 	public static String sanitize(String input) {

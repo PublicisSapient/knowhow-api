@@ -52,26 +52,18 @@ import jakarta.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAnalyticsServiceImplTest {
 
-	@Mock
-	UserAuthorizedProjectsService userAuthorizedProjectsService;
+	@Mock UserAuthorizedProjectsService userAuthorizedProjectsService;
 	Authentication authentication;
 	UserInfo user;
 	RoleWiseProjects roleWiseProjects;
 	List<RoleWiseProjects> listRoleWiseProjects = new ArrayList<>();
-	@InjectMocks
-	private CustomAnalyticsServiceImpl customAnalyticsServiceImpl;
-	@Mock
-	private UserInfoRepository userInfoRepository;
-	@Mock
-	private AuthenticationRepository authenticationRepository;
-	@Mock
-	private CustomApiConfig customAPISettings;
-	@Mock
-	private ProjectAccessManager projectAccessManager;
-	@Mock
-	private UserInfoServiceImpl service;
-	@Mock
-	private UsersSessionService usersSessionService;
+	@InjectMocks private CustomAnalyticsServiceImpl customAnalyticsServiceImpl;
+	@Mock private UserInfoRepository userInfoRepository;
+	@Mock private AuthenticationRepository authenticationRepository;
+	@Mock private CustomApiConfig customAPISettings;
+	@Mock private ProjectAccessManager projectAccessManager;
+	@Mock private UserInfoServiceImpl service;
+	@Mock private UsersSessionService usersSessionService;
 
 	@Test
 	public void testAddAnalyticsData() {
@@ -87,7 +79,8 @@ public class CustomAnalyticsServiceImplTest {
 
 		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
 		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(authentication);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString())).thenReturn(listRoleWiseProjects);
+		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
+				.thenReturn(listRoleWiseProjects);
 		JSONObject json = customAnalyticsServiceImpl.addAnalyticsData(resp, "test");
 		assertEquals("test", json.get("user_name"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
@@ -107,8 +100,10 @@ public class CustomAnalyticsServiceImplTest {
 
 		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
 		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(authentication);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString())).thenReturn(listRoleWiseProjects);
-		Map<String, Object> json = customAnalyticsServiceImpl.addAnalyticsDataAndSaveCentralUser(resp, "test", "token");
+		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
+				.thenReturn(listRoleWiseProjects);
+		Map<String, Object> json =
+				customAnalyticsServiceImpl.addAnalyticsDataAndSaveCentralUser(resp, "test", "token");
 		assertEquals("test", json.get("user_name"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
 	}

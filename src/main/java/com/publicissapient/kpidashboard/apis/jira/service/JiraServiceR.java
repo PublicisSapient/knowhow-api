@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -47,16 +47,12 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReleaseStatusRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class handle all Scrum JIRA based KPI request and call each KPIs service
- * in thread. It is responsible for cache of KPI data at different level.
+ * This class handle all Scrum JIRA based KPI request and call each KPIs service in thread. It is
+ * responsible for cache of KPI data at different level.
  *
  * @author tauakram
  * @implNote {@link KpiIntegrationServiceImpl }
@@ -65,73 +61,72 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JiraServiceR {
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
+	@Autowired private KpiHelperService kpiHelperService;
 
-	@Autowired
-	private FilterHelperService filterHelperService;
+	@Autowired private FilterHelperService filterHelperService;
 
-	@Autowired
-	private CacheService cacheService;
+	@Autowired private CacheService cacheService;
 
-	@Autowired
-	private SprintRepository sprintRepository;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Autowired
-	private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private CustomApiConfig customApiConfig;
+	@Autowired private CustomApiConfig customApiConfig;
 
 	private boolean referFromProjectCache = true;
 
 	/**
-	 * This method process scrum JIRA based kpi request, cache data and call service
-	 * in multiple thread.
+	 * This method process scrum JIRA based kpi request, cache data and call service in multiple
+	 * thread.
 	 *
-	 * @param kpiRequest
-	 *          JIRA KPI request true if flow for precalculated, false for direct
-	 *          flow.
+	 * @param kpiRequest JIRA KPI request true if flow for precalculated, false for direct flow.
 	 * @return List of KPI data
-	 * @throws EntityNotFoundException
-	 *           EntityNotFoundException
+	 * @throws EntityNotFoundException EntityNotFoundException
 	 */
 	@SuppressWarnings({"PMD.AvoidCatchingGenericException", "unchecked"})
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
 
 		log.info("Processing KPI calculation for data {}", kpiRequest.getKpiList());
-		List<KpiElement> origRequestedKpis = kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
+		List<KpiElement> origRequestedKpis =
+				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
 		String[] projectKeyCache = null;
 		try {
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-			String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(), false);
+			String groupName =
+					filterHelperService.getHierarchyLevelId(
+							kpiRequest.getLevel(), kpiRequest.getLabel(), false);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
 			} else {
 				log.error("label name for selected hierarchy not found");
 			}
-			List<AccountHierarchyData> filteredAccountDataList = filterHelperService.getFilteredBuilds(kpiRequest, groupName);
+			List<AccountHierarchyData> filteredAccountDataList =
+					filterHelperService.getFilteredBuilds(kpiRequest, groupName);
 			if (!CollectionUtils.isEmpty(filteredAccountDataList)) {
-				projectKeyCache = kpiHelperService.getProjectKeyCache(kpiRequest, filteredAccountDataList,
-						referFromProjectCache);
+				projectKeyCache =
+						kpiHelperService.getProjectKeyCache(
+								kpiRequest, filteredAccountDataList, referFromProjectCache);
 
-				filteredAccountDataList = kpiHelperService.getAuthorizedFilteredList(kpiRequest, filteredAccountDataList,
-						referFromProjectCache);
+				filteredAccountDataList =
+						kpiHelperService.getAuthorizedFilteredList(
+								kpiRequest, filteredAccountDataList, referFromProjectCache);
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
-				if (CollectionUtils.isNotEmpty(cachedData) && referFromProjectCache)
-					return cachedData;
+				//skip using cache when the request is made with an api key
+				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+					List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
+					if (CollectionUtils.isNotEmpty(cachedData) && referFromProjectCache) {
+						return cachedData;
+					}
+				}
 
-				TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest,
-						filteredAccountDataList, null, filterHelperService.getFirstHierarachyLevel(), filterHelperService
-								.getHierarchyIdLevelMap(false).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, 0));
+				TreeAggregatorDetail treeAggregatorDetail =
+						KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+								kpiRequest,
+								filteredAccountDataList,
+								null,
+								filterHelperService.getFirstHierarchyLevel(),
+								filterHelperService
+										.getHierarchyIdLevelMap(false)
+										.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, 0));
 
 				updateTreeAggregatorDetail(kpiRequest, treeAggregatorDetail);
 
@@ -144,17 +139,25 @@ public class JiraServiceR {
 				List<ParallelJiraServices> listOfTask = new ArrayList<>();
 				for (KpiElement kpiEle : kpiRequest.getKpiList()) {
 
-					listOfTask.add(new ParallelJiraServices(kpiRequest, responseList, kpiEle, treeAggregatorDetail));
+					listOfTask.add(
+							new ParallelJiraServices(kpiRequest, responseList, kpiEle, treeAggregatorDetail));
 				}
 
 				ForkJoinTask.invokeAll(listOfTask);
-				List<KpiElement> missingKpis = origRequestedKpis.stream().filter(
-						reqKpi -> responseList.stream().noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
-						.toList();
+				List<KpiElement> missingKpis =
+						origRequestedKpis.stream()
+								.filter(
+										reqKpi ->
+												responseList.stream()
+														.noneMatch(
+																responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
+								.toList();
 				responseList.addAll(missingKpis);
 
-				if (!customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId) && referFromProjectCache) {
-					kpiHelperService.setIntoApplicationCache(kpiRequest, responseList, groupId, projectKeyCache);
+				if (!customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId)
+						&& referFromProjectCache) {
+					kpiHelperService.setIntoApplicationCache(
+							kpiRequest, responseList, groupId, projectKeyCache);
 				}
 			} else {
 				responseList.addAll(origRequestedKpis);
@@ -168,14 +171,20 @@ public class JiraServiceR {
 		return responseList;
 	}
 
-	private List<KpiElement> getCachedData(KpiRequest kpiRequest, Integer groupId, String[] projectKeyCache) {
+	private List<KpiElement> getCachedData(
+			KpiRequest kpiRequest, Integer groupId, String[] projectKeyCache) {
 		Object cachedData = null;
 		if (!customApiConfig.getGroupIdsToExcludeFromCache().contains(groupId)) {
-			cachedData = cacheService.getFromApplicationCache(projectKeyCache, KPISource.JIRA.name(), groupId,
-					kpiRequest.getSprintIncluded());
+			cachedData =
+					cacheService.getFromApplicationCache(
+							projectKeyCache, KPISource.JIRA.name(), groupId, kpiRequest.getSprintIncluded());
 		}
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				null != cachedData && isLeadTimeDuration(kpiRequest.getKpiList())) {
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+				&& null != cachedData
+				&& isLeadTimeDuration(kpiRequest.getKpiList())) {
 			log.info("Fetching value from cache for {}", Arrays.toString(kpiRequest.getIds()));
 			return (List<KpiElement>) cachedData;
 		}
@@ -187,32 +196,42 @@ public class JiraServiceR {
 	}
 
 	/**
-	 * updates the TreeAggregatorDetail object based on the KpiRequest. If the
-	 * selectedMap in the KpiRequest does not contain the HIERARCHY_LEVEL_ID_SPRINT,
-	 * filter out the sprint by sprintCountForKpiCalculation property
+	 * updates the TreeAggregatorDetail object based on the KpiRequest. If the selectedMap in the
+	 * KpiRequest does not contain the HIERARCHY_LEVEL_ID_SPRINT, filter out the sprint by
+	 * sprintCountForKpiCalculation property
 	 *
-	 * @param kpiRequest
-	 *          KpiRequest object containing the selectedMap.
-	 * @param treeAggregatorDetail
-	 *          The TreeAggregatorDetail object to be updated.
+	 * @param kpiRequest KpiRequest object containing the selectedMap.
+	 * @param treeAggregatorDetail The TreeAggregatorDetail object to be updated.
 	 */
-	private void updateTreeAggregatorDetail(KpiRequest kpiRequest, TreeAggregatorDetail treeAggregatorDetail) {
-		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap()) &&
-				CollectionUtils.isEmpty(kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)) &&
-				MapUtils.isNotEmpty(treeAggregatorDetail.getMapOfListOfLeafNodes())) {
+	private void updateTreeAggregatorDetail(
+			KpiRequest kpiRequest, TreeAggregatorDetail treeAggregatorDetail) {
+		if (MapUtils.isNotEmpty(kpiRequest.getSelectedMap())
+				&& CollectionUtils.isEmpty(
+						kpiRequest.getSelectedMap().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))
+				&& MapUtils.isNotEmpty(treeAggregatorDetail.getMapOfListOfLeafNodes())) {
 			List<Node> sprintList = new ArrayList<>();
-			if (CollectionUtils
-					.isNotEmpty(treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))) {
-				treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT).stream()
-						.collect(Collectors.groupingBy(Node::getParentId)).forEach((proj, sprints) -> {
-							if (sprints.size() > customApiConfig.getSprintCountForKpiCalculation()) {
-								sprintList
-										.addAll(new ArrayList<>(sprints.subList(0, customApiConfig.getSprintCountForKpiCalculation())));
-							} else {
-								sprintList.addAll(sprints);
-							}
-						});
-				treeAggregatorDetail.getMapOfListOfLeafNodes().put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, sprintList);
+			if (CollectionUtils.isNotEmpty(
+					treeAggregatorDetail
+							.getMapOfListOfLeafNodes()
+							.get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT))) {
+				treeAggregatorDetail
+						.getMapOfListOfLeafNodes()
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
+						.stream()
+						.collect(Collectors.groupingBy(Node::getParentId))
+						.forEach(
+								(proj, sprints) -> {
+									if (sprints.size() > customApiConfig.getSprintCountForKpiCalculation()) {
+										sprintList.addAll(
+												new ArrayList<>(
+														sprints.subList(0, customApiConfig.getSprintCountForKpiCalculation())));
+									} else {
+										sprintList.addAll(sprints);
+									}
+								});
+				treeAggregatorDetail
+						.getMapOfListOfLeafNodes()
+						.put(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, sprintList);
 			}
 		}
 	}
@@ -239,7 +258,10 @@ public class JiraServiceR {
 		 *
 		 * @param treeAggregatorDetail
 		 */
-		public ParallelJiraServices(KpiRequest kpiRequest, List<KpiElement> responseList, KpiElement kpiEle,
+		public ParallelJiraServices(
+				KpiRequest kpiRequest,
+				List<KpiElement> responseList,
+				KpiElement kpiEle,
 				TreeAggregatorDetail treeAggregatorDetail) {
 			super();
 			this.kpiRequest = kpiRequest;
@@ -256,20 +278,17 @@ public class JiraServiceR {
 		}
 
 		/**
-		 * This method call by multiple thread, take object of specific KPI and call
-		 * method of these KPIs
+		 * This method call by multiple thread, take object of specific KPI and call method of these
+		 * KPIs
 		 *
-		 * @param kpiRequest
-		 *          JIRA KPI request
-		 * @param kpiElement
-		 *          kpiElement object
-		 * @param treeAggregatorDetail
-		 *          filter tree object
+		 * @param kpiRequest JIRA KPI request
+		 * @param kpiElement kpiElement object
+		 * @param treeAggregatorDetail filter tree object
 		 * @return KpiElement kpiElement
 		 */
 		@SuppressWarnings("PMD.AvoidCatchingGenericException")
-		private KpiElement calculateAllKPIAggregatedMetrics(KpiRequest kpiRequest, KpiElement kpiElement,
-				TreeAggregatorDetail treeAggregatorDetail) {
+		private KpiElement calculateAllKPIAggregatedMetrics(
+				KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail) {
 
 			JiraKPIService<?, ?, ?> jiraKPIService = null;
 
@@ -281,20 +300,28 @@ public class JiraServiceR {
 				if (KPICode.THROUGHPUT.equals(kpi)) {
 					log.info("No need to fetch Throughput KPI data");
 				} else {
-					TreeAggregatorDetail treeAggregatorDetailClone = (TreeAggregatorDetail) SerializationUtils
-							.clone(treeAggregatorDetail);
-					List<Node> projectNodes = treeAggregatorDetailClone.getMapOfListOfProjectNodes()
-							.get(CommonConstant.PROJECT.toLowerCase());
-					if (!projectNodes.isEmpty() &&
-							(projectNodes.size() > 1 || kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
-						kpiElement = jiraKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
+					TreeAggregatorDetail treeAggregatorDetailClone =
+							(TreeAggregatorDetail) SerializationUtils.clone(treeAggregatorDetail);
+					List<Node> projectNodes =
+							treeAggregatorDetailClone
+									.getMapOfListOfProjectNodes()
+									.get(CommonConstant.PROJECT.toLowerCase());
+					if (!projectNodes.isEmpty()
+							&& (projectNodes.size() > 1
+									|| kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
+						kpiElement =
+								jiraKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
 						kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 						if (projectNodes.size() == 1) {
 							kpiHelperService.isMandatoryFieldSet(kpi, kpiElement, projectNodes.get(0));
 						}
 					}
 					long processTime = System.currentTimeMillis() - startTime;
-					log.info("[JIRA-{}-TIME][{}]. KPI took {} ms", kpi.name(), kpiRequest.getRequestTrackerId(), processTime);
+					log.info(
+							"[JIRA-{}-TIME][{}]. KPI took {} ms",
+							kpi.name(),
+							kpiRequest.getRequestTrackerId(),
+							processTime);
 				}
 			} catch (ApplicationException exception) {
 				kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
@@ -311,14 +338,12 @@ public class JiraServiceR {
 	/**
 	 * This method is called when the request for kpi is done from exposed API
 	 *
-	 * @param kpiRequest
-	 *          JIRA KPI request true if flow for precalculated, false for direct
-	 *          flow.
+	 * @param kpiRequest JIRA KPI request true if flow for precalculated, false for direct flow.
 	 * @return List of KPI data
-	 * @throws EntityNotFoundException
-	 *           EntityNotFoundException
+	 * @throws EntityNotFoundException EntityNotFoundException
 	 */
-	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache) throws EntityNotFoundException {
+	public List<KpiElement> processWithExposedApiToken(KpiRequest kpiRequest, boolean withCache)
+			throws EntityNotFoundException {
 		referFromProjectCache = withCache;
 		List<KpiElement> kpiElementList = process(kpiRequest);
 		referFromProjectCache = true;

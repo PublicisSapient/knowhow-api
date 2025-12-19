@@ -17,29 +17,30 @@
  ******************************************************************************/
 package com.publicissapient.kpidashboard.apis.zephyr.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.apis.enums.Filters;
-import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
-import com.publicissapient.kpidashboard.apis.enums.KPICode;
-import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
-import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
-import com.publicissapient.kpidashboard.apis.model.KpiElement;
-import com.publicissapient.kpidashboard.apis.model.KpiRequest;
-import com.publicissapient.kpidashboard.apis.model.Node;
-import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.enums.Filters;
+import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
+import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
@@ -58,16 +59,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
+public class TestExecutionTimeServiceImpl
+		extends ZephyrKPIService<Double, List<Object>, Map<String, Object>> {
 
-	@Autowired
-	private ConfigHelperService configHelperService;
-	@Autowired
-	private CacheService cacheService;
-	@Autowired
-	private JiraIssueRepository jiraIssueRepository;
-	@Autowired
-	TestCaseDetailsRepository testCaseDetailsRepository;
+	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private CacheService cacheService;
+	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired TestCaseDetailsRepository testCaseDetailsRepository;
 
 	private static final String SPRINTSTORIES = "storyData";
 	private static final String TESTCASEKEY = "testCaseData";
@@ -76,10 +74,18 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	private static final String MANUALTESTCASEKEY = "manualTestCaseData";
 	private static final String AVGEXECUTIONTIME = "avgExecutionTimeSec";
 	private static final String COUNT = "count";
+	private static final String TOTAL = "TOTAL";
+	private static final String MANUAL = "MANUAL";
+	private static final String AUTOMATED = "AUTOMATED";
 	private static final String TOOL_ZEPHYR = ProcessorConstants.ZEPHYR;
 	private static final String TOOL_JIRA_TEST = ProcessorConstants.JIRA_TEST;
 	private static final String DEVELOPER_KPI = "DeveloperKpi";
 	private static final String NIN = "nin";
+
+	@Override
+	public Double calculateKpiValue(List<Double> valueList, String kpiId) {
+		return calculateKpiValueForDouble(valueList, kpiId);
+	}
 
 	@Override
 	public String getQualifierType() {
@@ -87,122 +93,309 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	}
 
 	@Override
-	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement,
-								 TreeAggregatorDetail treeAggregatorDetail) throws ApplicationException {
+	public KpiElement getKpiData(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
+			throws ApplicationException {
 
 		List<DataCount> trendValueList = new ArrayList<>();
 		Node root = treeAggregatorDetail.getRoot();
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
-		treeAggregatorDetail.getMapOfListOfLeafNodes().forEach((k, v) -> {
-			if (Filters.getFilter(k) == Filters.SPRINT) {
-				sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
-			}
-		});
+		treeAggregatorDetail
+				.getMapOfListOfLeafNodes()
+				.forEach(
+						(k, v) -> {
+							if (Filters.getFilter(k) == Filters.SPRINT) {
+								sprintWiseLeafNodeValue(mapTmp, v, trendValueList, kpiElement, kpiRequest);
+							}
+						});
 
-		log.debug("[TEST-EXECUTION-TIME-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
-				kpiRequest.getRequestTrackerId(), root);
+		log.debug(
+				"[TEST-EXECUTION-TIME-LEAF-NODE-VALUE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
+				root);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
+		calculateAggregatedValueWithHover(root, nodeWiseKPIValue);
 
-		List<DataCount> trendValues = getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue,
-				KPICode.TEST_EXECUTION_TIME);
+		List<DataCount> trendValues =
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.TEST_EXECUTION_TIME);
 		kpiElement.setTrendValueList(trendValues);
 		return kpiElement;
 	}
 
+	@SuppressWarnings("unchecked")
+	private Object calculateAggregatedValueWithHover(
+			Node node, Map<Pair<String, String>, Node> nodeWiseKPIValue) {
+		if (node == null || node.getValue() == null) {
+			return new ArrayList<>();
+		}
+
+		List<Node> children = node.getChildren();
+		if (CollectionUtils.isEmpty(children)) {
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+			return node.getValue();
+		}
+
+		List<DataCount> aggregatedValueList = collectChildValues(children, nodeWiseKPIValue, node);
+
+		if (CollectionUtils.isNotEmpty(aggregatedValueList)) {
+			List<DataCount> aggregated = aggregateDataCountsWithHover(aggregatedValueList, node);
+			node.setValue(aggregated);
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+		}
+		return node.getValue();
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<DataCount> collectChildValues(
+			List<Node> children, Map<Pair<String, String>, Node> nodeWiseKPIValue, Node node) {
+		List<DataCount> aggregatedValueList = new ArrayList<>();
+		for (Node child : children) {
+			nodeWiseKPIValue.put(Pair.of(node.getGroupName().toUpperCase(), node.getId()), node);
+			Object obj = calculateAggregatedValueWithHover(child, nodeWiseKPIValue);
+			if (obj instanceof List<?>) {
+				aggregatedValueList.addAll((List<DataCount>) obj);
+			}
+		}
+		return aggregatedValueList;
+	}
+
+	private List<DataCount> aggregateDataCountsWithHover(List<DataCount> dataCounts, Node node) {
+		Map<String, List<DataCount>> projectWiseDataCount =
+				dataCounts.stream().collect(Collectors.groupingBy(DataCount::getSProjectName));
+
+		return projectWiseDataCount.size() <= 1
+				? createSingleProjectResult(dataCounts, node)
+				: createMultiProjectResult(projectWiseDataCount, node);
+	}
+
+	private List<DataCount> createSingleProjectResult(List<DataCount> dataCounts, Node node) {
+		return dataCounts.stream()
+				.map(dc -> copyDataCountWithNodeName(dc, node.getName()))
+				.collect(Collectors.toList());
+	}
+
+	private DataCount copyDataCountWithNodeName(DataCount dc, String nodeName) {
+		DataCount newDc = new DataCount();
+		newDc.setData(dc.getData());
+		newDc.setValue(dc.getValue());
+		newDc.setHoverValue(dc.getHoverValue());
+		newDc.setSprintIds(dc.getSprintIds());
+		newDc.setSprintNames(dc.getSprintNames());
+		newDc.setProjectNames(dc.getProjectNames());
+		newDc.setSProjectName(nodeName);
+		newDc.setDate(dc.getDate());
+		return newDc;
+	}
+
+	private List<DataCount> createMultiProjectResult(
+			Map<String, List<DataCount>> projectWiseDataCount, Node node) {
+		List<List<DataCount>> indexWiseValuesList = groupByIndex(projectWiseDataCount);
+		return indexWiseValuesList.stream()
+				.map(indexValues -> aggregateIndexValues(indexValues, node))
+				.collect(Collectors.toList());
+	}
+
+	private List<List<DataCount>> groupByIndex(Map<String, List<DataCount>> projectWiseDataCount) {
+		List<List<DataCount>> indexWiseValuesList = new ArrayList<>();
+		for (List<DataCount> dataCountList : projectWiseDataCount.values()) {
+			for (int i = 0; i < dataCountList.size(); i++) {
+				if (indexWiseValuesList.size() <= i) {
+					indexWiseValuesList.add(new ArrayList<>());
+				}
+				indexWiseValuesList.get(i).add(dataCountList.get(i));
+			}
+		}
+		return indexWiseValuesList;
+	}
+
+	private DataCount aggregateIndexValues(List<DataCount> indexValues, Node node) {
+		DataCount aggregated = new DataCount();
+		List<String> sprintIds = new ArrayList<>();
+		List<String> sprintNames = new ArrayList<>();
+		List<String> projectNames = new ArrayList<>();
+		List<Double> values = new ArrayList<>();
+		List<Map<String, Object>> hoverValues = new ArrayList<>();
+		String date = null;
+
+		for (DataCount dc : indexValues) {
+			if (CollectionUtils.isNotEmpty(dc.getSprintIds())) {
+				sprintIds.addAll(dc.getSprintIds());
+				sprintNames.addAll(dc.getSprintNames());
+			}
+			projectNames.add(dc.getSProjectName());
+			if (dc.getValue() != null) {
+				values.add((Double) dc.getValue());
+			}
+			if (dc.getHoverValue() != null) {
+				hoverValues.add(dc.getHoverValue());
+			}
+			date = dc.getDate();
+		}
+
+		Double avgValue = calculateKpiValue(values, KPICode.TEST_EXECUTION_TIME.getKpiId());
+		Map<String, Object> aggregatedHover = calculateHoverMap(hoverValues);
+		syncHoverValueWithCalculatedValue(aggregatedHover, avgValue);
+
+		aggregated.setData(String.valueOf(avgValue));
+		aggregated.setValue(avgValue);
+		aggregated.setHoverValue(aggregatedHover);
+		aggregated.setSprintIds(sprintIds);
+		aggregated.setSprintNames(sprintNames);
+		aggregated.setProjectNames(projectNames);
+		aggregated.setSProjectName(node.getName());
+		aggregated.setDate(date);
+		return aggregated;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void syncHoverValueWithCalculatedValue(
+			Map<String, Object> hoverMap, Double calculatedValue) {
+		if (hoverMap == null) {
+			return;
+		}
+		updateCategoryValue(hoverMap, TOTAL, calculatedValue, false);
+		updateCategoryValue(hoverMap, MANUAL, calculatedValue, true);
+		updateCategoryValue(hoverMap, AUTOMATED, calculatedValue, true);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void updateCategoryValue(
+			Map<String, Object> hoverMap, String category, Double calculatedValue, boolean checkCount) {
+		if (hoverMap.containsKey(category)) {
+			Object catObj = hoverMap.get(category);
+			if (catObj instanceof Map) {
+				Map<String, Object> catMap = (Map<String, Object>) catObj;
+				if (!checkCount || getNumberValue(catMap.get(COUNT)) > 0) {
+					catMap.put(AVGEXECUTIONTIME, calculatedValue);
+				}
+			}
+		}
+	}
+
 	/**
-	 * Populates KPI value to sprint leaf nodes. It also gives the trend analysis at
-	 * sprint wise.
+	 * Populates KPI value to sprint leaf nodes. It also gives the trend analysis at sprint wise.
 	 *
 	 * @param mapTmp
 	 * @param sprintLeafNodeList
 	 */
 	@SuppressWarnings("unchecked")
-	private void sprintWiseLeafNodeValue(Map<String, Node> mapTmp, List<Node> sprintLeafNodeList,
-			List<DataCount> trendValueList, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void sprintWiseLeafNodeValue(
+			Map<String, Node> mapTmp,
+			List<Node> sprintLeafNodeList,
+			List<DataCount> trendValueList,
+			KpiElement kpiElement,
+			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
-		Collections.sort(sprintLeafNodeList, (Node o1, Node o2) -> o1.getSprintFilter().getStartDate()
-				.compareTo(o2.getSprintFilter().getStartDate()));
+		Collections.sort(
+				sprintLeafNodeList,
+				(Node o1, Node o2) ->
+						o1.getSprintFilter().getStartDate().compareTo(o2.getSprintFilter().getStartDate()));
 
-		Map<String, Object> defectDataListMap = fetchKPIDataFromDb(sprintLeafNodeList, null, null, kpiRequest);
+		Map<String, Object> defectDataListMap =
+				fetchKPIDataFromDb(sprintLeafNodeList, null, null, kpiRequest);
 
-		List<SprintWiseStory> sprintWiseStoryList = (List<SprintWiseStory>) defectDataListMap
-				.getOrDefault(SPRINTSTORIES, new ArrayList<>());
+		List<SprintWiseStory> sprintWiseStoryList =
+				(List<SprintWiseStory>) defectDataListMap.getOrDefault(SPRINTSTORIES, new ArrayList<>());
 
-		Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap = sprintWiseStoryList.stream().collect(Collectors
-				.groupingBy(sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()), Collectors.toList()));
+		Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap =
+				sprintWiseStoryList.stream()
+						.collect(
+								Collectors.groupingBy(
+										sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()),
+										Collectors.toList()));
 
-		List<TestCaseDetails> testCaseList = (List<TestCaseDetails>) defectDataListMap.getOrDefault(TESTCASEKEY,
-				new ArrayList<>());
-		Map<String, Set<JiraIssue>> projectWiseStories = ((List<JiraIssue>) defectDataListMap.getOrDefault(ISSUE_DATA,
-				new ArrayList<>())).stream()
-				.collect(Collectors.groupingBy(JiraIssue::getBasicProjectConfigId, Collectors.toSet()));
+		List<TestCaseDetails> testCaseList =
+				(List<TestCaseDetails>) defectDataListMap.getOrDefault(TESTCASEKEY, new ArrayList<>());
+		Map<String, Set<JiraIssue>> projectWiseStories =
+				((List<JiraIssue>) defectDataListMap.getOrDefault(ISSUE_DATA, new ArrayList<>()))
+						.stream()
+								.collect(
+										Collectors.groupingBy(JiraIssue::getBasicProjectConfigId, Collectors.toSet()));
 
 		Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseAutoTestMap = new HashMap<>();
 		Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseManualTestMap = new HashMap<>();
 		Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseTotalTestMap = new HashMap<>();
 
-		sprintWiseMap.forEach((sprintFilter, sprintWiseStories) -> {
-			List<TestCaseDetails> sprintWiseAutomatedTestList = new ArrayList<>();
-			List<TestCaseDetails> sprintWiseTotalTestList = new ArrayList<>();
-			List<TestCaseDetails> sprintWiseManualTestList = new ArrayList<>();
+		sprintWiseMap.forEach(
+				(sprintFilter, sprintWiseStories) -> {
+					List<TestCaseDetails> sprintWiseAutomatedTestList = new ArrayList<>();
+					List<TestCaseDetails> sprintWiseTotalTestList = new ArrayList<>();
+					List<TestCaseDetails> sprintWiseManualTestList = new ArrayList<>();
 
-			sprintWiseAutomatedTestList.addAll(getAutomatedTestCases(testCaseList, sprintWiseStories));
-			sprintWiseManualTestList.addAll(getManualTestCases(testCaseList, sprintWiseStories));
-			sprintWiseTotalTestList.addAll(getTotalTestCases(testCaseList, sprintWiseStories));
-			Map<String, Object> currentSprintLeafNodeDefectDataMap = new HashMap<>();
-			currentSprintLeafNodeDefectDataMap.put(AUTOMATEDTESTCASEKEY,
-					getAutomatedTestCases(testCaseList, sprintWiseStories));
-			currentSprintLeafNodeDefectDataMap.put(TESTCASEKEY, getTotalTestCases(testCaseList, sprintWiseStories));
+					sprintWiseAutomatedTestList.addAll(
+							getAutomatedTestCases(testCaseList, sprintWiseStories));
+					sprintWiseManualTestList.addAll(getManualTestCases(testCaseList, sprintWiseStories));
+					sprintWiseTotalTestList.addAll(getTotalTestCases(testCaseList, sprintWiseStories));
+					Map<String, Object> currentSprintLeafNodeDefectDataMap = new HashMap<>();
+					currentSprintLeafNodeDefectDataMap.put(
+							AUTOMATEDTESTCASEKEY, getAutomatedTestCases(testCaseList, sprintWiseStories));
+					currentSprintLeafNodeDefectDataMap.put(
+							TESTCASEKEY, getTotalTestCases(testCaseList, sprintWiseStories));
 
-			sprintWiseManualTestMap.put(sprintFilter, sprintWiseManualTestList);
-			sprintWiseAutoTestMap.put(sprintFilter, sprintWiseAutomatedTestList);
-			sprintWiseTotalTestMap.put(sprintFilter, sprintWiseTotalTestList);
-		});
+					sprintWiseManualTestMap.put(sprintFilter, sprintWiseManualTestList);
+					sprintWiseAutoTestMap.put(sprintFilter, sprintWiseAutomatedTestList);
+					sprintWiseTotalTestMap.put(sprintFilter, sprintWiseTotalTestList);
+				});
 		List<KPIExcelData> excelData = new ArrayList<>();
-		sprintLeafNodeList.forEach(node -> {
-			String validationKey = node.getSprintFilter().getName();
-			// Leaf node wise data
-			String trendLineName = node.getProjectFilter().getName();
+		sprintLeafNodeList.forEach(
+				node -> {
+					String validationKey = node.getSprintFilter().getName();
+					// Leaf node wise data
+					String trendLineName = node.getProjectFilter().getName();
 
-			Pair<String, String> currentNodeIdentifier = Pair
-					.of(node.getProjectFilter().getBasicProjectConfigId().toString(), node.getSprintFilter().getId());
+					Pair<String, String> currentNodeIdentifier =
+							Pair.of(
+									node.getProjectFilter().getBasicProjectConfigId().toString(),
+									node.getSprintFilter().getId());
 
-			Map<String, Object> hoverMap = new LinkedHashMap<>();
-			Map<String, Object> currentSprintLeafNodeDefectDataMap = new HashMap<>();
-			currentSprintLeafNodeDefectDataMap.put(MANUALTESTCASEKEY,
-					sprintWiseManualTestMap.get(currentNodeIdentifier));
-			currentSprintLeafNodeDefectDataMap.put(AUTOMATEDTESTCASEKEY,
-					sprintWiseAutoTestMap.get(currentNodeIdentifier));
-			currentSprintLeafNodeDefectDataMap.put(TESTCASEKEY, sprintWiseTotalTestMap.get(currentNodeIdentifier));
+					Map<String, Object> hoverMap = new LinkedHashMap<>();
+					Map<String, Object> currentSprintLeafNodeDefectDataMap = new HashMap<>();
+					currentSprintLeafNodeDefectDataMap.put(
+							MANUALTESTCASEKEY, sprintWiseManualTestMap.get(currentNodeIdentifier));
+					currentSprintLeafNodeDefectDataMap.put(
+							AUTOMATEDTESTCASEKEY, sprintWiseAutoTestMap.get(currentNodeIdentifier));
+					currentSprintLeafNodeDefectDataMap.put(
+							TESTCASEKEY, sprintWiseTotalTestMap.get(currentNodeIdentifier));
 
-			populateExcelDataObject(requestTrackerId, currentSprintLeafNodeDefectDataMap, excelData, validationKey,
-					projectWiseStories.get(node.getProjectFilter().getBasicProjectConfigId().toString()));
-			setHoverMap(sprintWiseAutoTestMap, sprintWiseManualTestMap, sprintWiseTotalTestMap, currentNodeIdentifier,
-					hoverMap);
+					populateExcelDataObject(
+							requestTrackerId,
+							currentSprintLeafNodeDefectDataMap,
+							excelData,
+							validationKey,
+							projectWiseStories.get(node.getProjectFilter().getBasicProjectConfigId().toString()));
+					setHoverMap(
+							sprintWiseAutoTestMap,
+							sprintWiseManualTestMap,
+							sprintWiseTotalTestMap,
+							currentNodeIdentifier,
+							hoverMap);
 
-			double executionTimeForCurrentLeaf = 0.0;
-			executionTimeForCurrentLeaf = getValueFromHoverMap(hoverMap, "TOTAL", AVGEXECUTIONTIME, Double.class);
+					double executionTimeForCurrentLeaf = 0.0;
+					executionTimeForCurrentLeaf =
+							getValueFromHoverMap(hoverMap, TOTAL, AVGEXECUTIONTIME, Double.class);
 
-			mapTmp.get(node.getId()).setValue(executionTimeForCurrentLeaf);
+					mapTmp.get(node.getId()).setValue(executionTimeForCurrentLeaf);
 
-			log.debug("[TEST-AUTOMATION-SPRINT-WISE][{}]. TEST-AUTOMATION for sprint {}  is {}", requestTrackerId,
-					node.getSprintFilter().getName(), executionTimeForCurrentLeaf);
-			DataCount dataCount = new DataCount();
-			dataCount.setData(String.valueOf(Math.round(executionTimeForCurrentLeaf)));
-			dataCount.setSProjectName(trendLineName);
-			dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
-			dataCount.setSprintNames(new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
-			dataCount.setSSprintID(node.getSprintFilter().getId());
-			dataCount.setSSprintName(node.getSprintFilter().getName());
-			dataCount.setHoverValue(hoverMap);
-			dataCount.setValue(executionTimeForCurrentLeaf);
-			mapTmp.get(node.getId()).setValue(new ArrayList<>(Arrays.asList(dataCount)));
-			trendValueList.add(dataCount);
-
-		});
+					log.debug(
+							"[TEST-AUTOMATION-SPRINT-WISE][{}]. TEST-AUTOMATION for sprint {}  is {}",
+							requestTrackerId,
+							node.getSprintFilter().getName(),
+							executionTimeForCurrentLeaf);
+					DataCount dataCount = new DataCount();
+					dataCount.setData(String.valueOf(executionTimeForCurrentLeaf));
+					dataCount.setSProjectName(trendLineName);
+					dataCount.setSprintIds(new ArrayList<>(Arrays.asList(node.getSprintFilter().getId())));
+					dataCount.setSprintNames(
+							new ArrayList<>(Arrays.asList(node.getSprintFilter().getName())));
+					dataCount.setSSprintID(node.getSprintFilter().getId());
+					dataCount.setSSprintName(node.getSprintFilter().getName());
+					dataCount.setHoverValue(hoverMap);
+					dataCount.setValue(executionTimeForCurrentLeaf);
+					mapTmp.get(node.getId()).setValue(new ArrayList<>(Arrays.asList(dataCount)));
+					trendValueList.add(dataCount);
+				});
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.TEST_EXECUTION_TIME.getColumns());
 	}
@@ -210,74 +403,70 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 	/**
 	 * Sets Hover map with test case counts and average execution times
 	 *
-	 * @param sprintWiseAutomatedMap
-	 *            map of automated test cases per sprint
-	 * @param sprintWiseManualMap
-	 *            map of manual test cases per sprint
-	 * @param sprintWiseTotalMap
-	 *            map of total test cases per sprint
-	 * @param sprintId
-	 *            sprint identifier
-	 * @param hoverMap
-	 *            output map to populate
+	 * @param sprintWiseAutomatedMap map of automated test cases per sprint
+	 * @param sprintWiseManualMap map of manual test cases per sprint
+	 * @param sprintWiseTotalMap map of total test cases per sprint
+	 * @param sprintId sprint identifier
+	 * @param hoverMap output map to populate
 	 */
-	private void setHoverMap(Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseAutomatedMap,
+	private void setHoverMap(
+			Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseAutomatedMap,
 			Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseManualMap,
-			Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseTotalMap, Pair<String, String> sprintId,
+			Map<Pair<String, String>, List<TestCaseDetails>> sprintWiseTotalMap,
+			Pair<String, String> sprintId,
 			Map<String, Object> hoverMap) {
 
-		// Automated test cases
-		populateCategoryData("AUTOMATED", sprintWiseAutomatedMap.get(sprintId), hoverMap);
-
-		// Manual test cases
-		populateCategoryData("MANUAL", sprintWiseManualMap.get(sprintId), hoverMap);
-
-		// Total test cases
-		populateCategoryData("TOTAL", sprintWiseTotalMap.get(sprintId), hoverMap);
+		populateCategoryData(AUTOMATED, sprintWiseAutomatedMap.get(sprintId), hoverMap);
+		populateCategoryData(MANUAL, sprintWiseManualMap.get(sprintId), hoverMap);
+		populateCategoryData(TOTAL, sprintWiseTotalMap.get(sprintId), hoverMap);
 	}
 
-	/**
-	 * Helper method to compute count & average execution time for a category
-	 */
-	private void populateCategoryData(String category, List<TestCaseDetails> testCases, Map<String, Object> hoverMap) {
-		if (CollectionUtils.isNotEmpty(testCases)) {
-			int totalCount = testCases.size();
-
-			// Compute per-test average execution time in **minutes**
-			long avgExecTimeMin = Math.round(
-					testCases.stream().mapToDouble(tc -> {
-						if (CollectionUtils.isEmpty(tc.getExecutions())) {
-							return 0.0;
-						}
-						double sum = tc.getExecutions().stream()
-								.filter(exec -> exec.getExecutionTime() != null)
-								.mapToDouble(TestCaseExecutionData::getExecutionTime)
-								.sum();
-
-						long count = tc.getExecutions().stream()
-								.filter(exec -> exec.getExecutionTime() != null)
-								.count();
-
-						return count > 0 ? (sum / count) : 0.0;
-					}).average().orElse(0.0) / 1000.0 / 60.0 // ms → sec → min
-			);
-
-			// Put results into hover map
-			Map<String, Object> categoryData = new HashMap<>();
-			categoryData.put(COUNT, totalCount);
-			categoryData.put(AVGEXECUTIONTIME, avgExecTimeMin); // in minutes
-
-			hoverMap.put(category, categoryData);
-		} else {
-			Map<String, Object> categoryData = new HashMap<>();
+	private void populateCategoryData(
+			String category, List<TestCaseDetails> testCases, Map<String, Object> hoverMap) {
+		Map<String, Object> categoryData = new HashMap<>();
+		if (CollectionUtils.isEmpty(testCases)) {
 			categoryData.put(COUNT, 0);
-			categoryData.put(AVGEXECUTIONTIME, 0L); // 0 minutes
+			categoryData.put(AVGEXECUTIONTIME, 0.0);
 			hoverMap.put(category, categoryData);
+			return;
 		}
+
+		long totalCount =
+				testCases.stream().filter(tc -> CollectionUtils.isNotEmpty(tc.getExecutions())).count();
+
+		double avgExecTimeMin = calculateAverageExecutionTime(testCases);
+
+		categoryData.put(COUNT, totalCount);
+		categoryData.put(AVGEXECUTIONTIME, avgExecTimeMin);
+		hoverMap.put(category, categoryData);
+	}
+
+	private double calculateAverageExecutionTime(List<TestCaseDetails> testCases) {
+		double avgTimeMs =
+				testCases.stream()
+						.mapToDouble(this::getAverageExecutionTimeForTestCase)
+						.average()
+						.orElse(0.0);
+		return BigDecimal.valueOf(avgTimeMs / 60000.0).setScale(2, RoundingMode.HALF_UP).doubleValue();
+	}
+
+	private double getAverageExecutionTimeForTestCase(TestCaseDetails tc) {
+		if (CollectionUtils.isEmpty(tc.getExecutions())) {
+			return 0.0;
+		}
+		double sum =
+				tc.getExecutions().stream()
+						.filter(exec -> exec.getExecutionTime() != null)
+						.mapToDouble(TestCaseExecutionData::getExecutionTime)
+						.sum();
+		long count =
+				tc.getExecutions().stream().filter(exec -> exec.getExecutionTime() != null).count();
+		return count > 0 ? (sum / count) : 0.0;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getValueFromHoverMap(Map<String, Object> hoverMap, String category, String key, Class<T> type) {
+	public static <T> T getValueFromHoverMap(
+			Map<String, Object> hoverMap, String category, String key, Class<T> type) {
 		if (hoverMap == null || !hoverMap.containsKey(category)) {
 			return null;
 		}
@@ -312,64 +501,72 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 		return null; // type mismatch
 	}
 
-	private void populateExcelDataObject(String requestTrackerId,
-			Map<String, Object> currentSprintLeafNodeDefectDataMap, List<KPIExcelData> excelData, String sprint,
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			Map<String, Object> currentSprintLeafNodeDefectDataMap,
+			List<KPIExcelData> excelData,
+			String sprint,
 			Set<JiraIssue> jiraIssues) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			List<TestCaseDetails> automatedTest = (List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap
-					.get(AUTOMATEDTESTCASEKEY);
-			List<TestCaseDetails> manualTest = (List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap
-					.get(MANUALTESTCASEKEY);
-			List<TestCaseDetails> totalTest = (List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap
-					.get(TESTCASEKEY);
-			KPIExcelUtility.populateTestExecutionTimeExcelData(sprint, totalTest, automatedTest, manualTest,
-					excelData, KPICode.TEST_EXECUTION_TIME.getKpiId(),"");
+			List<TestCaseDetails> automatedTest =
+					(List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap.get(AUTOMATEDTESTCASEKEY);
+			List<TestCaseDetails> manualTest =
+					(List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap.get(MANUALTESTCASEKEY);
+			List<TestCaseDetails> totalTest =
+					(List<TestCaseDetails>) currentSprintLeafNodeDefectDataMap.get(TESTCASEKEY);
+			KPIExcelUtility.populateTestExecutionTimeExcelData(
+					sprint,
+					totalTest,
+					automatedTest,
+					manualTest,
+					excelData,
+					KPICode.TEST_EXECUTION_TIME.getKpiId(),
+					"");
 		}
 	}
 
-	/**
-	 * @param testCaseList
-	 * @return
-	 */
-	private List<TestCaseDetails> getAutomatedTestCases(List<TestCaseDetails> testCaseList,
-			List<SprintWiseStory> sprintWiseStory) {
+	private List<TestCaseDetails> getAutomatedTestCases(
+			List<TestCaseDetails> testCaseList, List<SprintWiseStory> sprintWiseStory) {
+		return filterTestCasesByAutomation(
+				testCaseList, sprintWiseStory, NormalizedJira.YES_VALUE.getValue());
+	}
+
+	private List<TestCaseDetails> getManualTestCases(
+			List<TestCaseDetails> testCaseList, List<SprintWiseStory> sprintWiseStory) {
+		return filterTestCasesByAutomation(
+				testCaseList, sprintWiseStory, NormalizedJira.NO_VALUE.getValue());
+	}
+
+	private List<TestCaseDetails> getTotalTestCases(
+			List<TestCaseDetails> testCaseList, List<SprintWiseStory> sprintWiseStory) {
+		return filterTestCasesByAutomation(testCaseList, sprintWiseStory, null);
+	}
+
+	private List<TestCaseDetails> filterTestCasesByAutomation(
+			List<TestCaseDetails> testCaseList,
+			List<SprintWiseStory> sprintWiseStory,
+			String automationValue) {
 		return testCaseList.stream()
-				.filter(tc -> sprintWiseStory.stream()
-						.anyMatch(st -> st.getBasicProjectConfigId().equals(tc.getBasicProjectConfigId())
-								&& CollectionUtils.isNotEmpty(tc.getDefectStoryID())
-								&& CollectionUtils.containsAny(tc.getDefectStoryID(), st.getStoryList())
-								&& NormalizedJira.YES_VALUE.getValue().equals(tc.getIsTestAutomated())))
+				.filter(tc -> matchesSprintAndAutomation(tc, sprintWiseStory, automationValue))
 				.toList();
 	}
 
-	/**
-	 * @param testCaseList
-	 * @return
-	 */
-	private List<TestCaseDetails> getManualTestCases(List<TestCaseDetails> testCaseList,
-			List<SprintWiseStory> sprintWiseStory) {
-		return testCaseList.stream()
-				.filter(tc -> sprintWiseStory.stream()
-						.anyMatch(st -> st.getBasicProjectConfigId().equals(tc.getBasicProjectConfigId())
-								&& CollectionUtils.isNotEmpty(tc.getDefectStoryID())
-								&& CollectionUtils.containsAny(tc.getDefectStoryID(), st.getStoryList())
-								&& NormalizedJira.NO_VALUE.getValue().equals(tc.getIsTestAutomated())))
-				.toList();
+	private boolean matchesSprintAndAutomation(
+			TestCaseDetails tc, List<SprintWiseStory> sprintWiseStory, String automationValue) {
+		return sprintWiseStory.stream().anyMatch(st -> matchesStory(tc, st, automationValue));
 	}
 
-	/**
-	 * @param testCaseList
-	 * @return
-	 */
-	private List<TestCaseDetails> getTotalTestCases(List<TestCaseDetails> testCaseList,
-			List<SprintWiseStory> sprintWiseStory) {
-		return testCaseList.stream()
-				.filter(tc -> sprintWiseStory.stream()
-						.anyMatch(st -> st.getBasicProjectConfigId().equals(tc.getBasicProjectConfigId())
-								&& CollectionUtils.isNotEmpty(tc.getDefectStoryID())
-								&& CollectionUtils.containsAny(tc.getDefectStoryID(), st.getStoryList())))
-				.toList();
+	private boolean matchesStory(TestCaseDetails tc, SprintWiseStory st, String automationValue) {
+		boolean basicMatch =
+				st.getBasicProjectConfigId().equals(tc.getBasicProjectConfigId())
+						&& CollectionUtils.isNotEmpty(tc.getDefectStoryID())
+						&& CollectionUtils.containsAny(tc.getDefectStoryID(), st.getStoryList());
+
+		if (automationValue == null) {
+			return basicMatch;
+		}
+		return basicMatch && automationValue.equals(tc.getIsTestAutomated());
 	}
 
 	@Override
@@ -377,9 +574,97 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 		return 0.0;
 	}
 
+	/**
+	 * Aggregates hover values from multiple child nodes for hierarchy level aggregation Overrides the
+	 * default behavior to handle nested hover value structure
+	 *
+	 * @param hoverMapValues list of hover maps from child nodes
+	 * @return aggregated hover map
+	 */
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> calculateHoverMap(List<Map<String, Object>> hoverMapValues) {
+		if (CollectionUtils.isEmpty(hoverMapValues)) {
+			return createEmptyHoverMap();
+		}
+
+		Map<String, Object> aggregatedHoverMap = new LinkedHashMap<>();
+		for (String category : Arrays.asList(TOTAL, AUTOMATED, MANUAL)) {
+			aggregatedHoverMap.put(category, aggregateCategoryData(category, hoverMapValues));
+		}
+		return aggregatedHoverMap;
+	}
+
+	private Map<String, Object> aggregateCategoryData(
+			String category, List<Map<String, Object>> hoverMapValues) {
+		long totalCount = 0;
+		double totalWeightedTime = 0.0;
+		long totalCountForAvg = 0;
+
+		for (Map<String, Object> hoverMap : hoverMapValues) {
+			Map<String, Object> categoryData = extractCategoryData(hoverMap, category);
+			if (categoryData != null) {
+				long count = getNumberValue(categoryData.get(COUNT));
+				double avgTime = getDoubleValue(categoryData.get(AVGEXECUTIONTIME));
+				totalCount += count;
+				if (count > 0) {
+					totalWeightedTime += (avgTime * count);
+					totalCountForAvg += count;
+				}
+			}
+		}
+
+		double aggregatedAvgTime =
+				totalCountForAvg > 0
+						? BigDecimal.valueOf(totalWeightedTime / totalCountForAvg)
+								.setScale(2, RoundingMode.HALF_UP)
+								.doubleValue()
+						: 0.0;
+
+		Map<String, Object> result = new HashMap<>();
+		result.put(COUNT, totalCount);
+		result.put(AVGEXECUTIONTIME, aggregatedAvgTime);
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> extractCategoryData(Map<String, Object> hoverMap, String category) {
+		if (hoverMap != null && hoverMap.containsKey(category)) {
+			Object categoryObj = hoverMap.get(category);
+			if (categoryObj instanceof Map) {
+				return (Map<String, Object>) categoryObj;
+			}
+		}
+		return null;
+	}
+
+	private Map<String, Object> createEmptyHoverMap() {
+		Map<String, Object> emptyMap = new LinkedHashMap<>();
+		for (String category : Arrays.asList(TOTAL, AUTOMATED, MANUAL)) {
+			Map<String, Object> categoryMap = new HashMap<>();
+			categoryMap.put(COUNT, 0);
+			categoryMap.put(AVGEXECUTIONTIME, 0.0);
+			emptyMap.put(category, categoryMap);
+		}
+		return emptyMap;
+	}
+
+	private long getNumberValue(Object obj) {
+		if (obj instanceof Number) {
+			return ((Number) obj).longValue();
+		}
+		return 0;
+	}
+
+	private double getDoubleValue(Object obj) {
+		if (obj instanceof Number) {
+			return ((Number) obj).doubleValue();
+		}
+		return 0.0;
+	}
+
+	@Override
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
@@ -388,87 +673,103 @@ public class TestExecutionTimeServiceImpl extends ZephyrKPIService<Double, List<
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 		Map<String, Map<String, Object>> uniqueProjectMapForTestCase = new HashMap<>();
 		Map<String, String> sprintProjectIdMap = new HashMap<>();
-		Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap = (Map<ObjectId, Map<String, List<ProjectToolConfig>>>) cacheService
-				.cacheProjectToolConfigMapData();
+		Map<ObjectId, Map<String, List<ProjectToolConfig>>> toolMap =
+				(Map<ObjectId, Map<String, List<ProjectToolConfig>>>)
+						cacheService.cacheProjectToolConfigMapData();
 		Map<ObjectId, FieldMapping> basicProjetWiseConfig = configHelperService.getFieldMappingMap();
-		leafNodeList.forEach(leaf -> {
-			ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
-			List<ProjectToolConfig> zephyrTools = getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId,
-					TOOL_ZEPHYR);
+		leafNodeList.forEach(
+				leaf -> {
+					ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
+					List<ProjectToolConfig> zephyrTools =
+							getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId, TOOL_ZEPHYR);
 
-			List<ProjectToolConfig> jiraTestTools = getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId,
-					TOOL_JIRA_TEST);
+					List<ProjectToolConfig> jiraTestTools =
+							getToolConfigBasedOnProcessors(toolMap, basicProjectConfigId, TOOL_JIRA_TEST);
 
-			Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
-			Map<String, Object> mapOfFolderPathFilters = new LinkedHashMap<>();
-			Map<String, Object> mapOfProjectFiltersNotIn = new LinkedHashMap<>();
-			FieldMapping fieldMapping = basicProjetWiseConfig.get(basicProjectConfigId);
+					Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
+					Map<String, Object> mapOfFolderPathFilters = new LinkedHashMap<>();
+					Map<String, Object> mapOfProjectFiltersNotIn = new LinkedHashMap<>();
+					FieldMapping fieldMapping = basicProjetWiseConfig.get(basicProjectConfigId);
 
-			sprintList.add(leaf.getSprintFilter().getId());
-			basicProjectConfigIds.add(basicProjectConfigId.toString());
-			sprintProjectIdMap.put(leaf.getSprintFilter().getId(), basicProjectConfigId.toString());
+					sprintList.add(leaf.getSprintFilter().getId());
+					basicProjectConfigIds.add(basicProjectConfigId.toString());
+					sprintProjectIdMap.put(leaf.getSprintFilter().getId(), basicProjectConfigId.toString());
 
-			mapOfProjectFilters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
-					CommonUtils.convertToPatternList(fieldMapping.getJiraTestAutomationIssueType()));
-			// if Zephyr scale as a tool is setup with project
-			if (CollectionUtils.isNotEmpty(zephyrTools)) {
-				List<String> sprintAutomationFolderPath = new ArrayList<>();
-				zephyrTools.forEach(tool -> {
-					if (CollectionUtils.isNotEmpty(tool.getInSprintAutomationFolderPath())) {
-						sprintAutomationFolderPath.addAll(tool.getInSprintAutomationFolderPath());
+					mapOfProjectFilters.put(
+							JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
+							CommonUtils.convertToPatternList(fieldMapping.getJiraTestAutomationIssueType()));
+					// if Zephyr scale as a tool is setup with project
+					if (CollectionUtils.isNotEmpty(zephyrTools)) {
+						List<String> sprintAutomationFolderPath = new ArrayList<>();
+						zephyrTools.forEach(
+								tool -> {
+									if (CollectionUtils.isNotEmpty(tool.getInSprintAutomationFolderPath())) {
+										sprintAutomationFolderPath.addAll(tool.getInSprintAutomationFolderPath());
+									}
+								});
+						if (CollectionUtils.isNotEmpty(sprintAutomationFolderPath)) {
+							mapOfFolderPathFilters.put(
+									JiraFeature.ATM_TEST_FOLDER.getFieldValueInFeature(),
+									CommonUtils.convertTestFolderToPatternList(sprintAutomationFolderPath));
+						}
 					}
-				});
-				if (CollectionUtils.isNotEmpty(sprintAutomationFolderPath)) {
-					mapOfFolderPathFilters.put(JiraFeature.ATM_TEST_FOLDER.getFieldValueInFeature(),
-							CommonUtils.convertTestFolderToPatternList(sprintAutomationFolderPath));
-				}
-			}
-			// if Zephyr squad as a jira plguin is setup with project
-			if (CollectionUtils.isNotEmpty(jiraTestTools)) {
-				jiraTestTools.forEach(tool -> {
-					if (CollectionUtils.isNotEmpty(tool.getTestCaseStatus())) {
-						mapOfProjectFiltersNotIn.put(JiraFeature.TEST_CASE_STATUS.getFieldValueInFeature(),
-								CommonUtils.convertTestFolderToPatternList(tool.getTestCaseStatus()));
+					// if Zephyr squad as a jira plguin is setup with project
+					if (CollectionUtils.isNotEmpty(jiraTestTools)) {
+						jiraTestTools.forEach(
+								tool -> {
+									if (CollectionUtils.isNotEmpty(tool.getTestCaseStatus())) {
+										mapOfProjectFiltersNotIn.put(
+												JiraFeature.TEST_CASE_STATUS.getFieldValueInFeature(),
+												CommonUtils.convertTestFolderToPatternList(tool.getTestCaseStatus()));
+									}
+								});
 					}
+
+					uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 				});
-			}
 
-			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
-		});
-
-		mapOfFilters.put(JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
-		mapOfFilters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFilters.put(
+				JiraFeature.SPRINT_ID.getFieldValueInFeature(), sprintList.stream().distinct().toList());
+		mapOfFilters.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				basicProjectConfigIds.stream().distinct().toList());
 
-		List<SprintWiseStory> sprintWiseStoryList = jiraIssueRepository.findIssuesGroupBySprint(mapOfFilters,
-				uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEVELOPER_KPI);
+		List<SprintWiseStory> sprintWiseStoryList =
+				jiraIssueRepository.findIssuesGroupBySprint(
+						mapOfFilters, uniqueProjectMap, kpiRequest.getFilterToShowOnTrend(), DEVELOPER_KPI);
 
 		Map<String, List<String>> projectStoryNumberMap = new HashMap<>();
 		List<String> storyIdList = new ArrayList<>();
-		sprintWiseStoryList.forEach(s -> {
-			String basicProjConfId = sprintProjectIdMap.get(s.getSprint());
-			projectStoryNumberMap.putIfAbsent(basicProjConfId, new ArrayList<>());
-			projectStoryNumberMap.get(basicProjConfId).addAll(s.getStoryList());
-			storyIdList.addAll(s.getStoryList());
-		});
+		sprintWiseStoryList.forEach(
+				s -> {
+					String basicProjConfId = sprintProjectIdMap.get(s.getSprint());
+					projectStoryNumberMap.putIfAbsent(basicProjConfId, new ArrayList<>());
+					projectStoryNumberMap.get(basicProjConfId).addAll(s.getStoryList());
+					storyIdList.addAll(s.getStoryList());
+				});
 
-		projectStoryNumberMap.forEach((k, v) -> {
-			Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
-			uniqueProjectMapForTestCase.putIfAbsent(k, mapOfProjectFilters);
-			uniqueProjectMapForTestCase.get(k).put(JiraFeature.DEFECT_STORY_ID.getFieldValueInFeature(),
-					v.stream().distinct().toList());
-		});
+		projectStoryNumberMap.forEach(
+				(k, v) -> {
+					Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
+					uniqueProjectMapForTestCase.putIfAbsent(k, mapOfProjectFilters);
+					uniqueProjectMapForTestCase
+							.get(k)
+							.put(
+									JiraFeature.DEFECT_STORY_ID.getFieldValueInFeature(),
+									v.stream().distinct().toList());
+				});
 		Map<String, List<String>> mapOfFiltersStoryQuery = new LinkedHashMap<>();
-		mapOfFiltersStoryQuery.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
+		mapOfFiltersStoryQuery.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				basicProjectConfigIds.stream().distinct().toList());
 
-		List<TestCaseDetails> testCasesList = testCaseDetailsRepository.findTestDetails(mapOfFiltersStoryQuery,
-				uniqueProjectMapForTestCase, NIN);
+		List<TestCaseDetails> testCasesList =
+				testCaseDetailsRepository.findTestDetails(
+						mapOfFiltersStoryQuery, uniqueProjectMapForTestCase, NIN);
 
 		resultListMap.put(SPRINTSTORIES, sprintWiseStoryList);
 		resultListMap.put(TESTCASEKEY, testCasesList);
 		resultListMap.put(ISSUE_DATA, jiraIssueRepository.findIssueAndDescByNumber(storyIdList));
 		return resultListMap;
 	}
-
 }

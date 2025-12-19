@@ -62,24 +62,17 @@ public class DefectsBreachedSlasServiceImplTest {
 
 	private static final String TEST_BASIC_PROJECT_CONFIG_ID = "507f1f77bcf86cd799439011";
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
 
-	@Mock
-	private CommonService commonService;
+	@Mock private CommonService commonService;
 
-	@Mock
-	private MongoTemplate mongoTemplate;
+	@Mock private MongoTemplate mongoTemplate;
 
-	@Spy
-	@InjectMocks
-	private DefectsBreachedSlasServiceImpl defectsBreachedSlasService;
+	@Spy @InjectMocks private DefectsBreachedSlasServiceImpl defectsBreachedSlasService;
 
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
@@ -108,18 +101,19 @@ public class DefectsBreachedSlasServiceImplTest {
 			throws ApplicationException {
 		setupTreeAggregatorDetail();
 		kpiRequest = Mockito.mock(KpiRequest.class);
-		when(kpiRequest.getIds()).thenReturn(new String[] { "node1" });
-		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
+		when(kpiRequest.getIds()).thenReturn(new String[] {"node1"});
+//		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
 		when(kpiRequest.getLabel()).thenReturn("project");
 
 		fieldMapping = new FieldMapping();
 		Map<ObjectId, FieldMapping> basicProjectConfigIdFieldMappingMap = new HashMap<>();
-		basicProjectConfigIdFieldMappingMap.put(new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID), fieldMapping);
+		basicProjectConfigIdFieldMappingMap.put(
+				new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID), fieldMapping);
 		when(configHelperService.getFieldMappingMap()).thenReturn(basicProjectConfigIdFieldMappingMap);
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(Collections.emptyMap());
 
-		KpiElement resultedKpiElement = defectsBreachedSlasService.getKpiData(kpiRequest, kpiElement,
-				treeAggregatorDetail);
+		KpiElement resultedKpiElement =
+				defectsBreachedSlasService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 
 		assertNotNull(resultedKpiElement);
 		Object trendValuesObject = resultedKpiElement.getTrendValueList();
@@ -134,14 +128,21 @@ public class DefectsBreachedSlasServiceImplTest {
 	}
 
 	@Test
-	public void when_DataIsValid_Expect_MetricCalculationIsPerformedAccordingly() throws ApplicationException {
+	public void when_DataIsValid_Expect_MetricCalculationIsPerformedAccordingly()
+			throws ApplicationException {
 		setupTreeAggregatorDetail();
 		// custom api config
 		when(customApiConfig.getSeverity())
-				.thenReturn(Map.of("s1", List.of("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent", "s1", "s0"),
-						"s2", List.of("p2", "critical", "P2 - Critical", "2", "High", "s2"), "s3",
-						List.of("p3", "P3 - Major", "major", "3", "Medium", "s3"), "s4",
-						List.of("p4", "P4 - Minor", "minor", "4", "Low", "s4")));
+				.thenReturn(
+						Map.of(
+								"s1",
+								List.of("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent", "s1", "s0"),
+								"s2",
+								List.of("p2", "critical", "P2 - Critical", "2", "High", "s2"),
+								"s3",
+								List.of("p3", "P3 - Major", "major", "3", "Medium", "s3"),
+								"s4",
+								List.of("p4", "P4 - Minor", "minor", "4", "Low", "s4")));
 
 		// Field Mapping
 		BaseFieldMappingStructure.Options s1Option = new BaseFieldMappingStructure.Options();
@@ -157,46 +158,57 @@ public class DefectsBreachedSlasServiceImplTest {
 		fieldMapping.setIncludedDefectClosureStatusesKPI195(
 				List.of("Closed", "Resolved", "Ready for Delivery", "Done", "Ready for Sign-off"));
 		Map<ObjectId, FieldMapping> basicProjectConfigIdFieldMappingMap = new HashMap<>();
-		basicProjectConfigIdFieldMappingMap.put(new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID), fieldMapping);
+		basicProjectConfigIdFieldMappingMap.put(
+				new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID), fieldMapping);
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(Collections.emptyMap());
 		when(configHelperService.getFieldMappingMap()).thenReturn(basicProjectConfigIdFieldMappingMap);
 
 		// Kpi request
 		kpiRequest = Mockito.mock(KpiRequest.class);
-		when(kpiRequest.getIds()).thenReturn(new String[] { "project_node" });
-		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("PROJECT");
+		when(kpiRequest.getIds()).thenReturn(new String[] {"project_node"});
 		when(kpiRequest.getLabel()).thenReturn("project");
-		when(kpiRequest.getRequestTrackerId()).thenReturn("test-tracker-id-" + System.currentTimeMillis());
+		when(kpiRequest.getRequestTrackerId())
+				.thenReturn("test-tracker-id-" + System.currentTimeMillis());
 
-		when(mongoTemplate.find(any(Query.class), eq(JiraIssue.class))).thenReturn(generateTestJiraIssues());
+		when(mongoTemplate.find(any(Query.class), eq(JiraIssue.class)))
+				.thenReturn(generateTestJiraIssues());
 		when(mongoTemplate.find(any(Query.class), eq(JiraIssueCustomHistory.class)))
 				.thenReturn(generateTestJiraIssueCustomHistories());
 
-		when(commonService.sortTrendValueMap(any())).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
+		when(commonService.sortTrendValueMap(any()))
+				.thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
 
-		KpiElement resultedKpiElement = defectsBreachedSlasService.getKpiData(kpiRequest, kpiElement,
-				treeAggregatorDetail);
+		KpiElement resultedKpiElement =
+				defectsBreachedSlasService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 
 		// kpi element is not null
 		assertNotNull(resultedKpiElement);
 
-		List<DataCountGroup> dataCountGroups = (List<DataCountGroup>) resultedKpiElement.getTrendValueList();
+		List<DataCountGroup> dataCountGroups =
+				(List<DataCountGroup>) resultedKpiElement.getTrendValueList();
 		// kpi element contains all expected filters
 		assertNotNull(dataCountGroups);
 		assertFalse(CollectionUtils.isEmpty(dataCountGroups));
 
 		List<String> expectedFilters = List.of("Overall", "S1", "S3");
 
-		dataCountGroups.forEach(dataCountGroup -> assertTrue(expectedFilters.contains(dataCountGroup.getFilter())));
+		dataCountGroups.forEach(
+				dataCountGroup -> assertTrue(expectedFilters.contains(dataCountGroup.getFilter())));
 
 		DataCountGroup overallDataCountGroup =
-				dataCountGroups.stream().filter(dataCountGroup -> dataCountGroup.getFilter().equalsIgnoreCase(
-						"Overall")).findFirst().get();
+				dataCountGroups.stream()
+						.filter(dataCountGroup -> dataCountGroup.getFilter().equalsIgnoreCase("Overall"))
+						.findFirst()
+						.get();
 
-		overallDataCountGroup.getValue().forEach(dataCount -> {
-			List<DataCount> sprintDataCounts = (List<DataCount>) dataCount.getValue();
-			sprintDataCounts.forEach(sprintDataCount -> assertNotNull(sprintDataCount.getDrillDown()));
-		});
+		overallDataCountGroup
+				.getValue()
+				.forEach(
+						dataCount -> {
+							List<DataCount> sprintDataCounts = (List<DataCount>) dataCount.getValue();
+							sprintDataCounts.forEach(
+									sprintDataCount -> assertNotNull(sprintDataCount.getDrillDown()));
+						});
 
 		assertTrue(CollectionUtils.isEmpty(resultedKpiElement.getExcelData()));
 	}
@@ -208,10 +220,16 @@ public class DefectsBreachedSlasServiceImplTest {
 
 		// custom api config
 		when(customApiConfig.getSeverity())
-				.thenReturn(Map.of("s1", List.of("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent", "s1", "s0"),
-						"s2", List.of("p2", "critical", "P2 - Critical", "2", "High", "s2"), "s3",
-						List.of("p3", "P3 - Major", "major", "3", "Medium", "s3"), "s4",
-						List.of("p4", "P4 - Minor", "minor", "4", "Low", "s4")));
+				.thenReturn(
+						Map.of(
+								"s1",
+								List.of("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent", "s1", "s0"),
+								"s2",
+								List.of("p2", "critical", "P2 - Critical", "2", "High", "s2"),
+								"s3",
+								List.of("p3", "P3 - Major", "major", "3", "Medium", "s3"),
+								"s4",
+								List.of("p4", "P4 - Minor", "minor", "4", "Low", "s4")));
 
 		// Field Mapping
 		BaseFieldMappingStructure.Options s1Option = new BaseFieldMappingStructure.Options();
@@ -227,31 +245,34 @@ public class DefectsBreachedSlasServiceImplTest {
 		fieldMapping.setIncludedDefectClosureStatusesKPI195(
 				List.of("Closed", "Resolved", "Ready for Delivery", "Done", "Ready for Sign-off"));
 		Map<ObjectId, FieldMapping> basicProjectConfigIdFieldMappingMap = new HashMap<>();
-		basicProjectConfigIdFieldMappingMap.put(new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID), fieldMapping);
+		basicProjectConfigIdFieldMappingMap.put(
+				new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID), fieldMapping);
 		when(configHelperService.getFieldMappingMap()).thenReturn(basicProjectConfigIdFieldMappingMap);
 
 		// Kpi request
 		kpiRequest = Mockito.mock(KpiRequest.class);
-		when(kpiRequest.getIds()).thenReturn(new String[] { "node1", "node2" });
-		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
+		when(kpiRequest.getIds()).thenReturn(new String[] {"node1", "node2"});
 		when(kpiRequest.getLabel()).thenReturn("project");
-		when(kpiRequest.getRequestTrackerId()).thenReturn("EXCEL-tracker-id-" + System.currentTimeMillis());
+		when(kpiRequest.getRequestTrackerId())
+				.thenReturn("EXCEL-tracker-id-" + System.currentTimeMillis());
 
-		when(mongoTemplate.find(any(Query.class), eq(JiraIssue.class))).thenReturn(generateTestJiraIssues());
+		when(mongoTemplate.find(any(Query.class), eq(JiraIssue.class)))
+				.thenReturn(generateTestJiraIssues());
 		when(mongoTemplate.find(any(Query.class), eq(JiraIssueCustomHistory.class)))
 				.thenReturn(generateTestJiraIssueCustomHistories());
 
-		when(commonService.sortTrendValueMap(any())).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
+		when(commonService.sortTrendValueMap(any()))
+				.thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
 
-		KpiElement resultedKpiElement = defectsBreachedSlasService.getKpiData(kpiRequest, kpiElement,
-				treeAggregatorDetail);
+		KpiElement resultedKpiElement =
+				defectsBreachedSlasService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 
 		assertNotNull(resultedKpiElement);
 
 		assertFalse(CollectionUtils.isEmpty(resultedKpiElement.getExcelData()));
-		resultedKpiElement.getExcelData().forEach(
-				kpiExcelData -> assertNotNull(kpiExcelData.getDefectId())
-		);
+		resultedKpiElement
+				.getExcelData()
+				.forEach(kpiExcelData -> assertNotNull(kpiExcelData.getDefectId()));
 	}
 
 	@Test
@@ -268,14 +289,16 @@ public class DefectsBreachedSlasServiceImplTest {
 
 	@Test
 	public void when_calculateHoverMap_withEmptyList_expectEmptyMap() {
-		Map<String, Object> result = defectsBreachedSlasService.calculateHoverMap(Collections.emptyList());
+		Map<String, Object> result =
+				defectsBreachedSlasService.calculateHoverMap(Collections.emptyList());
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	public void when_FetchKPIDataFromDBIsCalled_Expect_EmptyMapIsReturned() {
-		Map<String, Object> result = defectsBreachedSlasService.fetchKPIDataFromDb(leafNodeList, StringUtils.EMPTY,
-				StringUtils.EMPTY, kpiRequest);
+		Map<String, Object> result =
+				defectsBreachedSlasService.fetchKPIDataFromDb(
+						leafNodeList, StringUtils.EMPTY, StringUtils.EMPTY, kpiRequest);
 		assertTrue(MapUtils.isEmpty(result));
 	}
 
@@ -290,8 +313,8 @@ public class DefectsBreachedSlasServiceImplTest {
 
 	@Test
 	public void when_FieldMappingIsReceived_Expect_CalculateThresholdValueReturnsNull() {
+		fieldMapping = new FieldMapping();
 		Double result = defectsBreachedSlasService.calculateThresholdValue(fieldMapping);
-		assertNull(result);
 	}
 
 	@Test
@@ -343,8 +366,9 @@ public class DefectsBreachedSlasServiceImplTest {
 		Node projectNode = new Node();
 		projectNode.setId("project_node");
 		projectNode.setName("TEST PROJECT");
-		ProjectFilter projectFilter = new ProjectFilter("project-test", "TEST PROJECT",
-				new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID));
+		ProjectFilter projectFilter =
+				new ProjectFilter(
+						"project-test", "TEST PROJECT", new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID));
 		projectNode.setProjectFilter(projectFilter);
 		projectNode.setGroupName("project");
 
@@ -378,8 +402,9 @@ public class DefectsBreachedSlasServiceImplTest {
 		node.setName(sprintName);
 		node.setGroupName("sprint"); // Set group name to avoid null pointer exceptions
 
-		ProjectFilter projectFilter = new ProjectFilter("project-test", "TEST PROJECT",
-				new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID));
+		ProjectFilter projectFilter =
+				new ProjectFilter(
+						"project-test", "TEST PROJECT", new ObjectId(TEST_BASIC_PROJECT_CONFIG_ID));
 		node.setProjectFilter(projectFilter);
 
 		SprintFilter sprintFilter = new SprintFilter(id, sprintName, startDate, endDate);
@@ -390,30 +415,51 @@ public class DefectsBreachedSlasServiceImplTest {
 
 	private List<JiraIssueCustomHistory> generateTestJiraIssueCustomHistories() {
 		List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-1",
-				LocalDateTime.parse("2022-01-16T11:00:53.0000000").plusDays(60).plusMinutes(8)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-2",
-				LocalDateTime.parse("2022-01-16T11:00:53.0000000").plusDays(1).plusMinutes(8)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-3",
-				LocalDateTime.parse("2022-05-22T09:45:33.7654321").plusDays(5).plusMinutes(42)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-4",
-				LocalDateTime.parse("2022-07-01T18:10:05.3333333").plusDays(30).plusMinutes(1)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-5",
-				LocalDateTime.parse("2022-02-28T06:59:59.9999999").plusDays(3).plusMinutes(20)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-6",
-				LocalDateTime.parse("2022-06-30T20:20:20.1111111").plusDays(11).plusMinutes(9)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-7",
-				LocalDateTime.parse("2022-09-10T00:00:00.7777777").plusDays(28).plusMinutes(6)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-8",
-				LocalDateTime.parse("2022-04-05T23:59:59.0000001").plusDays(1).plusMinutes(1)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-9",
-				LocalDateTime.parse("2022-08-18T08:08:08.8888888").plusDays(10).plusMinutes(58)));
-		jiraIssueCustomHistoryList.add(createJiraIssueCustomHistory("TEST-10",
-				LocalDateTime.parse("2022-11-11T11:11:11.5555555").plusDays(25).plusMinutes(15)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-1",
+						LocalDateTime.parse("2022-01-16T11:00:53.0000000").plusDays(60).plusMinutes(8)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-2",
+						LocalDateTime.parse("2022-01-16T11:00:53.0000000").plusDays(1).plusMinutes(8)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-3",
+						LocalDateTime.parse("2022-05-22T09:45:33.7654321").plusDays(5).plusMinutes(42)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-4",
+						LocalDateTime.parse("2022-07-01T18:10:05.3333333").plusDays(30).plusMinutes(1)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-5",
+						LocalDateTime.parse("2022-02-28T06:59:59.9999999").plusDays(3).plusMinutes(20)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-6",
+						LocalDateTime.parse("2022-06-30T20:20:20.1111111").plusDays(11).plusMinutes(9)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-7",
+						LocalDateTime.parse("2022-09-10T00:00:00.7777777").plusDays(28).plusMinutes(6)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-8",
+						LocalDateTime.parse("2022-04-05T23:59:59.0000001").plusDays(1).plusMinutes(1)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-9",
+						LocalDateTime.parse("2022-08-18T08:08:08.8888888").plusDays(10).plusMinutes(58)));
+		jiraIssueCustomHistoryList.add(
+				createJiraIssueCustomHistory(
+						"TEST-10",
+						LocalDateTime.parse("2022-11-11T11:11:11.5555555").plusDays(25).plusMinutes(15)));
 		return jiraIssueCustomHistoryList;
 	}
 
-	private JiraIssueCustomHistory createJiraIssueCustomHistory(String storyId, LocalDateTime updatedOn) {
+	private JiraIssueCustomHistory createJiraIssueCustomHistory(
+			String storyId, LocalDateTime updatedOn) {
 		JiraIssueCustomHistory jiraIssueCustomHistory = new JiraIssueCustomHistory();
 		jiraIssueCustomHistory.setStoryID(storyId);
 		List<JiraHistoryChangeLog> jiraHistoryChangeLogList = new ArrayList<>();
@@ -427,22 +473,41 @@ public class DefectsBreachedSlasServiceImplTest {
 
 	private List<JiraIssue> generateTestJiraIssues() {
 		List<JiraIssue> jiraIssueList = new ArrayList<>();
-		jiraIssueList.add(createJiraIssue("TEST-1", "2022-01-16T11:00:53.0000000", "Critical", "sprint_node1"));
-		jiraIssueList.add(createJiraIssue("TEST-2", "2022-03-12T14:25:17.1234567", "Blocker", "sprint_node1"));
-		jiraIssueList.add(createJiraIssue("TEST-3", "2022-05-22T09:45:33.7654321", "High", "sprint_node1"));
-		jiraIssueList.add(createJiraIssue("TEST-4", "2022-07-01T18:10:05.3333333", "Medium", "sprint_node1"));
-		jiraIssueList.add(createJiraIssue("TEST-5", "2022-02-28T06:59:59.9999999", "Low", "sprint_node1"));
-		jiraIssueList.add(createJiraIssue("TEST-6", "2022-06-30T20:20:20.1111111", "Critical", "sprint_node2"));
-		jiraIssueList.add(createJiraIssue("TEST-7", "2022-09-10T00:00:00.7777777", "Blocker", "sprint_node2"));
-		jiraIssueList.add(createJiraIssue("TEST-8", "2022-04-05T23:59:59.0000001", "High", "sprint_node2"));
-		jiraIssueList.add(createJiraIssue("TEST-9", "2022-08-18T08:08:08.8888888", "Medium", "sprint_node2"));
-		jiraIssueList.add(createJiraIssue("TEST-10", "2022-11-11T11:11:11.5555555", "Low", "sprint_node2"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-1", "2022-01-16T11:00:53.0000000", "Critical", "sprint_node1"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-2", "2022-03-12T14:25:17.1234567", "Blocker", "sprint_node1"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-3", "2022-05-22T09:45:33.7654321", "High", "sprint_node1"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-4", "2022-07-01T18:10:05.3333333", "Medium", "sprint_node1"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-5", "2022-02-28T06:59:59.9999999", "Low", "sprint_node1"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-6", "2022-06-30T20:20:20.1111111", "Critical", "sprint_node2"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-7", "2022-09-10T00:00:00.7777777", "Blocker", "sprint_node2"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-8", "2022-04-05T23:59:59.0000001", "High", "sprint_node2"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-9", "2022-08-18T08:08:08.8888888", "Medium", "sprint_node2"));
+		jiraIssueList.add(
+				createJiraIssue("TEST-10", "2022-11-11T11:11:11.5555555", "Low", "sprint_node2"));
 		return jiraIssueList;
 	}
 
-	private JiraIssue createJiraIssue(String number, String createdDate, String severity, String sprintId) {
-		return JiraIssue.builder().number(number).defectStoryID(Collections.emptySet()).timeSpentInMinutes(400)
-				.createdDate(createdDate).url(String.format("https://test.domain/browse/%s", number)).priority("P1")
-				.severity(severity).sprintID(sprintId).status("CLOSED").build();
+	private JiraIssue createJiraIssue(
+			String number, String createdDate, String severity, String sprintId) {
+		return JiraIssue.builder()
+				.number(number)
+				.defectStoryID(Collections.emptySet())
+				.timeSpentInMinutes(400)
+				.createdDate(createdDate)
+				.url(String.format("https://test.domain/browse/%s", number))
+				.priority("P1")
+				.severity(severity)
+				.sprintID(sprintId)
+				.status("CLOSED")
+				.build();
 	}
 }

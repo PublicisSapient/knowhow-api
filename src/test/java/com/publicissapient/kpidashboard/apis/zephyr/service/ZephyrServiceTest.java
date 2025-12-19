@@ -71,22 +71,14 @@ public class ZephyrServiceTest {
 
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	FilterHelperService filterHelperService;
-	@Mock
-	KpiHelperService kpiHelperService;
-	@InjectMocks
-	private ZephyrService zephyrService;
-	@Mock
-	private CustomApiConfig customApiConfig;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	private TestService service;
+	@Mock ConfigHelperService configHelperService;
+	@Mock FilterHelperService filterHelperService;
+	@Mock KpiHelperService kpiHelperService;
+	@InjectMocks private ZephyrService zephyrService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private CacheService cacheService;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private TestService service;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private KpiRequest kpiRequest;
@@ -97,18 +89,19 @@ public class ZephyrServiceTest {
 	public void setup() throws ApplicationException {
 		MockitoAnnotations.openMocks(this);
 		List<ZephyrKPIService<?, ?, ?>> mockServices = Arrays.asList(service);
-		ZephyrKPIServiceFactory zephyrKPIServiceFactory = ZephyrKPIServiceFactory.builder().services(mockServices).build();
+		ZephyrKPIServiceFactory zephyrKPIServiceFactory =
+				ZephyrKPIServiceFactory.builder().services(mockServices).build();
 		doReturn(TESTZEPHYR).when(service).getQualifierType();
 		doReturn(new KpiElement()).when(service).getKpiData(any(), any(), any());
 		zephyrKPIServiceFactory.initMyServiceCache();
 
-		projectKey = new String[]{"Regression", "Automation"};
+		projectKey = new String[] {"Regression", "Automation"};
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi16");
 		createKpiRequest("", 2, kpiRequest);
 		kpiRequest.setLabel("PROJECT");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
@@ -120,10 +113,10 @@ public class ZephyrServiceTest {
 
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -151,10 +144,10 @@ public class ZephyrServiceTest {
 		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -181,10 +174,10 @@ public class ZephyrServiceTest {
 		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -205,10 +198,10 @@ public class ZephyrServiceTest {
 		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
 		when(authorizedProjectsService.getProjectKey(accountHierarchyDataList, kpiRequest))
 				.thenReturn(projectKey);
-		when(filterHelperService.getHierarachyLevelId(
+		when(filterHelperService.getHierarchyLevelId(
 						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
 				.thenReturn("project");
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
+		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
 		Map<String, HierarchyLevel> hierarchyMap =
 				hierarchyLevels.stream()
@@ -236,12 +229,17 @@ public class ZephyrServiceTest {
 		List<KpiElement> kpiList = new ArrayList<>();
 		addKpiElement(kpiList, TESTZEPHYR, TESTZEPHYR, "TechDebt", "", source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[]{"Scrum Project_6335363749794a18e8a4479b"});
+		kpiRequest.setIds(new String[] {"Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);

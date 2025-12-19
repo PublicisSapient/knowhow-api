@@ -32,15 +32,13 @@ import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
  * @author anisingh4
  */
 public interface AuthenticationRepository
-		extends
-			PagingAndSortingRepository<Authentication, ObjectId>,
-			CrudRepository<Authentication, ObjectId> {
+		extends PagingAndSortingRepository<Authentication, ObjectId>,
+				CrudRepository<Authentication, ObjectId> {
 
 	/**
 	 * Find by username authentication.
 	 *
-	 * @param username
-	 *          the username
+	 * @param username the username
 	 * @return the authentication
 	 */
 	Authentication findByUsername(String username);
@@ -48,8 +46,7 @@ public interface AuthenticationRepository
 	/**
 	 * Find by email list.
 	 *
-	 * @param email
-	 *          the email
+	 * @param email the email
 	 * @return the list of authentication
 	 */
 	List<Authentication> findByEmail(String email);

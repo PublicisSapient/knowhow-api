@@ -23,6 +23,7 @@ import static com.publicissapient.kpidashboard.apis.util.KpiDataHelper.sprintWis
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -98,8 +99,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	public static final String DEV_STATUS = "Dev Status";
 	public static final String DELAY_COUNT = "Delayed Workitems";
 
-	@Autowired
-	private ConfigHelperService configHelperService;
+	@Autowired private ConfigHelperService configHelperService;
 
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node sprintNode)
@@ -114,35 +114,77 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(Node leafNode, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			Node leafNode, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (null != leafNode) {
 			log.info("Work Status -> Requested sprint : {}", leafNode.getName());
-			SprintDetails dbSprintDetail = getSprintDetailsFromBaseClass();
+
+			SprintDetails dbSprintDetail =
+					getJiraIterationServiceR()
+							.getSprintRepository()
+							.findBySprintIDIn(kpiRequest.getSelectedMap().get(CommonConstant.SPRINT))
+							.stream()
+							.findFirst()
+							.orElse(null);
+
 			SprintDetails sprintDetails;
 			if (null != dbSprintDetail) {
-				FieldMapping fieldMapping = configHelperService.getFieldMappingMap()
-						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+				FieldMapping fieldMapping =
+						configHelperService
+								.getFieldMappingMap()
+								.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 				// to modify sprint details on the basis of configuration for the project
-				List<JiraIssueCustomHistory> totalHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
-				List<JiraIssue> totalJiraIssueList = getJiraIssuesFromBaseClass();
-				Set<String> issueList = totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
 
-				sprintDetails = IterationKpiHelper.transformIterSprintdetail(totalHistoryList, issueList, dbSprintDetail,
-						fieldMapping.getJiraIterationIssuetypeKPI128(), fieldMapping.getJiraIterationCompletionStatusKPI128(),
-						leafNode.getProjectFilter().getBasicProjectConfigId());
+				Map<String, Object> mapOfFilter = new HashMap<>();
+				this.getJiraIterationServiceR().createAdditionalFilterMap(kpiRequest, mapOfFilter);
+				Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
+				uniqueProjectMap.put(
+						leafNode.getProjectFilter().getBasicProjectConfigId().toString(), mapOfFilter);
+				List<JiraIssue> totalJiraIssueList =
+						this.getJiraIterationServiceR()
+								.getJiraIssueRepository()
+								.findIssueByNumberWithAdditionalFilter(
+										new HashSet<>(
+												createIssuesList(
+														List.of(dbSprintDetail),
+														leafNode.getProjectFilter().getBasicProjectConfigId().toString())),
+										uniqueProjectMap);
 
-				List<String> totalIssues = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-						CommonConstant.TOTAL_ISSUES);
-				List<String> completedIssues = KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(sprintDetails,
-						CommonConstant.COMPLETED_ISSUES);
+				Set<String> issueList =
+						totalJiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
+
+				List<JiraIssueCustomHistory> totalHistoryList =
+						getJiraIterationServiceR()
+								.getJiraIssueCustomHistoryRepository()
+								.findByStoryIDInAndBasicProjectConfigIdIn(
+										new ArrayList<>(issueList),
+										Collections.singletonList(
+												leafNode.getProjectFilter().getBasicProjectConfigId().toString()));
+
+				sprintDetails =
+						IterationKpiHelper.transformIterSprintdetail(
+								totalHistoryList,
+								issueList,
+								dbSprintDetail,
+								fieldMapping.getJiraIterationIssuetypeKPI128(),
+								fieldMapping.getJiraIterationCompletionStatusKPI128(),
+								leafNode.getProjectFilter().getBasicProjectConfigId());
+
+				List<String> totalIssues =
+						KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+								sprintDetails, CommonConstant.TOTAL_ISSUES);
+				List<String> completedIssues =
+						KpiDataHelper.getIssuesIdListBasedOnTypeFromSprintDetails(
+								sprintDetails, CommonConstant.COMPLETED_ISSUES);
 				if (CollectionUtils.isNotEmpty(totalIssues)) {
-					List<JiraIssue> jiraIssueList = IterationKpiHelper.getFilteredJiraIssue(totalIssues, totalJiraIssueList);
-					List<JiraIssueCustomHistory> issueHistoryList = IterationKpiHelper.getFilteredJiraIssueHistory(totalIssues,
-							totalHistoryList);
-					Set<JiraIssue> filtersIssuesList = KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
-							sprintDetails, sprintDetails.getTotalIssues(), jiraIssueList);
+					List<JiraIssue> jiraIssueList =
+							IterationKpiHelper.getFilteredJiraIssue(totalIssues, totalJiraIssueList);
+					List<JiraIssueCustomHistory> issueHistoryList =
+							IterationKpiHelper.getFilteredJiraIssueHistory(totalIssues, totalHistoryList);
+					Set<JiraIssue> filtersIssuesList =
+							KpiDataHelper.getFilteredJiraIssuesListBasedOnTypeFromSprintDetails(
+									sprintDetails, sprintDetails.getTotalIssues(), jiraIssueList);
 					resultListMap.put(ISSUES, new ArrayList<>(filtersIssuesList));
 					resultListMap.put(ISSUE_CUSTOM_HISTORY, new ArrayList<>(issueHistoryList));
 					resultListMap.put(SPRINT_DETAILS, sprintDetails);
@@ -154,17 +196,18 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	}
 
 	/**
-	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at
-	 * sprint level.
+	 * Populates KPI value to sprint leaf nodes and gives the trend analysis at sprint level.
 	 *
 	 * @param sprintLeafNode
 	 * @param kpiElement
 	 * @param kpiRequest
 	 */
 	@SuppressWarnings("unchecked")
-	private void projectWiseLeafNodeValue(Node sprintLeafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
+	private void projectWiseLeafNodeValue(
+			Node sprintLeafNode, KpiElement kpiElement, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
-		Object basicProjectConfigId = Objects.requireNonNull(sprintLeafNode).getProjectFilter().getBasicProjectConfigId();
+		Object basicProjectConfigId =
+				Objects.requireNonNull(sprintLeafNode).getProjectFilter().getBasicProjectConfigId();
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(sprintLeafNode, null, null, kpiRequest);
@@ -172,56 +215,97 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		SprintDetails sprintDetails = (SprintDetails) resultMap.get(SPRINT_DETAILS);
 		List<JiraIssue> allIssues = (List<JiraIssue>) resultMap.get(ISSUES);
 		List<String> allCompletedIssuesList = (List<String>) resultMap.get(COMPLETED);
-		List<JiraIssueCustomHistory> allIssueHistories = (List<JiraIssueCustomHistory>) resultMap.get(ISSUE_CUSTOM_HISTORY);
+		List<JiraIssueCustomHistory> allIssueHistories =
+				(List<JiraIssueCustomHistory>) resultMap.get(ISSUE_CUSTOM_HISTORY);
 
 		if (CollectionUtils.isNotEmpty(allIssues)) {
-			log.info("Work Status -> request id : {} total jira Issues : {}", requestTrackerId, allIssues.size());
+			log.info(
+					"Work Status -> request id : {} total jira Issues : {}",
+					requestTrackerId,
+					allIssues.size());
 			// issues with due date.
-			List<JiraIssue> allIssuesWithDueDate = allIssues.stream()
-					.filter(jiraIssue -> StringUtils.isNotBlank(jiraIssue.getDueDate())).toList();
+			List<JiraIssue> allIssuesWithDueDate =
+					allIssues.stream()
+							.filter(jiraIssue -> StringUtils.isNotBlank(jiraIssue.getDueDate()))
+							.toList();
 			// issues with dev due date.
-			List<JiraIssue> allIssuesWithDevDueDate = allIssues.stream()
-					.filter(jiraIssue -> StringUtils.isNotBlank(jiraIssue.getDevDueDate())).toList();
+			List<JiraIssue> allIssuesWithDevDueDate =
+					allIssues.stream()
+							.filter(jiraIssue -> StringUtils.isNotBlank(jiraIssue.getDevDueDate()))
+							.toList();
 			// issues without due date.
-			List<JiraIssue> allIssuesWithoutDueDate = allIssues.stream()
-					.filter(jiraIssue -> StringUtils.isBlank(jiraIssue.getDueDate())).toList();
+			List<JiraIssue> allIssuesWithoutDueDate =
+					allIssues.stream()
+							.filter(jiraIssue -> StringUtils.isBlank(jiraIssue.getDueDate()))
+							.toList();
 
-			List<JiraIssue> notCompletedIssuesWithDueDate = allIssuesWithDueDate.stream()
-					.filter(jiraIssue -> !allCompletedIssuesList.contains(jiraIssue.getNumber())).collect(Collectors.toList());
-			List<IterationPotentialDelay> iterationPotentialDelayList = calculatePotentialDelay(sprintDetails,
-					notCompletedIssuesWithDueDate, fieldMapping);
-			Map<String, IterationPotentialDelay> issueWiseDelay = checkMaxDelayAssigneeWise(notCompletedIssuesWithDueDate,
-					iterationPotentialDelayList, sprintDetails);
-			Map<String, IssueKpiModalValue> issueKpiModalObject = KpiDataHelper.createMapOfIssueModal(allIssues);
+			List<JiraIssue> notCompletedIssuesWithDueDate =
+					allIssuesWithDueDate.stream()
+							.filter(jiraIssue -> !allCompletedIssuesList.contains(jiraIssue.getNumber()))
+							.collect(Collectors.toList());
+			List<IterationPotentialDelay> iterationPotentialDelayList =
+					calculatePotentialDelay(sprintDetails, notCompletedIssuesWithDueDate, fieldMapping);
+			Map<String, IterationPotentialDelay> issueWiseDelay =
+					checkMaxDelayAssigneeWise(
+							notCompletedIssuesWithDueDate, iterationPotentialDelayList, sprintDetails);
+			Map<String, IssueKpiModalValue> issueKpiModalObject =
+					KpiDataHelper.createMapOfIssueModal(allIssues);
 
-			Map<JiraIssue, String> devCompletedIssues = getDevCompletedIssues(allIssuesWithDevDueDate, allIssueHistories,
-					fieldMapping);
+			Map<JiraIssue, String> devCompletedIssues =
+					getDevCompletedIssues(allIssuesWithDevDueDate, allIssueHistories, fieldMapping);
 			Set<IssueKpiModalValue> issueData = new HashSet<>();
-			allIssues.forEach(issue -> {
-				KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
-				IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
-				setCommonData(issue, data, fieldMapping);
-				Set<String> category = new HashSet<>();
-				Map<String, List<String>> category2 = new HashMap<>();
-				if (allIssuesWithDueDate.contains(issue)) {
-					Map<String, Object> jiraIssueData = jiraIssueCalculation(fieldMapping, sprintDetails, allIssueHistories,
-							allCompletedIssuesList, issue);
-					category2 = setDataForPlanned(issue, jiraIssueData, sprintDetails, allCompletedIssuesList, issueWiseDelay,
-							data, category);
-				}
-				if (allIssuesWithDevDueDate.contains(issue)) {
-					Map<String, Object> jiraIssueData = jiraIssueCalculationDev(fieldMapping, sprintDetails, allIssueHistories,
-							issue, devCompletedIssues, allCompletedIssuesList);
-					setDataForDevCompletion(issue, sprintDetails, category, jiraIssueData, devCompletedIssues, data, category2,
-							issueWiseDelay);
-				}
-				setCategoryForUnplanned(issue, allIssuesWithoutDueDate, category, allCompletedIssuesList, category2);
-				if (CollectionUtils.isNotEmpty(category)) {
-					data.setCategory(category.stream().toList());
-					data.setCategory2(category2);
-					issueData.add(data);
-				}
-			});
+			allIssues.forEach(
+					issue -> {
+						KPIExcelUtility.populateIssueModal(issue, fieldMapping, issueKpiModalObject);
+						IssueKpiModalValue data = issueKpiModalObject.get(issue.getNumber());
+						setCommonData(issue, data, fieldMapping);
+						Set<String> category = new HashSet<>();
+						Map<String, List<String>> category2 = new HashMap<>();
+						if (allIssuesWithDueDate.contains(issue)) {
+							Map<String, Object> jiraIssueData =
+									jiraIssueCalculation(
+											fieldMapping,
+											sprintDetails,
+											allIssueHistories,
+											allCompletedIssuesList,
+											issue);
+							category2 =
+									setDataForPlanned(
+											issue,
+											jiraIssueData,
+											sprintDetails,
+											allCompletedIssuesList,
+											issueWiseDelay,
+											data,
+											category);
+						}
+						if (allIssuesWithDevDueDate.contains(issue)) {
+							Map<String, Object> jiraIssueData =
+									jiraIssueCalculationDev(
+											fieldMapping,
+											sprintDetails,
+											allIssueHistories,
+											issue,
+											devCompletedIssues,
+											allCompletedIssuesList);
+							setDataForDevCompletion(
+									issue,
+									sprintDetails,
+									category,
+									jiraIssueData,
+									devCompletedIssues,
+									data,
+									category2,
+									issueWiseDelay);
+						}
+						setCategoryForUnplanned(
+								issue, allIssuesWithoutDueDate, category, allCompletedIssuesList, category2);
+						if (CollectionUtils.isNotEmpty(category)) {
+							data.setCategory(category.stream().toList());
+							data.setCategory2(category2);
+							issueData.add(data);
+						}
+					});
 
 			kpiElement.setSprintId(sprintLeafNode.getSprintFilter().getId());
 			kpiElement.setSprint(sprintLeafNode.getName());
@@ -233,8 +317,12 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
-	private static void setCategoryForUnplanned(JiraIssue issue, List<JiraIssue> allIssuesWithoutDueDate,
-			Set<String> category, List<String> allCompletedIssuesList, Map<String, List<String>> category2) {
+	private static void setCategoryForUnplanned(
+			JiraIssue issue,
+			List<JiraIssue> allIssuesWithoutDueDate,
+			Set<String> category,
+			List<String> allCompletedIssuesList,
+			Map<String, List<String>> category2) {
 		if (allIssuesWithoutDueDate.contains(issue)) {
 			category.add(UNPLANNED);
 			category2.putIfAbsent(UNPLANNED, new ArrayList<>());
@@ -245,10 +333,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		}
 	}
 
-	private static void setCommonData(JiraIssue issue, IssueKpiModalValue data, FieldMapping fieldMapping) {
+	private static void setCommonData(
+			JiraIssue issue, IssueKpiModalValue data, FieldMapping fieldMapping) {
 		data.setValue(0d);
-		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria()) &&
-				fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
+		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
+				&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
 			data.setValue(issue.getStoryPoints());
 		} else if (null != issue.getOriginalEstimateMinutes()) {
 			data.setValue(Double.valueOf(issue.getOriginalEstimateMinutes()));
@@ -266,7 +355,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param fieldMapping
 	 * @return
 	 */
-	private KpiDataGroup createDataGroup(FieldMapping fieldMapping) {
+	private static KpiDataGroup createDataGroup(FieldMapping fieldMapping) {
 		KpiDataGroup dataGroup = new KpiDataGroup();
 
 		// For markerInfo
@@ -276,8 +365,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		List<KpiData> dataGroup1 = new ArrayList<>();
 		String unit;
 		String name;
-		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria()) &&
-				fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
+		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
+				&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
 			unit = CommonConstant.SP;
 			name = CommonConstant.STORY_POINT;
 		} else {
@@ -307,7 +396,12 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param unit
 	 * @return
 	 */
-	private KpiData createKpiData(String key, String name, Integer order, String aggregation, String unit,
+	private static KpiData createKpiData(
+			String key,
+			String name,
+			Integer order,
+			String aggregation,
+			String unit,
 			boolean isMultipleValue) {
 		KpiData data = new KpiData();
 		data.setKey(key);
@@ -351,7 +445,7 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param order
 	 * @return
 	 */
-	private KpiDataCategory createKpiDataCategory(String categoryName, Integer order) {
+	private static KpiDataCategory createKpiDataCategory(String categoryName, Integer order) {
 		KpiDataCategory category = new KpiDataCategory();
 		category.setCategoryName(categoryName);
 		category.setOrder(order);
@@ -400,27 +494,37 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param devCompletedIssues
 	 * @param data
 	 */
-	private void setDataForDevCompletion(JiraIssue issue, SprintDetails sprintDetails, Set<String> category,
-			Map<String, Object> jiraIssueData, Map<JiraIssue, String> devCompletedIssues, IssueKpiModalValue data,
-			Map<String, List<String>> category2, Map<String, IterationPotentialDelay> issueWiseDelay) {
+	private void setDataForDevCompletion(
+			JiraIssue issue,
+			SprintDetails sprintDetails,
+			Set<String> category,
+			Map<String, Object> jiraIssueData,
+			Map<JiraIssue, String> devCompletedIssues,
+			IssueKpiModalValue data,
+			Map<String, List<String>> category2,
+			Map<String, IterationPotentialDelay> issueWiseDelay) {
 		int delay = 0;
 		category2.putIfAbsent(DEV_STATUS, new ArrayList<>());
-		Map<String, Object> actualCompletionData = (Map<String, Object>) jiraIssueData.get(ACTUAL_COMPLETION_DATA);
+		Map<String, Object> actualCompletionData =
+				(Map<String, Object>) jiraIssueData.get(ACTUAL_COMPLETION_DATA);
 		if (SprintDetails.SPRINT_STATE_ACTIVE.equalsIgnoreCase(sprintDetails.getState())) {
 			// Checking if dev due Date is < today date for active sprint
-			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
+			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+					.isBefore(LocalDate.now())) {
 				category.add(DEV_STATUS);
 				category2.get(DEV_STATUS).add(PLANNED_COMPLETION);
-				delay = runDelayLogicForPositive(jiraIssueData,category2);
+				delay = runDelayLogicForPositive(jiraIssueData, category2);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
 		} else {
 			// Checking if dev due Date is <= sprint End Date for closed sprint
-			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(
-					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
+			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+					.isBefore(
+							DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+									.plusDays(1))) {
 				category.add(DEV_STATUS);
 				category2.get(DEV_STATUS).add(PLANNED_COMPLETION);
-				delay = runDelayLogicForPositive(jiraIssueData,category2);
+				delay = runDelayLogicForPositive(jiraIssueData, category2);
 				setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
 			}
 		}
@@ -428,7 +532,8 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		if (devCompletedIssues.containsKey(issue)) {
 			category2.get(DEV_STATUS).add(ACTUAL_COMPLETION);
 			if (DateUtil.stringToLocalDate(issue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
-					.isAfter(LocalDate.now().minusDays(1)) && !jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
+							.isAfter(LocalDate.now().minusDays(1))
+					&& !jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
 				delay = runDelayLogic(jiraIssueData);
 			}
 			setKpiSpecificData(data, issueWiseDelay, issue, jiraIssueData, actualCompletionData, false);
@@ -436,11 +541,12 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		data.getCategoryWiseDelay().put(DEV_STATUS, delay);
 	}
 
-	int runDelayLogicForPositive(Map<String, Object> jiraIssueData, Map<String, List<String>> category2) {
+	int runDelayLogicForPositive(
+			Map<String, Object> jiraIssueData, Map<String, List<String>> category2) {
 		int delay = 0;
-		if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH) &&
-			jiraIssueData.get(ISSUE_DELAY) instanceof Integer jiraIssueDataDelay &&
-			jiraIssueDataDelay >= 0) {
+		if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)
+				&& jiraIssueData.get(ISSUE_DELAY) instanceof Integer jiraIssueDataDelay
+				&& jiraIssueDataDelay >= 0) {
 
 			int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
 			delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
@@ -462,23 +568,31 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param issueWiseDelay
 	 * @param data
 	 */
-	private Map<String, List<String>> setDataForPlanned(JiraIssue issue, Map<String, Object> jiraIssueData,
-			SprintDetails sprintDetails, List<String> allCompletedIssuesList,
-			Map<String, IterationPotentialDelay> issueWiseDelay, IssueKpiModalValue data, Set<String> category) {
+	private Map<String, List<String>> setDataForPlanned(
+			JiraIssue issue,
+			Map<String, Object> jiraIssueData,
+			SprintDetails sprintDetails,
+			List<String> allCompletedIssuesList,
+			Map<String, IterationPotentialDelay> issueWiseDelay,
+			IssueKpiModalValue data,
+			Set<String> category) {
 		Map<String, List<String>> category2 = new HashMap<>();
 		int delay = 0;
 		if (!jiraIssueData.get(ISSUE_DELAY).equals(Constant.DASH)) {
 			int jiraIssueDelay = (int) jiraIssueData.get(ISSUE_DELAY);
 			delay = KpiDataHelper.getDelayInMinutes(jiraIssueDelay);
-		} else if (issueWiseDelay.containsKey(issue.getNumber()) && issueWiseDelay.get(issue.getNumber()).isMaxMarker()) {
+		} else if (issueWiseDelay.containsKey(issue.getNumber())
+				&& issueWiseDelay.get(issue.getNumber()).isMaxMarker()) {
 			IterationPotentialDelay iterationPotentialDelay = issueWiseDelay.get(issue.getNumber());
 			delay = KpiDataHelper.getDelayInMinutes(iterationPotentialDelay.getPotentialDelay());
 		}
 		category2.putIfAbsent(PLANNED, new ArrayList<>());
-		Map<String, Object> actualCompletionData = (Map<String, Object>) jiraIssueData.get(ACTUAL_COMPLETION_DATA);
+		Map<String, Object> actualCompletionData =
+				(Map<String, Object>) jiraIssueData.get(ACTUAL_COMPLETION_DATA);
 		if (SprintDetails.SPRINT_STATE_ACTIVE.equalsIgnoreCase(sprintDetails.getState())) {
 			// Checking if dueDate is < today date for active sprint
-			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now())) {
+			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+					.isBefore(LocalDate.now())) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
 				populateDelayPositiveForPlanned(delay, category2);
@@ -487,8 +601,10 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			}
 		} else {
 			// Checking if dueDate is <= sprint End Date for closed sprint
-			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(
-					DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1))) {
+			if (DateUtil.stringToLocalDate(issue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+					.isBefore(
+							DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+									.plusDays(1))) {
 				category.add(PLANNED);
 				category2.get(PLANNED).add(PLANNED_COMPLETION);
 				populateDelayPositiveForPlanned(delay, category2);
@@ -509,11 +625,15 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		return category2;
 	}
 
-	private static void populateDelayPositiveForPlanned(int delay, Map<String, List<String>> category2) {
-		if(delay>=0)
+	private static void populateDelayPositiveForPlanned(
+			int delay, Map<String, List<String>> category2) {
+		if (delay >= 0) {
 			populateDelay(delay, category2, PLANNED);
+		}
 	}
-	private static void populateDelay(int delay, Map<String, List<String>> category2, String categoryKey) {
+
+	private static void populateDelay(
+			int delay, Map<String, List<String>> category2, String categoryKey) {
 		if (delay != 0) {
 			category2.get(categoryKey).add(DELAY_COUNT);
 		}
@@ -524,26 +644,71 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param allIssueHistories
 	 * @param fieldMapping
 	 */
-	private static Map<JiraIssue, String> getDevCompletedIssues(List<JiraIssue> allIssuesWithDevDueDate,
-			List<JiraIssueCustomHistory> allIssueHistories, FieldMapping fieldMapping) {
+	private static Map<JiraIssue, String> getDevCompletedIssues(
+			List<JiraIssue> allIssuesWithDevDueDate,
+			List<JiraIssueCustomHistory> allIssueHistories,
+			FieldMapping fieldMapping) {
 		Map<JiraIssue, String> devCompletedIssues = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(allIssuesWithDevDueDate)) {
 			Map<JiraIssue, String> completedIssues = new HashMap<>();
 			if (CollectionUtils.isNotEmpty(allIssueHistories)) {
-				allIssuesWithDevDueDate.forEach(jiraIssue -> {
-					JiraIssueCustomHistory issueCustomHistory = allIssueHistories.stream()
-							.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equals(jiraIssue.getNumber()))
-							.findFirst().orElse(new JiraIssueCustomHistory());
-					String devCompletionDate = IterationKpiHelper.getDevCompletionDate(issueCustomHistory,
-							fieldMapping.getJiraDevDoneStatusKPI128());
-					completedIssues.putIfAbsent(jiraIssue, devCompletionDate);
-				});
+				allIssuesWithDevDueDate.forEach(
+						jiraIssue -> {
+							JiraIssueCustomHistory issueCustomHistory =
+									allIssueHistories.stream()
+											.filter(
+													jiraIssueCustomHistory ->
+															jiraIssueCustomHistory.getStoryID().equals(jiraIssue.getNumber()))
+											.findFirst()
+											.orElse(new JiraIssueCustomHistory());
+							String devCompletionDate =
+									IterationKpiHelper.getDevCompletionDate(
+											issueCustomHistory, fieldMapping.getJiraDevDoneStatusKPI128());
+							completedIssues.putIfAbsent(jiraIssue, devCompletionDate);
+						});
 			}
-			devCompletedIssues = completedIssues.entrySet().stream()
-					.filter(entry -> !entry.getValue().equalsIgnoreCase(Constant.DASH))
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			devCompletedIssues =
+					completedIssues.entrySet().stream()
+							.filter(entry -> !entry.getValue().equalsIgnoreCase(Constant.DASH))
+							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		}
 		return devCompletedIssues;
+	}
+
+	private static List<String> createIssuesList(
+			List<SprintDetails> sprintDetails, String basicProjectConfigId) {
+		List<String> totalIssuesList = new ArrayList<>();
+		sprintDetails.stream()
+				.filter(sd -> sd.getBasicProjectConfigId().toString().equals(basicProjectConfigId))
+				.forEach(
+						sprintDetails1 -> {
+							if (!CollectionUtils.isEmpty(sprintDetails1.getCompletedIssues())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getCompletedIssues().stream()
+												.map(SprintIssue::getNumber)
+												.toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getNotCompletedIssues())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getNotCompletedIssues().stream()
+												.map(SprintIssue::getNumber)
+												.toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getPuntedIssues())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getPuntedIssues().stream().map(SprintIssue::getNumber).toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getCompletedIssuesAnotherSprint())) {
+								totalIssuesList.addAll(
+										sprintDetails1.getCompletedIssuesAnotherSprint().stream()
+												.map(SprintIssue::getNumber)
+												.toList());
+							}
+							if (!CollectionUtils.isEmpty(sprintDetails1.getAddedIssues())) {
+								totalIssuesList.addAll(sprintDetails1.getAddedIssues());
+							}
+						});
+		return totalIssuesList;
 	}
 
 	/**
@@ -555,28 +720,37 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param fieldMapping
 	 * @return
 	 */
-	private Map<String, Object> calStartAndEndDate(JiraIssueCustomHistory issueCustomHistory,
-			List<String> allCompletedIssuesList, SprintDetails sprintDetail, FieldMapping fieldMapping) {
+	private Map<String, Object> calStartAndEndDate(
+			JiraIssueCustomHistory issueCustomHistory,
+			List<String> allCompletedIssuesList,
+			SprintDetails sprintDetail,
+			FieldMapping fieldMapping) {
 		List<String> inProgressStatuses = new ArrayList<>();
 		List<JiraHistoryChangeLog> filterStatusUpdationLogs = new ArrayList<>();
 
-		LocalDateTime sprintStartDate = DateUtil.stringToLocalDateTime(sprintDetail.getStartDate(),DateUtil.TIME_FORMAT_WITH_SEC);
-		LocalDateTime sprintEndDate = DateUtil.stringToLocalDateTime(sprintDetail.getEndDate(),DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintStartDate =
+				DateUtil.stringToLocalDateTime(sprintDetail.getStartDate(), DateUtil.TIME_FORMAT_WITH_SEC);
+		LocalDateTime sprintEndDate =
+				DateUtil.stringToLocalDateTime(sprintDetail.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC);
 		Map<String, Object> resultList = new HashMap<>();
 
 		// filtering statusUpdationLogs lies in between sprintStart and sprintEnd
-		filterStatusUpdationLogs = getFilterStatusUpdationLogs(issueCustomHistory, filterStatusUpdationLogs,
-				sprintStartDate, sprintEndDate);
+		filterStatusUpdationLogs =
+				getFilterStatusUpdationLogs(
+						issueCustomHistory, filterStatusUpdationLogs, sprintStartDate, sprintEndDate);
 
 		// Creating the set of completed status
-		Set<String> closedStatus = sprintDetail.getCompletedIssues().stream().map(SprintIssue::getStatus)
-				.collect(Collectors.toSet());
+		Set<String> closedStatus =
+				sprintDetail.getCompletedIssues().stream()
+						.map(SprintIssue::getStatus)
+						.collect(Collectors.toSet());
 
 		// sorting the story history on basis of UpdatedOn
 		filterStatusUpdationLogs.sort(Comparator.comparing(JiraHistoryChangeLog::getUpdatedOn));
 
 		// Getting inProgress Status
-		if (null != fieldMapping && CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI128())) {
+		if (null != fieldMapping
+				&& CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI128())) {
 			inProgressStatuses = fieldMapping.getJiraStatusForInProgressKPI128();
 		}
 		LocalDateTime startDate = null;
@@ -592,9 +766,9 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				isStartDateFound = true;
 			}
 
-			if (CollectionUtils.isNotEmpty(allCompletedIssuesList) &&
-					allCompletedIssuesList.contains(issueCustomHistory.getStoryID()) &&
-					closedStatus.contains(statusUpdationLog.getChangedTo())) {
+			if (CollectionUtils.isNotEmpty(allCompletedIssuesList)
+					&& allCompletedIssuesList.contains(issueCustomHistory.getStoryID())
+					&& closedStatus.contains(statusUpdationLog.getChangedTo())) {
 				if (closedStatusDateMap.containsKey(statusUpdationLog.getChangedTo())) {
 					closedStatusDateMap.clear();
 				}
@@ -602,7 +776,11 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			}
 		}
 		// Getting the min date of closed status.
-		endDate = closedStatusDateMap.values().stream().filter(Objects::nonNull).min(LocalDateTime::compareTo).orElse(null);
+		endDate =
+				closedStatusDateMap.values().stream()
+						.filter(Objects::nonNull)
+						.min(LocalDateTime::compareTo)
+						.orElse(null);
 		resultList.put(ACTUAL_START_DATE, startDate);
 		resultList.put(ACTUAL_COMPLETE_DATE, endDate);
 		return resultList;
@@ -610,14 +788,19 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 
 	// Filtering the history which happened inside the sprint on basis of activity
 	// date
-	private List<JiraHistoryChangeLog> getFilterStatusUpdationLogs(JiraIssueCustomHistory issueCustomHistory,
-			List<JiraHistoryChangeLog> filterStatusUpdationLogs, LocalDateTime sprintStartDate,
+	private List<JiraHistoryChangeLog> getFilterStatusUpdationLogs(
+			JiraIssueCustomHistory issueCustomHistory,
+			List<JiraHistoryChangeLog> filterStatusUpdationLogs,
+			LocalDateTime sprintStartDate,
 			LocalDateTime sprintEndDate) {
 		if (CollectionUtils.isNotEmpty(issueCustomHistory.getStatusUpdationLog())) {
-			filterStatusUpdationLogs = issueCustomHistory
-					.getStatusUpdationLog().stream().filter(jiraIssueSprint -> DateUtil
-							.isWithinDateTimeRange(jiraIssueSprint.getUpdatedOn(), sprintStartDate, sprintEndDate))
-					.collect(Collectors.toList());
+			filterStatusUpdationLogs =
+					issueCustomHistory.getStatusUpdationLog().stream()
+							.filter(
+									jiraIssueSprint ->
+											DateUtil.isWithinDateTimeRange(
+													jiraIssueSprint.getUpdatedOn(), sprintStartDate, sprintEndDate))
+							.collect(Collectors.toList());
 		}
 		return filterStatusUpdationLogs;
 	}
@@ -632,23 +815,35 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param jiraIssue
 	 * @return
 	 */
-	private Map<String, Object> jiraIssueCalculation(FieldMapping fieldMapping, SprintDetails sprintDetails,
-			List<JiraIssueCustomHistory> allIssueHistories, List<String> allCompletedIssuesList, JiraIssue jiraIssue) {
+	private Map<String, Object> jiraIssueCalculation(
+			FieldMapping fieldMapping,
+			SprintDetails sprintDetails,
+			List<JiraIssueCustomHistory> allIssueHistories,
+			List<String> allCompletedIssuesList,
+			JiraIssue jiraIssue) {
 		Map<String, Object> resultList = new HashMap<>();
 
-		JiraIssueCustomHistory issueCustomHistory = allIssueHistories.stream()
-				.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equals(jiraIssue.getNumber())).findFirst()
-				.orElse(new JiraIssueCustomHistory());
+		JiraIssueCustomHistory issueCustomHistory =
+				allIssueHistories.stream()
+						.filter(
+								jiraIssueCustomHistory ->
+										jiraIssueCustomHistory.getStoryID().equals(jiraIssue.getNumber()))
+						.findFirst()
+						.orElse(new JiraIssueCustomHistory());
 
-		String devCompletionDate = IterationKpiHelper.getDevCompletionDate(issueCustomHistory,
-				fieldMapping.getJiraDevDoneStatusKPI128());
+		String devCompletionDate =
+				IterationKpiHelper.getDevCompletionDate(
+						issueCustomHistory, fieldMapping.getJiraDevDoneStatusKPI128());
 		// calling function for cal actual completion days
-		Map<String, Object> actualCompletionData = calStartAndEndDate(issueCustomHistory, allCompletedIssuesList,
-				sprintDetails, fieldMapping);
+		Map<String, Object> actualCompletionData =
+				calStartAndEndDate(issueCustomHistory, allCompletedIssuesList, sprintDetails, fieldMapping);
 		if (actualCompletionData.get(ACTUAL_COMPLETE_DATE) != null && jiraIssue.getDueDate() != null) {
-			LocalDateTime actualCompletedDate = (LocalDateTime) actualCompletionData.get(ACTUAL_COMPLETE_DATE);
-			int jiraIssueDelay = getDelay(DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC),
-					actualCompletedDate.toLocalDate());
+			LocalDateTime actualCompletedDate =
+					(LocalDateTime) actualCompletionData.get(ACTUAL_COMPLETE_DATE);
+			int jiraIssueDelay =
+					getDelay(
+							DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC),
+							actualCompletedDate.toLocalDate());
 			resultList.put(ISSUE_DELAY, jiraIssueDelay);
 		} else {
 			resultList.put(ISSUE_DELAY, Constant.DASH);
@@ -668,24 +863,35 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 	 * @param completedIssueMap
 	 * @return
 	 */
-	private Map<String, Object> jiraIssueCalculationDev(FieldMapping fieldMapping, SprintDetails sprintDetails,
-			List<JiraIssueCustomHistory> allIssueHistories, JiraIssue jiraIssue, Map<JiraIssue, String> completedIssueMap,
+	private Map<String, Object> jiraIssueCalculationDev(
+			FieldMapping fieldMapping,
+			SprintDetails sprintDetails,
+			List<JiraIssueCustomHistory> allIssueHistories,
+			JiraIssue jiraIssue,
+			Map<JiraIssue, String> completedIssueMap,
 			List<String> allCompletedIssuesList) {
 		Map<String, Object> resultList = new HashMap<>();
 
-		JiraIssueCustomHistory issueCustomHistory = allIssueHistories.stream()
-				.filter(jiraIssueCustomHistory -> jiraIssueCustomHistory.getStoryID().equals(jiraIssue.getNumber())).findFirst()
-				.orElse(new JiraIssueCustomHistory());
+		JiraIssueCustomHistory issueCustomHistory =
+				allIssueHistories.stream()
+						.filter(
+								jiraIssueCustomHistory ->
+										jiraIssueCustomHistory.getStoryID().equals(jiraIssue.getNumber()))
+						.findFirst()
+						.orElse(new JiraIssueCustomHistory());
 		String devCompletionDate = completedIssueMap.getOrDefault(jiraIssue, "-");
 		// calling function for call actual completion days
-		Map<String, Object> actualCompletionData = calStartAndEndDate(issueCustomHistory, allCompletedIssuesList,
-				sprintDetails, fieldMapping);
+		Map<String, Object> actualCompletionData =
+				calStartAndEndDate(issueCustomHistory, allCompletedIssuesList, sprintDetails, fieldMapping);
 
-		if (StringUtils.isNotEmpty(devCompletionDate) && !devCompletionDate.equalsIgnoreCase("-") &&
-				jiraIssue.getDevDueDate() != null) {
+		if (StringUtils.isNotEmpty(devCompletionDate)
+				&& !devCompletionDate.equalsIgnoreCase("-")
+				&& jiraIssue.getDevDueDate() != null) {
 			LocalDateTime devCompletedDate = LocalDateTime.parse(devCompletionDate);
-			int jiraIssueDelay = getDelay(
-					DateUtil.stringToLocalDate(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC), devCompletedDate.toLocalDate());
+			int jiraIssueDelay =
+					getDelay(
+							DateUtil.stringToLocalDate(jiraIssue.getDevDueDate(), DateUtil.TIME_FORMAT_WITH_SEC),
+							devCompletedDate.toLocalDate());
 			resultList.put(ISSUE_DELAY, jiraIssueDelay);
 		} else {
 			resultList.put(ISSUE_DELAY, Constant.DASH);
@@ -700,19 +906,33 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 		return (dueDate.isAfter(completedDate)) ? potentialDelays * (-1) : potentialDelays;
 	}
 
-	private LinkedHashMap<String, IterationPotentialDelay> checkMaxDelayAssigneeWise(List<JiraIssue> jiraIssueList,
-			List<IterationPotentialDelay> issueWiseDelay, SprintDetails sprintDetails) {
+	private LinkedHashMap<String, IterationPotentialDelay> checkMaxDelayAssigneeWise(
+			List<JiraIssue> jiraIssueList,
+			List<IterationPotentialDelay> issueWiseDelay,
+			SprintDetails sprintDetails) {
 		if (SprintDetails.SPRINT_STATE_ACTIVE.equalsIgnoreCase(sprintDetails.getState())) {
-			jiraIssueList = jiraIssueList.stream()
-					.filter(jiraIssue -> jiraIssue.getDueDate() != null && DateUtil
-							.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(LocalDate.now()))
-					.collect(Collectors.toList());
+			jiraIssueList =
+					jiraIssueList.stream()
+							.filter(
+									jiraIssue ->
+											jiraIssue.getDueDate() != null
+													&& DateUtil.stringToLocalDate(
+																	jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+															.isBefore(LocalDate.now()))
+							.collect(Collectors.toList());
 		} else {
-			jiraIssueList = jiraIssueList.stream()
-					.filter(jiraIssue -> jiraIssue.getDueDate() != null &&
-							DateUtil.stringToLocalDate(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC).isBefore(
-									DateUtil.stringToLocalDate(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC).plusDays(1)))
-					.collect(Collectors.toList());
+			jiraIssueList =
+					jiraIssueList.stream()
+							.filter(
+									jiraIssue ->
+											jiraIssue.getDueDate() != null
+													&& DateUtil.stringToLocalDate(
+																	jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+															.isBefore(
+																	DateUtil.stringToLocalDate(
+																					sprintDetails.getEndDate(), DateUtil.TIME_FORMAT_WITH_SEC)
+																			.plusDays(1)))
+							.collect(Collectors.toList());
 		}
 		Map<String, List<JiraIssue>> assigneeWiseJiraIssue = assigneeWiseJiraIssue(jiraIssueList);
 		List<IterationPotentialDelay> maxDelayList = new ArrayList<>();
@@ -720,86 +940,114 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 			for (List<JiraIssue> jiraIssues : assigneeWiseJiraIssue.values()) {
 				List<IterationPotentialDelay> delayList = new ArrayList<>();
 				for (JiraIssue jiraIssue : jiraIssues) {
-					issueWiseDelay.stream().filter(
-							iterationPotentialDelay -> iterationPotentialDelay.getIssueId().equalsIgnoreCase(jiraIssue.getNumber()))
+					issueWiseDelay.stream()
+							.filter(
+									iterationPotentialDelay ->
+											iterationPotentialDelay.getIssueId().equalsIgnoreCase(jiraIssue.getNumber()))
 							.forEach(delayList::add);
 				}
 
 				if (CollectionUtils.isNotEmpty(delayList)) {
 					// fetch the maximum delayed story of each assignee
 					// and set the marker in the original IterationPotentialDelay list
-					maxDelayList.add(delayList.stream().max(Comparator.comparing(IterationPotentialDelay::getPotentialDelay))
-							.orElse(new IterationPotentialDelay()));
+					maxDelayList.add(
+							delayList.stream()
+									.max(Comparator.comparing(IterationPotentialDelay::getPotentialDelay))
+									.orElse(new IterationPotentialDelay()));
 				}
 			}
 			if (CollectionUtils.isNotEmpty(maxDelayList)) {
-				maxDelayList.forEach(iterationPotentialDelay -> issueWiseDelay.stream()
-						.filter(issue -> issue.equals(iterationPotentialDelay)).forEach(issue -> issue.setMaxMarker(true)));
+				maxDelayList.forEach(
+						iterationPotentialDelay ->
+								issueWiseDelay.stream()
+										.filter(issue -> issue.equals(iterationPotentialDelay))
+										.forEach(issue -> issue.setMaxMarker(true)));
 			}
 		}
-		return issueWiseDelay.stream().collect(
-				Collectors.toMap(IterationPotentialDelay::getIssueId, Function.identity(), (e1, e2) -> e2, LinkedHashMap::new));
+		return issueWiseDelay.stream()
+				.collect(
+						Collectors.toMap(
+								IterationPotentialDelay::getIssueId,
+								Function.identity(),
+								(e1, e2) -> e2,
+								LinkedHashMap::new));
 	}
 
 	/**
-	 * with assignees criteria calculating potential delay for in progress and open
-	 * issues and without assignees calculating potential delay for in progress
-	 * stories
+	 * with assignees criteria calculating potential delay for in progress and open issues and without
+	 * assignees calculating potential delay for in progress stories
 	 *
 	 * @param sprintDetails
 	 * @param allIssues
 	 * @param fieldMapping
 	 * @return
 	 */
-	private List<IterationPotentialDelay> calculatePotentialDelay(SprintDetails sprintDetails, List<JiraIssue> allIssues,
-			FieldMapping fieldMapping) {
+	private List<IterationPotentialDelay> calculatePotentialDelay(
+			SprintDetails sprintDetails, List<JiraIssue> allIssues, FieldMapping fieldMapping) {
 		List<IterationPotentialDelay> iterationPotentialDelayList = new ArrayList<>();
 		Map<String, List<JiraIssue>> assigneeWiseJiraIssue = assigneeWiseJiraIssue(allIssues);
 
 		if (MapUtils.isNotEmpty(assigneeWiseJiraIssue)) {
-			assigneeWiseJiraIssue.forEach((assignee, jiraIssues) -> {
-				List<JiraIssue> inProgressIssues = new ArrayList<>();
-				List<JiraIssue> openIssues = new ArrayList<>();
-				CalculatePCDHelper.arrangeJiraIssueList(fieldMapping.getJiraStatusForInProgressKPI128(), jiraIssues,
-						inProgressIssues, openIssues);
-				iterationPotentialDelayList.addAll(sprintWiseDelayCalculation(inProgressIssues, openIssues, sprintDetails));
-			});
+			assigneeWiseJiraIssue.forEach(
+					(assignee, jiraIssues) -> {
+						List<JiraIssue> inProgressIssues = new ArrayList<>();
+						List<JiraIssue> openIssues = new ArrayList<>();
+						CalculatePCDHelper.arrangeJiraIssueList(
+								fieldMapping.getJiraStatusForInProgressKPI128(),
+								jiraIssues,
+								inProgressIssues,
+								openIssues);
+						iterationPotentialDelayList.addAll(
+								sprintWiseDelayCalculation(inProgressIssues, openIssues, sprintDetails));
+					});
 		}
 
 		if (CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI128())) {
-			List<JiraIssue> inProgressIssues = allIssues.stream()
-					.filter(jiraIssue -> (jiraIssue.getAssigneeId() == null) && StringUtils.isNotEmpty(jiraIssue.getDueDate()) &&
-							(fieldMapping.getJiraStatusForInProgressKPI128().contains(jiraIssue.getStatus())))
-					.collect(Collectors.toList());
+			List<JiraIssue> inProgressIssues =
+					allIssues.stream()
+							.filter(
+									jiraIssue ->
+											(jiraIssue.getAssigneeId() == null)
+													&& StringUtils.isNotEmpty(jiraIssue.getDueDate())
+													&& (fieldMapping
+															.getJiraStatusForInProgressKPI128()
+															.contains(jiraIssue.getStatus())))
+							.collect(Collectors.toList());
 
 			List<JiraIssue> openIssues = new ArrayList<>();
-			iterationPotentialDelayList.addAll(sprintWiseDelayCalculation(inProgressIssues, openIssues, sprintDetails));
+			iterationPotentialDelayList.addAll(
+					sprintWiseDelayCalculation(inProgressIssues, openIssues, sprintDetails));
 		}
 		return iterationPotentialDelayList;
 	}
 
 	private Map<String, List<JiraIssue>> assigneeWiseJiraIssue(List<JiraIssue> allIssues) {
-		return allIssues.stream().filter(jiraIssue -> jiraIssue.getAssigneeId() != null)
+		return allIssues.stream()
+				.filter(jiraIssue -> jiraIssue.getAssigneeId() != null)
 				.collect(Collectors.groupingBy(JiraIssue::getAssigneeName));
 	}
 
-	private void setKpiSpecificData(IssueKpiModalValue jiraIssueModalObject,
-			Map<String, IterationPotentialDelay> issueWiseDelay, JiraIssue jiraIssue, Map<String, Object> jiraIssueData,
-			Map<String, Object> actualCompletionData, boolean isPlanned) {
-		String devCompletion=(String)jiraIssueData.get(DEV_COMPLETION_DATE);
+	private void setKpiSpecificData(
+			IssueKpiModalValue jiraIssueModalObject,
+			Map<String, IterationPotentialDelay> issueWiseDelay,
+			JiraIssue jiraIssue,
+			Map<String, Object> jiraIssueData,
+			Map<String, Object> actualCompletionData,
+			boolean isPlanned) {
+		String devCompletion = (String) jiraIssueData.get(DEV_COMPLETION_DATE);
 		jiraIssueModalObject.setDevCompletionDate(devCompletion);
-		if(StringUtils.isNotEmpty(devCompletion) && !devCompletion.equalsIgnoreCase(Constant.DASH)) {
-			jiraIssueModalObject.setDevCompletionDate(DateUtil.localDateTimeToUTC(jiraIssueData.get(DEV_COMPLETION_DATE).toString()));
+		if (StringUtils.isNotEmpty(devCompletion) && !devCompletion.equalsIgnoreCase(Constant.DASH)) {
+			jiraIssueModalObject.setDevCompletionDate(
+					DateUtil.localDateTimeToUTC(jiraIssueData.get(DEV_COMPLETION_DATE).toString()));
 		}
 		if (actualCompletionData.get(ACTUAL_COMPLETE_DATE) != null)
-			jiraIssueModalObject
-					.setActualCompletionDate(DateUtil.localDateTimeToUTC(actualCompletionData.get(ACTUAL_COMPLETE_DATE).toString()));
-		else
-			jiraIssueModalObject.setActualCompletionDate(Constant.BLANK);
+			jiraIssueModalObject.setActualCompletionDate(
+					DateUtil.localDateTimeToUTC(actualCompletionData.get(ACTUAL_COMPLETE_DATE).toString()));
+		else jiraIssueModalObject.setActualCompletionDate(Constant.BLANK);
 		if (actualCompletionData.get(ACTUAL_START_DATE) != null) {
-			jiraIssueModalObject.setActualStartDate(DateUtil.localDateTimeToUTC(actualCompletionData.get(ACTUAL_START_DATE).toString()));
-		} else
-			jiraIssueModalObject.setActualStartDate(Constant.BLANK);
+			jiraIssueModalObject.setActualStartDate(
+					DateUtil.localDateTimeToUTC(actualCompletionData.get(ACTUAL_START_DATE).toString()));
+		} else jiraIssueModalObject.setActualStartDate(Constant.BLANK);
 
 		if (isPlanned) {
 			if (DateUtil.stringToLocalDateTime(jiraIssue.getDueDate(), DateUtil.TIME_FORMAT_WITH_SEC)
@@ -822,11 +1070,13 @@ public class WorkStatusServiceImpl extends JiraIterationKPIService {
 				jiraIssueModalObject.setDevDelayInDays(Constant.BLANK);
 			}
 		}
-		if (StringUtils.isNotEmpty(jiraIssue.getDueDate()) && issueWiseDelay.containsKey(jiraIssue.getNumber()) &&
-				issueWiseDelay.get(jiraIssue.getNumber()).isMaxMarker()) {
+		if (StringUtils.isNotEmpty(jiraIssue.getDueDate())
+				&& issueWiseDelay.containsKey(jiraIssue.getNumber())
+				&& issueWiseDelay.get(jiraIssue.getNumber()).isMaxMarker()) {
 			IterationPotentialDelay iterationPotentialDelay = issueWiseDelay.get(jiraIssue.getNumber());
 			jiraIssueModalObject.setPotentialDelay(iterationPotentialDelay.getPotentialDelay() + "d");
-			jiraIssueModalObject.setPredictedCompletionDate(iterationPotentialDelay.getPredictedCompletedDate());
+			jiraIssueModalObject.setPredictedCompletionDate(
+					iterationPotentialDelay.getPredictedCompletedDate());
 		}
 	}
 }

@@ -54,16 +54,12 @@ import com.publicissapient.kpidashboard.common.repository.comments.KpiCommentsRe
 @RunWith(MockitoJUnitRunner.class)
 public class CommentsServiceImplTest {
 
-	@Mock
-	KpiCommentsRepository kpiCommentsRepository;
-	@Mock
-	private KpiCommentRepositoryCustom kpiCommentsCustomRepository;
+	@Mock KpiCommentsRepository kpiCommentsRepository;
+	@Mock private KpiCommentRepositoryCustom kpiCommentsCustomRepository;
 
-	@Mock
-	private KpiCommentHistoryRepositoryCustom kpiCommentsHistoryCustomRepository;
+	@Mock private KpiCommentHistoryRepositoryCustom kpiCommentsHistoryCustomRepository;
 
-	@Mock
-	KpiCommentsHistoryRepository kpiCommentsHistoryRepository;
+	@Mock KpiCommentsHistoryRepository kpiCommentsHistoryRepository;
 	String node;
 	String level;
 	String sprintId;
@@ -72,10 +68,8 @@ public class CommentsServiceImplTest {
 	String comment;
 	String TIME_FORMAT;
 	String date;
-	@InjectMocks
-	private CommentsServiceImpl commentServiceImpl;
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@InjectMocks private CommentsServiceImpl commentServiceImpl;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void before() {
@@ -129,11 +123,13 @@ public class CommentsServiceImplTest {
 
 		KPIComments kpiComments = new KPIComments();
 		kpiComments.setCommentsInfo(new ArrayList<>());
-		when(kpiCommentsRepository.findCommentsByFilter(node, level, sprintId, kpiId)).thenReturn(kpiComments);
+		when(kpiCommentsRepository.findCommentsByFilter(node, level, sprintId, kpiId))
+				.thenReturn(kpiComments);
 
 		KpiCommentsHistory kpiCommentsHistory = new KpiCommentsHistory();
 		kpiCommentsHistory.setCommentsInfo(commentsInfo);
-		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(node, level, sprintId, kpiId))
+		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(
+						node, level, sprintId, kpiId))
 				.thenReturn(kpiCommentsHistory);
 		when(customApiConfig.getKpiCommentsMaxStoreCount()).thenReturn(2);
 
@@ -165,7 +161,8 @@ public class CommentsServiceImplTest {
 	}
 
 	@Test
-	public void submitCommentTest_saveWhenCommentsAlreadyExists_commentsAreLessThanConfigMaxComments() {
+	public void
+			submitCommentTest_saveWhenCommentsAlreadyExists_commentsAreLessThanConfigMaxComments() {
 		final CommentSubmitDTO commentDTO = new CommentSubmitDTO();
 		commentDTO.setNode(node);
 		commentDTO.setLevel(level);
@@ -183,13 +180,15 @@ public class CommentsServiceImplTest {
 
 		KPIComments kpiComments = new KPIComments();
 		kpiComments.setCommentsInfo(commentsInfo);
-		when(kpiCommentsRepository.findCommentsByFilter(node, level, sprintId, kpiId)).thenReturn(kpiComments);
+		when(kpiCommentsRepository.findCommentsByFilter(node, level, sprintId, kpiId))
+				.thenReturn(kpiComments);
 
 		KpiCommentsHistory kpiCommentsHistory = new KpiCommentsHistory();
 		kpiCommentsHistory.setCommentsInfo(commentsInfo);
 
 		when(customApiConfig.getKpiCommentsMaxStoreCount()).thenReturn(2);
-		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(node, level, sprintId, kpiId))
+		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(
+						node, level, sprintId, kpiId))
 				.thenReturn(kpiCommentsHistory);
 
 		final boolean commentSubmitted = commentServiceImpl.submitComment(commentDTO);
@@ -197,7 +196,8 @@ public class CommentsServiceImplTest {
 	}
 
 	@Test
-	public void submitCommentTest_saveWhenCommentsAlreadyExists_commentsAreMoreThanConfigMaxComments() {
+	public void
+			submitCommentTest_saveWhenCommentsAlreadyExists_commentsAreMoreThanConfigMaxComments() {
 		final CommentSubmitDTO commentDTO = new CommentSubmitDTO();
 		commentDTO.setNode(node);
 		commentDTO.setLevel(level);
@@ -219,11 +219,13 @@ public class CommentsServiceImplTest {
 
 		KPIComments kpiComments = new KPIComments();
 		kpiComments.setCommentsInfo(commentsInfo);
-		when(kpiCommentsRepository.findCommentsByFilter(node, level, sprintId, kpiId)).thenReturn(kpiComments);
+		when(kpiCommentsRepository.findCommentsByFilter(node, level, sprintId, kpiId))
+				.thenReturn(kpiComments);
 
 		KpiCommentsHistory kpiCommentsHistory = new KpiCommentsHistory();
 		kpiCommentsHistory.setCommentsInfo(commentsInfo);
-		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(node, level, sprintId, kpiId))
+		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(
+						node, level, sprintId, kpiId))
 				.thenReturn(kpiCommentsHistory);
 
 		final boolean commentSubmitted = commentServiceImpl.submitComment(commentDTO);
@@ -257,9 +259,11 @@ public class CommentsServiceImplTest {
 		mappedCollection.put("nodeChildId", sprintId);
 		mappedCollection.put("kpiId", kpiId);
 		mappedCollection.put("CommentsInfo", commentsInfo);
-		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(node, level, sprintId, kpiId))
+		when(kpiCommentsHistoryRepository.findByNodeAndLevelAndNodeChildIdAndKpiId(
+						node, level, sprintId, kpiId))
 				.thenReturn(kpiComment);
-		Map<String, Object> mappedCollectionActual = commentServiceImpl.findCommentByKPIId(node, level, sprintId, kpiId);
+		Map<String, Object> mappedCollectionActual =
+				commentServiceImpl.findCommentByKPIId(node, level, sprintId, kpiId);
 		Assert.assertEquals(mappedCollection, mappedCollectionActual);
 	}
 
@@ -288,10 +292,12 @@ public class CommentsServiceImplTest {
 
 		Map<String, Object> mappedCollection = new LinkedHashMap<>();
 		mappedCollection.put("kpi12", 4);
-		when(kpiCommentsHistoryRepository.findCommentsByBoard(Arrays.asList(node), level, sprintId, Arrays.asList(kpiId)))
+		when(kpiCommentsHistoryRepository.findCommentsByBoard(
+						Arrays.asList(node), level, sprintId, Arrays.asList(kpiId)))
 				.thenReturn(kpiCommentsList);
-		Map<String, Integer> mappedCollectionActual = commentServiceImpl.findCommentByBoard(Arrays.asList(node), level,
-				sprintId, Arrays.asList(kpiId));
+		Map<String, Integer> mappedCollectionActual =
+				commentServiceImpl.findCommentByBoard(
+						Arrays.asList(node), level, sprintId, Arrays.asList(kpiId));
 		Assert.assertEquals(mappedCollection, mappedCollectionActual);
 	}
 
@@ -342,10 +348,11 @@ public class CommentsServiceImplTest {
 
 		commentViewResponseDTOList.add(commentViewResponseDTO);
 
-		when(kpiCommentsHistoryRepository.findCommentsByBoard(nodes, level, sprintId, kpiIds)).thenReturn(kpiCommentsList);
+		when(kpiCommentsHistoryRepository.findCommentsByBoard(nodes, level, sprintId, kpiIds))
+				.thenReturn(kpiCommentsList);
 		Mockito.when(customApiConfig.getLatestKpiCommentsSummary()).thenReturn(10);
-		List<CommentViewResponseDTO> commentViewResponse = commentServiceImpl.findLatestCommentSummary(nodes, level,
-				sprintId, kpiIds);
+		List<CommentViewResponseDTO> commentViewResponse =
+				commentServiceImpl.findLatestCommentSummary(nodes, level, sprintId, kpiIds);
 		Assert.assertEquals(commentViewResponseDTOList, commentViewResponse);
 	}
 }

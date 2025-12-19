@@ -17,8 +17,25 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.ArrayList;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ObjectUtils;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
@@ -26,25 +43,14 @@ import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.ObjectUtils;
-import org.bson.types.ObjectId;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The class contains all required common methods for developer kpis
@@ -54,35 +60,50 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class DeveloperKpiHelper {
 
-	private DeveloperKpiHelper() {
-	}
+	private static final String CONNECTOR = " -> ";
+
+	@Autowired(required = false)
+	private static ForecastingManager forecastingManager;
+
+	private DeveloperKpiHelper() {}
 
 	/**
-	 * Transforms a map of trend values into structured DataCountGroup objects.
-	 * Splits the map key by "#" to extract filter values.
+	 * Transforms a map of trend values into structured DataCountGroup objects. Splits the map key by
+	 * "#" to extract filter values.
 	 *
-	 * @param trendValuesMap
-	 *            Map with keys in format "filter1#filter2"
+	 * @param trendValuesMap Map with keys in format "filter1#filter2"
 	 * @return List of DataCountGroup objects with separated filters
 	 */
-	public static List<DataCountGroup> prepareDataCountGroups(Map<String, List<DataCount>> trendValuesMap) {
-		return trendValuesMap.entrySet().stream().map(entry -> {
-			String[] filters = entry.getKey().split("#");
-			DataCountGroup group = new DataCountGroup();
-			group.setFilter1(filters[0]);
-			group.setFilter2(filters[1]);
-			group.setValue(entry.getValue());
-			return group;
-		}).collect(Collectors.toList());
+	public static List<DataCountGroup> prepareDataCountGroups(
+            Map<String, List<DataCount>> trendValuesMap, String kpiId) {
+		return trendValuesMap.entrySet().stream()
+				.map(
+						entry -> {
+							String[] filters = entry.getKey().split("#");
+							DataCountGroup group = new DataCountGroup();
+							group.setFilter1(filters[0]);
+							group.setFilter2(filters[1]);
+							group.setValue(entry.getValue());
+								// Add forecasts if configured
+								Optional.ofNullable(forecastingManager)
+										.ifPresent(
+												manager ->
+														manager.addForecastsToDataCount(
+																group,
+																Optional.ofNullable(entry.getValue())
+																		.orElse(Collections.emptyList()),
+																kpiId));
+
+							return group;
+						})
+				.collect(Collectors.toList());
 	}
 
 	/**
 	 * Returns the next range date based on the duration and current date.
 	 *
-	 * @param duration
-	 *            the duration (e.g., "WEEK" or "DAY")
-	 * @param currentDate
-	 *            the current date
+	 * @param duration the duration (e.g., "WEEK" or "DAY")
+	 * @param currentDate the current date
 	 * @return the next range date
 	 */
 	public static LocalDateTime getNextRangeDate(String duration, LocalDateTime currentDate) {
@@ -101,132 +122,152 @@ public final class DeveloperKpiHelper {
 	}
 
 	/**
-	 * Filters SCM commits within a specified date range. Converts commit timestamps
-	 * from milliseconds to LocalDateTime.
+	 * Filters SCM commits within a specified date range. Converts commit timestamps from milliseconds
+	 * to LocalDateTime.
 	 *
-	 * @param commits
-	 *            List of SCM commits
-	 * @param dateRange
-	 *            Date range for filtering
+	 * @param commits List of SCM commits
+	 * @param dateRange Date range for filtering
 	 * @return Filtered list of commits within the date range
 	 */
-	public static List<ScmCommits> filterCommitsByCommitTimeStamp(List<ScmCommits> commits, CustomDateRange dateRange) {
+	public static List<ScmCommits> filterCommitsByCommitTimeStamp(
+			List<ScmCommits> commits, CustomDateRange dateRange) {
 		return commits.stream()
-				.filter(commit -> DateUtil.isWithinDateTimeRange(
-						DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
-						dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+				.filter(
+						commit ->
+								DateUtil.isWithinDateTimeRange(
+										DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
+										dateRange.getStartDateTime(),
+										dateRange.getEndDateTime()))
 				.toList();
 	}
 
 	/**
 	 * Filters merge requests by updated date within a date range.
-	 * 
-	 * @param mergeRequests
-	 *            List of merge requests
-	 * @param dateRange
-	 *            Date range for filtering
+	 *
+	 * @param mergeRequests List of merge requests
+	 * @param dateRange Date range for filtering
 	 * @return Filtered merge requests with non-null updated dates
 	 */
-	public static List<ScmMergeRequests> filterMergeRequestsByUpdateDate(List<ScmMergeRequests> mergeRequests,
-			CustomDateRange dateRange) {
-		return mergeRequests.stream().filter(request -> request.getUpdatedDate() != null).filter(request -> {
-			LocalDateTime updatedDateTime = DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate());
-			return DateUtil.isWithinDateTimeRange(updatedDateTime, dateRange.getStartDateTime(),
-					dateRange.getEndDateTime());
-		}).toList();
+	public static List<ScmMergeRequests> filterMergeRequestsByUpdateDate(
+			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
+		return mergeRequests.stream()
+				.filter(request -> request.getUpdatedDate() != null)
+				.filter(
+						request -> {
+							LocalDateTime updatedDateTime =
+									DateUtil.convertMillisToLocalDateTime(request.getUpdatedDate());
+							return DateUtil.isWithinDateTimeRange(
+									updatedDateTime, dateRange.getStartDateTime(), dateRange.getEndDateTime());
+						})
+				.toList();
 	}
 
 	/**
-	 * Retrieves SCM tools configured for a specific project. Looks up tools by
-	 * project configuration ID.
+	 * Retrieves SCM tools configured for a specific project. Looks up tools by project configuration
+	 * ID.
 	 *
-	 * @param projectNode
-	 *            Project node containing project filter
-	 * @param configHelperService
-	 *            Service for configuration management
-	 * @param kpiHelperService
-	 *            Service for KPI operations
+	 * @param projectNode Project node containing project filter
+	 * @param configHelperService Service for configuration management
+	 * @param kpiHelperService Service for KPI operations
 	 * @return List of SCM tools for the project
 	 */
-	public static List<Tool> getScmToolsForProject(Node projectNode, ConfigHelperService configHelperService,
+	public static List<Tool> getScmToolsForProject(
+			Node projectNode,
+			ConfigHelperService configHelperService,
 			KpiHelperService kpiHelperService) {
 		Map<ObjectId, Map<String, List<Tool>>> toolMap = configHelperService.getToolItemMap();
-		ObjectId projectConfigId = Optional.ofNullable(projectNode.getProjectFilter())
-				.map(ProjectFilter::getBasicProjectConfigId).orElse(null);
+		ObjectId projectConfigId =
+				Optional.ofNullable(projectNode.getProjectFilter())
+						.map(ProjectFilter::getBasicProjectConfigId)
+						.orElse(null);
 
 		Map<String, List<Tool>> toolListMap = toolMap.getOrDefault(projectConfigId, Map.of());
 		return kpiHelperService.populateSCMToolsRepoList(toolListMap);
 	}
 
 	/**
-	 * Filters merge requests for a specific tool/branch. Matches by processor item
-	 * ID.
+	 * Filters merge requests for a specific tool/branch. Matches by processor item ID.
 	 *
-	 * @param mergeRequests
-	 *            List of merge requests
-	 * @param tool
-	 *            Tool containing processor item information
+	 * @param mergeRequests List of merge requests
+	 * @param tool Tool containing processor item information
 	 * @return Filtered merge requests for the tool
 	 */
-	public static List<ScmMergeRequests> filterMergeRequestsForBranch(List<ScmMergeRequests> mergeRequests, Tool tool) {
+	public static List<ScmMergeRequests> filterMergeRequestsForBranch(
+			List<ScmMergeRequests> mergeRequests, Tool tool) {
 		return mergeRequests.stream()
-				.filter(request -> request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
+				.filter(
+						request ->
+								request.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
 				.toList();
 	}
 
-    public static List<ScmCommits> filterCommitsForBranch(List<ScmCommits> commitsList, Tool tool) {
-        return commitsList.stream()
-                .filter(commits -> commits.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
-                .toList();
-    }
+	public static List<ScmCommits> filterCommitsForBranch(List<ScmCommits> commitsList, Tool tool) {
+		return commitsList.stream()
+				.filter(
+						commits ->
+								commits.getProcessorItemId().equals(tool.getProcessorItemList().get(0).getId()))
+				.toList();
+	}
 
 	/**
-	 * Groups merge requests by author email. Filters out requests with null author
-	 * or email.
+	 * Groups merge requests by author email. Filters out requests with null author or email.
 	 *
-	 * @param mergeRequests
-	 *            List of merge requests
+	 * @param mergeRequests List of merge requests
 	 * @return Map of email to list of merge requests
 	 */
-	public static Map<String, List<ScmMergeRequests>> groupMergeRequestsByUser(List<ScmMergeRequests> mergeRequests) {
+	public static Map<String, List<ScmMergeRequests>> groupMergeRequestsByUser(
+			List<ScmMergeRequests> mergeRequests) {
 		return mergeRequests.stream()
-				.filter(req -> req.getAuthorId() != null
-						&& (req.getAuthorId().getEmail() != null || req.getAuthorId().getUsername() != null))
-				.collect(Collectors.groupingBy(
-						request -> request.getAuthorId().getEmail() != null ? request.getAuthorId().getEmail()
-								: request.getAuthorId().getUsername()));
+				.filter(
+						req ->
+								req.getAuthorId() != null
+										&& (req.getAuthorId().getEmail() != null
+												|| req.getAuthorId().getUsername() != null))
+				.collect(
+						Collectors.groupingBy(
+								request ->
+										request.getAuthorId().getEmail() != null
+												? request.getAuthorId().getEmail()
+												: request.getAuthorId().getUsername()));
 	}
 
 	public static Map<String, List<ScmCommits>> groupCommitsByUser(List<ScmCommits> commits) {
-		return commits.stream().filter(commit -> commit.getCommitAuthor() != null
-				&& (commit.getCommitAuthor().getEmail() != null || commit.getCommitAuthor().getUsername() != null))
-				.collect(Collectors.groupingBy(
-						commit -> commit.getCommitAuthor().getEmail() != null ? commit.getCommitAuthor().getEmail()
-								: commit.getCommitAuthor().getUsername()));
+		return commits.stream()
+				.filter(
+						commit ->
+								commit.getCommitAuthor() != null
+										&& (commit.getCommitAuthor().getEmail() != null
+												|| commit.getCommitAuthor().getUsername() != null))
+				.collect(
+						Collectors.groupingBy(
+								commit ->
+										commit.getCommitAuthor().getEmail() != null
+												? commit.getCommitAuthor().getEmail()
+												: commit.getCommitAuthor().getUsername()));
 	}
 
 	/**
-	 * Resolves developer name from email using assignee mapping. Falls back to
-	 * email if no assignee found.
+	 * Resolves developer name from email using assignee mapping. Falls back to email if no assignee
+	 * found.
 	 *
-	 * @param userEmail
-	 *            Developer's email address
-	 * @param assignees
-	 *            Set of assignee mappings
+	 * @param userEmail Developer's email address
+	 * @param assignees Set of assignee mappings
 	 * @return Developer name or email as fallback
 	 */
 	public static String getDeveloperName(String userEmail, Set<Assignee> assignees) {
-		Optional<Assignee> assignee = assignees.stream()
-				.filter(a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail)).findFirst();
+		Optional<Assignee> assignee =
+				assignees.stream()
+						.filter(
+								a -> CollectionUtils.isNotEmpty(a.getEmail()) && a.getEmail().contains(userEmail))
+						.findFirst();
 		return assignee.map(Assignee::getAssigneeName).orElse(userEmail);
 	}
 
 	/**
-	 * Validates if a tool has proper processor configuration. Checks for non-empty
-	 * processor list with valid ID.
+	 * Validates if a tool has proper processor configuration. Checks for non-empty processor list
+	 * with valid ID.
 	 *
-	 * @param tool
-	 *            Tool to validate
+	 * @param tool Tool to validate
 	 * @return true if tool has valid processor configuration
 	 */
 	public static boolean isValidTool(Tool tool) {
@@ -235,34 +276,35 @@ public final class DeveloperKpiHelper {
 	}
 
 	/**
-	 * Creates or updates data count entries for KPI metrics. Supports both Long and
-	 * Double value types with proper aggregation.
+	 * Creates or updates data count entries for KPI metrics. Supports both Long and Double value
+	 * types with proper aggregation.
 	 *
-	 * @param projectName
-	 *            Project name for the data
-	 * @param dateLabel
-	 *            Date label for the data point
-	 * @param kpiGroup
-	 *            KPI group identifier
-	 * @param value
-	 *            Numeric value (Long or Double)
-	 * @param hoverValue
-	 *            Additional hover information
-	 * @param dataCountMap
-	 *            Map to store/update data counts
+	 * @param projectName Project name for the data
+	 * @param dateLabel Date label for the data point
+	 * @param kpiGroup KPI group identifier
+	 * @param value Numeric value (Long or Double)
+	 * @param hoverValue Additional hover information
+	 * @param dataCountMap Map to store/update data counts
 	 */
-	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, Number value,
-			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
+	public static void setDataCount(
+			String projectName,
+			String dateLabel,
+			String kpiGroup,
+			Number value,
+			Map<String, Object> hoverValue,
+			Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-		Optional<DataCount> existingDataCount = dataCounts.stream()
-				.filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
+		Optional<DataCount> existingDataCount =
+				dataCounts.stream().filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
 
 		if (existingDataCount.isPresent()) {
 			DataCount updatedDataCount = existingDataCount.get();
 			if (value instanceof Long) {
-				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value.longValue());
+				updatedDataCount.setValue(
+						((Number) updatedDataCount.getValue()).longValue() + value.longValue());
 			} else if (value instanceof Double) {
-				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
+				updatedDataCount.setValue(
+						((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
 			}
 		} else {
 			DataCount newDataCount = new DataCount();
@@ -276,23 +318,98 @@ public final class DeveloperKpiHelper {
 		}
 	}
 
-    public static LocalDate convertStringToDate(String dateString) {
-        return LocalDate.parse(dateString.split("T")[0]);
-    }
+	/**
+	 * Creates or updates data count entries for KPI metrics. Supports both Long and Double
+	 * pullRequestsValues types with proper aggregation.
+	 *
+	 * @param projectName Project name for the data
+	 * @param dateLabel Date label for the data point
+	 * @param kpiGroup KPI group identifier
+	 * @param pullRequestsValues Numeric pullRequestsValues (Long or Double)
+	 * @param dataCountMap Map to store/update data counts
+	 */
+	public static void setDataCounts(
+			String projectName,
+			String dateLabel,
+			String kpiGroup,
+			List<PullRequestsValue> pullRequestsValues,
+			Map<String, List<DataCount>> dataCountMap) {
 
-    public static CustomDateRange getStartAndEndDate(KpiRequest kpiRequest) {
-        int dataPoint = (int) ObjectUtils.defaultIfNull(kpiRequest.getXAxisDataPoints(), 5) + 1;
-        CustomDateRange cdr = new CustomDateRange();
-        cdr.setEndDate(DateUtil.getTodayDate());
-        LocalDate startDate = null;
-        if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
-            startDate = DateUtil.getTodayDate().minusWeeks(dataPoint);
-        } else if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.MONTH)) {
-            startDate = DateUtil.getTodayDate().minusMonths(dataPoint);
-        } else {
-            startDate = DateUtil.getTodayDate().minusDays(dataPoint);
-        }
-        cdr.setStartDate(startDate);
-        return cdr;
-    }
+		// Get or create list of DataCount for this KPI group
+		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
+
+		// Find existing DataCount for this date
+		Optional<DataCount> existingDataCountOpt =
+				dataCounts.stream().filter(dc -> dc.getDate().equals(dateLabel)).findFirst();
+
+		if (existingDataCountOpt.isPresent()) {
+			// Update existing entry
+			DataCount existingDataCount = existingDataCountOpt.get();
+
+			// Get existing PRs (initialize if null)
+			List<PullRequestsValue> existingPrValues =
+					existingDataCount.getBubblePoints() != null
+							? existingDataCount.getBubblePoints()
+							: new ArrayList<>();
+
+			// Build a set of existing PR IDs for fast duplicate check
+			Set<String> existingIds =
+					existingPrValues.stream().map(PullRequestsValue::getLabel).collect(Collectors.toSet());
+
+			// Add only new PRs (avoid duplicates)
+			for (PullRequestsValue newPr : pullRequestsValues) {
+				if (!existingIds.contains(newPr.getLabel())) {
+					existingPrValues.add(newPr);
+				}
+			}
+
+			existingDataCount.setBubblePoints(existingPrValues);
+
+		} else {
+			// Create a new DataCount entry
+			DataCount newDataCount = new DataCount();
+			newDataCount.setSProjectName(projectName);
+			newDataCount.setDate(dateLabel);
+			newDataCount.setKpiGroup(kpiGroup);
+			newDataCount.setBubblePoints(new ArrayList<>(pullRequestsValues));
+			dataCounts.add(newDataCount);
+		}
+	}
+
+	public static LocalDate convertStringToDate(String dateString) {
+		return LocalDate.parse(dateString.split("T")[0]);
+	}
+
+	public static CustomDateRange getStartAndEndDate(KpiRequest kpiRequest) {
+		int dataPoint = (int) ObjectUtils.defaultIfNull(kpiRequest.getXAxisDataPoints(), 5) + 1;
+		CustomDateRange cdr = new CustomDateRange();
+		cdr.setEndDate(DateUtil.getTodayDate());
+		LocalDate startDate = null;
+		if (kpiRequest.getDuration().equalsIgnoreCase(CommonConstant.WEEK)) {
+			startDate = DateUtil.getTodayDate().minusWeeks(dataPoint * 2L);
+		} else {
+			startDate = DateUtil.getTodayDate().minusDays(dataPoint * 2L);
+		}
+		cdr.setStartDate(startDate);
+		return cdr;
+	}
+
+	/**
+	 * This method creates branch filters for kpis
+	 *
+	 * @param repo tool repo
+	 * @param projectName projectName
+	 * @return branch filter
+	 */
+	public static String getBranchSubFilter(Tool repo, String projectName) {
+		String subfilter = "";
+		if (null != repo.getRepoSlug()) {
+			subfilter = repo.getBranch() + CONNECTOR + repo.getRepoSlug() + CONNECTOR + projectName;
+		} else if (null != repo.getRepositoryName()) {
+			subfilter = repo.getBranch() + CONNECTOR + repo.getRepositoryName() + CONNECTOR + projectName;
+		} else {
+			subfilter = repo.getBranch() + CONNECTOR + projectName;
+		}
+		return subfilter;
+	}
 }

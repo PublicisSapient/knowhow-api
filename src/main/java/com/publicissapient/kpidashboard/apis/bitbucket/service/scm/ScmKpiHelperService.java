@@ -19,13 +19,13 @@ package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
 
 import java.util.List;
 
-import com.publicissapient.kpidashboard.common.model.scm.User;
 import org.bson.types.ObjectId;
 
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import com.publicissapient.kpidashboard.common.model.scm.User;
 
 public interface ScmKpiHelperService {
 	List<ScmCommits> getCommitDetails(ObjectId projectBasicConfigId, CustomDateRange dateRange);
@@ -34,6 +34,5 @@ public interface ScmKpiHelperService {
 
 	List<Assignee> getJiraAssigneeForScmUsers(ObjectId projectBasicConfigId);
 
-    List<User> getScmUser(ObjectId projectBasicConfigId);
-
+	List<User> getScmUser(ObjectId projectBasicConfigId);
 }

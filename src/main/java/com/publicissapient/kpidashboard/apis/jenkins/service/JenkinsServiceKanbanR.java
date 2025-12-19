@@ -24,14 +24,13 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
@@ -46,43 +45,39 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class JenkinsServiceKanbanR {
 
-	@Autowired
-	private KpiHelperService kpiHelperService;
-
-	@Autowired
-	private FilterHelperService filterHelperService;
-
-	@Autowired
-	private CacheService cacheService;
-
-	@Autowired
-	private CustomApiConfig customApiConfig;
-
-	@Autowired
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	private final CacheService cacheService;
+	private final KpiHelperService kpiHelperService;
+	private final FilterHelperService filterHelperService;
+	private final UserAuthorizedProjectsService authorizedProjectsService;
 
 	@SuppressWarnings({"unchecked", "PMD.AvoidCatchingGenericException"})
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
 
-		log.info("[JENKINS KANBAN][{}]. Processing KPI calculation for data {}", kpiRequest.getRequestTrackerId(),
+		log.info(
+				"[JENKINS KANBAN][{}]. Processing KPI calculation for data {}",
+				kpiRequest.getRequestTrackerId(),
 				kpiRequest.getKpiList());
 		List<KpiElement> responseList = new ArrayList<>();
-		String[] kanbanProjectKeyCache = null;
+		String[] kanbanProjectKeyCache;
 		try {
-			String groupName = filterHelperService.getHierarachyLevelId(kpiRequest.getLevel(), kpiRequest.getLabel(), true);
+			String groupName =
+					filterHelperService.getHierarchyLevelId(
+							kpiRequest.getLevel(), kpiRequest.getLabel(), true);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
 			} else {
 				log.error("label name for selected hierarchy not found");
 			}
-			List<AccountHierarchyDataKanban> filteredAccountDataList = filterHelperService.getFilteredBuildsKanban(kpiRequest,
-					groupName);
+			List<AccountHierarchyDataKanban> filteredAccountDataList =
+					filterHelperService.getFilteredBuildsKanban(kpiRequest, groupName);
 			kanbanProjectKeyCache = getProjectKeyCache(kpiRequest, filteredAccountDataList);
 
 			filteredAccountDataList = getAuthorizedFilteredList(kpiRequest, filteredAccountDataList);
@@ -91,38 +86,60 @@ public class JenkinsServiceKanbanR {
 				return responseList;
 			}
 
-			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-
 			populateKanbanKpiRequest(kpiRequest);
-			Object cachedData = cacheService.getFromApplicationCache(kanbanProjectKeyCache, KPISource.JENKINSKANBAN.name(),
-					groupId, null);
-			if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-					null != cachedData) {
-				log.info("[JENKINS KANBAN][{}]. Fetching value from cache for {}", kpiRequest.getRequestTrackerId(),
-						kpiRequest.getIds());
-				return (List<KpiElement>) cachedData;
+
+			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
+			//skip using cache when the request is made with an api key and also processing by group id will be disabled
+			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				Object cachedData =
+						cacheService.getFromApplicationCache(
+								kanbanProjectKeyCache, KPISource.JENKINSKANBAN.name(), groupId, null);
+				if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+						&& null != cachedData) {
+					log.info(
+							"[JENKINS KANBAN][{}]. Fetching value from cache for {}",
+							kpiRequest.getRequestTrackerId(),
+							kpiRequest.getIds());
+					return (List<KpiElement>) cachedData;
+				}
 			}
 
-			TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, null,
-					filteredAccountDataList, filterHelperService.getFirstHierarachyLevel(),
-					filterHelperService.getHierarchyIdLevelMap(false).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
+			TreeAggregatorDetail treeAggregatorDetail =
+					KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+							kpiRequest,
+							null,
+							filteredAccountDataList,
+							filterHelperService.getFirstHierarchyLevel(),
+							filterHelperService
+									.getHierarchyIdLevelMap(false)
+									.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
 
 			for (KpiElement kpiEle : kpiRequest.getKpiList()) {
-
-				responseList.add(calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
+				responseList.add(
+						calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
+			}
+			//skip using cache when the request is made with an api key and also processing by group id will be disabled
+			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
 			}
 
-			setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
-
 		} catch (EntityNotFoundException enfe) {
-
-			log.error("[JENKINS KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
-					kpiRequest.getRequestTrackerId(), kpiRequest.getKpiList(), enfe);
+			log.error(
+					"[JENKINS KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					enfe.getMessage());
 			throw enfe;
 
 		} catch (Exception e) {
-			log.error("[JENKINS KANBAN][{}]. Error while KPI calculation for data {} {}", kpiRequest.getRequestTrackerId(),
-					kpiRequest.getKpiList(), e);
+			log.error(
+					"[JENKINS KANBAN][{}]. Error while KPI calculation for data {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					e.getMessage());
 			throw new HttpMessageNotWritableException(e.getMessage(), e);
 		}
 
@@ -130,72 +147,76 @@ public class JenkinsServiceKanbanR {
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param filteredAccountDataList
-	 *          filteredAccountDataList
+	 * @param kpiRequest kpiRequest
+	 * @param filteredAccountDataList filteredAccountDataList
 	 * @return String of array
 	 */
-	private String[] getProjectKeyCache(KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
+	private String[] getProjectKeyCache(
+			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 
 		return authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param filteredAccountDataList
-	 *          filteredAccountDataList
+	 * @param kpiRequest kpiRequest
+	 * @param filteredAccountDataList filteredAccountDataList
 	 * @return list
 	 */
-	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(KpiRequest kpiRequest,
-			List<AccountHierarchyDataKanban> filteredAccountDataList) {
+	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(
+			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 		kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-		if (!authorizedProjectsService.ifSuperAdminUser()) {
-			filteredAccountDataList = authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
+		if(Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser()) || ApiKeyAuthenticationService.isApiKeyRequest()) {
+			return filteredAccountDataList;
 		}
-
-		return filteredAccountDataList;
+		return authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
 	}
 
 	/**
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param kpiElement
-	 *          kpiElement
-	 * @param treeAggregatorDetail
-	 *          treeAggregatorDetail
+	 * @param kpiRequest kpiRequest
+	 * @param kpiElement kpiElement
+	 * @param treeAggregatorDetail treeAggregatorDetail
 	 * @return Kpielement
 	 */
-	private KpiElement calculateAllKPIAggregatedMetrics(KpiRequest kpiRequest, KpiElement kpiElement,
-			TreeAggregatorDetail treeAggregatorDetail) {
+	private KpiElement calculateAllKPIAggregatedMetrics(
+			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail) {
 		try {
 			KPICode kpi = KPICode.getKPI(kpiElement.getKpiId());
-			JenkinsKPIService<?, ?, ?> jenkinsKPIService = JenkinsKPIServiceFactory.getJenkinsKPIService(kpi.name());
+			JenkinsKPIService<?, ?, ?> jenkinsKPIService =
+					JenkinsKPIServiceFactory.getJenkinsKPIService(kpi.name());
 			long startTime = System.currentTimeMillis();
-			TreeAggregatorDetail treeAggregatorDetailClone = (TreeAggregatorDetail) SerializationUtils
-					.clone(treeAggregatorDetail);
-			List<Node> projectNodes = treeAggregatorDetailClone.getMapOfListOfProjectNodes()
-					.get(CommonConstant.PROJECT.toLowerCase());
+			TreeAggregatorDetail treeAggregatorDetailClone =
+					(TreeAggregatorDetail) SerializationUtils.clone(treeAggregatorDetail);
+			List<Node> projectNodes =
+					treeAggregatorDetailClone
+							.getMapOfListOfProjectNodes()
+							.get(CommonConstant.PROJECT.toLowerCase());
 
-			if (!projectNodes.isEmpty() &&
-					(projectNodes.size() > 1 || kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
-				kpiElement = jenkinsKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
+			if (!projectNodes.isEmpty()
+					&& (projectNodes.size() > 1
+							|| kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
+				kpiElement =
+						jenkinsKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
 				kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 				if (projectNodes.size() == 1) {
 					kpiHelperService.isMandatoryFieldSet(kpi, kpiElement, projectNodes.get(0));
 				}
 			}
 			long processTime = System.currentTimeMillis() - startTime;
-			log.info("[JENKINS-KANBAN-{}-TIME][{}]. KPI took {} ms", kpi.name(), kpiRequest.getRequestTrackerId(),
+			log.info(
+					"[JENKINS-KANBAN-{}-TIME][{}]. KPI took {} ms",
+					kpi.name(),
+					kpiRequest.getRequestTrackerId(),
 					processTime);
 		} catch (ApplicationException exception) {
 			kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
 			log.error("Kpi not found", exception);
 		} catch (Exception exception) {
 			kpiElement.setResponseCode(CommonConstant.KPI_FAILED);
-			log.error("[JENKINS KANBAN][{}]. Error while KPI calculation for data {} {}", kpiRequest.getRequestTrackerId(),
-					kpiRequest.getKpiList(), exception);
+			log.error(
+					"[JENKINS KANBAN][{}]. Error while KPI calculation for data {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					exception.getMessage());
 			return kpiElement;
 		}
 		return kpiElement;
@@ -204,28 +225,32 @@ public class JenkinsServiceKanbanR {
 	/**
 	 * Sets cache.
 	 *
-	 * @param kpiRequest
-	 *          kpiRequest
-	 * @param responseList
-	 *          responseList
-	 * @param groupId
-	 *          groupId
-	 * @param kanbanProjectKeyCache
-	 *          kanbanProjectKeyCache
+	 * @param kpiRequest kpiRequest
+	 * @param responseList responseList
+	 * @param groupId groupId
+	 * @param kanbanProjectKeyCache kanbanProjectKeyCache
 	 */
-	private void setIntoApplicationCache(KpiRequest kpiRequest, List<KpiElement> responseList, Integer groupId,
+	private void setIntoApplicationCache(
+			KpiRequest kpiRequest,
+			List<KpiElement> responseList,
+			Integer groupId,
 			String[] kanbanProjectKeyCache) {
-		Integer projectLevel = filterHelperService.getHierarchyIdLevelMap(true)
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) &&
-				projectLevel >= kpiRequest.getLevel()) {
+		Integer projectLevel =
+				filterHelperService
+						.getHierarchyIdLevelMap(true)
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
+				&& projectLevel >= kpiRequest.getLevel()) {
 
-			cacheService.setIntoApplicationCache(kanbanProjectKeyCache, responseList, KPISource.JENKINSKANBAN.name(), groupId,
-					null);
+			cacheService.setIntoApplicationCache(
+					kanbanProjectKeyCache, responseList, KPISource.JENKINSKANBAN.name(), groupId, null);
 		}
 	}
 
-	private void populateKanbanKpiRequest(KpiRequest kpiRequest) {
+	private static void populateKanbanKpiRequest(KpiRequest kpiRequest) {
 		String id = kpiRequest.getIds()[0];
 		if (NumberUtils.isCreatable(id)) {
 			kpiRequest.setKanbanXaxisDataPoints(Integer.parseInt(id));

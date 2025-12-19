@@ -32,8 +32,7 @@ import com.publicissapient.kpidashboard.apis.model.VersionDetails;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Implementation of {@link VersionMetadataService}. It provides method to get
- * the version metadata.
+ * Implementation of {@link VersionMetadataService}. It provides method to get the version metadata.
  */
 @Service
 @Slf4j
@@ -41,8 +40,7 @@ public class VersionMetadataServiceImpl implements VersionMetadataService {
 
 	private static final String CURRENT_VERSION_DEFAULT_KEY = "currentVersion";
 
-	@Autowired
-	private CustomApiConfig apiConfig;
+	@Autowired private CustomApiConfig apiConfig;
 
 	@Value("${versionnumber:}")
 	private String version;

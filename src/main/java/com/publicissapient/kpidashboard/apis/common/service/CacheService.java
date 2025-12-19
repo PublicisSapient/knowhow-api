@@ -20,9 +20,9 @@ package com.publicissapient.kpidashboard.apis.common.service;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterCategory;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
@@ -48,21 +48,17 @@ public interface CacheService {
 	void setIntoApplicationCache(String key, String value);
 
 	/**
-	 * Stores the KPI data result. Cache key = key+requestOrigin+kpiSource. Given
-	 * that none of them is empty.
+	 * Stores the KPI data result. Cache key = key+requestOrigin+kpiSource. Given that none of them is
+	 * empty.
 	 *
-	 * @param key
-	 *          mandatory parameter
-	 * @param value
-	 *          KPI result
-	 * @param kpiSource
-	 *          taken into account if not empty
+	 * @param key mandatory parameter
+	 * @param value KPI result
+	 * @param kpiSource taken into account if not empty
 	 * @param groupId
-	 * @param sprintIncluded
-	 *          sprintIncluded
+	 * @param sprintIncluded sprintIncluded
 	 */
-	void setIntoApplicationCache(String[] key, Object value, String kpiSource, Integer groupId,
-			List<String> sprintIncluded);
+	void setIntoApplicationCache(
+			String[] key, Object value, String kpiSource, Integer groupId, List<String> sprintIncluded);
 
 	/**
 	 * Gets data from cache based on key
@@ -73,18 +69,17 @@ public interface CacheService {
 	String getFromApplicationCache(String key);
 
 	/**
-	 * Gets from the cache. Key formation strategy is same as detailed in the
-	 * setIntoApplicationCache method above.
+	 * Gets from the cache. Key formation strategy is same as detailed in the setIntoApplicationCache
+	 * method above.
 	 *
 	 * @param keyList
 	 * @param kpiSource
 	 * @param groupId
-	 * @param sprintIncluded
-	 *          sprintIncluded
+	 * @param sprintIncluded sprintIncluded
 	 * @return
 	 */
-	public Object getFromApplicationCache(String[] keyList, String kpiSource, Integer groupId,
-			List<String> sprintIncluded);
+	Object getFromApplicationCache(
+			String[] keyList, String kpiSource, Integer groupId, List<String> sprintIncluded);
 
 	Object cacheProjectConfigMapData();
 

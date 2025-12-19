@@ -17,9 +17,9 @@
 
 package com.publicissapient.kpidashboard.apis.ai.service.prompt;
 
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
-
 import java.util.List;
+
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 
 public interface PromptDetailsService {
 

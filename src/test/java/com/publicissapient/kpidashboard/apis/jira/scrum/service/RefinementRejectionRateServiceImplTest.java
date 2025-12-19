@@ -35,9 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
-import com.publicissapient.kpidashboard.apis.constant.Constant;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import org.bson.types.ObjectId;
 import org.hamcrest.core.StringContains;
 import org.junit.Before;
@@ -48,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.data.AccountHierarchyFilterDataFactory;
@@ -56,6 +54,7 @@ import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.backlogdashboard.JiraBacklogServiceR;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
@@ -72,7 +71,6 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReleaseStatusRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RefinementRejectionRateServiceImplTest {
@@ -84,30 +82,21 @@ public class RefinementRejectionRateServiceImplTest {
 	List<Node> leafNodeList = new ArrayList<>();
 	TreeAggregatorDetail treeAggregatorDetail;
 
-	@Mock
-	ConfigHelperService configHelperService;
-	@Mock
-	CustomApiConfig customApiConfig;
-	@InjectMocks
-	RefinementRejectionRateServiceImpl refinementRejectionRateService;
-	@Mock
-	CustomDateRange customDateRange;
-	@Mock
-	private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private JiraBacklogServiceR jiraService;
-	@Mock
-	private FieldMapping fieldMapping;
+	@Mock ConfigHelperService configHelperService;
+	@Mock CustomApiConfig customApiConfig;
+	@InjectMocks RefinementRejectionRateServiceImpl refinementRejectionRateService;
+	@Mock CustomDateRange customDateRange;
+	@Mock private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private JiraBacklogServiceR jiraService;
+	@Mock private FieldMapping fieldMapping;
 
-	@Mock
-	private JiraIssueRepository jiraIssueRepository;
-	@Mock
-	private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	private KpiRequest kpiRequest;
-	@Mock
-	private CacheService cacheService;
+	@Mock private CacheService cacheService;
+	@Mock private ForecastingManager forecastingManager;
+
 	@Before
 	public void setup() throws ApplicationException {
 		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance();
@@ -115,17 +104,21 @@ public class RefinementRejectionRateServiceImplTest {
 
 		kpiRequest = kpiRequestFactory.findKpiRequest("kpi139");
 		kpiRequest.setLabel("PROJECT");
-		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory = AccountHierarchyFilterDataFactory
-				.newInstance();
+		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
+				AccountHierarchyFilterDataFactory.newInstance();
 
 		accountHierarchyDataList = accountHierarchyFilterDataFactory.getAccountHierarchyDataList();
 
 		leafNodeList = new ArrayList<>();
-		treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, accountHierarchyDataList,
-				new ArrayList<>(), "hierarchyLevelOne", 4);
-		treeAggregatorDetail.getMapOfListOfProjectNodes().forEach((k, v) -> {
-			leafNodeList.addAll(v);
-		});
+		treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 4);
+		treeAggregatorDetail
+				.getMapOfListOfProjectNodes()
+				.forEach(
+						(k, v) -> {
+							leafNodeList.addAll(v);
+						});
 
 		customDateRange = new CustomDateRange();
 		customDateRange.setStartDate(LocalDate.now());
@@ -133,24 +126,33 @@ public class RefinementRejectionRateServiceImplTest {
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 
 		jiraIssueList = JiraIssueDataFactory.newInstance().getJiraIssues();
-		unassignedJiraHistoryDataList = JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
+		unassignedJiraHistoryDataList =
+				JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
 
-/*
-		for (FieldMapping fieldMap : FieldMappingDataFactory.newInstance(null).getFieldMappings()) {
-			fieldMappingMap.put(fieldMap.getBasicProjectConfigId(), fieldMap);
-		}
-*/
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		/*
+		 * for (FieldMapping fieldMap :
+		 * FieldMappingDataFactory.newInstance(null).getFieldMappings()) {
+		 * fieldMappingMap.put(fieldMap.getBasicProjectConfigId(), fieldMap); }
+		 */
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 
-		unassignedJiraHistoryDataList = JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
-        String formattedDateTime = LocalDateTime.now().minusDays(10).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS"));
-		jiraIssueList.stream().filter(j->j.getNumber().equalsIgnoreCase("TEST-19485")).toList().get(0).setUpdateDate(formattedDateTime);
+		unassignedJiraHistoryDataList =
+				JiraIssueHistoryDataFactory.newInstance().getJiraIssueCustomHistory();
+		String formattedDateTime =
+				LocalDateTime.now()
+						.minusDays(10)
+						.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS"));
+		jiraIssueList.stream()
+				.filter(j -> j.getNumber().equalsIgnoreCase("TEST-19485"))
+				.toList()
+				.get(0)
+				.setUpdateDate(formattedDateTime);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(jiraIssueList);
-		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint()).thenReturn(unassignedJiraHistoryDataList);
-
+		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
+				.thenReturn(unassignedJiraHistoryDataList);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -197,6 +199,24 @@ public class RefinementRejectionRateServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertThat(refinementRejectionRateService.getQualifierType(), equalTo("REFINEMENT_REJECTION_RATE"));
+		assertThat(
+				refinementRejectionRateService.getQualifierType(), equalTo("REFINEMENT_REJECTION_RATE"));
+	}
+
+	@Test
+	public void testGetKpiDataWithForecasting() throws ApplicationException {
+		when(customApiConfig.getBacklogWeekCount()).thenReturn(5);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(cacheService.getFromApplicationCache(anyString())).thenReturn("Jira");
+		when(jiraService.getJiraIssueReleaseForProject()).thenReturn(new JiraIssueReleaseStatus());
+
+		KpiElement responseKpiElement =
+				refinementRejectionRateService.getKpiData(
+						kpiRequest,
+						kpiRequest.getKpiList().get(0),
+						treeAggregatorDetail.getMapOfListOfProjectNodes().get("project").get(0));
+
+		assertNotNull(responseKpiElement);
+		assertNotNull(responseKpiElement.getTrendValueList());
 	}
 }

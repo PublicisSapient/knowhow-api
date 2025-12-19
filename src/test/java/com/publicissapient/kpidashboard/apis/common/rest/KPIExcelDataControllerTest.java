@@ -55,16 +55,14 @@ public class KPIExcelDataControllerTest {
 
 	private MockMvc mockMvc;
 	private Map<String, ValidationData> kpiValidationDataMap = new HashMap<>();
-	private KPIExcelValidationDataResponse kpiExcelValidationDataResponse = new KPIExcelValidationDataResponse();
+	private KPIExcelValidationDataResponse kpiExcelValidationDataResponse =
+			new KPIExcelValidationDataResponse();
 
-	@Mock
-	private KPIExcelDataService kpiExcelDataService;
+	@Mock private KPIExcelDataService kpiExcelDataService;
 
-	@InjectMocks
-	private KPIExcelDataController kpiExcelDataController;
+	@InjectMocks private KPIExcelDataController kpiExcelDataController;
 
-	@Mock
-	private CustomApiConfig customApiConfig;
+	@Mock private CustomApiConfig customApiConfig;
 
 	@Before
 	public void setup() {
@@ -72,9 +70,11 @@ public class KPIExcelDataControllerTest {
 
 		ValidationData validationData = new ValidationData();
 		validationData.setStoryKeyList(
-				Arrays.asList("Project1_Sprint1_Story1", "Project1_Sprint1_Story2", "Project1_Sprint1_Story3"));
+				Arrays.asList(
+						"Project1_Sprint1_Story1", "Project1_Sprint1_Story2", "Project1_Sprint1_Story3"));
 		validationData.setDefectKeyList(
-				Arrays.asList("Project1_Sprint1_Defect1", "Project1_Sprint1_Defect2", "Project1_Sprint1_Defect3"));
+				Arrays.asList(
+						"Project1_Sprint1_Defect1", "Project1_Sprint1_Defect2", "Project1_Sprint1_Defect3"));
 
 		kpiValidationDataMap.put("Project1_Sprint1", validationData);
 
@@ -90,34 +90,65 @@ public class KPIExcelDataControllerTest {
 	@Test
 	public void testGetKpiValidationData() throws Exception {
 		// TODO GIRISH here discuss with team
-		String request = "{\n" + "  \"kpiList\": [\n" + "    {\n" + "      \"id\": \"5b753628d42937acd035b7ef\",\n" +
-				"      \"kpiId\": \"kpi14\",\n" + "      \"kpiName\": \"Defect Injection Rate\",\n" +
-				"      \"isDeleted\": \"False\",\n" + "      \"kpiCategory\": \"Quality\",\n" +
-				"      \"kpiUnit\": \"Percentage\",\n" + "      \"kpiSource\": \"Jira\",\n" + "      \"maxValue\": \"\",\n" +
-				"      \"chartType\": \"gaugeChart\"\n" + "    }\n" + "  ],\n" + "  \"ids\": [\n" + "    \"GMA_GMA\"\n" +
-				"  ],\n" + "  \"level\": 1\n" + "}";
+		String request =
+				"{\n"
+						+ "  \"kpiList\": [\n"
+						+ "    {\n"
+						+ "      \"id\": \"5b753628d42937acd035b7ef\",\n"
+						+ "      \"kpiId\": \"kpi14\",\n"
+						+ "      \"kpiName\": \"Defect Injection Rate\",\n"
+						+ "      \"isDeleted\": \"False\",\n"
+						+ "      \"kpiCategory\": \"Quality\",\n"
+						+ "      \"kpiUnit\": \"Percentage\",\n"
+						+ "      \"kpiSource\": \"Jira\",\n"
+						+ "      \"maxValue\": \"\",\n"
+						+ "      \"chartType\": \"gaugeChart\"\n"
+						+ "    }\n"
+						+ "  ],\n"
+						+ "  \"ids\": [\n"
+						+ "    \"GMA_GMA\"\n"
+						+ "  ],\n"
+						+ "  \"level\": 1\n"
+						+ "}";
 		when(customApiConfig.getxApiKey()).thenReturn("testKey");
-		when(kpiExcelDataService.process(Mockito.anyString(), Mockito.anyInt(), Mockito.any(),
-				(List<String>) Mockito.isNull(), Mockito.any(), (Boolean) Mockito.isNull(), Mockito.any()))
+		when(kpiExcelDataService.process(
+						Mockito.anyString(),
+						Mockito.anyInt(),
+						Mockito.any(),
+						(List<String>) Mockito.isNull(),
+						Mockito.any(),
+						(Boolean) Mockito.isNull(),
+						Mockito.any()))
 				.thenReturn((KPIExcelValidationDataResponse) kpiExcelValidationDataResponse);
 
 		mockMvc
 				.perform(
-						post("/v1/kpi/kpi14").header("x-filter-level", 1).header("x-filter-id", Arrays.asList("GMA_GMA", "CIM_CIM"))
-								.header("X-Api-Key", "testKey").contentType(MediaType.APPLICATION_JSON).content(request))
-				.andExpect(status().is2xxSuccessful()).andDo(print());
+						post("/v1/kpi/kpi14")
+								.header("x-filter-level", 1)
+								.header("x-filter-id", Arrays.asList("GMA_GMA", "CIM_CIM"))
+								.header("X-Api-Key", "testKey")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(request))
+				.andExpect(status().is2xxSuccessful())
+				.andDo(print());
 	}
 
 	@Test
 	public void testGetKpiData_invalidHeader() throws Exception {
 
-		mockMvc.perform(get("/v1/kpi").header("x-filter-level", "test_file_for_upload").header("x-filter-id",
-				Arrays.asList("GMA_GMA", "CIM_CIM"))).andExpect(status().is4xxClientError());
+		mockMvc
+				.perform(
+						get("/v1/kpi")
+								.header("x-filter-level", "test_file_for_upload")
+								.header("x-filter-id", Arrays.asList("GMA_GMA", "CIM_CIM")))
+				.andExpect(status().is4xxClientError());
 	}
 
 	@Test
 	public void testGetKpiData_missingHeader() throws Exception {
 
-		mockMvc.perform(get("/v1/kpi").header("x-filter-level", 1)).andExpect(status().is4xxClientError());
+		mockMvc
+				.perform(get("/v1/kpi").header("x-filter-level", 1))
+				.andExpect(status().is4xxClientError());
 	}
 }

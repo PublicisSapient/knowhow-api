@@ -19,8 +19,6 @@ package com.publicissapient.kpidashboard.apis.mongock.data;
 import java.io.IOException;
 import java.util.List;
 
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,7 +26,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,13 +36,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class PromptDetailsDataFactory {
-	private static final String FILE_PATH_PROMPT_DETAILS = "/json/mongock/default/prompt_details.json";
-    @Getter
-    private List<PromptDetails> promptDetailsList;
+	private static final String FILE_PATH_PROMPT_DETAILS =
+			"/json/mongock/default/prompt_details.json";
+	@Getter private List<PromptDetails> promptDetailsList;
 	private ObjectMapper mapper;
 
-	private PromptDetailsDataFactory() {
-	}
+	private PromptDetailsDataFactory() {}
 
 	public static PromptDetailsDataFactory newInstance(String filePath) {
 		PromptDetailsDataFactory factory = new PromptDetailsDataFactory();
@@ -58,12 +57,12 @@ public class PromptDetailsDataFactory {
 	private void init(String filePath) {
 		try {
 			String resultPath = StringUtils.isEmpty(filePath) ? FILE_PATH_PROMPT_DETAILS : filePath;
-			promptDetailsList = mapper.readValue(
-					TypeReference.class.getResourceAsStream(resultPath),
-					new TypeReference<List<PromptDetails>>() {
-					});
+			promptDetailsList =
+					mapper.readValue(
+							TypeReference.class.getResourceAsStream(resultPath),
+							new TypeReference<List<PromptDetails>>() {});
 		} catch (IOException e) {
-            log.error("Error in reading from file = {}", filePath, e);
+			log.error("Error in reading from file = {}", filePath, e);
 		}
 	}
 
@@ -75,5 +74,4 @@ public class PromptDetailsDataFactory {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		}
 	}
-
 }

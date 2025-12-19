@@ -68,8 +68,6 @@ public final class Constant {
 	public static final String SCRUM = "Scrum";
 	public static final String AGGREGATED_VALUE = "Overall";
 
-	public static final String COVERAGE = "coverage";
-
 	public static final String NOT_AVAILABLE = "NA";
 
 	public static final String AUTOMATED_PERCENTAGE = "automatedPercentage";
@@ -91,11 +89,10 @@ public final class Constant {
 	public static final String DAYS = "Days";
 	public static final String PERCENTAGE = "%";
 	public static final String ISO_DATE_FORMAT = "yyyy-MM-dd";
-	public static final Integer DEFAULT_DEFECT_COUNT = Integer.valueOf(0);
+	public static final Integer DEFAULT_DEFECT_COUNT = 0;
 	public static final int INCREMENTER_DAY = 1;
 
 	public static final int LAST_X_DAYS_INTERVAL = 7;
-	public static final String WASTAGE = "wastage";
 
 	public static final String LOGO_FIL_NAME = "PsKnowHowLogo.png";
 	public static final String FALSE = "False";
@@ -148,11 +145,6 @@ public final class Constant {
 	public static final String REPO_TOOLS = "RepoTool";
 	public static final String SUCCESS = "SUCCESS";
 	public static final String TOKEN_KEY = "X-Api-Key";
-	public static final String SQALE_RATING = "sqale_rating";
-	public static final String SECURITY_REMEDIATION = "security_remediation_effort";
-	public static final String RELIABILITY_REMEDIATION = "reliability_remediation_effort";
-	public static final String DUPLICATED_LINES = "duplicated_lines";
-	public static final String N_CLOC = "ncloc";
 	public static final String PROJECT_LEVEL_THRESHOLD = "Project Level Threshold";
 	public static final String CACHE_PROJECT_KPI_DATA = "project_kpi_data_cache";
 	public static final String TOOL_RALLY = "Rally";
@@ -161,6 +153,18 @@ public final class Constant {
 	public static final String DSE_3 = "S3";
 	public static final String DSE_4 = "S4";
 	public static final String DSE_5 = "S5";
-	private Constant() {
-	}
+
+	public static final String RELEASE = "release";
+
+	public static final String POTENTIAL_ECONOMIC_BENEFITS = "Potential Economic Benefits";
+
+	public static final String POTENTIAL_ECONOMIC_BENEFITS_SLUG = "potential-economic-benefits";
+
+	public static final String HOME_TAB = "Home";
+
+	public static final String HOME_TAB_SLUG = "home";
+
+	public static final int DEFAULT_BOARD_ID_FOR_PEB = 12;
+
+	private Constant() {}
 }

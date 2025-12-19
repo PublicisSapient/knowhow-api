@@ -50,6 +50,7 @@ public class IterationKpiValue implements Serializable {
 	private Map<String, String> markerInfo;
 	private transient Map<String, Object> additionalInfo;
 	private String yAxisLabel;
+	private List<DataCount> forecasts; // forecast data points
 
 	public IterationKpiValue(String filter1, String filter2, List<IterationKpiData> data) {
 		this.filter1 = filter1;
@@ -62,7 +63,11 @@ public class IterationKpiValue implements Serializable {
 		this.value = value;
 	}
 
-	public IterationKpiValue(String filter1, String filter2, List<IterationKpiData> data, List<String> metaDataColumns,
+	public IterationKpiValue(
+			String filter1,
+			String filter2,
+			List<IterationKpiData> data,
+			List<String> metaDataColumns,
 			Map<String, String> markerInfo) {
 		this.filter1 = filter1;
 		this.filter2 = filter2;

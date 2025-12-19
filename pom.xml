@@ -15,10 +15,10 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.2.0</version>
-    <relativePath />
+    <relativePath/>
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
-  <artifactId>customapi</artifactId>
+  <artifactId>knowhow-api</artifactId>
   <version>14.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Rest API Layer</description>
@@ -34,7 +34,7 @@
     <lombok.version>1.18.30</lombok.version>
     <application.version.number>2.5.0</application.version.number>
     <suiteXmlFile>src/test/resources/default-testng.xml</suiteXmlFile>
-    <final.name>customapi</final.name>
+    <final.name>knowhow-api</final.name>
     <spotless.version>2.44.0</spotless.version>
     <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
     <sonar.coverage.exclusions>**com/publicissapient/kpidashboard/**/*Application.java,
@@ -56,8 +56,7 @@
 			**com/publicissapient/kpidashboard/**/*Configuration.java,
 			**com/publicissapient/kpidashboard/apis/mongock/**/*,
 			**com/publicissapient/kpidashboard/apis/datamigration/**/*,
-            **com/publicissapient/kpidashboard/apis/notification/**/*
-    </sonar.coverage.exclusions>
+            **com/publicissapient/kpidashboard/apis/notification/**/*</sonar.coverage.exclusions>
     <sonar.test.exclusions>**src/test/java/**</sonar.test.exclusions>
     <sonar.exclusions>**src/test/java/**,**/src/main/java/com/publicissapient/kpidashboard/apis/bitbucket/service/scm/**</sonar.exclusions>
     <sonar.cpd.exclusions>**com/publicissapient/kpidashboard/apis/mongock/**/*</sonar.cpd.exclusions>
@@ -346,6 +345,34 @@
       <artifactId>commons-csv</artifactId>
       <version>1.9.0</version>
     </dependency>
+    <!-- Forecasting dependencies: Apache Commons Math and Smile -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.6.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.haifengl</groupId>
+      <artifactId>smile-core</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+    <!-- DeepLearning4J dependencies for LSTM forecasting -->
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-core</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native-platform</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <!-- ND4J API -->
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-api</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
@@ -496,11 +523,16 @@
       <artifactId>ai-gateway-client</artifactId>
       <version>1.0.0</version>
     </dependency>
-      <dependency>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter-api</artifactId>
-          <scope>test</scope>
-      </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Micrometer Prometheus for metrics -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
   </dependencies>
   <repositories>
     <repository>
@@ -563,7 +595,7 @@
         <executions>
           <execution>
             <id>build</id>
-            <goals>
+             <goals>
               <goal>build</goal>
             </goals>
             <phase>install</phase>
@@ -591,7 +623,7 @@
             <eclipse>
               <file>${project.basedir}/eclipse-formatter-config.xml</file>
             </eclipse>
-            <googleJavaFormat />
+            <googleJavaFormat/>
             <indent>
               <tabs>true</tabs>
               <spacesPerTab>2</spacesPerTab>
@@ -599,7 +631,7 @@
             <importOrder>
               <order>java|javax,org,com</order>
             </importOrder>
-            <removeUnusedImports />
+            <removeUnusedImports/>
           </java>
           <pom>
             <includes>
@@ -639,6 +671,20 @@
             </format>
           </formats>
         </configuration>
+        <executions>
+          <execution>
+            <id>spotless-apply</id>
+            <goals>
+              <goal>apply</goal>
+            </goals>
+            <phase>validate</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>3.11.0.3922</version>
       </plugin>
     </plugins>
   </build>

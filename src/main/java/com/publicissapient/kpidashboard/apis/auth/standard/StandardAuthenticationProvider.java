@@ -39,7 +39,8 @@ public class StandardAuthenticationProvider implements AuthenticationProvider {
 	private final AuthProperties authProperties;
 
 	@Autowired
-	public StandardAuthenticationProvider(AuthenticationService authService, AuthProperties authProperties) {
+	public StandardAuthenticationProvider(
+			AuthenticationService authService, AuthProperties authProperties) {
 		this.authService = authService;
 		this.authProperties = authProperties;
 	}
@@ -51,11 +52,13 @@ public class StandardAuthenticationProvider implements AuthenticationProvider {
 	 * @return Authentication
 	 */
 	@Override
-	public Authentication authenticate(Authentication authentication) throws AuthenticationException { // NOSONAR
+	public Authentication authenticate(Authentication authentication)
+			throws AuthenticationException { // NOSONAR
 		// //NOPMD
 		try {
-			Authentication auth = authService.authenticate(authentication.getName(),
-					(String) authentication.getCredentials());
+			Authentication auth =
+					authService.authenticate(
+							authentication.getName(), (String) authentication.getCredentials());
 			authService.resetFailAttempts(authentication.getName());
 			return auth;
 		} catch (BadCredentialsException e) {
@@ -64,7 +67,8 @@ public class StandardAuthenticationProvider implements AuthenticationProvider {
 			throw e;
 
 		} catch (LockedException e) {
-			String error = "User account is locked for " + authProperties.getAccountLockedPeriod() + " minutes";
+			String error =
+					"User account is locked for " + authProperties.getAccountLockedPeriod() + " minutes";
 			throw new LockedException(error, e);
 		} catch (PendingApprovalException e) {
 			throw new PendingApprovalException(e.getMessage());
@@ -72,8 +76,7 @@ public class StandardAuthenticationProvider implements AuthenticationProvider {
 	}
 
 	/**
-	 * @return true if this AuthenticationProvider supports theindicated
-	 *         Authentication object.
+	 * @return true if this AuthenticationProvider supports theindicated Authentication object.
 	 */
 	@Override
 	public boolean supports(Class<?> authentication) {

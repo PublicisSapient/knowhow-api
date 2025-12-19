@@ -10,7 +10,11 @@ import io.mongock.api.annotations.RollbackExecution;
 /**
  * @author kunkambl
  */
-@ChangeUnit(id = "fixathon_delete_jira_last_sync", order = "11103", author = "kunkambl", systemVersion = "11.1.0")
+@ChangeUnit(
+		id = "fixathon_delete_jira_last_sync",
+		order = "11103",
+		author = "kunkambl",
+		systemVersion = "11.1.0")
 public class FixathonCleanJiraLastSync {
 
 	private final MongoTemplate mongoTemplate;
@@ -21,7 +25,9 @@ public class FixathonCleanJiraLastSync {
 
 	@Execution
 	public void execution() {
-		mongoTemplate.getCollection("processor_execution_trace_log").deleteMany(new Document("processorName", "Jira"));
+		mongoTemplate
+				.getCollection("processor_execution_trace_log")
+				.deleteMany(new Document("processorName", "Jira"));
 	}
 
 	@RollbackExecution

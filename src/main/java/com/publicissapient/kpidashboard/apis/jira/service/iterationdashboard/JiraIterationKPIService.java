@@ -38,32 +38,34 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
+import lombok.Getter;
+
 /**
- * All Jira NonTrend KPIs service have to implement this class
- * {@link NonTrendKPIService}
+ * All Jira NonTrend KPIs service have to implement this class {@link NonTrendKPIService}
  *
  * @author purgupta2
  */
+@Getter
 public abstract class JiraIterationKPIService implements NonTrendKPIService {
 
-	@Autowired
-	private CacheService cacheService;
-
-	@Autowired
-	private JiraIterationServiceR jiraIterationServiceR;
+	@Autowired private CacheService cacheService;
+	@Autowired private JiraIterationServiceR jiraIterationServiceR;
 
 	/**
-	 * Returns API Request tracker Id to be used for logging/debugging and using it
-	 * for maintaining any sort of cache.
+	 * Returns API Request tracker Id to be used for logging/debugging and using it for maintaining
+	 * any sort of cache.
 	 *
 	 * @return Scrum Request Tracker Id
 	 */
 	public String getRequestTrackerId() {
-		return cacheService.getFromApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name());
+		return cacheService.getFromApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name());
 	}
 
-	public void populateIterationStatusData(List<IterationKpiModalValue> overAllmodalValues,
-			List<IterationKpiModalValue> modalValues, IterationStatus iterationStatus) {
+	public void populateIterationStatusData(
+			List<IterationKpiModalValue> overAllmodalValues,
+			List<IterationKpiModalValue> modalValues,
+			IterationStatus iterationStatus) {
 		IterationKpiModalValue iterationKpiModalVal = new IterationKpiModalValue();
 		iterationKpiModalVal.setIssueId(iterationStatus.getIssueId());
 		iterationKpiModalVal.setIssueURL(iterationStatus.getUrl());
@@ -74,8 +76,7 @@ public abstract class JiraIterationKPIService implements NonTrendKPIService {
 		iterationKpiModalVal.setDueDate(DateUtil.convertToGenericString(iterationStatus.getDueDate()));
 		if (iterationStatus.getRemainingEstimateMinutes() != null)
 			iterationKpiModalVal.setRemainingTime(iterationStatus.getRemainingEstimateMinutes());
-		else
-			iterationKpiModalVal.setRemainingTime(0);
+		else iterationKpiModalVal.setRemainingTime(0);
 		modalValues.add(iterationKpiModalVal);
 		overAllmodalValues.add(iterationKpiModalVal);
 	}
@@ -83,8 +84,7 @@ public abstract class JiraIterationKPIService implements NonTrendKPIService {
 	/**
 	 * to maintain values upto 2 places of decimal
 	 *
-	 * @param value
-	 *          value
+	 * @param value value
 	 * @return double
 	 */
 	public double roundingOff(double value) {
@@ -94,30 +94,43 @@ public abstract class JiraIterationKPIService implements NonTrendKPIService {
 	/**
 	 * For Assigning IterationKPiData
 	 *
-	 * @param label
-	 *          label
-	 * @param fieldMapping
-	 *          fieldMapping
-	 * @param issueCount
-	 *          issueCount
-	 * @param storyPoint
-	 *          storyPoint
-	 * @param originalEstimate
-	 *          originalEstimate
-	 * @param modalvalue
-	 *          modalvalue
+	 * @param label label
+	 * @param fieldMapping fieldMapping
+	 * @param issueCount issueCount
+	 * @param storyPoint storyPoint
+	 * @param originalEstimate originalEstimate
+	 * @param modalvalue modalvalue
 	 * @return IterationKpiData
 	 */
-	public IterationKpiData createIterationKpiData(String label, FieldMapping fieldMapping, Integer issueCount,
-			Double storyPoint, Double originalEstimate, List<IterationKpiModalValue> modalvalue) {
+	public IterationKpiData createIterationKpiData(
+			String label,
+			FieldMapping fieldMapping,
+			Integer issueCount,
+			Double storyPoint,
+			Double originalEstimate,
+			List<IterationKpiModalValue> modalvalue) {
 		IterationKpiData iterationKpiData;
-		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria()) &&
-				fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
-			iterationKpiData = new IterationKpiData(label, Double.valueOf(issueCount), roundingOff(storyPoint), null, "",
-					CommonConstant.SP, modalvalue);
+		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
+				&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
+			iterationKpiData =
+					new IterationKpiData(
+							label,
+							Double.valueOf(issueCount),
+							roundingOff(storyPoint),
+							null,
+							"",
+							CommonConstant.SP,
+							modalvalue);
 		} else {
-			iterationKpiData = new IterationKpiData(label, Double.valueOf(issueCount), roundingOff(originalEstimate), null,
-					"", CommonConstant.DAY, modalvalue);
+			iterationKpiData =
+					new IterationKpiData(
+							label,
+							Double.valueOf(issueCount),
+							roundingOff(originalEstimate),
+							null,
+							"",
+							CommonConstant.DAY,
+							modalvalue);
 		}
 		return iterationKpiData;
 	}
@@ -134,10 +147,12 @@ public abstract class JiraIterationKPIService implements NonTrendKPIService {
 
 	public List<JiraIssue> getJiraIssuesFromBaseClass(List<String> numbersList) {
 		return jiraIterationServiceR.getJiraIssuesForCurrentSprint().stream()
-				.filter(jiraIssue -> numbersList.contains(jiraIssue.getNumber())).collect(Collectors.toList());
+				.filter(jiraIssue -> numbersList.contains(jiraIssue.getNumber()))
+				.collect(Collectors.toList());
 	}
 
-	public List<JiraIssueCustomHistory> getJiraIssuesCustomHistoryFromBaseClass(List<String> numbersList) {
+	public List<JiraIssueCustomHistory> getJiraIssuesCustomHistoryFromBaseClass(
+			List<String> numbersList) {
 		return jiraIterationServiceR.getJiraIssuesCustomHistoryForCurrentSprint().stream()
 				.filter(jiraIssueCustomHistory -> numbersList.contains(jiraIssueCustomHistory.getStoryID()))
 				.collect(Collectors.toList());

@@ -61,10 +61,8 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
 @RunWith(MockitoJUnitRunner.class)
 public class KpiDataHelperTest {
 
-	@Mock
-	FilterHelperService flterHelperService;
-	@Mock
-	private CacheService cacheService;
+	@Mock FilterHelperService flterHelperService;
+	@Mock private CacheService cacheService;
 	private Map<String, AdditionalFilterCategory> additonalFilterMap;
 	private List<SprintWiseStory> sprintWiseStoryList;
 	private List<JiraIssue> stories;
@@ -73,30 +71,38 @@ public class KpiDataHelperTest {
 
 	@Before
 	public void setUp() {
-		AdditionalFilterCategoryFactory additionalFilterCategoryFactory = AdditionalFilterCategoryFactory.newInstance();
-		List<AdditionalFilterCategory> additionalFilterCategoryList = additionalFilterCategoryFactory
-				.getAdditionalFilterCategoryList();
-		additonalFilterMap = additionalFilterCategoryList.stream()
-				.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
+		AdditionalFilterCategoryFactory additionalFilterCategoryFactory =
+				AdditionalFilterCategoryFactory.newInstance();
+		List<AdditionalFilterCategory> additionalFilterCategoryList =
+				additionalFilterCategoryFactory.getAdditionalFilterCategoryList();
+		additonalFilterMap =
+				additionalFilterCategoryList.stream()
+						.collect(Collectors.toMap(AdditionalFilterCategory::getFilterCategoryId, x -> x));
 		when(flterHelperService.getAdditionalFilterHierarchyLevel()).thenReturn(additonalFilterMap);
 
-		SprintWiseStoryDataFactory sprintWiseStoryDataFactory = SprintWiseStoryDataFactory.newInstance();
+		SprintWiseStoryDataFactory sprintWiseStoryDataFactory =
+				SprintWiseStoryDataFactory.newInstance();
 		sprintWiseStoryList = sprintWiseStoryDataFactory.getSprintWiseStories();
 
-		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory
-				.newInstance("/json/default/iteration/jira_issues_new_structure.json");
+		JiraIssueDataFactory jiraIssueDataFactory =
+				JiraIssueDataFactory.newInstance("/json/default/iteration/jira_issues_new_structure.json");
 		stories = jiraIssueDataFactory.getStories();
-		List<String> storyNumber = stories.stream().map(issue -> issue.getNumber()).collect(Collectors.toList());
+		List<String> storyNumber =
+				stories.stream().map(issue -> issue.getNumber()).collect(Collectors.toList());
 
-		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory = JiraIssueHistoryDataFactory
-				.newInstance("/json/default/iteration/jira_issue_custom_history_new_structure.json");
+		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
+				JiraIssueHistoryDataFactory.newInstance(
+						"/json/default/iteration/jira_issue_custom_history_new_structure.json");
 		jiraIssueCustomHistory = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
-		this.jiraIssueCustomHistory = this.jiraIssueCustomHistory.stream()
-				.filter(jiraIssueCustomHistory1 -> storyNumber.contains(jiraIssueCustomHistory1.getStoryID()))
-				.collect(Collectors.toList());
+		this.jiraIssueCustomHistory =
+				this.jiraIssueCustomHistory.stream()
+						.filter(
+								jiraIssueCustomHistory1 ->
+										storyNumber.contains(jiraIssueCustomHistory1.getStoryID()))
+						.collect(Collectors.toList());
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/default/scrum_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 	}
 
@@ -112,8 +118,9 @@ public class KpiDataHelperTest {
 
 		Map<String, List<String>> mapOfFilters = new HashMap<>();
 
-		String actual = KpiDataHelper.createAdditionalFilterMap(kpiRequest, mapOfFilters, Constant.SCRUM, "",
-				flterHelperService);
+		String actual =
+				KpiDataHelper.createAdditionalFilterMap(
+						kpiRequest, mapOfFilters, Constant.SCRUM, flterHelperService);
 		assertEquals("SQD", actual);
 	}
 
@@ -129,58 +136,79 @@ public class KpiDataHelperTest {
 
 		Map<String, Object> mapOfFilters = new HashMap<>();
 
-		KpiDataHelper.createAdditionalFilterMapForCapacity(kpiRequest, mapOfFilters, flterHelperService);
+		KpiDataHelper.createAdditionalFilterMapForCapacity(
+				kpiRequest, mapOfFilters, flterHelperService);
 		assertEquals(2, mapOfFilters.size());
 	}
 
 	@Test
 	public void testCreateSubCategoryWiseMap() {
-		Map<Pair<String, String>, Map<String, List<String>>> subCategoryWiseMap = KpiDataHelper
-				.createSubCategoryWiseMap(Constant.SPRINT, sprintWiseStoryList, "");
+		Map<Pair<String, String>, Map<String, List<String>>> subCategoryWiseMap =
+				KpiDataHelper.createSubCategoryWiseMap(Constant.SPRINT, sprintWiseStoryList);
 		assertEquals(5, subCategoryWiseMap.size());
 
-		Map<Pair<String, String>, Map<String, List<String>>> subCategoryWiseMapNegative = KpiDataHelper
-				.createSubCategoryWiseMap(Constant.SCRUM, sprintWiseStoryList, "");
+		Map<Pair<String, String>, Map<String, List<String>>> subCategoryWiseMapNegative =
+				KpiDataHelper.createSubCategoryWiseMap(Constant.SCRUM, sprintWiseStoryList);
 		assertEquals(5, subCategoryWiseMapNegative.size());
 	}
 
 	@Test
 	public void testProcessSprintIssues_NoSprintMatch() {
-		Map<String, List<JiraHistoryChangeLog>> issueKeyWiseHistoryMap = jiraIssueCustomHistory.stream()
-				.collect(Collectors.toMap(JiraIssueCustomHistory::getStoryID, JiraIssueCustomHistory::getSprintUpdationLog,
-						(existingValue, newValue) -> newValue, LinkedHashMap::new));
-		Map<String, String> stringMap = KpiDataHelper.processSprintIssues(stories, "sprint1", issueKeyWiseHistoryMap,
-				CommonConstant.ADDED);
+		Map<String, List<JiraHistoryChangeLog>> issueKeyWiseHistoryMap =
+				jiraIssueCustomHistory.stream()
+						.collect(
+								Collectors.toMap(
+										JiraIssueCustomHistory::getStoryID,
+										JiraIssueCustomHistory::getSprintUpdationLog,
+										(existingValue, newValue) -> newValue,
+										LinkedHashMap::new));
+		Map<String, String> stringMap =
+				KpiDataHelper.processSprintIssues(
+						stories, "sprint1", issueKeyWiseHistoryMap, CommonConstant.ADDED);
 		assertEquals(0, stringMap.size());
 	}
 
 	@Test
 	public void testProcessSprintIssues_Added() {
 
-		Map<String, List<JiraHistoryChangeLog>> issueKeyWiseHistoryMap = jiraIssueCustomHistory.stream()
-				.collect(Collectors.toMap(JiraIssueCustomHistory::getStoryID, JiraIssueCustomHistory::getSprintUpdationLog,
-						(existingValue, newValue) -> newValue, LinkedHashMap::new));
+		Map<String, List<JiraHistoryChangeLog>> issueKeyWiseHistoryMap =
+				jiraIssueCustomHistory.stream()
+						.collect(
+								Collectors.toMap(
+										JiraIssueCustomHistory::getStoryID,
+										JiraIssueCustomHistory::getSprintUpdationLog,
+										(existingValue, newValue) -> newValue,
+										LinkedHashMap::new));
 
-		issueKeyWiseHistoryMap.forEach((history, list) -> {
-			list.forEach(a -> a.setChangedTo("sprint1"));
-		});
-		Map<String, String> stringMap = KpiDataHelper.processSprintIssues(stories, "sprint1", issueKeyWiseHistoryMap,
-				CommonConstant.ADDED);
+		issueKeyWiseHistoryMap.forEach(
+				(history, list) -> {
+					list.forEach(a -> a.setChangedTo("sprint1"));
+				});
+		Map<String, String> stringMap =
+				KpiDataHelper.processSprintIssues(
+						stories, "sprint1", issueKeyWiseHistoryMap, CommonConstant.ADDED);
 		assertEquals(20, stringMap.size());
 	}
 
 	@Test
 	public void testProcessSprintIssues_Removed() {
 
-		Map<String, List<JiraHistoryChangeLog>> issueKeyWiseHistoryMap = jiraIssueCustomHistory.stream()
-				.collect(Collectors.toMap(JiraIssueCustomHistory::getStoryID, JiraIssueCustomHistory::getSprintUpdationLog,
-						(existingValue, newValue) -> newValue, LinkedHashMap::new));
+		Map<String, List<JiraHistoryChangeLog>> issueKeyWiseHistoryMap =
+				jiraIssueCustomHistory.stream()
+						.collect(
+								Collectors.toMap(
+										JiraIssueCustomHistory::getStoryID,
+										JiraIssueCustomHistory::getSprintUpdationLog,
+										(existingValue, newValue) -> newValue,
+										LinkedHashMap::new));
 
-		issueKeyWiseHistoryMap.forEach((history, list) -> {
-			list.forEach(a -> a.setChangedFrom("sprint1"));
-		});
-		Map<String, String> stringMap = KpiDataHelper.processSprintIssues(stories, "sprint1", issueKeyWiseHistoryMap,
-				CommonConstant.REMOVED);
+		issueKeyWiseHistoryMap.forEach(
+				(history, list) -> {
+					list.forEach(a -> a.setChangedFrom("sprint1"));
+				});
+		Map<String, String> stringMap =
+				KpiDataHelper.processSprintIssues(
+						stories, "sprint1", issueKeyWiseHistoryMap, CommonConstant.REMOVED);
 		assertEquals(20, stringMap.size());
 	}
 
@@ -208,7 +236,7 @@ public class KpiDataHelperTest {
 		kpiElement.setChartType("gaugeChart");
 		kpiList.add(kpiElement);
 		kpiRequest.setLevel(2);
-		kpiRequest.setIds(new String[]{"Alpha_Tower_Id"}); // This is
+		kpiRequest.setIds(new String[] {"Alpha_Tower_Id"}); // This is
 		// immaterial as
 		// all the sprint
 		// in Account

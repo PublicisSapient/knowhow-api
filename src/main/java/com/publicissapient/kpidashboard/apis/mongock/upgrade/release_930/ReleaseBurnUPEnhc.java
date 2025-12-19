@@ -51,10 +51,15 @@ public class ReleaseBurnUPEnhc {
 
 	public void addFieldToFieldMappingStructure() {
 
-		Document thresholdValueMapping = new Document(FIELD_NAME, "releaseListKPI150")
-				.append("fieldLabel", "Select desired releases to define team's velocity").append("fieldType", "chips")
-				.append("fieldCategory", "releases").append("section", "Custom Fields Mapping")
-				.append("tooltip", new Document(DEFINITION, "Select releases to define team velocity as per ticket"));
+		Document thresholdValueMapping =
+				new Document(FIELD_NAME, "releaseListKPI150")
+						.append("fieldLabel", "Select desired releases to define team's velocity")
+						.append("fieldType", "chips")
+						.append("fieldCategory", "releases")
+						.append("section", "Custom Fields Mapping")
+						.append(
+								"tooltip",
+								new Document(DEFINITION, "Select releases to define team velocity as per ticket"));
 
 		mongoTemplate.getCollection("field_mapping_structure").insertOne(thresholdValueMapping);
 	}
@@ -65,7 +70,9 @@ public class ReleaseBurnUPEnhc {
 	}
 
 	public void deleteFieldMappingStructure() {
-		MongoCollection<Document> fieldMappingStructure = mongoTemplate.getCollection("field_mapping_structure");
-		fieldMappingStructure.deleteMany(new Document(FIELD_NAME, new Document("$in", Arrays.asList("releaseListKPI150"))));
+		MongoCollection<Document> fieldMappingStructure =
+				mongoTemplate.getCollection("field_mapping_structure");
+		fieldMappingStructure.deleteMany(
+				new Document(FIELD_NAME, new Document("$in", Arrays.asList("releaseListKPI150"))));
 	}
 }
