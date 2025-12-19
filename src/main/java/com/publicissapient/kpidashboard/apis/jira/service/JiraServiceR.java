@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -47,10 +47,6 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueReleaseStatusRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,11 +67,6 @@ public class JiraServiceR {
 
 	@Autowired private CacheService cacheService;
 
-	@Autowired private SprintRepository sprintRepository;
-	@Autowired private JiraIssueRepository jiraIssueRepository;
-	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	@Autowired private JiraIssueReleaseStatusRepository jiraIssueReleaseStatusRepository;
-	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private CustomApiConfig customApiConfig;
 
 	private boolean referFromProjectCache = true;
@@ -119,8 +110,13 @@ public class JiraServiceR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
-				if (CollectionUtils.isNotEmpty(cachedData) && referFromProjectCache) return cachedData;
+				//skip using cache when the request is made with an api key
+				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+					List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
+					if (CollectionUtils.isNotEmpty(cachedData) && referFromProjectCache) {
+						return cachedData;
+					}
+				}
 
 				TreeAggregatorDetail treeAggregatorDetail =
 						KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
