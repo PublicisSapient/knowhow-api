@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +21,10 @@ package com.publicissapient.kpidashboard.apis.projectconfig.basic.rest;
 import java.util.List;
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +42,6 @@ import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.abac.ContextAwarePolicyEnforcement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
-import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.model.ProjectConfigResponse;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.model.HierarchyResponseDTO;
@@ -52,7 +52,6 @@ import com.publicissapient.kpidashboard.common.model.application.dto.HierarchyVa
 import com.publicissapient.kpidashboard.common.model.application.dto.ProjectBasicConfigDTO;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +63,8 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/basicconfigs")
 @Slf4j
+@AllArgsConstructor
+@Tag(name = "Project Basic Config API", description = "APIs for Project Basic Configurations")
 public class ProjectBasicConfigController {
 
 	public static final String ADDING_PROJECT_CONFIGURATIONS = "Adding project configurations: {}";
@@ -71,13 +72,11 @@ public class ProjectBasicConfigController {
 			"Updating project configurations: {}";
 	private static final String AUTH_RESPONSE_HEADER = "X-Authentication-Token";
 	public static final String FETCHED_SUCCESSFULLY = "Fetched successfully";
-	@Autowired HttpServletRequest contextreq;
-	@Autowired UserInfoService userInfoService;
-	@Autowired private ProjectBasicConfigService projectBasicConfigService;
-	@Autowired private ContextAwarePolicyEnforcement policy;
-	@Autowired private ProjectAccessManager projectAccessManager;
 
-	@Autowired private AuthenticationService authenticationService;
+	private final ProjectBasicConfigService projectBasicConfigService;
+	private final ContextAwarePolicyEnforcement policy;
+	private final ProjectAccessManager projectAccessManager;
+	private final AuthenticationService authenticationService;
 
 	/**
 	 * Returns the list of project's basic configuration.
@@ -136,8 +135,8 @@ public class ProjectBasicConfigController {
 	}
 
 	/**
-	 * @param projectBasicConfigDTO
-	 * @param response
+	 * @param projectBasicConfigDTO projectBasicConfigDTO
+	 * @param response httpServletResponse
 	 * @return ResponseEntity
 	 */
 	@PostMapping
@@ -178,9 +177,9 @@ public class ProjectBasicConfigController {
 	}
 
 	/**
-	 * @param basicConfigId
-	 * @param projectBasicConfigDTO
-	 * @param response
+	 * @param basicConfigId id
+	 * @param projectBasicConfigDTO projectBasicConfigDTO
+	 * @param response httpServletResponse
 	 * @return ResponseEntity
 	 */
 	@PutMapping(value = "/{id}")

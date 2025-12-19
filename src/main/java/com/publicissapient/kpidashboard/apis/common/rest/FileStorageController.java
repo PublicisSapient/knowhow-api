@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.common.rest;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.FileStorageService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.model.BaseResponse;
 import com.publicissapient.kpidashboard.apis.model.Logo;
 import com.publicissapient.kpidashboard.apis.util.ValidExtension;
@@ -44,21 +44,16 @@ import lombok.extern.slf4j.Slf4j;
 @Validated
 @RestController
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "File Storage API", description = "APIs for File Storage Management")
 public class FileStorageController {
 
 	private final FileStorageService fileStorageService;
 
-	@Autowired public CustomApiConfig customApiConfig;
-
-	@Autowired
-	public FileStorageController(FileStorageService fileStorageService) {
-		this.fileStorageService = fileStorageService;
-	}
-
 	/**
 	 * Uploads image file as logo
 	 *
-	 * @param file
+	 * @param file the file to upload
 	 * @return BaseResponse with <tt>message</tt> and <tt>success status(true or false)</tt> of upload
 	 */
 	@PostMapping("/file/upload")
@@ -70,7 +65,7 @@ public class FileStorageController {
 	/**
 	 * Uploads image file as logo
 	 *
-	 * @param file
+	 * @param file the file to upload
 	 * @return BaseResponse with <tt>message</tt> and <tt>success status(true or false)</tt> of upload
 	 */
 	@PostMapping("/file/upload/{type}")

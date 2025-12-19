@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,10 +20,11 @@ package com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.re
 
 import javax.validation.Valid;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,11 +45,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @RestController
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "Project Tool Config API", description = "APIs for Project Tool Configurations")
 public class ProjectToolConfigController {
 
-	@Autowired private ProjectToolConfigService toolService;
+	private final ProjectToolConfigService toolService;
 
-	@Autowired private ProjectAccessUtil projectAccessUtil;
+	private final ProjectAccessUtil projectAccessUtil;
 
 	/** Fetch all projectToolConfig */
 	@GetMapping(value = "/basicconfigs/{basicConfigId}/tools")
@@ -68,7 +71,7 @@ public class ProjectToolConfigController {
 					new ServiceResponse(
 							true, "list of tools", toolService.getProjectToolConfigs(basicConfigId));
 		} else {
-			log.info("Fetching toolType ", toolType);
+			log.info("Fetching toolType {}", toolType);
 			response =
 					new ServiceResponse(
 							true, "list of tools", toolService.getProjectToolConfigs(basicConfigId, toolType));
@@ -108,15 +111,14 @@ public class ProjectToolConfigController {
 	 * @return responseEntity with data,message and status
 	 */
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'UPDATE_PROJECT_TOOL')")
-	@RequestMapping(
+	@PutMapping(
 			value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}",
-			method = RequestMethod.PUT,
 			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> modifyConnectionById(
 			@PathVariable String basicProjectConfigId,
 			@PathVariable String projectToolId,
 			@Valid @RequestBody ProjectToolConfigDTO projectToolDTO) {
-		log.info("projectTool updated", projectToolDTO.getProjectId());
+		log.info("projectTool updated {}", projectToolDTO.getProjectId());
 		final ModelMapper modelMapper = new ModelMapper();
 		final ProjectToolConfig projectToolConfig =
 				modelMapper.map(projectToolDTO, ProjectToolConfig.class);
@@ -127,14 +129,13 @@ public class ProjectToolConfigController {
 	}
 
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'DELETE_PROJECT_TOOL')")
-	@RequestMapping(
-			value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}",
-			method = RequestMethod.DELETE)
+	@DeleteMapping(
+			value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}")
 	public ResponseEntity<ServiceResponse> deleteTool(
 			@PathVariable String basicProjectConfigId, @PathVariable String projectToolId) {
 
 		boolean isDeleted = toolService.deleteTool(basicProjectConfigId, projectToolId);
-		ServiceResponse serviceResponse = null;
+		ServiceResponse serviceResponse;
 		if (isDeleted) {
 			serviceResponse = new ServiceResponse(true, "Tool deleted successfully", null);
 		} else {
@@ -150,7 +151,7 @@ public class ProjectToolConfigController {
 			@PathVariable String basicProjectConfigId, @PathVariable String projectToolId) {
 
 		boolean isDeleted = toolService.cleanToolData(basicProjectConfigId, projectToolId);
-		ServiceResponse serviceResponse = null;
+		ServiceResponse serviceResponse;
 		if (isDeleted) {
 			serviceResponse = new ServiceResponse(true, "Tool Data deleted successfully", null);
 		} else {
