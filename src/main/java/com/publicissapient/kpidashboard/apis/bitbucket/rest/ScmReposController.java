@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.rest;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.bson.types.ObjectId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/scm/config")
+@Tag(name = "SCM Repositories Controller", description = "APIs for SCM Repositories Management")
 public class ScmReposController {
 
 	private final ScmRepositoryService scmRepositoryService;

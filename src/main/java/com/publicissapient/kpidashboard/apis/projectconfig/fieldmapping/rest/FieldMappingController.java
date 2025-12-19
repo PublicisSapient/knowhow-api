@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,10 +25,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -56,14 +57,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @RestController
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "Field Mapping Controller", description = "APIs for Field Mapping Management")
 public class FieldMappingController {
 
 	private static final String UPDATE_PROJECT = "UPDATE_PROJECT";
-	@Autowired private FieldMappingService fieldMappingService;
+	private final FieldMappingService fieldMappingService;
 
-	@Autowired private ContextAwarePolicyEnforcement policy;
+	private final ContextAwarePolicyEnforcement policy;
 
-	@Autowired private ConfigHelperService configHelperService;
+	private final ConfigHelperService configHelperService;
 
 	/*
 	 * save import functionality
@@ -223,7 +226,7 @@ public class FieldMappingController {
 			ProjectBasicConfig projectBasicConfig =
 					fieldMappingService.getBasicProjectConfigById(
 							projectToolConfig.getBasicProjectConfigId());
-			policy.checkPermission(projectBasicConfig, "UPDATE_PROJECT");
+			policy.checkPermission(projectBasicConfig, UPDATE_PROJECT);
 
 			// validating kpicode
 			KPICode kpi = KPICode.getKPI(kpiId);
