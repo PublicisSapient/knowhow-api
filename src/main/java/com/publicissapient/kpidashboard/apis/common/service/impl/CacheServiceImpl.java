@@ -35,7 +35,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.support.SimpleValueWrapper;
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 import com.publicissapient.kpidashboard.apis.ai.service.prompt.PromptDetailsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -49,6 +48,7 @@ import com.publicissapient.kpidashboard.common.model.application.AdditionalFilte
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 import com.publicissapient.kpidashboard.common.repository.application.AdditionalFilterCategoryRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
@@ -74,7 +74,7 @@ public class CacheServiceImpl implements CacheService {
 
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
-    @Autowired private ProjectHierarchyService projectHierarchyService;
+	@Autowired private ProjectHierarchyService projectHierarchyService;
 	@Autowired private PromptDetailsService promptDetailsService;
 
 	List<AccountHierarchyData> accountHierarchyDataList;

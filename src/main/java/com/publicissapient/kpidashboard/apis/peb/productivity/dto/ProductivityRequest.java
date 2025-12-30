@@ -16,6 +16,4 @@
 
 package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-public record ProductivityRequest(String levelName, String parentNodeId) {
-
-}
+public record ProductivityRequest(String levelName, String parentNodeId) {}

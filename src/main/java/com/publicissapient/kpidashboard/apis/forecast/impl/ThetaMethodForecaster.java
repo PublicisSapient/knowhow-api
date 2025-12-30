@@ -32,12 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Theta Method forecaster for time series forecasting.
  *
- * This implementation follows the simplified practical Theta Method by
- * combining:
- * 1) Simple Exponential Smoothing (SES)
- * 2) Linear trend projection
+ * <p>This implementation follows the simplified practical Theta Method by combining: 1) Simple
+ * Exponential Smoothing (SES) 2) Linear trend projection
  *
- * and averaging their results.
+ * <p>and averaging their results.
  *
  * <h3>Algorithm:</h3>
  *
@@ -79,14 +77,13 @@ import lombok.extern.slf4j.Slf4j;
  * </pre>
  *
  * <h3>Characteristics:</h3>
+ *
  * <ul>
- *   <li>Works well with small datasets</li>
- *   <li>Captures both short-term smoothing and long-term trend</li>
- *   <li>Open-source friendly and easy to implement in Java</li>
+ *   <li>Works well with small datasets
+ *   <li>Captures both short-term smoothing and long-term trend
+ *   <li>Open-source friendly and easy to implement in Java
  * </ul>
  */
-
-
 @Slf4j
 @Service
 public class ThetaMethodForecaster extends AbstractForecastService {
@@ -170,7 +167,6 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 		return finalForecast;
 	}
 
-
 	/**
 	 * Extracts numerical values from DataCount objects.
 	 *
@@ -217,6 +213,7 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 	 * Validates if forecasting is possible with given historical data.
 	 *
 	 * <p>Checks for:
+	 *
 	 * <ul>
 	 *   <li>Non-null and non-empty historical data
 	 *   <li>Minimum required data points (> 2)

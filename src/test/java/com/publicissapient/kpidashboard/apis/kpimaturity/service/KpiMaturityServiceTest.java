@@ -59,17 +59,13 @@ import jakarta.ws.rs.ForbiddenException;
 @ExtendWith(MockitoExtension.class)
 class KpiMaturityServiceTest {
 
-	@Mock
-	private KpiMaturityCustomRepository kpiMaturityCustomRepository;
+	@Mock private KpiMaturityCustomRepository kpiMaturityCustomRepository;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
-	@Mock
-	private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	@Mock private AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
-	@InjectMocks
-	private KpiMaturityService kpiMaturityService;
+	@InjectMocks private KpiMaturityService kpiMaturityService;
 
 	private KpiMaturityRequest testKpiMaturityRequest;
 	private HierarchyLevel testRequestedLevel;
@@ -89,7 +85,8 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithScrumMethodology_Then_ReturnsScrumMaturityResponse() {
 		// Arrange
-		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
+		Map<String, HierarchyLevel> hierarchyLevels =
+				Map.of("acc", testRequestedLevel, "project", testProjectLevel);
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
 				.thenReturn(Optional.of(testRequestedLevel));
@@ -115,8 +112,8 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithNullRequest_Then_ThrowsBadRequestException() {
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiMaturityService.getKpiMaturity(null));
+		BadRequestException exception =
+				assertThrows(BadRequestException.class, () -> kpiMaturityService.getKpiMaturity(null));
 
 		assertEquals("Received null KPI maturity request", exception.getMessage());
 	}
@@ -124,12 +121,16 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithEmptyLevelName_Then_ThrowsBadRequestException() {
 		// Arrange
-		KpiMaturityRequest invalidRequest = KpiMaturityRequest.builder().levelName("")
-				.deliveryMethodology(ProjectDeliveryMethodology.SCRUM).build();
+		KpiMaturityRequest invalidRequest =
+				KpiMaturityRequest.builder()
+						.levelName("")
+						.deliveryMethodology(ProjectDeliveryMethodology.SCRUM)
+						.build();
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiMaturityService.getKpiMaturity(invalidRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class, () -> kpiMaturityService.getKpiMaturity(invalidRequest));
 
 		assertEquals("Level name must not be empty", exception.getMessage());
 	}
@@ -137,12 +138,13 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithNullDeliveryMethodology_Then_ThrowsBadRequestException() {
 		// Arrange
-		KpiMaturityRequest invalidRequest = KpiMaturityRequest.builder().levelName("Account").deliveryMethodology(null)
-				.build();
+		KpiMaturityRequest invalidRequest =
+				KpiMaturityRequest.builder().levelName("Account").deliveryMethodology(null).build();
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiMaturityService.getKpiMaturity(invalidRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class, () -> kpiMaturityService.getKpiMaturity(invalidRequest));
 
 		assertEquals("Delivery methodology must not be null", exception.getMessage());
 	}
@@ -150,7 +152,8 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_GetKpiMaturityCalledWithNoUserAccess_Then_ThrowsForbiddenException() {
 		// Arrange
-		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
+		Map<String, HierarchyLevel> hierarchyLevels =
+				Map.of("acc", testRequestedLevel, "project", testProjectLevel);
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
 				.thenReturn(Optional.of(testRequestedLevel));
@@ -160,16 +163,21 @@ class KpiMaturityServiceTest {
 				.thenReturn(Collections.emptySet());
 
 		// Act & Assert
-		ForbiddenException exception = assertThrows(ForbiddenException.class,
-				() -> kpiMaturityService.getKpiMaturity(testKpiMaturityRequest));
+		ForbiddenException exception =
+				assertThrows(
+						ForbiddenException.class,
+						() -> kpiMaturityService.getKpiMaturity(testKpiMaturityRequest));
 
-		assertEquals("Current user doesn't have access to any organization hierarchy data", exception.getMessage());
+		assertEquals(
+				"Current user doesn't have access to any organization hierarchy data",
+				exception.getMessage());
 	}
 
 	@Test
 	void when_GetKpiMaturityCalledWithNoKpiMaturityData_Then_ReturnsEmptyResponse() {
 		// Arrange
-		Map<String, HierarchyLevel> hierarchyLevels = Map.of("acc", testRequestedLevel, "project", testProjectLevel);
+		Map<String, HierarchyLevel> hierarchyLevels =
+				Map.of("acc", testRequestedLevel, "project", testProjectLevel);
 		when(filterHelperService.getHierarchyLevelMap(false)).thenReturn(hierarchyLevels);
 		when(accountHierarchyServiceImpl.getHierarchyLevelByLevelName("Account"))
 				.thenReturn(Optional.of(testRequestedLevel));
@@ -190,13 +198,17 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_ComputeBoardMaturityMetricsCalledWithValidScores_Then_ReturnsCorrectMetrics() {
 		// Arrange
-		Map<String, List<Double>> maturityScoresGroupedByCategory = Map.of("speed", List.of(3.0, 4.0, 5.0), "quality",
-				List.of(2.0, 3.0));
+		Map<String, List<Double>> maturityScoresGroupedByCategory =
+				Map.of("speed", List.of(3.0, 4.0, 5.0), "quality", List.of(2.0, 3.0));
 		int numberOfProjects = 2;
 
 		// Act
-		Map<String, String> result = ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
-				"computeBoardMaturityMetrics", maturityScoresGroupedByCategory, numberOfProjects);
+		Map<String, String> result =
+				ReflectionTestUtils.invokeMethod(
+						KpiMaturityService.class,
+						"computeBoardMaturityMetrics",
+						maturityScoresGroupedByCategory,
+						numberOfProjects);
 
 		// Assert
 		assertNotNull(result);
@@ -207,18 +219,21 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_DetermineHealthByEfficiencyPercentageCalledWithHighPercentage_Then_ReturnsHealthy() {
 		// Act
-		String result = ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
-				"determineHealthByEfficiencyPercentage", 85.0);
+		String result =
+				ReflectionTestUtils.invokeMethod(
+						KpiMaturityService.class, "determineHealthByEfficiencyPercentage", 85.0);
 
 		// Assert
 		assertEquals("Healthy", result);
 	}
 
 	@Test
-	void when_DetermineHealthByEfficiencyPercentageCalledWithModeratePercentage_Then_ReturnsModerate() {
+	void
+			when_DetermineHealthByEfficiencyPercentageCalledWithModeratePercentage_Then_ReturnsModerate() {
 		// Act
-		String result = ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
-				"determineHealthByEfficiencyPercentage", 65.0);
+		String result =
+				ReflectionTestUtils.invokeMethod(
+						KpiMaturityService.class, "determineHealthByEfficiencyPercentage", 65.0);
 
 		// Assert
 		assertEquals("Moderate", result);
@@ -227,8 +242,10 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_DetermineHealthByEfficiencyPercentageCalledWithLowPercentage_Then_ReturnsUnhealthy() {
 		// Act
-		String result = (String) ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
-				"determineHealthByEfficiencyPercentage", 30.0);
+		String result =
+				(String)
+						ReflectionTestUtils.invokeMethod(
+								KpiMaturityService.class, "determineHealthByEfficiencyPercentage", 30.0);
 
 		// Assert
 		assertEquals("Unhealthy", result);
@@ -237,13 +254,21 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_MultipleLevelsAreCorrespondingToLevelNameCalledWithDuplicates_Then_ReturnsTrue() {
 		// Arrange
-		Map<String, HierarchyLevel> hierarchyLevels = Map.of("level1",
-				HierarchyLevel.builder().hierarchyLevelName("Account").build(), "level2",
-				HierarchyLevel.builder().hierarchyLevelName("Account").build());
+		Map<String, HierarchyLevel> hierarchyLevels =
+				Map.of(
+						"level1",
+						HierarchyLevel.builder().hierarchyLevelName("Account").build(),
+						"level2",
+						HierarchyLevel.builder().hierarchyLevelName("Account").build());
 
 		// Act
-		boolean result = Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
-				"multipleLevelsAreCorrespondingToLevelName", "Account", hierarchyLevels));
+		boolean result =
+				Boolean.TRUE.equals(
+						ReflectionTestUtils.invokeMethod(
+								KpiMaturityService.class,
+								"multipleLevelsAreCorrespondingToLevelName",
+								"Account",
+								hierarchyLevels));
 
 		// Assert
 		assertTrue(result);
@@ -252,13 +277,21 @@ class KpiMaturityServiceTest {
 	@Test
 	void when_MultipleLevelsAreCorrespondingToLevelNameCalledWithUniqueLevels_Then_ReturnsFalse() {
 		// Arrange
-		Map<String, HierarchyLevel> hierarchyLevels = Map.of("level1",
-				HierarchyLevel.builder().hierarchyLevelName("Account").build(), "level2",
-				HierarchyLevel.builder().hierarchyLevelName("Project").build());
+		Map<String, HierarchyLevel> hierarchyLevels =
+				Map.of(
+						"level1",
+						HierarchyLevel.builder().hierarchyLevelName("Account").build(),
+						"level2",
+						HierarchyLevel.builder().hierarchyLevelName("Project").build());
 
 		// Act
-		boolean result = Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(KpiMaturityService.class,
-				"multipleLevelsAreCorrespondingToLevelName", "Account", hierarchyLevels));
+		boolean result =
+				Boolean.TRUE.equals(
+						ReflectionTestUtils.invokeMethod(
+								KpiMaturityService.class,
+								"multipleLevelsAreCorrespondingToLevelName",
+								"Account",
+								hierarchyLevels));
 
 		// Assert
 		assertFalse(result);
@@ -266,37 +299,66 @@ class KpiMaturityServiceTest {
 
 	// Helper methods for creating test data
 	private KpiMaturityRequest createTestKpiMaturityRequest() {
-		return KpiMaturityRequest.builder().levelName("Account").deliveryMethodology(ProjectDeliveryMethodology.SCRUM)
+		return KpiMaturityRequest.builder()
+				.levelName("Account")
+				.deliveryMethodology(ProjectDeliveryMethodology.SCRUM)
 				.build();
 	}
 
 	private HierarchyLevel createTestRequestedLevel() {
-		return HierarchyLevel.builder().hierarchyLevelId("acc").hierarchyLevelName("Account").level(3).build();
+		return HierarchyLevel.builder()
+				.hierarchyLevelId("acc")
+				.hierarchyLevelName("Account")
+				.level(3)
+				.build();
 	}
 
 	private HierarchyLevel createTestProjectLevel() {
-		return HierarchyLevel.builder().hierarchyLevelId("project").hierarchyLevelName("Project").level(5).build();
+		return HierarchyLevel.builder()
+				.hierarchyLevelId("project")
+				.hierarchyLevelName("Project")
+				.level(5)
+				.build();
 	}
 
 	private Set<AccountFilteredData> createTestAccountFilteredData() {
 		return Set.of(
-				AccountFilteredData.builder().nodeId("acc1").nodeName("Account 1").level(3).parentId("ver1").build(),
-				AccountFilteredData.builder().nodeId("proj1").nodeName("Project 1").level(5).parentId("acc1").build(),
-				AccountFilteredData.builder().nodeId("proj2").nodeName("Project 2").level(5).parentId("acc1").build());
+				AccountFilteredData.builder()
+						.nodeId("acc1")
+						.nodeName("Account 1")
+						.level(3)
+						.parentId("ver1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("proj1")
+						.nodeName("Project 1")
+						.level(5)
+						.parentId("acc1")
+						.build(),
+				AccountFilteredData.builder()
+						.nodeId("proj2")
+						.nodeName("Project 2")
+						.level(5)
+						.parentId("acc1")
+						.build());
 	}
 
 	private List<KpiMaturity> createTestKpiMaturityList() {
 		KpiMaturity kpiMaturity1 = KpiMaturity.builder().build();
 		kpiMaturity1.setHierarchyEntityNodeId("proj1");
 		kpiMaturity1.setEfficiency(EfficiencyScore.builder().percentage(85.0).build());
-		kpiMaturity1.setMaturityScores(List.of(MaturityScore.builder().kpiCategory("speed").score(4.0).build(),
-				MaturityScore.builder().kpiCategory("quality").score(3.0).build()));
+		kpiMaturity1.setMaturityScores(
+				List.of(
+						MaturityScore.builder().kpiCategory("speed").score(4.0).build(),
+						MaturityScore.builder().kpiCategory("quality").score(3.0).build()));
 
 		KpiMaturity kpiMaturity2 = KpiMaturity.builder().build();
 		kpiMaturity2.setHierarchyEntityNodeId("proj2");
 		kpiMaturity2.setEfficiency(EfficiencyScore.builder().percentage(75.0).build());
-		kpiMaturity2.setMaturityScores(List.of(MaturityScore.builder().kpiCategory("speed").score(3.0).build(),
-				MaturityScore.builder().kpiCategory("quality").score(4.0).build()));
+		kpiMaturity2.setMaturityScores(
+				List.of(
+						MaturityScore.builder().kpiCategory("speed").score(3.0).build(),
+						MaturityScore.builder().kpiCategory("quality").score(4.0).build()));
 
 		return List.of(kpiMaturity1, kpiMaturity2);
 	}

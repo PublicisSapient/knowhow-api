@@ -30,9 +30,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.common.constant.PromptKeys;
 import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
-import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PromptGeneratorTest {

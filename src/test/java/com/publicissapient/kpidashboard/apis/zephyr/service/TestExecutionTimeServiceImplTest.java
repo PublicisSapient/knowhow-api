@@ -281,20 +281,26 @@ public class TestExecutionTimeServiceImplTest {
 		Map<String, Object> totalData = new HashMap<>();
 		totalData.put("avgExecutionTimeSec", 5.5);
 		hoverMap.put("TOTAL", totalData);
-		Double result = TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "avgExecutionTimeSec", Double.class);
+		Double result =
+				TestExecutionTimeServiceImpl.getValueFromHoverMap(
+						hoverMap, "TOTAL", "avgExecutionTimeSec", Double.class);
 		assertThat("Should extract double value", result, equalTo(5.5));
 	}
 
 	@Test
 	public void testGetValueFromHoverMapWithNull() {
-		Double result = TestExecutionTimeServiceImpl.getValueFromHoverMap(null, "TOTAL", "avgExecutionTimeSec", Double.class);
+		Double result =
+				TestExecutionTimeServiceImpl.getValueFromHoverMap(
+						null, "TOTAL", "avgExecutionTimeSec", Double.class);
 		assertThat("Should return null for null map", result, equalTo(null));
 	}
 
 	@Test
 	public void testGetValueFromHoverMapWithMissingCategory() {
 		Map<String, Object> hoverMap = new HashMap<>();
-		Double result = TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "avgExecutionTimeSec", Double.class);
+		Double result =
+				TestExecutionTimeServiceImpl.getValueFromHoverMap(
+						hoverMap, "TOTAL", "avgExecutionTimeSec", Double.class);
 		assertThat("Should return null for missing category", result, equalTo(null));
 	}
 
@@ -304,7 +310,8 @@ public class TestExecutionTimeServiceImplTest {
 		Map<String, Object> totalData = new HashMap<>();
 		totalData.put("count", 10);
 		hoverMap.put("TOTAL", totalData);
-		Double result = TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "count", Double.class);
+		Double result =
+				TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "count", Double.class);
 		assertThat("Should convert integer to double", result, equalTo(10.0));
 	}
 
@@ -314,7 +321,8 @@ public class TestExecutionTimeServiceImplTest {
 		Map<String, Object> totalData = new HashMap<>();
 		totalData.put("count", 100);
 		hoverMap.put("TOTAL", totalData);
-		Long result = TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "count", Long.class);
+		Long result =
+				TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "count", Long.class);
 		assertThat("Should convert to long", result, equalTo(100L));
 	}
 
@@ -322,7 +330,8 @@ public class TestExecutionTimeServiceImplTest {
 	public void testGetValueFromHoverMapWithInvalidCategory() {
 		Map<String, Object> hoverMap = new HashMap<>();
 		hoverMap.put("TOTAL", "not a map");
-		Double result = TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "count", Double.class);
+		Double result =
+				TestExecutionTimeServiceImpl.getValueFromHoverMap(hoverMap, "TOTAL", "count", Double.class);
 		assertThat("Should return null for invalid structure", result, equalTo(null));
 	}
 
@@ -363,14 +372,15 @@ public class TestExecutionTimeServiceImplTest {
 		when(featureRepository.findIssueAndDescByNumber(any())).thenReturn(new ArrayList<>());
 		when(cacheService.getFromApplicationCache(anyString())).thenReturn("test-tracker-id");
 
-		KpiElement result = testExecutionTimeServiceImpl.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+		KpiElement result =
+				testExecutionTimeServiceImpl.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
 		assertThat("Should return kpi element", result != null, equalTo(true));
 	}
 
 	@Test
 	public void testCalculateHoverMapWithWeightedAverage() {
 		List<Map<String, Object>> hoverMapValues = new ArrayList<>();
-		
+
 		Map<String, Object> hoverMap1 = new HashMap<>();
 		Map<String, Object> totalData1 = new HashMap<>();
 		totalData1.put("count", 10L);
@@ -405,7 +415,9 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testCopyDataCountWithNodeName() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("copyDataCountWithNodeName", DataCount.class, String.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"copyDataCountWithNodeName", DataCount.class, String.class);
 		method.setAccessible(true);
 		DataCount dc = new DataCount();
 		dc.setData("10");
@@ -417,7 +429,8 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testGetNumberValue() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getNumberValue", Object.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod("getNumberValue", Object.class);
 		method.setAccessible(true);
 		long result = (long) method.invoke(testExecutionTimeServiceImpl, 10);
 		assertThat("Should convert integer", result, equalTo(10L));
@@ -425,7 +438,8 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testGetDoubleValue() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getDoubleValue", Object.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod("getDoubleValue", Object.class);
 		method.setAccessible(true);
 		double result = (double) method.invoke(testExecutionTimeServiceImpl, 10.5);
 		assertThat("Should handle double", result, equalTo(10.5));
@@ -442,12 +456,16 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testGetAverageExecutionTimeForTestCase() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getAverageExecutionTimeForTestCase", TestCaseDetails.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"getAverageExecutionTimeForTestCase", TestCaseDetails.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
-		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec1 = new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
+		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec1 =
+				new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
 		exec1.setExecutionTime(100);
-		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec2 = new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
+		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec2 =
+				new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
 		exec2.setExecutionTime(200);
 		tc.setExecutions(Arrays.asList(exec1, exec2));
 		double result = (double) method.invoke(testExecutionTimeServiceImpl, tc);
@@ -456,7 +474,9 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testGetAverageExecutionTimeForTestCaseEmpty() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getAverageExecutionTimeForTestCase", TestCaseDetails.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"getAverageExecutionTimeForTestCase", TestCaseDetails.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
 		tc.setExecutions(new ArrayList<>());
@@ -466,10 +486,13 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testCalculateAverageExecutionTime() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("calculateAverageExecutionTime", List.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"calculateAverageExecutionTime", List.class);
 		method.setAccessible(true);
 		TestCaseDetails tc1 = new TestCaseDetails();
-		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec1 = new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
+		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec1 =
+				new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
 		exec1.setExecutionTime(60000);
 		tc1.setExecutions(Arrays.asList(exec1));
 		List<TestCaseDetails> testCases = Arrays.asList(tc1);
@@ -479,7 +502,9 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testMatchesStory() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("matchesStory", TestCaseDetails.class, SprintWiseStory.class, String.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"matchesStory", TestCaseDetails.class, SprintWiseStory.class, String.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
 		tc.setBasicProjectConfigId("project1");
@@ -494,7 +519,9 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testMatchesStoryWithNull() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("matchesStory", TestCaseDetails.class, SprintWiseStory.class, String.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"matchesStory", TestCaseDetails.class, SprintWiseStory.class, String.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
 		tc.setBasicProjectConfigId("project1");
@@ -508,10 +535,13 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testPopulateCategoryData() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("populateCategoryData", String.class, List.class, Map.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"populateCategoryData", String.class, List.class, Map.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
-		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec = new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
+		com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData exec =
+				new com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData();
 		exec.setExecutionTime(60000);
 		tc.setExecutions(Arrays.asList(exec));
 		List<TestCaseDetails> testCases = Arrays.asList(tc);
@@ -522,7 +552,9 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testPopulateCategoryDataEmpty() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("populateCategoryData", String.class, List.class, Map.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"populateCategoryData", String.class, List.class, Map.class);
 		method.setAccessible(true);
 		Map<String, Object> hoverMap = new HashMap<>();
 		method.invoke(testExecutionTimeServiceImpl, "TOTAL", new ArrayList<>(), hoverMap);
@@ -538,13 +570,16 @@ public class TestExecutionTimeServiceImplTest {
 		Map<String, List<DataCount>> projectWiseDataCount = new HashMap<>();
 		projectWiseDataCount.put("Project1", Arrays.asList(dc1, dc2));
 		@SuppressWarnings("unchecked")
-		List<List<DataCount>> result = (List<List<DataCount>>) method.invoke(testExecutionTimeServiceImpl, projectWiseDataCount);
+		List<List<DataCount>> result =
+				(List<List<DataCount>>) method.invoke(testExecutionTimeServiceImpl, projectWiseDataCount);
 		assertThat("Should group by index", result.size(), equalTo(2));
 	}
 
 	@Test
 	public void testCreateSingleProjectResult() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("createSingleProjectResult", List.class, Node.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"createSingleProjectResult", List.class, Node.class);
 		method.setAccessible(true);
 		DataCount dc = new DataCount();
 		dc.setSProjectName("Project1");
@@ -552,13 +587,16 @@ public class TestExecutionTimeServiceImplTest {
 		Node node = new Node();
 		node.setName("TestNode");
 		@SuppressWarnings("unchecked")
-		List<DataCount> result = (List<DataCount>) method.invoke(testExecutionTimeServiceImpl, dataCounts, node);
+		List<DataCount> result =
+				(List<DataCount>) method.invoke(testExecutionTimeServiceImpl, dataCounts, node);
 		assertThat("Should return list", result.size(), equalTo(1));
 	}
 
 	@Test
 	public void testAggregateIndexValues() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("aggregateIndexValues", List.class, Node.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"aggregateIndexValues", List.class, Node.class);
 		method.setAccessible(true);
 		DataCount dc1 = new DataCount();
 		dc1.setValue(10.0);
@@ -572,13 +610,16 @@ public class TestExecutionTimeServiceImplTest {
 		dc1.setHoverValue(hover);
 		Node node = new Node();
 		node.setName("AggNode");
-		DataCount result = (DataCount) method.invoke(testExecutionTimeServiceImpl, Arrays.asList(dc1), node);
+		DataCount result =
+				(DataCount) method.invoke(testExecutionTimeServiceImpl, Arrays.asList(dc1), node);
 		assertThat("Should aggregate", result.getSProjectName(), equalTo("AggNode"));
 	}
 
 	@Test
 	public void testSyncHoverValue() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("syncHoverValueWithCalculatedValue", Map.class, Double.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"syncHoverValueWithCalculatedValue", Map.class, Double.class);
 		method.setAccessible(true);
 		Map<String, Object> hoverMap = new HashMap<>();
 		Map<String, Object> totalData = new HashMap<>();
@@ -591,7 +632,9 @@ public class TestExecutionTimeServiceImplTest {
 
 	@Test
 	public void testGetAutomatedTestCases() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getAutomatedTestCases", List.class, List.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"getAutomatedTestCases", List.class, List.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
 		tc.setBasicProjectConfigId("project1");
@@ -601,13 +644,17 @@ public class TestExecutionTimeServiceImplTest {
 		sws.setBasicProjectConfigId("project1");
 		sws.setStoryList(Arrays.asList("STORY-1"));
 		@SuppressWarnings("unchecked")
-		List<TestCaseDetails> result = (List<TestCaseDetails>) method.invoke(testExecutionTimeServiceImpl, Arrays.asList(tc), Arrays.asList(sws));
+		List<TestCaseDetails> result =
+				(List<TestCaseDetails>)
+						method.invoke(testExecutionTimeServiceImpl, Arrays.asList(tc), Arrays.asList(sws));
 		assertThat("Should filter automated", result.size(), equalTo(1));
 	}
 
 	@Test
 	public void testGetManualTestCases() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getManualTestCases", List.class, List.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"getManualTestCases", List.class, List.class);
 		method.setAccessible(true);
 		TestCaseDetails tc = new TestCaseDetails();
 		tc.setBasicProjectConfigId("project1");
@@ -617,13 +664,17 @@ public class TestExecutionTimeServiceImplTest {
 		sws.setBasicProjectConfigId("project1");
 		sws.setStoryList(Arrays.asList("STORY-1"));
 		@SuppressWarnings("unchecked")
-		List<TestCaseDetails> result = (List<TestCaseDetails>) method.invoke(testExecutionTimeServiceImpl, Arrays.asList(tc), Arrays.asList(sws));
+		List<TestCaseDetails> result =
+				(List<TestCaseDetails>)
+						method.invoke(testExecutionTimeServiceImpl, Arrays.asList(tc), Arrays.asList(sws));
 		assertThat("Should filter manual", result.size(), equalTo(1));
 	}
 
 	@Test
 	public void testGetTotalTestCases() throws Exception {
-		Method method = TestExecutionTimeServiceImpl.class.getDeclaredMethod("getTotalTestCases", List.class, List.class);
+		Method method =
+				TestExecutionTimeServiceImpl.class.getDeclaredMethod(
+						"getTotalTestCases", List.class, List.class);
 		method.setAccessible(true);
 		TestCaseDetails tc1 = new TestCaseDetails();
 		tc1.setBasicProjectConfigId("project1");
@@ -637,7 +688,10 @@ public class TestExecutionTimeServiceImplTest {
 		sws.setBasicProjectConfigId("project1");
 		sws.setStoryList(Arrays.asList("STORY-1"));
 		@SuppressWarnings("unchecked")
-		List<TestCaseDetails> result = (List<TestCaseDetails>) method.invoke(testExecutionTimeServiceImpl, Arrays.asList(tc1, tc2), Arrays.asList(sws));
+		List<TestCaseDetails> result =
+				(List<TestCaseDetails>)
+						method.invoke(
+								testExecutionTimeServiceImpl, Arrays.asList(tc1, tc2), Arrays.asList(sws));
 		assertThat("Should get all tests", result.size(), equalTo(2));
 	}
 }

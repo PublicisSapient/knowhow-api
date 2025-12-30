@@ -670,10 +670,7 @@ public class DefectSeverityIndexImplTest {
 					.when(
 							() ->
 									KpiDataHelper.createAdditionalFilterMap(
-											any(KpiRequest.class),
-											anyMap(),
-											anyString(),
-											any(FilterHelperService.class)))
+											any(KpiRequest.class), anyMap(), anyString(), any(FilterHelperService.class)))
 					.thenReturn(null);
 		}
 	}

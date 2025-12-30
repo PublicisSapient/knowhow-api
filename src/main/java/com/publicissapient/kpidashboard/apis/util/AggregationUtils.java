@@ -238,7 +238,6 @@ public final class AggregationUtils {
 		return values;
 	}
 
-
 	/**
 	 * Calculates percentiles for inputs
 	 *
