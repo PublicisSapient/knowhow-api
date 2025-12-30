@@ -15,7 +15,7 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.2.0</version>
-    <relativePath />
+    <relativePath/>
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
   <artifactId>knowhow-api</artifactId>
@@ -595,9 +595,9 @@
         <executions>
           <execution>
             <id>build</id>
-             <goals>
+            <!--<goals>
               <goal>build</goal>
-            </goals>
+            </goals>-->
             <phase>install</phase>
             <configuration>
               <dockerfile>Dockerfile</dockerfile>
@@ -623,7 +623,7 @@
             <eclipse>
               <file>${project.basedir}/eclipse-formatter-config.xml</file>
             </eclipse>
-            <googleJavaFormat />
+            <googleJavaFormat/>
             <indent>
               <tabs>true</tabs>
               <spacesPerTab>2</spacesPerTab>
@@ -631,7 +631,7 @@
             <importOrder>
               <order>java|javax,org,com</order>
             </importOrder>
-            <removeUnusedImports />
+            <removeUnusedImports/>
           </java>
           <pom>
             <includes>

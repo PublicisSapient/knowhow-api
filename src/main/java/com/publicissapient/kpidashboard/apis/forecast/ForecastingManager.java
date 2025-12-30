@@ -128,7 +128,8 @@ public class ForecastingManager {
 	 * @param forecastingModel Forecasting model to use
 	 * @return List of forecast DataCount objects
 	 */
-	public List<DataCount> generateForecastsForNonKPI(List<DataCount> dataCounts, ForecastingModel forecastingModel) {
+	public List<DataCount> generateForecastsForNonKPI(
+			List<DataCount> dataCounts, ForecastingModel forecastingModel) {
 		List<DataCount> forecasts = new ArrayList<>();
 
 		if (dataCounts == null || dataCounts.isEmpty()) {
@@ -136,15 +137,18 @@ public class ForecastingManager {
 		}
 
 		try {
-			log.debug("Generating forecast for non configured KPI with model {}", forecastingModel.getDisplayName());
-			ForecastService	forecaster = forecasterMap.get(forecastingModel);
+			log.debug(
+					"Generating forecast for non configured KPI with model {}",
+					forecastingModel.getDisplayName());
+			ForecastService forecaster = forecasterMap.get(forecastingModel);
 
 			if (forecaster == null) {
-				log.warn("No forecaster implementation found for model {}", forecastingModel.getDisplayName());
+				log.warn(
+						"No forecaster implementation found for model {}", forecastingModel.getDisplayName());
 				return forecasts;
 			}
 
-			if (forecaster.canForecast(dataCounts,null)) {
+			if (forecaster.canForecast(dataCounts, null)) {
 				forecasts = forecaster.generateForecast(dataCounts, null);
 				log.debug(
 						"Generated {} forecast(s) using {}",

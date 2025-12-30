@@ -89,7 +89,8 @@ public class ScmPickupTimeServiceImpl
 			Map<String, List<DataCount>> trendValuesMap =
 					getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PICKUP_TIME);
 			kpiElement.setTrendValueList(
-					DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.PICKUP_TIME.getKpiId()));
+					DeveloperKpiHelper.prepareDataCountGroups(
+							trendValuesMap, KPICode.PICKUP_TIME.getKpiId()));
 		} else {
 			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
 		}
