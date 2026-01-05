@@ -45,10 +45,13 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
-			@NotNull FilterChain filterChain) throws ServletException, IOException {
-		Optional<ApiKeyAuthenticationToken> apiKeyAuthenticationTokenOptional = this.apiKeyAuthenticationService
-				.createApiKeyAuthentication(request);
+	protected void doFilterInternal(
+			@NotNull HttpServletRequest request,
+			@NotNull HttpServletResponse response,
+			@NotNull FilterChain filterChain)
+			throws ServletException, IOException {
+		Optional<ApiKeyAuthenticationToken> apiKeyAuthenticationTokenOptional =
+				this.apiKeyAuthenticationService.createApiKeyAuthentication(request);
 		if (apiKeyAuthenticationTokenOptional.isEmpty()) {
 			response.setStatus(HttpStatus.UNAUTHORIZED.value());
 		} else {

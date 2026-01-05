@@ -76,8 +76,10 @@ public enum ForecastingModel {
 	LOGISTIC_GROWTH(
 			"logisticGrowth", "Logistic Growth", "S-shaped growth model for saturation effects"),
 
-	THETA_METHOD("thetaMethod", "Theta Method",
-            "non-linear time-series forecasting technique that smooths and combines trend curves to predict future values accurately from small datasets.");
+	THETA_METHOD(
+			"thetaMethod",
+			"Theta Method",
+			"non-linear time-series forecasting technique that smooths and combines trend curves to predict future values accurately from small datasets.");
 
 	private final String name;
 	private final String displayName;

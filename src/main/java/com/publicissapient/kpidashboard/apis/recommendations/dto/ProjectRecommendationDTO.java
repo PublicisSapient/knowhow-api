@@ -32,8 +32,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO representing a project's AI-generated recommendations. Maps from
- * RecommendationsActionPlan entity excluding internal fields.
+ * DTO representing a project's AI-generated recommendations. Maps from RecommendationsActionPlan
+ * entity excluding internal fields.
  */
 @Data
 @Builder
@@ -43,7 +43,9 @@ import lombok.NoArgsConstructor;
 public class ProjectRecommendationDTO {
 
 	@NotBlank(message = "Recommendation ID must not be blank")
-	@Schema(description = "MongoDB ID of the recommendation document", example = "507f1f77bcf86cd799439011")
+	@Schema(
+			description = "MongoDB ID of the recommendation document",
+			example = "507f1f77bcf86cd799439011")
 	private String id;
 
 	@NotBlank(message = "Project ID must not be blank")
@@ -66,6 +68,8 @@ public class ProjectRecommendationDTO {
 	@Schema(description = "Metadata about KPIs and persona used for generating recommendations")
 	private RecommendationMetadata metadata;
 
-	@Schema(description = "Timestamp when the recommendation was generated", example = "2024-11-29T10:30:00Z")
+	@Schema(
+			description = "Timestamp when the recommendation was generated",
+			example = "2024-11-29T10:30:00Z")
 	private Instant createdAt;
 }

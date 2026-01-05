@@ -33,6 +33,7 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -114,19 +115,25 @@ public class ZephyrService {
 					return responseList;
 				}
 
-				Object cachedData =
-						cacheService.getFromApplicationCache(
-								projectKeyCache, KPISource.ZEPHYR.name(), groupId, kpiRequest.getSprintIncluded());
-				if (!kpiRequest
-								.getRequestTrackerId()
-								.toLowerCase()
-								.contains(KPISource.EXCEL.name().toLowerCase())
-						&& null != cachedData) {
-					log.info(
-							"[ZEPHYR][{}]. Fetching value from cache for {}",
-							kpiRequest.getRequestTrackerId(),
-							kpiRequest.getIds());
-					return (List<KpiElement>) cachedData;
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+					Object cachedData =
+							cacheService.getFromApplicationCache(
+									projectKeyCache,
+									KPISource.ZEPHYR.name(),
+									groupId,
+									kpiRequest.getSprintIncluded());
+					if (!kpiRequest
+									.getRequestTrackerId()
+									.toLowerCase()
+									.contains(KPISource.EXCEL.name().toLowerCase())
+							&& null != cachedData) {
+						log.info(
+								"[ZEPHYR][{}]. Fetching value from cache for {}",
+								kpiRequest.getRequestTrackerId(),
+								kpiRequest.getIds());
+						return (List<KpiElement>) cachedData;
+					}
 				}
 
 				TreeAggregatorDetail treeAggregatorDetail =
