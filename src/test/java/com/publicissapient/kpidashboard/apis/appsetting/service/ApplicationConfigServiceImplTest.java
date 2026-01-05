@@ -78,9 +78,9 @@ class ApplicationConfigServiceImplTest {
 		assertEquals("https://videos.com", result.getVideoTutorials());
 		assertEquals("https://tickets.com", result.getRaiseTicket());
 		assertEquals("https://support.com", result.getSupportChannel());
-		assertEquals("test-audience", result.getAudience());
-		assertEquals("https://ai-gateway.com", result.getBaseUrl());
-		assertEquals("openai", result.getDefaultAiProvider());
+		assertEquals("test-audience", result.getAiGatewayAudience());
+		assertEquals("https://ai-gateway.com", result.getAiGatewayBaseUrl());
+		assertEquals("openai", result.getAiGatewayDefaultAiProvider());
 	}
 
 	@Test
@@ -113,9 +113,9 @@ class ApplicationConfigServiceImplTest {
 		assertEquals("", result.getVideoTutorials());
 		assertEquals("", result.getRaiseTicket());
 		assertEquals("", result.getSupportChannel());
-		assertEquals("", result.getAudience());
-		assertEquals("", result.getBaseUrl());
-		assertEquals("", result.getDefaultAiProvider());
+		assertEquals("", result.getAiGatewayAudience());
+		assertEquals("", result.getAiGatewayBaseUrl());
+		assertEquals("", result.getAiGatewayDefaultAiProvider());
 	}
 
 	@Test
@@ -148,8 +148,8 @@ class ApplicationConfigServiceImplTest {
 		assertEquals("https://tutorials.example.com", result.getVideoTutorials());
 		assertEquals("", result.getRaiseTicket()); // default empty
 		assertEquals("https://support.example.com", result.getSupportChannel());
-		assertEquals("mixed-audience", result.getAudience());
-		assertEquals("", result.getBaseUrl()); // default empty
-		assertEquals("claude", result.getDefaultAiProvider());
+		assertEquals("mixed-audience", result.getAiGatewayAudience());
+		assertEquals("", result.getAiGatewayBaseUrl()); // default empty
+		assertEquals("claude", result.getAiGatewayDefaultAiProvider());
 	}
 }
