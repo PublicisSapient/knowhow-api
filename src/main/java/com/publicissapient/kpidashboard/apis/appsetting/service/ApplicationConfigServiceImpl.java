@@ -65,9 +65,9 @@ public class ApplicationConfigServiceImpl {
 						.videoTutorials(Objects.toString(helpConfig.getVideoTutorialsUrl(), StringUtils.EMPTY))
 						.raiseTicket(Objects.toString(helpConfig.getRaiseTicketUrl(), StringUtils.EMPTY))
 						.supportChannel(Objects.toString(helpConfig.getSupportChannelUrl(), StringUtils.EMPTY))
-						.audience(Objects.toString(aIGatewayConfig.getAudience(), StringUtils.EMPTY))
-						.baseUrl(Objects.toString(aIGatewayConfig.getBaseUrl(), StringUtils.EMPTY))
-						.defaultAiProvider(
+						.aiGatewayAudience(Objects.toString(aIGatewayConfig.getAudience(), StringUtils.EMPTY))
+						.aiGatewayBaseUrl(Objects.toString(aIGatewayConfig.getBaseUrl(), StringUtils.EMPTY))
+						.aiGatewayDefaultAiProvider(
 								Objects.toString(aIGatewayConfig.getDefaultAiProvider(), StringUtils.EMPTY))
 						.build();
 
