@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -266,7 +267,7 @@ public class KpiIntegrationServiceImpl {
 
 										kpiElement.setOverallMaturity(dataCount.getMaturity());
 									});
-						} else {
+						} else if (!(trendValueList.get(0) instanceof IterationKpiValue)) {
 							List<DataCount> dataCounts = (List<DataCount>) trendValueList;
 							DataCount firstDataCount = dataCounts.get(0);
 

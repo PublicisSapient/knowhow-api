@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
-import com.publicissapient.kpidashboard.common.repository.kpibenchmark.KpiBenchmarkValuesRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,7 +49,9 @@ import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import com.publicissapient.kpidashboard.common.repository.application.AdditionalFilterCategoryRepository;
+import com.publicissapient.kpidashboard.common.repository.kpibenchmark.KpiBenchmarkValuesRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 
@@ -78,7 +78,7 @@ public class CacheServiceImpl implements CacheService {
 	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
 	@Autowired private ProjectHierarchyService projectHierarchyService;
 	@Autowired private PromptDetailsService promptDetailsService;
-    @Autowired private KpiBenchmarkValuesRepository kpiBenchmarkValuesRepository;
+	@Autowired private KpiBenchmarkValuesRepository kpiBenchmarkValuesRepository;
 
 	List<AccountHierarchyData> accountHierarchyDataList;
 
@@ -355,12 +355,12 @@ public class CacheServiceImpl implements CacheService {
 				.collect(Collectors.toMap(PromptDetails::getKey, Function.identity()));
 	}
 
-    @Cacheable(CommonConstant.CACHE_KPI_BENCHMARK_TARGETS)
+	@Cacheable(CommonConstant.CACHE_KPI_BENCHMARK_TARGETS)
 	@Override
 	public Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets() {
 		log.info("Caching Kpi Benchmark Targets Map");
 		List<KpiBenchmarkValues> kpiBenchmarkValuesList = kpiBenchmarkValuesRepository.findAll();
-        return kpiBenchmarkValuesList.stream()
+		return kpiBenchmarkValuesList.stream()
 				.collect(Collectors.toMap(KpiBenchmarkValues::getKpiId, Function.identity()));
 	}
 }
