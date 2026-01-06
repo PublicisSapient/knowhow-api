@@ -20,13 +20,13 @@ package com.publicissapient.kpidashboard.apis.common.service;
 import java.util.List;
 import java.util.Map;
 
-import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterCategory;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 
 /**
  * A Service to manage cache.
@@ -114,5 +114,5 @@ public interface CacheService {
 
 	Object filterOnHoldProjectBasicConfig();
 
-    Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets();
+	Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets();
 }

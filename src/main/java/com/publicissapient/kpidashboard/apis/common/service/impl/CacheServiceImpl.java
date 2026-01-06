@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.common.service.impl;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -361,6 +362,10 @@ public class CacheServiceImpl implements CacheService {
 		log.info("Caching Kpi Benchmark Targets Map");
 		List<KpiBenchmarkValues> kpiBenchmarkValuesList = kpiBenchmarkValuesRepository.findAll();
 		return kpiBenchmarkValuesList.stream()
-				.collect(Collectors.toMap(KpiBenchmarkValues::getKpiId, Function.identity()));
+				.collect(Collectors.groupingBy(KpiBenchmarkValues::getKpiId,
+						Collectors.maxBy(Comparator.comparing(KpiBenchmarkValues::getCalculationDate))))
+				.entrySet().stream()
+				.filter(entry -> entry.getValue().isPresent())
+				.collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().get()));
 	}
 }
