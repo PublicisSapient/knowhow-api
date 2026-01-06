@@ -234,9 +234,7 @@ public class KpiHelperService { // NOPMD
 								.removeIf(storyId -> !acceptedStoryIds.contains(storyId)));
 	}
 
-	/**
-	 * exclude defects with priority and Filter RCA based on fieldMapping
-	 */
+	/** exclude defects with priority and Filter RCA based on fieldMapping */
 	public static List<JiraIssue> excludePriorityAndIncludeRCA(
 			List<JiraIssue> allDefects,
 			Map<String, List<String>> projectWisePriority,
