@@ -22,7 +22,7 @@ import lombok.Data;
 @Data
 @Builder
 public class ForecastData {
-    private String category;
-    private String forecastingModel;
-    private Double value;
+	private String category;
+	private String forecastingModel;
+	private Double value;
 }

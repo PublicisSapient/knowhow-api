@@ -115,15 +115,18 @@ public class ZephyrService {
 					return responseList;
 				}
 
-				//skip using cache when the request is made with an api key
-				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 					Object cachedData =
 							cacheService.getFromApplicationCache(
-									projectKeyCache, KPISource.ZEPHYR.name(), groupId, kpiRequest.getSprintIncluded());
+									projectKeyCache,
+									KPISource.ZEPHYR.name(),
+									groupId,
+									kpiRequest.getSprintIncluded());
 					if (!kpiRequest
-							.getRequestTrackerId()
-							.toLowerCase()
-							.contains(KPISource.EXCEL.name().toLowerCase())
+									.getRequestTrackerId()
+									.toLowerCase()
+									.contains(KPISource.EXCEL.name().toLowerCase())
 							&& null != cachedData) {
 						log.info(
 								"[ZEPHYR][{}]. Fetching value from cache for {}",

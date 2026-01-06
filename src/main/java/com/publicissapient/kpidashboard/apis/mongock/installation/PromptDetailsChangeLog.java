@@ -21,9 +21,9 @@ import java.util.List;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 import com.publicissapient.kpidashboard.apis.mongock.data.PromptDetailsDataFactory;
 import com.publicissapient.kpidashboard.apis.util.MongockUtil;
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;

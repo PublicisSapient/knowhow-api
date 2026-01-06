@@ -3,7 +3,6 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -102,7 +101,7 @@ public class DefectsBreachedSlasServiceImplTest {
 		setupTreeAggregatorDetail();
 		kpiRequest = Mockito.mock(KpiRequest.class);
 		when(kpiRequest.getIds()).thenReturn(new String[] {"node1"});
-//		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
+		// when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
 		when(kpiRequest.getLabel()).thenReturn("project");
 
 		fieldMapping = new FieldMapping();

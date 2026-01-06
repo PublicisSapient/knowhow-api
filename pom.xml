@@ -19,13 +19,13 @@
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
   <artifactId>knowhow-api</artifactId>
-  <version>14.1.0-SNAPSHOT</version>
+  <version>15.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Rest API Layer</description>
   <scm>
     <connection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</connection>
     <developerConnection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</developerConnection>
-    <tag>4.6.1</tag>
+    <tag>15.0.0</tag>
     <url>https://github.com/PublicisSapient/knowhow-api.git</url>
   </scm>
   <properties>
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>com.publicissapient.kpidashboard</groupId>
       <artifactId>common</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>15.1.0-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>com.diffplug.spotless</groupId>
@@ -595,7 +595,7 @@
         <executions>
           <execution>
             <id>build</id>
-             <goals>
+            <goals>
               <goal>build</goal>
             </goals>
             <phase>install</phase>

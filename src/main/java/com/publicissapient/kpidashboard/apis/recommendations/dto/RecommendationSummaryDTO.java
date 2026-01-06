@@ -8,9 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Summary containing aggregate statistics from all recommendations.
- */
+/** Summary containing aggregate statistics from all recommendations. */
 @Data
 @Builder
 @NoArgsConstructor

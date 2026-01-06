@@ -20,13 +20,13 @@ package com.publicissapient.kpidashboard.apis.util;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.Set;
-import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -75,7 +75,7 @@ public final class DeveloperKpiHelper {
 	 * @return List of DataCountGroup objects with separated filters
 	 */
 	public static List<DataCountGroup> prepareDataCountGroups(
-            Map<String, List<DataCount>> trendValuesMap, String kpiId) {
+			Map<String, List<DataCount>> trendValuesMap, String kpiId) {
 		return trendValuesMap.entrySet().stream()
 				.map(
 						entry -> {
@@ -84,15 +84,14 @@ public final class DeveloperKpiHelper {
 							group.setFilter1(filters[0]);
 							group.setFilter2(filters[1]);
 							group.setValue(entry.getValue());
-								// Add forecasts if configured
-								Optional.ofNullable(forecastingManager)
-										.ifPresent(
-												manager ->
-														manager.addForecastsToDataCount(
-																group,
-																Optional.ofNullable(entry.getValue())
-																		.orElse(Collections.emptyList()),
-																kpiId));
+							// Add forecasts if configured
+							Optional.ofNullable(forecastingManager)
+									.ifPresent(
+											manager ->
+													manager.addForecastsToDataCount(
+															group,
+															Optional.ofNullable(entry.getValue()).orElse(Collections.emptyList()),
+															kpiId));
 
 							return group;
 						})

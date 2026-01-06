@@ -70,7 +70,8 @@ public class KpiMaturityDashboardMapper {
 		// Create column definitions
 		List<ColumnDefinitionDTO> columns = addColumns(boardNames, levelName);
 
-		KpiMaturityMatrixDTO matrix = KpiMaturityMatrixDTO.builder().rows(rows).columns(columns).build();
+		KpiMaturityMatrixDTO matrix =
+				KpiMaturityMatrixDTO.builder().rows(rows).columns(columns).build();
 
 		KpiMaturityDashboardDataDTO data = KpiMaturityDashboardDataDTO.builder().matrix(matrix).build();
 

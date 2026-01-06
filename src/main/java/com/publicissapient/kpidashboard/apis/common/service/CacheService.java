@@ -23,10 +23,10 @@ import java.util.Map;
 import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import org.springframework.stereotype.Component;
 
-import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterCategory;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
 
 /**
  * A Service to manage cache.

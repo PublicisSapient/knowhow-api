@@ -813,9 +813,7 @@ public abstract class ToolsKPIService<R, S> {
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
 		for (String selectedId : selectedIds) {
-			Node node =
-					nodeWiseKPIValue.get(
-							Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
+			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				Map<String, List<DataCount>> valueMap =
@@ -890,9 +888,7 @@ public abstract class ToolsKPIService<R, S> {
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
 
 		for (String selectedId : selectedIds) {
-			Node node =
-					nodeWiseKPIValue.get(
-							Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
+			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				Map<String, List<DataCount>> valueMap =
@@ -1334,8 +1330,7 @@ public abstract class ToolsKPIService<R, S> {
 
 		aggMap.forEach(
 				(key, objectList) -> {
-					List<Integer> value =
-							objectList.stream().map(Integer.class::cast).toList();
+					List<Integer> value = objectList.stream().map(Integer.class::cast).toList();
 					if (Constant.PERCENTILE.equalsIgnoreCase(aggregationCriteria)) {
 						if (null == customApiConfig.getPercentileValue()) {
 							resultMap.put(key, AggregationUtils.percentilesInteger(value, 90.0D));

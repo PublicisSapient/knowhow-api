@@ -16,6 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.defect.rate;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
@@ -24,25 +38,11 @@ import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DefectRateNonTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private DefectRateNonTrendKpiServiceImpl service;
+	@InjectMocks private DefectRateNonTrendKpiServiceImpl service;
 
 	private KpiRequest kpiRequest;
 	private List<ScmMergeRequests> mergeRequests;
@@ -74,14 +74,23 @@ class DefectRateNonTrendKpiServiceImplTest {
 			dateUtilMock.when(DateUtil::getTodayTime).thenReturn(now);
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(true);
 			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), any())).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
 					.thenReturn(Collections.emptyMap());
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -93,8 +102,15 @@ class DefectRateNonTrendKpiServiceImplTest {
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(false);
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertTrue(result.isEmpty());
@@ -118,14 +134,23 @@ class DefectRateNonTrendKpiServiceImplTest {
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(true);
 			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), any())).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
 					.thenReturn(Collections.emptyMap());
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertFalse(result.isEmpty());
@@ -150,14 +175,26 @@ class DefectRateNonTrendKpiServiceImplTest {
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(true);
 			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), any())).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any())).thenReturn(userWiseMap);
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), any())).thenReturn("Test User");
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
+					.thenReturn(userWiseMap);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), any()))
+					.thenReturn("Test User");
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertFalse(validationDataList.isEmpty());

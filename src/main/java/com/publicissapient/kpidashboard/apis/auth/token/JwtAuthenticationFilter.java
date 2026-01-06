@@ -50,8 +50,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	@Override
-	protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
-			@NotNull FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(
+			@NotNull HttpServletRequest request,
+			@NotNull HttpServletResponse response,
+			@NotNull FilterChain filterChain)
+			throws ServletException, IOException {
 		Cookie authCookie = cookieUtil.getAuthCookie(request);
 
 		if (authCookie == null) {
@@ -59,7 +62,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		Authentication authentication = tokenAuthenticationService.validateAuthentication(request, response);
+		Authentication authentication =
+				tokenAuthenticationService.validateAuthentication(request, response);
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		filterChain.doFilter(request, response);
