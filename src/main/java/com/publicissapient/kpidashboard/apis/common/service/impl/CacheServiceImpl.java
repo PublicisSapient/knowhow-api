@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.common.service.impl;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -49,7 +50,9 @@ import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import com.publicissapient.kpidashboard.common.repository.application.AdditionalFilterCategoryRepository;
+import com.publicissapient.kpidashboard.common.repository.kpibenchmark.KpiBenchmarkValuesRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
 
@@ -76,6 +79,7 @@ public class CacheServiceImpl implements CacheService {
 	@Autowired private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
 	@Autowired private ProjectHierarchyService projectHierarchyService;
 	@Autowired private PromptDetailsService promptDetailsService;
+	@Autowired private KpiBenchmarkValuesRepository kpiBenchmarkValuesRepository;
 
 	List<AccountHierarchyData> accountHierarchyDataList;
 
@@ -350,5 +354,18 @@ public class CacheServiceImpl implements CacheService {
 		List<PromptDetails> promptDetailsList = promptDetailsService.getAllPrompts();
 		return promptDetailsList.stream()
 				.collect(Collectors.toMap(PromptDetails::getKey, Function.identity()));
+	}
+
+	@Cacheable(CommonConstant.CACHE_KPI_BENCHMARK_TARGETS)
+	@Override
+	public Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets() {
+		log.info("Caching Kpi Benchmark Targets Map");
+		List<KpiBenchmarkValues> kpiBenchmarkValuesList = kpiBenchmarkValuesRepository.findAll();
+		return kpiBenchmarkValuesList.stream()
+				.collect(Collectors.groupingBy(KpiBenchmarkValues::getKpiId,
+						Collectors.maxBy(Comparator.comparing(KpiBenchmarkValues::getCalculationDate))))
+				.entrySet().stream()
+				.filter(entry -> entry.getValue().isPresent())
+				.collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().get()));
 	}
 }

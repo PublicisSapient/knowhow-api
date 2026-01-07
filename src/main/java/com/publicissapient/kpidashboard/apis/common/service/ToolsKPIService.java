@@ -42,6 +42,8 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 
 import lombok.Getter;
 
@@ -670,7 +672,6 @@ public abstract class ToolsKPIService<R, S> {
 		List<DataCount> trendValues = new ArrayList<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel(), selectedId));
 			if (null != node) {
@@ -693,6 +694,7 @@ public abstract class ToolsKPIService<R, S> {
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
 									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+					setKpiBenchmarkValues(maturityDataCount, kpiId, CommonConstant.OVERALL);
 
 					trendValues.add(maturityDataCount);
 				}
@@ -810,7 +812,6 @@ public abstract class ToolsKPIService<R, S> {
 		Map<String, List<DataCount>> trendMap = new HashMap<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
 			if (null != node) {
@@ -833,6 +834,7 @@ public abstract class ToolsKPIService<R, S> {
 								DataCount maturityDataCount =
 										new DataCount(
 												node.getName(), maturity, aggregateValue, getList(value, kpiName));
+								setKpiBenchmarkValues(maturityDataCount, kpiId, key);
 
 								// Add forecasts if configured
 								Optional.ofNullable(forecastingManager)
@@ -847,6 +849,25 @@ public abstract class ToolsKPIService<R, S> {
 			}
 		}
 		return commonService.sortTrendValueMap(trendMap);
+	}
+
+	public void setKpiBenchmarkValues(DataCount dataCount, String kpiId, String filter) {
+		KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiId);
+		if (null != kpiBenchmarkValues) {
+			Optional<BenchmarkPercentiles> benchmarkPercentiles;
+			if (filter.equalsIgnoreCase(CommonConstant.OVERALL)) {
+				benchmarkPercentiles =
+						kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
+								.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value"))
+								.findFirst();
+			} else {
+				benchmarkPercentiles =
+						kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
+								.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value#" + filter))
+								.findFirst();
+			}
+			benchmarkPercentiles.ifPresent(dataCount::setBenchmarkPercentiles);
+		}
 	}
 
 	/**
