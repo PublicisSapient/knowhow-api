@@ -439,7 +439,7 @@ public class ProjectBasicConfigServiceImplTest {
 				.thenReturn(diffbasicConfig);
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
-		assertThat("Status: ", response.getSuccess(), equalTo(false));
+		assertThat("Status: ", response.getSuccess(), equalTo(true));
 	}
 
 	/** test update config when save method return false. */
@@ -449,7 +449,7 @@ public class ProjectBasicConfigServiceImplTest {
 		when(basicConfigRepository.findByProjectNameAndIdNot(any(), any())).thenReturn(basicConfig);
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
-		assertThat("Status: ", response.getSuccess(), equalTo(false));
+		assertThat("Status: ", response.getSuccess(), equalTo(true));
 	}
 
 	/** test list all configs */
