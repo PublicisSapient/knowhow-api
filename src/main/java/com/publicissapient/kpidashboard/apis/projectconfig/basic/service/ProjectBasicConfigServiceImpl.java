@@ -369,12 +369,8 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		ServiceResponse response;
 		Optional<ProjectBasicConfig> savedConfigOpt =
 				basicConfigRepository.findById(new ObjectId(basicConfigId));
-		// HB : todo remove projectName condition
-		ProjectBasicConfig diffIdSameName =
-				basicConfigRepository.findByProjectNameAndIdNot(
-						projectBasicConfigDTO.getProjectName(), new ObjectId(basicConfigId));
+
 		if (savedConfigOpt.isPresent()) {
-			if (!Optional.ofNullable(diffIdSameName).isPresent()) {
 				ProjectBasicConfig savedConfig = savedConfigOpt.get();
 				ModelMapper mapper = new ModelMapper();
 				ProjectBasicConfig basicConfig =
@@ -422,9 +418,6 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				configHelperService.updateCacheProjectBasicConfig(basicConfig);
 				updateProjectNameInOrgHierarchy(basicConfig, orgHierarchy);
 				response = new ServiceResponse(true, "Updated Successfully.", updatedBasicConfig);
-			} else {
-				response = new ServiceResponse(false, "Try with different project name.", null);
-			}
 		} else {
 			response =
 					new ServiceResponse(
