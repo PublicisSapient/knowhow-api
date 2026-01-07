@@ -27,6 +27,22 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 
+/**
+ * Custom error controller to handle servlet container level errors.
+ * 
+ * <p>This controller implements Spring Boot's ErrorController interface to intercept
+ * errors that occur at the servlet container level, before they reach Spring's
+ * exception handling mechanism. It specifically handles RequestDispatcher errors
+ * that occur when invalid URLs are accessed, converting them to proper 404 responses
+ * instead of 500 internal server errors.
+ * 
+ * <p>The controller handles three main scenarios:
+ * <ul>
+ *   <li>RequestDispatcher errors (invalid URLs) → 404 Not Found</li>
+ *   <li>Other HTTP error status codes → Appropriate HTTP status</li>
+ *   <li>Unknown errors → 500 Internal Server Error</li>
+ * </ul>
+ */
 @RestController
 public class CustomErrorController implements ErrorController {
 
@@ -57,7 +73,7 @@ public class CustomErrorController implements ErrorController {
                 .body(new ErrorResponse(System.currentTimeMillis(), 500, "Internal Server Error",
                         (String) request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)));
     }
-
+    
     public static class ErrorResponse {
         public long timestamp;
         public int status;
