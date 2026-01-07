@@ -349,7 +349,7 @@ public class ConfigHelperService {
 		List<KpiMaster> masterList = (List<KpiMaster>) loadKpiMaster();
 		return masterList.stream()
 				.filter(d -> d.getAggregationCircleCriteria() != null)
-				.collect(Collectors.toMap(KpiMaster::getKpiId, KpiMaster::getAggregationCircleCriteria, (existing, replacement) -> existing));
+				.collect(Collectors.toMap(KpiMaster::getKpiId, KpiMaster::getAggregationCircleCriteria));
 	}
 
 	@Cacheable(CommonConstant.CACHE_PROJECT_BASIC_TREE)
