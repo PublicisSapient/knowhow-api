@@ -211,12 +211,17 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<Object> handleNoHandlerFoundException(
 			NoHandlerFoundException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		Object errorDetail = errorDetails(request);
-		ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST);
-		apiError.setMessage(
-				String.format(
-						"Could not find the %s method for URL %s", ex.getHttpMethod(), ex.getRequestURL()));
+		ApiError apiError = new ApiError(HttpStatus.NOT_FOUND);
+		apiError.setMessage("Not Found");
 		apiError.setDebugMessage(ex.getMessage());
 		apiError.setDetails(errorDetail);
+		return buildResponseEntity(apiError);
+	}
+
+	@ExceptionHandler(InvalidLevelException.class)
+	protected ResponseEntity<Object> handleInvalidLevelException(InvalidLevelException ex) {
+		ApiError apiError = new ApiError(HttpStatus.NOT_FOUND);
+		apiError.setMessage(ex.getMessage());
 		return buildResponseEntity(apiError);
 	}
 

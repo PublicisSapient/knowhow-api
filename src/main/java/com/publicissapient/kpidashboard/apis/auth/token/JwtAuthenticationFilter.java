@@ -62,10 +62,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		Authentication authentication =
-				tokenAuthenticationService.validateAuthentication(request, response);
+		try {
+			Authentication authentication = tokenAuthenticationService.validateAuthentication(request, response);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		} catch (Exception e) {
+			// Invalid JWT token - clear cookie and return 400 Bad Request
+			cookieUtil.deleteCookie(request, response, CookieUtil.AUTH_COOKIE);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"timestamp\":" + System.currentTimeMillis() + ",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Invalid authentication token\"}");
+			return;
+		}
 
-		SecurityContextHolder.getContext().setAuthentication(authentication);
 		filterChain.doFilter(request, response);
 	}
 }
