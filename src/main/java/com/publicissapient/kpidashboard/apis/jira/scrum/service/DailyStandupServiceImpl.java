@@ -596,11 +596,16 @@ public class DailyStandupServiceImpl extends JiraIterationKPIService {
 
 		if (CollectionUtils.isNotEmpty(totalHistoryList)) {
 			LocalDate sprintStartDate =
-					DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate()).toLocalDate();
+					DateUtil.convertingStringToLocalDateTime(
+									sprintDetails.getStartDate(), DateUtil.TIME_FORMAT)
+							.toLocalDate();
 			LocalDateTime sprintStartDateTime =
-					DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate());
+					DateUtil.convertingStringToLocalDateTime(
+							sprintDetails.getStartDate(), DateUtil.TIME_FORMAT);
 			LocalDate sprintEndDate =
-					DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate()).toLocalDate();
+					DateUtil.convertingStringToLocalDateTime(
+									sprintDetails.getStartDate(), DateUtil.TIME_FORMAT)
+							.toLocalDate();
 
 			for (JiraIssue jiraIssue : jiraIssueList) {
 				KPIExcelUtility.populateIterationKPI(null, null, jiraIssue, fieldMapping, mapOfModalObject);
