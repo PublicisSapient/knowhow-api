@@ -383,7 +383,7 @@ public class ProjectBasicConfigServiceImplTest {
 		basicConfig.setSaveAssigneeDetails(true);
 		basicConfig.setIsKanban(false);
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
-		when(basicConfigRepository.findByProjectNameAndIdNot(any(), any())).thenReturn(null);
+
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		List<ProcessorExecutionTraceLog> traceLogs = new ArrayList<>();
 		traceLogs.add(new ProcessorExecutionTraceLog());
@@ -415,7 +415,7 @@ public class ProjectBasicConfigServiceImplTest {
 		ph.add(projectHierarchy);
 
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
-		when(basicConfigRepository.findByProjectNameAndIdNot(any(), any())).thenReturn(null);
+
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
@@ -435,8 +435,6 @@ public class ProjectBasicConfigServiceImplTest {
 	@Test
 	public void updateConfigTest_diffIdSameName_failure() {
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
-		when(basicConfigRepository.findByProjectNameAndIdNot(any(String.class), any(ObjectId.class)))
-				.thenReturn(diffbasicConfig);
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -446,7 +444,7 @@ public class ProjectBasicConfigServiceImplTest {
 	@Test
 	public void updateConfigTest_updateNotOccured_failure() {
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
-		when(basicConfigRepository.findByProjectNameAndIdNot(any(), any())).thenReturn(basicConfig);
+
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
