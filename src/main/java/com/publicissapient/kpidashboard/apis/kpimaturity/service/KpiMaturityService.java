@@ -89,6 +89,8 @@ public class KpiMaturityService {
 	private static final String PROJECT_HAS_NO_KPI_MATURITY_DATA_L0G_MESSAGE =
 			"No kpi maturity data was found for " + "project with node id {} and name {}";
 
+    private static final String NOT_APPLICABLE = "N/A";
+
 	private final KpiMaturityCustomRepository kpiMaturityCustomRepository;
 
 	private final FilterHelperService filterHelperService;
@@ -304,8 +306,16 @@ public class KpiMaturityService {
 							+ "containing productivity data",
 					rootNode.getNodeId(),
 					rootNode.getNodeName());
+            return Optional.of(
+                    OrganizationEntityMaturityMetricsDTO.builder()
+                            .id(rootNode.getNodeId())
+                            .name(rootNode.getNodeName())
+                            .boardMaturity(BoardMaturityDTO.builder().metrics(Map.of()).build())
+                            .health(NOT_APPLICABLE)
+                            .completion(NOT_APPLICABLE)
+                            .build());
 		}
-		return Optional.empty();
+//		return Optional.empty();
 	}
 
 	/**
