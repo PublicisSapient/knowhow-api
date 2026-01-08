@@ -11,4 +11,4 @@ This repository uses GitGuardian via pre-commit hooks.
 Run once after cloning:
 
 ```pip install pre-commit
-pre-commit install```
+pre-commit install
