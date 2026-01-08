@@ -101,7 +101,7 @@ public class DefectsBreachedSlasServiceImplTest {
 		setupTreeAggregatorDetail();
 		kpiRequest = Mockito.mock(KpiRequest.class);
 		when(kpiRequest.getIds()).thenReturn(new String[] {"node1"});
-		// when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
+		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
 		when(kpiRequest.getLabel()).thenReturn("project");
 
 		fieldMapping = new FieldMapping();
@@ -165,6 +165,7 @@ public class DefectsBreachedSlasServiceImplTest {
 		// Kpi request
 		kpiRequest = Mockito.mock(KpiRequest.class);
 		when(kpiRequest.getIds()).thenReturn(new String[] {"project_node"});
+		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("PROJECT");
 		when(kpiRequest.getLabel()).thenReturn("project");
 		when(kpiRequest.getRequestTrackerId())
 				.thenReturn("test-tracker-id-" + System.currentTimeMillis());
@@ -251,6 +252,7 @@ public class DefectsBreachedSlasServiceImplTest {
 		// Kpi request
 		kpiRequest = Mockito.mock(KpiRequest.class);
 		when(kpiRequest.getIds()).thenReturn(new String[] {"node1", "node2"});
+		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("SPRINT");
 		when(kpiRequest.getLabel()).thenReturn("project");
 		when(kpiRequest.getRequestTrackerId())
 				.thenReturn("EXCEL-tracker-id-" + System.currentTimeMillis());
