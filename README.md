@@ -9,6 +9,6 @@ This is developed using Java 17 with springboot 3.x.x
 This repository uses GitGuardian via pre-commit hooks to scans your code before every commit.
 
 Run once after cloning:
-
-```pip install pre-commit
-```pre-commit install
+```
+pip install pre-commit
+pre-commit install
