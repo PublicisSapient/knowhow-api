@@ -73,7 +73,7 @@ public class CustomErrorController implements ErrorController {
                 .body(new ErrorResponse(System.currentTimeMillis(), 500, "Internal Server Error",
                         (String) request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)));
     }
-    
+
     public static class ErrorResponse {
         public long timestamp;
         public int status;

@@ -21,6 +21,8 @@ package com.publicissapient.kpidashboard.apis.auth.token;
 import java.io.IOException;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -68,9 +70,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		} catch (Exception e) {
 			// Invalid JWT token - clear cookie and return 400 Bad Request
 			cookieUtil.deleteCookie(request, response, CookieUtil.AUTH_COOKIE);
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.setContentType("application/json");
-			response.getWriter().write("{\"timestamp\":" + System.currentTimeMillis() + ",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Invalid authentication token\"}");
+			response.setStatus(HttpStatus.BAD_REQUEST.value());
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+			response.getWriter().write("{\"timestamp\":" + System.currentTimeMillis() + ",\"status\":" + HttpStatus.BAD_REQUEST.value() + ",\"error\":\"" + HttpStatus.BAD_REQUEST.getReasonPhrase() + "\",\"message\":\"Invalid authentication token\"}");
 			return;
 		}
 
