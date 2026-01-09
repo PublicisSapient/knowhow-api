@@ -26,6 +26,7 @@ import com.publicissapient.kpidashboard.common.model.application.AdditionalFilte
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 
 /**
  * A Service to manage cache.
@@ -112,4 +113,6 @@ public interface CacheService {
 	Map<String, PromptDetails> getPromptDetails();
 
 	Object filterOnHoldProjectBasicConfig();
+
+	Map<String, KpiBenchmarkValues> getKpiBenchmarkTargets();
 }
