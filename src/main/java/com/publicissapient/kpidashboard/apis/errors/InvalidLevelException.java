@@ -18,18 +18,16 @@
 
 package com.publicissapient.kpidashboard.apis.errors;
 
-/**
- * Exception thrown when an invalid level name is provided.
- */
+/** Exception thrown when an invalid level name is provided. */
 public class InvalidLevelException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public InvalidLevelException(String message) {
-        super(message);
-    }
+	public InvalidLevelException(String message) {
+		super(message);
+	}
 
-    public InvalidLevelException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public InvalidLevelException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

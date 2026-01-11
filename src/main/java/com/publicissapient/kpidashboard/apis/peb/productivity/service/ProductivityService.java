@@ -238,6 +238,14 @@ public class ProductivityService {
 								+ "containing productivity data",
 						rootAccountData.getNodeId(),
 						rootAccountData.getNodeName());
+				details.add(
+						OrganizationEntityProductivity.builder()
+								.levelName(
+										pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+												.getHierarchyLevelName())
+								.organizationEntityName(rootAccountData.getNodeName())
+								.categoryScores(new CategoryScoresDTO())
+								.build());
 			}
 		}
 
