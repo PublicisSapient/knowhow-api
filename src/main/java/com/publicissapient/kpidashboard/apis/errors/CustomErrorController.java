@@ -29,13 +29,13 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Custom error controller to handle servlet container level errors.
- *
+ * 
  * <p>This controller implements Spring Boot's ErrorController interface to intercept
  * errors that occur at the servlet container level, before they reach Spring's
  * exception handling mechanism. It specifically handles RequestDispatcher errors
  * that occur when invalid URLs are accessed, converting them to proper 404 responses
  * instead of 500 internal server errors.
- *
+ * 
  * <p>The controller handles three main scenarios:
  * <ul>
  *   <li>RequestDispatcher errors (invalid URLs) → 404 Not Found</li>
