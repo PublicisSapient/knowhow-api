@@ -171,11 +171,9 @@ public class EditKpiConfigServiceImpl implements EditKpiConfigService {
 		if (StringUtils.isNotEmpty(accountHierarchy.getBeginDate())
 				&& StringUtils.isNotEmpty(accountHierarchy.getEndDate())) {
 			LocalDateTime startDate =
-					DateUtil.convertingStringToLocalDateTime(
-							accountHierarchy.getBeginDate(), DateUtil.TIME_FORMAT);
+					DateUtil.convertingStringToLocalDateTime(accountHierarchy.getBeginDate());
 			LocalDateTime releaseDate =
-					DateUtil.convertingStringToLocalDateTime(
-							accountHierarchy.getEndDate(), DateUtil.TIME_FORMAT);
+					DateUtil.convertingStringToLocalDateTime(accountHierarchy.getEndDate());
 			duration = DateUtil.calculateWorkingDays(startDate, releaseDate);
 		}
 		return duration;
