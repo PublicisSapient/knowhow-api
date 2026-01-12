@@ -67,7 +67,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class RepoToolCodeCommitKanbanServiceImpl
+public class ScmRepoToolCodeCommitKanbanServiceImpl
 		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String NO_CHECKIN = "No. of Checkins";

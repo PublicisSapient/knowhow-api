@@ -71,7 +71,7 @@ import com.publicissapient.kpidashboard.common.model.jira.AssigneeDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRepository;
 
 @RunWith(MockitoJUnitRunner.class)
-public class RepoToolCodeCommitKanbanServiceImplTest {
+public class ScmRepoToolCodeCommitKanbanServiceImplTest {
 
 	private static Tool tool;
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
@@ -84,7 +84,7 @@ public class RepoToolCodeCommitKanbanServiceImplTest {
 	@Mock private CustomApiConfig customApiConfig;
 	@Mock private KpiHelperService kpiHelperService;
 	@Mock private AssigneeDetailsRepository assigneeDetailsRepository;
-	@InjectMocks RepoToolCodeCommitKanbanServiceImpl codeCommitServiceImpl;
+	@InjectMocks ScmRepoToolCodeCommitKanbanServiceImpl codeCommitServiceImpl;
 	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
 	private List<FieldMapping> fieldMappingList = new ArrayList<>();
 	private Map<ObjectId, Map<String, List<Tool>>> toolMap = new HashMap<>();
