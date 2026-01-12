@@ -32,8 +32,11 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import javax.crypto.SecretKey;
 
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -44,13 +47,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.google.common.collect.Sets;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
-import com.publicissapient.kpidashboard.apis.auth.AuthenticationFixture;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.UserTokenAuthenticationDTO;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
@@ -59,13 +65,13 @@ import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsForAccessRequest;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.rbac.UserTokenData;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -74,8 +80,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class TokenAuthenticationServiceImplTest {
 
 	private static final String USERNAME = "username";
-
 	private static final String AUTH_RESPONSE_HEADER = "X-Authentication-Token";
+	private static final String VALID_JWT_SECRET =
+			"mySecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmToWorkProperlyWithExtraCharactersToEnsure512Bits1234567890";
+	private static final String ROLES_CLAIM = "roles";
+	private static final String DETAILS_CLAIM = "details";
+
 	@Mock UserTokenReopository userTokenReopository;
 	@Mock Authentication authentication;
 	@Mock SecurityContext securityContext;
@@ -94,8 +104,30 @@ public class TokenAuthenticationServiceImplTest {
 	@Mock private Cookie cookie;
 	@Mock private CustomApiConfig customApiConfig;
 	@Mock UsersSessionService usersSessionService;
-
 	@Mock UserTokenAuthenticationDTO userTokenAuthenticationDTO;
+
+	private String createTestJwtToken(String username, String secret, long expirationTime) {
+		Authentication auth = createTestAuthentication(username);
+		List<String> authorities = Arrays.asList("ROLE_VIEWER", "ROLE_SUPERADMIN");
+		SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+
+		return Jwts.builder()
+				.subject(auth.getName())
+				.claim(DETAILS_CLAIM, auth.getDetails())
+				.claim(ROLES_CLAIM, authorities)
+				.expiration(new Date(System.currentTimeMillis() + expirationTime))
+				.signWith(key)
+				.compact();
+	}
+
+	private Authentication createTestAuthentication(String username) {
+		Collection<GrantedAuthority> authorities =
+				Sets.newHashSet(new SimpleGrantedAuthority("ROLE_ADMIN"));
+		UsernamePasswordAuthenticationToken auth =
+				new UsernamePasswordAuthenticationToken(username, "password", authorities);
+		auth.setDetails(AuthType.STANDARD.name());
+		return auth;
+	}
 
 	@Before
 	public void setup() {
@@ -103,19 +135,15 @@ public class TokenAuthenticationServiceImplTest {
 		SecurityContextHolder.clearContext();
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class)))
 				.thenReturn(
-						new Cookie(
-								"authCookie",
-								AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
+						new Cookie("authCookie", createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L)));
 	}
 
 	@Test
 	public void testValidateAuthentication() {
-		when(tokenAuthProperties.getSecret()).thenReturn("userTokenData");
+		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class)))
 				.thenReturn(
-						new Cookie(
-								"authCookie",
-								AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
+						new Cookie("authCookie", createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L)));
 		service.validateAuthentication(request, response);
 		Assert.assertNotNull(authentication);
 	}
@@ -124,24 +152,20 @@ public class TokenAuthenticationServiceImplTest {
 	public void testAddAuthentication() {
 		HttpServletResponse response = mock(HttpServletResponse.class);
 		when(tokenAuthProperties.getExpirationTime()).thenReturn(0l);
-		when(tokenAuthProperties.getSecret()).thenReturn("userTokenData");
+		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
 		when(cookieUtil.createAccessTokenCookie(any()))
 				.thenReturn(
-						new Cookie(
-								"authCookie",
-								AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
-		service.addAuthentication(response, AuthenticationFixture.getAuthentication(USERNAME));
+						new Cookie("authCookie", createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L)));
+		service.addAuthentication(response, createTestAuthentication(USERNAME));
 		verify(response).addHeader(eq(AUTH_RESPONSE_HEADER), anyString());
 	}
 
 	@Test
 	public void testGetAuthenticationWhenTokenNotProvided() {
-		when(tokenAuthProperties.getSecret()).thenReturn("userTokenData");
+		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class)))
 				.thenReturn(
-						new Cookie(
-								"authCookie",
-								AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L)));
+						new Cookie("authCookie", createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L)));
 		Authentication authentication = service.getAuthentication(request, response);
 		Assert.assertNotNull(authentication);
 		assertTrue(authentication.isAuthenticated());
@@ -152,7 +176,7 @@ public class TokenAuthenticationServiceImplTest {
 
 	@Test
 	public void testGetAuthenticationWhenValidTokenProvided() {
-		when(tokenAuthProperties.getSecret()).thenReturn("userTokenData");
+		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
 		Authentication authentication = service.getAuthentication(request, response);
 		Assert.assertNotNull(authentication);
 		assertTrue(authentication.isAuthenticated());
@@ -163,28 +187,6 @@ public class TokenAuthenticationServiceImplTest {
 
 	@Test
 	public void validateGetUserProjects() {
-		ProjectsForAccessRequest par = new ProjectsForAccessRequest();
-		par.setProjectId("pID");
-		List<ProjectsForAccessRequest> parList = new ArrayList<>();
-		parList.add(par);
-		accessItem = new AccessItem();
-		accessItem.setItemId("itemId");
-		accessItems.add(accessItem);
-
-		accessNodes = new AccessNode();
-		accessNodes.setAccessLevel("accessLevel");
-		accessNodes.setAccessItems(accessItems);
-		listAccessNode.add(accessNodes);
-		ProjectsAccess pa = new ProjectsAccess();
-		pa.setAccessNodes(listAccessNode);
-		pa.setRole("Role");
-
-		List<ProjectsAccess> paList = new ArrayList<>();
-		paList.add(pa);
-		UserInfo testUser = new UserInfo();
-		testUser.setUsername("User");
-		testUser.setProjectsAccess(paList);
-
 		SecurityContextHolder.setContext(securityContext);
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
 		Set<String> result = service.getUserProjects();
@@ -193,31 +195,8 @@ public class TokenAuthenticationServiceImplTest {
 
 	@Test
 	public void validateRefreshToken() {
-		ProjectsForAccessRequest par = new ProjectsForAccessRequest();
-		par.setProjectId("pID");
-		List<ProjectsForAccessRequest> parList = new ArrayList<>();
-		parList.add(par);
-
-		accessItem = new AccessItem();
-		accessItem.setItemId("itemId");
-		accessItems.add(accessItem);
-
-		accessNodes = new AccessNode();
-		accessNodes.setAccessLevel("accessLevel");
-		accessNodes.setAccessItems(accessItems);
-		listAccessNode.add(accessNodes);
-		ProjectsAccess pa = new ProjectsAccess();
-		pa.setAccessNodes(listAccessNode);
-		pa.setRole("Role");
-
-		List<ProjectsAccess> paList = new ArrayList<>();
-		paList.add(pa);
-		UserInfo testUser = new UserInfo();
-		testUser.setUsername("User");
-		testUser.setProjectsAccess(paList);
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		HttpServletResponse response = mock(HttpServletResponse.class);
-
 		SecurityContextHolder.setContext(securityContext);
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
 		List<RoleWiseProjects> result = service.refreshToken(request, response);
@@ -226,10 +205,8 @@ public class TokenAuthenticationServiceImplTest {
 
 	@Test
 	public void invalidateAuthToken() {
-
 		List<String> users = Arrays.asList("Test");
 		doNothing().when(userTokenReopository).deleteByUserNameIn(users);
-
 		service.invalidateAuthToken(users);
 		verify(userTokenReopository, times(1)).deleteByUserNameIn(users);
 	}
@@ -239,8 +216,9 @@ public class TokenAuthenticationServiceImplTest {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		UserTokenData userTokenData =
 				new UserTokenData(
-						USERNAME, cookieUtil.getAuthCookie(request).getValue(), "2023-01-19T12:33:14.013");
-
+						USERNAME,
+						createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L),
+						"2023-01-19T12:33:14.013");
 		UserInfo testUser = new UserInfo();
 		Object auth = "STANDARD";
 		JSONObject jsonObject = new JSONObject();
