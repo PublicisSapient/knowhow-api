@@ -89,6 +89,8 @@ public class KpiMaturityService {
 	private static final String PROJECT_HAS_NO_KPI_MATURITY_DATA_L0G_MESSAGE =
 			"No kpi maturity data was found for " + "project with node id {} and name {}";
 
+	private static final String NOT_APPLICABLE = "N/A";
+
 	private final KpiMaturityCustomRepository kpiMaturityCustomRepository;
 
 	private final FilterHelperService filterHelperService;
@@ -212,6 +214,13 @@ public class KpiMaturityService {
 							kpiMaturityGroupedByNodeId)
 					.ifPresent(rows::add);
 		}
+
+		rows.sort(
+				(a, b) -> {
+					boolean aIsNA = NOT_APPLICABLE.equalsIgnoreCase(a.getCompletion());
+					boolean bIsNA = NOT_APPLICABLE.equalsIgnoreCase(b.getCompletion());
+					return Boolean.compare(aIsNA, bIsNA);
+				});
 		return KpiMaturityResponseDTO.builder()
 				.data(
 						KpiMaturityDashboardDataDTO.builder()
@@ -304,8 +313,15 @@ public class KpiMaturityService {
 							+ "containing productivity data",
 					rootNode.getNodeId(),
 					rootNode.getNodeName());
+			return Optional.of(
+					OrganizationEntityMaturityMetricsDTO.builder()
+							.id(rootNode.getNodeId())
+							.name(rootNode.getNodeName())
+							.boardMaturity(BoardMaturityDTO.builder().metrics(Map.of()).build())
+							.health(NOT_APPLICABLE)
+							.completion(NOT_APPLICABLE)
+							.build());
 		}
-		return Optional.empty();
 	}
 
 	/**
@@ -447,8 +463,8 @@ public class KpiMaturityService {
 						.field("name")
 						.header(hierarchyLevelsData.requestedLevel.getHierarchyLevelName() + " Name")
 						.build());
-		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Efficiency(%)").build());
 		columns.add(ColumnDefinitionDTO.builder().field("health").header("Overall Health").build());
+		columns.add(ColumnDefinitionDTO.builder().field("completion").header("Efficiency(%)").build());
 
 		// Add dynamic board columns
 		kpiMaturity

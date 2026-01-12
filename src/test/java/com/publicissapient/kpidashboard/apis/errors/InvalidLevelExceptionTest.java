@@ -25,22 +25,22 @@ import org.junit.jupiter.api.Test;
 
 class InvalidLevelExceptionTest {
 
-    @Test
-    void testInvalidLevelException_WithMessage() {
-        String message = "Invalid level name: invalid";
-        InvalidLevelException exception = new InvalidLevelException(message);
+	@Test
+	void testInvalidLevelException_WithMessage() {
+		String message = "Invalid level name: invalid";
+		InvalidLevelException exception = new InvalidLevelException(message);
 
-        assertEquals(message, exception.getMessage());
-        assertNotNull(exception);
-    }
+		assertEquals(message, exception.getMessage());
+		assertNotNull(exception);
+	}
 
-    @Test
-    void testInvalidLevelException_WithMessageAndCause() {
-        String message = "Level is required";
-        Throwable cause = new RuntimeException("Root cause");
-        InvalidLevelException exception = new InvalidLevelException(message, cause);
+	@Test
+	void testInvalidLevelException_WithMessageAndCause() {
+		String message = "Level is required";
+		Throwable cause = new RuntimeException("Root cause");
+		InvalidLevelException exception = new InvalidLevelException(message, cause);
 
-        assertEquals(message, exception.getMessage());
-        assertEquals(cause, exception.getCause());
-    }
+		assertEquals(message, exception.getMessage());
+		assertEquals(cause, exception.getCause());
+	}
 }

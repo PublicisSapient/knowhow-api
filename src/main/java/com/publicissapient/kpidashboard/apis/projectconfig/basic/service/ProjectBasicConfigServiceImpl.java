@@ -371,53 +371,52 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				basicConfigRepository.findById(new ObjectId(basicConfigId));
 
 		if (savedConfigOpt.isPresent()) {
-				ProjectBasicConfig savedConfig = savedConfigOpt.get();
-				ModelMapper mapper = new ModelMapper();
-				ProjectBasicConfig basicConfig =
-						mapper.map(projectBasicConfigDTO, ProjectBasicConfig.class);
-				// AP: Temporary workaround till UI passes the new field
-				if (StringUtils.isEmpty(projectBasicConfigDTO.getProjectNodeId())) {
-					basicConfig.setProjectNodeId(savedConfigOpt.get().getProjectNodeId());
-				}
+			ProjectBasicConfig savedConfig = savedConfigOpt.get();
+			ModelMapper mapper = new ModelMapper();
+			ProjectBasicConfig basicConfig = mapper.map(projectBasicConfigDTO, ProjectBasicConfig.class);
+			// AP: Temporary workaround till UI passes the new field
+			if (StringUtils.isEmpty(projectBasicConfigDTO.getProjectNodeId())) {
+				basicConfig.setProjectNodeId(savedConfigOpt.get().getProjectNodeId());
+			}
 
-				// UI providing changed display name value to original project name as well,
-				// which will require more effort so workaround
-				basicConfig.setProjectName(savedConfig.getProjectName());
+			// UI providing changed display name value to original project name as well,
+			// which will require more effort so workaround
+			basicConfig.setProjectName(savedConfig.getProjectName());
 
-				// AP: Temporary workaround end
-				if (isAssigneeUpdated(basicConfig, savedConfig)) {
-					List<ProcessorExecutionTraceLog> traceLogs =
-							processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
-									ProcessorConstants.JIRA, Collections.singletonList(basicConfigId));
-					if (!traceLogs.isEmpty()) {
-						for (ProcessorExecutionTraceLog traceLog : traceLogs) {
-							if (traceLog != null) {
-								traceLog.setLastSuccessfulRun(null);
-								traceLog.setLastSavedEntryUpdatedDateByType(new HashMap<>());
-							}
+			// AP: Temporary workaround end
+			if (isAssigneeUpdated(basicConfig, savedConfig)) {
+				List<ProcessorExecutionTraceLog> traceLogs =
+						processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
+								ProcessorConstants.JIRA, Collections.singletonList(basicConfigId));
+				if (!traceLogs.isEmpty()) {
+					for (ProcessorExecutionTraceLog traceLog : traceLogs) {
+						if (traceLog != null) {
+							traceLog.setLastSuccessfulRun(null);
+							traceLog.setLastSavedEntryUpdatedDateByType(new HashMap<>());
 						}
-						processorExecutionTraceLogRepository.saveAll(traceLogs);
 					}
-					AssigneeDetails assigneeDetails =
-							assigneeDetailsRepository.findByBasicProjectConfigId(basicConfigId);
-					if (assigneeDetails != null) {
-						assigneeDetailsRepository.delete(assigneeDetails);
-					}
+					processorExecutionTraceLogRepository.saveAll(traceLogs);
 				}
-				setProjectOnHold(savedConfig, basicConfig);
-				basicConfig.setCreatedBy(savedConfig.getCreatedBy());
-				basicConfig.setCreatedAt(savedConfig.getCreatedAt());
-				basicConfig.setUpdatedAt(
-						DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
-				basicConfig.setUpdatedBy(authenticationService.getLoggedInUser());
-				ProjectBasicConfig updatedBasicConfig = basicConfigRepository.save(basicConfig);
+				AssigneeDetails assigneeDetails =
+						assigneeDetailsRepository.findByBasicProjectConfigId(basicConfigId);
+				if (assigneeDetails != null) {
+					assigneeDetailsRepository.delete(assigneeDetails);
+				}
+			}
+			setProjectOnHold(savedConfig, basicConfig);
+			basicConfig.setCreatedBy(savedConfig.getCreatedBy());
+			basicConfig.setCreatedAt(savedConfig.getCreatedAt());
+			basicConfig.setUpdatedAt(
+					DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
+			basicConfig.setUpdatedBy(authenticationService.getLoggedInUser());
+			ProjectBasicConfig updatedBasicConfig = basicConfigRepository.save(basicConfig);
 
-				OrganizationHierarchy orgHierarchy =
-						organizationHierarchyService.findByNodeId(basicConfig.getProjectNodeId());
+			OrganizationHierarchy orgHierarchy =
+					organizationHierarchyService.findByNodeId(basicConfig.getProjectNodeId());
 
-				configHelperService.updateCacheProjectBasicConfig(basicConfig);
-				updateProjectNameInOrgHierarchy(basicConfig, orgHierarchy);
-				response = new ServiceResponse(true, "Updated Successfully.", updatedBasicConfig);
+			configHelperService.updateCacheProjectBasicConfig(basicConfig);
+			updateProjectNameInOrgHierarchy(basicConfig, orgHierarchy);
+			response = new ServiceResponse(true, "Updated Successfully.", updatedBasicConfig);
 		} else {
 			response =
 					new ServiceResponse(

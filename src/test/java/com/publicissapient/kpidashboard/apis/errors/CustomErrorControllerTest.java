@@ -31,30 +31,30 @@ import jakarta.servlet.http.HttpServletRequest;
 
 class CustomErrorControllerTest {
 
-    private final CustomErrorController controller = new CustomErrorController();
+	private final CustomErrorController controller = new CustomErrorController();
 
-    @Test
-    void testHandleError_RequestDispatcherError_Returns404() {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        Exception exception = new IllegalStateException("RequestDispatcher could not be located");
-        
-        when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(exception);
-        when(request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).thenReturn("/invalid-url");
+	@Test
+	void testHandleError_RequestDispatcherError_Returns404() {
+		HttpServletRequest request = mock(HttpServletRequest.class);
+		Exception exception = new IllegalStateException("RequestDispatcher could not be located");
 
-        ResponseEntity<Object> response = controller.handleError(request);
+		when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(exception);
+		when(request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).thenReturn("/invalid-url");
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+		ResponseEntity<Object> response = controller.handleError(request);
 
-    @Test
-    void testHandleError_404Status_Returns404() {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        
-        when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(404);
-        when(request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).thenReturn("/not-found");
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+	}
 
-        ResponseEntity<Object> response = controller.handleError(request);
+	@Test
+	void testHandleError_404Status_Returns404() {
+		HttpServletRequest request = mock(HttpServletRequest.class);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
+		when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(404);
+		when(request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).thenReturn("/not-found");
+
+		ResponseEntity<Object> response = controller.handleError(request);
+
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+	}
 }

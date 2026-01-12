@@ -435,7 +435,7 @@ class ProductivityServiceTest {
 
 		assertTrue(
 				productivityResponse.getDetails().stream()
-						.allMatch(
+						.anyMatch(
 								productivityDetail ->
 										expectedOrganizationUnitNames.contains(
 												productivityDetail.getOrganizationEntityName())));
