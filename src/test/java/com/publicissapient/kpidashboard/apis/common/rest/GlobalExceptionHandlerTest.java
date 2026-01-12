@@ -50,6 +50,7 @@ import com.publicissapient.kpidashboard.apis.auth.exceptions.DeleteLastAdminExce
 import com.publicissapient.kpidashboard.apis.auth.exceptions.InvalidAuthTypeConfigException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.PendingApprovalException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.UserNotFoundException;
+import com.publicissapient.kpidashboard.apis.errors.InvalidLevelException;
 import com.publicissapient.kpidashboard.apis.errors.ProjectNotFoundException;
 import com.publicissapient.kpidashboard.apis.errors.ToolNotFoundException;
 import com.publicissapient.kpidashboard.apis.model.ErrorResponse;
@@ -685,5 +686,35 @@ class GlobalExceptionHandlerTest {
 		assertEquals(
 				"An error occurred. Please try again later.",
 				Objects.requireNonNull(response.getBody()).getMessage());
+	}
+
+	@Test
+	void when_InvalidLevelExceptionThrown_Then_ReturnNotFound() {
+		// Arrange
+		InvalidLevelException exception = new InvalidLevelException("Invalid level name");
+		com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler handler =
+				new com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler();
+
+		// Act - Using reflection to access protected method
+		ResponseEntity<Object> response =
+				ReflectionTestUtils.invokeMethod(handler, "handleInvalidLevelException", exception);
+
+		// Assert
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+	}
+
+	@Test
+	void when_InvalidLevelExceptionWithMissingLevelThrown_Then_ReturnNotFound() {
+		// Arrange
+		InvalidLevelException exception = new InvalidLevelException("Level is required");
+		com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler handler =
+				new com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler();
+
+		// Act - Using reflection to access protected method
+		ResponseEntity<Object> response =
+				ReflectionTestUtils.invokeMethod(handler, "handleInvalidLevelException", exception);
+
+		// Assert
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 	}
 }
