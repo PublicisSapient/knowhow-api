@@ -29,6 +29,7 @@ public class ConfigDetails {
 	private boolean gitlabToolFieldFlag;
 	private int sprintCountForKpiCalculation;
 	private boolean isOpenSource;
+	private AnalyticsConfig analytics;
 
 	public boolean isGitlabToolFieldFlag() {
 		return gitlabToolFieldFlag;
@@ -109,5 +110,13 @@ public class ConfigDetails {
 
 	public void setOpenSource(boolean openSource) {
 		isOpenSource = openSource;
+	}
+
+	public AnalyticsConfig getAnalytics() {
+		return analytics;
+	}
+
+	public void setAnalytics(AnalyticsConfig analytics) {
+		this.analytics = analytics;
 	}
 }

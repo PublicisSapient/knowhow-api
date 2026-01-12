@@ -168,6 +168,15 @@ public class CustomApiConfig { // NOPMD
 	@Value("${analytics.switch}")
 	private boolean analyticsSwitch;
 
+	@Value("${analytics.grafana.rollout.percentage:0}")
+	private int analyticsGrafanaRolloutPercentage;
+
+	@Value("${analytics.google.enabled:true}")
+	private boolean analyticsGoogleEnabled;
+
+	@Value("${analytics.grafana.enabled:false}")
+	private boolean analyticsGrafanaEnabled;
+
 	// feedback categories
 	@Value("${feedback.categories}")
 	private List<String> feedbackCategories;

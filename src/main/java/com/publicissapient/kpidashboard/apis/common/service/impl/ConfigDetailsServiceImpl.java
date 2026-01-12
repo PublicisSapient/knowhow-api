@@ -54,6 +54,15 @@ public class ConfigDetailsServiceImpl implements ConfigDetailService {
 		configDetails.setSprintCountForKpiCalculation(
 				customApiConfig.getSprintCountForKpiCalculation());
 		configDetails.setOpenSource(StringUtils.isEmpty(customApiConfig.getCentralHierarchyUrl()));
+
+		com.publicissapient.kpidashboard.apis.model.AnalyticsConfig analyticsConfig = 
+				new com.publicissapient.kpidashboard.apis.model.AnalyticsConfig(
+						customApiConfig.getAnalyticsGrafanaRolloutPercentage(),
+						customApiConfig.isAnalyticsGoogleEnabled(),
+						customApiConfig.isAnalyticsGrafanaEnabled()
+				);
+		configDetails.setAnalytics(analyticsConfig);
+		
 		return configDetails;
 	}
 }
