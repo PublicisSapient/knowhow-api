@@ -362,9 +362,12 @@ public class CacheServiceImpl implements CacheService {
 		log.info("Caching Kpi Benchmark Targets Map");
 		List<KpiBenchmarkValues> kpiBenchmarkValuesList = kpiBenchmarkValuesRepository.findAll();
 		return kpiBenchmarkValuesList.stream()
-				.collect(Collectors.groupingBy(KpiBenchmarkValues::getKpiId,
-						Collectors.maxBy(Comparator.comparing(KpiBenchmarkValues::getCalculationDate))))
-				.entrySet().stream()
+				.collect(
+						Collectors.groupingBy(
+								KpiBenchmarkValues::getKpiId,
+								Collectors.maxBy(Comparator.comparing(KpiBenchmarkValues::getCalculationDate))))
+				.entrySet()
+				.stream()
 				.filter(entry -> entry.getValue().isPresent())
 				.collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().get()));
 	}

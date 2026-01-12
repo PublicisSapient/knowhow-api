@@ -692,12 +692,12 @@ class GlobalExceptionHandlerTest {
 	void when_InvalidLevelExceptionThrown_Then_ReturnNotFound() {
 		// Arrange
 		InvalidLevelException exception = new InvalidLevelException("Invalid level name");
-		com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler handler = 
+		com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler handler =
 				new com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler();
 
 		// Act - Using reflection to access protected method
-		ResponseEntity<Object> response = ReflectionTestUtils.invokeMethod(
-				handler, "handleInvalidLevelException", exception);
+		ResponseEntity<Object> response =
+				ReflectionTestUtils.invokeMethod(handler, "handleInvalidLevelException", exception);
 
 		// Assert
 		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -707,12 +707,12 @@ class GlobalExceptionHandlerTest {
 	void when_InvalidLevelExceptionWithMissingLevelThrown_Then_ReturnNotFound() {
 		// Arrange
 		InvalidLevelException exception = new InvalidLevelException("Level is required");
-		com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler handler = 
+		com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler handler =
 				new com.publicissapient.kpidashboard.apis.errors.CustomRestExceptionHandler();
 
 		// Act - Using reflection to access protected method
-		ResponseEntity<Object> response = ReflectionTestUtils.invokeMethod(
-				handler, "handleInvalidLevelException", exception);
+		ResponseEntity<Object> response =
+				ReflectionTestUtils.invokeMethod(handler, "handleInvalidLevelException", exception);
 
 		// Assert
 		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
