@@ -355,6 +355,7 @@ public class RepoToolsConfigServiceImpl {
 			String endDate,
 			String frequency) {
 		String repoToolUrl = customApiConfig.getRepoToolURL().concat(repoToolKpi);
+		log.info("RepoToolUrl: {}", repoToolUrl);
 		String repoToolApiKey = customApiConfig.getRepoToolAPIKey();
 		List<RepoToolKpiMetricResponse> repoToolKpiMetricRespons = new ArrayList<>();
 		RepoToolKpiRequestBody repoToolKpiRequestBody =
@@ -365,6 +366,7 @@ public class RepoToolsConfigServiceImpl {
 						frequency);
 		try {
 			String url = String.format(repoToolUrl, startDate, endDate, frequency);
+			log.info("Final URL: {}", url);
 			RepoToolKpiBulkMetricResponse repoToolKpiBulkMetricResponse =
 					repoToolsClient.kpiMetricCall(url, repoToolApiKey, repoToolKpiRequestBody);
 			repoToolKpiMetricRespons =
