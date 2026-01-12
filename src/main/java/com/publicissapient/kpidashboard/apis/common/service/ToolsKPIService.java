@@ -670,9 +670,8 @@ public abstract class ToolsKPIService<R, S> {
 		List<DataCount> trendValues = new ArrayList<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
-			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel(), selectedId));
+			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 
@@ -720,7 +719,7 @@ public abstract class ToolsKPIService<R, S> {
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
 		for (String selectedId : selectedIds) {
-			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getLabel(), selectedId));
+			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				List<DataCount> dataCounts = obj instanceof List<?> ? (List<DataCount>) obj : null;
@@ -810,11 +809,10 @@ public abstract class ToolsKPIService<R, S> {
 		Map<String, List<DataCount>> trendMap = new HashMap<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
-							Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
+							Pair.of(kpiRequest.getSelecedHierarchyLabel().toUpperCase(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				Map<String, List<DataCount>> valueMap =
@@ -875,7 +873,7 @@ public abstract class ToolsKPIService<R, S> {
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
-							Pair.of(kpiRequest.getLabel().toUpperCase(), selectedId));
+							Pair.of(kpiRequest.getSelecedHierarchyLabel().toUpperCase(), selectedId));
 			if (null != node) {
 				Object obj = node.getValue();
 				Map<String, List<DataCount>> valueMap =
@@ -957,7 +955,7 @@ public abstract class ToolsKPIService<R, S> {
 
 		if (Constant.SPRINT.equalsIgnoreCase(kpiRequest.getLabel())) {
 			populateSelectedIdInSprintSelection(kpiRequest, selectedIds);
-			kpiRequest.setLabel(Constant.PROJECT.toUpperCase());
+			kpiRequest.setSelecedHierarchyLabel(Constant.PROJECT.toUpperCase());
 		} else if (MapUtils.isNotEmpty(addFilterCat)
 				&& null != addFilterCat.get(kpiRequest.getLabel().toUpperCase())) {
 			Map<String, List<String>> kpiRequestSelectedMap = new HashMap<>();
@@ -972,10 +970,10 @@ public abstract class ToolsKPIService<R, S> {
 			} else {
 				selectedIds.addAll(kpiRequestSelectedMap.get(Constant.PROJECT.toUpperCase()));
 			}
-			kpiRequest.setLabel(Constant.PROJECT.toUpperCase());
+			kpiRequest.setSelecedHierarchyLabel(Constant.PROJECT.toUpperCase());
 		} else {
 			selectedIds = new HashSet<>(Arrays.asList(kpiRequest.getIds()));
-			kpiRequest.setLabel(kpiRequest.getLabel());
+			kpiRequest.setSelecedHierarchyLabel(kpiRequest.getLabel());
 		}
 		return selectedIds;
 	}
@@ -1317,8 +1315,7 @@ public abstract class ToolsKPIService<R, S> {
 
 		aggMap.forEach(
 				(key, objectList) -> {
-					List<Integer> value =
-							objectList.stream().map(Integer.class::cast).toList();
+					List<Integer> value = objectList.stream().map(Integer.class::cast).toList();
 					if (Constant.PERCENTILE.equalsIgnoreCase(aggregationCriteria)) {
 						if (null == customApiConfig.getPercentileValue()) {
 							resultMap.put(key, AggregationUtils.percentilesInteger(value, 90.0D));
