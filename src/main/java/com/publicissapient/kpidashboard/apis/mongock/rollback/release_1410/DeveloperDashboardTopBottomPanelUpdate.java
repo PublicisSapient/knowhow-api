@@ -28,40 +28,56 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "r_developer_dashboard_top_bottom_panel_kpi_update", order = "014109", author = "kunkambl", systemVersion = "14.1.0")
+@ChangeUnit(
+		id = "r_developer_dashboard_top_bottom_panel_kpi_update",
+		order = "014109",
+		author = "kunkambl",
+		systemVersion = "14.1.0")
 public class DeveloperDashboardTopBottomPanelUpdate {
 
-    private static final String KPI_158 = "kpi158";
-    private static final String KPI_160 = "kpi160";
-    private static final String KPI_185 = "kpi185";
-    private static final String KPI_186 = "kpi186";
-    private static final List<String> kpiIds = List.of(KPI_158, KPI_160, KPI_186, KPI_185);
-    private static final String KPI_ID = "kpiId";
-    private static final String KPI_MASTER = "kpi_master";
+	private static final String KPI_158 = "kpi158";
+	private static final String KPI_160 = "kpi160";
+	private static final String KPI_185 = "kpi185";
+	private static final String KPI_186 = "kpi186";
+	private static final List<String> kpiIds = List.of(KPI_158, KPI_160, KPI_186, KPI_185);
+	private static final String KPI_ID = "kpiId";
+	private static final String KPI_MASTER = "kpi_master";
 
-    private final MongoTemplate mongoTemplate;
+	private final MongoTemplate mongoTemplate;
 
-    public DeveloperDashboardTopBottomPanelUpdate(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
-    }
+	public DeveloperDashboardTopBottomPanelUpdate(MongoTemplate mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
 
-    @RollbackExecution
-    public void execution() {
-        mongoTemplate.updateMulti(new Query(Criteria.where(KPI_ID).in(kpiIds)),
-                new Update().set("chartType", "card").set("groupId", 6), KPI_MASTER);
+	@RollbackExecution
+	public void execution() {
+		mongoTemplate.updateMulti(
+				new Query(Criteria.where(KPI_ID).in(kpiIds)),
+				new Update().set("chartType", "card").set("groupId", 6),
+				KPI_MASTER);
 
-        Map.of(KPI_158, 1, KPI_160, 2, KPI_185, 3, KPI_186, 4)
-                .forEach((kpiId, order) -> mongoTemplate.updateFirst(new Query(Criteria.where(KPI_ID).is(kpiId)),
-                        new Update().set("defaultOrder", order), KPI_MASTER));
-    }
+		Map.of(KPI_158, 1, KPI_160, 2, KPI_185, 3, KPI_186, 4)
+				.forEach(
+						(kpiId, order) ->
+								mongoTemplate.updateFirst(
+										new Query(Criteria.where(KPI_ID).is(kpiId)),
+										new Update().set("defaultOrder", order),
+										KPI_MASTER));
+	}
 
-    @Execution
-    public void rollback() {
-        mongoTemplate.updateMulti(new Query(Criteria.where(KPI_ID).in(kpiIds)), new Update().set("chartType", "line"),
-                KPI_MASTER);
+	@Execution
+	public void rollback() {
+		mongoTemplate.updateMulti(
+				new Query(Criteria.where(KPI_ID).in(kpiIds)),
+				new Update().set("chartType", "line"),
+				KPI_MASTER);
 
-        Map.of(KPI_158, 2, KPI_160, 3, KPI_185, 9, KPI_186, 10)
-                .forEach((kpiId, order) -> mongoTemplate.updateFirst(new Query(Criteria.where(KPI_ID).is(kpiId)),
-                        new Update().set("defaultOrder", order), KPI_MASTER));
-    }
+		Map.of(KPI_158, 2, KPI_160, 3, KPI_185, 9, KPI_186, 10)
+				.forEach(
+						(kpiId, order) ->
+								mongoTemplate.updateFirst(
+										new Query(Criteria.where(KPI_ID).is(kpiId)),
+										new Update().set("defaultOrder", order),
+										KPI_MASTER));
+	}
 }

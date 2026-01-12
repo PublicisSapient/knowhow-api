@@ -1,0 +1,189 @@
+name: API_CI_CD_Prod_Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Select Git tag (applies to both knowhow-api & knowhow-common)"
+        required: true
+        type: string
+        default: "14.0.0"
+
+      mongock_start_version:
+        description: "Start version for Mongock (e.g. 13.0.0)"
+        required: true
+        default: "13.0.0"
+        type: string
+
+      mongock_end_version:
+        description: "End version for Mongock (e.g. 14.0.0)"
+        required: true
+        default: "14.0.0"
+        type: string
+
+env:
+  IMAGE_NAME: knowhow-api
+  ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }}
+  ACR_LOGIN_SERVER: ${{ secrets.SPEEDTOOLS_ACR_LOGIN_SERVER }}
+  BITBUCKET_HELM_REPO: ${{ secrets.SPEEDTOOLS_BITBUCKET_HELM_REPO }}
+
+  # 🔐 Sonar
+  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+  SONAR_URL: ${{ secrets.SONARURL }}
+  SONAR_PROJECT_KEY: ENGINEERING.KPIDASHBOARD.CUSTOMAPI
+  SONAR_PROJECT_NAME: ENGINEERING.KPIDASHBOARD.CUSTOMAPI
+
+  # 🔥 ArgoCD
+  ARGOCD_APP_NAME: knowhow-api-prod
+
+  GITHUB_HEAD_NAME: $GITHUB_REF_NAME
+
+  # 🔥 Hardcoded because Prod always uses upgrade
+  MONGOCK_OPERATION: com.publicissapient.kpidashboard.apis.mongock.upgrade
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      argocd_app_name: ${{ env.ARGOCD_APP_NAME }}
+
+    steps:
+      - name: Set IMAGE_TAG and Values file for Prod
+        run: |
+          echo "IMAGE_TAG=${{ github.event.inputs.release_tag }}" >> $GITHUB_ENV
+          echo "VALUES_FILE=values-prod.yaml" >> $GITHUB_ENV
+
+      - name: Checkout knowhow-api Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.release_tag }}
+
+      - name: Set Up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: "adopt"
+          java-version: "17"
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Configure Maven to use GitHub Packages
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<EOF
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${{ github.actor }}</username>
+                <password>${{ secrets.MAVEN_TOKEN }}</password>
+              </server>
+            </servers>
+            <profiles>
+              <profile>
+                <id>github</id>
+                <repositories>
+                  <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/PublicisSapient/knowhow-ai-gateway-client</url>
+                  </repository>
+                </repositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>github</activeProfile>
+            </activeProfiles>
+          </settings>
+          EOF
+
+      - name: Clone knowhow-common (same tag as knowhow-api)
+        run: |
+          TAG="${{ github.event.inputs.release_tag }}"
+          git clone --branch "$TAG" https://github.com/PublicisSapient/knowhow-common.git
+          cd knowhow-common
+          mvn clean install -Ddockerfile.skip=true
+
+      - name: Get common version from Maven
+        run: |
+          cd knowhow-common
+          COMMON_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "COMMON_VERSION=$COMMON_VERSION" >> $GITHUB_ENV
+
+      - name: Update common version in API project
+        run: |
+          mvn versions:use-dep-version \
+            -Dincludes=com.publicissapient.kpidashboard:common \
+            -DdepVersion=$COMMON_VERSION \
+            -DforceVersion=true
+
+      - name: Build knowhow-api (Always With Tests)
+        run: mvn clean install -Ddockerfile.skip=true
+
+      - name: SonarQube Analysis
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }} \
+            -Dsonar.projectName=${{ env.SONAR_PROJECT_NAME }} \
+            -Dsonar.branch.name=${{ env.GITHUB_HEAD_NAME }} \
+            -Dsonar.host.url=${{ env.SONAR_URL }} \
+            -Dsonar.login=${{ env.SONAR_TOKEN }}
+
+      - name: Build & Push Docker Image
+        run: |
+          docker login $ACR_LOGIN_SERVER \
+            --username ${{ secrets.SPEEDTOOLS_ACR_USERNAME }} \
+            --password ${{ secrets.SPEEDTOOLS_ACR_PASSWORD }}
+
+          docker build -t $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG .
+          docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Checkout Helm charts from Bitbucket
+        run: |
+          git clone $BITBUCKET_HELM_REPO
+          cd build-configurations/KnowHOW-Deploy/knowhow-api
+
+          yq -i ".image.tag = \"${IMAGE_TAG}\"" $VALUES_FILE
+          yq -i ".mongock.startversion = \"${{ github.event.inputs.mongock_start_version }}\"" $VALUES_FILE
+          yq -i ".mongock.endversion = \"${{ github.event.inputs.mongock_end_version }}\"" $VALUES_FILE
+          yq -i ".mongock.migrationpackage = \"${MONGOCK_OPERATION}\"" $VALUES_FILE
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add $VALUES_FILE
+          git diff --cached --quiet || git commit -m "Update image tag and mongock values to ${IMAGE_TAG}"
+          git push origin HEAD
+
+  deploy:
+    runs-on: github-actions-self-hosted-runner
+    timeout-minutes: 20
+    needs: build
+    env:
+      ARGOCD_APP_NAME: ${{ needs.build.outputs.argocd_app_name }}
+
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          mkdir -p $HOME/bin
+          curl -sSL -o "$HOME/bin/argocd" https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x "$HOME/bin/argocd"
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: ArgoCD CLI Login
+        run: |
+          argocd login argocd-server \
+            --username ${{ secrets.SPEEDTOOLS_ARGOCD_USERNAME }} \
+            --password ${{ secrets.SPEEDTOOLS_ARGOCD_PASSWORD }} \
+            --plaintext
+
+      - name: Sync application
+        run: argocd app sync $ARGOCD_APP_NAME
+
+      - name: Wait for application health
+        run: argocd app wait $ARGOCD_APP_NAME --health --timeout 600

@@ -20,13 +20,17 @@ package com.publicissapient.kpidashboard.apis.enums;
 
 import java.util.Arrays;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * The enum Kpi source.
  *
  * @author tauakram
  */
+@Getter
+@RequiredArgsConstructor
 public enum KPISource {
-
 	/** Jira kpi source. */
 	JIRA("JIRA"),
 	/** Sonar kpi source. */
@@ -61,23 +65,12 @@ public enum KPISource {
 	/** Invalid. */
 	INVALID("INVALID");
 
-	private String value;
-
-	KPISource(String value) {
-		this.value = value;
-	}
+	private final String value;
 
 	public static KPISource getKPISource(String value) {
-		return Arrays.asList(KPISource.values()).stream()
+		return Arrays.stream(KPISource.values())
 				.filter(kpi -> kpi.getValue().equalsIgnoreCase(value))
 				.findAny()
 				.orElse(INVALID);
-	}
-
-	/**
-	 * @return the value
-	 */
-	public String getValue() {
-		return value;
 	}
 }

@@ -37,6 +37,7 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -116,11 +117,11 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 		List<KpiElement> origRequestedKpis =
 				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
-		String[] projectKeyCache = null;
+		String[] projectKeyCache;
 		try {
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
 			String groupName =
-					filterHelperService.getHierarachyLevelId(
+					filterHelperService.getHierarchyLevelId(
 							kpiRequest.getLevel(), kpiRequest.getLabel(), false);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
@@ -141,16 +142,19 @@ public class JiraReleaseServiceR implements JiraNonTrendKPIServiceR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				Object cachedData =
-						cacheService.getFromApplicationCache(
-								projectKeyCache, KPISource.JIRA.name(), groupId, kpiRequest.getSprintIncluded());
-				if (!kpiRequest
-								.getRequestTrackerId()
-								.toLowerCase()
-								.contains(KPISource.EXCEL.name().toLowerCase())
-						&& null != cachedData) {
-					log.info("Fetching value from cache for {}", Arrays.toString(kpiRequest.getIds()));
-					return (List<KpiElement>) cachedData;
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+					Object cachedData =
+							cacheService.getFromApplicationCache(
+									projectKeyCache, KPISource.JIRA.name(), groupId, kpiRequest.getSprintIncluded());
+					if (!kpiRequest
+									.getRequestTrackerId()
+									.toLowerCase()
+									.contains(KPISource.EXCEL.name().toLowerCase())
+							&& null != cachedData) {
+						log.info("Fetching value from cache for {}", Arrays.toString(kpiRequest.getIds()));
+						return (List<KpiElement>) cachedData;
+					}
 				}
 
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);

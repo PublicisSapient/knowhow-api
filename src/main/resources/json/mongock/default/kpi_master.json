@@ -747,7 +747,7 @@
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
     "hideOverallFilter": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "-60",
       "60-45",
@@ -1265,7 +1265,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "-2",
       "2-4",
@@ -3559,7 +3559,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "90-",
       "30-90",
@@ -3679,7 +3679,9 @@
       "16-"
     ],
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
+
   },
   {
     "kpiId": "kpi158",
@@ -3764,7 +3766,8 @@
       "2-"
     ],
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi159",
@@ -3964,7 +3967,8 @@
     "calculateMaturity": false,
     "hideOverallFilter": true,
     "isRepoToolKpi": true,
-    "kpiCategory": "Developer"
+    "kpiCategory": "Developer",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi164",
@@ -4220,7 +4224,7 @@
     "aggregationCircleCriteria": "average",
     "isAdditionalFilterSupport": false,
     "calculateMaturity": true,
-    "forecastModel" : "lstm",
+    "forecastModel" : "exponentialSmoothing",
     "maturityRange": [
       "24-",
       "4-24",
@@ -4438,52 +4442,6 @@
     ]
   },
   {
-    "kpiId": "kpi173",
-    "kpiName": "Rework Rate",
-    "maxValue": "",
-    "kpiUnit": "%",
-    "isDeleted": true,
-    "defaultOrder": 5,
-    "groupId": 7,
-    "kpiSource": "BitBucket",
-    "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
-    "kanban": false,
-    "chartType": "line",
-    "kpiInfo": {
-      "definition": "Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
-      "details": [
-        {
-          "type": "link",
-          "kpiLinkDetail": {
-            "text": "Detailed Information at",
-            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate"
-          }
-        }
-      ]
-    },
-    "upperThresholdBG": "red",
-    "lowerThresholdBG": "white",
-    "thresholdValue": "50",
-    "xAxisLabel": "Weeks",
-    "yAxisLabel": "Percentage",
-    "isPositiveTrend": false,
-    "showTrend": true,
-    "kpiFilter": "dropDown",
-    "aggregationCriteria": "average",
-    "isAdditionalFilterSupport": false,
-    "calculateMaturity": false,
-    "hideOverallFilter": true,
-    "isRepoToolKpi": true,
-    "kpiCategory": "Developer",
-    "maturityRange": [
-      "-80",
-      "80-50",
-      "50-20",
-      "20-5",
-      "5-"
-    ]
-  },
-  {
     "kpiId": "kpi176",
     "kpiName": "Risks And Dependencies",
     "maxValue": "",
@@ -4511,7 +4469,8 @@
     },
     "kpiWidth": 33,
     "kpiHeight": 50,
-    "isRawData": false
+    "isRawData": false,
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi178",
@@ -4656,52 +4615,6 @@
     "hideOverallFilter": true,
     "isRepoToolKpi": true,
     "kpiCategory": "Developer"
-  },
-  {
-    "kpiId": "kpi180",
-    "kpiName": "Revert Rate",
-    "maxValue": "",
-    "kpiUnit": "%",
-    "isDeleted": true,
-    "defaultOrder": 5,
-    "groupId": 7,
-    "kpiSource": "BitBucket",
-    "combinedKpiSource": "Bitbucket/AzureRepository/GitHub/GitLab",
-    "kanban": false,
-    "chartType": "line",
-    "kpiInfo": {
-      "definition": "The percentage of total pull requests opened that are reverts.",
-      "details": [
-        {
-          "type": "link",
-          "kpiLinkDetail": {
-            "text": "Detailed Information at",
-            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate"
-          }
-        }
-      ]
-    },
-    "upperThresholdBG": "red",
-    "lowerThresholdBG": "white",
-    "thresholdValue": "50",
-    "xAxisLabel": "Weeks",
-    "yAxisLabel": "Percentage",
-    "isPositiveTrend": false,
-    "showTrend": true,
-    "kpiFilter": "dropDown",
-    "aggregationCriteria": "average",
-    "isAdditionalFilterSupport": false,
-    "calculateMaturity": false,
-    "hideOverallFilter": true,
-    "isRepoToolKpi": true,
-    "kpiCategory": "Developer",
-    "maturityRange": [
-      "-80",
-      "80-50",
-      "50-20",
-      "20-5",
-      "5-"
-    ]
   },
   {
     "kpiId": "kpi182",
@@ -4973,7 +4886,7 @@
     "groupId": 20,
     "thresholdValue": "",
     "kanban": false,
-    "chartType": null,
+    "chartType": "CumulativeMultilineChart",
     "kpiInfo": {
       "definition": "Measures the number of work items that are not adequately refined in time for development planning. This includes: Work items in the current sprint that do not meet DoR (Definition of Ready).",
       "details": [
@@ -5010,7 +4923,7 @@
     "groupId": 19,
     "thresholdValue": "",
     "kanban": false,
-    "chartType": null,
+    "chartType": "tabular-with-donut-chart",
     "kpiInfo": {
       "definition": "Measures the number of work items that are slated for the next sprint but still lack necessary refinement details. Work items tagged to the next sprint that lack sufficient refinement (e.g., missing description, acceptance criteria, etc).",
       "details": [
@@ -5297,55 +5210,6 @@
     "kpiSource": "Jira"
   },
   {
-    "kpiUnit" : "%",
-    "aggregationCriteria" : "average",
-    "kpiCategory" : "Developer",
-    "maxValue" : "",
-    "kpiFilter" : "dropDown",
-    "kpiId" : "kpi201",
-    "groupId" : 2,
-    "kpiName" : "Code Quality Metrics",
-    "isAdditionalFilterSupport" : false,
-    "calculateMaturity" : false,
-    "hideOverallFilter" : true,
-    "isRepoToolKpi" : true,
-    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
-    "showTrend" : true,
-    "isDeleted" : false,
-    "defaultOrder" : 7,
-    "kpiInfo" : {
-      "definition" : "Code Quality Metrics - a combination of revert rate and rework rate percentage values",
-      "details" : [
-        {
-          "text" : "Revert Rate: The percentage of total pull requests opened that are reverts.",
-          "type" : "paragraph"
-        },
-        {
-          "type" : "link",
-          "kpiLinkDetail" : {
-            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi180-Revert+Rate",
-            "text" : "Revert Rate - Detailed Information at"
-          }
-        },
-        {
-          "text" : "Rework Rate: Percentage of code changes in which an engineer rewrites code that they recently updated (within the past three weeks).",
-          "type" : "paragraph"
-        },
-        {
-          "type" : "link",
-          "kpiLinkDetail" : {
-            "link" : "https://knowhow.tools.publicis.sapient.com/wiki/kpi173-Rework+Rate",
-            "text" : "Rework Rate - Detailed Information at"
-          }
-        }
-      ]
-    },
-    "kanban" : false,
-    "chartType" : "progressbar",
-    "isPositiveTrend" : false,
-    "kpiSource" : "BitBucket"
-  },
-  {
     "kpiId" : "kpi201",
   "kpiUnit" : "%",
   "aggregationCriteria" : "average",
@@ -5393,5 +5257,68 @@
   "chartType" : "progressbar",
   "isPositiveTrend" : false,
   "kpiSource" : "BitBucket"
-}
+},
+  {
+    "kpiId" : "kpi196",
+    "kpiName" : "Test Execution Time",
+    "isDeleted" : false,
+    "defaultOrder" : 1,
+    "kpiSubCategory" : "Quality",
+    "kpiSource" : "Zypher",
+    "combinedKpiSource" : "Zephyr/Zypher/JiraTest",
+    "groupId" : 9,
+    "kpiUnit" : "min",
+    "kanban" : false,
+    "chartType" : "stacked-bar-chart",
+    "kpiInfo" : {
+      "definition" : " The Test Execution Time metric measures the average duration between the start and end of test executions. It helps QA leads track how long it takes to run test cases and identify delays or inconsistencies in execution speed across teams, test types, or modules.",
+      "details" : [
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at",
+            "link" : "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/272465922/Test+Execution+Time"
+          }
+        }
+      ]
+    },
+    "xaxisLabel" : "Sprints",
+    "yaxisLabel" : "Avg. Execution Time (in minutes)",
+    "isAdditionalFilterSupport" : false,
+    "kpiFilter" : "",
+    "boxType" : "chart",
+    "calculateMaturity" : false,
+    "aggregationCriteria" : "average"
+  },
+  {
+    "kpiId" : "kpi197",
+    "kpiName" : "Test Execution Time",
+    "isDeleted" : false,
+    "defaultOrder" : 1,
+    "kpiSubCategory" : "Quality",
+    "kpiSource" : "Zypher",
+    "combinedKpiSource" : "Zephyr/Zypher/JiraTest",
+    "groupId" : 9,
+    "kpiUnit" : "min",
+    "kanban" : true,
+    "chartType" : "stacked-bar-chart",
+    "kpiInfo" : {
+      "definition" : "The Test Execution Time metric measures the average duration between the start and end of test executions. It helps QA leads track how long it takes to run test cases and identify delays or inconsistencies in execution speed across teams, test types, or modules.",
+      "details" : [
+        {
+          "type" : "link",
+          "kpiLinkDetail" : {
+            "text" : "Detailed Information at",
+            "link" : "https://knowhow.suite.publicissapient.com/wiki/spaces/PS/pages/272465922/Test+Execution+Time"
+          }
+        }
+      ]
+    },
+    "xaxisLabel" : "Sprints",
+    "yaxisLabel" : "Avg. Execution Time (in minutes)",
+    "isAdditionalFilterSupport" : false,
+    "kpiFilter" : "",
+    "boxType" : "chart",
+    "calculateMaturity" : false
+  }
 ]

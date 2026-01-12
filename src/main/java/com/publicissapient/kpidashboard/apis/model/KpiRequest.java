@@ -18,6 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,10 +30,9 @@ import java.util.UUID;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
-/** The type Kpi request. */
 public class KpiRequest implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	@Serial private static final long serialVersionUID = -299083586293015104L;
 
 	private String requestTrackerId;
 	private int level;

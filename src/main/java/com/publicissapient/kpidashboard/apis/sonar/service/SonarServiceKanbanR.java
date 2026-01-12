@@ -24,10 +24,10 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -44,22 +44,21 @@ import com.publicissapient.kpidashboard.apis.sonar.factory.SonarKPIServiceFactor
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author prijain3
  */
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class SonarServiceKanbanR {
 
-	@Autowired private KpiHelperService kpiHelperService;
-
-	@Autowired private FilterHelperService filterHelperService;
-
-	@Autowired private CacheService cacheService;
-
-	@Autowired private UserAuthorizedProjectsService authorizedProjectsService;
+	private final CacheService cacheService;
+	private final KpiHelperService kpiHelperService;
+	private final FilterHelperService filterHelperService;
+	private final UserAuthorizedProjectsService authorizedProjectsService;
 
 	/**
 	 * Process Sonar KPI request
@@ -75,10 +74,10 @@ public class SonarServiceKanbanR {
 				kpiRequest.getRequestTrackerId(),
 				kpiRequest.getKpiList());
 		List<KpiElement> responseList = new ArrayList<>();
-		String[] kanbanProjectKeyCache = null;
+		String[] kanbanProjectKeyCache;
 		try {
 			String groupName =
-					filterHelperService.getHierarachyLevelId(
+					filterHelperService.getHierarchyLevelId(
 							kpiRequest.getLevel(), kpiRequest.getLabel(), true);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
@@ -89,7 +88,12 @@ public class SonarServiceKanbanR {
 					filterHelperService.getFilteredBuildsKanban(kpiRequest, groupName);
 
 			kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-			if (!authorizedProjectsService.ifSuperAdminUser()) {
+
+			if (Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())
+					|| ApiKeyAuthenticationService.isApiKeyRequest()) {
+				kanbanProjectKeyCache =
+						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
+			} else {
 				kanbanProjectKeyCache =
 						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 
@@ -99,17 +103,17 @@ public class SonarServiceKanbanR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-			} else {
-				kanbanProjectKeyCache =
-						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 			}
+			populateKanbanKpiRequest(kpiRequest);
 
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-
-			populateKanbanKpiRequest(kpiRequest);
-			List<KpiElement> cachedData = getCachedData(kpiRequest, kanbanProjectKeyCache, groupId);
-			if (CollectionUtils.isNotEmpty(cachedData)) {
-				return cachedData;
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				List<KpiElement> cachedData = getCachedData(kpiRequest, kanbanProjectKeyCache, groupId);
+				if (CollectionUtils.isNotEmpty(cachedData)) {
+					return cachedData;
+				}
 			}
 
 			TreeAggregatorDetail treeAggregatorDetail =
@@ -117,25 +121,26 @@ public class SonarServiceKanbanR {
 							kpiRequest,
 							null,
 							filteredAccountDataList,
-							filterHelperService.getFirstHierarachyLevel(),
+							filterHelperService.getFirstHierarchyLevel(),
 							filterHelperService
 									.getHierarchyIdLevelMap(false)
 									.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
 			for (KpiElement kpiEle : kpiRequest.getKpiList()) {
-
 				responseList.add(
 						calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
 			}
-
-			setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
+			}
 
 		} catch (EntityNotFoundException | ApplicationException enfe) {
-
 			log.error(
 					"[SONAR KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
 					kpiRequest.getRequestTrackerId(),
 					kpiRequest.getKpiList(),
-					enfe);
+					enfe.getMessage());
 		}
 		return responseList;
 	}
@@ -154,7 +159,7 @@ public class SonarServiceKanbanR {
 		try {
 			KPICode kpi = KPICode.getKPI(kpiElement.getKpiId());
 
-			SonarKPIService<?, ?, ?> sonarKPIService = null;
+			SonarKPIService<?, ?, ?> sonarKPIService;
 			sonarKPIService = SonarKPIServiceFactory.getSonarKPIService(kpi.name());
 
 			startTime = System.currentTimeMillis();
@@ -243,7 +248,7 @@ public class SonarServiceKanbanR {
 		return new ArrayList<>();
 	}
 
-	private void populateKanbanKpiRequest(KpiRequest kpiRequest) {
+	private static void populateKanbanKpiRequest(KpiRequest kpiRequest) {
 		String id = kpiRequest.getIds()[0];
 		if (NumberUtils.isCreatable(id)) {
 			kpiRequest.setKanbanXaxisDataPoints(Integer.parseInt(id));

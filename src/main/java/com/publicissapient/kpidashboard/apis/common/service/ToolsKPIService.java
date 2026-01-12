@@ -42,6 +42,8 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 
 import lombok.Getter;
 
@@ -670,7 +672,6 @@ public abstract class ToolsKPIService<R, S> {
 		List<DataCount> trendValues = new ArrayList<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
 			if (null != node) {
@@ -693,6 +694,7 @@ public abstract class ToolsKPIService<R, S> {
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
 									manager -> manager.addForecastsToDataCount(maturityDataCount, dataCounts, kpiId));
+					setKpiBenchmarkValues(maturityDataCount, kpiId, CommonConstant.OVERALL);
 
 					trendValues.add(maturityDataCount);
 				}
@@ -729,7 +731,7 @@ public abstract class ToolsKPIService<R, S> {
 							dataCounts.stream()
 									.filter(val -> val.getValue() != null)
 									.map(val -> (R) val.getValue())
-									.collect(Collectors.toList());
+									.toList();
 
 					R calculatedAggValue = getCalculatedAggValue(aggValues, kpiId);
 					String maturity =
@@ -810,7 +812,6 @@ public abstract class ToolsKPIService<R, S> {
 		Map<String, List<DataCount>> trendMap = new HashMap<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
-
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
@@ -835,6 +836,7 @@ public abstract class ToolsKPIService<R, S> {
 								DataCount maturityDataCount =
 										new DataCount(
 												node.getName(), maturity, aggregateValue, getList(value, kpiName));
+								setKpiBenchmarkValues(maturityDataCount, kpiId, key);
 
 								// Add forecasts if configured
 								Optional.ofNullable(forecastingManager)
@@ -849,6 +851,25 @@ public abstract class ToolsKPIService<R, S> {
 			}
 		}
 		return commonService.sortTrendValueMap(trendMap);
+	}
+
+	public void setKpiBenchmarkValues(DataCount dataCount, String kpiId, String filter) {
+		KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiId);
+		if (null != kpiBenchmarkValues) {
+			Optional<BenchmarkPercentiles> benchmarkPercentiles;
+			if (filter.equalsIgnoreCase(CommonConstant.OVERALL)) {
+				benchmarkPercentiles =
+						kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
+								.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value"))
+								.findFirst();
+			} else {
+				benchmarkPercentiles =
+						kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
+								.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value#" + filter))
+								.findFirst();
+			}
+			benchmarkPercentiles.ifPresent(dataCount::setBenchmarkPercentiles);
+		}
 	}
 
 	/**
@@ -890,7 +911,7 @@ public abstract class ToolsKPIService<R, S> {
 										value.stream()
 												.filter(val -> val.getValue() != null)
 												.map(val -> (R) val.getValue())
-												.collect(Collectors.toList());
+												.toList();
 								R calculatedAggValue = getCalculatedAggValue(aggValues, kpiId);
 								String aggregateValue = null;
 								String maturity =
@@ -933,9 +954,9 @@ public abstract class ToolsKPIService<R, S> {
 	 */
 	private List<DataCount> getList(List<DataCount> value, String kpiName) {
 		if (reverseTrendList.contains(kpiName)) {
-			return value.stream().limit(Constant.TREND_LIMIT).collect(Collectors.toList());
+			return value.stream().limit(Constant.TREND_LIMIT).toList();
 		} else {
-			return Lists.reverse(value).stream().limit(Constant.TREND_LIMIT).collect(Collectors.toList());
+			return Lists.reverse(value).stream().limit(Constant.TREND_LIMIT).toList();
 		}
 	}
 
@@ -1317,8 +1338,7 @@ public abstract class ToolsKPIService<R, S> {
 
 		aggMap.forEach(
 				(key, objectList) -> {
-					List<Integer> value =
-							objectList.stream().map(Integer.class::cast).collect(Collectors.toList());
+					List<Integer> value = objectList.stream().map(Integer.class::cast).toList();
 					if (Constant.PERCENTILE.equalsIgnoreCase(aggregationCriteria)) {
 						if (null == customApiConfig.getPercentileValue()) {
 							resultMap.put(key, AggregationUtils.percentilesInteger(value, 90.0D));

@@ -19,13 +19,13 @@
   </parent>
   <groupId>com.publicissapient.kpidashboard</groupId>
   <artifactId>knowhow-api</artifactId>
-  <version>14.1.0-SNAPSHOT</version>
+  <version>15.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Rest API Layer</description>
   <scm>
     <connection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</connection>
     <developerConnection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</developerConnection>
-    <tag>4.6.1</tag>
+    <tag>15.0.0</tag>
     <url>https://github.com/PublicisSapient/knowhow-api.git</url>
   </scm>
   <properties>
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>com.publicissapient.kpidashboard</groupId>
       <artifactId>common</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>15.1.0-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>com.diffplug.spotless</groupId>
@@ -362,23 +362,23 @@
       <artifactId>smile-core</artifactId>
       <version>3.0.2</version>
     </dependency>
-      <!-- DeepLearning4J dependencies for LSTM forecasting -->
-      <dependency>
-          <groupId>org.deeplearning4j</groupId>
-          <artifactId>deeplearning4j-core</artifactId>
-          <version>1.0.0-M2.1</version>
-      </dependency>
-      <dependency>
-          <groupId>org.nd4j</groupId>
-          <artifactId>nd4j-native-platform</artifactId>
-          <version>1.0.0-M2.1</version>
-      </dependency>
-      <!-- ND4J API -->
-      <dependency>
-          <groupId>org.nd4j</groupId>
-          <artifactId>nd4j-api</artifactId>
-          <version>1.0.0-M2.1</version>
-      </dependency>
+    <!-- DeepLearning4J dependencies for LSTM forecasting -->
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-core</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native-platform</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <!-- ND4J API -->
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-api</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
@@ -533,6 +533,11 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
+    </dependency>
+    <!-- Micrometer Prometheus for metrics -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
   </dependencies>
   <repositories>

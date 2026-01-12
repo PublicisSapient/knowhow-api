@@ -29,21 +29,30 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsServiceR;
+import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceR;
 import com.publicissapient.kpidashboard.apis.jira.service.NonTrendServiceFactory;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceR;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
+import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrServiceKanban;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
@@ -54,6 +63,8 @@ import com.publicissapient.kpidashboard.common.repository.application.KpiMasterR
 import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
+import jakarta.ws.rs.BadRequestException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -61,11 +72,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KpiIntegrationServiceImpl {
-
-	private static final List<String> FILTER_LIST =
-			Arrays.asList(
-					"Final Scope (Story Points)", "Average Coverage", "Story Points", "Overall", "Lead Time");
 	private static final String KPI_SOURCE_JIRA = "Jira";
 	private static final String KPI_SOURCE_SONAR = "Sonar";
 	private static final String KPI_SOURCE_ZEPHYR = "Zypher";
@@ -73,21 +81,86 @@ public class KpiIntegrationServiceImpl {
 	private static final String KPI_SOURCE_DEVELOPER = "BitBucket";
 	private static final String SPRINT_CLOSED = "CLOSED";
 
-	@Autowired KpiMasterRepository kpiMasterRepository;
-	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
-	@Autowired private JiraServiceR jiraService;
+	private static final List<String> FILTER_LIST =
+			Arrays.asList(
+					"Final Scope (Story Points)", "Average Coverage", "Story Points", "Overall", "Lead Time");
 
-	@Autowired private SonarServiceR sonarService;
+	private final KpiMasterRepository kpiMasterRepository;
+	private final OrganizationHierarchyRepository organizationHierarchyRepository;
 
-	@Autowired private ZephyrService zephyrService;
+	private final NonTrendServiceFactory serviceFactory;
 
-	@Autowired private JenkinsServiceR jenkinsServiceR;
+	private final JiraServiceR jiraService;
+	private final SonarServiceR sonarService;
+	private final ZephyrService zephyrService;
+	private final JenkinsServiceR jenkinsServiceR;
+	private final BitBucketServiceR bitBucketServiceR;
+	private final HierarchyLevelService hierarchyLevelService;
 
-	@Autowired private HierarchyLevelService hierarchyLevelService;
+	private final JiraServiceKanbanR jiraServiceKanbanR;
+	private final SonarServiceKanbanR sonarServiceKanbanR;
+	private final ZephyrServiceKanban zephyrServiceKanban;
+	private final JenkinsServiceKanbanR jenkinsServiceKanbanR;
+	private final BitBucketServiceKanbanR bitBucketServiceKanbanR;
 
-	@Autowired NonTrendServiceFactory serviceFactory;
+	/**
+	 * Processes Kanban KPI requests by validating input, routing to appropriate services, and
+	 * calculating overall maturity values.
+	 *
+	 * <p>This method handles the complete Kanban KPI processing workflow:
+	 *
+	 * <ol>
+	 *   <li>Validates the incoming request parameters
+	 *   <li>Retrieves KPI master data from repository
+	 *   <li>Groups KPIs by their data source
+	 *   <li>Delegates processing to source-specific Kanban services
+	 *   <li>Aggregates results and calculates maturity values
+	 * </ol>
+	 *
+	 * <p><strong>Validation Requirements:</strong>
+	 *
+	 * <ul>
+	 *   <li>Non-null request object
+	 *   <li>Non-empty KPI ID list
+	 *   <li>Single positive integer in IDs array
+	 *   <li>Non-blank label
+	 *   <li>Selected map with date aggregation unit
+	 * </ul>
+	 *
+	 * @param kpiRequest the KPI request containing KPI IDs, filters, and processing parameters
+	 * @return list of processed KPI elements with calculated values and maturity scores
+	 */
+	public List<KpiElement> processKanbanKPIRequest(KpiRequest kpiRequest) {
+		validateKanbanKPIRequest(kpiRequest);
+		List<KpiMaster> kpiMasterList = kpiMasterRepository.findByKpiIdIn(kpiRequest.getKpiIdList());
 
-	@Autowired private BitBucketServiceR bitBucketServiceR;
+		Map<KPISource, List<KpiMaster>> kpiElementsGroupedBySource =
+				kpiMasterList.stream()
+						.filter(kpiMaster -> StringUtils.isNotEmpty(kpiMaster.getKpiSource()))
+						.collect(
+								Collectors.groupingBy(
+										kpiMaster -> KPISource.getKPISource(kpiMaster.getKpiSource().toUpperCase())));
+		List<KpiElement> kpiElements = new ArrayList<>();
+		kpiElementsGroupedBySource.forEach(
+				(kpiSource, kpis) -> {
+					kpiRequest.setKpiList(kpis.stream().map(this::mapKpiMasterToKpiElement).toList());
+					try {
+						switch (kpiSource) {
+							case JIRA -> kpiElements.addAll(this.jiraServiceKanbanR.process(kpiRequest));
+							case SONAR -> kpiElements.addAll(this.sonarServiceKanbanR.process(kpiRequest));
+							case ZEPHYR -> kpiElements.addAll(this.zephyrServiceKanban.process(kpiRequest));
+							case JENKINS -> kpiElements.addAll(this.jenkinsServiceKanbanR.process(kpiRequest));
+							case BITBUCKET ->
+									kpiElements.addAll(this.bitBucketServiceKanbanR.process(kpiRequest));
+							default -> log.info("Unexpected kpi source received {}", kpiSource);
+						}
+					} catch (EntityNotFoundException exception) {
+						log.error("Could not process the kpi request for kpi source {}", kpiSource, exception);
+					}
+				});
+		calculateOverallMaturity(kpiElements);
+		return kpiElements;
+	}
 
 	/**
 	 * get kpi element list with maturity assuming req for hierarchy level 4
@@ -95,12 +168,38 @@ public class KpiIntegrationServiceImpl {
 	 * @param kpiRequest kpiRequest to fetch kpi data
 	 * @return list of KpiElement
 	 */
-	public List<KpiElement> getKpiResponses(KpiRequest kpiRequest) {
+	public List<KpiElement> processScrumKpiRequest(KpiRequest kpiRequest) {
 		List<KpiMaster> kpiMasterList = kpiMasterRepository.findByKpiIdIn(kpiRequest.getKpiIdList());
 		Map<String, List<KpiMaster>> sourceWiseKpiList =
 				kpiMasterList.stream().collect(Collectors.groupingBy(KpiMaster::getKpiSource));
 		setKpiRequest(kpiRequest);
 		return getKpiElements(kpiRequest, sourceWiseKpiList, false);
+	}
+
+	/**
+	 * Map KpiMaster object to KpiElement
+	 *
+	 * @param kpiMaster KpiMaster object fetched from db
+	 * @return KpiElement
+	 */
+	public KpiElement mapKpiMasterToKpiElement(KpiMaster kpiMaster) {
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId(kpiMaster.getKpiId());
+		kpiElement.setKpiName(kpiMaster.getKpiName());
+		kpiElement.setIsDeleted(kpiMaster.getIsDeleted());
+		kpiElement.setKpiCategory(kpiMaster.getKpiCategory());
+		kpiElement.setKpiInAggregatedFeed(kpiMaster.getKpiInAggregatedFeed());
+		kpiElement.setKpiOnDashboard(kpiMaster.getKpiOnDashboard());
+		kpiElement.setKpiBaseLine(kpiMaster.getKpiBaseLine());
+		kpiElement.setKpiUnit(kpiMaster.getKpiUnit());
+		kpiElement.setIsTrendUpOnValIncrease(kpiMaster.getIsTrendUpOnValIncrease());
+		kpiElement.setKanban(kpiMaster.getKanban());
+		kpiElement.setKpiSource(kpiMaster.getKpiSource());
+		kpiElement.setThresholdValue(kpiMaster.getThresholdValue());
+		kpiElement.setAggregationType(kpiMaster.getAggregationCriteria());
+		kpiElement.setMaturityRange(kpiMaster.getMaturityRange());
+		kpiElement.setGroupId(kpiMaster.getGroupId());
+		return kpiElement;
 	}
 
 	@NotNull
@@ -168,7 +267,7 @@ public class KpiIntegrationServiceImpl {
 
 										kpiElement.setOverallMaturity(dataCount.getMaturity());
 									});
-						} else {
+						} else if (!(trendValueList.get(0) instanceof IterationKpiValue)) {
 							List<DataCount> dataCounts = (List<DataCount>) trendValueList;
 							DataCount firstDataCount = dataCounts.get(0);
 
@@ -184,7 +283,7 @@ public class KpiIntegrationServiceImpl {
 	 *
 	 * @param kpiRequest received kpi request
 	 */
-	public void setKpiRequest(KpiRequest kpiRequest) {
+	private void setKpiRequest(KpiRequest kpiRequest) {
 		String[] hierarchyIdList = null;
 		List<String> externalIDs = kpiRequest.getExternalIDs();
 		if (CollectionUtils.isNotEmpty(externalIDs)) {
@@ -218,12 +317,12 @@ public class KpiIntegrationServiceImpl {
 	}
 
 	private String[] getHierarchyIdList(KpiRequest kpiRequest, HierarchyLevel hierarchyLevel) {
-		String[] hierarchyIdList = null;
 		if (ArrayUtils.isNotEmpty(kpiRequest.getIds())) {
 			log.debug(
 					"Using hierarchy IDs directly from request: {}", Arrays.toString(kpiRequest.getIds()));
 			return kpiRequest.getIds();
 		}
+		String[] hierarchyIdList;
 		if (kpiRequest.getHierarchyName() != null) {
 			OrganizationHierarchy byNodeNameAndHierarchyLevelId =
 					organizationHierarchyRepository.findByNodeNameAndHierarchyLevelId(
@@ -330,7 +429,7 @@ public class KpiIntegrationServiceImpl {
 	private List<KpiElement> getJenkinsKpiMaturity(KpiRequest kpiRequest, boolean withCache)
 			throws EntityNotFoundException {
 		MDC.put("JenkinsKpiRequest", kpiRequest.getRequestTrackerId());
-		log.info("Received Zephyr KPI request {}", kpiRequest);
+		log.info("Received Jenkins KPI request {}", kpiRequest);
 		long jenkinsRequestStartTime = System.currentTimeMillis();
 		MDC.put("JenkinsRequestStartTime", String.valueOf(jenkinsRequestStartTime));
 		List<KpiElement> responseList =
@@ -367,29 +466,33 @@ public class KpiIntegrationServiceImpl {
 		return responseList;
 	}
 
-	/**
-	 * Map KpiMaster object to KpiElement
-	 *
-	 * @param kpiMaster KpiMaster object fetched from db
-	 * @return KpiElement
-	 */
-	public KpiElement mapKpiMasterToKpiElement(KpiMaster kpiMaster) {
-		KpiElement kpiElement = new KpiElement();
-		kpiElement.setKpiId(kpiMaster.getKpiId());
-		kpiElement.setKpiName(kpiMaster.getKpiName());
-		kpiElement.setIsDeleted(kpiMaster.getIsDeleted());
-		kpiElement.setKpiCategory(kpiMaster.getKpiCategory());
-		kpiElement.setKpiInAggregatedFeed(kpiMaster.getKpiInAggregatedFeed());
-		kpiElement.setKpiOnDashboard(kpiMaster.getKpiOnDashboard());
-		kpiElement.setKpiBaseLine(kpiMaster.getKpiBaseLine());
-		kpiElement.setKpiUnit(kpiMaster.getKpiUnit());
-		kpiElement.setIsTrendUpOnValIncrease(kpiMaster.getIsTrendUpOnValIncrease());
-		kpiElement.setKanban(kpiMaster.getKanban());
-		kpiElement.setKpiSource(kpiMaster.getKpiSource());
-		kpiElement.setThresholdValue(kpiMaster.getThresholdValue());
-		kpiElement.setAggregationType(kpiMaster.getAggregationCriteria());
-		kpiElement.setMaturityRange(kpiMaster.getMaturityRange());
-		kpiElement.setGroupId(kpiMaster.getGroupId());
-		return kpiElement;
+	private static void validateKanbanKPIRequest(KpiRequest kpiRequest) {
+		if (kpiRequest == null) {
+			throw new BadRequestException("Received kpi request was null");
+		}
+		if (CollectionUtils.isEmpty(kpiRequest.getKpiIdList())) {
+			throw new BadRequestException("'kpiIdList' must not be empty");
+		}
+		if (kpiRequest.getIds() == null || kpiRequest.getIds().length == 0) {
+			throw new BadRequestException("'ids' must be provided and contain one positive integer");
+		}
+		if (kpiRequest.getIds().length > 1) {
+			throw new BadRequestException("'ids' must contain only one positive integer");
+		}
+		if (!NumberUtils.isCreatable(kpiRequest.getIds()[0])) {
+			throw new BadRequestException("'ids' must contain one valid positive integer");
+		}
+		if (StringUtils.isBlank(kpiRequest.getLabel())) {
+			throw new BadRequestException("'label' must be provided");
+		}
+		Map<String, List<String>> selectedMap = kpiRequest.getSelectedMap();
+		if (MapUtils.isEmpty(selectedMap)) {
+			throw new BadRequestException("'selectedMap' must be provided");
+		}
+		if (!selectedMap.containsKey(Constant.DATE)) {
+			throw new BadRequestException(
+					"'selectedMap.date' must be provided with a valid temporal aggregation unit"
+							+ " ex.: Weeks");
+		}
 	}
 }

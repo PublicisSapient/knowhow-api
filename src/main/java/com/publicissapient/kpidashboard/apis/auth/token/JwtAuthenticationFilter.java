@@ -20,49 +20,72 @@ package com.publicissapient.kpidashboard.apis.auth.token;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
-public class JwtAuthenticationFilter extends GenericFilterBean {
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	@Autowired private TokenAuthenticationService tokenAuthenticationService;
+	private final CookieUtil cookieUtil;
 
-	@Autowired private CookieUtil cookieUtil;
-
-	@Autowired private CustomApiConfig customApiConfig;
+	private final TokenAuthenticationService tokenAuthenticationService;
+	private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
-			throws IOException, ServletException {
+	protected boolean shouldNotFilter(@NotNull HttpServletRequest request) {
+		return this.apiKeyAuthenticationService.isRequestToApiKeyEndpoint(request);
+	}
 
-		if (request != null) {
-			Cookie authCookie = cookieUtil.getAuthCookie((HttpServletRequest) request);
+	@Override
+	protected void doFilterInternal(
+			@NotNull HttpServletRequest request,
+			@NotNull HttpServletResponse response,
+			@NotNull FilterChain filterChain)
+			throws ServletException, IOException {
+		Cookie authCookie = cookieUtil.getAuthCookie(request);
 
-			if (authCookie == null) {
-				filterChain.doFilter(request, response);
-				return;
-			}
+		if (authCookie == null) {
+			filterChain.doFilter(request, response);
+			return;
 		}
 
-		Authentication authentication =
-				tokenAuthenticationService.validateAuthentication(
-						(HttpServletRequest) request, (HttpServletResponse) response);
+		try {
+			Authentication authentication =
+					tokenAuthenticationService.validateAuthentication(request, response);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+		} catch (Exception e) {
+			// Invalid JWT token - clear cookie and return 400 Bad Request
+			cookieUtil.deleteCookie(request, response, CookieUtil.AUTH_COOKIE);
+			response.setStatus(HttpStatus.BAD_REQUEST.value());
+			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+			response
+					.getWriter()
+					.write(
+							"{\"timestamp\":"
+									+ System.currentTimeMillis()
+									+ ",\"status\":"
+									+ HttpStatus.BAD_REQUEST.value()
+									+ ",\"error\":\""
+									+ HttpStatus.BAD_REQUEST.getReasonPhrase()
+									+ "\",\"message\":\"Invalid authentication token\"}");
+			return;
+		}
 
-		SecurityContextHolder.getContext().setAuthentication(authentication);
 		filterChain.doFilter(request, response);
 	}
 }

@@ -18,12 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.zephyr.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -31,34 +36,30 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
-import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.data.AccountHierarchyKanbanFilterDataFactory;
-import com.publicissapient.kpidashboard.apis.data.HierachyLevelFactory;
-import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyDataKanban;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.apis.zephyr.factory.ZephyrKPIServiceFactory;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -70,167 +71,272 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectBasicCon
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ZephyrServiceKanbanTest {
-	private static final String TESTZEPHYR = "TEST_ZEPHYR";
-
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 
-	@Mock ConfigHelperService configHelperService;
-	@Mock FilterHelperService filterHelperService;
-	@Mock KpiHelperService kpiHelperService;
-	@InjectMocks private ZephyrServiceKanban zephyrService;
-	@Mock private CustomApiConfig customApiConfig;
+	private static final String TEST_ZEPHYR = "TEST_ZEPHYR";
+
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 	@Mock private CacheService cacheService;
 	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock private RegressionPercentageKanbanServiceImpl regressionPercentageKanbanServiceImpl;
-
-	@SuppressWarnings("rawtypes")
-	@Mock
-	private List<ZephyrKPIService> services;
-
-	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
-	private Map<String, Object> filterLevelMap;
-	private List<ProjectBasicConfig> projectConfigList = new ArrayList<>();
-	private List<FieldMapping> fieldMappingList = new ArrayList<>();
-	private String[] projectKey;
-	private Set<String> projects;
-	private ZephyrKPIServiceFactory zephyrKPIServiceFactory;
-
 	@Mock private TestService service;
-	private KpiRequest kpiRequest;
-	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
+
+	@InjectMocks private ZephyrServiceKanban zephyrService;
+
+	private final KpiRequest kpiRequest = new KpiRequest();
+
 	private List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
-	String[] exampleStringList;
-
-	@Before
-	public void setup() throws ApplicationException {
-		MockitoAnnotations.openMocks(this);
-		List<ZephyrKPIService<?, ?, ?>> mockServices = Arrays.asList(service);
-		zephyrKPIServiceFactory = ZephyrKPIServiceFactory.builder().services(mockServices).build();
-		doReturn(TESTZEPHYR).when(service).getQualifierType();
-		doReturn(new KpiElement()).when(service).getKpiData(any(), any(), any());
-		zephyrKPIServiceFactory.initMyServiceCache();
-
-		KpiRequestFactory kpiRequestFactory =
-				KpiRequestFactory.newInstance("/json/default/kanban_kpi_request.json");
-		kpiRequest = kpiRequestFactory.findKpiRequest("kpi63");
-		createKpiRequest("SONAR", 3, kpiRequest);
-		kpiRequest.setLabel("PROJECT");
-
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
-				AccountHierarchyKanbanFilterDataFactory.newInstance();
-		accountHierarchyKanbanDataList =
-				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
-
-		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
-		hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
-		Map<String, HierarchyLevel> hierarchyMap =
-				hierarchyLevels.stream()
-						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
-		Map<String, Integer> map = new HashMap<>();
-		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
-		when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(map);
-		exampleStringList = new String[] {"exampleElement", "exampleElement"};
-	}
+	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 
 	@Test
-	public void sonarViolationsTestProcess_cache() throws Exception {
+	public void sonarViolationsTestProcess() throws Exception {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+			initiateRequiredServicesAndFactories();
 
-		when(filterHelperService.getHierarachyLevelId(
-						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
-				.thenReturn("project");
-		when(cacheService.getFromApplicationCache(
-						eq(exampleStringList), eq(KPISource.ZEPHYRKANBAN.name()), eq(1), isNull()))
-				.thenReturn(new ArrayList<KpiElement>());
-		when(filterHelperService.getFilteredBuildsKanban(ArgumentMatchers.any(), Mockito.anyString()))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(authorizedProjectsService.getKanbanProjectKey(accountHierarchyKanbanDataList, kpiRequest))
-				.thenReturn(exampleStringList);
-		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
-				.thenReturn(accountHierarchyKanbanDataList);
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
+			updateKpiRequest("Excel-Sonar", 3);
+			kpiRequest.setLabel("PROJECT");
+			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
+			Node testNode = new Node();
+			testNode.setGroupName("group name");
+			accountHierarchyDataKanban.setNode(List.of(testNode));
 
-		try {
+			when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(Map.of("project", 1));
+			when(filterHelperService.getFirstHierarchyLevel()).thenReturn("firstHierarchyLevel");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
+			when(authorizedProjectsService.filterKanbanProjects(anyList()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+			when(service.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
+
 			List<KpiElement> resultList = zephyrService.process(kpiRequest);
-		} catch (Exception e) {
-
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
 		}
 	}
 
 	@Test
-	public void sonarViolationsTestProcess() throws Exception {
-		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
-		when(filterHelperService.getHierarachyLevelId(
-						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
-				.thenReturn("project");
-		when(filterHelperService.getFilteredBuildsKanban(ArgumentMatchers.any(), Mockito.anyString()))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(authorizedProjectsService.getKanbanProjectKey(accountHierarchyKanbanDataList, kpiRequest))
-				.thenReturn(exampleStringList);
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
-		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap =
-				hierarchyLevels.stream()
-						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
-		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
-		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
-		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(service.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
-		List<KpiElement> resultList = zephyrService.process(kpiRequest);
-		assertEquals(CommonConstant.KPI_PASSED, resultList.get(0).getResponseCode());
-	}
-
-	@Test
 	public void sonarViolationsTestProcessThrowApplication() throws Exception {
-		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
-		when(filterHelperService.getHierarachyLevelId(
-						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
-				.thenReturn("project");
-		when(filterHelperService.getFilteredBuildsKanban(ArgumentMatchers.any(), Mockito.anyString()))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(authorizedProjectsService.getKanbanProjectKey(accountHierarchyKanbanDataList, kpiRequest))
-				.thenReturn(exampleStringList);
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
-		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap =
-				hierarchyLevels.stream()
-						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
-		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
-		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
-		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(service.getKpiData(any(), any(), any())).thenThrow(ApplicationException.class);
-		List<KpiElement> resultList = zephyrService.process(kpiRequest);
-		assertEquals(CommonConstant.KPI_FAILED, resultList.get(0).getResponseCode());
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+			initiateRequiredServicesAndFactories();
+
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
+			updateKpiRequest("Excel-Sonar", 3);
+			kpiRequest.setLabel("PROJECT");
+			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
+			Node testNode = new Node();
+			testNode.setGroupName("group name");
+			accountHierarchyDataKanban.setNode(List.of(testNode));
+
+			when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(Map.of("project", 1));
+			when(filterHelperService.getFirstHierarchyLevel()).thenReturn("firstHierarchyLevel");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
+			when(authorizedProjectsService.filterKanbanProjects(anyList()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+			when(service.getKpiData(any(), any(), any())).thenThrow(ApplicationException.class);
+
+			List<KpiElement> resultList = zephyrService.process(kpiRequest);
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+		}
 	}
 
 	@Test
 	public void sonarViolationsTestProcessThrowNullPointer() throws Exception {
-		when(kpiHelperService.isRequiredTestToolConfigured(any(), any(), any())).thenReturn(true);
-		when(filterHelperService.getHierarachyLevelId(
-						Mockito.anyInt(), anyString(), Mockito.anyBoolean()))
-				.thenReturn("project");
-		when(filterHelperService.getFilteredBuildsKanban(ArgumentMatchers.any(), Mockito.anyString()))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(authorizedProjectsService.getKanbanProjectKey(accountHierarchyKanbanDataList, kpiRequest))
-				.thenReturn(exampleStringList);
-		when(filterHelperService.getFirstHierarachyLevel()).thenReturn("hierarchyLevelOne");
-		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap =
-				hierarchyLevels.stream()
-						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
-		hierarchyMap.entrySet().stream().forEach(k -> map.put(k.getKey(), k.getValue().getLevel()));
-		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
-		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
-				.thenReturn(accountHierarchyKanbanDataList);
-		when(service.getKpiData(any(), any(), any())).thenThrow(NullPointerException.class);
-		List<KpiElement> resultList = zephyrService.process(kpiRequest);
-		assertEquals(CommonConstant.KPI_FAILED, resultList.get(0).getResponseCode());
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+			initiateRequiredServicesAndFactories();
+
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
+			updateKpiRequest("Excel-Sonar", 3);
+			kpiRequest.setLabel("PROJECT");
+			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
+			Node testNode = new Node();
+			testNode.setGroupName("group name");
+			accountHierarchyDataKanban.setNode(List.of(testNode));
+
+			when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(Map.of("project", 1));
+			when(filterHelperService.getFirstHierarchyLevel()).thenReturn("firstHierarchyLevel");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
+			when(authorizedProjectsService.filterKanbanProjects(anyList()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+			when(service.getKpiData(any(), any(), any())).thenThrow(NullPointerException.class);
+
+			List<KpiElement> resultList = zephyrService.process(kpiRequest);
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+		}
 	}
 
-	private void createKpiRequest(String source, int level, KpiRequest kpiRequest) {
+	@Test
+	public void when_KanbanKpiRequestIsReceived_Expect_RequestIsPopulatedAccordingly() {
+		KpiRequest kpiRequest1 = new KpiRequest();
+		kpiRequest1.setIds(new String[] {"10"});
+		kpiRequest1.setSelectedMap(Map.of("date", List.of("5")));
+
+		ReflectionTestUtils.invokeMethod(zephyrService, "populateKanbanKpiRequest", kpiRequest1);
+
+		Assertions.assertEquals(10, kpiRequest1.getKanbanXaxisDataPoints());
+		Assertions.assertEquals(CommonConstant.DAYS, kpiRequest1.getDuration());
+
+		kpiRequest1.setSelectedMap(Map.of("date", List.of("Random duration")));
+
+		ReflectionTestUtils.invokeMethod(zephyrService, "populateKanbanKpiRequest", kpiRequest1);
+
+		Assertions.assertEquals("RANDOM DURATION", kpiRequest1.getDuration());
+	}
+
+	@Test
+	public void
+			when_RequesterShouldHaveFullAccessOnRequestedResource_Expect_GetAuthorizedFilteredListReturnsRequiredResource() {
+		updateKpiRequest("Excel-Sonar", 3);
+		List<AccountHierarchyDataKanban> expectedAccountHierarchyDataKanbanList = new ArrayList<>();
+		AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
+		accountHierarchyDataKanban.setLabelName("testLabel");
+		expectedAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
+
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+				mockStatic(ApiKeyAuthenticationService.class)) {
+			// Case 1 -> user is super admin and request is not through api key
+			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
+
+			List<AccountHierarchyDataKanban> resultedAccountHierarchyDataKanbanList =
+					ReflectionTestUtils.invokeMethod(
+							zephyrService,
+							"getAuthorizedFilteredList",
+							kpiRequest,
+							expectedAccountHierarchyDataKanbanList);
+
+			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
+
+			// Case 2 -> user is not super admin and request is through api key
+			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(true);
+
+			resultedAccountHierarchyDataKanbanList =
+					ReflectionTestUtils.invokeMethod(
+							zephyrService,
+							"getAuthorizedFilteredList",
+							kpiRequest,
+							expectedAccountHierarchyDataKanbanList);
+
+			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
+		}
+	}
+
+	@Test
+	public void
+			when_RequesterIsNotSuperAdminOrRequestIsNotMadeWithApiKey_Expect_GetAuthorizedFilteredListPerformsResourceAccessFiltering() {
+		updateKpiRequest("Excel-Sonar", 3);
+		List<AccountHierarchyDataKanban> testAccountHierarchyDataKanbanList = new ArrayList<>();
+		AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
+		accountHierarchyDataKanban.setLabelName("testLabel");
+		testAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
+
+		List<AccountHierarchyDataKanban> expectedAccountHierarchyDataKanbanList = new ArrayList<>();
+		AccountHierarchyDataKanban accountHierarchyDataKanban1 = new AccountHierarchyDataKanban();
+		accountHierarchyDataKanban1.setLabelName("expectedLabel");
+		expectedAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
+
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+				mockStatic(ApiKeyAuthenticationService.class)) {
+			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
+			when(authorizedProjectsService.filterKanbanProjects(anyList()))
+					.thenReturn(expectedAccountHierarchyDataKanbanList);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
+
+			List<AccountHierarchyDataKanban> resultedAccountHierarchyDataKanbanList =
+					ReflectionTestUtils.invokeMethod(
+							zephyrService,
+							"getAuthorizedFilteredList",
+							kpiRequest,
+							testAccountHierarchyDataKanbanList);
+
+			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
+		}
+	}
+
+	@Test
+	public void when_RequestIsMadeWithApiKey_Expect_NoCachedDataWillBeUsed()
+			throws EntityNotFoundException, ApplicationException {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+			initiateRequiredServicesAndFactories();
+
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(true);
+			updateKpiRequest("Excel-Sonar", 3);
+			kpiRequest.setLabel("PROJECT");
+			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
+			Node testNode = new Node();
+			testNode.setGroupName("group name");
+			accountHierarchyDataKanban.setNode(List.of(testNode));
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
+			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
+					.thenReturn(List.of(accountHierarchyDataKanban));
+
+			zephyrService.process(kpiRequest);
+			verifyNoInteractions(cacheService);
+		}
+	}
+
+	private void updateKpiRequest(String source, int level) {
 		List<KpiElement> kpiList = new ArrayList<>();
-		addKpiElement(kpiList, TESTZEPHYR, TESTZEPHYR, "TechDebt", "", source);
+		addKpiElement(kpiList, TEST_ZEPHYR, TEST_ZEPHYR, "TechDebt", "", source);
 		kpiRequest.setLevel(level);
 		kpiRequest.setIds(new String[] {"Scrum Project_6335363749794a18e8a4479b"});
 		kpiRequest.setKpiList(kpiList);
@@ -258,5 +364,21 @@ public class ZephyrServiceKanbanTest {
 		kpiElement.setMaxValue("500");
 		kpiElement.setChartType("gaugeChart");
 		kpiList.add(kpiElement);
+	}
+
+	private TreeAggregatorDetail createTreeAggregatorDetail() {
+		TreeAggregatorDetail treeAggregatorDetail = new TreeAggregatorDetail();
+		treeAggregatorDetail.setMapOfListOfProjectNodes(
+				Map.of("project", List.of(new Node(), new Node())));
+		return treeAggregatorDetail;
+	}
+
+	private void initiateRequiredServicesAndFactories() throws ApplicationException {
+		List<ZephyrKPIService<?, ?, ?>> mockServices = List.of(service);
+		ZephyrKPIServiceFactory zephyrKPIServiceFactory =
+				ZephyrKPIServiceFactory.builder().services(mockServices).build();
+		doReturn(TEST_ZEPHYR).when(service).getQualifierType();
+		doReturn(new KpiElement()).when(service).getKpiData(any(), any(), any());
+		zephyrKPIServiceFactory.initMyServiceCache();
 	}
 }

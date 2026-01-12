@@ -223,12 +223,16 @@ public final class AggregationUtils {
 		Long values = null;
 
 		if (CollectionUtils.isNotEmpty(numbers) && (null != percentiles)) {
-			Collections.sort(numbers);
-			int index = (int) Math.round((percentiles / 100) * numbers.size());
+			// clone list to avoid UnsupportedOperationException
+			List<Long> sortedNumbers = new ArrayList<>(numbers);
+			Collections.sort(sortedNumbers);
+
+			int index = (int) Math.round((percentiles / 100) * sortedNumbers.size());
+
 			if (index == 0) {
-				values = numbers.get(index);
+				values = sortedNumbers.get(index);
 			} else {
-				values = numbers.get(index - 1);
+				values = sortedNumbers.get(index - 1);
 			}
 		}
 		return values;

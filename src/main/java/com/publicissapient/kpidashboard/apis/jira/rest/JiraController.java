@@ -18,14 +18,11 @@
 
 package com.publicissapient.kpidashboard.apis.jira.rest;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.jira.model.BoardRequestDTO;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraNonTrendKPIServiceR;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceKanbanR;
@@ -50,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.dto.AssigneeResponseDTO;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -59,34 +58,23 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class JiraController {
+	private static final String KPI_LIST = "kpiList";
+	private static final String JIRA_SCRUM_KPI_REQ = "JiraScrumKpiRequest";
 
-	@Autowired private JiraServiceR jiraService;
+	private final CacheService cacheService;
+	private final JiraServiceR jiraService;
+	private final JiraServiceKanbanR jiraServiceKanban;
+	private final JiraToolConfigServiceImpl jiraToolConfigService;
 
-	@Autowired private JiraServiceKanbanR jiraServiceKanban;
+	private final NonTrendServiceFactory serviceFactory;
 
-	@Autowired private CacheService cacheService;
-
-	@Autowired private JiraToolConfigServiceImpl jiraToolConfigService;
-
-	@Autowired private NonTrendServiceFactory serviceFactory;
-
-	public static final String JIRASCRUMKPIREQ = "JiraScrumKpiRequest";
-	public static final String KPILIST = "kpiList";
-
-	/**
-	 * This method handles Jira Scrum KPIs request.
-	 *
-	 * @param kpiRequest
-	 * @return List of KPIs with trend and aggregated data.
-	 * @throws Exception
-	 */
-	@PostMapping(value = "/jira/kpi", produces = APPLICATION_JSON_VALUE)
-	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
+	@PostMapping(value = "/jira/kpi")
 	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
-
-		MDC.put(JIRASCRUMKPIREQ, kpiRequest.getRequestTrackerId());
+			@RequestBody KpiRequest kpiRequest)
+			throws MissingServletRequestParameterException, EntityNotFoundException {
+		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request {}", kpiRequest);
 
 		long jiraRequestStartTime = System.currentTimeMillis();
@@ -96,14 +84,13 @@ public class JiraController {
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
-			throw new MissingServletRequestParameterException(KPILIST, "List");
+			throw new MissingServletRequestParameterException(KPI_LIST, "List");
 		}
 
 		List<KpiElement> responseList = jiraService.process(kpiRequest);
 		MDC.put(
 				"TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 
-		log.info("");
 		MDC.clear();
 		if (responseList.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
@@ -112,27 +99,22 @@ public class JiraController {
 		}
 	}
 
-	/**
-	 * This method handles Jira Kanban KPIs request.
-	 *
-	 * @param kpiRequest
-	 * @return List of KPIs with trend and aggregated data.
-	 * @throws Exception
-	 */
-	@PostMapping(value = "/jirakanban/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
-	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
+	@PostMapping(value = "/jirakanban/kpi")
 	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
-		MDC.put(JIRASCRUMKPIREQ, kpiRequest.getRequestTrackerId());
+			@RequestBody KpiRequest kpiRequest)
+			throws MissingServletRequestParameterException, EntityNotFoundException {
+		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira Kanban KPI request {}", kpiRequest);
+
 		long jiraKanbanRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraKanbanRequestStartTime", String.valueOf(jiraKanbanRequestStartTime));
+
 		cacheService.setIntoApplicationCache(
 				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
-			throw new MissingServletRequestParameterException(KPILIST, "List");
+			throw new MissingServletRequestParameterException(KPI_LIST, "List");
 		}
 
 		List<KpiElement> responseList = jiraServiceKanban.process(kpiRequest);
@@ -140,14 +122,9 @@ public class JiraController {
 				"TotalJiraKanbanRequestTime",
 				String.valueOf(System.currentTimeMillis() - jiraKanbanRequestStartTime));
 
-		log.info("");
 		MDC.clear();
 
-		if (responseList.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
-		} else {
-			return ResponseEntity.ok().body(responseList);
-		}
+		return ResponseEntity.ok().body(responseList);
 	}
 
 	@PostMapping(value = "/jira/board", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -165,17 +142,17 @@ public class JiraController {
 			response =
 					new ServiceResponse(true, "Successfully fetched assignee list", assigneeResponseDTO);
 		} else {
-			response =
-					new ServiceResponse(false, "Error while fetching Assignee List", assigneeResponseDTO);
+			response = new ServiceResponse(false, "Error while fetching Assignee List", null);
 		}
 		return response;
 	}
 
-	@PostMapping(value = "/jira/nonTrend/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/jira/nonTrend/kpi")
 	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+			@NotNull @RequestBody KpiRequest kpiRequest)
+			throws MissingServletRequestParameterException, EntityNotFoundException {
 
-		MDC.put(JIRASCRUMKPIREQ, kpiRequest.getRequestTrackerId());
+		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request for iteration{}", kpiRequest);
 
 		long jiraRequestStartTime = System.currentTimeMillis();
@@ -185,7 +162,7 @@ public class JiraController {
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
-			throw new MissingServletRequestParameterException(KPILIST, "List");
+			throw new MissingServletRequestParameterException(KPI_LIST, "List");
 		}
 		JiraNonTrendKPIServiceR jiraNonTrendKPIServiceR =
 				serviceFactory.getService(kpiRequest.getKpiList().get(0).getKpiCategory());
@@ -194,10 +171,6 @@ public class JiraController {
 				"TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 
 		MDC.clear();
-		if (responseList.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(responseList);
-		} else {
-			return ResponseEntity.ok().body(responseList);
-		}
+		return ResponseEntity.ok().body(responseList);
 	}
 }

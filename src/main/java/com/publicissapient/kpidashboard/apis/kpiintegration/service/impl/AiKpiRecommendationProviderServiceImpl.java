@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.ai.model.KpiDataPrompt;
 import com.publicissapient.kpidashboard.apis.ai.parser.ParserStategy;
 import com.publicissapient.kpidashboard.apis.ai.service.PromptGenerator;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -47,6 +46,7 @@ import com.publicissapient.kpidashboard.apis.model.ProjectWiseKpiRecommendation;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.application.KpiDataPrompt;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -108,7 +108,7 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 	 *     prompts.
 	 */
 	private Map<String, Object> extractKpiData(KpiRequest kpiRequest) {
-		List<KpiElement> kpiElements = kpiIntegrationService.getKpiResponses(kpiRequest);
+		List<KpiElement> kpiElements = kpiIntegrationService.processScrumKpiRequest(kpiRequest);
 		Map<String, Object> kpiDataMap = new HashMap<>();
 
 		kpiElements.forEach(

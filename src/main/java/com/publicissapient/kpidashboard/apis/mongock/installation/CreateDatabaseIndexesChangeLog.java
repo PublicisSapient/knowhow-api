@@ -78,6 +78,7 @@ public class CreateDatabaseIndexesChangeLog {
 		clearAndExecuteMergeRequestsIndexes();
 		clearAndExecuteProcessorItemsIndexes();
 		usersSessionTTLIndex();
+		createRecommendationsActionPlanIndexes();
 	}
 
 	public void clearAndExecuteJiraIssueIndexes() {
@@ -474,6 +475,17 @@ public class CreateDatabaseIndexesChangeLog {
 	public void usersSessionTTLIndex() {
 		IndexOperations indexOps = mongoTemplate.indexOps("users_session");
 		indexOps.ensureIndex(new Index().on("expiresOn", Sort.Direction.ASC).expire(0));
+	}
+
+	public void createRecommendationsActionPlanIndexes() {
+		IndexOperations indexOps = mongoTemplate.indexOps("recommendations_action_plan");
+
+		// Compound index: basicProjectConfigId (ASC) + createdAt (DESC)
+		indexOps.ensureIndex(
+				new Index()
+						.on(BASIC_PROJECT_CONFIG_ID, Sort.Direction.ASC)
+						.on("createdAt", Sort.Direction.DESC)
+						.named("basicProjectConfigId_1_createdAt_-1"));
 	}
 
 	@RollbackExecution

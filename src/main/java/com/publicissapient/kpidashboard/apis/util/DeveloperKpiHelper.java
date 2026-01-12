@@ -17,8 +17,25 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ObjectUtils;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
@@ -32,20 +49,8 @@ import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang.ObjectUtils;
-import org.bson.types.ObjectId;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The class contains all required common methods for developer kpis
@@ -55,7 +60,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class DeveloperKpiHelper {
 
-    private static final String CONNECTOR = " -> ";
+	private static final String CONNECTOR = " -> ";
+
+	@Autowired(required = false)
+	private static ForecastingManager forecastingManager;
 
 	private DeveloperKpiHelper() {}
 
@@ -67,7 +75,7 @@ public final class DeveloperKpiHelper {
 	 * @return List of DataCountGroup objects with separated filters
 	 */
 	public static List<DataCountGroup> prepareDataCountGroups(
-			Map<String, List<DataCount>> trendValuesMap) {
+			Map<String, List<DataCount>> trendValuesMap, String kpiId) {
 		return trendValuesMap.entrySet().stream()
 				.map(
 						entry -> {
@@ -76,6 +84,15 @@ public final class DeveloperKpiHelper {
 							group.setFilter1(filters[0]);
 							group.setFilter2(filters[1]);
 							group.setValue(entry.getValue());
+							// Add forecasts if configured
+							Optional.ofNullable(forecastingManager)
+									.ifPresent(
+											manager ->
+													manager.addForecastsToDataCount(
+															group,
+															Optional.ofNullable(entry.getValue()).orElse(Collections.emptyList()),
+															kpiId));
+
 							return group;
 						})
 				.collect(Collectors.toList());
@@ -268,18 +285,25 @@ public final class DeveloperKpiHelper {
 	 * @param hoverValue Additional hover information
 	 * @param dataCountMap Map to store/update data counts
 	 */
-	public static void setDataCount(String projectName, String dateLabel, String kpiGroup, Number value,
-			Map<String, Object> hoverValue, Map<String, List<DataCount>> dataCountMap) {
+	public static void setDataCount(
+			String projectName,
+			String dateLabel,
+			String kpiGroup,
+			Number value,
+			Map<String, Object> hoverValue,
+			Map<String, List<DataCount>> dataCountMap) {
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
-		Optional<DataCount> existingDataCount = dataCounts.stream()
-				.filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
+		Optional<DataCount> existingDataCount =
+				dataCounts.stream().filter(dataCount -> dataCount.getDate().equals(dateLabel)).findFirst();
 
 		if (existingDataCount.isPresent()) {
 			DataCount updatedDataCount = existingDataCount.get();
 			if (value instanceof Long) {
-				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).longValue() + value.longValue());
+				updatedDataCount.setValue(
+						((Number) updatedDataCount.getValue()).longValue() + value.longValue());
 			} else if (value instanceof Double) {
-				updatedDataCount.setValue(((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
+				updatedDataCount.setValue(
+						((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
 			}
 		} else {
 			DataCount newDataCount = new DataCount();
@@ -369,22 +393,22 @@ public final class DeveloperKpiHelper {
 		return cdr;
 	}
 
-    /**
-     * This method creates branch filters for kpis
-     *
-     * @param repo tool repo
-     * @param projectName projectName
-     * @return branch filter
-     */
-    public static String getBranchSubFilter(Tool repo, String projectName) {
-        String subfilter = "";
-        if (null != repo.getRepoSlug()) {
-            subfilter = repo.getBranch() + CONNECTOR + repo.getRepoSlug() + CONNECTOR + projectName;
-        } else if (null != repo.getRepositoryName()) {
-            subfilter = repo.getBranch() + CONNECTOR + repo.getRepositoryName() + CONNECTOR + projectName;
-        } else {
-            subfilter = repo.getBranch() + CONNECTOR + projectName;
-        }
-        return subfilter;
-    }
+	/**
+	 * This method creates branch filters for kpis
+	 *
+	 * @param repo tool repo
+	 * @param projectName projectName
+	 * @return branch filter
+	 */
+	public static String getBranchSubFilter(Tool repo, String projectName) {
+		String subfilter = "";
+		if (null != repo.getRepoSlug()) {
+			subfilter = repo.getBranch() + CONNECTOR + repo.getRepoSlug() + CONNECTOR + projectName;
+		} else if (null != repo.getRepositoryName()) {
+			subfilter = repo.getBranch() + CONNECTOR + repo.getRepositoryName() + CONNECTOR + projectName;
+		} else {
+			subfilter = repo.getBranch() + CONNECTOR + projectName;
+		}
+		return subfilter;
+	}
 }

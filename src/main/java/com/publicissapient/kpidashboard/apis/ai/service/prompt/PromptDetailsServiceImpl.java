@@ -21,8 +21,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.publicissapient.kpidashboard.apis.ai.model.PromptDetails;
-import com.publicissapient.kpidashboard.apis.ai.repository.PromptDetailsRepository;
+import com.publicissapient.kpidashboard.common.model.application.PromptDetails;
+import com.publicissapient.kpidashboard.common.repository.application.PromptDetailsRepository;
 
 import lombok.RequiredArgsConstructor;
 

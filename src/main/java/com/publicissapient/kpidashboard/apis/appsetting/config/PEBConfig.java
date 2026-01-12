@@ -21,6 +21,8 @@ package com.publicissapient.kpidashboard.apis.appsetting.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,4 +44,5 @@ public class PEBConfig {
 	private Integer totalDevelopers;
 	private Double avgCostPerDeveloper;
 	private String timeDuration;
+	private ForecastingModel forecastingModel;
 }

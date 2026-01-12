@@ -1,5 +1,17 @@
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.innovation.rate;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
@@ -21,31 +33,22 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class ScmInnovationRateServiceImpl
+		extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String COMMITS_LIST = "commitsList";
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
-    private final KpiStrategyRegistry kpiStrategyRegistry;
+	private final KpiStrategyRegistry kpiStrategyRegistry;
 
 	@Override
 	public String getQualifierType() {
@@ -58,20 +61,24 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
-        if (kpiElement.getChartType().equalsIgnoreCase("line")) {
+		if (kpiElement.getChartType().equalsIgnoreCase("line")) {
 
-            Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-            calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.INNOVATION_RATE);
+			Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
+			calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.INNOVATION_RATE);
 
-            Map<String, List<DataCount>> trendValuesMap = getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue,
-                    KPICode.INNOVATION_RATE);
-            kpiElement.setTrendValueList(DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap));
-        } else {
-            kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
-        }
+			Map<String, List<DataCount>> trendValuesMap =
+					getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.INNOVATION_RATE);
+			kpiElement.setTrendValueList(
+					DeveloperKpiHelper.prepareDataCountGroups(
+							trendValuesMap, KPICode.INNOVATION_RATE.getKpiId()));
+		} else {
+			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
+		}
 		return kpiElement;
 	}
 
@@ -86,8 +93,8 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
 
 		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
@@ -97,32 +104,33 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.INNOVATION_RATE.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI162(), KPICode.INNOVATION_RATE.getKpiId());
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *            kpi element
-	 * @param mapTmp
-	 *            node map
-	 * @param projectLeafNode
-	 *            leaf node of project
-	 * @param kpiRequest
-	 *            kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void calculateProjectKpiTrendData(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 
-		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
-				kpiHelperService);
+		List<Tool> scmTools =
+				DeveloperKpiHelper.getScmToolsForProject(
+						projectLeafNode, configHelperService, kpiHelperService);
 
 		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
 			return;
 		}
@@ -133,25 +141,35 @@ public class ScmInnovationRateServiceImpl extends BitBucketKPIService<Double, Li
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(commits)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
 			return;
 		}
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-        KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(
-                KPICode.INNOVATION_RATE, kpiElement.getChartType());
-		List<ScmCommits> filteredNonMergeCommits = commits.stream().filter(commit -> !commit.getIsMergeCommit())
-				.toList();
-        Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, null, filteredNonMergeCommits, scmTools,
-                validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
+		KpiCalculationStrategy<?> strategy =
+				kpiStrategyRegistry.getStrategy(KPICode.INNOVATION_RATE, kpiElement.getChartType());
+
+		List<ScmCommits> filteredNonMergeCommits =
+				commits.stream().filter(commit -> !commit.getIsMergeCommit()).toList();
+		Object kpiTrendDataByGroup =
+				strategy.calculateKpi(
+						kpiRequest,
+						null,
+						filteredNonMergeCommits,
+						scmTools,
+						validationDataList,
+						assignees,
+						projectLeafNode.getProjectFilter().getName());
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-
-	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
+	private void populateExcelData(
+			String requestTrackerId,
+			List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();

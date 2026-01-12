@@ -18,6 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.errors;
 
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -26,10 +27,9 @@ import org.springframework.util.StringUtils;
 
 public class EntityNotFoundException extends Exception {
 
-	/** */
-	private static final long serialVersionUID = 1L;
-
 	private static final int ONE = 1;
+
+	@Serial private static final long serialVersionUID = -6522257525726104870L;
 
 	/**
 	 * @param clazz

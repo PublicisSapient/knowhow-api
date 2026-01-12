@@ -18,10 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.config;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -49,6 +46,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
 import com.publicissapient.kpidashboard.apis.auth.AuthenticationResultHandler;
 import com.publicissapient.kpidashboard.apis.auth.CustomAuthenticationFailureHandler;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationFilter;
 import com.publicissapient.kpidashboard.apis.auth.standard.StandardAuthenticationManager;
 import com.publicissapient.kpidashboard.apis.auth.standard.StandardLoginRequestFilter;
 import com.publicissapient.kpidashboard.apis.auth.token.JwtAuthenticationFilter;
@@ -72,6 +70,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+	private ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
+
 	private AuthenticationResultHandler authenticationResultHandler;
 
 	private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
@@ -85,15 +85,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 	private StandardAuthenticationManager authenticationManager;
 
 	private DashboardConfig dashboardConfig;
-
-	public static Properties getProps() throws IOException {
-		Properties prop = new Properties();
-		try (InputStream in =
-				Thread.currentThread().getContextClassLoader().getResourceAsStream("crowd.properties")) {
-			prop.load(in);
-		}
-		return prop;
-	}
 
 	/**
 	 * Added below fixes for security scan: - commented the headers in the response - added CorsFilter
@@ -141,17 +132,10 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 										.permitAll()
 										.requestMatchers("/getversionmetadata")
 										.permitAll()
-										.requestMatchers("/kpiIntegrationValues")
-										.permitAll()
-										.requestMatchers("/processor/saveRepoToolsStatus")
-										.permitAll()
 										.requestMatchers("/v1/kpi/{kpiID}")
 										.permitAll()
-										.requestMatchers("/basicconfigs/hierarchyResponses")
+										.requestMatchers("/config")
 										.permitAll()
-
-                                        .requestMatchers("/config")
-                                        .permitAll()
 
 										// management metrics
 										.requestMatchers("/info")
@@ -195,6 +179,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 										.permitAll()
 										.anyRequest()
 										.authenticated())
+				.addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(
 						standardLoginRequestFilter(authenticationManager),
 						UsernamePasswordAuthenticationFilter.class)

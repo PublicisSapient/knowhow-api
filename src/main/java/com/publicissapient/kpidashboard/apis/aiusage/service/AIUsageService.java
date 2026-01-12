@@ -18,6 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageStatisticsDTO;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageStatisticsResponse;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageSummary;
@@ -28,20 +39,12 @@ import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountFilterRequest;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import org.apache.coyote.BadRequestException;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
+
+import jakarta.ws.rs.BadRequestException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -52,71 +55,91 @@ public class AIUsageService {
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
 
 	/**
-	 * Retrieves AI usage statistics for the hierarchy level specified by {@code levelName},
-	 * imited to the hierarchy elements the user has access to. For each matching item,
-	 * this method builds an {@link AIUsageStatistics} object based on the hierarchy type:
-	 * business unit ("bu"), vertical ("ver"), or account ("acc").
-	 * <p>
-	 * Entries that result in {@code null} statistics are skipped.
-	 * </p>
+	 * Retrieves AI usage statistics for the hierarchy level specified by {@code levelName}, limited
+	 * to the hierarchy elements the user has access to. For each matching item, this method builds an
+	 * {@link AIUsageStatistics} object based on the hierarchy type: business unit ("bu"), vertical or
+	 * account.
 	 *
-	 * @param levelName     the hierarchy level name to filter by (e.g., "bu", "ver", "acc");
-	 *                      comparison is case-insensitive.
-	 * @param includeUsers  whether to include user-level statistics (currently not used in logic,
-	 *                      but reserved for future functionality).
-	 * @param startDate     the beginning of the date range filter (inclusive). May be null.
-	 * @param endDate       the end of the date range filter (inclusive). May be null.
-	 * @param pageable      pagination information for controlling result size (currently unused).
+	 * <p>Entries that result in {@code null} statistics are skipped.
 	 *
+	 * @param levelName the hierarchy level name to filter by (e.g., "bu", "vertical", "account");
+	 *     comparison is case-insensitive.
+	 * @param includeUsers whether to include user-level statistics (currently not used in logic, but
+	 *     reserved for future functionality).
+	 * @param startDate the beginning of the date range filter (inclusive). May be null.
+	 * @param endDate the end of the date range filter (inclusive). May be null.
+	 * @param pageable pagination information for controlling result size (currently unused).
 	 * @return a list of {@link AIUsageStatistics} for hierarchy levels the user is allowed to access.
-	 *
 	 * @throws IllegalArgumentException if an unknown hierarchy level is encountered.
 	 */
-	public AIUsageStatisticsResponse getAIUsageStats(String levelName, LocalDate startDate,
-												   LocalDate endDate, Boolean includeUsers, Pageable pageable) throws EntityNotFoundException, BadRequestException {
+	public ServiceResponse getAIUsageStats(
+			String levelName,
+			LocalDate startDate,
+			LocalDate endDate,
+			Boolean includeUsers,
+			Pageable pageable)
+			throws EntityNotFoundException, BadRequestException {
 		validateLevelName(levelName);
 		validateDates(startDate, endDate);
 
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = fetchHierarchiesForCurrentLevel(levelName);
+		HierarchyLevelType level = HierarchyLevelType.fromLevelName(levelName.toLowerCase());
+
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo =
+				fetchHierarchiesForCurrentLevel(level.getHierarchyLabel());
 
 		List<AIUsageStatistics> responseList = new ArrayList<>();
 		for (AccountFilteredData hierarchy : hierarchyDataUserHasAccessTo) {
-			if (hierarchy.getLabelName() != null) {
-				switch (hierarchy.getLabelName()) {
-					case "bu" -> {
-						AIUsageStatistics buStats = constructResponseForBusinessUnit(hierarchy, startDate, endDate);
-						if (buStats != null) {
-							responseList.add(buStats);
-						}
-					}
-					case "ver" -> {
-						AIUsageStatistics verStats = constructResponseForVertical(hierarchy, startDate, endDate);
-						if (verStats != null) {
-							responseList.add(verStats);
-						}
-					}
-					case "acc" -> {
-						AIUsageStatistics accStats = constructResponseForAccount(hierarchy, startDate, endDate);
-						if (accStats != null) {
-							responseList.add(accStats);
-						}
-					}
-					default -> throw new IllegalArgumentException("Unknown hierarchy level: " + hierarchy.getLabelName());
-				}
-			}
+			computeValuesForExpectedLevelName(startDate, endDate, hierarchy, responseList);
 		}
 		if (responseList.isEmpty()) {
 			throw new EntityNotFoundException(AIUsageStatistics.class);
 		}
 
-		List< AIUsageStatisticsDTO> responseDTOList = responseList.stream()
-				.map(AIUsageStatisticsDTO::new)
-				.toList();
+		List<AIUsageStatisticsDTO> responseDTOList =
+				responseList.stream().map(AIUsageStatisticsDTO::new).toList();
 
-		if (responseList.size() < hierarchyDataUserHasAccessTo.size()) {
-			return new AIUsageStatisticsResponse(responseDTOList, true);
+		ServiceResponse response = new ServiceResponse();
+		response.setMessage("AI usage statistics retrieved successfully");
+		response.setSuccess(true);
+		AIUsageStatisticsDTO totalSummaryDto = new AIUsageStatisticsDTO();
+		totalSummaryDto.setLevelName(levelName);
+		totalSummaryDto.setUsageSummary(aggregateSummaries(responseList));
+		response.setData(new AIUsageStatisticsResponse(totalSummaryDto, responseDTOList));
+
+		return response;
+	}
+
+	private void computeValuesForExpectedLevelName(
+			LocalDate startDate,
+			LocalDate endDate,
+			AccountFilteredData hierarchy,
+			List<AIUsageStatistics> responseList) {
+		if (hierarchy.getLabelName() != null) {
+			switch (HierarchyLevelType.fromHierarchyLevel(hierarchy.getLabelName().toLowerCase())) {
+				case BUSINESS_UNIT -> {
+					AIUsageStatistics buStats =
+							constructResponseForBusinessUnit(hierarchy, startDate, endDate);
+					if (buStats != null) {
+						responseList.add(buStats);
+					}
+				}
+				case VERTICAL -> {
+					AIUsageStatistics verStats = constructResponseForVertical(hierarchy, startDate, endDate);
+					if (verStats != null) {
+						responseList.add(verStats);
+					}
+				}
+				case ACCOUNT -> {
+					AIUsageStatistics accStats = constructResponseForAccount(hierarchy, startDate, endDate);
+					if (accStats != null) {
+						responseList.add(accStats);
+					}
+				}
+				default ->
+						throw new IllegalArgumentException(
+								"Unknown hierarchy level: " + hierarchy.getLabelName());
+			}
 		}
-		return new AIUsageStatisticsResponse(responseDTOList, false);
 	}
 
 	private Set<AccountFilteredData> fetchHierarchiesForCurrentLevel(String levelName) {
@@ -130,8 +153,11 @@ public class AIUsageService {
 	}
 
 	private void validateLevelName(String levelName) throws BadRequestException {
-		if (!List.of("bu", "ver", "acc").contains(levelName.toLowerCase())) {
-			throw new BadRequestException("Invalid levelName: " + levelName + ". Expected values are 'bu', 'ver', or 'acc'.");
+		if (!HierarchyLevelType.getLevelNameValues().contains(levelName.toLowerCase())) {
+			throw new BadRequestException(
+					"Invalid levelName: "
+							+ levelName
+							+ ". Expected values are 'bu', 'vertical', or 'account'.");
 		}
 	}
 
@@ -141,15 +167,16 @@ public class AIUsageService {
 		}
 	}
 
-	private AIUsageStatistics constructResponseForAccount(AccountFilteredData hierarchy,  LocalDate startDate,
-														  LocalDate endDate) {
+	private AIUsageStatistics constructResponseForAccount(
+			AccountFilteredData hierarchy, LocalDate startDate, LocalDate endDate) {
 		String nodeName = hierarchy.getNodeName();
 		if (nodeName == null) {
 			return null;
 		}
 		if (startDate != null && endDate != null) {
-			return aiUsageStatisticsRepository.findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(
-					nodeName, startDate, endDate);
+			return aiUsageStatisticsRepository
+					.findTop1ByLevelNameAndStatsDateBetweenOrderByIngestTimestampDesc(
+							nodeName, startDate, endDate);
 		}
 		log.info("Fetching AI usage statistics for account level: {}", nodeName);
 		return aiUsageStatisticsRepository.findTop1ByLevelNameAndLevelTypeOrderByIngestTimestampDesc(
@@ -162,22 +189,19 @@ public class AIUsageService {
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
 		return accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
-						.filter(data -> data.getParentId() != null 
-								&& data.getParentId().equalsIgnoreCase(nodeId))
+				.filter(data -> data.getParentId() != null && data.getParentId().equalsIgnoreCase(nodeId))
 				.collect(Collectors.toSet());
 	}
 
 	private AIUsageStatistics aggregateForLevel(
 			AccountFilteredData node,
 			String levelType,
-			Function<AccountFilteredData, AIUsageStatistics> childResolver
-	) {
-		Set<AccountFilteredData> children = fetchHierarchyDataUserHasAccessToForParentId(node.getNodeId());
+			Function<AccountFilteredData, AIUsageStatistics> childResolver) {
+		Set<AccountFilteredData> children =
+				fetchHierarchyDataUserHasAccessToForParentId(node.getNodeId());
 
-		List<AIUsageStatistics> statsList = children.stream()
-				.map(childResolver)
-				.filter(Objects::nonNull)
-				.toList();
+		List<AIUsageStatistics> statsList =
+				children.stream().map(childResolver).filter(Objects::nonNull).toList();
 
 		AIUsageSummary summary = aggregateSummaries(statsList);
 		if (summary.getUserCount() == 0) {
@@ -191,22 +215,20 @@ public class AIUsageService {
 		return aggregated;
 	}
 
-	private AIUsageStatistics constructResponseForVertical(AccountFilteredData vertical, LocalDate startDate,
-														   LocalDate endDate) {
+	private AIUsageStatistics constructResponseForVertical(
+			AccountFilteredData vertical, LocalDate startDate, LocalDate endDate) {
 		return aggregateForLevel(
 				vertical,
 				HierarchyLevelType.VERTICAL.name(),
-				child -> constructResponseForAccount(child, startDate, endDate)
-		);
+				child -> constructResponseForAccount(child, startDate, endDate));
 	}
 
-	private AIUsageStatistics constructResponseForBusinessUnit(AccountFilteredData businessUnit, LocalDate startDate,
-															   LocalDate endDate) {
+	private AIUsageStatistics constructResponseForBusinessUnit(
+			AccountFilteredData businessUnit, LocalDate startDate, LocalDate endDate) {
 		return aggregateForLevel(
 				businessUnit,
 				HierarchyLevelType.BUSINESS_UNIT.name(),
-				child -> constructResponseForVertical(child, startDate, endDate)
-		);
+				child -> constructResponseForVertical(child, startDate, endDate));
 	}
 
 	private AIUsageSummary aggregateSummaries(List<AIUsageStatistics> statsList) {

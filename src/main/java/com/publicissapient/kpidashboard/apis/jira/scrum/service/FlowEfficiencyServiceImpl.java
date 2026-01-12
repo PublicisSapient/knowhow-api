@@ -40,12 +40,12 @@ import org.springframework.stereotype.Component;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.backlogdashboard.JiraBacklogKPIService;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
@@ -128,8 +128,10 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 					projectWiseDc.entrySet().forEach(trend -> dataList.addAll(trend.getValue()));
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
-							.ifPresent(manager -> manager.addForecastsToDataCount(
-									dataCountGroup, dataList, KPICode.FLOW_EFFICIENCY.getKpiId()));
+							.ifPresent(
+									manager ->
+											manager.addForecastsToDataCount(
+													dataCountGroup, dataList, KPICode.FLOW_EFFICIENCY.getKpiId()));
 					dataCountGroup.setFilter(filter);
 					dataCountGroup.setValue(dataList);
 					dataCountGroups.add(dataCountGroup);
@@ -369,7 +371,7 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 						.flatMap(innerMap -> innerMap.values().stream().flatMap(List::stream))
 						.map(JiraIssueCustomHistory::getStoryType)
 						.distinct()
-						.collect(Collectors.toList());
+						.toList();
 		rangeAndStatusWiseJiraIssueMap.forEach(
 				(dateRange, statusWiseJiraIssues) -> {
 					totalIssueTypeString.forEach(
@@ -387,9 +389,7 @@ public class FlowEfficiencyServiceImpl extends JiraBacklogKPIService<Integer, Li
 										typeWiseIssues.size());
 							});
 					List<JiraIssueCustomHistory> totalRangeWiseIssues =
-							statusWiseJiraIssues.values().stream()
-									.flatMap(List::stream)
-									.collect(Collectors.toList());
+							statusWiseJiraIssues.values().stream().flatMap(List::stream).toList();
 					double average = calculateAverage(totalRangeWiseIssues, flowEfficiencyMap);
 					setDataCount(
 							leafNode.getProjectFilter().getName(),

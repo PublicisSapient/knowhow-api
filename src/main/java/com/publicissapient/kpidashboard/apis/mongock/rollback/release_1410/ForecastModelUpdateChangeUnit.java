@@ -64,7 +64,6 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.CODE_VIOLATIONS.getKpiId());
 		removeForecastModel(KPICode.CODE_VIOLATIONS_KANBAN.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId());
-		removeForecastModel(KPICode.TEST_EXECUTION_TIME.getKpiId());
 		removeForecastModel(KPICode.TEST_EXECUTION_KANBAN.getKpiId());
 
 		// KPIs for Iteration Board.
@@ -81,6 +80,11 @@ public class ForecastModelUpdateChangeUnit {
 
 		// KPIs for Release Board.
 		removeForecastModel(KPICode.RELEASE_PLAN.getKpiId());
+
+		// KPIs for Developer Dashboard
+		removeForecastModel(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+		removeForecastModel(KPICode.PR_SIZE_OVERTIME.getKpiId());
+		removeForecastModel(KPICode.CODE_QUALITY_REVERT_RATE.getKpiId());
 		log.info("Completed rollback of forecast model updates");
 	}
 
@@ -127,8 +131,6 @@ public class ForecastModelUpdateChangeUnit {
 				KPICode.TEST_EXECUTION_AND_PASS_PERCENTAGE.getKpiId(),
 				ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 		updateForecastModel(
-				KPICode.TEST_EXECUTION_TIME.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
-		updateForecastModel(
 				KPICode.TEST_EXECUTION_KANBAN.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 
 		// KPIs for Iteration Board.
@@ -142,13 +144,24 @@ public class ForecastModelUpdateChangeUnit {
 		updateForecastModel(KPICode.FLOW_EFFICIENCY.getKpiId(), ForecastingModel.ARIMA.getName());
 
 		// KPIs for Dora Board.
-		updateForecastModel(KPICode.LEAD_TIME_FOR_CHANGE.getKpiId(), ForecastingModel.LSTM.getName());
-		updateForecastModel(KPICode.MEAN_TIME_TO_RECOVER.getKpiId(), ForecastingModel.LSTM.getName());
-		updateForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.LSTM.getName());
-		updateForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.LSTM.getName());
-
 		updateForecastModel(
-				KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
+				KPICode.LEAD_TIME_FOR_CHANGE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.MEAN_TIME_TO_RECOVER.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+
+		updateForecastModel(KPICode.RELEASE_PLAN.getKpiId(), ForecastingModel.SARIMA.getName());
+
+		// KPI for Developer dashboard
+		updateForecastModel(
+				KPICode.REPO_TOOL_CODE_COMMIT.getKpiId(), ForecastingModel.THETA_METHOD.getName());
+		updateForecastModel(
+				KPICode.CODE_QUALITY_REVERT_RATE.getKpiId(), ForecastingModel.THETA_METHOD.getName());
+		updateForecastModel(
+				KPICode.PR_SIZE_OVERTIME.getKpiId(), ForecastingModel.THETA_METHOD.getName());
 
 		log.info("Completed forecast model update for KPIs");
 	}

@@ -18,16 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.model;
 
+import java.time.Instant;
+
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageSummary;
 import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -35,11 +37,14 @@ import java.time.Instant;
 @AllArgsConstructor
 @Document(collection = "ai_usage_statistics")
 public class AIUsageStatistics extends BasicModel {
-    private String levelType;
-    private String levelName;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Instant statsDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Instant ingestTimestamp;
-    private AIUsageSummary usageSummary;
+	private String levelType;
+	private String levelName;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private Instant statsDate;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private Instant ingestTimestamp;
+
+	private AIUsageSummary usageSummary;
 }

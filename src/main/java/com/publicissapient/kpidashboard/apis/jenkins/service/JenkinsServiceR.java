@@ -33,6 +33,7 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -82,12 +83,12 @@ public class JenkinsServiceR {
 		List<KpiElement> origRequestedKpis =
 				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
-		String[] projectKeyCache = null;
+		String[] projectKeyCache;
 		try {
 
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
 			String groupName =
-					filterHelperService.getHierarachyLevelId(
+					filterHelperService.getHierarchyLevelId(
 							kpiRequest.getLevel(), kpiRequest.getLabel(), false);
 			if (null != groupName) {
 				kpiRequest.setLabel(groupName.toUpperCase());
@@ -101,16 +102,20 @@ public class JenkinsServiceR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-
-				List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
-				if (CollectionUtils.isNotEmpty(cachedData)) return cachedData;
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+					List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
+					if (CollectionUtils.isNotEmpty(cachedData)) {
+						return cachedData;
+					}
+				}
 
 				TreeAggregatorDetail treeAggregatorDetail =
 						KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
 								kpiRequest,
 								filteredAccountDataList,
 								null,
-								filterHelperService.getFirstHierarachyLevel(),
+								filterHelperService.getFirstHierarchyLevel(),
 								filterHelperService
 										.getHierarchyIdLevelMap(false)
 										.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT, 0));

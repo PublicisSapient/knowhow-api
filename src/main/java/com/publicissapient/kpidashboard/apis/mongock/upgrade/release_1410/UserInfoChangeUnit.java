@@ -101,7 +101,7 @@ public class UserInfoChangeUnit {
 	}
 
 	private void rollbackUserInfoCollection() {
-		MongoCollection<Document> collection = mongoTemplate.getCollection("user_info");
+		MongoCollection<Document> collection = mongoTemplate.getCollection(COLLECTION_NAME);
 		collection
 				.find()
 				.forEach(
