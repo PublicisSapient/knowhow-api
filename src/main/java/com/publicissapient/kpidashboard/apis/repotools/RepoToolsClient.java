@@ -112,7 +112,7 @@ public class RepoToolsClient {
 		setHttpHeaders(apiKey);
 		Gson gson = new Gson();
 		String payload = gson.toJson(repoToolKpiRequestBody);
-		log.info("kpi request payload for {} {}", repoToolsUrl, payload);
+		log.info("kpi request payload for {} {} {}", repoToolsUrl, payload,apiKey);
 		HttpEntity<String> entity = new HttpEntity<>(payload, httpHeaders);
 		ResponseEntity<RepoToolKpiBulkMetricResponse> response =
 				restTemplate.exchange(
