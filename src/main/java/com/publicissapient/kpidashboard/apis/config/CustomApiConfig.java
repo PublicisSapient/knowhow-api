@@ -165,18 +165,6 @@ public class CustomApiConfig { // NOPMD
 	@Value("${notification.switch}")
 	private boolean notificationSwitch;
 
-	@Value("${analytics.switch}")
-	private boolean analyticsSwitch;
-
-	@Value("${analytics.grafana.rollout.percentage:0}")
-	private int analyticsGrafanaRolloutPercentage;
-
-	@Value("${analytics.google.enabled:true}")
-	private boolean analyticsGoogleEnabled;
-
-	@Value("${analytics.grafana.enabled:false}")
-	private boolean analyticsGrafanaEnabled;
-
 	// feedback categories
 	@Value("${feedback.categories}")
 	private List<String> feedbackCategories;
@@ -1070,10 +1058,6 @@ public class CustomApiConfig { // NOPMD
 
 	public void setNotificationSwitch(boolean notificationSwitch) {
 		this.notificationSwitch = notificationSwitch;
-	}
-
-	public boolean isAnalyticsSwitch() {
-		return analyticsSwitch;
 	}
 
 	public String getAzureBoardApi() {
