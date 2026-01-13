@@ -110,13 +110,14 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	}
 
 	public String createJwtToken(Authentication authentication) {
+		SecretKey key = Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 		return Jwts.builder()
 				.setSubject(authentication.getName())
 				.claim(DETAILS_CLAIM, authentication.getDetails())
 				.claim(ROLES_CLAIM, getRoles(authentication.getAuthorities()))
 				.setExpiration(
 						new Date(System.currentTimeMillis() + tokenAuthProperties.getExpirationTime()))
-				.signWith(SignatureAlgorithm.HS512, tokenAuthProperties.getSecret())
+				.signWith(key)
 				.compact();
 	}
 
