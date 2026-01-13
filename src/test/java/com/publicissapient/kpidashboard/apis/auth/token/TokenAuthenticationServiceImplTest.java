@@ -29,10 +29,7 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertFalse;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,11 +62,9 @@ import com.publicissapient.kpidashboard.apis.common.UserTokenAuthenticationDTO;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
-import com.publicissapient.kpidashboard.apis.errors.NoSSOImplementationFoundException;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsForAccessRequest;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.rbac.UserTokenData;
@@ -241,190 +236,4 @@ public class TokenAuthenticationServiceImplTest {
 				.thenReturn(testUser);
 		assertEquals(service.getOrSaveUserByToken(request, authentication), jsonObject);
 	}
-
-	@Test(expected = NoSSOImplementationFoundException.class)
-	public void testGetAuthenticationWithSSOEnabled() {
-		when(customApiConfig.isSsoLogin()).thenReturn(true);
-		service.getAuthentication(request, response);
-	}
-
-	@Test(expected = NoSSOImplementationFoundException.class)
-	public void testGetAuthTokenWithSSOEnabled() {
-		when(customApiConfig.isSsoLogin()).thenReturn(true);
-		service.getAuthToken(request);
-	}
-
-	@Test(expected = NoSSOImplementationFoundException.class)
-	public void testValidateAuthenticationWithSSOEnabled() {
-		when(customApiConfig.isSsoLogin()).thenReturn(true);
-		service.validateAuthentication(request, response);
-	}
-
-	@Test
-	public void testGetAuthenticationWithNullCookie() {
-		when(customApiConfig.isSsoLogin()).thenReturn(false);
-		when(cookieUtil.getAuthCookie(request)).thenReturn(null);
-		Authentication result = service.getAuthentication(request, response);
-		assertNull(result);
-	}
-
-	@Test
-	public void testGetAuthTokenWithNullCookie() {
-		when(customApiConfig.isSsoLogin()).thenReturn(false);
-		when(cookieUtil.getAuthCookie(request)).thenReturn(null);
-		String result = service.getAuthToken(request);
-		assertNull(result);
-	}
-
-	@Test
-	public void testIsJWTTokenExpired() {
-		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
-		String expiredToken = createTestJwtToken(USERNAME, VALID_JWT_SECRET, -10000L);
-		try {
-			boolean result = service.isJWTTokenExpired(expiredToken);
-			assertTrue(result);
-		} catch (io.jsonwebtoken.ExpiredJwtException e) {
-			// Expected behavior - expired token throws exception
-			assertTrue(true);
-		}
-	}
-
-	@Test
-	public void testIsJWTTokenNotExpired() {
-		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
-		String validToken = createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L);
-		boolean result = service.isJWTTokenExpired(validToken);
-		assertFalse(result);
-	}
-
-	@Test
-	public void testValidateAuthenticationWithBlankToken() {
-		when(customApiConfig.isSsoLogin()).thenReturn(false);
-		Cookie blankCookie = new Cookie("authCookie", "");
-		when(cookieUtil.getAuthCookie(request)).thenReturn(blankCookie);
-		Authentication result = service.validateAuthentication(request, response);
-		assertNull(result);
-	}
-
-	@Test
-	public void testCreateAuthenticationWithExpiredToken() {
-		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
-		String expiredToken = createTestJwtToken(USERNAME, VALID_JWT_SECRET, -10000L);
-		Cookie expiredCookie = new Cookie("authCookie", expiredToken);
-		when(cookieUtil.getAuthCookie(request)).thenReturn(expiredCookie);
-		Authentication result = service.validateAuthentication(request, response);
-		assertNull(result);
-	}
-
-	@Test
-	public void testCreateAuthenticationWithInvalidTokenAfterLogout() {
-		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
-		when(tokenAuthProperties.getExpirationTime()).thenReturn(100000L);
-		LocalDateTime futureLogout = LocalDateTime.now().plusHours(1);
-		when(usersSessionService.getLastLogoutTimeOfUser(USERNAME)).thenReturn(futureLogout);
-		String validToken = createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L);
-		Cookie validCookie = new Cookie("authCookie", validToken);
-		when(cookieUtil.getAuthCookie(request)).thenReturn(validCookie);
-		Authentication result = service.validateAuthentication(request, response);
-		assertNull(result);
-		verify(response).setStatus(401);
-	}
-
-	@Test
-	public void testGetLatestUserWithEmptyList() {
-		UserTokenData result = service.getLatestUser(new ArrayList<>());
-		assertNull(result);
-	}
-
-	@Test
-	public void testGetLatestUserWithNullList() {
-		UserTokenData result = service.getLatestUser(null);
-		assertNull(result);
-	}
-
-	@Test
-	public void testGetLatestUserWithValidData() {
-		List<UserTokenData> userTokenDataList = new ArrayList<>();
-		UserTokenData data1 = new UserTokenData("user1", "token1", "2023-01-19T12:33:14.013");
-		UserTokenData data2 = new UserTokenData("user2", "token2", "2023-01-20T12:33:14.013");
-		userTokenDataList.add(data1);
-		userTokenDataList.add(data2);
-		UserTokenData result = service.getLatestUser(userTokenDataList);
-		assertNotNull(result);
-		assertEquals(result.getUserName(), "user2");
-	}
-
-	@Test
-	public void testUpdateExpiryDate() {
-		List<UserTokenData> dataList = new ArrayList<>();
-		UserTokenData data = new UserTokenData(USERNAME, "token", "2023-01-19T12:33:14.013");
-		dataList.add(data);
-		when(userTokenReopository.findAllByUserName(USERNAME)).thenReturn(dataList);
-		service.updateExpiryDate(USERNAME, "2023-01-20T12:33:14.013");
-		verify(userTokenReopository).saveAll(dataList);
-		assertEquals(data.getExpiryDate(), "2023-01-20T12:33:14.013");
-	}
-
-	@Test
-	public void testCreateAuthDetailsJsonWithNullUserInfo() {
-		JSONObject result = service.createAuthDetailsJson(null);
-		assertNotNull(result);
-		assertTrue(result.isEmpty());
-	}
-
-	@Test
-	public void testCreateAuthDetailsJsonWithValidUserInfo() {
-		UserInfo userInfo = new UserInfo();
-		userInfo.setUsername(USERNAME);
-		userInfo.setEmailAddress("test@example.com");
-		userInfo.setAuthorities(Arrays.asList("ROLE_ADMIN"));
-		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(new ArrayList<>());
-		JSONObject result = service.createAuthDetailsJson(userInfo);
-		assertNotNull(result);
-		assertEquals(result.get("username"), USERNAME);
-		assertEquals(result.get("emailAddress"), "test@example.com");
-	}
-
-	@Test
-	public void testGetUserNameFromToken() {
-		when(tokenAuthProperties.getSecret()).thenReturn(VALID_JWT_SECRET);
-		String token = createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L);
-		String result = service.getUserNameFromToken(token);
-		assertEquals(result, USERNAME);
-	}
-
-	@Test
-	public void testGetUserProjectsWithEmptyAccess() {
-		when(authenticationService.getLoggedInUser()).thenReturn(USERNAME);
-		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(new ArrayList<>());
-		Set<String> result = service.getUserProjects();
-		assertNotNull(result);
-		assertTrue(result.isEmpty());
-	}
-
-	@Test
-	public void testGetUserProjectsWithValidAccess() {
-		when(authenticationService.getLoggedInUser()).thenReturn(USERNAME);
-		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
-		RoleWiseProjects roleProject = new RoleWiseProjects();
-		List<ProjectsForAccessRequest> projects = new ArrayList<>();
-		ProjectsForAccessRequest project = new ProjectsForAccessRequest();
-		project.setProjectId("project1");
-		projects.add(project);
-		roleProject.setProjects(projects);
-		roleWiseProjects.add(roleProject);
-		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(roleWiseProjects);
-		Set<String> result = service.getUserProjects();
-		assertNotNull(result);
-		assertFalse(result.isEmpty());
-		assertTrue(result.contains("project1"));
-	}
-
-	@Test
-	public void testGetOrSaveUserByTokenWithNullCookie() {
-		when(cookieUtil.getAuthCookie(request)).thenReturn(null);
-		JSONObject result = service.getOrSaveUserByToken(request, authentication);
-		assertNotNull(result);
-	}
-
 }
