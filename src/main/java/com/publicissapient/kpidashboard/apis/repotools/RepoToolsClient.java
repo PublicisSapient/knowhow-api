@@ -116,7 +116,7 @@ public class RepoToolsClient {
 		HttpEntity<String> entity = new HttpEntity<>(payload, httpHeaders);
 		ResponseEntity<RepoToolKpiBulkMetricResponse> response =
 				restTemplate.exchange(
-						URI.create(repoToolsUrl), HttpMethod.POST, entity, RepoToolKpiBulkMetricResponse.class);
+						URI.create("https://172.26.12.52:443/api/metric/repo-activity-bulk/"), HttpMethod.POST, entity, RepoToolKpiBulkMetricResponse.class);
 		return response.getBody();
 	}
 
