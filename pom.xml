@@ -25,7 +25,7 @@
   <scm>
     <connection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</connection>
     <developerConnection>scm:git:https://github.com/PublicisSapient/knowhow-api.git</developerConnection>
-    <tag>15.0.0</tag>
+    <tag>15.0.1</tag>
     <url>https://github.com/PublicisSapient/knowhow-api.git</url>
   </scm>
   <properties>
