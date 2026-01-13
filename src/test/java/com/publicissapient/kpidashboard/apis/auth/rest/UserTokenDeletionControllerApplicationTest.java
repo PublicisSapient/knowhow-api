@@ -90,11 +90,7 @@ public class UserTokenDeletionControllerApplicationTest extends Mockito {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		Cookie authCookie =
 				new Cookie(
-						"authCookie",
-						AuthenticationFixture.getJwtToken(
-								USERNAME,
-								"mySecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmToWorkProperlyWithExtraCharactersToEnsure512Bits1234567890",
-								100000L));
+						"authCookie", AuthenticationFixture.getJwtToken(USERNAME, "userTokenData", 100000L));
 		when(cookieUtil.getAuthCookie(any(HttpServletRequest.class))).thenReturn(authCookie);
 		when(userInfoService.getCentralAuthUserDeleteUserToken(authCookie.getValue())).thenReturn(true);
 		request.setAttribute("Authorization", "Bearer abcde");
