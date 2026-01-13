@@ -18,7 +18,6 @@
 
 package com.publicissapient.kpidashboard.apis.auth.token;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -35,7 +34,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.jsonwebtoken.security.Keys;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
@@ -71,8 +69,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.crypto.SecretKey;
 
 /** Implementation of {@link TokenAuthenticationService} */
 @Component
@@ -121,20 +117,18 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 				.compact();
 	}
 
-    @Override
-    public boolean isJWTTokenExpired(String jwtToken) {
-        SecretKey key = Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
-        Claims decodedJWT = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(jwtToken)
-                .getPayload();
-        Date expiresAt = decodedJWT.getExpiration();
-        return new Date().after(expiresAt);
-    }
+	@Override
+	public boolean isJWTTokenExpired(String jwtToken) {
+		Claims decodedJWT =
+				Jwts.parser()
+						.setSigningKey(tokenAuthProperties.getSecret())
+						.parseClaimsJws(jwtToken)
+						.getBody();
+		Date expiresAt = decodedJWT.getExpiration();
+		return new Date().after(expiresAt);
+	}
 
-
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	@Override
 	public Authentication getAuthentication(
 			HttpServletRequest httpServletRequest, HttpServletResponse response) {
@@ -189,13 +183,12 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 
 	private Authentication createAuthentication(String token, HttpServletResponse response) {
 		try {
-            SecretKey key = Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
-            Claims claims = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-            String username = claims.getSubject();
+			Claims claims =
+					Jwts.parser()
+							.setSigningKey(tokenAuthProperties.getSecret())
+							.parseClaimsJws(token)
+							.getBody();
+			String username = claims.getSubject();
 			Collection<? extends GrantedAuthority> authorities =
 					getAuthorities(claims.get(ROLES_CLAIM, Collection.class));
 			PreAuthenticatedAuthenticationToken authentication =
@@ -351,12 +344,11 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 
 	@Override
 	public String getUserNameFromToken(String jwtToken) {
-        SecretKey key = Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(jwtToken)
-                .getPayload();
-        return claims.getSubject();
+		Claims claims =
+				Jwts.parser()
+						.setSigningKey(tokenAuthProperties.getSecret())
+						.parseClaimsJws(jwtToken)
+						.getBody();
+		return claims.getSubject();
 	}
 }
