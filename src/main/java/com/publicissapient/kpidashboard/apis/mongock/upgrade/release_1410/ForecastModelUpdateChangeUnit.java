@@ -100,10 +100,14 @@ public class ForecastModelUpdateChangeUnit {
 				KPICode.FLOW_EFFICIENCY.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 
 		// KPIs for Dora Board.
-		updateForecastModel(KPICode.LEAD_TIME_FOR_CHANGE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
-		updateForecastModel(KPICode.MEAN_TIME_TO_RECOVER.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
-		updateForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
-		updateForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.LEAD_TIME_FOR_CHANGE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.MEAN_TIME_TO_RECOVER.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.CHANGE_FAILURE_RATE.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
+		updateForecastModel(
+				KPICode.DEPLOYMENT_FREQUENCY.getKpiId(), ForecastingModel.EXPONENTIAL_SMOOTHING.getName());
 
 		log.info("Completed forecast model update for 3 KPIs");
 		// KPI for Release Board.
@@ -155,7 +159,7 @@ public class ForecastModelUpdateChangeUnit {
 		removeForecastModel(KPICode.MEAN_TIME_TO_RECOVER.getKpiId());
 		removeForecastModel(KPICode.CHANGE_FAILURE_RATE.getKpiId());
 		removeForecastModel(KPICode.DEPLOYMENT_FREQUENCY.getKpiId());
-        
+
 		// KPIs for Developer Dashboard
 		removeForecastModel(KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
 		removeForecastModel(KPICode.PR_SIZE_OVERTIME.getKpiId());

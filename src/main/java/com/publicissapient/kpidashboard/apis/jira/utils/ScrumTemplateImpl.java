@@ -233,8 +233,7 @@ public class ScrumTemplateImpl extends JiraKPIService<Double, List<Object>, Map<
 
 		/** Additional Filter * */
 		Map<Pair<String, String>, Map<String, List<String>>> sprintWiseMap =
-				KpiDataHelper.createSubCategoryWiseMap(
-						subGroupCategory, sprintWiseStoryList);
+				KpiDataHelper.createSubCategoryWiseMap(subGroupCategory, sprintWiseStoryList);
 		Map<String, String> sprintIdSprintNameMap =
 				sprintWiseStoryList.stream()
 						.collect(

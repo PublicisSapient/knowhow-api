@@ -35,7 +35,7 @@ public class ApplicationConfigDto {
 	private String videoTutorials;
 	private String raiseTicket;
 	private String supportChannel;
-	private String audience;
-	private String baseUrl;
-	private String defaultAiProvider;
+	private String aiGatewayAudience;
+	private String aiGatewayBaseUrl;
+	private String aiGatewayDefaultAiProvider;
 }

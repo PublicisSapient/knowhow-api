@@ -16,6 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.defect.rate;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -27,25 +41,11 @@ import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DefectRateTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private DefectRateTrendKpiServiceImpl service;
+	@InjectMocks private DefectRateTrendKpiServiceImpl service;
 
 	private KpiRequest kpiRequest;
 	private List<ScmMergeRequests> mergeRequests;
@@ -84,23 +84,39 @@ class DefectRateTrendKpiServiceImplTest {
 			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong())).thenReturn(now);
 			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(), any(), any())).thenReturn(true);
 
-			kpiDataHelperMock.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
+			kpiDataHelperMock
+					.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
 					.thenReturn(dateRange);
-			kpiHelperServiceMock.when(() -> KpiHelperService.getDateRange(any(), anyString())).thenReturn("Week 1");
+			kpiHelperServiceMock
+					.when(() -> KpiHelperService.getDateRange(any(), anyString()))
+					.thenReturn("Week 1");
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(true);
 			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), any())).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
 					.thenReturn(Collections.emptyMap());
-			helperMock.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any())).thenReturn(now.minusDays(7));
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(), any(), any(), anyDouble(), any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any()))
+					.thenReturn(now.minusDays(7));
+			helperMock
+					.when(
+							() -> DeveloperKpiHelper.setDataCount(any(), any(), any(), anyDouble(), any(), any()))
 					.thenAnswer(invocation -> null);
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			Map<String, List<DataCount>> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -117,15 +133,27 @@ class DefectRateTrendKpiServiceImplTest {
 			CustomDateRange dateRange = new CustomDateRange();
 
 			dateUtilMock.when(DateUtil::getTodayTime).thenReturn(now);
-			kpiDataHelperMock.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
+			kpiDataHelperMock
+					.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
 					.thenReturn(dateRange);
-			kpiHelperServiceMock.when(() -> KpiHelperService.getDateRange(any(), anyString())).thenReturn("Week 1");
+			kpiHelperServiceMock
+					.when(() -> KpiHelperService.getDateRange(any(), anyString()))
+					.thenReturn("Week 1");
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(false);
-			helperMock.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any())).thenReturn(now.minusDays(7));
+			helperMock
+					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any()))
+					.thenReturn(now.minusDays(7));
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			Map<String, List<DataCount>> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -152,23 +180,39 @@ class DefectRateTrendKpiServiceImplTest {
 			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong())).thenReturn(now);
 			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(), any(), any())).thenReturn(true);
 
-			kpiDataHelperMock.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
+			kpiDataHelperMock
+					.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
 					.thenReturn(dateRange);
-			kpiHelperServiceMock.when(() -> KpiHelperService.getDateRange(any(), anyString())).thenReturn("Week 1");
+			kpiHelperServiceMock
+					.when(() -> KpiHelperService.getDateRange(any(), anyString()))
+					.thenReturn("Week 1");
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(true);
 			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), any())).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
 					.thenReturn(Collections.emptyMap());
-			helperMock.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any())).thenReturn(now.minusDays(7));
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(), any(), any(), anyDouble(), any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any()))
+					.thenReturn(now.minusDays(7));
+			helperMock
+					.when(
+							() -> DeveloperKpiHelper.setDataCount(any(), any(), any(), anyDouble(), any(), any()))
 					.thenAnswer(invocation -> null);
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			Map<String, List<DataCount>> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -196,23 +240,42 @@ class DefectRateTrendKpiServiceImplTest {
 			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong())).thenReturn(now);
 			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(), any(), any())).thenReturn(true);
 
-			kpiDataHelperMock.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
+			kpiDataHelperMock
+					.when(() -> KpiDataHelper.getStartAndEndDateTimeForDataFiltering(any(), anyString()))
 					.thenReturn(dateRange);
-			kpiHelperServiceMock.when(() -> KpiHelperService.getDateRange(any(), anyString())).thenReturn("Week 1");
+			kpiHelperServiceMock
+					.when(() -> KpiHelperService.getDateRange(any(), anyString()))
+					.thenReturn("Week 1");
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any())).thenReturn(true);
 			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), any())).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any())).thenReturn(userWiseMap);
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), any())).thenReturn("Test User");
-			helperMock.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any())).thenReturn(now.minusDays(7));
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(), any(), any(), anyDouble(), any(), any()))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
+					.thenReturn(userWiseMap);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), any()))
+					.thenReturn("Test User");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any()))
+					.thenReturn(now.minusDays(7));
+			helperMock
+					.when(
+							() -> DeveloperKpiHelper.setDataCount(any(), any(), any(), anyDouble(), any(), any()))
 					.thenAnswer(invocation -> null);
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			Map<String, List<DataCount>> result = service.calculateKpi(kpiRequest, mergeRequests, new ArrayList<>(),
-					scmTools, validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							new ArrayList<>(),
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertFalse(validationDataList.isEmpty());

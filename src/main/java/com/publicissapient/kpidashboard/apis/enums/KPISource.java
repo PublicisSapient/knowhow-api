@@ -65,7 +65,7 @@ public enum KPISource {
 	/** Invalid. */
 	INVALID("INVALID");
 
-    private final String value;
+	private final String value;
 
 	public static KPISource getKPISource(String value) {
 		return Arrays.stream(KPISource.values())

@@ -16,14 +16,14 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.mttm;
 
-import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mockStatic;
 
-import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
-import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
-import com.publicissapient.kpidashboard.common.model.application.DataCount;
-import com.publicissapient.kpidashboard.common.model.application.Tool;
-import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.util.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,19 +31,18 @@ import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mockStatic;
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
+import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
+import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.Tool;
+import com.publicissapient.kpidashboard.common.model.jira.Assignee;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 
 @ExtendWith(MockitoExtension.class)
 class MeanTimeToMergeTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private MeanTimeToMergeTrendKpiServiceImpl service;
+	@InjectMocks private MeanTimeToMergeTrendKpiServiceImpl service;
 
 	private Tool tool;
 	private Set<Assignee> assignees;
@@ -63,20 +62,37 @@ class MeanTimeToMergeTrendKpiServiceImplTest {
 
 	@Test
 	void testPrepareUserValidationData_WithSingleUser() throws Exception {
-		ScmMergeRequests mr = createMergeRequest(LocalDateTime.of(2024, 1, 10, 10, 0),
-				LocalDateTime.of(2024, 1, 12, 14, 0), "MERGED");
+		ScmMergeRequests mr =
+				createMergeRequest(
+						LocalDateTime.of(2024, 1, 10, 10, 0), LocalDateTime.of(2024, 1, 12, 14, 0), "MERGED");
 		userWiseMergeRequests.put("user1@test.com", List.of(mr));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
+				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One");
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(String.class), any(String.class), any(String.class),
-					any(), any(Map.class), any(Map.class))).thenAnswer(inv -> null);
-			kpiHelperMock.when(() -> KpiHelperService.convertMilliSecondsToHours(anyLong())).thenReturn(52L);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+					.thenReturn("User One");
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											any(String.class),
+											any(String.class),
+											any(String.class),
+											any(),
+											any(Map.class),
+											any(Map.class)))
+					.thenAnswer(inv -> null);
+			kpiHelperMock
+					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyLong()))
+					.thenReturn(52L);
 
-			List<RepoToolValidationData> result = invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
+			List<RepoToolValidationData> result =
+					invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
 
 			assertNotNull(result);
 			assertEquals(1, result.size());
@@ -85,24 +101,41 @@ class MeanTimeToMergeTrendKpiServiceImplTest {
 
 	@Test
 	void testPrepareUserValidationData_WithMultipleUsers() throws Exception {
-		ScmMergeRequests mr1 = createMergeRequest(LocalDateTime.of(2024, 1, 10, 10, 0),
-				LocalDateTime.of(2024, 1, 12, 14, 0), "MERGED");
-		ScmMergeRequests mr2 = createMergeRequest(LocalDateTime.of(2024, 1, 11, 9, 0),
-				LocalDateTime.of(2024, 1, 13, 15, 0), "MERGED");
+		ScmMergeRequests mr1 =
+				createMergeRequest(
+						LocalDateTime.of(2024, 1, 10, 10, 0), LocalDateTime.of(2024, 1, 12, 14, 0), "MERGED");
+		ScmMergeRequests mr2 =
+				createMergeRequest(
+						LocalDateTime.of(2024, 1, 11, 9, 0), LocalDateTime.of(2024, 1, 13, 15, 0), "MERGED");
 		userWiseMergeRequests.put("user1@test.com", List.of(mr1));
 		userWiseMergeRequests.put("user2@test.com", List.of(mr2));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
+				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
 					.thenReturn("User One", "User Two");
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(String.class), any(String.class), any(String.class),
-					any(), any(Map.class), any(Map.class))).thenAnswer(inv -> null);
-			kpiHelperMock.when(() -> KpiHelperService.convertMilliSecondsToHours(anyLong())).thenReturn(52L);
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											any(String.class),
+											any(String.class),
+											any(String.class),
+											any(),
+											any(Map.class),
+											any(Map.class)))
+					.thenAnswer(inv -> null);
+			kpiHelperMock
+					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyLong()))
+					.thenReturn(52L);
 
-			List<RepoToolValidationData> result = invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
+			List<RepoToolValidationData> result =
+					invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
 
 			assertNotNull(result);
 			assertEquals(2, result.size());
@@ -115,15 +148,31 @@ class MeanTimeToMergeTrendKpiServiceImplTest {
 		userWiseMergeRequests.put("user1@test.com", List.of(mr));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
+				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One");
-			helperMock.when(() -> DeveloperKpiHelper.setDataCount(any(String.class), any(String.class), any(String.class),
-					any(), any(Map.class), any(Map.class))).thenAnswer(inv -> null);
-			kpiHelperMock.when(() -> KpiHelperService.convertMilliSecondsToHours(anyLong())).thenReturn(0L);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+					.thenReturn("User One");
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											any(String.class),
+											any(String.class),
+											any(String.class),
+											any(),
+											any(Map.class),
+											any(Map.class)))
+					.thenAnswer(inv -> null);
+			kpiHelperMock
+					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyLong()))
+					.thenReturn(0L);
 
-			List<RepoToolValidationData> result = invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
+			List<RepoToolValidationData> result =
+					invokePrepareUserValidationData("TestProject", "2024-01-01 to 2024-01-07");
 
 			assertNotNull(result);
 			assertTrue(result.isEmpty());
@@ -135,10 +184,12 @@ class MeanTimeToMergeTrendKpiServiceImplTest {
 		assertEquals("REPO_TOOL_MEAN_TIME_TO_MERGE_TREND", service.getStrategyType());
 	}
 
-	private ScmMergeRequests createMergeRequest(LocalDateTime createdDate, LocalDateTime mergedAt, String state) {
+	private ScmMergeRequests createMergeRequest(
+			LocalDateTime createdDate, LocalDateTime mergedAt, String state) {
 		ScmMergeRequests mr = new ScmMergeRequests();
 		if (createdDate != null) {
-			mr.setCreatedDate(createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+			mr.setCreatedDate(
+					createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
 		}
 		mr.setMergedAt(mergedAt);
 		mr.setState(state);
@@ -146,11 +197,26 @@ class MeanTimeToMergeTrendKpiServiceImplTest {
 		return mr;
 	}
 
-	private List<RepoToolValidationData> invokePrepareUserValidationData(String projectName, String dateLabel) throws Exception {
-		Method method = MeanTimeToMergeTrendKpiServiceImpl.class.getDeclaredMethod(
-				"prepareUserValidationData", Map.class, Set.class, Tool.class, String.class, String.class, Map.class);
+	private List<RepoToolValidationData> invokePrepareUserValidationData(
+			String projectName, String dateLabel) throws Exception {
+		Method method =
+				MeanTimeToMergeTrendKpiServiceImpl.class.getDeclaredMethod(
+						"prepareUserValidationData",
+						Map.class,
+						Set.class,
+						Tool.class,
+						String.class,
+						String.class,
+						Map.class);
 		method.setAccessible(true);
-		return (List<RepoToolValidationData>) method.invoke(service, userWiseMergeRequests, assignees, tool,
-				projectName, dateLabel, kpiTrendDataByGroup);
+		return (List<RepoToolValidationData>)
+				method.invoke(
+						service,
+						userWiseMergeRequests,
+						assignees,
+						tool,
+						projectName,
+						dateLabel,
+						kpiTrendDataByGroup);
 	}
 }

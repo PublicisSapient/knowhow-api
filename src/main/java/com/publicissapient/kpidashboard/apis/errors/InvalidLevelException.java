@@ -16,27 +16,18 @@
  *
  ******************************************************************************/
 
-package com.publicissapient.kpidashboard.apis.auth.exceptions;
+package com.publicissapient.kpidashboard.apis.errors;
 
-import java.io.Serial;
+/** Exception thrown when an invalid level name is provided. */
+public class InvalidLevelException extends RuntimeException {
 
-import com.publicissapient.kpidashboard.common.constant.AuthType;
+	private static final long serialVersionUID = 1L;
 
-/** Can be thrown if user does not exists. */
-public class UserNotFoundException extends RuntimeException {
+	public InvalidLevelException(String message) {
+		super(message);
+	}
 
-	@Serial private static final long serialVersionUID = -8596676033217258687L;
-
-	private static final String MESSAGE =
-			"No user found with name: %1$2s, and authorization type %2$2s.";
-
-	/**
-	 * Instantiates a new User not found exception.
-	 *
-	 * @param username the username
-	 * @param authType the auth type
-	 */
-	public UserNotFoundException(String username, AuthType authType) {
-		super(String.format(MESSAGE, username, authType.name()));
+	public InvalidLevelException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

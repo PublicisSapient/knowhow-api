@@ -16,36 +16,37 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy;
 
-import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
+import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+
 public abstract class AbstractKpiCalculationStrategy<T> implements KpiCalculationStrategy<T> {
 
-    private static final double PERCENTAGE_MULTIPLIER = 100.0;
+	private static final double PERCENTAGE_MULTIPLIER = 100.0;
 
-    protected CustomDateRange getCustomDateRange(LocalDateTime currentDate, String duration, int dataPoints) {
-        CustomDateRange periodRange = new CustomDateRange();
-        if (duration.equalsIgnoreCase(CommonConstant.DAY)) {
-            periodRange.setEndDateTime(currentDate.minusDays(1));
-            periodRange.setStartDateTime(currentDate.minusDays(dataPoints - 1L));
-        } else {
-            periodRange.setEndDateTime(currentDate);
-            periodRange.setStartDateTime(currentDate.minusWeeks(dataPoints - 1L));
-        }
-        return periodRange;
-    }
+	protected CustomDateRange getCustomDateRange(
+			LocalDateTime currentDate, String duration, int dataPoints) {
+		CustomDateRange periodRange = new CustomDateRange();
+		if (duration.equalsIgnoreCase(CommonConstant.DAY)) {
+			periodRange.setEndDateTime(currentDate.minusDays(1));
+			periodRange.setStartDateTime(currentDate.minusDays(dataPoints - 1L));
+		} else {
+			periodRange.setEndDateTime(currentDate);
+			periodRange.setStartDateTime(currentDate.minusWeeks(dataPoints - 1L));
+		}
+		return periodRange;
+	}
 
-    /**
-     * Calculates the deviation rate between current and previous mean time to merge.
-     *
-     * @param currentValue  current value
-     * @param previousValue previous value
-     * @return deviation rate as a percentage
-     */
+	/**
+	 * Calculates the deviation rate between current and previous mean time to merge.
+	 *
+	 * @param currentValue current value
+	 * @param previousValue previous value
+	 * @return deviation rate as a percentage
+	 */
 	protected double calculateDeviationRate(double currentValue, double previousValue) {
 		double sum = currentValue + previousValue;
 		if (sum == 0) {

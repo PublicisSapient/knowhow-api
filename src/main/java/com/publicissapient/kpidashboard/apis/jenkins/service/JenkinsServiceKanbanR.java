@@ -89,15 +89,16 @@ public class JenkinsServiceKanbanR {
 			populateKanbanKpiRequest(kpiRequest);
 
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-			//skip using cache when the request is made with an api key and also processing by group id will be disabled
-			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 				Object cachedData =
 						cacheService.getFromApplicationCache(
 								kanbanProjectKeyCache, KPISource.JENKINSKANBAN.name(), groupId, null);
 				if (!kpiRequest
-						.getRequestTrackerId()
-						.toLowerCase()
-						.contains(KPISource.EXCEL.name().toLowerCase())
+								.getRequestTrackerId()
+								.toLowerCase()
+								.contains(KPISource.EXCEL.name().toLowerCase())
 						&& null != cachedData) {
 					log.info(
 							"[JENKINS KANBAN][{}]. Fetching value from cache for {}",
@@ -121,8 +122,9 @@ public class JenkinsServiceKanbanR {
 				responseList.add(
 						calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
 			}
-			//skip using cache when the request is made with an api key and also processing by group id will be disabled
-			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 				setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
 			}
 
@@ -165,7 +167,8 @@ public class JenkinsServiceKanbanR {
 	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(
 			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 		kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-		if(Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser()) || ApiKeyAuthenticationService.isApiKeyRequest()) {
+		if (Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())
+				|| ApiKeyAuthenticationService.isApiKeyRequest()) {
 			return filteredAccountDataList;
 		}
 		return authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);

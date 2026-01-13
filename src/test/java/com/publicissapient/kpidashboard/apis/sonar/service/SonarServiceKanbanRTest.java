@@ -71,36 +71,35 @@ public class SonarServiceKanbanRTest {
 
 	private static final String TEST_SONAR = "TEST_SONAR";
 
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private TestService service;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private CacheService cacheService;
+	@Mock private TestService service;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@InjectMocks
-	private SonarServiceKanbanR sonarService;
+	@InjectMocks private SonarServiceKanbanR sonarService;
 
-    private final KpiRequest kpiRequest = new KpiRequest();
+	private final KpiRequest kpiRequest = new KpiRequest();
 
 	private final List<HierarchyLevel> hierarchyLevels = new ArrayList<>();
 	private final List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 
 	@Test
 	public void sonarViolationsTestProcess() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
 			initiateRequiredServicesAndFactories();
 			initialization();
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(false);
 			updateKpiRequest("Excel-Sonar", 3);
 			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
@@ -114,21 +113,27 @@ public class SonarServiceKanbanRTest {
 			when(service.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
 
 			List<KpiElement> resultList = sonarService.process(kpiRequest);
-			assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
 		}
 	}
 
 	@Test
 	public void sonarViolationsTestProcess_ApplicationException() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
 			initiateRequiredServicesAndFactories();
 			initialization();
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(false);
 			updateKpiRequest("Excel-Sonar", 3);
 			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
@@ -142,21 +147,27 @@ public class SonarServiceKanbanRTest {
 			when(service.getKpiData(any(), any(), any())).thenThrow(ApplicationException.class);
 
 			List<KpiElement> resultList = sonarService.process(kpiRequest);
-			assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 		}
 	}
 
 	@Test
 	public void sonarViolationsTestProcess_NullPointer() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
 			initiateRequiredServicesAndFactories();
 			initialization();
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(false);
 			updateKpiRequest("Excel-Sonar", 3);
 			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
@@ -170,7 +181,8 @@ public class SonarServiceKanbanRTest {
 			when(service.getKpiData(any(), any(), any())).thenThrow(NullPointerException.class);
 
 			List<KpiElement> resultList = sonarService.process(kpiRequest);
-			assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 		}
 	}
 
@@ -184,7 +196,7 @@ public class SonarServiceKanbanRTest {
 	@Test
 	public void when_KanbanKpiRequestIsReceived_Expect_RequestIsPopulatedAccordingly() {
 		KpiRequest kpiRequest1 = new KpiRequest();
-		kpiRequest1.setIds(new String[] { "10" });
+		kpiRequest1.setIds(new String[] {"10"});
 		kpiRequest1.setSelectedMap(Map.of("date", List.of("5")));
 
 		ReflectionTestUtils.invokeMethod(sonarService, "populateKanbanKpiRequest", kpiRequest1);
@@ -201,15 +213,20 @@ public class SonarServiceKanbanRTest {
 
 	@Test
 	public void when_RequestIsMadeWithApiKey_Expect_NoCachedDataWillBeUsed() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
 			initiateRequiredServicesAndFactories();
 			initialization();
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(true);
 			updateKpiRequest("Excel-Sonar", 3);
 			AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
@@ -228,7 +245,7 @@ public class SonarServiceKanbanRTest {
 		List<KpiElement> kpiList = new ArrayList<>();
 		addKpiElement(kpiList, TEST_SONAR, TEST_SONAR, "TechDebt", "", source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[] { "Kanban Project_6335368249794a18e8a4479f" });
+		kpiRequest.setIds(new String[] {"Kanban Project_6335368249794a18e8a4479f"});
 		kpiRequest.setKpiList(kpiList);
 		kpiRequest.setRequestTrackerId();
 		Map<String, List<String>> selectedMap = new HashMap<>();
@@ -237,7 +254,12 @@ public class SonarServiceKanbanRTest {
 		kpiRequest.setSelectedMap(selectedMap);
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);
@@ -253,13 +275,14 @@ public class SonarServiceKanbanRTest {
 	}
 
 	private void initialization() {
-		String[] exampleStringList = { "exampleElement", "exampleElement" };
+		String[] exampleStringList = {"exampleElement", "exampleElement"};
 		when(authorizedProjectsService.getKanbanProjectKey(accountHierarchyKanbanDataList, kpiRequest))
 				.thenReturn(exampleStringList);
 		when(filterHelperService.getFirstHierarchyLevel()).thenReturn("hierarchyLevelOne");
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.forEach((key, value) -> map.put(key, value.getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(false)).thenReturn(map);
 		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyKanbanDataList))
@@ -268,13 +291,15 @@ public class SonarServiceKanbanRTest {
 
 	private TreeAggregatorDetail createTreeAggregatorDetail() {
 		TreeAggregatorDetail treeAggregatorDetail = new TreeAggregatorDetail();
-		treeAggregatorDetail.setMapOfListOfProjectNodes(Map.of("project", List.of(new Node(), new Node())));
+		treeAggregatorDetail.setMapOfListOfProjectNodes(
+				Map.of("project", List.of(new Node(), new Node())));
 		return treeAggregatorDetail;
 	}
 
 	private void initiateRequiredServicesAndFactories() throws ApplicationException {
 		List<SonarKPIService<?, ?, ?>> mockServices = List.of(service);
-		SonarKPIServiceFactory sonarKPIServiceFactory = SonarKPIServiceFactory.builder().services(mockServices).build();
+		SonarKPIServiceFactory sonarKPIServiceFactory =
+				SonarKPIServiceFactory.builder().services(mockServices).build();
 		doReturn(TEST_SONAR).when(service).getQualifierType();
 		doReturn(new KpiElement()).when(service).getKpiData(any(), any(), any());
 

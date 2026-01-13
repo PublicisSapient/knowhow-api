@@ -369,62 +369,54 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 		ServiceResponse response;
 		Optional<ProjectBasicConfig> savedConfigOpt =
 				basicConfigRepository.findById(new ObjectId(basicConfigId));
-		// HB : todo remove projectName condition
-		ProjectBasicConfig diffIdSameName =
-				basicConfigRepository.findByProjectNameAndIdNot(
-						projectBasicConfigDTO.getProjectName(), new ObjectId(basicConfigId));
+
 		if (savedConfigOpt.isPresent()) {
-			if (!Optional.ofNullable(diffIdSameName).isPresent()) {
-				ProjectBasicConfig savedConfig = savedConfigOpt.get();
-				ModelMapper mapper = new ModelMapper();
-				ProjectBasicConfig basicConfig =
-						mapper.map(projectBasicConfigDTO, ProjectBasicConfig.class);
-				// AP: Temporary workaround till UI passes the new field
-				if (StringUtils.isEmpty(projectBasicConfigDTO.getProjectNodeId())) {
-					basicConfig.setProjectNodeId(savedConfigOpt.get().getProjectNodeId());
-				}
-
-				// UI providing changed display name value to original project name as well,
-				// which will require more effort so workaround
-				basicConfig.setProjectName(savedConfig.getProjectName());
-
-				// AP: Temporary workaround end
-				if (isAssigneeUpdated(basicConfig, savedConfig)) {
-					List<ProcessorExecutionTraceLog> traceLogs =
-							processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
-									ProcessorConstants.JIRA, Collections.singletonList(basicConfigId));
-					if (!traceLogs.isEmpty()) {
-						for (ProcessorExecutionTraceLog traceLog : traceLogs) {
-							if (traceLog != null) {
-								traceLog.setLastSuccessfulRun(null);
-								traceLog.setLastSavedEntryUpdatedDateByType(new HashMap<>());
-							}
-						}
-						processorExecutionTraceLogRepository.saveAll(traceLogs);
-					}
-					AssigneeDetails assigneeDetails =
-							assigneeDetailsRepository.findByBasicProjectConfigId(basicConfigId);
-					if (assigneeDetails != null) {
-						assigneeDetailsRepository.delete(assigneeDetails);
-					}
-				}
-				setProjectOnHold(savedConfig, basicConfig);
-				basicConfig.setCreatedBy(savedConfig.getCreatedBy());
-				basicConfig.setCreatedAt(savedConfig.getCreatedAt());
-				basicConfig.setUpdatedAt(
-						DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
-				basicConfig.setUpdatedBy(authenticationService.getLoggedInUser());
-				ProjectBasicConfig updatedBasicConfig = basicConfigRepository.save(basicConfig);
-
-				OrganizationHierarchy orgHierarchy =
-						organizationHierarchyService.findByNodeId(basicConfig.getProjectNodeId());
-
-				configHelperService.updateCacheProjectBasicConfig(basicConfig);
-				updateProjectNameInOrgHierarchy(basicConfig, orgHierarchy);
-				response = new ServiceResponse(true, "Updated Successfully.", updatedBasicConfig);
-			} else {
-				response = new ServiceResponse(false, "Try with different project name.", null);
+			ProjectBasicConfig savedConfig = savedConfigOpt.get();
+			ModelMapper mapper = new ModelMapper();
+			ProjectBasicConfig basicConfig = mapper.map(projectBasicConfigDTO, ProjectBasicConfig.class);
+			// AP: Temporary workaround till UI passes the new field
+			if (StringUtils.isEmpty(projectBasicConfigDTO.getProjectNodeId())) {
+				basicConfig.setProjectNodeId(savedConfigOpt.get().getProjectNodeId());
 			}
+
+			// UI providing changed display name value to original project name as well,
+			// which will require more effort so workaround
+			basicConfig.setProjectName(savedConfig.getProjectName());
+
+			// AP: Temporary workaround end
+			if (isAssigneeUpdated(basicConfig, savedConfig)) {
+				List<ProcessorExecutionTraceLog> traceLogs =
+						processorExecutionTraceLogRepository.findByProcessorNameAndBasicProjectConfigIdIn(
+								ProcessorConstants.JIRA, Collections.singletonList(basicConfigId));
+				if (!traceLogs.isEmpty()) {
+					for (ProcessorExecutionTraceLog traceLog : traceLogs) {
+						if (traceLog != null) {
+							traceLog.setLastSuccessfulRun(null);
+							traceLog.setLastSavedEntryUpdatedDateByType(new HashMap<>());
+						}
+					}
+					processorExecutionTraceLogRepository.saveAll(traceLogs);
+				}
+				AssigneeDetails assigneeDetails =
+						assigneeDetailsRepository.findByBasicProjectConfigId(basicConfigId);
+				if (assigneeDetails != null) {
+					assigneeDetailsRepository.delete(assigneeDetails);
+				}
+			}
+			setProjectOnHold(savedConfig, basicConfig);
+			basicConfig.setCreatedBy(savedConfig.getCreatedBy());
+			basicConfig.setCreatedAt(savedConfig.getCreatedAt());
+			basicConfig.setUpdatedAt(
+					DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
+			basicConfig.setUpdatedBy(authenticationService.getLoggedInUser());
+			ProjectBasicConfig updatedBasicConfig = basicConfigRepository.save(basicConfig);
+
+			OrganizationHierarchy orgHierarchy =
+					organizationHierarchyService.findByNodeId(basicConfig.getProjectNodeId());
+
+			configHelperService.updateCacheProjectBasicConfig(basicConfig);
+			updateProjectNameInOrgHierarchy(basicConfig, orgHierarchy);
+			response = new ServiceResponse(true, "Updated Successfully.", updatedBasicConfig);
 		} else {
 			response =
 					new ServiceResponse(
