@@ -152,13 +152,13 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(testRecommendation));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+						new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -214,13 +214,13 @@ class RecommendationServiceTest {
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any()))
 					.thenReturn(Set.of(accountData, projectUnderAccount));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(testRecommendation));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("account", null));
+							new RecommendationRequest("account", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -263,13 +263,13 @@ class RecommendationServiceTest {
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any()))
 					.thenReturn(Set.of(projectAccountData, project2));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(testRecommendation, rec2));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+							new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -277,6 +277,47 @@ class RecommendationServiceTest {
 			assertEquals(2, responseDTO.getDetails().size());
 			assertEquals(2, responseDTO.getSummary().getTotalProjectsWithRecommendations());
 			assertEquals(2, responseDTO.getSummary().getTotalProjectsQueried());
+		}
+
+		@Test
+		@DisplayName("Should return recommendations for KPI level successfully")
+		void getRecommendationsForLevel_KpiLevel_Success() {
+			// Arrange
+			when(filterHelperService.getHierarchyLevelMap(anyBoolean())).thenReturn(hierarchyLevelMap);
+			when(accountHierarchyService.getHierarchyLevelByLevelName("project"))
+					.thenReturn(Optional.of(projectLevel));
+			when(accountHierarchyService.getHierarchyLevelByLevelId(
+							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+					.thenReturn(Optional.of(projectLevel));
+			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.KPI_LEVEL)))
+					.thenReturn(List.of(testRecommendation));
+
+			// Act
+			ServiceResponse response =
+					recommendationService.getRecommendationsForLevel(
+							new RecommendationRequest("project", null, RecommendationLevel.KPI_LEVEL));
+
+			// Assert
+			assertNotNull(response);
+			assertTrue(response.getSuccess());
+			assertEquals("Recommendations retrieved successfully", response.getMessage());
+
+			RecommendationResponseDTO responseDTO = (RecommendationResponseDTO) response.getData();
+			assertNotNull(responseDTO);
+			assertNotNull(responseDTO.getSummary());
+			assertEquals("project", responseDTO.getSummary().getLevelName());
+			assertEquals(1, responseDTO.getSummary().getTotalProjectsWithRecommendations());
+			assertEquals(1, responseDTO.getSummary().getTotalProjectsQueried());
+
+			assertNotNull(responseDTO.getDetails());
+			assertEquals(1, responseDTO.getDetails().size());
+
+			ProjectRecommendationDTO detail = responseDTO.getDetails().get(0);
+			assertEquals(testRecommendation.getBasicProjectConfigId(), detail.getProjectId());
+			assertEquals("Test Project", detail.getProjectName());
+			assertEquals(Persona.ENGINEERING_LEAD, detail.getPersona());
+			assertNotNull(detail.getRecommendations());
 		}
 	}
 
@@ -303,7 +344,7 @@ class RecommendationServiceTest {
 							ForbiddenException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("project", null)));
+											new RecommendationRequest("project", null, null)));
 
 			assertTrue(exception.getMessage().contains("doesn't have access"));
 		}
@@ -332,7 +373,7 @@ class RecommendationServiceTest {
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+							new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -354,13 +395,13 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(Collections.emptyList());
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+							new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -397,7 +438,7 @@ class RecommendationServiceTest {
 							BadRequestException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("", null)));
+											new RecommendationRequest("", null, null)));
 
 			assertEquals("The recommendation request 'levelName' is required", exception.getMessage());
 		}
@@ -416,7 +457,7 @@ class RecommendationServiceTest {
 							NotFoundException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("invalid", null)));
+											new RecommendationRequest("invalid", null, null)));
 
 			assertTrue(exception.getMessage().contains("does not exist"));
 		}
@@ -440,7 +481,7 @@ class RecommendationServiceTest {
 							BadRequestException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("sprint", null)));
+											new RecommendationRequest("sprint", null, null)));
 
 			assertTrue(exception.getMessage().contains("below project level"));
 		}
@@ -463,7 +504,7 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(invalidEntity));
 
 			// Act & Assert
@@ -472,7 +513,7 @@ class RecommendationServiceTest {
 							IllegalStateException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("project", null)));
+											new RecommendationRequest("project", null, null)));
 
 			assertTrue(exception.getMessage().contains("Missing recommendations"));
 			assertTrue(exception.getMessage().contains("project-123"));
@@ -505,7 +546,7 @@ class RecommendationServiceTest {
 							ForbiddenException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("project", null)));
+											new RecommendationRequest("project", null, null)));
 
 			assertTrue(exception.getMessage().contains("doesn't have access"));
 		}
@@ -531,7 +572,7 @@ class RecommendationServiceTest {
 							InternalServerErrorException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("project", null)));
+											new RecommendationRequest("project", null, null)));
 
 			assertTrue(
 					exception.getMessage().contains("Multiple hierarchy levels found for name 'project'"));
@@ -554,7 +595,7 @@ class RecommendationServiceTest {
 							InternalServerErrorException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("account", null)));
+											new RecommendationRequest("account", null, null)));
 
 			assertTrue(exception.getMessage().contains("Could not find project hierarchy level"));
 		}
@@ -576,7 +617,7 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(badEntity));
 
 			// Act & Assert
@@ -585,7 +626,7 @@ class RecommendationServiceTest {
 							IllegalStateException.class,
 							() ->
 									recommendationService.getRecommendationsForLevel(
-											new RecommendationRequest("project", null)));
+											new RecommendationRequest("project", null, null)));
 
 			assertTrue(exception.getMessage().contains("Missing recommendations"));
 			assertTrue(exception.getMessage().contains("test-id"));
@@ -633,13 +674,13 @@ class RecommendationServiceTest {
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any()))
 					.thenReturn(Set.of(parentAccount, childProject));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(childRecommendation));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", parentNodeId));
+							new RecommendationRequest("project", parentNodeId, null));
 
 			// Assert
 			assertNotNull(response);
@@ -691,13 +732,13 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(project1, project2));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(recommendation1, recommendation2));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+							new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -766,20 +807,20 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(allData);
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(Collections.emptyList());
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("account", null));
+							new RecommendationRequest("account", null, null));
 
 			// Assert
 			assertNotNull(response);
 			// Verify that repository was called with the project ID (data was filtered to
 			// levels 2-5, excluding sprint level 6)
 			verify(recommendationRepository, times(1))
-					.findLatestRecommendationsByProjectIds(anyList(), anyInt());
+					.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL));
 		}
 
 		@Test
@@ -814,20 +855,20 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(validData);
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(testRecommendation));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+							new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
 			assertTrue(response.getSuccess());
 			// Verify repository was called with valid project IDs
 			verify(recommendationRepository, times(1))
-					.findLatestRecommendationsByProjectIds(anyList(), eq(1));
+					.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL));
 		}
 	}
 
@@ -847,13 +888,13 @@ class RecommendationServiceTest {
 							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(testRecommendation));
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("PROJECT", null));
+							new RecommendationRequest("PROJECT", null, null));
 
 			// Assert
 			assertNotNull(response);
@@ -882,19 +923,46 @@ class RecommendationServiceTest {
 					.thenReturn(Optional.of(projectLevel));
 			when(accountHierarchyService.getFilteredList(any()))
 					.thenReturn(Set.of(projectAccountData, project2));
-			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), anyInt()))
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
 					.thenReturn(List.of(testRecommendation)); // Only 1 recommendation
 
 			// Act
 			ServiceResponse response =
 					recommendationService.getRecommendationsForLevel(
-							new RecommendationRequest("project", null));
+							new RecommendationRequest("project", null, null));
 
 			// Assert
 			assertNotNull(response);
 			RecommendationResponseDTO responseDTO = (RecommendationResponseDTO) response.getData();
 			assertEquals(1, responseDTO.getSummary().getTotalProjectsWithRecommendations());
 			assertEquals(2, responseDTO.getSummary().getTotalProjectsQueried());
+		}
+
+		@Test
+		@DisplayName("Should default to PROJECT_LEVEL when recommendationLevel is null")
+		void getRecommendationsForLevel_NullRecommendationLevel_DefaultsToProjectLevel() {
+			// Arrange
+			when(filterHelperService.getHierarchyLevelMap(anyBoolean())).thenReturn(hierarchyLevelMap);
+			when(accountHierarchyService.getHierarchyLevelByLevelName("project"))
+					.thenReturn(Optional.of(projectLevel));
+			when(accountHierarchyService.getHierarchyLevelByLevelId(
+							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT))
+					.thenReturn(Optional.of(projectLevel));
+			when(accountHierarchyService.getFilteredList(any())).thenReturn(Set.of(projectAccountData));
+			when(recommendationRepository.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL)))
+					.thenReturn(List.of(testRecommendation));
+
+			// Act
+			ServiceResponse response =
+					recommendationService.getRecommendationsForLevel(
+							new RecommendationRequest("project", null, null));
+
+			// Assert
+			assertNotNull(response);
+			assertTrue(response.getSuccess());
+			// Verify that repository was called with PROJECT_LEVEL (default for null)
+			verify(recommendationRepository, times(1))
+					.findLatestRecommendationsByProjectIds(anyList(), eq(1), eq(RecommendationLevel.PROJECT_LEVEL));
 		}
 	}
 }

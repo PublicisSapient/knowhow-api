@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.recommendation.batch.RecommendationLevel;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -54,7 +55,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for retrieving batch-calculated AI recommendations at organizational hierarchy levels.
+ * Service for retrieving batch-calculated AI recommendations at organizational
+ * hierarchy levels.
+ * 
  */
 @Slf4j
 @Service
@@ -89,7 +92,7 @@ public class RecommendationService {
 	/**
 	 * Retrieves AI-generated recommendations for projects within a hierarchy level.
 	 *
-	 * @param recommendationRequest request containing levelName and optional parentNodeId
+	 * @param recommendationRequest request containing levelName, optional parentNodeId, and optional recommendationLevel
 	 * @return ServiceResponse containing RecommendationResponseDTO
 	 * @throws BadRequestException if levelName is below project level
 	 * @throws NotFoundException if the hierarchy level does not exist
@@ -100,9 +103,10 @@ public class RecommendationService {
 		validateRecommendationRequest(recommendationRequest);
 
 		log.info(
-				"Started getting recommendations for level: {} with parentNodeId: {}",
+				"Started getting recommendations for level: {} with parentNodeId: {} and recommendation level: {}",
 				recommendationRequest.levelName(),
-				recommendationRequest.parentNodeId());
+				recommendationRequest.parentNodeId(),
+				recommendationRequest.recommendationLevel());
 
 		// Build request context with hierarchy metadata and organization lookup
 		RecommendationRequestData requestData =
@@ -120,7 +124,7 @@ public class RecommendationService {
 
 		// Retrieve latest recommendation per project from batch data
 		List<RecommendationsActionPlan> recommendations =
-				getLatestRecommendationsForProjects(projectConfigIds);
+				getLatestRecommendationsForProjects(projectConfigIds, recommendationRequest.recommendationLevel());
 
 		// Map entities to DTOs
 		List<ProjectRecommendationDTO> recommendationDTOs =
@@ -411,21 +415,25 @@ public class RecommendationService {
 	}
 
 	/**
-	 * Retrieves latest recommendation per project using MongoDB aggregation. Optimized to fetch only
-	 * the most recent recommendation per project at database level.
+	 * Retrieves the latest recommendation per project using aggregation to filter at database level.
+	 * Level filtering is pushed to repository layer for optimal performance.
 	 *
 	 * @param projectConfigIds Set of project configuration IDs
-	 * @return List of RecommendationsActionPlan (one per project)
+	 * @param level Recommendation level filter (PROJECT_LEVEL or KPI_LEVEL); defaults to PROJECT_LEVEL for backward compatibility
+	 * @return List of RecommendationsActionPlan (one per project, filtered by level at DB)
 	 */
 	private List<RecommendationsActionPlan> getLatestRecommendationsForProjects(
-			Set<String> projectConfigIds) {
-		log.debug("Fetching latest recommendation for {} projects", projectConfigIds.size());
+			Set<String> projectConfigIds, RecommendationLevel level) {
+		// Default to PROJECT_LEVEL if not specified
+		RecommendationLevel filterLevel = level != null ? level : RecommendationLevel.PROJECT_LEVEL;
+		log.debug("Fetching latest {} recommendation for {} projects", filterLevel, projectConfigIds.size());
 
+		// DB-level filtering via repository aggregation pipeline
 		List<RecommendationsActionPlan> recommendations =
 				recommendationRepository.findLatestRecommendationsByProjectIds(
-						new ArrayList<>(projectConfigIds), LATEST_RECOMMENDATION_LIMIT);
+						new ArrayList<>(projectConfigIds), LATEST_RECOMMENDATION_LIMIT, filterLevel);
 
-		log.debug("Retrieved {} recommendations from database", recommendations.size());
+		log.debug("Retrieved {} {} recommendations from database", recommendations.size(), filterLevel);
 		return recommendations;
 	}
 
@@ -453,9 +461,39 @@ public class RecommendationService {
 				.projectName(entity.getProjectName())
 				.persona(entity.getPersona())
 				.level(entity.getLevel())
+				.kpiId(entity.getKpiId())
 				.recommendations(entity.getRecommendations())
 				.metadata(entity.getMetadata())
 				.createdAt(entity.getCreatedAt())
 				.build();
+	}
+
+	/**
+	 * Fetch latest recommendation for a specific project and KPI.
+	 * Used for enriching KPI responses with recommendations.
+	 *
+	 * @param basicProjectConfigId Project configuration ID
+	 * @param kpiId KPI identifier
+	 * @return Latest KPI-level recommendation or null if not found
+	 */
+	public RecommendationsActionPlan getLatestRecommendationForKpi(
+			String basicProjectConfigId, String kpiId) {
+
+		if (basicProjectConfigId == null || kpiId == null) {
+			log.warn("Invalid parameters for getLatestRecommendationForKpi: projectId={}, kpiId={}",
+					basicProjectConfigId, kpiId);
+			return null;
+		}
+
+		try {
+			log.debug("Fetching latest KPI_LEVEL recommendation for project {} and KPI {}",
+					basicProjectConfigId, kpiId);
+			return recommendationRepository.findLatestRecommendationByProjectAndKpi(
+					basicProjectConfigId, kpiId, RecommendationLevel.KPI_LEVEL);
+		} catch (Exception e) {
+			log.error("Error fetching recommendation for project {} and KPI {}",
+					basicProjectConfigId, kpiId, e);
+			return null;
+		}
 	}
 }
