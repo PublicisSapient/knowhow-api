@@ -114,6 +114,6 @@ public class RecommendationController {
 
 		return ResponseEntity.ok(
 				recommendationService.getRecommendationsForLevel(
-					new RecommendationRequest(levelName, parentNodeId, recommendationLevel)));
-    }
+						new RecommendationRequest(levelName, parentNodeId, recommendationLevel)));
+	}
 }

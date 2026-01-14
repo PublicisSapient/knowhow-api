@@ -47,7 +47,8 @@ public class KpiLevelRecommendationChangeUnit {
 	private static final String RECOMMENDATIONS_COLLECTION = "recommendations_action_plan";
 	private static final String BATCH_PROJECT_LEVEL_RECOMMENDATION_PROMPT =
 			PromptKeys.BATCH_PROJECT_LEVEL_RECOMMENDATION_PROMPT;
-	private static final String KPI_LEVEL_RECOMMENDATION_PROMPT = PromptKeys.BATCH_KPI_LEVEL_RECOMMENDATION_PROMPT;
+	private static final String KPI_LEVEL_RECOMMENDATION_PROMPT =
+			PromptKeys.BATCH_KPI_LEVEL_RECOMMENDATION_PROMPT;
 	private static final String OLD_BATCH_RECOMMENDATION_KEY = "batch-recommendation";
 	private static final String INDEX_NAME = "basicProjectConfigId_1_level_1_createdAt_-1";
 	private static final String CONTEXT = "context";
@@ -158,12 +159,8 @@ public class KpiLevelRecommendationChangeUnit {
 										"7. Identify downstream KPIs most likely to be impacted due to misalignment of this KPI based on benchmark correlations.",
 										"8. Analyze interdependencies: explain how improving this KPI is expected to influence correlated KPIs and delivery outcomes.",
 										"9. Determine severity based on deviation of this KPI from benchmark expectations (>30% CRITICAL, 20–30% HIGH, 10–20% MEDIUM, <10% LOW). Severity must guide recommendation intensity."))
-						.set(
-								OUTPUT_FORMAT,
-								outputFormat)
-						.set(
-								TASK,
-								"Generate KPI-level health analysis and recommendations.")
+						.set(OUTPUT_FORMAT, outputFormat)
+						.set(TASK, "Generate KPI-level health analysis and recommendations.")
 						.set(
 								PLACEHOLDERS,
 								Arrays.asList(
@@ -179,11 +176,10 @@ public class KpiLevelRecommendationChangeUnit {
 		log.info("Successfully inserted kpi-level-recommendation prompt details");
 	}
 
-	/**
-	 * Drops the compound index during rollback execution.
-	 */
+	/** Drops the compound index during rollback execution. */
 	private void dropCompoundIndex() {
-		log.info("Dropping compound index: {} from collection: {}", INDEX_NAME, RECOMMENDATIONS_COLLECTION);
+		log.info(
+				"Dropping compound index: {} from collection: {}", INDEX_NAME, RECOMMENDATIONS_COLLECTION);
 
 		try {
 			mongoTemplate.indexOps(RECOMMENDATIONS_COLLECTION).dropIndex(INDEX_NAME);
@@ -194,21 +190,20 @@ public class KpiLevelRecommendationChangeUnit {
 	}
 
 	/**
-	 * Creates compound index for efficient project + level filtering queries.
-	 * Index fields in order:
-	 * 1. basicProjectConfigId (ASC) - equality match, highest selectivity
-	 * 2. level (ASC) - optional equality filter
-	 * 3. createdAt (DESC) - sort field for retrieving latest recommendations
-	 *
+	 * Creates compound index for efficient project + level filtering queries. Index fields in order:
+	 * 1. basicProjectConfigId (ASC) - equality match, highest selectivity 2. level (ASC) - optional
+	 * equality filter 3. createdAt (DESC) - sort field for retrieving latest recommendations
 	 */
 	private void createCompoundIndex() {
-		log.info("Creating compound index on {} collection: {}", RECOMMENDATIONS_COLLECTION, INDEX_NAME);
+		log.info(
+				"Creating compound index on {} collection: {}", RECOMMENDATIONS_COLLECTION, INDEX_NAME);
 
-		Index index = new Index()
-				.on("basicProjectConfigId", Sort.Direction.ASC)
-				.on("level", Sort.Direction.ASC)
-				.on("createdAt", Sort.Direction.DESC)
-				.named(INDEX_NAME);
+		Index index =
+				new Index()
+						.on("basicProjectConfigId", Sort.Direction.ASC)
+						.on("level", Sort.Direction.ASC)
+						.on("createdAt", Sort.Direction.DESC)
+						.named(INDEX_NAME);
 
 		mongoTemplate.indexOps(RECOMMENDATIONS_COLLECTION).ensureIndex(index);
 

@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.recommendations.service.RecommendationService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
@@ -33,6 +32,7 @@ import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.recommendations.service.RecommendationService;
 import com.publicissapient.kpidashboard.apis.util.AggregationUtils;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterCategory;
@@ -83,8 +83,7 @@ public abstract class ToolsKPIService<R, S> {
 	@Autowired(required = false)
 	private ForecastingManager forecastingManager;
 
-	@Autowired
-	private RecommendationService recommendationService;
+	@Autowired private RecommendationService recommendationService;
 
 	/**
 	 * Calculates the aggregated value for the nodes in the bottom-up fashion. nodeWiseKPIValue is
@@ -880,8 +879,8 @@ public abstract class ToolsKPIService<R, S> {
 	}
 
 	/**
-	 * Sets the latest recommendation action plan at the KPI element level.
-	 * This method is called once per KPI to fetch and attach the project-level recommendation.
+	 * Sets the latest recommendation action plan at the KPI element level. This method is called once
+	 * per KPI to fetch and attach the project-level recommendation.
 	 *
 	 * @param selectedIds project node IDs selected in the request
 	 * @param kpiElement the KpiElement to populate with recommendation
@@ -892,8 +891,8 @@ public abstract class ToolsKPIService<R, S> {
 			Set<String> selectedIds, KpiElement kpiElement, String labelName, String kpiId) {
 		if (selectedIds.size() == 1
 				&& (labelName.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)
-					|| labelName.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
-					|| "SQD".equalsIgnoreCase(labelName))
+						|| labelName.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
+						|| "SQD".equalsIgnoreCase(labelName))
 				&& recommendationService != null) {
 
 			Optional<String> projectId = selectedIds.stream().findFirst();
@@ -901,12 +900,16 @@ public abstract class ToolsKPIService<R, S> {
 					(Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData();
 
 			basicConfigMap.values().stream()
-                    .filter(
-                            projectBasicConfig ->
-                                    projectBasicConfig.getProjectNodeId().equalsIgnoreCase(projectId.orElse("")))
-                    .findFirst().flatMap(basicConfig -> Optional.ofNullable(
-                            recommendationService.getLatestRecommendationForKpi(
-                                    basicConfig.getId().toString(), kpiId))).ifPresent(kpiElement::setRecommendationActionPlan);
+					.filter(
+							projectBasicConfig ->
+									projectBasicConfig.getProjectNodeId().equalsIgnoreCase(projectId.orElse("")))
+					.findFirst()
+					.flatMap(
+							basicConfig ->
+									Optional.ofNullable(
+											recommendationService.getLatestRecommendationForKpi(
+													basicConfig.getId().toString(), kpiId)))
+					.ifPresent(kpiElement::setRecommendationActionPlan);
 		}
 	}
 
