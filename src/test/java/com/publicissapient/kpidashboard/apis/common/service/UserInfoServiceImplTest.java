@@ -403,7 +403,10 @@ public class UserInfoServiceImplTest {
 				.thenReturn(
 						new Cookie(
 								"authCookie",
-								AuthenticationFixture.getJwtToken("dummyUser", "dummyData", 100000L)));
+								AuthenticationFixture.getJwtToken(
+										"dummyUser",
+										"mySecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmToWorkProperlyWithExtraCharactersToEnsure512Bits1234567890",
+										100000L)));
 		when(userTokenReopository.findByUserToken(anyString()))
 				.thenReturn(new UserTokenData("dummyUser", "dummyToken", null));
 		when(authenticationRepository.findByUsername(anyString())).thenReturn(new Authentication());
