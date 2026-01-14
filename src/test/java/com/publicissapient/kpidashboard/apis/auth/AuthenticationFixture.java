@@ -61,17 +61,12 @@ public class AuthenticationFixture {
 	public static String getJwtToken(String username, String secret, long expirationTime) {
 		Authentication authentication = getAuthentication(username);
 		List<String> authorities = Arrays.asList("ROLE_VIEWER", "ROLE_SUPERADMIN");
-		// Ensure secret is at least 512 bits for HS512
-		String validSecret =
-				secret.length() < 64
-						? "mySecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmToWorkProperlyWithExtraCharactersToEnsure512Bits1234567890"
-						: secret;
 		return Jwts.builder()
 				.setSubject(authentication.getName())
 				.claim(DETAILS_CLAIM, authentication.getDetails())
 				.claim(ROLES_CLAIM, authorities)
 				.setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-				.signWith(SignatureAlgorithm.HS512, validSecret)
+				.signWith(SignatureAlgorithm.HS512, secret)
 				.compact();
 	}
 }
