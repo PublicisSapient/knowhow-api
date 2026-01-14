@@ -70,9 +70,9 @@ public class KpiElement implements Serializable { // NOPMD
 	private String kpiSource;
 
 	private Double thresholdValue;
-    @Setter
-    @Getter
-	private RecommendationsActionPlan recommendationActionPlan;
+	@Setter
+	@Getter
+	private transient RecommendationsActionPlan recommendationActionPlan;
 	private String aggregationType;
 
 	private transient Object trendValueList;
