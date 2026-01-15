@@ -775,6 +775,7 @@ public class ProductivityService {
 							.trendValue(trendValue)
 							.kpiName(kpiData.getName())
 							.kpiCategory(kpiData.getCategory())
+							.desiredTrend(kpiData.getDesiredTrend())
 							.build();
 			if (trendValue >= 0.0) {
 				positive.add(kpiTrend);

@@ -16,6 +16,8 @@
 
 package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
+import com.publicissapient.kpidashboard.common.shared.enums.TrendDirection;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -26,4 +28,6 @@ public class KPITrend {
 
 	private String kpiName;
 	private String kpiCategory;
+
+	private TrendDirection desiredTrend;
 }
