@@ -620,10 +620,6 @@
               <include>src/main/java/**/*.java</include>
               <include>src/test/java/**/*.java</include>
             </includes>
-            <excludes>
-              <exclude>**/target/**</exclude>
-              <exclude>target/**/</exclude>
-            </excludes>
             <eclipse>
               <file>${project.basedir}/eclipse-formatter-config.xml</file>
             </eclipse>
@@ -654,6 +650,12 @@
                 <include>**/*.yml</include>
                 <include>**/*.yaml</include>
               </includes>
+              <excludes>
+                <exclude>**/target/**</exclude>
+                <exclude>**/node_modules/**</exclude>
+                <exclude>**/.git/**</exclude>
+                <exclude>.github/workflows/**</exclude>
+              </excludes>
               <prettier>
                 <configFile>${project.basedir}/.prettierrc</configFile>
               </prettier>
@@ -667,6 +669,9 @@
                 <exclude>pom.xml</exclude>
                 <exclude>**/pom.xml</exclude>
                 <exclude>**/.idea/**</exclude>
+                <exclude>**/target/**</exclude>
+                <exclude>**/node_modules/**</exclude>
+                <exclude>**/.git/**</exclude>
               </excludes>
               <indent>
                 <spaces>true</spaces>
