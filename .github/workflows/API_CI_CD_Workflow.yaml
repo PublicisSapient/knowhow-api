@@ -168,7 +168,6 @@ jobs:
       - name: Code Formatting Check
         run: mvn spotless:check
 
-
       # ✅ Build & Test knowhoiw-api with both dependencies: common + ai-gateway-client
       - name: Build & skip Test knowhow-api
         if: ${{ github.event.inputs.test == 'false' }}
