@@ -66,7 +66,6 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -110,7 +109,8 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	}
 
 	public String createJwtToken(Authentication authentication) {
-		SecretKey key = Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+		SecretKey key =
+				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 		return Jwts.builder()
 				.setSubject(authentication.getName())
 				.claim(DETAILS_CLAIM, authentication.getDetails())
