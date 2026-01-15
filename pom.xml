@@ -650,6 +650,12 @@
                 <include>**/*.yml</include>
                 <include>**/*.yaml</include>
               </includes>
+              <excludes>
+                <exclude>**/target/**</exclude>
+                <exclude>**/node_modules/**</exclude>
+                <exclude>**/.git/**</exclude>
+                <exclude>.github/workflows/**</exclude>
+              </excludes>
               <prettier>
                 <configFile>${project.basedir}/.prettierrc</configFile>
               </prettier>
