@@ -102,8 +102,8 @@ public class JenkinsServiceR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				//skip using cache when the request is made with an api key
-				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 					List<KpiElement> cachedData = getCachedData(kpiRequest, groupId, projectKeyCache);
 					if (CollectionUtils.isNotEmpty(cachedData)) {
 						return cachedData;

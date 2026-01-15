@@ -138,15 +138,15 @@ public class JiraIterationServiceR implements JiraNonTrendKPIServiceR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				//skip using cache when the request is made with an api key
-				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 					Object cachedData =
 							cacheService.getFromApplicationCache(
 									projectKeyCache, KPISource.JIRA.name(), groupId, kpiRequest.getSprintIncluded());
 					if (!kpiRequest
-							.getRequestTrackerId()
-							.toLowerCase()
-							.contains(KPISource.EXCEL.name().toLowerCase())
+									.getRequestTrackerId()
+									.toLowerCase()
+									.contains(KPISource.EXCEL.name().toLowerCase())
 							&& null != cachedData) {
 						log.info("Fetching value from cache for {}", Arrays.toString(kpiRequest.getIds()));
 						return (List<KpiElement>) cachedData;

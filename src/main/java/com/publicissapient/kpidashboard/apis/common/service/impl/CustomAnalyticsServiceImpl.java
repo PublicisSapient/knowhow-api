@@ -28,21 +28,18 @@ import java.util.Objects;
 import org.apache.commons.collections4.CollectionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
-import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.constant.AuthenticationEvent;
 import com.publicissapient.kpidashboard.common.constant.Status;
@@ -54,6 +51,7 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepositor
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
 
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -61,8 +59,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author prijain3
  */
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	private static final String USER_NAME = "user_name";
 	private static final String USER_EMAIL = "user_email";
@@ -73,17 +72,15 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	private static final String USER_AUTH_TYPE = "authType";
 	private static final String NOTIFICATION_EMAIL = "notificationEmail";
 
-	@Autowired UserAuthorizedProjectsService userAuthorizedProjectsService;
-	@Autowired UserInfoService userInfoService;
-	@Autowired private UserInfoRepository userInfoRepository;
-	@Autowired private AuthenticationRepository authenticationRepository;
-	@Autowired private CustomApiConfig settings;
-	@Autowired private ProjectAccessManager projectAccessManager;
-	@Autowired private UsersSessionService usersSessionService;
+	private final AnalyticsConfig analyticsConfig;
 
-	@Autowired private UserTokenReopository userTokenReopository;
+	private final UserInfoService userInfoService;
+	private final UserInfoRepository userInfoRepository;
+	private final AuthenticationRepository authenticationRepository;
+	private final ProjectAccessManager projectAccessManager;
+	private final UsersSessionService usersSessionService;
 
-	final ModelMapper modelMapper = new ModelMapper();
+	private final UserTokenReopository userTokenReopository;
 
 	/** {@inheritDoc} */
 	@SuppressWarnings("unchecked")
@@ -195,7 +192,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	@Override
 	public JSONObject getAnalyticsCheck() {
 		JSONObject json = new JSONObject();
-		json.put("analyticsSwitch", settings.isAnalyticsSwitch());
+		json.put("analyticsSwitch", analyticsConfig.isAnalyticsSwitch());
 		return json;
 	}
 }

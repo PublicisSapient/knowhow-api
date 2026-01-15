@@ -469,9 +469,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 					requestTrackerId,
 					fullSprintIssuesMap.size());
 			List<String> totalSprintDetailsIssues =
-					sprintDetails.getTotalIssues().stream()
-							.map(SprintIssue::getNumber)
-							.toList();
+					sprintDetails.getTotalIssues().stream().map(SprintIssue::getNumber).toList();
 
 			// CALCULATION OF PCDS OF ALL ISSUES
 			List<JiraIssue> totalJiraIssueList =
@@ -554,9 +552,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 							sprintDetails,
 							maxCompletionDate,
 							completedIssues,
-							sprintDetails.getNotCompletedIssues().stream()
-									.map(SprintIssue::getNumber)
-									.toList());
+							sprintDetails.getNotCompletedIssues().stream().map(SprintIssue::getNumber).toList());
 					completedIssues.removeAll(
 							removedFromClosed.getOrDefault(date.toLocalDate(), new HashSet<>()));
 					Long closedDateWiseCount =
@@ -658,9 +654,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 				sprintDetails,
 				maximumRemovalDate,
 				removedJiraIssues,
-				sprintDetails.getTotalIssues().stream()
-						.map(SprintIssue::getNumber)
-						.toList());
+				sprintDetails.getTotalIssues().stream().map(SprintIssue::getNumber).toList());
 
 		// if an issue is present in both on the same day, then whatever in the punted
 		// issues those should be removed once and for all

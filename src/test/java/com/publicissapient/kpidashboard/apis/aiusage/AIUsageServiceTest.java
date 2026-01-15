@@ -10,8 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +26,9 @@ import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.AccountFilteredData;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+
+import jakarta.ws.rs.BadRequestException;
 
 @RunWith(MockitoJUnitRunner.class)
 class AIUsageServiceTest {

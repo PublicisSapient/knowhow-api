@@ -19,7 +19,6 @@
 package com.publicissapient.kpidashboard.apis.jira.rest;
 
 import java.util.List;
-
 import javax.validation.constraints.NotNull;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,8 +53,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This controller class handles Jira KPIs request. It handles all KPIs of Scrum
- * and Kanban.
+ * This controller class handles Jira KPIs request. It handles all KPIs of Scrum and Kanban.
  *
  * @author tauakram
  */
@@ -75,14 +73,16 @@ public class JiraController {
 	private final NonTrendServiceFactory serviceFactory;
 
 	@PostMapping(value = "/jira/kpi")
-	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(@RequestBody KpiRequest kpiRequest)
+	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(
+			@RequestBody KpiRequest kpiRequest)
 			throws MissingServletRequestParameterException, EntityNotFoundException {
 		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request {}", kpiRequest);
 
 		long jiraRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraRequestStartTime", String.valueOf(jiraRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -90,7 +90,8 @@ public class JiraController {
 		}
 
 		List<KpiElement> responseList = jiraService.process(kpiRequest);
-		MDC.put("TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
+		MDC.put(
+				"TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 
 		MDC.clear();
 		if (responseList.isEmpty()) {
@@ -101,7 +102,8 @@ public class JiraController {
 	}
 
 	@PostMapping(value = "/jirakanban/kpi")
-	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(@RequestBody KpiRequest kpiRequest)
+	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(
+			@RequestBody KpiRequest kpiRequest)
 			throws MissingServletRequestParameterException, EntityNotFoundException {
 		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira Kanban KPI request {}", kpiRequest);
@@ -109,7 +111,8 @@ public class JiraController {
 		long jiraKanbanRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraKanbanRequestStartTime", String.valueOf(jiraKanbanRequestStartTime));
 
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
@@ -117,7 +120,9 @@ public class JiraController {
 		}
 
 		List<KpiElement> responseList = jiraServiceKanban.process(kpiRequest);
-		MDC.put("TotalJiraKanbanRequestTime", String.valueOf(System.currentTimeMillis() - jiraKanbanRequestStartTime));
+		MDC.put(
+				"TotalJiraKanbanRequestTime",
+				String.valueOf(System.currentTimeMillis() - jiraKanbanRequestStartTime));
 
 		MDC.clear();
 
@@ -125,16 +130,19 @@ public class JiraController {
 	}
 
 	@PostMapping(value = "/jira/board", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> getJiraBoardDetailsList(@RequestBody BoardRequestDTO boardRequestDTO) {
+	public ResponseEntity<ServiceResponse> getJiraBoardDetailsList(
+			@RequestBody BoardRequestDTO boardRequestDTO) {
 		return jiraToolConfigService.getJiraBoardDetailsList(boardRequestDTO);
 	}
 
 	@GetMapping(value = "/jira/assignees/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ServiceResponse getJiraAssigneesList(@PathVariable("id") String projectConfigId) {
 		ServiceResponse response;
-		AssigneeResponseDTO assigneeResponseDTO = jiraToolConfigService.getProjectAssigneeDetails(projectConfigId);
+		AssigneeResponseDTO assigneeResponseDTO =
+				jiraToolConfigService.getProjectAssigneeDetails(projectConfigId);
 		if (assigneeResponseDTO != null) {
-			response = new ServiceResponse(true, "Successfully fetched assignee list", assigneeResponseDTO);
+			response =
+					new ServiceResponse(true, "Successfully fetched assignee list", assigneeResponseDTO);
 		} else {
 			response = new ServiceResponse(false, "Error while fetching Assignee List", null);
 		}
@@ -142,23 +150,27 @@ public class JiraController {
 	}
 
 	@PostMapping(value = "/jira/nonTrend/kpi")
-	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(@NotNull @RequestBody KpiRequest kpiRequest) throws MissingServletRequestParameterException, EntityNotFoundException {
+	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(
+			@NotNull @RequestBody KpiRequest kpiRequest)
+			throws MissingServletRequestParameterException, EntityNotFoundException {
 
 		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request for iteration{}", kpiRequest);
 
 		long jiraRequestStartTime = System.currentTimeMillis();
 		MDC.put("JiraRequestStartTime", String.valueOf(jiraRequestStartTime));
-		cacheService.setIntoApplicationCache(Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
+		cacheService.setIntoApplicationCache(
+				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name(),
 				kpiRequest.getRequestTrackerId());
 
 		if (CollectionUtils.isEmpty(kpiRequest.getKpiList())) {
 			throw new MissingServletRequestParameterException(KPI_LIST, "List");
 		}
-		JiraNonTrendKPIServiceR jiraNonTrendKPIServiceR = serviceFactory
-				.getService(kpiRequest.getKpiList().get(0).getKpiCategory());
+		JiraNonTrendKPIServiceR jiraNonTrendKPIServiceR =
+				serviceFactory.getService(kpiRequest.getKpiList().get(0).getKpiCategory());
 		List<KpiElement> responseList = jiraNonTrendKPIServiceR.process(kpiRequest);
-		MDC.put("TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
+		MDC.put(
+				"TotalJiraRequestTime", String.valueOf(System.currentTimeMillis() - jiraRequestStartTime));
 
 		MDC.clear();
 		return ResponseEntity.ok().body(responseList);

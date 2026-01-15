@@ -33,7 +33,6 @@ import com.publicissapient.kpidashboard.apis.model.ConfigDetails;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.service.TemplateConfigurationService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /** Rest controller to handle configuration properties */
@@ -49,12 +48,11 @@ public class ConfigDetailsController {
 	/**
 	 * Returns required properties from application.prop
 	 *
-	 * @param request request
 	 * @return ResponseEntity<ConfigDetails>
 	 */
 	// Todo: to be removed after V2 become primary view
 	@GetMapping(value = "/configDetails", produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<ConfigDetails> getConfigDetails(HttpServletRequest request) {
+	public ResponseEntity<ConfigDetails> getConfigDetails() {
 		log.info("ConfigDetailsController::getConfigDetails start");
 		ConfigDetails configDetails = configDetailService.getConfigDetails();
 		log.info("ConfigDetailsController::getConfigDetails end");

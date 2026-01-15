@@ -164,12 +164,16 @@ jobs:
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
+      # ✅ Code Formatting Check (Spotless)
+      - name: Code Formatting Check
+        run: mvn spotless:check
+
       # ✅ Build & Test knowhoiw-api with both dependencies: common + ai-gateway-client
       - name: Build & skip Test knowhow-api
         if: ${{ github.event.inputs.test == 'false' }}
         run: mvn clean install -Ddockerfile.skip=true -DskipTests
 
-        # ✅ Build & Test knowhow-api with both dependencies: common + ai-gateway-client
+      # ✅ Build & Test knowhow-api with both dependencies: common + ai-gateway-client
       - name: Build & Test knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: mvn clean install -Ddockerfile.skip=true

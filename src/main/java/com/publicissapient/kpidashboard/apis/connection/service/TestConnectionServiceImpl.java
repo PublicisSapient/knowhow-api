@@ -65,7 +65,7 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private RestTemplate restTemplate;
 
-    @Override
+	@Override
 	public ServiceResponse validateConnection(Connection connection, String toolName) {
 		String apiUrl = getApiUrl(connection, toolName);
 		if (apiUrl == null) {
@@ -241,7 +241,8 @@ public class TestConnectionServiceImpl implements TestConnectionService {
 		if (connection.isCloudEnv()) {
 			return testConnectionForTools(apiUrl, password);
 		} else {
-			return testConnection(connection, Constant.TOOL_SONAR, apiUrl, password, connection.isAccessTokenEnabled());
+			return testConnection(
+					connection, Constant.TOOL_SONAR, apiUrl, password, connection.isAccessTokenEnabled());
 		}
 	}
 

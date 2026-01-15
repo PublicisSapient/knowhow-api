@@ -134,6 +134,7 @@ public class DefectSeverityIndexImplTest {
 				.thenReturn("test-tracker-id-" + System.currentTimeMillis());
 		when(kpiRequest.getFilterToShowOnTrend()).thenReturn("Overall");
 		when(kpiRequest.getIds()).thenReturn(ids);
+		when(kpiRequest.getSelecedHierarchyLabel()).thenReturn("sprint");
 
 		when(kpiRequest.getLabel()).thenReturn("project");
 	}
@@ -670,10 +671,7 @@ public class DefectSeverityIndexImplTest {
 					.when(
 							() ->
 									KpiDataHelper.createAdditionalFilterMap(
-											any(KpiRequest.class),
-											anyMap(),
-											anyString(),
-											any(FilterHelperService.class)))
+											any(KpiRequest.class), anyMap(), anyString(), any(FilterHelperService.class)))
 					.thenReturn(null);
 		}
 	}
