@@ -19,7 +19,7 @@ package com.publicissapient.kpidashboard.apis.config.dto;
 import lombok.Builder;
 
 @Builder
-public record AnalyticsConfigResponse(int analyticsGrafanaRolloutPercentage, boolean isAnalyticsGoogleEnabled,
-		boolean isAnalyticsGrafanaEnabled) {
-
-}
+public record AnalyticsConfigResponse(
+		int analyticsGrafanaRolloutPercentage,
+		boolean isAnalyticsGoogleEnabled,
+		boolean isAnalyticsGrafanaEnabled) {}

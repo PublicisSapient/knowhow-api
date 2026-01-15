@@ -22,9 +22,7 @@ import org.springframework.context.annotation.Configuration;
 
 import lombok.Data;
 
-/**
- * Analytics configuration exposed to frontend
- */
+/** Analytics configuration exposed to frontend */
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "analytics")
