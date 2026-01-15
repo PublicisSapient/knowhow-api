@@ -122,7 +122,7 @@ jobs:
             -Dincludes=com.publicissapient.kpidashboard:common \
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
-      
+
       # ✅ Code Formatting Check (Spotless)
       - name: Code Formatting Check
         run: mvn spotless:check
