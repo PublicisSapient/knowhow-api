@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.hierarchy.rest;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,15 +37,21 @@ import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHiera
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/hierarchy")
+@RequiredArgsConstructor
+@Tag(
+		name = "Organization Hierarchy API",
+		description = "APIs for Organization Hierarchy Management")
 public class OrganizationHierarchyController {
 
-	@Autowired private OrganizationHierarchyService organizationHierarchyService;
+	private final OrganizationHierarchyService organizationHierarchyService;
 
-	@Autowired private HierarchyOptionService hierarchyOptionService;
+	private final HierarchyOptionService hierarchyOptionService;
 
 	@GetMapping
 	public ResponseEntity<ServiceResponse> getHierarchyLevel() {
