@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.rbac.roles.rest;
 
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,6 +31,8 @@ import com.publicissapient.kpidashboard.apis.rbac.roles.service.RolesHelperServi
 import com.publicissapient.kpidashboard.common.model.rbac.RoleData;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleDataDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -79,9 +79,7 @@ public class RolesController {
 	 * @param roleDTO request object that replaces the role data present at object_id id.
 	 * @return responseEntity with data,message and status
 	 */
-	@PutMapping(
-			value = "/{id}",
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> modifyRoleById(
 			@PathVariable("id") String id, @Valid @RequestBody RoleDataDTO roleDTO) {
 		final ModelMapper modelMapper = new ModelMapper();

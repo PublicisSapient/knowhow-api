@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- /*******************************************************************************
+ * /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
  * <p>
@@ -24,8 +24,6 @@ package com.publicissapient.kpidashboard.apis.pushdata.controller;
 import java.util.List;
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
@@ -45,7 +43,9 @@ import com.publicissapient.kpidashboard.apis.pushdata.service.AuthExposeAPIServi
 import com.publicissapient.kpidashboard.apis.pushdata.service.PushBaseService;
 import com.publicissapient.kpidashboard.apis.pushdata.service.PushDataTraceLogService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Validated
@@ -68,9 +68,7 @@ public class PushDataController {
 	 * @param pushBuildDeployDTO The data transfer object containing build deployment details.
 	 * @return A ResponseEntity containing the service response.
 	 */
-	@PostMapping(
-			value = "/build",
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/build", consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> savePushDataBuilds(
 			HttpServletRequest request, @RequestBody @Valid PushBuildDeployDTO pushBuildDeployDTO) {
 		PushDataTraceLog instance = PushDataTraceLog.getInstance();

@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.pushdata.controller;
 
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +34,8 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.pushdata.model.dto.ExposeAPITokenRequestDTO;
 import com.publicissapient.kpidashboard.apis.pushdata.service.AuthExposeAPIService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Validated
@@ -57,9 +57,7 @@ public class ExposeAPIController {
 	 */
 	@PreAuthorize(
 			"hasPermission(#exposeAPITokenRequestDTO.basicProjectConfigId, 'SAVE_PROJECT_TOOL')")
-	@PostMapping(
-			value = "/generateToken",
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/generateToken", consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> generateAndSaveToken(
 			@RequestBody @Valid ExposeAPITokenRequestDTO exposeAPITokenRequestDTO) {
 		return ResponseEntity.status(HttpStatus.OK)

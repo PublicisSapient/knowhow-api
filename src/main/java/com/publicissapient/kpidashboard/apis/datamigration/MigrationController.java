@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.datamigration;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.datamigration.model.MigrateData;
 import com.publicissapient.kpidashboard.apis.datamigration.service.DataMigrationService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/hierarchy/migrate")

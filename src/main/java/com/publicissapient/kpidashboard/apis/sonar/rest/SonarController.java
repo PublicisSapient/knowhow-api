@@ -23,8 +23,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,6 +44,8 @@ import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceR;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarToolConfigServiceImpl;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -71,9 +71,7 @@ public class SonarController {
 	 * @return {@code ResponseEntity<List<KpiElement>>}
 	 * @throws Exception exception thrown when kpi processing fails
 	 */
-	@PostMapping(
-			value = "/sonar/kpi",
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/sonar/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
 	public ResponseEntity<List<KpiElement>> getSonarAggregatedMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
@@ -104,9 +102,7 @@ public class SonarController {
 	 * @return {@code ResponseEntity<List<KpiElement>>}
 	 * @throws Exception exception thrown when kpi processing fails
 	 */
-	@PostMapping(
-			value = "/sonarkanban/kpi",
-			produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@PostMapping(value = "/sonarkanban/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<List<KpiElement>> getSonarKanbanAggregatedMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
 

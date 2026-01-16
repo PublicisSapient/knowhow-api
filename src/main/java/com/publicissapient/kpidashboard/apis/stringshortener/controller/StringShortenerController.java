@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.stringshortener.controller;
 
 import java.util.Optional;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +29,9 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.stringshortener.dto.StringShortenerDTO;
 import com.publicissapient.kpidashboard.apis.stringshortener.model.StringShortener;
 import com.publicissapient.kpidashboard.apis.stringshortener.service.StringShortenerService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/stringShortener")
@@ -52,7 +53,8 @@ public class StringShortenerController {
 		final StringShortenerDTO responseDTO =
 				modelMapper.map(stringShortener, StringShortenerDTO.class);
 		if (responseDTO != null && !responseDTO.toString().isEmpty()) {
-			ServiceResponse response = new ServiceResponse(true, SHORT_STRING_RESPONSE_MESSAGE, responseDTO);
+			ServiceResponse response =
+					new ServiceResponse(true, SHORT_STRING_RESPONSE_MESSAGE, responseDTO);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
 			ServiceResponse response = new ServiceResponse(false, FAILURE_RESPONSE_MESSAGE, null);

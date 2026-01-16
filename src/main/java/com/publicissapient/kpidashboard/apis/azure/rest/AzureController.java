@@ -20,12 +20,6 @@ package com.publicissapient.kpidashboard.apis.azure.rest;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,6 +33,12 @@ import com.publicissapient.kpidashboard.apis.azure.model.AzureTeamsDTO;
 import com.publicissapient.kpidashboard.apis.azure.service.AzureToolConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -55,20 +55,25 @@ public class AzureController {
 	 */
 	@Operation(
 			summary = "Get Azure Pipelines",
-			description = "Fetches the list of Azure Pipelines associated with the specified connection ID and version."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved Azure Pipelines"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description =
+					"Fetches the list of Azure Pipelines associated with the specified connection ID and version.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully retrieved Azure Pipelines"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(
 			value = "/azure/pipeline/{connectionId}/{version}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getAzurePipelineNameAndDefinitionIdList(
-			@Parameter(description = "Azure Connection ID", required = true, example = "64b0c7f5e1b2c3d4e5f67890")
-			@PathVariable String connectionId,
-			@Parameter(description = "API Version", required = true, example = "6.0")
-			@PathVariable String version) {
+			@Parameter(
+							description = "Azure Connection ID",
+							required = true,
+							example = "64b0c7f5e1b2c3d4e5f67890")
+					@PathVariable
+					String connectionId,
+			@Parameter(description = "API Version", required = true, example = "6.0") @PathVariable
+					String version) {
 		ServiceResponse response;
 		List<AzurePipelinesResponseDTO> pipelinesResponseList =
 				azureToolConfigService.getAzurePipelineNameAndDefinitionIdList(connectionId, version);
@@ -86,17 +91,25 @@ public class AzureController {
 	 */
 	@Operation(
 			summary = "Get Azure Release Pipelines",
-			description = "Fetches the list of Azure Release Pipelines associated with the specified connection ID.")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved Azure Release Pipelines"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description =
+					"Fetches the list of Azure Release Pipelines associated with the specified connection ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved Azure Release Pipelines"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(
 			value = "/azure/release/{connectionId}/6.0",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getAzureReleaseNameAndDefinitionIdList(
-			@Parameter(description = "Azure Connection ID", required = true, example = "64b0c7f5e1b2c3d4e5f67890")
-			@PathVariable String connectionId) {
+			@Parameter(
+							description = "Azure Connection ID",
+							required = true,
+							example = "64b0c7f5e1b2c3d4e5f67890")
+					@PathVariable
+					String connectionId) {
 		ServiceResponse response;
 		List<AzurePipelinesResponseDTO> releasesResponseList =
 				azureToolConfigService.getAzureReleaseNameAndDefinitionIdList(connectionId);
@@ -113,14 +126,19 @@ public class AzureController {
 	@Operation(
 			summary = "Get Azure Teams",
 			description = "Fetches the list of Azure Teams associated with the specified connection ID.")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved Azure Teams"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully retrieved Azure Teams"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/azure/teams/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getAzureTeams(
-			@Parameter(description = "Azure Connection ID", required = true, example = "64b0c7f5e1b2c3d4e5f67890")
-			@PathVariable String connectionId) {
+			@Parameter(
+							description = "Azure Connection ID",
+							required = true,
+							example = "64b0c7f5e1b2c3d4e5f67890")
+					@PathVariable
+					String connectionId) {
 		ServiceResponse response;
 		List<AzureTeamsDTO> teamsResponseList = azureToolConfigService.getAzureTeamsList(connectionId);
 		if (CollectionUtils.isEmpty(teamsResponseList)) {

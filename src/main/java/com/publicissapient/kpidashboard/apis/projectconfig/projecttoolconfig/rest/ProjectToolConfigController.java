@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.projectconfig.projecttoolconfig.re
 
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
@@ -37,6 +35,8 @@ import com.publicissapient.kpidashboard.apis.util.ProjectAccessUtil;
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfigDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -129,8 +129,7 @@ public class ProjectToolConfigController {
 	}
 
 	@PreAuthorize("hasPermission(#basicProjectConfigId, 'DELETE_PROJECT_TOOL')")
-	@DeleteMapping(
-			value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}")
+	@DeleteMapping(value = "/basicconfigs/{basicProjectConfigId}/tools/{projectToolId}")
 	public ResponseEntity<ServiceResponse> deleteTool(
 			@PathVariable String basicProjectConfigId, @PathVariable String projectToolId) {
 

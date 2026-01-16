@@ -19,8 +19,6 @@ package com.publicissapient.kpidashboard.apis.hierarchy.rest;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,12 +37,16 @@ import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHiera
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/hierarchy")
 @RequiredArgsConstructor
-@Tag(name = "Organization Hierarchy API", description = "APIs for Organization Hierarchy Management")
+@Tag(
+		name = "Organization Hierarchy API",
+		description = "APIs for Organization Hierarchy Management")
 public class OrganizationHierarchyController {
 
 	private final OrganizationHierarchyService organizationHierarchyService;

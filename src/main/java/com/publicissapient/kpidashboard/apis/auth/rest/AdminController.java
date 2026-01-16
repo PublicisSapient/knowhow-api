@@ -23,12 +23,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.Collection;
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +32,13 @@ import com.publicissapient.kpidashboard.apis.auth.model.ApiToken;
 import com.publicissapient.kpidashboard.apis.auth.service.ApiTokenRequest;
 import com.publicissapient.kpidashboard.apis.auth.service.ApiTokenService;
 import com.publicissapient.kpidashboard.common.util.EncryptionException;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /** Rest Controller to handle admin request */
 @RestController
@@ -57,24 +58,33 @@ public class AdminController {
 	 */
 	@Operation(
 			summary = "Create API token",
-			description = "Generates a new API token for the specified user with a defined expiration time."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Token successfully generated"),
-			@ApiResponse(responseCode = "400", description = "Invalid request data, encryption failure, or application error"),
-			@ApiResponse(responseCode = "403", description = "Forbidden access (user does not have admin privileges)"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description =
+					"Generates a new API token for the specified user with a defined expiration time.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Token successfully generated"),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Invalid request data, encryption failure, or application error"),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden access (user does not have admin privileges)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/createToken",
 			consumes = APPLICATION_JSON_VALUE,
 			produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> createToken(
-			@Parameter(description = "API Token Request", required = true,
-					example = """ 
-							{"apiUser": "user1", "expirationDt": 1704067200000}
-							""")
-			@Valid @RequestBody ApiTokenRequest apiTokenRequest) {
+			@Parameter(
+							description = "API Token Request",
+							required = true,
+							example = """
+			{"apiUser": "user1", "expirationDt": 1704067200000}
+			""")
+					@Valid
+					@RequestBody
+					ApiTokenRequest apiTokenRequest) {
 		try {
 			return ResponseEntity.status(HttpStatus.OK)
 					.body(
@@ -93,13 +103,15 @@ public class AdminController {
 	 */
 	@Operation(
 			summary = "Get API tokens",
-			description = "Returns all API tokens configured in the system."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Tokens successfully retrieved"),
-			@ApiResponse(responseCode = "403", description = "Forbidden access (user does not have admin privileges)"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description = "Returns all API tokens configured in the system.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Tokens successfully retrieved"),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden access (user does not have admin privileges)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(path = "/apitokens")
 	public ResponseEntity<Collection<ApiToken>> getApiTokens() {
 		return ResponseEntity.status(HttpStatus.OK).body(apiTokenService.getApiTokens());

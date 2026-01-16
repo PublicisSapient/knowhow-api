@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.appsetting.rest;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +40,7 @@ import com.publicissapient.kpidashboard.common.model.ProcessorExecutionBasicConf
 import com.publicissapient.kpidashboard.common.model.application.dto.ProcessorExecutionTraceLogDTO;
 import com.publicissapient.kpidashboard.common.service.ProcessorExecutionTraceLogService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

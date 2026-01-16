@@ -23,13 +23,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +39,13 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrServiceKanban;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -74,26 +74,28 @@ public class ZephyrController {
 	 */
 	@Operation(
 			summary = "Retrieve Zephyr KPI metrics",
-			description = "Posts a request to retrieve KPI metrics based on the provided KPI request details.",
+			description =
+					"Posts a request to retrieve KPI metrics based on the provided KPI request details.",
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Successful retrieval of KPI metrics",
-							content = @Content(
-									mediaType = "application/json",
-									schema = @Schema(implementation = KpiElement.class),
-									examples = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successful retrieval of KPI metrics",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class),
+										examples = {
 											@ExampleObject(
 													name = "Example Response",
-													value = "[{\"kpiName\": \"Velocity\", \"kpiValue\": \"15\"}]"
-											)
-									}
-							)
-					),
-					@ApiResponse(responseCode = "403", description = "Forbidden - No KPI metrics found for the given request"),
-					@ApiResponse(responseCode = "400", description = "Bad Request - Missing required parameters")
-			}
-	)
+													value = "[{\"kpiName\": \"Velocity\", \"kpiValue\": \"15\"}]")
+										})),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden - No KPI metrics found for the given request"),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Bad Request - Missing required parameters")
+			})
 	@PostMapping(value = "/zypher/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<List<KpiElement>> getZephyrMetrics(
 			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR

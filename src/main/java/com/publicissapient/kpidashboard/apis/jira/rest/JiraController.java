@@ -21,7 +21,6 @@ package com.publicissapient.kpidashboard.apis.jira.rest;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -49,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.dto.AssigneeResponseDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

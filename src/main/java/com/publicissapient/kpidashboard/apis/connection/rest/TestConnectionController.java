@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.connection.rest;
 
 import javax.validation.constraints.NotNull;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,13 +33,15 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
 import com.publicissapient.kpidashboard.common.model.connection.ConnectionDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/testconnection")
 @Slf4j
 @RequiredArgsConstructor
-@Tag(name="Test Connection API", description="APIs for Testing Connections")
+@Tag(name = "Test Connection API", description = "APIs for Testing Connections")
 public class TestConnectionController {
 
 	private final TestConnectionService testConnectionService;

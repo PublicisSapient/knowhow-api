@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.common.rest;
 
 import java.util.Map;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,13 +29,17 @@ import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationServi
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 /** aksshriv1 */
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Token Authentication Controller", description = "APIs for Token Authentication Management")
+@Tag(
+		name = "Token Authentication Controller",
+		description = "APIs for Token Authentication Management")
 public class TokenAuthenticationController {
 	private final TokenAuthenticationService tokenAuthenticationService;
 	private final CustomAnalyticsService customAnalyticsService;

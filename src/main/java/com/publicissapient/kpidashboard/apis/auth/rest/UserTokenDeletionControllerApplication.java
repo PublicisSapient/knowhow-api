@@ -23,7 +23,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import java.util.Objects;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,6 +41,7 @@ import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.Status;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -55,7 +55,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@Tag(name = "User Token Deletion Controller", description = "APIs for User Token Deletion Management")
+@Tag(
+		name = "User Token Deletion Controller",
+		description = "APIs for User Token Deletion Management")
 public class UserTokenDeletionControllerApplication {
 	@Autowired private CookieUtil cookieUtil;
 

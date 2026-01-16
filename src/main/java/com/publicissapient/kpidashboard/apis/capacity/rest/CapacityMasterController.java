@@ -21,8 +21,6 @@ package com.publicissapient.kpidashboard.apis.capacity.rest;
 import java.util.List;
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,6 +36,9 @@ import com.publicissapient.kpidashboard.common.constant.Role;
 import com.publicissapient.kpidashboard.common.model.application.CapacityMaster;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
 /**
  * @author narsingh9
  */
@@ -47,7 +48,7 @@ import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiDTO;
 @Tag(name = "Capacity Master Controller", description = "APIs for Capacity Master Management")
 public class CapacityMasterController {
 
-	private final  CapacityMasterService capacityMasterService;
+	private final CapacityMasterService capacityMasterService;
 
 	private final ContextAwarePolicyEnforcement policy;
 

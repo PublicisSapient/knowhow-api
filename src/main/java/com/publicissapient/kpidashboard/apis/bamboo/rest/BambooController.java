@@ -20,12 +20,6 @@ package com.publicissapient.kpidashboard.apis.bamboo.rest;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,6 +34,12 @@ import com.publicissapient.kpidashboard.apis.bamboo.model.BambooPlansResponseDTO
 import com.publicissapient.kpidashboard.apis.bamboo.service.BambooToolConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -56,16 +56,23 @@ public class BambooController {
 	 */
 	@Operation(
 			summary = "Get Bamboo Projects and Plan Keys",
-			description = "Fetches the list of Bamboo Projects and their associated Plan Keys for the specified connection ID."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved Bamboo Projects and Plan Keys"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description =
+					"Fetches the list of Bamboo Projects and their associated Plan Keys for the specified connection ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved Bamboo Projects and Plan Keys"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/bamboo/plans/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getBambooProjectsAndPlanKeys(
-			@Parameter(description = "Bamboo Connection ID", required = true, example = "64b0c7f5e1b2c3d4e5f67890")
-			@PathVariable String connectionId) {
+			@Parameter(
+							description = "Bamboo Connection ID",
+							required = true,
+							example = "64b0c7f5e1b2c3d4e5f67890")
+					@PathVariable
+					String connectionId) {
 		ServiceResponse response;
 		List<BambooPlansResponseDTO> projectKeyList =
 				bambooToolConfigService.getProjectsAndPlanKeyList(connectionId);
@@ -84,20 +91,28 @@ public class BambooController {
 	 */
 	@Operation(
 			summary = "Get Bamboo Branches Name and Keys",
-			description = "Fetches the list of Bamboo Branches Names and their associated Keys for the specified connection ID and Job Name Key."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved Bamboo Branches Names and Keys"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description =
+					"Fetches the list of Bamboo Branches Names and their associated Keys for the specified connection ID and Job Name Key.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved Bamboo Branches Names and Keys"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(
 			value = "/bamboo/branches/{connectionId}/{jobNameKey}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getBambooBranchesNameAndKeys(
-			@Parameter(description = "Bamboo Connection ID", required = true, example = "64b0c7f5e1b2c3d4e5f67890")
-			@PathVariable String connectionId,
+			@Parameter(
+							description = "Bamboo Connection ID",
+							required = true,
+							example = "64b0c7f5e1b2c3d4e5f67890")
+					@PathVariable
+					String connectionId,
 			@Parameter(description = "Bamboo Job Name Key", required = true, example = "PROJECT-PLAN")
-			@PathVariable String jobNameKey) {
+					@PathVariable
+					String jobNameKey) {
 		ServiceResponse response;
 		List<BambooBranchesResponseDTO> projectKeyList =
 				bambooToolConfigService.getBambooBranchesNameAndKeys(connectionId, jobNameKey);
@@ -115,16 +130,23 @@ public class BambooController {
 	 */
 	@Operation(
 			summary = "Get Bamboo Deployment Projects",
-			description = "Fetches the list of Bamboo Deployment Projects for the specified connection ID."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved Bamboo Deployment Projects"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description =
+					"Fetches the list of Bamboo Deployment Projects for the specified connection ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved Bamboo Deployment Projects"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/bamboo/deploy/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getBambooDeploymentProject(
-			@Parameter(description = "Bamboo Connection ID", required = true, example = "64b0c7f5e1b2c3d4e5f67890")
-			@PathVariable String connectionId) {
+			@Parameter(
+							description = "Bamboo Connection ID",
+							required = true,
+							example = "64b0c7f5e1b2c3d4e5f67890")
+					@PathVariable
+					String connectionId) {
 		ServiceResponse response;
 		List<BambooDeploymentProjectsResponseDTO> projectKeyList =
 				bambooToolConfigService.getDeploymentProjectList(connectionId);

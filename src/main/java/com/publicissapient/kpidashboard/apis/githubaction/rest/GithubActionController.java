@@ -20,8 +20,6 @@ package com.publicissapient.kpidashboard.apis.githubaction.rest;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +31,9 @@ import com.publicissapient.kpidashboard.apis.githubaction.model.GithubActionRepo
 import com.publicissapient.kpidashboard.apis.githubaction.model.GithubActionWorkflowsDTO;
 import com.publicissapient.kpidashboard.apis.githubaction.service.GithubActionToolConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor

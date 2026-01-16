@@ -22,14 +22,6 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.http.HttpStatus;
@@ -48,6 +40,14 @@ import com.publicissapient.kpidashboard.common.model.comments.CommentSubmitDTO;
 import com.publicissapient.kpidashboard.common.model.comments.CommentViewRequestDTO;
 import com.publicissapient.kpidashboard.common.model.comments.CommentViewResponseDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -71,23 +71,23 @@ public class CommentsController {
 	 */
 	@Operation(
 			summary = "Get comments by KPI ID",
-			description = "Fetches comments for a specific KPI ID based on the provided request."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(
-					responseCode = "200",
-					description = "Successfully retrieved comments",
-					content = @Content(
-							mediaType = "application/json",
-							schema = @Schema(implementation = ServiceResponse.class),
-							examples = @ExampleObject(
-									value = "{\"success\": true, \"message\": \"Found comments\", \"data\": {\"kpiId\": \"123\", \"comments\": [...]}}"
-							)
-					)
-			),
-			@ApiResponse(responseCode = "400", description = "Invalid request payload"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description = "Fetches comments for a specific KPI ID based on the provided request.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved comments",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class),
+										examples =
+												@ExampleObject(
+														value =
+																"{\"success\": true, \"message\": \"Found comments\", \"data\": {\"kpiId\": \"123\", \"comments\": [...]}}"))),
+				@ApiResponse(responseCode = "400", description = "Invalid request payload"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/getCommentsByKpiId")
 	public ResponseEntity<ServiceResponse> getCommentsByKPI(
 			@RequestBody CommentRequestDTO commentRequestDTO) {
@@ -115,23 +115,23 @@ public class CommentsController {
 	 */
 	@Operation(
 			summary = "Submit a comment",
-			description = "Saves a comment for a specific KPI and project."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(
-					responseCode = "200",
-					description = "Comment submitted successfully",
-					content = @Content(
-							mediaType = "application/json",
-							schema = @Schema(implementation = ServiceResponse.class),
-							examples = @ExampleObject(
-									value = "{\"success\": true, \"message\": \"Your comment is submitted successfully.\", \"data\": {\"comment\": \"Great work!\"}}"
-							)
-					)
-			),
-			@ApiResponse(responseCode = "400", description = "Invalid request payload"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description = "Saves a comment for a specific KPI and project.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Comment submitted successfully",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class),
+										examples =
+												@ExampleObject(
+														value =
+																"{\"success\": true, \"message\": \"Your comment is submitted successfully.\", \"data\": {\"comment\": \"Great work!\"}}"))),
+				@ApiResponse(responseCode = "400", description = "Invalid request payload"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/submitComments")
 	public ResponseEntity<ServiceResponse> submitComments(
 			@Valid @RequestBody CommentSubmitDTO comment) {
@@ -157,23 +157,23 @@ public class CommentsController {
 	 */
 	@Operation(
 			summary = "Get KPI-wise comments count",
-			description = "Fetches the count of comments for each KPI based on the provided request."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(
-					responseCode = "200",
-					description = "Successfully retrieved comments count",
-					content = @Content(
-							mediaType = "application/json",
-							schema = @Schema(implementation = ServiceResponse.class),
-							examples = @ExampleObject(
-									value = "{\"success\": true, \"message\": \"Found Comments Count\", \"data\": {\"kpiId1\": 5, \"kpiId2\": 3}}"
-							)
-					)
-			),
-			@ApiResponse(responseCode = "400", description = "Invalid request payload"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description = "Fetches the count of comments for each KPI based on the provided request.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved comments count",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class),
+										examples =
+												@ExampleObject(
+														value =
+																"{\"success\": true, \"message\": \"Found Comments Count\", \"data\": {\"kpiId1\": 5, \"kpiId2\": 3}}"))),
+				@ApiResponse(responseCode = "400", description = "Invalid request payload"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/getCommentCount")
 	public ResponseEntity<ServiceResponse> getKpiWiseCommentsCount(
 			@RequestBody CommentViewRequestDTO commentViewRequestDTO) {
@@ -200,23 +200,23 @@ public class CommentsController {
 	 */
 	@Operation(
 			summary = "Delete a comment by ID",
-			description = "Deletes a comment based on the provided comment ID."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(
-					responseCode = "200",
-					description = "Comment deleted successfully",
-					content = @Content(
-							mediaType = "application/json",
-							schema = @Schema(implementation = ServiceResponse.class),
-							examples = @ExampleObject(
-									value = "{\"success\": true, \"message\": \"Successfully Deleted Comment\", \"data\": \"commentId123\"}"
-							)
-					)
-			),
-			@ApiResponse(responseCode = "404", description = "Comment not found"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description = "Deletes a comment based on the provided comment ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Comment deleted successfully",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class),
+										examples =
+												@ExampleObject(
+														value =
+																"{\"success\": true, \"message\": \"Successfully Deleted Comment\", \"data\": \"commentId123\"}"))),
+				@ApiResponse(responseCode = "404", description = "Comment not found"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@DeleteMapping("/deleteCommentById/{commentId}")
 	public ResponseEntity<ServiceResponse> deleteComments(@PathVariable String commentId) {
 		try {
@@ -237,23 +237,23 @@ public class CommentsController {
 	 */
 	@Operation(
 			summary = "Get comments summary",
-			description = "Fetches a summary of the latest comments for the provided KPIs."
-	)
-	@ApiResponses(value = {
-			@ApiResponse(
-					responseCode = "200",
-					description = "Successfully retrieved comments summary",
-					content = @Content(
-							mediaType = "application/json",
-							schema = @Schema(implementation = ServiceResponse.class),
-							examples = @ExampleObject(
-									value = "{\"success\": true, \"message\": \"Found comments\", \"data\": [{\"kpiId\": \"123\", \"latestComment\": \"Great work!\"}]}"
-							)
-					)
-			),
-			@ApiResponse(responseCode = "400", description = "Invalid request payload"),
-			@ApiResponse(responseCode = "500", description = "Internal server error")
-	})
+			description = "Fetches a summary of the latest comments for the provided KPIs.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved comments summary",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class),
+										examples =
+												@ExampleObject(
+														value =
+																"{\"success\": true, \"message\": \"Found comments\", \"data\": [{\"kpiId\": \"123\", \"latestComment\": \"Great work!\"}]}"))),
+				@ApiResponse(responseCode = "400", description = "Invalid request payload"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/commentsSummary")
 	public ResponseEntity<ServiceResponse> getCommentsSummary(
 			@RequestBody CommentViewRequestDTO commentViewRequestDTO) {

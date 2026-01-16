@@ -20,12 +20,6 @@ package com.publicissapient.kpidashboard.apis.common.rest;
 
 import java.util.List;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,24 +30,38 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.common.service.MetaDataIdentifierService;
 import com.publicissapient.kpidashboard.common.model.jira.MetadataIdentifierDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/templates")
 @RequiredArgsConstructor
-@Tag(name = "MetaData Identifier Controller", description = "APIs for MetaData Identifier Management")
+@Tag(
+		name = "MetaData Identifier Controller",
+		description = "APIs for MetaData Identifier Management")
 public class MetaDataIdentifierController {
 
 	private final MetaDataIdentifierService metaDataIdentifierService;
 
-	@Operation(summary = "Get Template Names",
-			description = "API to get template names")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Successfully fetched template names"),
-			@ApiResponse(responseCode = "400", description = "Bad Request"),
-			@ApiResponse(responseCode = "500", description = "Internal Server Error") })
+	@Operation(summary = "Get Template Names", description = "API to get template names")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully fetched template names"),
+				@ApiResponse(responseCode = "400", description = "Bad Request"),
+				@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			})
 	@GetMapping(value = {"/{basicConfigId}"})
 	public ResponseEntity<List<MetadataIdentifierDTO>> getTemplateNames(
-			@Parameter(description = "Basic Configuration Id", required = true, example = "60d21b8667d0d8992e610c85")
-			@PathVariable String basicConfigId) {
+			@Parameter(
+							description = "Basic Configuration Id",
+							required = true,
+							example = "60d21b8667d0d8992e610c85")
+					@PathVariable
+					String basicConfigId) {
 		return new ResponseEntity<>(metaDataIdentifierService.getTemplateDetails(), HttpStatus.OK);
 	}
 }
