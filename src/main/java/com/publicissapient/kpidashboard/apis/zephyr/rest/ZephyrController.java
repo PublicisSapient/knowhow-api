@@ -59,11 +59,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ZephyrController {
 
-	private ZephyrService zephyrService;
+	private final ZephyrService zephyrService;
 
-	private ZephyrServiceKanban zephyrServiceKanban;
+	private final ZephyrServiceKanban zephyrServiceKanban;
 
-	private CacheService cacheService;
+	private final CacheService cacheService;
 
 	/**
 	 * Gets zephyr data metrics.
