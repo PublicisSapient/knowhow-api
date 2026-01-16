@@ -4886,7 +4886,7 @@
     "groupId": 20,
     "thresholdValue": "",
     "kanban": false,
-    "chartType": null,
+    "chartType": "CumulativeMultilineChart",
     "kpiInfo": {
       "definition": "Measures the number of work items that are not adequately refined in time for development planning. This includes: Work items in the current sprint that do not meet DoR (Definition of Ready).",
       "details": [
@@ -4923,7 +4923,7 @@
     "groupId": 19,
     "thresholdValue": "",
     "kanban": false,
-    "chartType": null,
+    "chartType": "tabular-with-donut-chart",
     "kpiInfo": {
       "definition": "Measures the number of work items that are slated for the next sprint but still lack necessary refinement details. Work items tagged to the next sprint that lack sufficient refinement (e.g., missing description, acceptance criteria, etc).",
       "details": [

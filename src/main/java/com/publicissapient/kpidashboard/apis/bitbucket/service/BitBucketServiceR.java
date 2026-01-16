@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
+import com.publicissapient.kpidashboard.apis.auth.apikey.ApiKeyAuthenticationService;
 import com.publicissapient.kpidashboard.apis.bitbucket.factory.BitBucketKPIServiceFactory;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -120,22 +121,25 @@ public class BitBucketServiceR {
 					return responseList;
 				}
 
-				Object cachedData =
-						cacheService.getFromApplicationCache(
-								projectKeyCache,
-								KPISource.BITBUCKET.name(),
-								groupId,
-								kpiRequest.getSprintIncluded());
-				if (!kpiRequest
-								.getRequestTrackerId()
-								.toLowerCase()
-								.contains(KPISource.EXCEL.name().toLowerCase())
-						&& null != cachedData) {
-					log.info(
-							"[BITBUCKET][{}]. Fetching value from cache for {}",
-							kpiRequest.getRequestTrackerId(),
-							kpiRequest.getIds());
-					return (List<KpiElement>) cachedData;
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+					Object cachedData =
+							cacheService.getFromApplicationCache(
+									projectKeyCache,
+									KPISource.BITBUCKET.name(),
+									groupId,
+									kpiRequest.getSprintIncluded());
+					if (!kpiRequest
+									.getRequestTrackerId()
+									.toLowerCase()
+									.contains(KPISource.EXCEL.name().toLowerCase())
+							&& null != cachedData) {
+						log.info(
+								"[BITBUCKET][{}]. Fetching value from cache for {}",
+								kpiRequest.getRequestTrackerId(),
+								kpiRequest.getIds());
+						return (List<KpiElement>) cachedData;
+					}
 				}
 
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);

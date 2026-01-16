@@ -31,12 +31,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrganizationEntityKpiMaturity {
-    private String health;
-    private String levelName;
-    private String organizationEntityName;
-    private String organizationEntityNodeId;
+	private String health;
+	private String levelName;
+	private String organizationEntityName;
+	private String organizationEntityNodeId;
 
-    private Double completionPercentage;
+	private Double completionPercentage;
 
-    private List<MaturityScore> maturityScores;
+	private List<MaturityScore> maturityScores;
 }

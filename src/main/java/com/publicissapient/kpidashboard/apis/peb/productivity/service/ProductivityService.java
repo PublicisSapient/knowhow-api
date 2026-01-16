@@ -67,21 +67,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service class responsible for retrieving and calculating productivity metrics
- * for organizational hierarchy levels in the PEB (Potential Economical Benefit)
- * system.
+ * Service class responsible for retrieving and calculating productivity metrics for organizational
+ * hierarchy levels in the PEB (Potential Economical Benefit) system.
  *
- * <p>
- * This service provides comprehensive productivity analytics by aggregating
- * data from project-level calculations and presenting them at various
- * organizational hierarchy levels such project.
- * </p>
+ * <p>This service provides comprehensive productivity analytics by aggregating data from
+ * project-level calculations and presenting them at various organizational hierarchy levels such
+ * project.
  *
- * <p>
- * The service operates on a hierarchical model where productivity is calculated
- * at the project level and then aggregated upwards through the organizational
- * structure to provide insights at higher levels.
- * </p>
+ * <p>The service operates on a hierarchical model where productivity is calculated at the project
+ * level and then aggregated upwards through the organizational structure to provide insights at
+ * higher levels.
  *
  * @author vladinu
  */
@@ -95,9 +90,10 @@ public class ProductivityService {
 
 	private static final double TWO_DECIMAL_ROUNDING_COEFFICIENT = 100.0D;
 
-	private static final String PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE = "No productivity data was found for project with node id {} and name {}";
-	private static final String PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE = "Productivity trends"
-			+ " were successfully calculated";
+	private static final String PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE =
+			"No productivity data was found for project with node id {} and name {}";
+	private static final String PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE =
+			"Productivity trends" + " were successfully calculated";
 
 	private final FilterHelperService filterHelperService;
 
@@ -110,73 +106,73 @@ public class ProductivityService {
 	private final ForecastingManager forecastingManager;
 
 	@Builder
-	private record PEBProductivityCalculationContext(HierarchyLevelsData hierarchyLevelsData,
-			OrganizationLookup organizationLookup) {
-	}
+	private record PEBProductivityCalculationContext(
+			HierarchyLevelsData hierarchyLevelsData, OrganizationLookup organizationLookup) {}
 
 	/**
-	 * Data structure containing hierarchy level information required for
-	 * productivity calculations.
+	 * Data structure containing hierarchy level information required for productivity calculations.
 	 *
-	 * @param requestedLevel
-	 *            The hierarchy level requested by the user
-	 * @param projectLevel
-	 *            The project hierarchy level (lowest level where productivity is
-	 *            calculated)
+	 * @param requestedLevel The hierarchy level requested by the user
+	 * @param projectLevel The project hierarchy level (lowest level where productivity is calculated)
 	 */
 	@Builder
-	private record HierarchyLevelsData(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {
-	}
+	private record HierarchyLevelsData(HierarchyLevel requestedLevel, HierarchyLevel projectLevel) {}
 
 	@Builder
-	private record ProductivityTrendsProcessingResult(Map<Integer, CategoryScoresDTO> categoryScoresByDataPoints,
-			List<CategoryScoresDTO> categoryScoresTrendValues, int projectsWithoutProductivityData) {
-	}
+	private record ProductivityTrendsProcessingResult(
+			Map<Integer, CategoryScoresDTO> categoryScoresByDataPoints,
+			List<CategoryScoresDTO> categoryScoresTrendValues,
+			int projectsWithoutProductivityData) {}
 
 	/**
-	 * Retrieves comprehensive productivity data for a specified organizational
-	 * hierarchy level.
+	 * Retrieves comprehensive productivity data for a specified organizational hierarchy level.
 	 *
-	 * <p>
-	 * This method performs the following operations:
-	 * </p>
+	 * <p>This method performs the following operations:
+	 *
 	 * <ol>
-	 * <li>Validates the requested hierarchy level</li>
-	 * <li>Constructs the organizational hierarchy search capabilities</li>
-	 * <li>Retrieves project-level productivity data</li>
-	 * <li>Aggregates productivity scores by organizational entities</li>
-	 * <li>Calculates summary statistics and KPI trends</li>
+	 *   <li>Validates the requested hierarchy level
+	 *   <li>Constructs the organizational hierarchy search capabilities
+	 *   <li>Retrieves project-level productivity data
+	 *   <li>Aggregates productivity scores by organizational entities
+	 *   <li>Calculates summary statistics and KPI trends
 	 * </ol>
 	 *
-	 * <p>
-	 * The productivity data includes category scores for Quality, Speed,
-	 * Efficiency, and overall Productivity, along with detailed breakdowns by
-	 * organizational entities and trending information for key performance
-	 * indicators.
-	 * </p>
+	 * <p>The productivity data includes category scores for Quality, Speed, Efficiency, and overall
+	 * Productivity, along with detailed breakdowns by organizational entities and trending
+	 * information for key performance indicators.
 	 *
-	 * @param productivityRequest class representing the starting input required for generating the productivity response
-	 * @return ServiceResponse containing ProductivityResponse with summary and
-	 *         detailed productivity metrics
+	 * @param productivityRequest class representing the starting input required for generating the
+	 *     productivity response
+	 * @return ServiceResponse containing ProductivityResponse with summary and detailed productivity
+	 *     metrics
 	 */
 	public ServiceResponse getProductivityForLevel(ProductivityRequest productivityRequest) {
 		validateProductivityCalculationRequest(productivityRequest);
 		log.info("Started getting productivity data for level {}", productivityRequest.levelName());
 		long startTime = System.currentTimeMillis();
 
-		PEBProductivityCalculationContext pebProductivityCalculationContext = createPEBProductivityRequestForRequestedLevel(
-				productivityRequest.levelName(), productivityRequest.parentNodeId());
+		PEBProductivityCalculationContext pebProductivityCalculationContext =
+				createPEBProductivityRequestForRequestedLevel(
+						productivityRequest.levelName(), productivityRequest.parentNodeId());
 
 		// The "roots" will be the nodes corresponding to the requested hierarchy level
-		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds = createProjectChildrenGroupedByRequestedRootNodeIdsMap(
-				productivityRequest, pebProductivityCalculationContext);
+		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds =
+				createProjectChildrenGroupedByRequestedRootNodeIdsMap(
+						productivityRequest, pebProductivityCalculationContext);
 
-		Set<String> projectNodeIds = projectChildrenGroupedByRequestedRootNodeIds.values().stream()
-				.flatMap(Collection::stream).map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
+		Set<String> projectNodeIds =
+				projectChildrenGroupedByRequestedRootNodeIds.values().stream()
+						.flatMap(Collection::stream)
+						.map(AccountFilteredData::getNodeId)
+						.collect(Collectors.toSet());
 
-		Map<String, Productivity> productivityGroupedByNodeId = productivityCustomRepository
-				.getLatestProductivityByCalculationDateForProjects(projectNodeIds).stream()
-				.collect(Collectors.toMap(Productivity::getHierarchyEntityNodeId, productivity -> productivity));
+		Map<String, Productivity> productivityGroupedByNodeId =
+				productivityCustomRepository
+						.getLatestProductivityByCalculationDateForProjects(projectNodeIds)
+						.stream()
+						.collect(
+								Collectors.toMap(
+										Productivity::getHierarchyEntityNodeId, productivity -> productivity));
 
 		CategoryScoresDTO summaryCategoryScoresDTO = new CategoryScoresDTO();
 		List<OrganizationEntityProductivity> details = new ArrayList<>();
@@ -185,14 +181,20 @@ public class ProductivityService {
 		Map<String, KPIData> kpiDataGroupedById = new HashMap<>();
 
 		int totalNumberOfProjectsWithProductivityData = 0;
-		for (Map.Entry<String, List<AccountFilteredData>> nextChildHierarchyLevelNodeIdProjectTreeNodes : projectChildrenGroupedByRequestedRootNodeIds
-				.entrySet()) {
-			AccountFilteredData rootAccountData = pebProductivityCalculationContext.organizationLookup
-					.getAccountDataByNodeId(nextChildHierarchyLevelNodeIdProjectTreeNodes.getKey()).get(0);
+		for (Map.Entry<String, List<AccountFilteredData>>
+				nextChildHierarchyLevelNodeIdProjectTreeNodes :
+						projectChildrenGroupedByRequestedRootNodeIds.entrySet()) {
+			AccountFilteredData rootAccountData =
+					pebProductivityCalculationContext
+							.organizationLookup
+							.getAccountDataByNodeId(nextChildHierarchyLevelNodeIdProjectTreeNodes.getKey())
+							.get(0);
 			CategoryScoresDTO rootNodeCategoryScore = new CategoryScoresDTO();
 			int numberOfProjectsWithProductivityData = 0;
-			for (AccountFilteredData projectAccountData : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
-				Productivity projectProductivity = productivityGroupedByNodeId.get(projectAccountData.getNodeId());
+			for (AccountFilteredData projectAccountData :
+					nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
+				Productivity projectProductivity =
+						productivityGroupedByNodeId.get(projectAccountData.getNodeId());
 				if (projectProductivity != null) {
 					// For calculating the break-down details
 					numberOfProjectsWithProductivityData++;
@@ -202,13 +204,21 @@ public class ProductivityService {
 					// For calculating the summary
 					addProductivityScores(summaryCategoryScoresDTO, projectProductivity.getCategoryScores());
 
-					projectProductivity.getKpis().forEach(kpiData -> {
-						kpiTrendValuesGroupedById.computeIfAbsent(kpiData.getKpiId(), key -> new ArrayList<>());
-						kpiTrendValuesGroupedById.get(kpiData.getKpiId()).add(kpiData.getVariationPercentage());
-						kpiDataGroupedById.computeIfAbsent(kpiData.getKpiId(), key -> kpiData);
-					});
+					projectProductivity
+							.getKpis()
+							.forEach(
+									kpiData -> {
+										kpiTrendValuesGroupedById.computeIfAbsent(
+												kpiData.getKpiId(), key -> new ArrayList<>());
+										kpiTrendValuesGroupedById
+												.get(kpiData.getKpiId())
+												.add(kpiData.getVariationPercentage());
+										kpiDataGroupedById.computeIfAbsent(kpiData.getKpiId(), key -> kpiData);
+									});
 				} else {
-					log.info(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectAccountData.getNodeId(),
+					log.info(
+							PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE,
+							projectAccountData.getNodeId(),
 							projectAccountData.getNodeName());
 				}
 			}
@@ -216,94 +226,90 @@ public class ProductivityService {
 			if (numberOfProjectsWithProductivityData != 0) {
 				setAveragedProductivityScores(rootNodeCategoryScore, numberOfProjectsWithProductivityData);
 
-				details.add(OrganizationEntityProductivity.builder()
-						.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
-								.getHierarchyLevelName())
-						.organizationEntityName(rootAccountData.getNodeName()).categoryScores(rootNodeCategoryScore)
-						.build());
+				details.add(
+						OrganizationEntityProductivity.builder()
+								.levelName(
+										pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+												.getHierarchyLevelName())
+								.organizationEntityName(rootAccountData.getNodeName())
+								.categoryScores(rootNodeCategoryScore)
+								.build());
 			} else {
 				log.info(
 						"The child hierarchy entity root with node id {} and name {} did not have any projects "
 								+ "containing productivity data",
-						rootAccountData.getNodeId(), rootAccountData.getNodeName());
+						rootAccountData.getNodeId(),
+						rootAccountData.getNodeName());
 			}
 		}
-		setAveragedProductivityScores(summaryCategoryScoresDTO, totalNumberOfProjectsWithProductivityData);
+		setAveragedProductivityScores(
+				summaryCategoryScoresDTO, totalNumberOfProjectsWithProductivityData);
 
 		ProductivityResponse productivityResponse = new ProductivityResponse();
 		productivityResponse.setDetails(details);
-		productivityResponse.setSummary(OrganizationEntityProductivity.builder()
-				.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
-				.categoryScores(summaryCategoryScoresDTO)
-				.trends(constructKPITrends(kpiTrendValuesGroupedById, kpiDataGroupedById)).build());
+		productivityResponse.setSummary(
+				OrganizationEntityProductivity.builder()
+						.levelName(
+								pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+										.getHierarchyLevelName())
+						.categoryScores(summaryCategoryScoresDTO)
+						.trends(constructKPITrends(kpiTrendValuesGroupedById, kpiDataGroupedById))
+						.build());
 
 		log.info(
 				"""
-						Successfully retrieved the productivity data for level {}. Total projects found under requested level: {}
-						Projects without productivity data: {}. Duration: {} ms
-						""",
-				productivityRequest.levelName(), projectNodeIds.size(), (projectNodeIds.size() - totalNumberOfProjectsWithProductivityData),
+				Successfully retrieved the productivity data for level {}. Total projects found under requested level: {}
+				Projects without productivity data: {}. Duration: {} ms
+				""",
+				productivityRequest.levelName(),
+				projectNodeIds.size(),
+				(projectNodeIds.size() - totalNumberOfProjectsWithProductivityData),
 				System.currentTimeMillis() - startTime);
-		return new ServiceResponse(Boolean.TRUE, "Productivity data was successfully retrieved", productivityResponse);
+		return new ServiceResponse(
+				Boolean.TRUE, "Productivity data was successfully retrieved", productivityResponse);
 	}
 
 	/**
-	 * Retrieves historical productivity trend data for a specified organizational
-	 * hierarchy level over configurable time periods.
+	 * Retrieves historical productivity trend data for a specified organizational hierarchy level
+	 * over configurable time periods.
 	 *
-	 * <p>
-	 * This method performs comprehensive temporal analysis of productivity metrics
-	 * by aggregating project-level data across specified time intervals. The
-	 * analysis includes trend calculations, category variations, and chronological
-	 * productivity evolution tracking.
-	 * </p>
+	 * <p>This method performs comprehensive temporal analysis of productivity metrics by aggregating
+	 * project-level data across specified time intervals. The analysis includes trend calculations,
+	 * category variations, and chronological productivity evolution tracking.
 	 *
-	 * <p>
-	 * The method executes the following operations:
-	 * </p>
+	 * <p>The method executes the following operations:
+	 *
 	 * <ol>
-	 * <li>Validates the requested hierarchy level and constructs organizational
-	 * tree structure</li>
-	 * <li>Retrieves temporally grouped productivity data from the repository
-	 * layer</li>
-	 * <li>Aggregates productivity scores across projects for each time period</li>
-	 * <li>Calculates averaged category scores (Quality, Speed, Efficiency,
-	 * Productivity)</li>
-	 * <li>Computes percentage variations between first and last data points</li>
-	 * <li>Returns chronologically ordered trend data with variation analysis</li>
+	 *   <li>Validates the requested hierarchy level and constructs organizational tree structure
+	 *   <li>Retrieves temporally grouped productivity data from the repository layer
+	 *   <li>Aggregates productivity scores across projects for each time period
+	 *   <li>Calculates averaged category scores (Quality, Speed, Efficiency, Productivity)
+	 *   <li>Computes percentage variations between first and last data points
+	 *   <li>Returns chronologically ordered trend data with variation analysis
 	 * </ol>
 	 *
-	 * <p>
-	 * <strong>Data Averaging:</strong> Category scores are averaged across all
-	 * projects with productivity data within each time period. Projects without
-	 * data are logged but excluded from calculations to maintain accuracy.
-	 * </p>
+	 * <p><strong>Data Averaging:</strong> Category scores are averaged across all projects with
+	 * productivity data within each time period. Projects without data are logged but excluded from
+	 * calculations to maintain accuracy.
 	 *
-	 * @param levelName
-	 *            The name of the organizational hierarchy level for which to
-	 *            retrieve productivity trends (e.g., "engagement", "account",
-	 *            "vertical", "bu"). Must correspond to a valid hierarchy level
-	 *            configured in the system. The level determines the scope of data
-	 *            aggregation and must be above the project level in the
-	 *            organizational hierarchy.
-	 * @param temporalAggregationUnit
-	 *            The temporal unit for grouping productivity data over time.
-	 *            Supported units include WEEK, MONTH, QUARTER, YEAR. Determines the
-	 *            granularity of trend analysis and affects the number of data
-	 *            points returned within the specified limit.
-	 * @param limit
-	 *            Maximum number of temporal periods to retrieve, counted from the
-	 *            most recent data backwards. Must be positive.
-	 * @return ServiceResponse containing {@link ProductivityTrendsResponse} with
-	 *         temporal grouping metadata, hierarchy level name, category variations
-	 *         between first and last periods, and chronologically ordered list of
-	 *         {@link CategoryScoresDTO} objects representing productivity metrics
-	 *         for each time period. Returns success response with empty trends data
-	 *         if no productivity information is found for the specified criteria.
+	 * @param levelName The name of the organizational hierarchy level for which to retrieve
+	 *     productivity trends (e.g., "engagement", "account", "vertical", "bu"). Must correspond to a
+	 *     valid hierarchy level configured in the system. The level determines the scope of data
+	 *     aggregation and must be above the project level in the organizational hierarchy.
+	 * @param temporalAggregationUnit The temporal unit for grouping productivity data over time.
+	 *     Supported units include WEEK, MONTH, QUARTER, YEAR. Determines the granularity of trend
+	 *     analysis and affects the number of data points returned within the specified limit.
+	 * @param limit Maximum number of temporal periods to retrieve, counted from the most recent data
+	 *     backwards. Must be positive.
+	 * @return ServiceResponse containing {@link ProductivityTrendsResponse} with temporal grouping
+	 *     metadata, hierarchy level name, category variations between first and last periods, and
+	 *     chronologically ordered list of {@link CategoryScoresDTO} objects representing productivity
+	 *     metrics for each time period. Returns success response with empty trends data if no
+	 *     productivity information is found for the specified criteria.
 	 */
 	@SuppressWarnings("java:S1941")
-	public ServiceResponse getProductivityTrendsForLevel(String levelName,
-			TemporalAggregationUnit temporalAggregationUnit, int limit) {
+	public ServiceResponse getProductivityTrendsForLevel(
+			String levelName, TemporalAggregationUnit temporalAggregationUnit, int limit) {
 		if (limit < 0) {
 			throw new BadRequestException("The 'limit' cannot be negative");
 		}
@@ -312,68 +318,90 @@ public class ProductivityService {
 			throw new BadRequestException("The 'temporalAggregationUnit' cannot be null");
 		}
 
-		log.info("Started getting productivity trends for level: {}, temporalAggregationUnit: {} and limit: {}",
-				levelName, temporalAggregationUnit, limit);
+		log.info(
+				"Started getting productivity trends for level: {}, temporalAggregationUnit: {} and limit: {}",
+				levelName,
+				temporalAggregationUnit,
+				limit);
 		long startTime = System.currentTimeMillis();
 
-		PEBProductivityCalculationContext pebProductivityCalculationContext = createPEBProductivityRequestForRequestedLevel(
-				levelName, StringUtils.EMPTY);
+		PEBProductivityCalculationContext pebProductivityCalculationContext =
+				createPEBProductivityRequestForRequestedLevel(levelName, StringUtils.EMPTY);
 
 		// The "roots" will be the nodes corresponding to the first hierarchy child
 		// level after the requested one
-		Map<String, List<AccountFilteredData>> rootNodeIdProjectChildren = pebProductivityCalculationContext.organizationLookup
-				.getChildrenGroupedByParentNodeIds(
+		Map<String, List<AccountFilteredData>> rootNodeIdProjectChildren =
+				pebProductivityCalculationContext.organizationLookup.getChildrenGroupedByParentNodeIds(
 						pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel(),
 						pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
 
-		Set<String> projectNodeIds = rootNodeIdProjectChildren.values().stream().flatMap(Collection::stream)
-				.map(AccountFilteredData::getNodeId).collect(Collectors.toSet());
+		Set<String> projectNodeIds =
+				rootNodeIdProjectChildren.values().stream()
+						.flatMap(Collection::stream)
+						.map(AccountFilteredData::getNodeId)
+						.collect(Collectors.toSet());
 
-		List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit = this.productivityCustomRepository
-				.getProductivitiesGroupedByTemporalUnit(projectNodeIds, temporalAggregationUnit, limit);
+		List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit =
+				this.productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(
+						projectNodeIds, temporalAggregationUnit, limit);
 
 		if (CollectionUtils.isEmpty(productivitiesGroupedByTemporalUnit)) {
-			log.debug("No productivity data could be found for level: {}, temporalAggregationUnit: {} and limit: {}",
-					levelName, temporalAggregationUnit, limit);
+			log.debug(
+					"No productivity data could be found for level: {}, temporalAggregationUnit: {} and limit: {}",
+					levelName,
+					temporalAggregationUnit,
+					limit);
 
-			return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
-					ProductivityTrendsResponse.builder().temporalGrouping(temporalAggregationUnit)
-							.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
-									.getHierarchyLevelName())
+			return new ServiceResponse(
+					Boolean.TRUE,
+					PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
+					ProductivityTrendsResponse.builder()
+							.temporalGrouping(temporalAggregationUnit)
+							.levelName(
+									pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+											.getHierarchyLevelName())
 							.build());
 		}
 
-		ProductivityTrendsProcessingResult productivityTrendsProcessingResult = calculateProductivityTrends(
-				productivitiesGroupedByTemporalUnit, rootNodeIdProjectChildren);
+		ProductivityTrendsProcessingResult productivityTrendsProcessingResult =
+				calculateProductivityTrends(productivitiesGroupedByTemporalUnit, rootNodeIdProjectChildren);
 
-		CategoryVariations categoryVariations = calculateCategoryVariations(
-				productivityTrendsProcessingResult.categoryScoresByDataPoints);
+		CategoryVariations categoryVariations =
+				calculateCategoryVariations(productivityTrendsProcessingResult.categoryScoresByDataPoints);
 
 		log.info(
 				"""
-						Successfully retrieved the productivity trends for level {}. Total projects found under requested level: {}
-						Projects without productivity data: {}. Duration: {} ms
-						""",
-				levelName, projectNodeIds.size(), productivityTrendsProcessingResult.projectsWithoutProductivityData,
+				Successfully retrieved the productivity trends for level {}. Total projects found under requested level: {}
+				Projects without productivity data: {}. Duration: {} ms
+				""",
+				levelName,
+				projectNodeIds.size(),
+				productivityTrendsProcessingResult.projectsWithoutProductivityData,
 				System.currentTimeMillis() - startTime);
 
-		DataCount productivityForecastDataCount = forecastTheNextOverallValue(productivityTrendsProcessingResult);
+		DataCount productivityForecastDataCount =
+				forecastTheNextOverallValue(productivityTrendsProcessingResult);
 
 		ForecastData overallForecast = ForecastData.builder().build();
 		if (CollectionUtils.isEmpty(productivityForecastDataCount.getForecasts())) {
 			log.debug("No productivity forecast could be generated for level: {}", levelName);
 		} else {
-			overallForecast = ForecastData.builder()
-					.forecastingModel(pebConfig.getForecastingModel().getDisplayName())
-					.value((Double) productivityForecastDataCount.getForecasts().get(0).getValue())
-					.category("overall")
-					.build();
+			overallForecast =
+					ForecastData.builder()
+							.forecastingModel(pebConfig.getForecastingModel().getDisplayName())
+							.value((Double) productivityForecastDataCount.getForecasts().get(0).getValue())
+							.category("overall")
+							.build();
 		}
 
-		return new ServiceResponse(Boolean.TRUE, PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
+		return new ServiceResponse(
+				Boolean.TRUE,
+				PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
 				ProductivityTrendsResponse.builder()
 						.temporalGrouping(temporalAggregationUnit)
-						.levelName(pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getHierarchyLevelName())
+						.levelName(
+								pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+										.getHierarchyLevelName())
 						.categoryVariations(categoryVariations)
 						.categoryScores(productivityTrendsProcessingResult.categoryScoresTrendValues)
 						.forecasts(List.of(overallForecast))
@@ -383,28 +411,29 @@ public class ProductivityService {
 	/**
 	 * Forecasts the next overall productivity value based on historical trend data.
 	 *
-	 * <p>This method processes a list of category scores from the productivity trends
-	 * and uses a forecasting manager to predict the next overall productivity value.
-	 * It constructs a list of {@link DataCount} objects from the trend values, then
-	 * uses the forecasting manager to add forecast data to a new {@link DataCount}
-	 * object, which is returned as the result.</p>
+	 * <p>This method processes a list of category scores from the productivity trends and uses a
+	 * forecasting manager to predict the next overall productivity value. It constructs a list of
+	 * {@link DataCount} objects from the trend values, then uses the forecasting manager to add
+	 * forecast data to a new {@link DataCount} object, which is returned as the result.
 	 *
-	 * @param productivityTrendsProcessingResult the result object containing historical
-	 *                                           productivity trend data
+	 * @param productivityTrendsProcessingResult the result object containing historical productivity
+	 *     trend data
 	 * @return a {@link DataCount} object containing the forecasted overall productivity value
 	 */
-	private DataCount forecastTheNextOverallValue(ProductivityTrendsProcessingResult productivityTrendsProcessingResult) {
+	private DataCount forecastTheNextOverallValue(
+			ProductivityTrendsProcessingResult productivityTrendsProcessingResult) {
 		List<DataCount> dataCounts = new ArrayList<>();
-		productivityTrendsProcessingResult.categoryScoresTrendValues().forEach(
-				categoryScoresDTO -> {
-					DataCount dataCount = new DataCount();
-					dataCount.setValue(categoryScoresDTO.getOverall());
-					dataCounts.add(dataCount);
-				});
+		productivityTrendsProcessingResult
+				.categoryScoresTrendValues()
+				.forEach(
+						categoryScoresDTO -> {
+							DataCount dataCount = new DataCount();
+							dataCount.setValue(categoryScoresDTO.getOverall());
+							dataCounts.add(dataCount);
+						});
 
-		DataCount productivityForecastDataCount = DataCount.builder()
-				.forecastingModel(pebConfig.getForecastingModel().getName())
-				.build();
+		DataCount productivityForecastDataCount =
+				DataCount.builder().forecastingModel(pebConfig.getForecastingModel().getName()).build();
 
 		Optional.ofNullable(forecastingManager)
 				.ifPresent(
@@ -415,75 +444,56 @@ public class ProductivityService {
 	}
 
 	/**
-	 * Processes temporal productivity data to calculate aggregated trend metrics
-	 * across organizational projects.
+	 * Processes temporal productivity data to calculate aggregated trend metrics across
+	 * organizational projects.
 	 *
-	 * <p>
-	 * This method performs comprehensive data aggregation and trend calculation by
-	 * processing productivity data grouped by temporal units (weeks, months,
-	 * quarters, etc.) and computing averaged category scores across all projects
-	 * within each time period. The processing ensures accurate trend analysis by
-	 * handling missing data gracefully and maintaining chronological ordering.
-	 * </p>
+	 * <p>This method performs comprehensive data aggregation and trend calculation by processing
+	 * productivity data grouped by temporal units (weeks, months, quarters, etc.) and computing
+	 * averaged category scores across all projects within each time period. The processing ensures
+	 * accurate trend analysis by handling missing data gracefully and maintaining chronological
+	 * ordering.
 	 *
-	 * <p>
-	 * The method executes the following data processing operations:
-	 * </p>
+	 * <p>The method executes the following data processing operations:
+	 *
 	 * <ol>
-	 * <li>Iterates through each temporal grouping in chronological order</li>
-	 * <li>Groups productivity data by hierarchy entity node ID for efficient
-	 * lookup</li>
-	 * <li>Creates category score DTOs with temporal grouping start dates</li>
-	 * <li>Aggregates productivity scores across all projects for each time
-	 * period</li>
-	 * <li>Calculates averaged scores based on actual productivity data count</li>
-	 * <li>Tracks projects without productivity data for monitoring purposes</li>
-	 * <li>Builds indexed mapping for category variation calculations</li>
+	 *   <li>Iterates through each temporal grouping in chronological order
+	 *   <li>Groups productivity data by hierarchy entity node ID for efficient lookup
+	 *   <li>Creates category score DTOs with temporal grouping start dates
+	 *   <li>Aggregates productivity scores across all projects for each time period
+	 *   <li>Calculates averaged scores based on actual productivity data count
+	 *   <li>Tracks projects without productivity data for monitoring purposes
+	 *   <li>Builds indexed mapping for category variation calculations
 	 * </ol>
 	 *
-	 * <p>
-	 * <strong>Data Aggregation Strategy:</strong> The method accumulates category
-	 * scores (Overall, Quality, Speed, Efficiency, Productivity) from all projects
-	 * that have productivity data within each temporal period. Projects without
-	 * data are logged but excluded from calculations to prevent skewing averages
-	 * with zero values.
-	 * </p>
+	 * <p><strong>Data Aggregation Strategy:</strong> The method accumulates category scores (Overall,
+	 * Quality, Speed, Efficiency, Productivity) from all projects that have productivity data within
+	 * each temporal period. Projects without data are logged but excluded from calculations to
+	 * prevent skewing averages with zero values.
 	 *
-	 * <p>
-	 * <strong>Temporal Grouping Handling:</strong> Each temporal grouping
-	 * represents a specific time period (e.g., week of 2024-01-15) and contains all
-	 * productivity calculations that fall within that period. The method preserves
-	 * the period start date in the resulting DTOs for client-side temporal
-	 * visualization.
-	 * </p>
+	 * <p><strong>Temporal Grouping Handling:</strong> Each temporal grouping represents a specific
+	 * time period (e.g., week of 2024-01-15) and contains all productivity calculations that fall
+	 * within that period. The method preserves the period start date in the resulting DTOs for
+	 * client-side temporal visualization.
 	 *
-	 * @param productivitiesGroupedByTemporalUnit
-	 *            List of temporal groupings containing productivity data organized
-	 *            by time periods. Each grouping contains all productivity
-	 *            calculations that fall within a specific temporal unit (week,
-	 *            month, etc.). Must not be null or empty. The list should be
-	 *            ordered chronologically from oldest to newest.
-	 * @param rootNodeIdProjectChildren
-	 *            Map linking root organizational entity node IDs to their
-	 *            descendant project nodes. Used to traverse the organizational
-	 *            hierarchy and identify which projects belong to each root entity.
-	 *            Keys are root node IDs, values are lists of project nodes. Must
-	 *            not be null.
+	 * @param productivitiesGroupedByTemporalUnit List of temporal groupings containing productivity
+	 *     data organized by time periods. Each grouping contains all productivity calculations that
+	 *     fall within a specific temporal unit (week, month, etc.). Must not be null or empty. The
+	 *     list should be ordered chronologically from oldest to newest.
+	 * @param rootNodeIdProjectChildren Map linking root organizational entity node IDs to their
+	 *     descendant project nodes. Used to traverse the organizational hierarchy and identify which
+	 *     projects belong to each root entity. Keys are root node IDs, values are lists of project
+	 *     nodes. Must not be null.
 	 * @return ProductivityTrendsProcessingResult containing three components:
-	 *         <ul>
-	 *         <li>categoryScoresByDataPoints: LinkedHashMap indexed by data point
-	 *         number (0, 1, 2...) mapping to CategoryScoresDTO objects, used for
-	 *         category variation calculations</li>
-	 *         <li>categoryScoresTrendValues: Sequential list of CategoryScoresDTO
-	 *         objects representing the chronological trend data, suitable for
-	 *         time-series visualization</li>
-	 *         <li>projectsWithoutProductivityData: Count of project instances that
-	 *         lacked productivity data during the processing, used for monitoring
-	 *         data completeness</li>
-	 *         </ul>
-	 *         All CategoryScoresDTO objects contain averaged productivity scores
-	 *         and temporal grouping start dates. Returns empty collections if no
-	 *         valid productivity data is found.
+	 *     <ul>
+	 *       <li>categoryScoresByDataPoints: LinkedHashMap indexed by data point number (0, 1, 2...)
+	 *           mapping to CategoryScoresDTO objects, used for category variation calculations
+	 *       <li>categoryScoresTrendValues: Sequential list of CategoryScoresDTO objects representing
+	 *           the chronological trend data, suitable for time-series visualization
+	 *       <li>projectsWithoutProductivityData: Count of project instances that lacked productivity
+	 *           data during the processing, used for monitoring data completeness
+	 *     </ul>
+	 *     All CategoryScoresDTO objects contain averaged productivity scores and temporal grouping
+	 *     start dates. Returns empty collections if no valid productivity data is found.
 	 */
 	private ProductivityTrendsProcessingResult calculateProductivityTrends(
 			List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit,
@@ -493,87 +503,100 @@ public class ProductivityService {
 
 		int dataPoint = 0;
 		int projectsWithoutProductivityData = 0;
-		for (ProductivityTemporalGrouping productivityTemporalGrouping : productivitiesGroupedByTemporalUnit) {
-			Map<String, List<Productivity>> productivitiesGroupedByNodeId = productivityTemporalGrouping
-					.getProductivities().stream()
-					.collect(Collectors.groupingBy(Productivity::getHierarchyEntityNodeId));
+		for (ProductivityTemporalGrouping productivityTemporalGrouping :
+				productivitiesGroupedByTemporalUnit) {
+			Map<String, List<Productivity>> productivitiesGroupedByNodeId =
+					productivityTemporalGrouping.getProductivities().stream()
+							.collect(Collectors.groupingBy(Productivity::getHierarchyEntityNodeId));
 
 			CategoryScoresDTO categoryScoresDTO = new CategoryScoresDTO();
-			categoryScoresDTO.setTemporalGroupingStartDate(productivityTemporalGrouping.getPeriodStart().toString());
+			categoryScoresDTO.setTemporalGroupingStartDate(
+					productivityTemporalGrouping.getPeriodStart().toString());
 			categoryScoresByDataPoints.putIfAbsent(dataPoint, categoryScoresDTO);
 
-			for (Map.Entry<String, List<AccountFilteredData>> nextChildHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren
-					.entrySet()) {
-				for (AccountFilteredData projectTreeNode : nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
-					List<Productivity> productivities = productivitiesGroupedByNodeId.get(projectTreeNode.getNodeId());
+			for (Map.Entry<String, List<AccountFilteredData>>
+					nextChildHierarchyLevelNodeIdProjectTreeNodes : rootNodeIdProjectChildren.entrySet()) {
+				for (AccountFilteredData projectTreeNode :
+						nextChildHierarchyLevelNodeIdProjectTreeNodes.getValue()) {
+					List<Productivity> productivities =
+							productivitiesGroupedByNodeId.get(projectTreeNode.getNodeId());
 					if (CollectionUtils.isNotEmpty(productivities)) {
-						productivities.stream().filter(Objects::nonNull)
-								.forEach(productivity -> addProductivityScores(categoryScoresDTO,
-										productivity.getCategoryScores()));
+						productivities.stream()
+								.filter(Objects::nonNull)
+								.forEach(
+										productivity ->
+												addProductivityScores(categoryScoresDTO, productivity.getCategoryScores()));
 					} else {
-						log.debug(PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE, projectTreeNode.getNodeId(),
+						log.debug(
+								PROJECT_HAS_NO_PRODUCTIVITY_DATA_L0G_MESSAGE,
+								projectTreeNode.getNodeId(),
 								projectTreeNode.getNodeName());
 						projectsWithoutProductivityData++;
 					}
 				}
 			}
-			setAveragedProductivityScores(categoryScoresDTO, productivityTemporalGrouping.getProductivities().size());
+			setAveragedProductivityScores(
+					categoryScoresDTO, productivityTemporalGrouping.getProductivities().size());
 			categoryScoresTrendValues.add(categoryScoresDTO);
 			dataPoint++;
 		}
 
-		return ProductivityTrendsProcessingResult.builder().categoryScoresByDataPoints(categoryScoresByDataPoints)
+		return ProductivityTrendsProcessingResult.builder()
+				.categoryScoresByDataPoints(categoryScoresByDataPoints)
 				.categoryScoresTrendValues(categoryScoresTrendValues)
-				.projectsWithoutProductivityData(projectsWithoutProductivityData).build();
+				.projectsWithoutProductivityData(projectsWithoutProductivityData)
+				.build();
 	}
 
 	/**
-	 * Creates a PEB productivity request object containing all necessary data for
-	 * productivity calculations.
+	 * Creates a PEB productivity request object containing all necessary data for productivity
+	 * calculations.
 	 *
-	 * @param levelName
-	 *            The name of the hierarchy level for which to create the request
-	 * @return PEBProductivityRequest containing hierarchy data and account tree
-	 *         structure
+	 * @param levelName The name of the hierarchy level for which to create the request
+	 * @return PEBProductivityRequest containing hierarchy data and account tree structure
 	 */
-	private PEBProductivityCalculationContext createPEBProductivityRequestForRequestedLevel(String levelName,
-			String parentNodeId) {
-		PEBProductivityCalculationContext.PEBProductivityCalculationContextBuilder pebProductivityRequestBuilder = PEBProductivityCalculationContext
-				.builder();
-		HierarchyLevelsData hierarchyLevelsData = constructHierarchyLevelsDataByRequestedLevelName(levelName);
-		OrganizationLookup organizationLookup = constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData,
-				parentNodeId);
-		return pebProductivityRequestBuilder.hierarchyLevelsData(hierarchyLevelsData)
-				.organizationLookup(organizationLookup).build();
+	private PEBProductivityCalculationContext createPEBProductivityRequestForRequestedLevel(
+			String levelName, String parentNodeId) {
+		PEBProductivityCalculationContext.PEBProductivityCalculationContextBuilder
+				pebProductivityRequestBuilder = PEBProductivityCalculationContext.builder();
+		HierarchyLevelsData hierarchyLevelsData =
+				constructHierarchyLevelsDataByRequestedLevelName(levelName);
+		OrganizationLookup organizationLookup =
+				constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData, parentNodeId);
+		return pebProductivityRequestBuilder
+				.hierarchyLevelsData(hierarchyLevelsData)
+				.organizationLookup(organizationLookup)
+				.build();
 	}
 
 	/**
-	 * Constructs the organizational hierarchy tree structure based on user access
-	 * permissions.
+	 * Constructs the organizational hierarchy tree structure based on user access permissions.
 	 *
-	 * <p>
-	 * This method filters the organizational hierarchy data to include only
-	 * entities that the current user has access to, within the range from the first
-	 * child level after the requested level down to the project level.
-	 * </p>
+	 * <p>This method filters the organizational hierarchy data to include only entities that the
+	 * current user has access to, within the range from the first child level after the requested
+	 * level down to the project level.
 	 *
-	 * @param hierarchyLevelsData Data structure containing hierarchy level information required for productivity calculations
-	 * @param parentNodeId String representing the parent organization entity node id for which to retrieve the productivity data
-	 * @return List of TreeNode representing the root nodes of the accessible
-	 *         hierarchy tree
+	 * @param hierarchyLevelsData Data structure containing hierarchy level information required for
+	 *     productivity calculations
+	 * @param parentNodeId String representing the parent organization entity node id for which to
+	 *     retrieve the productivity data
+	 * @return List of TreeNode representing the root nodes of the accessible hierarchy tree
 	 */
-	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(HierarchyLevelsData hierarchyLevelsData,
-			String parentNodeId) {
+	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(
+			HierarchyLevelsData hierarchyLevelsData, String parentNodeId) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
 		accountFilterRequest.setKanban(false);
 		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = accountHierarchyServiceImpl
-				.getFilteredList(accountFilterRequest).stream()
-				.filter(accountFilteredData -> accountFilteredData != null
-						&& StringUtils.isNotEmpty(accountFilteredData.getNodeId())
-						&& accountFilteredData.getLevel() <= hierarchyLevelsData.projectLevel.getLevel())
-				.collect(Collectors.toSet());
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo =
+				accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
+						.filter(
+								accountFilteredData ->
+										accountFilteredData != null
+												&& StringUtils.isNotEmpty(accountFilteredData.getNodeId())
+												&& accountFilteredData.getLevel()
+														<= hierarchyLevelsData.projectLevel.getLevel())
+						.collect(Collectors.toSet());
 
 		if (CollectionUtils.isEmpty(hierarchyDataUserHasAccessTo)) {
 			throw new ForbiddenException("Current user doesn't have access to any hierarchy data");
@@ -582,21 +605,29 @@ public class ProductivityService {
 		OrganizationLookup organizationLookup = new OrganizationLookup(hierarchyDataUserHasAccessTo);
 
 		if (StringUtils.isNotBlank(parentNodeId)) {
-			List<AccountFilteredData> accountFilteredData = organizationLookup.getAccountDataByNodeId(parentNodeId);
+			List<AccountFilteredData> accountFilteredData =
+					organizationLookup.getAccountDataByNodeId(parentNodeId);
 			if (CollectionUtils.isEmpty(accountFilteredData)) {
 				throw new BadRequestException(
-						String.format("Current user doesn't have access to the parent node id %s or it does not exist",
+						String.format(
+								"Current user doesn't have access to the parent node id %s or it does not exist",
 								parentNodeId));
 			}
 			if (accountFilteredData.size() > 1) {
-				throw new BadRequestException(String.format(
-						"Multiple organization entities are corresponding with the parent node id '%s'", parentNodeId));
+				throw new BadRequestException(
+						String.format(
+								"Multiple organization entities are corresponding with the parent node id '%s'",
+								parentNodeId));
 			}
-			if (accountFilteredData.stream().anyMatch(
-					parentNodeData -> hierarchyLevelsData.requestedLevel.getLevel() <= parentNodeData.getLevel())) {
-				throw new BadRequestException(String.format(
-						"The requested level name '%s' is not corresponding to a " + "child level of the parent node",
-						hierarchyLevelsData.requestedLevel.getHierarchyLevelName()));
+			if (accountFilteredData.stream()
+					.anyMatch(
+							parentNodeData ->
+									hierarchyLevelsData.requestedLevel.getLevel() <= parentNodeData.getLevel())) {
+				throw new BadRequestException(
+						String.format(
+								"The requested level name '%s' is not corresponding to a "
+										+ "child level of the parent node",
+								hierarchyLevelsData.requestedLevel.getHierarchyLevelName()));
 			}
 		}
 
@@ -604,59 +635,67 @@ public class ProductivityService {
 	}
 
 	/**
-	 * Constructs hierarchy levels data required for productivity calculations based
-	 * on the requested level name.
+	 * Constructs hierarchy levels data required for productivity calculations based on the requested
+	 * level name.
 	 *
-	 * <p>
-	 * This method validates the requested level, ensures it exists and is
-	 * supported, and identifies the related hierarchy levels needed for the
-	 * calculation process.
-	 * </p>
+	 * <p>This method validates the requested level, ensures it exists and is supported, and
+	 * identifies the related hierarchy levels needed for the calculation process.
 	 *
-	 * @param levelName
-	 *            The name of the requested hierarchy level
-	 * @return HierarchyLevelsData containing the requested level, its child level,
-	 *         and project level
+	 * @param levelName The name of the requested hierarchy level
+	 * @return HierarchyLevelsData containing the requested level, its child level, and project level
 	 */
 	private HierarchyLevelsData constructHierarchyLevelsDataByRequestedLevelName(String levelName) {
 		if (StringUtils.isEmpty(levelName)) {
 			throw new BadRequestException("Level name must not be empty");
 		}
 
-		Map<String, HierarchyLevel> allHierarchyLevels = this.filterHelperService.getHierarchyLevelMap(false);
+		Map<String, HierarchyLevel> allHierarchyLevels =
+				this.filterHelperService.getHierarchyLevelMap(false);
 		if (multipleLevelsAreCorrespondingToLevelName(levelName, allHierarchyLevels)) {
-			throw new InternalServerErrorException(String
-					.format("Multiple hierarchy levels were found corresponding to the level name '%s'", levelName));
+			throw new InternalServerErrorException(
+					String.format(
+							"Multiple hierarchy levels were found corresponding to the level name '%s'",
+							levelName));
 		}
 
-		Optional<HierarchyLevel> requestedHierarchyLevelOptional = this.accountHierarchyServiceImpl
-				.getHierarchyLevelByLevelName(levelName);
+		Optional<HierarchyLevel> requestedHierarchyLevelOptional =
+				this.accountHierarchyServiceImpl.getHierarchyLevelByLevelName(levelName);
 		if (requestedHierarchyLevelOptional.isEmpty()) {
 			throw new NotFoundException(String.format("Requested level '%s' does not exist", levelName));
 		}
 
-		Optional<HierarchyLevel> projectHierarchyLevelOptional = this.accountHierarchyServiceImpl
-				.getHierarchyLevelByLevelId(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		Optional<HierarchyLevel> projectHierarchyLevelOptional =
+				this.accountHierarchyServiceImpl.getHierarchyLevelByLevelId(
+						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
 		if (projectHierarchyLevelOptional.isEmpty()) {
-			throw new InternalServerErrorException("Could not find any hierarchy level relating to a 'project' entity");
+			throw new InternalServerErrorException(
+					"Could not find any hierarchy level relating to a 'project' entity");
 		}
 
 		HierarchyLevel requestedLevel = requestedHierarchyLevelOptional.get();
 		HierarchyLevel projectLevel = projectHierarchyLevelOptional.get();
 
 		if (requestedLevel.getLevel() > projectLevel.getLevel()) {
-			throw new BadRequestException(String.format("Requested level '%s' is too low on the hierarchy", levelName));
+			throw new BadRequestException(
+					String.format("Requested level '%s' is too low on the hierarchy", levelName));
 		}
 
-		return HierarchyLevelsData.builder().requestedLevel(requestedLevel).projectLevel(projectLevel).build();
+		return HierarchyLevelsData.builder()
+				.requestedLevel(requestedLevel)
+				.projectLevel(projectLevel)
+				.build();
 	}
 
-	private static boolean multipleLevelsAreCorrespondingToLevelName(String levelName,
-			Map<String, HierarchyLevel> allHierarchyLevels) {
+	private static boolean multipleLevelsAreCorrespondingToLevelName(
+			String levelName, Map<String, HierarchyLevel> allHierarchyLevels) {
 		return allHierarchyLevels.values().stream()
-				.filter(hierarchyLevel -> StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
-						&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
-				.toList().size() > 1;
+						.filter(
+								hierarchyLevel ->
+										StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
+												&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
+						.toList()
+						.size()
+				> 1;
 	}
 
 	private static double roundToTwoDecimals(double number) {
@@ -666,66 +705,70 @@ public class ProductivityService {
 	/**
 	 * Adds productivity scores from a project to the aggregated category scores.
 	 *
-	 * @param categoryScoresDTO
-	 *            The DTO to accumulate scores in
-	 * @param projectCategoryScores
-	 *            The project-level category scores to add
+	 * @param categoryScoresDTO The DTO to accumulate scores in
+	 * @param projectCategoryScores The project-level category scores to add
 	 */
-	private static void addProductivityScores(CategoryScoresDTO categoryScoresDTO,
-			CategoryScores projectCategoryScores) {
-		categoryScoresDTO.setOverall(categoryScoresDTO.getOverall() + projectCategoryScores.getOverall());
-		categoryScoresDTO.setQuality(categoryScoresDTO.getQuality() + projectCategoryScores.getQuality());
+	private static void addProductivityScores(
+			CategoryScoresDTO categoryScoresDTO, CategoryScores projectCategoryScores) {
+		categoryScoresDTO.setOverall(
+				categoryScoresDTO.getOverall() + projectCategoryScores.getOverall());
+		categoryScoresDTO.setQuality(
+				categoryScoresDTO.getQuality() + projectCategoryScores.getQuality());
 		categoryScoresDTO.setSpeed(categoryScoresDTO.getSpeed() + projectCategoryScores.getSpeed());
-		categoryScoresDTO.setEfficiency(categoryScoresDTO.getEfficiency() + projectCategoryScores.getEfficiency());
-		categoryScoresDTO
-				.setProductivity(categoryScoresDTO.getProductivity() + projectCategoryScores.getProductivity());
+		categoryScoresDTO.setEfficiency(
+				categoryScoresDTO.getEfficiency() + projectCategoryScores.getEfficiency());
+		categoryScoresDTO.setProductivity(
+				categoryScoresDTO.getProductivity() + projectCategoryScores.getProductivity());
 	}
 
 	/**
-	 * Calculates averaged productivity scores by dividing accumulated scores by the
-	 * entity count.
+	 * Calculates averaged productivity scores by dividing accumulated scores by the entity count.
 	 *
-	 * @param categoryScoresDTO
-	 *            The DTO containing accumulated scores
-	 * @param entityCount
-	 *            The number of entities to average across
+	 * @param categoryScoresDTO The DTO containing accumulated scores
+	 * @param entityCount The number of entities to average across
 	 */
-	private static void setAveragedProductivityScores(CategoryScoresDTO categoryScoresDTO, int entityCount) {
+	private static void setAveragedProductivityScores(
+			CategoryScoresDTO categoryScoresDTO, int entityCount) {
 		categoryScoresDTO.setOverall(roundToTwoDecimals(categoryScoresDTO.getOverall() / entityCount));
 		categoryScoresDTO.setQuality(roundToTwoDecimals(categoryScoresDTO.getQuality() / entityCount));
 		categoryScoresDTO.setSpeed(roundToTwoDecimals(categoryScoresDTO.getSpeed() / entityCount));
-		categoryScoresDTO.setEfficiency(roundToTwoDecimals(categoryScoresDTO.getEfficiency() / entityCount));
-		categoryScoresDTO.setProductivity(roundToTwoDecimals(categoryScoresDTO.getProductivity() / entityCount));
+		categoryScoresDTO.setEfficiency(
+				roundToTwoDecimals(categoryScoresDTO.getEfficiency() / entityCount));
+		categoryScoresDTO.setProductivity(
+				roundToTwoDecimals(categoryScoresDTO.getProductivity() / entityCount));
 	}
 
 	/**
 	 * Constructs KPI trends by categorizing them into positive and negative trends.
 	 *
-	 * <p>
-	 * This method calculates the average trend value for each KPI and categorizes
-	 * them as positive (>= 0) or negative (< 0) trends.
-	 * </p>
+	 * <p>This method calculates the average trend value for each KPI and categorizes them as positive
+	 * (>= 0) or negative (< 0) trends.
 	 *
-	 * @param kpiTrendValuesGroupedById
-	 *            Map of KPI IDs to their trend values
-	 * @param kpiDataGroupedById
-	 *            Map of KPI IDs to their metadata
+	 * @param kpiTrendValuesGroupedById Map of KPI IDs to their trend values
+	 * @param kpiDataGroupedById Map of KPI IDs to their metadata
 	 * @return KPITrends object containing categorized positive and negative trends
 	 */
-	private static KPITrends constructKPITrends(Map<String, List<Double>> kpiTrendValuesGroupedById,
+	private static KPITrends constructKPITrends(
+			Map<String, List<Double>> kpiTrendValuesGroupedById,
 			Map<String, KPIData> kpiDataGroupedById) {
 		List<KPITrend> positive = new ArrayList<>();
 		List<KPITrend> negative = new ArrayList<>();
 
 		double trendValue;
-		for (Map.Entry<String, List<Double>> kpiIdTrendValuesEntry : kpiTrendValuesGroupedById.entrySet()) {
+		for (Map.Entry<String, List<Double>> kpiIdTrendValuesEntry :
+				kpiTrendValuesGroupedById.entrySet()) {
 			KPIData kpiData = kpiDataGroupedById.get(kpiIdTrendValuesEntry.getKey());
-			trendValue = roundToTwoDecimals(
-					kpiIdTrendValuesEntry.getValue().stream().mapToDouble(Double::doubleValue).sum()
-							/ kpiIdTrendValuesEntry.getValue().size());
+			trendValue =
+					roundToTwoDecimals(
+							kpiIdTrendValuesEntry.getValue().stream().mapToDouble(Double::doubleValue).sum()
+									/ kpiIdTrendValuesEntry.getValue().size());
 
-			KPITrend kpiTrend = KPITrend.builder().trendValue(trendValue).kpiName(kpiData.getName())
-					.kpiCategory(kpiData.getCategory()).build();
+			KPITrend kpiTrend =
+					KPITrend.builder()
+							.trendValue(trendValue)
+							.kpiName(kpiData.getName())
+							.kpiCategory(kpiData.getCategory())
+							.build();
 			if (trendValue >= 0.0) {
 				positive.add(kpiTrend);
 			} else {
@@ -745,14 +788,20 @@ public class ProductivityService {
 		CategoryScoresDTO lastCategoryScoreDataPoint = categoryScoresByDataPoints.get(lastDataPoint);
 
 		return CategoryVariations.builder()
-				.productivity(calculateCategoryVariation(firstCategoryScoreDataPoint.getProductivity(),
-						lastCategoryScoreDataPoint.getProductivity()))
-				.speed(calculateCategoryVariation(firstCategoryScoreDataPoint.getSpeed(),
-						lastCategoryScoreDataPoint.getSpeed()))
-				.quality(calculateCategoryVariation(firstCategoryScoreDataPoint.getQuality(),
-						lastCategoryScoreDataPoint.getQuality()))
-				.efficiency(calculateCategoryVariation(firstCategoryScoreDataPoint.getEfficiency(),
-						lastCategoryScoreDataPoint.getEfficiency()))
+				.productivity(
+						calculateCategoryVariation(
+								firstCategoryScoreDataPoint.getProductivity(),
+								lastCategoryScoreDataPoint.getProductivity()))
+				.speed(
+						calculateCategoryVariation(
+								firstCategoryScoreDataPoint.getSpeed(), lastCategoryScoreDataPoint.getSpeed()))
+				.quality(
+						calculateCategoryVariation(
+								firstCategoryScoreDataPoint.getQuality(), lastCategoryScoreDataPoint.getQuality()))
+				.efficiency(
+						calculateCategoryVariation(
+								firstCategoryScoreDataPoint.getEfficiency(),
+								lastCategoryScoreDataPoint.getEfficiency()))
 				.build();
 	}
 
@@ -767,7 +816,8 @@ public class ProductivityService {
 				((lastPointValue - firstPointValue) / Math.abs(firstPointValue)) * PERCENTAGE_MULTIPLIER);
 	}
 
-	private static void validateProductivityCalculationRequest(ProductivityRequest productivityRequest) {
+	private static void validateProductivityCalculationRequest(
+			ProductivityRequest productivityRequest) {
 		if (productivityRequest == null) {
 			throw new BadRequestException("Productivity calculation request cannot be null");
 		}
@@ -776,23 +826,34 @@ public class ProductivityService {
 		}
 	}
 
-	private static Map<String, List<AccountFilteredData>> createProjectChildrenGroupedByRequestedRootNodeIdsMap(
-			ProductivityRequest productivityRequest,
-			PEBProductivityCalculationContext pebProductivityCalculationContext) {
+	private static Map<String, List<AccountFilteredData>>
+			createProjectChildrenGroupedByRequestedRootNodeIdsMap(
+					ProductivityRequest productivityRequest,
+					PEBProductivityCalculationContext pebProductivityCalculationContext) {
 
 		if (StringUtils.isNotBlank(productivityRequest.parentNodeId())) {
-			List<AccountFilteredData> childrenByParentNodeId = pebProductivityCalculationContext.organizationLookup()
-					.getChildrenByParentNodeId(productivityRequest.parentNodeId(),
-							pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel());
+			List<AccountFilteredData> childrenByParentNodeId =
+					pebProductivityCalculationContext
+							.organizationLookup()
+							.getChildrenByParentNodeId(
+									productivityRequest.parentNodeId(),
+									pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel());
 
-			Set<String> childrenNodeIds = childrenByParentNodeId.stream().map(AccountFilteredData::getNodeId)
-					.collect(Collectors.toSet());
-			return pebProductivityCalculationContext.organizationLookup().getChildrenGroupedByParentNodeIds(
-					childrenNodeIds, pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
+			Set<String> childrenNodeIds =
+					childrenByParentNodeId.stream()
+							.map(AccountFilteredData::getNodeId)
+							.collect(Collectors.toSet());
+			return pebProductivityCalculationContext
+					.organizationLookup()
+					.getChildrenGroupedByParentNodeIds(
+							childrenNodeIds,
+							pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
 		}
 
-		return pebProductivityCalculationContext.organizationLookup().getChildrenGroupedByParentNodeIds(
-				pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel(),
-				pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
+		return pebProductivityCalculationContext
+				.organizationLookup()
+				.getChildrenGroupedByParentNodeIds(
+						pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel.getLevel(),
+						pebProductivityCalculationContext.hierarchyLevelsData.projectLevel.getLevel());
 	}
 }

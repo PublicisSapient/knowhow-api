@@ -19,14 +19,17 @@
 package com.publicissapient.kpidashboard.apis.common.service.impl;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.ConfigDetailService;
+import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.config.dto.AnalyticsConfigResponse;
 import com.publicissapient.kpidashboard.apis.model.ConfigDetails;
 import com.publicissapient.kpidashboard.apis.model.DateRangeFilter;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementation of {@link ConfigDetailService}
@@ -34,10 +37,12 @@ import com.publicissapient.kpidashboard.apis.model.DateRangeFilter;
  * @author pkum34
  */
 @Service
+@RequiredArgsConstructor
 public class ConfigDetailsServiceImpl implements ConfigDetailService {
-	@Autowired private CustomApiConfig customApiConfig;
+	private final CustomApiConfig customApiConfig;
+	private final AnalyticsConfig analyticsConfig;
 
-	@Autowired private ConfigHelperService configHelperService;
+	private final ConfigHelperService configHelperService;
 
 	@Override
 	public ConfigDetails getConfigDetails() {
@@ -49,11 +54,19 @@ public class ConfigDetailsServiceImpl implements ConfigDetailService {
 		configDetails.setPercentile(customApiConfig.getPercentileValue());
 		configDetails.setHierarchySelectionCount(customApiConfig.getHierarchySelectionCount());
 		configDetails.setDateRangeFilter(dateRangeFilter);
-		configDetails.setNoOfDataPoints(customApiConfig.getSprintCountForFilters());
 		configDetails.setGitlabToolFieldFlag(customApiConfig.getIsGitlabFieldEnable());
 		configDetails.setSprintCountForKpiCalculation(
 				customApiConfig.getSprintCountForKpiCalculation());
 		configDetails.setOpenSource(StringUtils.isEmpty(customApiConfig.getCentralHierarchyUrl()));
+
+		configDetails.setAnalytics(
+				AnalyticsConfigResponse.builder()
+						.analyticsGrafanaRolloutPercentage(
+								this.analyticsConfig.getGrafana().getRollout().getPercentage())
+						.isAnalyticsGrafanaEnabled(this.analyticsConfig.getGrafana().isEnabled())
+						.isAnalyticsGoogleEnabled(this.analyticsConfig.getGoogle().isEnabled())
+						.build());
+
 		return configDetails;
 	}
 }

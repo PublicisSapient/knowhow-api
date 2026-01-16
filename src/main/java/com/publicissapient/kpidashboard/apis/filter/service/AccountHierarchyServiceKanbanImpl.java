@@ -137,15 +137,19 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
 		return this.filterHelperService.getHierarchyLevelMap(true).values().stream()
-				.filter(hierarchyLevel -> StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
-						&& hierarchyLevel.getHierarchyLevelId().equalsIgnoreCase(levelId))
+				.filter(
+						hierarchyLevel ->
+								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
+										&& hierarchyLevel.getHierarchyLevelId().equalsIgnoreCase(levelId))
 				.findAny();
 	}
 
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelName(String levelName) {
 		return this.filterHelperService.getHierarchyLevelMap(true).values().stream()
-				.filter(hierarchyLevel -> StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
-						&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
+				.filter(
+						hierarchyLevel ->
+								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
+										&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
 				.findAny();
 	}
 

@@ -53,46 +53,124 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "KPI Integration", description = "APIs for processing KPI requests and recommendations across Scrum and Kanban methodologies")
+@Tag(
+		name = "KPI Integration",
+		description =
+				"APIs for processing KPI requests and recommendations across Scrum and Kanban methodologies")
 public class KpiIntegrationController {
 
 	private final KpiIntegrationServiceImpl kpiIntegrationService;
 	private final KpiRecommendationServiceImpl kpiRecommendationService;
 
-	@Operation(summary = "Get Scrum KPI maturity values", description = "Processes Scrum-based KPI requests and returns calculated maturity values for the specified KPIs")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "KPI maturity values calculated successfully", content = @Content(mediaType = APPLICATION_JSON_VALUE, array = @ArraySchema(schema = @Schema(implementation = KpiElement.class)))),
-			@ApiResponse(responseCode = "400", description = "Invalid request parameters or malformed KPI request", content = @Content(mediaType = APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication", content = @Content(mediaType = APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "500", description = "Internal server error during KPI processing", content = @Content(mediaType = APPLICATION_JSON_VALUE)) })
+	@Operation(
+			summary = "Get Scrum KPI maturity values",
+			description =
+					"Processes Scrum-based KPI requests and returns calculated maturity values for the specified KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "KPI maturity values calculated successfully",
+						content =
+								@Content(
+										mediaType = APPLICATION_JSON_VALUE,
+										array = @ArraySchema(schema = @Schema(implementation = KpiElement.class)))),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Invalid request parameters or malformed KPI request",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE)),
+				@ApiResponse(
+						responseCode = "401",
+						description = "Unauthorized - Invalid or missing authentication",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE)),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error during KPI processing",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE))
+			})
 	@PostMapping(value = "/kpiIntegrationValues", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<KpiElement>> getScrumKpiValues(
-			@Parameter(description = "KPI request containing list of KPIs to process and filter criteria", required = true) @RequestBody KpiRequest kpiRequest) {
+			@Parameter(
+							description = "KPI request containing list of KPIs to process and filter criteria",
+							required = true)
+					@RequestBody
+					KpiRequest kpiRequest) {
 		return ResponseEntity.ok(kpiIntegrationService.processScrumKpiRequest(kpiRequest));
 	}
 
-	@Operation(summary = "Get Kanban KPI values", description = "Processes Kanban-based KPI requests and returns calculated values for the specified KPIs")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Kanban KPI values calculated successfully", content = @Content(mediaType = APPLICATION_JSON_VALUE, array = @ArraySchema(schema = @Schema(implementation = KpiElement.class)))),
-			@ApiResponse(responseCode = "400", description = "Invalid request parameters or malformed KPI request", content = @Content(mediaType = APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication", content = @Content(mediaType = APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "500", description = "Internal server error during KPI processing", content = @Content(mediaType = APPLICATION_JSON_VALUE)) })
+	@Operation(
+			summary = "Get Kanban KPI values",
+			description =
+					"Processes Kanban-based KPI requests and returns calculated values for the specified KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Kanban KPI values calculated successfully",
+						content =
+								@Content(
+										mediaType = APPLICATION_JSON_VALUE,
+										array = @ArraySchema(schema = @Schema(implementation = KpiElement.class)))),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Invalid request parameters or malformed KPI request",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE)),
+				@ApiResponse(
+						responseCode = "401",
+						description = "Unauthorized - Invalid or missing authentication",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE)),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error during KPI processing",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE))
+			})
 	@PostMapping("/kpi-integration-values/kanban")
 	public ResponseEntity<List<KpiElement>> getKanbanKpiValues(
-			@Parameter(description = "KPI request containing list of Kanban KPIs to process and filter criteria", required = true) @RequestBody KpiRequest kpiRequest) {
+			@Parameter(
+							description =
+									"KPI request containing list of Kanban KPIs to process and filter criteria",
+							required = true)
+					@RequestBody
+					KpiRequest kpiRequest) {
 		return ResponseEntity.ok(this.kpiIntegrationService.processKanbanKPIRequest(kpiRequest));
 	}
 
-	@Operation(summary = "Get KPI recommendations", description = "Provides project-wise KPI recommendations based on analysis criteria and historical data")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "KPI recommendations generated successfully", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = ServiceResponse.class))),
-			@ApiResponse(responseCode = "400", description = "Invalid recommendation request parameters", content = @Content(mediaType = APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication", content = @Content(mediaType = APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "500", description = "Internal server error during recommendation processing", content = @Content(mediaType = APPLICATION_JSON_VALUE)) })
+	@Operation(
+			summary = "Get KPI recommendations",
+			description =
+					"Provides project-wise KPI recommendations based on analysis criteria and historical data")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "KPI recommendations generated successfully",
+						content =
+								@Content(
+										mediaType = APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Invalid recommendation request parameters",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE)),
+				@ApiResponse(
+						responseCode = "401",
+						description = "Unauthorized - Invalid or missing authentication",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE)),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error during recommendation processing",
+						content = @Content(mediaType = APPLICATION_JSON_VALUE))
+			})
 	@PostMapping(value = "/kpiRecommendation", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getKpiRecommendation(
-			@Parameter(description = "KPI recommendation request containing project IDs and analysis criteria", required = true) @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
+			@Parameter(
+							description =
+									"KPI recommendation request containing project IDs and analysis criteria",
+							required = true)
+					@RequestBody
+					KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		return ResponseEntity.ok()
-				.body(kpiRecommendationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
+				.body(
+						kpiRecommendationService.getProjectWiseKpiRecommendation(kpiRecommendationRequestDTO));
 	}
 }

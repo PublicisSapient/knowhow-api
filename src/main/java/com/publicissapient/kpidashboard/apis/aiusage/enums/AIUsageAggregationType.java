@@ -22,10 +22,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum AIUsageAggregationType {
-    LAST_DAY("Last Uploaded Day"),
-    LAST_30_DAYS("Last Uploaded 30 Days"),
-    YTD("Year to Last Uploaded Date"),
-    TOTAL("Total");
+	LAST_DAY("Last Uploaded Day"),
+	LAST_30_DAYS("Last Uploaded 30 Days"),
+	YTD("Year to Last Uploaded Date"),
+	TOTAL("Total");
 
-    private final String displayName;
+	private final String displayName;
 }

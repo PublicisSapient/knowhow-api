@@ -220,6 +220,13 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 		return buildResponseEntity(apiError);
 	}
 
+	@ExceptionHandler(InvalidLevelException.class)
+	protected ResponseEntity<Object> handleInvalidLevelException(InvalidLevelException ex) {
+		ApiError apiError = new ApiError(HttpStatus.NOT_FOUND);
+		apiError.setMessage(ex.getMessage());
+		return buildResponseEntity(apiError);
+	}
+
 	/**
 	 * Handle Exception, handle generic Exception.class
 	 *

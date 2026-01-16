@@ -22,6 +22,6 @@ import lombok.Data;
 
 @Data
 public class KpiMaturityResponse {
-    private OrganizationEntityKpiMaturity summary;
-    private List<OrganizationEntityKpiMaturity> details;
+	private OrganizationEntityKpiMaturity summary;
+	private List<OrganizationEntityKpiMaturity> details;
 }

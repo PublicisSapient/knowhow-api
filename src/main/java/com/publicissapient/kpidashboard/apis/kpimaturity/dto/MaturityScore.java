@@ -22,8 +22,8 @@ import lombok.Data;
 @Data
 @Builder
 public class MaturityScore {
-    private double score;
+	private double score;
 
-    private String level;
-    private String kpiCategory;
+	private String level;
+	private String kpiCategory;
 }

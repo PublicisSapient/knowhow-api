@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,12 +33,12 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.enums.ForecastingModel;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ThetaMethodForecasterTest {
 
-	@InjectMocks
-	private ThetaMethodForecaster thetaMethodForecaster;
+	@InjectMocks private ThetaMethodForecaster thetaMethodForecaster;
 
 	private String kpiId;
 
@@ -260,7 +259,7 @@ public class ThetaMethodForecasterTest {
 		DataCount dc = new DataCount();
 		List<PullRequestsValue> bubblePoints = new ArrayList<>();
 		for (int i = 0; i < bubbleCount; i++) {
-            PullRequestsValue bp = new PullRequestsValue();
+			PullRequestsValue bp = new PullRequestsValue();
 			bp.setSize(String.valueOf(50.0 + i * 10));
 			bubblePoints.add(bp);
 		}

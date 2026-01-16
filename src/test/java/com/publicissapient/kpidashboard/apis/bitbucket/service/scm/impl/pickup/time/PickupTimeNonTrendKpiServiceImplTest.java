@@ -16,6 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.pickup.time;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
@@ -25,25 +39,11 @@ import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class PickupTimeNonTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private PickupTimeNonTrendKpiServiceImpl service;
+	@InjectMocks private PickupTimeNonTrendKpiServiceImpl service;
 
 	private KpiRequest kpiRequest;
 	private List<ScmMergeRequests> mergeRequests;
@@ -71,20 +71,33 @@ class PickupTimeNonTrendKpiServiceImplTest {
 	@Test
 	void testCalculateKpi_WithValidData() {
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			LocalDateTime now = LocalDateTime.of(2024, 1, 15, 0, 0);
 			dateUtilMock.when(DateUtil::getTodayTime).thenReturn(now);
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
 					.thenReturn(Collections.emptyMap());
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, commits,
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							commits,
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -96,8 +109,15 @@ class PickupTimeNonTrendKpiServiceImplTest {
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(false);
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, commits,
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							commits,
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertTrue(result.isEmpty());
@@ -106,31 +126,52 @@ class PickupTimeNonTrendKpiServiceImplTest {
 
 	@Test
 	void testCalculateKpi_WithPickedRequests() {
-		ScmMergeRequests mr = createMergeRequest(
-				LocalDateTime.of(2024, 1, 10, 10, 0),
-				LocalDateTime.of(2024, 1, 11, 14, 0));
+		ScmMergeRequests mr =
+				createMergeRequest(
+						LocalDateTime.of(2024, 1, 10, 10, 0), LocalDateTime.of(2024, 1, 11, 14, 0));
 		mergeRequests.add(mr);
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			LocalDateTime now = LocalDateTime.of(2024, 1, 15, 0, 0);
 			dateUtilMock.when(DateUtil::getTodayTime).thenReturn(now);
-			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
-					.thenAnswer(inv -> LocalDateTime.ofEpochSecond(inv.getArgument(0, Long.class) / 1000, 0, java.time.ZoneOffset.UTC));
-			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+			dateUtilMock
+					.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
+					.thenAnswer(
+							inv ->
+									LocalDateTime.ofEpochSecond(
+											inv.getArgument(0, Long.class) / 1000, 0, java.time.ZoneOffset.UTC));
+			dateUtilMock
+					.when(
+							() ->
+									DateUtil.isWithinDateTimeRange(
+											any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
 					.thenReturn(true);
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
 					.thenReturn(Collections.emptyMap());
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, commits,
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							commits,
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertFalse(result.isEmpty());
@@ -142,10 +183,13 @@ class PickupTimeNonTrendKpiServiceImplTest {
 		assertEquals("PICKUP_TIME_NON_TREND", service.getStrategyType());
 	}
 
-	private ScmMergeRequests createMergeRequest(LocalDateTime createdDate, LocalDateTime pickedForReviewOn) {
+	private ScmMergeRequests createMergeRequest(
+			LocalDateTime createdDate, LocalDateTime pickedForReviewOn) {
 		ScmMergeRequests mr = new ScmMergeRequests();
-		mr.setCreatedDate(createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
-		mr.setPickedForReviewOn(pickedForReviewOn.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+		mr.setCreatedDate(
+				createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+		mr.setPickedForReviewOn(
+				pickedForReviewOn.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
 		mr.setState("OPEN");
 		mr.setMergeRequestUrl("https://example.com/mr/1");
 		return mr;
