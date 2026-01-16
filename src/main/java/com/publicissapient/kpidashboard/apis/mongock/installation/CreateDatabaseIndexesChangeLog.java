@@ -480,12 +480,13 @@ public class CreateDatabaseIndexesChangeLog {
 	public void createRecommendationsActionPlanIndexes() {
 		IndexOperations indexOps = mongoTemplate.indexOps("recommendations_action_plan");
 
-		// Compound index: basicProjectConfigId (ASC) + createdAt (DESC)
+		// Compound index: basicProjectConfigId (ASC) + level (ASC) + createdAt (DESC)
 		indexOps.ensureIndex(
 				new Index()
 						.on(BASIC_PROJECT_CONFIG_ID, Sort.Direction.ASC)
+						.on("level", Sort.Direction.ASC)
 						.on("createdAt", Sort.Direction.DESC)
-						.named("basicProjectConfigId_1_createdAt_-1"));
+						.named("basicProjectConfigId_1_level_1_createdAt_-1"));
 	}
 
 	@RollbackExecution
