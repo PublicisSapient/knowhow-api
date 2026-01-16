@@ -13,34 +13,30 @@
  *  See the License for the specific language governing permissions and limitations under the
  *  License.
  */
+
 package com.publicissapient.kpidashboard.apis.kpimaturity.dto;
+
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** DTO representing the metrics for a single project in the executive dashboard. */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrganizationEntityMaturityMetricsDTO {
-	/** The unique identifier for the project. */
-	private String id;
-
-	/** The display name of the project. */
-	private String name;
-
-	/** The completion percentage of the project. Format: "XX%" (e.g., "73%") */
-	private String completion;
-
-	/** The health status of the project. Example: "Healthy", "At Risk", "Critical" */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class OrganizationEntityKpiMaturity {
 	private String health;
+	private String levelName;
+	private String organizationEntityName;
+	private String organizationEntityNodeId;
 
-	/**
-	 * The board maturity metrics for the project. Contains key-value pairs of board names and their
-	 * maturity levels.
-	 */
-	private BoardMaturityDTO boardMaturity;
+	private Double completionPercentage;
+
+	private List<MaturityScore> maturityScores;
 }

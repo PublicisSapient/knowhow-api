@@ -21,7 +21,4 @@ import lombok.Builder;
 
 @Builder
 public record KpiMaturityRequest(
-		String levelName,
-		Integer levelNumber,
-		String parentNodeId,
-		ProjectDeliveryMethodology deliveryMethodology) {}
+		String levelName, String parentNodeId, ProjectDeliveryMethodology deliveryMethodology) {}
