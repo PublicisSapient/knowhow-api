@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ProcessorService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolsStatusResponse;
 import com.publicissapient.kpidashboard.common.context.ExecutionLogContext;
@@ -41,6 +40,7 @@ import com.publicissapient.kpidashboard.common.model.ProcessorExecutionBasicConf
 import com.publicissapient.kpidashboard.common.model.application.dto.ProcessorExecutionTraceLogDTO;
 import com.publicissapient.kpidashboard.common.service.ProcessorExecutionTraceLogService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -55,10 +55,8 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/processor")
 @RequiredArgsConstructor
+@Tag(name = "Processor Controller", description = "APIs for Processor Management")
 public class ProcessorController {
-
-	private final CustomApiConfig customApiConfig;
-
 	private final ProcessorService processorService;
 	private final ProcessorExecutionTraceLogService processorExecutionTraceLogService;
 

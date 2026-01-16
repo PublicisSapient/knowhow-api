@@ -17,7 +17,6 @@
 
 package com.publicissapient.kpidashboard.apis.report.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +28,9 @@ import com.publicissapient.kpidashboard.apis.report.dto.ReportRequest;
 import com.publicissapient.kpidashboard.apis.report.service.ReportService;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /** Controller class for managing reports. */
@@ -37,14 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/reports")
 @Slf4j
 @Validated
+@RequiredArgsConstructor
+@Tag(name = "Report Controller", description = "APIs for Report Management")
 public class ReportController {
 
 	private final ReportService reportService;
-
-	@Autowired
-	public ReportController(ReportService reportService) {
-		this.reportService = reportService;
-	}
 
 	/**
 	 * Creates a new report.

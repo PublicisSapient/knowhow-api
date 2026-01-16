@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.common.rest;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,22 +29,28 @@ import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationServi
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 /** aksshriv1 */
 @RestController
+@RequiredArgsConstructor
+@Tag(
+		name = "Token Authentication Controller",
+		description = "APIs for Token Authentication Management")
 public class TokenAuthenticationController {
-	@Autowired private TokenAuthenticationService tokenAuthenticationService;
-	@Autowired private CustomAnalyticsService customAnalyticsService;
+	private final TokenAuthenticationService tokenAuthenticationService;
+	private final CustomAnalyticsService customAnalyticsService;
 
 	/**
 	 * Fetch user details from the Central Auth on the first login and save them into the KnowHow
 	 * database. For subsequent logins, retrieve user details from the KnowHow database
 	 *
-	 * @param httpServletRequest
-	 * @param httpServletResponse
-	 * @return
+	 * @param httpServletRequest the http servlet request
+	 * @param httpServletResponse the http servlet response
+	 * @return ResponseEntity<ServiceResponse>
 	 */
 	@GetMapping(value = "/fetchUserDetails")
 	public ResponseEntity<ServiceResponse> fetchUserDetails(

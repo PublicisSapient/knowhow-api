@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,6 @@ import java.util.Objects;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,7 +44,9 @@ import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
 import com.publicissapient.kpidashboard.common.repository.rbac.AccessRequestsRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -54,16 +55,19 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/userinfo")
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "User Info API", description = "APIs for managing user information and roles")
 public class UserInfoController {
 
-	@Autowired private UserInfoService userInfoService;
+	private final UserInfoService userInfoService;
 
-	@Autowired private UserTokenDeletionService userTokenDeletionService;
+	private final UserTokenDeletionService userTokenDeletionService;
 
-	@Autowired private AuthenticationService authenticationService;
+	private final AuthenticationService authenticationService;
 
-	@Autowired private UserInfoRepository userInfoRepository;
-	@Autowired private AccessRequestsRepository accessRequestsRepository;
+	private final UserInfoRepository userInfoRepository;
+
+	private final AccessRequestsRepository accessRequestsRepository;
 
 	/**
 	 * Fetch only approved user info data.

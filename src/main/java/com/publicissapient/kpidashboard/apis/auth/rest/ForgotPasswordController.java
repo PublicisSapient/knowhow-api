@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,6 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
@@ -38,7 +37,9 @@ import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.ResetPasswordTokenStatusEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -48,6 +49,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @RestController
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "Forgot Password Controller", description = "APIs for Forgot Password Management")
 public class ForgotPasswordController {
 
 	/** Relative path of reset password of UI */
@@ -58,8 +61,8 @@ public class ForgotPasswordController {
 	private static final String UI_ACCOUNT_PATH =
 			"/authentication/accountType?resetTokenStatus="; // NOSONAR
 
-	@Autowired private ForgotPasswordService forgotPasswordService;
-	@Autowired private CustomApiConfig customApiConfig;
+	private final ForgotPasswordService forgotPasswordService;
+	private final CustomApiConfig customApiConfig;
 
 	/**
 	 * Creates token for an user account.
@@ -68,8 +71,8 @@ public class ForgotPasswordController {
 	 * <tt>ForgotPasswordRequest</tt> object. Sends an email to the user account if the mail id is
 	 * valid
 	 *
-	 * @param httpServletRequest
-	 * @param request
+	 * @param httpServletRequest the http servlet request
+	 * @param request the forgot password request
 	 * @return ServiceResponse with <tt>success</tt> message and <tt>authentication</tt> object if
 	 *     email is sent successfully. <tt>logError</tt> message and <tt>null</tt> incase of
 	 *     <tt>UnknownHostException</tt> occurred.
@@ -107,11 +110,11 @@ public class ForgotPasswordController {
 	 * <p>validateToken method forwards the request to ForgotPasswordService to validate 128-bit UUID
 	 * token
 	 *
-	 * @param httpServletRequest
-	 * @param token
+	 * @param httpServletRequest the http servlet request
+	 * @param token the token
 	 * @return RedirectView with <tt>UI_RESET_PATH</tt> if the token valid and
-	 *     <tt>UI_ACCOUNT_PATH</tt> incase of invalid token.
-	 * @throws UnknownHostException
+	 *     <tt>UI_ACCOUNT_PATH</tt> in case of invalid token.
+	 * @throws UnknownHostException the unknown host exception
 	 */
 	@GetMapping(value = "/validateEmailToken", produces = APPLICATION_JSON_VALUE)
 	public RedirectView validateToken(
@@ -134,7 +137,7 @@ public class ForgotPasswordController {
 	 * <p>resetPassword method accepts ResetPasswordRequest object as param and forwards the request
 	 * to ForgotPasswordService to validate the request.
 	 *
-	 * @param updatedPasswordRequest
+	 * @param updatedPasswordRequest the updated password request
 	 * @return ServiceResponse with <tt>sucess</tt> if the request is valid and incase of a invalid
 	 *     request appends the logError message with response code <tt>-14</tt>
 	 */
@@ -181,8 +184,8 @@ public class ForgotPasswordController {
 	/**
 	 * Returns a String <tt>uiHost</tt> from customapi.properties with separator
 	 *
-	 * @return
-	 * @throws UnknownHostException
+	 * @return the UI host
+	 * @throws UnknownHostException the unknown host exception
 	 */
 	private String getUIHost() throws UnknownHostException {
 		StringBuilder urlPath = new StringBuilder();

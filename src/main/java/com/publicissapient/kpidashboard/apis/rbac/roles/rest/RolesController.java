@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ package com.publicissapient.kpidashboard.apis.rbac.roles.rest;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +31,8 @@ import com.publicissapient.kpidashboard.apis.rbac.roles.service.RolesHelperServi
 import com.publicissapient.kpidashboard.common.model.rbac.RoleData;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleDataDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,9 +43,11 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/roles")
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "Roles Controller", description = "APIs for Roles Management")
 public class RolesController {
 
-	@Autowired private RolesHelperService rolesHelperService;
+	private final RolesHelperService rolesHelperService;
 
 	/**
 	 * Fetch all roles data.
@@ -76,10 +79,7 @@ public class RolesController {
 	 * @param roleDTO request object that replaces the role data present at object_id id.
 	 * @return responseEntity with data,message and status
 	 */
-	@RequestMapping(
-			value = "/{id}",
-			method = RequestMethod.PUT,
-			consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
+	@PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> modifyRoleById(
 			@PathVariable("id") String id, @Valid @RequestBody RoleDataDTO roleDTO) {
 		final ModelMapper modelMapper = new ModelMapper();
@@ -95,8 +95,7 @@ public class RolesController {
 	 * @param roleDTO request object that is created in the database.
 	 * @return responseEntity with data,message and status
 	 */
-	@RequestMapping(
-			method = RequestMethod.POST,
+	@PostMapping(
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> createRole(@Valid @RequestBody RoleDataDTO roleDTO) {
