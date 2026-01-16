@@ -23,10 +23,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -48,6 +44,10 @@ import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarServiceR;
 import com.publicissapient.kpidashboard.apis.sonar.service.SonarToolConfigServiceImpl;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,24 +75,30 @@ public class SonarController {
 	 * @return {@code ResponseEntity<List<KpiElement>>}
 	 * @throws Exception exception thrown when kpi processing fails
 	 */
-	@Operation(summary = "Get Sonar KPI Data", description = "API to get Sonar KPI data for Scrum projects")
+	@Operation(
+			summary = "Get Sonar KPI Data",
+			description = "API to get Sonar KPI data for Scrum projects")
 	@ApiResponses(
 			value = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Sonar KPI data fetched successfully"),
-					@ApiResponse(
-							responseCode = "400",
-							description = "Bad Request, invalid parameters supplied"),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal server error while processing Sonar KPI data")
+				@ApiResponse(responseCode = "200", description = "Sonar KPI data fetched successfully"),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Bad Request, invalid parameters supplied"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while processing Sonar KPI data")
 			})
 	@PostMapping(value = "/sonar/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
 	public ResponseEntity<List<KpiElement>> getSonarAggregatedMetrics(
-			@Parameter(description = "KPI Request payload containing the details for fetching Sonar KPI data", required = true)
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+			@Parameter(
+							description =
+									"KPI Request payload containing the details for fetching Sonar KPI data",
+							required = true)
+					@NotNull
+					@RequestBody
+					KpiRequest kpiRequest)
+			throws Exception { // NOSONAR
 
 		log.info(
 				"[SONAR][{}]. Received Sonar KPI request {}", kpiRequest.getRequestTrackerId(), kpiRequest);
@@ -120,24 +126,31 @@ public class SonarController {
 	 * @return {@code ResponseEntity<List<KpiElement>>}
 	 * @throws Exception exception thrown when kpi processing fails
 	 */
-	@Operation(summary = "Get Sonar Kanban KPI Data", description = "API to get Sonar KPI data for Kanban projects")
+	@Operation(
+			summary = "Get Sonar Kanban KPI Data",
+			description = "API to get Sonar KPI data for Kanban projects")
 	@ApiResponses(
 			value = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Sonar Kanban KPI data fetched successfully"),
-					@ApiResponse(
-							responseCode = "400",
-							description = "Bad Request, invalid parameters supplied"),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal server error while processing Sonar Kanban KPI data")
+				@ApiResponse(
+						responseCode = "200",
+						description = "Sonar Kanban KPI data fetched successfully"),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Bad Request, invalid parameters supplied"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while processing Sonar Kanban KPI data")
 			})
 	@PostMapping(value = "/sonarkanban/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<List<KpiElement>> getSonarKanbanAggregatedMetrics(
-			@Parameter(description = "KPI Request payload containing the details for fetching Sonar Kanban KPI data",
-					required = true)
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+			@Parameter(
+							description =
+									"KPI Request payload containing the details for fetching Sonar Kanban KPI data",
+							required = true)
+					@NotNull
+					@RequestBody
+					KpiRequest kpiRequest)
+			throws Exception { // NOSONAR
 
 		log.info(
 				"[SONAR KANBAN][{}]. Received Sonar KPI request {}",
@@ -180,30 +193,33 @@ public class SonarController {
 	 */
 	@Operation(
 			summary = "Get Sonar Project Key List",
-			description = "API to get the list of Sonar Project's Key based on connection ID and organization key")
+			description =
+					"API to get the list of Sonar Project's Key based on connection ID and organization key")
 	@ApiResponses(
 			value = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Sonar Project Key List fetched successfully"),
-					@ApiResponse(
-							responseCode = "404",
-							description = "No Sonar projects found for the given connection and organization key")
+				@ApiResponse(
+						responseCode = "200",
+						description = "Sonar Project Key List fetched successfully"),
+				@ApiResponse(
+						responseCode = "404",
+						description = "No Sonar projects found for the given connection and organization key")
 			})
 	@GetMapping(
 			value = "/sonar/project/{connectionId}/{organizationKey}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getSonarProjectList(
 			@Parameter(
-					description = "Sonar connection ID",
-					required = true,
-					example = "sonarConnectionIdExample")
-			@PathVariable String connectionId,
+							description = "Sonar connection ID",
+							required = true,
+							example = "sonarConnectionIdExample")
+					@PathVariable
+					String connectionId,
 			@Parameter(
-					description = "Sonar organization key (required for Sonar Cloud)",
-					required = true,
-					example = "sonarOrganizationKeyExample")
-			@PathVariable String organizationKey) {
+							description = "Sonar organization key (required for Sonar Cloud)",
+							required = true,
+							example = "sonarOrganizationKeyExample")
+					@PathVariable
+					String organizationKey) {
 		List<String> projectKeyList =
 				sonarToolConfigService.getSonarProjectKeyList(connectionId, organizationKey);
 		if (CollectionUtils.isEmpty(projectKeyList)) {
@@ -225,38 +241,39 @@ public class SonarController {
 	 */
 	@Operation(
 			summary = "Get Sonar Project Branch List",
-			description = "API to get the list of Sonar Project's Branch based on connection ID, version and project key")
+			description =
+					"API to get the list of Sonar Project's Branch based on connection ID, version and project key")
 	@ApiResponses(
 			value = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Sonar Project Branch List fetched successfully"),
-					@ApiResponse(
-							responseCode = "404",
-							description = "No branches found for the given Sonar project"),
-					@ApiResponse(
-							responseCode = "500",
-							description = "Internal server error while fetching Sonar project branches")
+				@ApiResponse(
+						responseCode = "200",
+						description = "Sonar Project Branch List fetched successfully"),
+				@ApiResponse(
+						responseCode = "404",
+						description = "No branches found for the given Sonar project"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching Sonar project branches")
 			})
 	@GetMapping(
 			value = "/sonar/branch/{connectionId}/{version}/{projectKey}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getSonarProjectBranchList(
 			@Parameter(
-					description = "Sonar connection ID",
-					required = true,
-					example = "sonarConnectionIdExample")
-			@PathVariable String connectionId,
+							description = "Sonar connection ID",
+							required = true,
+							example = "sonarConnectionIdExample")
+					@PathVariable
+					String connectionId,
+			@Parameter(description = "Sonar version", required = true, example = "sonarVersionExample")
+					@PathVariable
+					String version,
 			@Parameter(
-					description = "Sonar version",
-					required = true,
-					example = "sonarVersionExample")
-			@PathVariable String version,
-			@Parameter(
-					description = "Sonar project key",
-					required = true,
-					example = "sonarProjectKeyExample")
-			@PathVariable String projectKey) {
+							description = "Sonar project key",
+							required = true,
+							example = "sonarProjectKeyExample")
+					@PathVariable
+					String projectKey) {
 		ServiceResponse response =
 				sonarToolConfigService.getSonarProjectBranchList(connectionId, version, projectKey);
 		HttpStatus httpStatus = HttpStatus.OK;

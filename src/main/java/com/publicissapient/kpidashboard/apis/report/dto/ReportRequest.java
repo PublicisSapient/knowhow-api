@@ -30,7 +30,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 @Schema(description = "Data Transfer Object for Report Request")
 public class ReportRequest {
-	@Schema(description = "Unique identifier of the report. If updating an existing report, this field must be provided.",
+	@Schema(
+			description =
+					"Unique identifier of the report. If updating an existing report, this field must be provided.",
 			example = "64b8f0c2e1b2c3a4d5e6f7g8")
 	private String id;
 

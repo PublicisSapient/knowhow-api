@@ -39,6 +39,9 @@ public class KpiRequest {
 
 	@Schema(description = "Name of the KPI", example = "Sprint Velocity")
 	private String chartData;
-	@Schema(description = "Metadata associated with the KPI", example = "{\"unit\":\"points\",\"threshold\":80}")
+
+	@Schema(
+			description = "Metadata associated with the KPI",
+			example = "{\"unit\":\"points\",\"threshold\":80}")
 	private Object metadata;
 }

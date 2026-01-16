@@ -23,7 +23,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +40,8 @@ import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrServiceKanban;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -81,9 +80,10 @@ public class ZephyrController {
 				@ApiResponse(
 						responseCode = "200",
 						description = "Successful retrieval of KPI metrics",
-						content = @Content(
-								mediaType = "application/json",
-								schema = @Schema(implementation = KpiElement.class))),
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class))),
 				@ApiResponse(
 						responseCode = "403",
 						description = "Forbidden - No KPI metrics found for the given request"),
@@ -94,9 +94,12 @@ public class ZephyrController {
 	@PostMapping(value = "/zypher/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<List<KpiElement>> getZephyrMetrics(
 			@Parameter(
-					description = "KPI Request object containing details for KPI retrieval",
-					required = true)
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+							description = "KPI Request object containing details for KPI retrieval",
+							required = true)
+					@NotNull
+					@RequestBody
+					KpiRequest kpiRequest)
+			throws Exception { // NOSONAR
 
 		log.info(
 				"[ZEPHYR][{}]. Received Zephyr KPI request {}",
@@ -126,29 +129,35 @@ public class ZephyrController {
 	 * @return the zephyr kanban metrics
 	 * @throws Exception the exception
 	 */
-	@Operation(description = "Posts a request to retrieve Zephyr Kanban KPI metrics based on the provided KPI request details.",
+	@Operation(
+			description =
+					"Posts a request to retrieve Zephyr Kanban KPI metrics based on the provided KPI request details.",
 			summary = "Retrieve Zephyr Kanban KPI metrics",
 			responses = {
-					@ApiResponse(
-							responseCode = "200",
-							description = "Successful retrieval of Zephyr Kanban KPI metrics",
-							content = @Content(
-									mediaType = "application/json",
-									schema = @Schema(implementation = KpiElement.class))),
-					@ApiResponse(
-							responseCode = "403",
-							description = "Forbidden - No Zephyr Kanban KPI metrics found for the given request"),
-					@ApiResponse(
-							responseCode = "400",
-							description = "Bad Request - Missing required parameters")
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successful retrieval of Zephyr Kanban KPI metrics",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden - No Zephyr Kanban KPI metrics found for the given request"),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Bad Request - Missing required parameters")
 			})
 	@PostMapping(value = "/zypherkanban/kpi", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	// @PreAuthorize("hasPermission(null,'KPI_FILTER')")
 	public ResponseEntity<List<KpiElement>> getZephyrKanbanMetrics(
 			@Parameter(
-					description = "KPI Request object containing details for Zephyr Kanban KPI retrieval",
-					required = true)
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+							description = "KPI Request object containing details for Zephyr Kanban KPI retrieval",
+							required = true)
+					@NotNull
+					@RequestBody
+					KpiRequest kpiRequest)
+			throws Exception { // NOSONAR
 
 		log.info(
 				"[ZEPHYR KANBAN][{}]. Received Zephyr KPI request {}",

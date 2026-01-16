@@ -16,7 +16,6 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.rest;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +28,7 @@ import com.publicissapient.kpidashboard.apis.usermanagement.dto.response.UserRes
 import com.publicissapient.kpidashboard.apis.usermanagement.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -65,8 +65,8 @@ public class UserController {
 			})
 	@PreAuthorize("hasPermission(null, 'ADD_USER') or hasPermission(null, 'GRANT_ACCESS')")
 	public ServiceResponse saveUserInfo(
-			@Parameter(description = "User information to be saved", required = true)
-			@Valid @RequestBody UserRequestDTO userRequestDTO) {
+			@Parameter(description = "User information to be saved", required = true) @Valid @RequestBody
+					UserRequestDTO userRequestDTO) {
 		return userService.saveUserInfo(userRequestDTO.getUsername());
 	}
 }
