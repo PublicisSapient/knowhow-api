@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.rest;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -63,7 +64,9 @@ public class UserController {
 				@ApiResponse(responseCode = "500", description = "Unexpected server error occurred")
 			})
 	@PreAuthorize("hasPermission(null, 'ADD_USER') or hasPermission(null, 'GRANT_ACCESS')")
-	public ServiceResponse saveUserInfo(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+	public ServiceResponse saveUserInfo(
+			@Parameter(description = "User information to be saved", required = true)
+			@Valid @RequestBody UserRequestDTO userRequestDTO) {
 		return userService.saveUserInfo(userRequestDTO.getUsername());
 	}
 }

@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.pushdata.model.dto;
 
 import javax.validation.constraints.NotNull;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,11 +34,15 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "Data Transfer Object for Expose API Token Request")
 public class ExposeAPITokenRequestDTO {
 
+	@Schema(description = "Basic Project Configuration Id", example = "64b8f0c2e1b2c3a4d5e6f7g8")
 	@NotNull private String basicProjectConfigId;
 
+	@Schema(description = "Project Name", example = "Project 1")
 	private String projectName;
 
+	@Schema(description = "User Name for whom the API token is to be exposed", example = "john.doe")
 	@NotNull private String userName;
 }

@@ -21,6 +21,10 @@ package com.publicissapient.kpidashboard.apis.projectconfig.basic.rest;
 import java.util.List;
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -84,8 +88,22 @@ public class ProjectBasicConfigController {
 	 * @param basicProjectConfigId basic project config id
 	 * @return ResponseEntity
 	 */
+	@Operation(summary = "Get Project Basic Configuration",
+			description = "API to get project basic configuration by ID")
+	@ApiResponses(
+			value = {
+					@ApiResponse(
+							responseCode = "200",
+							description = "Project basic configuration fetched successfully"),
+					@ApiResponse(
+							responseCode = "404",
+							description = "Project basic configuration not found for the given ID")
+			})
 	@GetMapping(value = {"/{id}"})
 	public ResponseEntity<ServiceResponse> getProjectBasicConfig(
+			@Parameter(description = "Basic Project Configuration Id",
+					required = true,
+					example = "64b8f0c2e1b2c3a4d5e6f7g8")
 			@PathVariable("id") String basicProjectConfigId) {
 		basicProjectConfigId = CommonUtils.handleCrossScriptingTaintedValue(basicProjectConfigId);
 		log.info("List project configuration request recieved for : {}", basicProjectConfigId);
@@ -115,8 +133,22 @@ public class ProjectBasicConfigController {
 	 *
 	 * @return ResponseEntity
 	 */
+	@Operation(summary = "Get All Project Basic Configurations",
+			description = "API to get all project basic configurations with optional filtering")
+	@ApiResponses(
+			value = {
+					@ApiResponse(
+							responseCode = "200",
+							description = "Project basic configurations fetched successfully"),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal server error while fetching project basic configurations")
+			})
 	@GetMapping
 	public ResponseEntity<ServiceResponse> getProjectBasicConfig(
+			@Parameter(
+					description = "Flag to include all projects or apply filtering based on user permissions. Defaults to true.",
+					example = "true")
 			@RequestParam(value = "includeAll", defaultValue = "true") Boolean includeAll) {
 		try {
 			// Call the service layer
@@ -139,8 +171,27 @@ public class ProjectBasicConfigController {
 	 * @param response httpServletResponse
 	 * @return ResponseEntity
 	 */
+	@Operation(summary = "Add Project Basic Configuration",
+			description = "API to add new project basic configuration")
+	@ApiResponses(
+			value = {
+					@ApiResponse(
+							responseCode = "200",
+							description = "Project basic configuration added successfully"),
+					@ApiResponse(
+							responseCode = "400",
+							description = "Invalid input data for project basic configuration"),
+					@ApiResponse(
+							responseCode = "403",
+							description = "Forbidden - User doesn't have permission to add project"),
+					@ApiResponse(
+							responseCode = "500",
+							description = "Internal server error while adding project basic configuration")
+			})
 	@PostMapping
 	public ResponseEntity<ProjectConfigResponse> addBasicConfig(
+			@Parameter(description = "ProjectBasicConfigDTO object containing project basic configuration details",
+					required = true)
 			@RequestBody ProjectBasicConfigDTO projectBasicConfigDTO, HttpServletResponse response) {
 
 		ServiceResponse serviceResp;

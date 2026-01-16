@@ -20,6 +20,10 @@ package com.publicissapient.kpidashboard.apis.stringshortener.controller;
 
 import java.util.Optional;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,9 +49,21 @@ public class StringShortenerController {
 
 	private final StringShortenerService stringShortenerService;
 
+	@Operation(summary = "Create Short String", description = "API to create a short string for given long string")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Short string created successfully"),
+				@ApiResponse(
+						responseCode = "404",
+						description = "Failed to create short string")
+			})
 	@PostMapping("/shorten")
 	public ResponseEntity<ServiceResponse> createShortString(
-			@RequestBody StringShortenerDTO stringShortenerDTO) {
+			@Parameter(description = "StringShortenerDTO object containing long string details", required = true)
+			@RequestBody StringShortenerDTO stringShortenerDTO)
+	{
 		StringShortener stringShortener = stringShortenerService.createShortString(stringShortenerDTO);
 		final ModelMapper modelMapper = new ModelMapper();
 		final StringShortenerDTO responseDTO =
@@ -62,9 +78,30 @@ public class StringShortenerController {
 		}
 	}
 
+	@Operation(
+			summary = "Get Long String",
+			description = "API to get the original long string for given short string parameters")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Long string fetched successfully"),
+				@ApiResponse(
+						responseCode = "404",
+						description = "Failed to fetch long string")
+			})
 	@GetMapping("/longString")
 	public ResponseEntity<ServiceResponse> getLongString(
-			@RequestParam String kpiFilters, @RequestParam String stateFilters) {
+			@Parameter(
+					description = "KPI Filters used to identify the long string",
+					required = true,
+					example = "kpiFiltersExample")
+			@RequestParam String kpiFilters,
+			@Parameter(
+					description = "State Filters used to identify the long string",
+					required = true,
+					example = "stateFiltersExample")
+			@RequestParam String stateFilters) {
 		Optional<StringShortener> stringShortener =
 				stringShortenerService.getLongString(kpiFilters, stateFilters);
 		if (stringShortener.isPresent()) {

@@ -20,6 +20,10 @@ package com.publicissapient.kpidashboard.apis.testexecution.rest;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -60,10 +64,21 @@ public class TestExecutionController {
 	 * @param testExecution data to be saved
 	 * @return service response entity
 	 */
+	@Operation(summary = "Add Test Execution Data", description = "API to add test execution data")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Test Execution Data added successfully"),
+				@ApiResponse(
+						responseCode = "401",
+						description = "Unauthorized to add Test Execution Data")
+			})
 	@PostMapping(
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> addTestExecutionData(
+			@Parameter(description = "Test Execution Data to be saved", required = true)
 			@RequestBody TestExecutionData testExecution) {
 		ServiceResponse response =
 				new ServiceResponse(false, "Failed to add  Test Execution Data", null);

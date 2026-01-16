@@ -22,6 +22,11 @@ import java.util.ArrayList;
 import java.util.Optional;
 import javax.validation.Valid;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,11 +70,27 @@ public class UserBoardConfigController {
 	 *
 	 * @return response
 	 */
+	@Operation(summary = "Get user board configurations",
+			description = "Fetches combined user board and general config details for specific projects.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved config",
+					content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "Invalid project list provided"),
+			@ApiResponse(responseCode = "401", description = "User is not authenticated"),
+			@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
 	@PostMapping(
 			value = "/getBoardConfig",
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getUserBoardConfigurations(
+			@Parameter(
+					description = "List of requested project configurations",
+					required = true,
+					example = """
+							{"basicProjectConfigIds": ["projConfigId1", "projConfigId2"]}
+							"""
+			)
 			@Valid @RequestBody ProjectListRequested listOfRequestedProj) {
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigService.getBoardConfig(ConfigLevel.USER, listOfRequestedProj);
@@ -96,10 +117,21 @@ public class UserBoardConfigController {
 	 * @param userBoardConfigDTO userBoardConfigDTO
 	 * @return response
 	 */
+	@Operation(summary = "Save user config", description = "Saves or updates personal board configuration for the current user.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Config saved successfully",
+					content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "Invalid configuration data"),
+			@ApiResponse(responseCode = "403", description = "Forbidden: Insufficient permissions"),
+			@ApiResponse(responseCode = "500", description = "Error saving configuration")
+	})
 	@PostMapping(
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveUserBoardConfig(
+			@Parameter(
+					description = "User board configuration data to be saved",
+					required = true)
 			@Valid @RequestBody UserBoardConfigDTO userBoardConfigDTO) {
 		ServiceResponse response =
 				userBoardConfigService.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, null);
@@ -111,8 +143,21 @@ public class UserBoardConfigController {
 	 *
 	 * @return response
 	 */
+	@Operation(summary = "Get project board configuration for admin",
+			description = "Fetches the board configuration for a specific project. Admin access required.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved project config",
+					content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "Invalid project configuration ID"),
+			@ApiResponse(responseCode = "403", description = "Forbidden: Admin access required"),
+			@ApiResponse(responseCode = "500", description = "Internal server error")
+	})
 	@GetMapping(value = "/{basicProjectConfigId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getUserBoardConfigurationAdmin(
+			@Parameter(
+					description = "Basic Project Configuration ID",
+					required = true,
+					example = "projConfigId1")
 			@PathVariable String basicProjectConfigId) {
 		ProjectListRequested projectListRequested = new ProjectListRequested();
 		Optional.ofNullable(projectListRequested.getBasicProjectConfigIds())
@@ -138,12 +183,28 @@ public class UserBoardConfigController {
 	 * @param userBoardConfigDTO userBoardConfigDTO
 	 * @return response
 	 */
+	@Operation(summary = "Save project board configuration for admin",
+			description = "Saves or updates the board configuration for a specific project. Admin access required.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Project config saved successfully",
+					content = @Content(mediaType = "application/json")),
+			@ApiResponse(responseCode = "400", description = "Invalid configuration data"),
+			@ApiResponse(responseCode = "403", description = "Forbidden: Admin access required"),
+			@ApiResponse(responseCode = "500", description = "Error saving project configuration")
+	})
 	@PostMapping(
 			value = "/saveAdmin/{basicProjectConfigId}",
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveUserBoardConfigAdmin(
+			@Parameter(
+					description = "User board configuration data to be saved for the project",
+					required = true)
 			@Valid @RequestBody UserBoardConfigDTO userBoardConfigDTO,
+			@Parameter(
+					description = "Basic Project Configuration ID",
+					required = true,
+					example = "projConfigId1")
 			@PathVariable String basicProjectConfigId) {
 		ServiceResponse response =
 				userBoardConfigService.saveBoardConfig(

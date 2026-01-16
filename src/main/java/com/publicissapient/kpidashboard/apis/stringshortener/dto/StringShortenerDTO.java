@@ -18,12 +18,19 @@
 
 package com.publicissapient.kpidashboard.apis.stringshortener.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "Data Transfer Object for String Shortening")
 public class StringShortenerDTO {
+	@Schema(description = "Long String to be shortened", example = "This is a very long string that needs to be shortened")
 	private String longStateFiltersString;
+	@Schema(description = "Shortened String", example = "abc123")
 	private String shortStateFiltersString;
+	@Schema(description = "Long KPI Filters String to be shortened",
+			example = "This is a very long KPI filters string that needs to be shortened")
 	private String longKPIFiltersString;
+	@Schema(description = "Shortened KPI Filters String", example = "kpi456")
 	private String shortKPIFilterString;
 }
