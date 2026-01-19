@@ -39,7 +39,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 import javax.crypto.SecretKey;
 
 import org.json.simple.JSONObject;
@@ -121,8 +120,8 @@ public class TokenAuthenticationServiceImplTest {
 				.subject(auth.getName())
 				.claim(DETAILS_CLAIM, auth.getDetails())
 				.claim(ROLES_CLAIM, authorities)
-				 .expiration(new Date(System.currentTimeMillis() + expirationTime))
-				 .signWith(key)
+				.expiration(new Date(System.currentTimeMillis() + expirationTime))
+				.signWith(key)
 				.compact();
 	}
 
