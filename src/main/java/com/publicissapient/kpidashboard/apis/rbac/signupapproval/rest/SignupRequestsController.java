@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,6 @@ import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,6 +47,8 @@ import com.publicissapient.kpidashboard.common.model.rbac.AccessRequestDecision;
 import com.publicissapient.kpidashboard.common.model.rbac.AuthenticationDTO;
 import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,15 +59,17 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/userapprovals")
 @Slf4j
+@RequiredArgsConstructor
+@Tag(name = "Signup Requests API", description = "APIs for managing signup requests and approvals")
 public class SignupRequestsController {
 
 	private final ModelMapper mapper = new ModelMapper();
-	@Autowired private AuthenticationService authenticationService;
-	@Autowired private SignupManager signupManager;
-	@Autowired private CustomApiConfig customApiConfig;
+	private final AuthenticationService authenticationService;
+	private final SignupManager signupManager;
+	private final CustomApiConfig customApiConfig;
 
-	@Autowired private AuthProperties authProperties;
-	@Autowired UserInfoServiceImpl userInfoService;
+	private final AuthProperties authProperties;
+	private final UserInfoServiceImpl userInfoService;
 
 	/**
 	 * Gets all unapproved requests data.l
