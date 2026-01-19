@@ -114,6 +114,22 @@
           <groupId>org.springframework</groupId>
           <artifactId>spring-core</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>io.jsonwebtoken</groupId>
+          <artifactId>jjwt</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.jsonwebtoken</groupId>
+          <artifactId>jjwt-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.jsonwebtoken</groupId>
+          <artifactId>jjwt-impl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.jsonwebtoken</groupId>
+          <artifactId>jjwt-jackson</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <!-- Spring Libraries -->
@@ -527,7 +543,7 @@
     <dependency>
       <groupId>com.knowhow.retro</groupId>
       <artifactId>ai-gateway-client</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
