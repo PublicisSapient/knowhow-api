@@ -69,6 +69,8 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -90,6 +92,7 @@ public class ReleaseBurnUpServiceImplTest {
 	private final Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 	private final Map<ObjectId, FieldMapping> fieldMappingMap2 = new HashMap<>();
 	private final Map<ObjectId, FieldMapping> fieldMappingMap3 = new HashMap<>();
+	private Map<String, KpiBenchmarkValues> kpiBenchmarkValuesMap = new HashMap<>();
 
 	@Before
 	public void setUp() {
@@ -125,6 +128,16 @@ public class ReleaseBurnUpServiceImplTest {
 		fieldMappingMap2.put(fieldMapping.getBasicProjectConfigId(), fieldMapping2);
 		fieldMappingMap3.put(fieldMapping.getBasicProjectConfigId(), fieldMapping3);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
+	}
+
+	public void populateKpiBenchMark() {
+		BenchmarkPercentiles benchmarkPercentiles =
+				BenchmarkPercentiles.builder().filter("value").build();
+		kpiBenchmarkValuesMap.put(
+				KPICode.RELEASE_BURNUP.getKpiId(),
+				KpiBenchmarkValues.builder()
+						.filterWiseBenchmarkValues(Collections.singletonList(benchmarkPercentiles))
+						.build());
 	}
 
 	@Test
@@ -172,6 +185,7 @@ public class ReleaseBurnUpServiceImplTest {
 				.thenReturn(jiraIssues);
 		when(jiraService.getReleaseList()).thenReturn(Collections.singletonList("AP v2.0.0"));
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap3);
+		when(cacheService.getKpiBenchmarkTargets()).thenReturn(kpiBenchmarkValuesMap);
 		KpiElement kpiElement =
 				releaseBurnUpService.getKpiData(
 						kpiRequest,

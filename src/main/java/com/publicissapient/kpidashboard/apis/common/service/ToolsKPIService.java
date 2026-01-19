@@ -861,7 +861,8 @@ public abstract class ToolsKPIService<R, S> {
 
 	public void setKpiBenchmarkValues(DataCount dataCount, String kpiId, String filter) {
 		KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiId);
-		if (null != kpiBenchmarkValues) {
+		if (null != kpiBenchmarkValues
+				&& CollectionUtils.isNotEmpty(kpiBenchmarkValues.getFilterWiseBenchmarkValues())) {
 			Optional<BenchmarkPercentiles> benchmarkPercentiles;
 			if (filter.equalsIgnoreCase(CommonConstant.OVERALL)) {
 				benchmarkPercentiles =
@@ -872,7 +873,8 @@ public abstract class ToolsKPIService<R, S> {
 				benchmarkPercentiles =
 						kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
 								.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value#" + filter))
-								.findFirst();
+								.findFirst()
+								.or(() -> Optional.of(kpiBenchmarkValues.getFilterWiseBenchmarkValues().get(0)));
 			}
 			benchmarkPercentiles.ifPresent(dataCount::setBenchmarkPercentiles);
 		}
