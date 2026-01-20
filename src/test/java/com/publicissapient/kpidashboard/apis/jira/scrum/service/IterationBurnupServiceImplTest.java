@@ -26,6 +26,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,6 +69,8 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 
@@ -89,6 +92,7 @@ public class IterationBurnupServiceImplTest {
 	private KpiRequest kpiRequest;
 	@Mock private JiraIterationServiceR jiraService;
 	@Mock private ForecastingManager forecastingManager;
+	private Map<String, KpiBenchmarkValues> kpiBenchmarkValuesMap = new HashMap<>();
 
 	@Before
 	public void setup() {
@@ -132,6 +136,17 @@ public class IterationBurnupServiceImplTest {
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
+		populateKpiBenchMark();
+	}
+
+	public void populateKpiBenchMark() {
+		BenchmarkPercentiles benchmarkPercentiles =
+				BenchmarkPercentiles.builder().filter("value").build();
+		kpiBenchmarkValuesMap.put(
+				KPICode.ITERATION_BURNUP.getKpiId(),
+				KpiBenchmarkValues.builder()
+						.filterWiseBenchmarkValues(Collections.singletonList(benchmarkPercentiles))
+						.build());
 	}
 
 	@After
@@ -177,6 +192,7 @@ public class IterationBurnupServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
 				.thenReturn(jiraIssuesCustomHistory);
+		when(cacheService.getKpiBenchmarkTargets()).thenReturn(kpiBenchmarkValuesMap);
 		try {
 			KpiElement kpiElement =
 					iterationBurnupService.getKpiData(
@@ -212,6 +228,7 @@ public class IterationBurnupServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
 				.thenReturn(jiraIssuesCustomHistory);
+		when(cacheService.getKpiBenchmarkTargets()).thenReturn(kpiBenchmarkValuesMap);
 		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
 		try {
 			KpiElement kpiElement =
