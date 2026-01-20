@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,12 +31,15 @@ import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.jira.service.NonTrendKPIService;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiData;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiModalValue;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.IterationStatus;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.Getter;
@@ -164,5 +168,16 @@ public abstract class JiraIterationKPIService implements NonTrendKPIService {
 
 	public List<JiraIssue> getJiraIssuesFromBaseClass() {
 		return jiraIterationServiceR.getJiraIssuesForCurrentSprint();
+	}
+
+	protected void setKpiBenchmarkValues(IterationKpiValue iterationKpiValue, String kpiCode) {
+		KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiCode);
+		if (kpiBenchmarkValues != null) {
+			Optional<BenchmarkPercentiles> benchmarkPercentiles =
+					kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
+							.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value"))
+							.findFirst();
+			benchmarkPercentiles.ifPresent(iterationKpiValue::setBenchmarkPercentiles);
+		}
 	}
 }
