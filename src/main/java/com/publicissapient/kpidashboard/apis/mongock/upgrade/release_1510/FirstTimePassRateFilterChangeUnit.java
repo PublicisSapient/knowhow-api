@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @ChangeUnit(
-		id = "kpi_level_recommendation_change_unit",
+		id = "ftpr_filter_change_unit",
 		order = "15101",
 		author = "kunkambl",
 		systemVersion = "15.1.0")
