@@ -29,6 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -40,6 +44,17 @@ public class HierarchyLevelsController {
 
 	private final HierarchyLevelService hierarchyLevelService;
 
+	@Operation(
+			summary = "Get Top Hierarchy Levels",
+			description = "Retrieve all top-level hierarchy levels.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved top hierarchy levels",
+						content = {@Content(mediaType = "application/json")}),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping
 	public ResponseEntity<List<HierarchyLevel>> getHierarchyLevel() {
 

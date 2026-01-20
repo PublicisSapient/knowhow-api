@@ -37,6 +37,10 @@ import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.ResetPasswordTokenStatusEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -77,12 +81,23 @@ public class ForgotPasswordController {
 	 *     email is sent successfully. <tt>logError</tt> message and <tt>null</tt> incase of
 	 *     <tt>UnknownHostException</tt> occurred.
 	 */
+	@Operation(
+			summary = "Process Forgot Password",
+			description = "Generates a reset password token and sends it to the user's email address.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Reset password email sent successfully"),
+				@ApiResponse(responseCode = "400", description = "Failed to send reset password email"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/forgotPassword",
 			consumes = APPLICATION_JSON_VALUE,
 			produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> processForgotPassword(
-			@RequestBody ForgotPasswordRequest request, HttpServletRequest httpServletRequest) {
+			@Parameter(description = "Forgot Password Request Model", required = true) @RequestBody
+					ForgotPasswordRequest request,
+			HttpServletRequest httpServletRequest) {
 		boolean isSuccess = false;
 		log.info("ForgotPasswordController: requested mail {}", request.getEmail());
 		Authentication authentication = null;
@@ -116,9 +131,26 @@ public class ForgotPasswordController {
 	 *     <tt>UI_ACCOUNT_PATH</tt> in case of invalid token.
 	 * @throws UnknownHostException the unknown host exception
 	 */
+	@Operation(
+			summary = "Validate Reset Password Token",
+			description = "Validates the reset password token and redirects to the appropriate UI page.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Token validation and redirection successful"),
+				@ApiResponse(responseCode = "400", description = "Invalid token or bad request"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/validateEmailToken", produces = APPLICATION_JSON_VALUE)
 	public RedirectView validateToken(
-			HttpServletRequest httpServletRequest, @RequestParam("token") UUID token)
+			HttpServletRequest httpServletRequest,
+			@Parameter(
+							description = "Reset Password Token",
+							required = true,
+							example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+					@RequestParam("token")
+					UUID token)
 			throws UnknownHostException {
 		log.info("ForgotPasswordController: requested token for validate {}", token);
 		ResetPasswordTokenStatusEnum tokenStatus =
@@ -141,9 +173,19 @@ public class ForgotPasswordController {
 	 * @return ServiceResponse with <tt>sucess</tt> if the request is valid and incase of a invalid
 	 *     request appends the logError message with response code <tt>-14</tt>
 	 */
+	@Operation(
+			summary = "Reset Password",
+			description = "Resets the user's password after validating the reset token.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Password reset successfully"),
+				@ApiResponse(responseCode = "400", description = "Failed to reset password"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(value = "/resetPassword", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> resetPassword(
-			@RequestBody ResetPasswordRequest updatedPasswordRequest) {
+			@Parameter(description = "Reset Password Request Model", required = true) @RequestBody
+					ResetPasswordRequest updatedPasswordRequest) {
 		boolean isSuccess = false;
 		Authentication authentication = null;
 		try {

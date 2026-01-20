@@ -72,35 +72,8 @@ public class AccountHierarchyController {
 			produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> filterData(
 			@Parameter(
-							description = "Account Filter Request",
-							required = true,
-							example =
-									"{ "
-											+ "  \"maturityLevel\": \"1\", "
-											+ "  \"currentSelection\": 2, "
-											+ "  \"currentSelectionLabel\": \"Sprint\", "
-											+ "  \"kanban\": false, "
-											+ "  \"sprintIncluded\": [\"SPRINT_23\", \"SPRINT_24\"], "
-											+ "  \"activeSprintIncluded\": true "
-											+ "  \"filterDataList\": [ "
-											+ "    { "
-											+ "      \"maturityLevel\": \"PROJECT\", "
-											+ "      \"level\": 1, "
-											+ "      \"label\": \"Project\", "
-											+ "      \"show\": true, "
-											+ "      \"filterData\": [ "
-											+ "        { "
-											+ "          \"nodeId\": \"PROJ-101\", "
-											+ "          \"nodeName\": \"project-alpha\", "
-											+ "          \"nodeDisplayName\": \"Project Alpha\", "
-											+ "          \"path\": \"/ORG/PROJ-101\", "
-											+ "          \"labelName\": \"Project\", "
-											+ "          \"level\": 1, "
-											+ "          \"onHold\": false "
-											+ "        } "
-											+ "      ] "
-											+ "    } ]"
-											+ "}")
+							description = "Account Filter Request containing filtering criteria",
+							required = true)
 					@RequestBody
 					AccountFilterRequest filter)
 			throws ApplicationException {

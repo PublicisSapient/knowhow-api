@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.hierarchy.dto;
 
 import javax.validation.constraints.NotBlank;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Request object for creating a new Hierarchy")
 public class CreateHierarchyRequest {
+	@Schema(description = "Name of the Hierarchy", example = "Default Hierarchy", required = true)
 	@NotBlank(message = "name cannot be empty")
 	@NotNull(message = "name cannot be null")
 	@NotEmpty(message = "name cannot be empty")

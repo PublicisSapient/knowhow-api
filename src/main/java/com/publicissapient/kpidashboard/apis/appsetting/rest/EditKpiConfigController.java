@@ -31,6 +31,10 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,11 +59,34 @@ public class EditKpiConfigController {
 	 * @param projectBasicConfigId for project config id
 	 * @return responseEntity with data,message and status
 	 */
+	@Operation(
+			summary = "Fetch KPI Edit Configuration Data by Type",
+			description =
+					"Retrieves KPI configuration data for a specific project configuration ID and KPI code.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "KPI configuration data retrieved successfully"),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Invalid project configuration ID or KPI code supplied"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching KPI configuration data")
+			})
 	@GetMapping(
 			value = "/jira/editKpi/{projectBasicConfigId}/{kpiCode}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> fetchTypeValues(
-			@PathVariable String projectBasicConfigId, @PathVariable String kpiCode) {
+			@Parameter(
+							description = "Project Basic Configuration ID",
+							required = true,
+							example = "60f7c0d5e1b2c12a34567890")
+					@PathVariable
+					String projectBasicConfigId,
+			@Parameter(description = "KPI Code", required = true, example = "kpi1234") @PathVariable
+					String kpiCode) {
 		projectBasicConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectBasicConfigId);
 		kpiCode = CommonUtils.handleCrossScriptingTaintedValue(kpiCode);
 		log.info("Fetching data in KPI edit configuration for :{}", projectBasicConfigId);

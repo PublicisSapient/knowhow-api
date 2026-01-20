@@ -18,13 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Base class for api request/response having maturity level.
  *
  * @author anisingh4
  */
+@Schema(description = "Base model containing common attributes for API requests and responses")
 public class BaseModel {
 
+	@Schema(description = "Maturity level of the entity", example = "Level 1")
 	private String maturityLevel;
 
 	/**

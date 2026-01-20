@@ -26,6 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.model.MasterResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -47,6 +52,23 @@ public class KPIMasterController {
 	 *
 	 * @return the master response
 	 */
+	@Operation(
+			summary = "Fetch KPI Master Data",
+			description = "API to fetch master data for all available KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully fetched KPI master data",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = MasterResponse.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error",
+						content = @Content)
+			})
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	public MasterResponse fetchMasterData() {
 		return kPIHelperService.fetchKpiMasterList();
