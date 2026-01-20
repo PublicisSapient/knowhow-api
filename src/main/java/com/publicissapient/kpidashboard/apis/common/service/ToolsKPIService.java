@@ -758,6 +758,8 @@ public abstract class ToolsKPIService<R, S> {
 									getList(dataCounts, kpiName),
 									calculatedAggValue);
 
+					setKpiBenchmarkValues(maturityDataCount, kpiId, CommonConstant.OVERALL);
+
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
 							.ifPresent(
@@ -973,6 +975,7 @@ public abstract class ToolsKPIService<R, S> {
 												aggregateValue,
 												getList(value, kpiCode.name()),
 												calculatedAggValue);
+								setKpiBenchmarkValues(maturityDataCount, kpiId, key);
 
 								// Add forecasts if configured
 								Optional.ofNullable(forecastingManager)
