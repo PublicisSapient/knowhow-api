@@ -22,10 +22,12 @@ import java.util.*;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -66,9 +68,11 @@ public class ScmKanbanNumberOfChekIns
 	private static final String NO_CHECKIN = "No. of Checkins";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String COMMIT_LIST = "commitList";
+	private static final int DAYS_AGO = 21;
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
+	private final ScmKpiHelperService scmKpiHelperService;
 
 	/** {@inheritDoc} */
 	@Override
@@ -115,12 +119,24 @@ public class ScmKanbanNumberOfChekIns
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-		Map<String, Object> scmDataMap = new HashMap<>();
+		Map<String, Object> resultMap = new HashMap<>();
+		CustomDateRange dateRange = KpiDataHelper.getStartAndEndDate(kpiRequest);
+		LocalDateTime extendedStartDate = dateRange.getStartDate().atStartOfDay().minusDays(DAYS_AGO);
+		LocalDateTime endDateTime = dateRange.getEndDate().atTime(23, 59, 59);
 
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(COMMIT_LIST, getCommitsFromBaseClass());
+		CustomDateRange extendedDateRange = new CustomDateRange();
+		extendedDateRange.setStartDate(extendedStartDate.toLocalDate());
+		extendedDateRange.setEndDate(endDateTime.toLocalDate());
 
-		return scmDataMap;
+		ObjectId projectBasicConfigId =
+				leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId();
+
+		List<ScmCommits> commits =
+				scmKpiHelperService.getCommitDetails(projectBasicConfigId, extendedDateRange);
+
+		resultMap.put(COMMIT_LIST, commits);
+		resultMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
+		return resultMap;
 	}
 
 	/** {@inheritDoc} */
@@ -133,7 +149,7 @@ public class ScmKanbanNumberOfChekIns
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI157(), KPICode.REPO_TOOL_CODE_COMMIT.getKpiId());
+				fieldMapping.getThresholdValueKPI159(), KPICode.REPO_TOOL_NUMBER_OF_CHECK_INS.getKpiId());
 	}
 
 	/**
@@ -166,7 +182,8 @@ public class ScmKanbanNumberOfChekIns
 			return;
 		}
 
-		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+		Map<String, Object> scmDataMap =
+				fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
 		List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
