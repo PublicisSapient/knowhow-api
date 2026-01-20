@@ -294,6 +294,7 @@ public class ScmKanbanNumberOfChekIns
 			dataCounts.set(dataCounts.indexOf(optionalDataCount.get()), updatedDataCount);
 		} else {
 			DataCount dataCount = new DataCount();
+			dataCount.setData(String.valueOf(commitValue));
 			dataCount.setSProjectName(projectName);
 			dataCount.setDate(week);
 			dataCount.setValue(commitValue);
