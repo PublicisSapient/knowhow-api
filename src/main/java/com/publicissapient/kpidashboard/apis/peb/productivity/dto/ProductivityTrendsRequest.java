@@ -17,9 +17,13 @@
 package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
 import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
+import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
 
 import lombok.Builder;
 
 @Builder
-public record ProductivityRequest(
-		String levelName, String parentNodeId, ProjectDeliveryMethodology deliveryMethodology) {}
+public record ProductivityTrendsRequest(
+		String levelName,
+		ProjectDeliveryMethodology deliveryMethodology,
+		TemporalAggregationUnit temporalAggregationUnit,
+		int limit) {}

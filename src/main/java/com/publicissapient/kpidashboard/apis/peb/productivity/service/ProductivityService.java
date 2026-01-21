@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.config.PEBConfig;
 import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceImpl;
+import com.publicissapient.kpidashboard.apis.filter.service.AccountHierarchyServiceKanbanImpl;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.filter.service.OrganizationLookup;
 import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
@@ -47,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.peb.productivity.dto.KPITrends;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.OrganizationEntityProductivity;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityRequest;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityTrendsRequest;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityTrendsResponse;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
@@ -56,7 +58,7 @@ import com.publicissapient.kpidashboard.common.model.productivity.calculation.KP
 import com.publicissapient.kpidashboard.common.model.productivity.calculation.Productivity;
 import com.publicissapient.kpidashboard.common.repository.productivity.ProductivityCustomRepository;
 import com.publicissapient.kpidashboard.common.repository.productivity.dto.ProductivityTemporalGrouping;
-import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
@@ -98,6 +100,7 @@ public class ProductivityService {
 	private final FilterHelperService filterHelperService;
 
 	private final AccountHierarchyServiceImpl accountHierarchyServiceImpl;
+	private final AccountHierarchyServiceKanbanImpl accountHierarchyServiceKanbanImpl;
 
 	private final ProductivityCustomRepository productivityCustomRepository;
 
@@ -146,14 +149,18 @@ public class ProductivityService {
 	 * @return ServiceResponse containing ProductivityResponse with summary and detailed productivity
 	 *     metrics
 	 */
+	@SuppressWarnings({"java:S138"})
 	public ServiceResponse getProductivityForLevel(ProductivityRequest productivityRequest) {
-		validateProductivityCalculationRequest(productivityRequest);
+		validateProductivityRequest(productivityRequest);
+
 		log.info("Started getting productivity data for level {}", productivityRequest.levelName());
 		long startTime = System.currentTimeMillis();
 
 		PEBProductivityCalculationContext pebProductivityCalculationContext =
 				createPEBProductivityRequestForRequestedLevel(
-						productivityRequest.levelName(), productivityRequest.parentNodeId());
+						productivityRequest.levelName(),
+						productivityRequest.parentNodeId(),
+						productivityRequest.deliveryMethodology());
 
 		// The "roots" will be the nodes corresponding to the requested hierarchy level
 		Map<String, List<AccountFilteredData>> projectChildrenGroupedByRequestedRootNodeIds =
@@ -299,15 +306,8 @@ public class ProductivityService {
 	 * productivity data within each time period. Projects without data are logged but excluded from
 	 * calculations to maintain accuracy.
 	 *
-	 * @param levelName The name of the organizational hierarchy level for which to retrieve
-	 *     productivity trends (e.g., "engagement", "account", "vertical", "bu"). Must correspond to a
-	 *     valid hierarchy level configured in the system. The level determines the scope of data
-	 *     aggregation and must be above the project level in the organizational hierarchy.
-	 * @param temporalAggregationUnit The temporal unit for grouping productivity data over time.
-	 *     Supported units include WEEK, MONTH, QUARTER, YEAR. Determines the granularity of trend
-	 *     analysis and affects the number of data points returned within the specified limit.
-	 * @param limit Maximum number of temporal periods to retrieve, counted from the most recent data
-	 *     backwards. Must be positive.
+	 * @param productivityTrendsRequest class representing the starting input required for generating the
+	 *                                     productivity response
 	 * @return ServiceResponse containing {@link ProductivityTrendsResponse} with temporal grouping
 	 *     metadata, hierarchy level name, category variations between first and last periods, and
 	 *     chronologically ordered list of {@link CategoryScoresDTO} objects representing productivity
@@ -316,24 +316,21 @@ public class ProductivityService {
 	 */
 	@SuppressWarnings("java:S1941")
 	public ServiceResponse getProductivityTrendsForLevel(
-			String levelName, TemporalAggregationUnit temporalAggregationUnit, int limit) {
-		if (limit < 0) {
-			throw new BadRequestException("The 'limit' cannot be negative");
-		}
-
-		if (temporalAggregationUnit == null) {
-			throw new BadRequestException("The 'temporalAggregationUnit' cannot be null");
-		}
+			ProductivityTrendsRequest productivityTrendsRequest) {
+		validateProductivityTrendsRequest(productivityTrendsRequest);
 
 		log.info(
 				"Started getting productivity trends for level: {}, temporalAggregationUnit: {} and limit: {}",
-				levelName,
-				temporalAggregationUnit,
-				limit);
+				productivityTrendsRequest.levelName(),
+				productivityTrendsRequest.temporalAggregationUnit(),
+				productivityTrendsRequest.limit());
 		long startTime = System.currentTimeMillis();
 
 		PEBProductivityCalculationContext pebProductivityCalculationContext =
-				createPEBProductivityRequestForRequestedLevel(levelName, StringUtils.EMPTY);
+				createPEBProductivityRequestForRequestedLevel(
+						productivityTrendsRequest.levelName(),
+						StringUtils.EMPTY,
+						productivityTrendsRequest.deliveryMethodology());
 
 		// The "roots" will be the nodes corresponding to the first hierarchy child
 		// level after the requested one
@@ -350,20 +347,22 @@ public class ProductivityService {
 
 		List<ProductivityTemporalGrouping> productivitiesGroupedByTemporalUnit =
 				this.productivityCustomRepository.getProductivitiesGroupedByTemporalUnit(
-						projectNodeIds, temporalAggregationUnit, limit);
+						projectNodeIds,
+						productivityTrendsRequest.temporalAggregationUnit(),
+						productivityTrendsRequest.limit());
 
 		if (CollectionUtils.isEmpty(productivitiesGroupedByTemporalUnit)) {
 			log.debug(
 					"No productivity data could be found for level: {}, temporalAggregationUnit: {} and limit: {}",
-					levelName,
-					temporalAggregationUnit,
-					limit);
+					productivityTrendsRequest.levelName(),
+					productivityTrendsRequest.temporalAggregationUnit(),
+					productivityTrendsRequest.limit());
 
 			return new ServiceResponse(
 					Boolean.TRUE,
 					PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
 					ProductivityTrendsResponse.builder()
-							.temporalGrouping(temporalAggregationUnit)
+							.temporalGrouping(productivityTrendsRequest.temporalAggregationUnit())
 							.levelName(
 									pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
 											.getHierarchyLevelName())
@@ -381,31 +380,19 @@ public class ProductivityService {
 				Successfully retrieved the productivity trends for level {}. Total projects found under requested level: {}
 				Projects without productivity data: {}. Duration: {} ms
 				""",
-				levelName,
+				productivityTrendsRequest.levelName(),
 				projectNodeIds.size(),
 				productivityTrendsProcessingResult.projectsWithoutProductivityData,
 				System.currentTimeMillis() - startTime);
 
-		DataCount productivityForecastDataCount =
-				forecastTheNextOverallValue(productivityTrendsProcessingResult);
-
-		ForecastData overallForecast = ForecastData.builder().build();
-		if (CollectionUtils.isEmpty(productivityForecastDataCount.getForecasts())) {
-			log.debug("No productivity forecast could be generated for level: {}", levelName);
-		} else {
-			overallForecast =
-					ForecastData.builder()
-							.forecastingModel(pebConfig.getForecastingModel().getDisplayName())
-							.value((Double) productivityForecastDataCount.getForecasts().get(0).getValue())
-							.category("overall")
-							.build();
-		}
+		ForecastData overallForecast =
+				determineTheOverallForecast(productivityTrendsProcessingResult, productivityTrendsRequest);
 
 		return new ServiceResponse(
 				Boolean.TRUE,
 				PRODUCTIVITY_TREND_CALCULATION_SUCCESSFULLY_CALCULATED_MESSAGE,
 				ProductivityTrendsResponse.builder()
-						.temporalGrouping(temporalAggregationUnit)
+						.temporalGrouping(productivityTrendsRequest.temporalAggregationUnit())
 						.levelName(
 								pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
 										.getHierarchyLevelName())
@@ -413,6 +400,25 @@ public class ProductivityService {
 						.categoryScores(productivityTrendsProcessingResult.categoryScoresTrendValues)
 						.forecasts(List.of(overallForecast))
 						.build());
+	}
+
+	private ForecastData determineTheOverallForecast(
+			ProductivityTrendsProcessingResult productivityTrendsProcessingResult,
+			ProductivityTrendsRequest productivityTrendsRequest) {
+		DataCount productivityForecastDataCount =
+				forecastTheNextOverallValue(productivityTrendsProcessingResult);
+
+		if (CollectionUtils.isEmpty(productivityForecastDataCount.getForecasts())) {
+			log.debug(
+					"No productivity forecast could be generated for level: {}",
+					productivityTrendsRequest.levelName());
+			return ForecastData.builder().build();
+		}
+		return ForecastData.builder()
+				.forecastingModel(pebConfig.getForecastingModel().getDisplayName())
+				.value((Double) productivityForecastDataCount.getForecasts().get(0).getValue())
+				.category("overall")
+				.build();
 	}
 
 	/**
@@ -563,13 +569,15 @@ public class ProductivityService {
 	 * @return PEBProductivityRequest containing hierarchy data and account tree structure
 	 */
 	private PEBProductivityCalculationContext createPEBProductivityRequestForRequestedLevel(
-			String levelName, String parentNodeId) {
+			String levelName, String parentNodeId, ProjectDeliveryMethodology deliveryMethodology) {
 		PEBProductivityCalculationContext.PEBProductivityCalculationContextBuilder
 				pebProductivityRequestBuilder = PEBProductivityCalculationContext.builder();
 		HierarchyLevelsData hierarchyLevelsData =
-				constructHierarchyLevelsDataByRequestedLevelName(levelName);
+				constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(
+						levelName, deliveryMethodology);
 		OrganizationLookup organizationLookup =
-				constructOrganizationLookupBasedOnAccountData(hierarchyLevelsData, parentNodeId);
+				constructOrganizationLookupBasedOnAccountData(
+						hierarchyLevelsData, parentNodeId, deliveryMethodology);
 		return pebProductivityRequestBuilder
 				.hierarchyLevelsData(hierarchyLevelsData)
 				.organizationLookup(organizationLookup)
@@ -590,13 +598,24 @@ public class ProductivityService {
 	 * @return List of TreeNode representing the root nodes of the accessible hierarchy tree
 	 */
 	private OrganizationLookup constructOrganizationLookupBasedOnAccountData(
-			HierarchyLevelsData hierarchyLevelsData, String parentNodeId) {
+			HierarchyLevelsData hierarchyLevelsData,
+			String parentNodeId,
+			ProjectDeliveryMethodology deliveryMethodology) {
 		AccountFilterRequest accountFilterRequest = new AccountFilterRequest();
-		accountFilterRequest.setKanban(false);
-		accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
 
-		Set<AccountFilteredData> hierarchyDataUserHasAccessTo =
-				accountHierarchyServiceImpl.getFilteredList(accountFilterRequest).stream()
+		Set<AccountFilteredData> hierarchyDataUserHasAccessTo = Set.of();
+
+		if (ProjectDeliveryMethodology.KANBAN == deliveryMethodology) {
+			hierarchyDataUserHasAccessTo =
+					this.accountHierarchyServiceKanbanImpl.getFilteredList(accountFilterRequest);
+		} else if (ProjectDeliveryMethodology.SCRUM == deliveryMethodology) {
+			accountFilterRequest.setSprintIncluded(List.of(CommonConstant.CLOSED.toUpperCase()));
+			hierarchyDataUserHasAccessTo =
+					this.accountHierarchyServiceImpl.getFilteredList(accountFilterRequest);
+		}
+
+		hierarchyDataUserHasAccessTo =
+				hierarchyDataUserHasAccessTo.stream()
 						.filter(
 								accountFilteredData ->
 										accountFilteredData != null
@@ -651,13 +670,15 @@ public class ProductivityService {
 	 * @param levelName The name of the requested hierarchy level
 	 * @return HierarchyLevelsData containing the requested level, its child level, and project level
 	 */
-	private HierarchyLevelsData constructHierarchyLevelsDataByRequestedLevelName(String levelName) {
+	private HierarchyLevelsData
+			constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(
+					String levelName, ProjectDeliveryMethodology deliveryMethodology) {
 		if (StringUtils.isEmpty(levelName)) {
 			throw new BadRequestException("Level name must not be empty");
 		}
 
 		Map<String, HierarchyLevel> allHierarchyLevels =
-				this.filterHelperService.getHierarchyLevelMap(false);
+				this.filterHelperService.getHierarchyLevelMap(deliveryMethodology);
 		if (multipleLevelsAreCorrespondingToLevelName(levelName, allHierarchyLevels)) {
 			throw new InternalServerErrorException(
 					String.format(
@@ -824,13 +845,28 @@ public class ProductivityService {
 				((lastPointValue - firstPointValue) / Math.abs(firstPointValue)) * PERCENTAGE_MULTIPLIER);
 	}
 
-	private static void validateProductivityCalculationRequest(
-			ProductivityRequest productivityRequest) {
+	private static void validateProductivityRequest(ProductivityRequest productivityRequest) {
 		if (productivityRequest == null) {
-			throw new BadRequestException("Productivity calculation request cannot be null");
+			throw new BadRequestException("Productivity request cannot be null");
 		}
 		if (StringUtils.isBlank(productivityRequest.levelName())) {
-			throw new BadRequestException("The productivity calculation 'levelName' is required");
+			throw new BadRequestException("The productivity 'levelName' is required");
+		}
+		if (productivityRequest.deliveryMethodology() == null) {
+			throw new BadRequestException("The productivity 'deliveryMethodology' is required");
+		}
+	}
+
+	private static void validateProductivityTrendsRequest(
+			ProductivityTrendsRequest productivityTrendsRequest) {
+		if (productivityTrendsRequest == null) {
+			throw new BadRequestException("Productivity trends request cannot be null");
+		}
+		if (productivityTrendsRequest.limit() < 0) {
+			throw new BadRequestException("The 'limit' cannot be negative");
+		}
+		if (productivityTrendsRequest.temporalAggregationUnit() == null) {
+			throw new BadRequestException("The 'temporalAggregationUnit' cannot be null");
 		}
 	}
 
