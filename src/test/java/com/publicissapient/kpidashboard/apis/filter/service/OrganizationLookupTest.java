@@ -95,7 +95,8 @@ class OrganizationLookupTest {
 	@Test
 	void when_GetChildrenByParentNodeIdCalledWithExistingParent_Then_ReturnsCorrectChildren() {
 		// Act
-		List<AccountFilteredData> children = organizationLookup.getChildrenByParentNodeId("account1", 5);
+		List<AccountFilteredData> children =
+				organizationLookup.getChildrenByParentNodeId("account1", 5);
 
 		// Assert
 		assertEquals(3, children.size());
@@ -108,7 +109,8 @@ class OrganizationLookupTest {
 	@Test
 	void when_GetChildrenByParentNodeIdCalledWithNonExistingParent_Then_ReturnsEmptyList() {
 		// Act
-		List<AccountFilteredData> children = organizationLookup.getChildrenByParentNodeId("nonexistent", 5);
+		List<AccountFilteredData> children =
+				organizationLookup.getChildrenByParentNodeId("nonexistent", 5);
 
 		// Assert
 		assertTrue(children.isEmpty());
@@ -117,7 +119,8 @@ class OrganizationLookupTest {
 	@Test
 	void when_GetChildrenByParentNodeIdCalledWithSameLevel_Then_ReturnsParentItself() {
 		// Act
-		List<AccountFilteredData> children = organizationLookup.getChildrenByParentNodeId("account1", 3);
+		List<AccountFilteredData> children =
+				organizationLookup.getChildrenByParentNodeId("account1", 3);
 
 		// Assert
 		assertEquals(1, children.size());
@@ -130,8 +133,8 @@ class OrganizationLookupTest {
 		Set<String> parentNodeIds = Set.of("account1", "vertical1");
 
 		// Act
-		Map<String, List<AccountFilteredData>> result = organizationLookup
-				.getChildrenGroupedByParentNodeIds(parentNodeIds, 5);
+		Map<String, List<AccountFilteredData>> result =
+				organizationLookup.getChildrenGroupedByParentNodeIds(parentNodeIds, 5);
 
 		// Assert
 		assertEquals(2, result.size());
@@ -146,8 +149,8 @@ class OrganizationLookupTest {
 		Set<String> emptyParentNodeIds = new HashSet<>();
 
 		// Act
-		Map<String, List<AccountFilteredData>> result = organizationLookup
-				.getChildrenGroupedByParentNodeIds(emptyParentNodeIds, 5);
+		Map<String, List<AccountFilteredData>> result =
+				organizationLookup.getChildrenGroupedByParentNodeIds(emptyParentNodeIds, 5);
 
 		// Assert
 		assertTrue(result.isEmpty());
@@ -156,7 +159,8 @@ class OrganizationLookupTest {
 	@Test
 	void when_GetChildrenGroupedByParentNodeIdsCalledWithLevels_Then_ReturnsCorrectGrouping() {
 		// Act
-		Map<String, List<AccountFilteredData>> result = organizationLookup.getChildrenGroupedByParentNodeIds(2, 5);
+		Map<String, List<AccountFilteredData>> result =
+				organizationLookup.getChildrenGroupedByParentNodeIds(2, 5);
 
 		// Assert
 		assertEquals(1, result.size());
@@ -165,18 +169,23 @@ class OrganizationLookupTest {
 	}
 
 	@Test
-	void when_GetChildrenGroupedByParentNodeIdsCalledWithChildLevelLowerThanParent_Then_ThrowsIllegalArgumentException() {
+	void
+			when_GetChildrenGroupedByParentNodeIdsCalledWithChildLevelLowerThanParent_Then_ThrowsIllegalArgumentException() {
 		// Act & Assert
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-				() -> organizationLookup.getChildrenGroupedByParentNodeIds(5, 3));
+		IllegalArgumentException exception =
+				assertThrows(
+						IllegalArgumentException.class,
+						() -> organizationLookup.getChildrenGroupedByParentNodeIds(5, 3));
 
-		assertTrue(exception.getMessage().contains("The child level must be higher than the parent level"));
+		assertTrue(
+				exception.getMessage().contains("The child level must be higher than the parent level"));
 	}
 
 	@Test
 	void when_GetChildrenGroupedByParentNodeIdsCalledWithEqualLevels_Then_ReturnsParentsThemselves() {
 		// Act
-		Map<String, List<AccountFilteredData>> result = organizationLookup.getChildrenGroupedByParentNodeIds(3, 3);
+		Map<String, List<AccountFilteredData>> result =
+				organizationLookup.getChildrenGroupedByParentNodeIds(3, 3);
 
 		// Assert
 		assertEquals(1, result.size());
@@ -186,13 +195,15 @@ class OrganizationLookupTest {
 	}
 
 	@Test
-	void when_FindDescendantsByLevelCalledWithTargetLevelEqualToCurrentLevel_Then_ReturnsCurrentNode() {
+	void
+			when_FindDescendantsByLevelCalledWithTargetLevelEqualToCurrentLevel_Then_ReturnsCurrentNode() {
 		// Arrange
 		AccountFilteredData currentNode = AccountFilteredData.builder().nodeId("test").level(3).build();
 
 		// Act
-		List<AccountFilteredData> result = ReflectionTestUtils.invokeMethod(organizationLookup,
-				"findDescendantsByLevel", currentNode, 3);
+		List<AccountFilteredData> result =
+				ReflectionTestUtils.invokeMethod(
+						organizationLookup, "findDescendantsByLevel", currentNode, 3);
 
 		// Assert
 		assertNotNull(result);
@@ -203,11 +214,12 @@ class OrganizationLookupTest {
 	@Test
 	void when_FindDescendantsByLevelCalledWithNoChildren_Then_ReturnsEmptyList() {
 		// Arrange
-		AccountFilteredData leafNode = AccountFilteredData.builder().nodeId("project1").level(5).build();
+		AccountFilteredData leafNode =
+				AccountFilteredData.builder().nodeId("project1").level(5).build();
 
 		// Act
-		List<AccountFilteredData> result = ReflectionTestUtils.invokeMethod(organizationLookup,
-				"findDescendantsByLevel", leafNode, 6);
+		List<AccountFilteredData> result =
+				ReflectionTestUtils.invokeMethod(organizationLookup, "findDescendantsByLevel", leafNode, 6);
 
 		// Assert
 		assertNotNull(result);
@@ -215,9 +227,11 @@ class OrganizationLookupTest {
 	}
 
 	@Test
-	void when_GetChildrenGroupedByParentNodeIdsCalledWithNonExistentParentLevel_Then_ReturnsEmptyMap() {
+	void
+			when_GetChildrenGroupedByParentNodeIdsCalledWithNonExistentParentLevel_Then_ReturnsEmptyMap() {
 		// Act
-		Map<String, List<AccountFilteredData>> result = organizationLookup.getChildrenGroupedByParentNodeIds(99, 100);
+		Map<String, List<AccountFilteredData>> result =
+				organizationLookup.getChildrenGroupedByParentNodeIds(99, 100);
 
 		// Assert
 		assertTrue(result.isEmpty());
@@ -227,25 +241,51 @@ class OrganizationLookupTest {
 		Set<AccountFilteredData> data = new HashSet<>();
 
 		// Level 1 - BU (root level, no parent)
-		data.add(AccountFilteredData.builder().nodeId("bu1").level(1).nodeName("Business Unit 1").build());
+		data.add(
+				AccountFilteredData.builder().nodeId("bu1").level(1).nodeName("Business Unit 1").build());
 
 		// Level 2 - Vertical
-		data.add(AccountFilteredData.builder().nodeId("vertical1").parentId("bu1").level(2).nodeName("Vertical 1")
-				.build());
+		data.add(
+				AccountFilteredData.builder()
+						.nodeId("vertical1")
+						.parentId("bu1")
+						.level(2)
+						.nodeName("Vertical 1")
+						.build());
 
 		// Level 3 - Account
-		data.add(AccountFilteredData.builder().nodeId("account1").parentId("vertical1").level(3).nodeName("Account 1")
-				.build());
+		data.add(
+				AccountFilteredData.builder()
+						.nodeId("account1")
+						.parentId("vertical1")
+						.level(3)
+						.nodeName("Account 1")
+						.build());
 
 		// Level 5 - Projects
-		data.add(AccountFilteredData.builder().nodeId("project1").parentId("account1").level(5).nodeName("Project 1")
-				.build());
+		data.add(
+				AccountFilteredData.builder()
+						.nodeId("project1")
+						.parentId("account1")
+						.level(5)
+						.nodeName("Project 1")
+						.build());
 
-		data.add(AccountFilteredData.builder().nodeId("project2").parentId("account1").level(5).nodeName("Project 2")
-				.build());
+		data.add(
+				AccountFilteredData.builder()
+						.nodeId("project2")
+						.parentId("account1")
+						.level(5)
+						.nodeName("Project 2")
+						.build());
 
-		data.add(AccountFilteredData.builder().nodeId("project3").parentId("account1").level(5).nodeName("Project 3")
-				.build());
+		data.add(
+				AccountFilteredData.builder()
+						.nodeId("project3")
+						.parentId("account1")
+						.level(5)
+						.nodeName("Project 3")
+						.build());
 
 		return data;
 	}

@@ -41,7 +41,7 @@ import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.common.service.impl.CustomAnalyticsServiceImpl;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
@@ -60,7 +60,7 @@ public class CustomAnalyticsServiceImplTest {
 	@InjectMocks private CustomAnalyticsServiceImpl customAnalyticsServiceImpl;
 	@Mock private UserInfoRepository userInfoRepository;
 	@Mock private AuthenticationRepository authenticationRepository;
-	@Mock private CustomApiConfig customAPISettings;
+	@Mock private AnalyticsConfig analyticsConfig;
 	@Mock private ProjectAccessManager projectAccessManager;
 	@Mock private UserInfoServiceImpl service;
 	@Mock private UsersSessionService usersSessionService;
@@ -110,7 +110,7 @@ public class CustomAnalyticsServiceImplTest {
 
 	@Test
 	public void getAnalyticsSwitch() {
-		when(customAPISettings.isAnalyticsSwitch()).thenReturn(true);
+		when(analyticsConfig.isAnalyticsSwitch()).thenReturn(true);
 		JSONObject json = customAnalyticsServiceImpl.getAnalyticsCheck();
 		assertEquals(true, json.get("analyticsSwitch"));
 	}

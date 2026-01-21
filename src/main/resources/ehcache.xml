@@ -254,4 +254,8 @@
         <heap>10</heap>
     </cache>
 
+    <cache alias="kpiBenchmarkTargets">
+        <heap unit="entries">10</heap>
+    </cache>
+
 </config>

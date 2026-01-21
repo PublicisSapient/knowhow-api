@@ -193,7 +193,7 @@
     "placeHolders": ["KPI_DATA"]
   },
   {
-    "key" : "batch-recommendation",
+    "key" : "batch-project-level-recommendation",
     "context" : "You are an AI data scientist, your task is to analyze the KPI data for a project using the steps provided below:",
     "input" : "Based on the KPIs – sprint_velocity, sprint_capacity_utilization, test_execution_pass_percentage, build_frequency, unit_test_coverage, code_build_time, tech_debt_sonar_maintainability, lead_time_for_change, defect_injection_rate, defect_rejection_rate, defect_removal_efficiency, defect_density, in_sprint_automation_coverage, regression_automation_coverage, sprint_predictability, first_time_pass_rate, happiness_index_rate, value_delivery, sonar_code_quality, release_frequency, issue_count, scope_churn, created_vs_resolved, defect_seepage_rate, commitment_reliability, code_violations – analyze the provided dataset KPI_DATA_BY_PROJECT_PLACEHOLDER, which contains kpi data of latest five sprints marked by date,analyze the performance of each kpi and generate a score for the project performance.",
     "instructions" : [
@@ -210,5 +210,28 @@
     "outputFormat" : "Provide a comprehensive recommendation with:\n1. Calculate project health score as a percentage based on benchmark comparison\n2. Analyze KPI deviations, interdependencies using correlation matrix, and prioritize improvements\n3. Format as parsable JSON matching this structure exactly:\n\n{\n  \"title\": \"Project Health Analysis\",\n  \"description\": \"Comprehensive analysis with project health score of [X%]. Key findings: [summarize top 3 deviations and their business impact in 2-3 sentences]. Translate technical metrics into business-friendly language.\",\n  \"severity\": \"[CRITICAL|HIGH|MEDIUM|LOW - use highest severity from all action plans]\",\n  \"timeToValue\": \"[Estimated time for overall improvement: e.g., '2-4 weeks', '1-2 months']\",\n  \"actionPlans\": [\n    {\n      \"title\": \"Improve [KPI_NAME] - Current: [X%]\",\n      \"description\": \"**Observation:** [Current state, deviation from benchmark, trend analysis]. **Correlated KPIs:** [List as 'kpi_name: correlation%' - only include correlations > 50%]. **Recommendation:** [Specific, actionable steps tailored for Persona_PLACEHOLDER role]. **Expected Impact:** [Explain improvement effects on correlated KPIs].\"\n    }\n  ]\n}\n\n**Requirements:**\n- Order actionPlans by severity (CRITICAL → HIGH → MEDIUM → LOW)\n- Each actionPlan should focus on ONE main KPI\n- Include top 3-5 actionPlans (most impactful)\n- Use severity based on deviation: >30% = CRITICAL, 20-30% = HIGH, 10-20% = MEDIUM, <10% = LOW\n- timeToValue based on severity and complexity\n- No inline comments, only valid JSON",
     "placeHolders" : [ "KPI_CORRELATION_REPORT_PLACEHOLDER", "KPI_DATA_BY_PROJECT_PLACEHOLDER", "Persona_PLACEHOLDER" ],
     "task" : "Analyze the KPI data and generate a comprehensive report."
+  },
+  {
+    "key": "batch-kpi-level-recommendation",
+    "context": "You are an AI data scientist. Your task is to analyze the health of a SINGLE KPI using its recent sprint data and a benchmark KPI correlation matrix to generate actionable KPI-level recommendations.",
+    "input": "Analyze the KPI provided in KPI_DATA_PLACEHOLDER (includes kpiId, kpiName, and latest five sprint values). Use KPI_CORRELATION_REPORT_PLACEHOLDER as the benchmark reference for expected interdependencies and weights.",
+    "instructions": [
+      "1. Extract kpiId and kpiName from kpi data to identify the target KPI.",
+      "2. From kpi correlation report, extract benchmark correlation coefficients and weights ONLY for pairs involving the identified KPI.",
+      "3. Analyze the trend, variability, and deviation of the KPI values across the last five sprints.",
+      "4. Identify significant benchmark relationships where correlation > 0.5 (positive) or < -0.5 (negative).",
+      "5. Compute a KPI alignment score by comparing observed KPI behavior against benchmark-expected behavior, weighted by benchmark correlation strengths. Normalize the score between 0 and 1.",
+      "6. Scale the normalized score to a percentage to derive the KPI health score.",
+      "7. Identify downstream KPIs most likely to be impacted due to misalignment of this KPI based on benchmark correlations.",
+      "8. Analyze interdependencies: explain how improving this KPI is expected to influence correlated KPIs and delivery outcomes.",
+      "9. Determine severity based on deviation of this KPI from benchmark expectations (>30% CRITICAL, 20–30% HIGH, 10–20% MEDIUM, <10% LOW). Severity must guide recommendation intensity."
+    ],
+    "outputFormat": "Provide a comprehensive KPI-level recommendation formatted as parsable JSON exactly as below:\n\n{\n  \"title\": \"KPI Health Analysis - [kpiName]\",\n  \"description\": \"Health score of [X%] for [kpiName]. Summarize how this KPI is trending, why it matters in business terms, and the impact of its current state.\",\n  \"severity\": \"[CRITICAL|HIGH|MEDIUM|LOW]\",\n  \"timeToValue\": \"[Estimated improvement timeline]\",\n  \"actionPlans\": [\n    {\n      \"title\": \"Improve [kpiName] - Current: [value or %]\",\n      \"description\": \"**Observation:** [Deviation from benchmark and recent sprint trend]. **Correlated KPIs:** [List benchmark-based correlations >50%]. **Recommendation:** [Specific steps for Persona_PLACEHOLDER]. **Expected Impact:** [Explain cascading effects on correlated KPIs].\"\n    }\n  ]\n}\n\nRequirements:\n- Focus ONLY on the KPI provided in KPI_DATA_PLACEHOLDER\n- Use benchmark correlations for interdependency analysis\n- Include 1–3 action plans maximum\n- Translate technical metrics into business impact\n- No inline comments, only valid JSON",
+    "placeHolders": [
+      "KPI_DATA_PLACEHOLDER",
+      "KPI_CORRELATION_REPORT_PLACEHOLDER",
+      "Persona_PLACEHOLDER"
+    ],
+    "task": "Generate KPI-level health analysis and recommendations."
   }
 ]

@@ -33,6 +33,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.common.service.impl.ConfigDetailsServiceImpl;
+import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.model.ConfigDetails;
 import com.publicissapient.kpidashboard.apis.model.DateRangeFilter;
@@ -45,6 +46,10 @@ public class ConfigDetailsServiceImplTest {
 	@Mock ConfigHelperService configHelperService;
 	@InjectMocks private ConfigDetailsServiceImpl configDetailsServiceImpl;
 	@Mock private CustomApiConfig customApiConfig;
+	@Mock private AnalyticsConfig analyticsConfig;
+	@Mock private AnalyticsConfig.Google googleAnalyticsConfig;
+	@Mock private AnalyticsConfig.Grafana grafanaAnalyticsConfig;
+	@Mock private AnalyticsConfig.Grafana.Rollout grafanaAnalyticsRolloutconfig;
 	private Map<String, String> kpiWiseAggregation;
 	private DateRangeFilter dateRangeFilter;
 
@@ -76,7 +81,7 @@ public class ConfigDetailsServiceImplTest {
 	public void after() {}
 
 	@Test
-	public void testConfigDetails() throws Exception {
+	public void testConfigDetails() {
 		Mockito.when(configHelperService.calculateCriteria()).thenReturn(kpiWiseAggregation);
 		Mockito.when(customApiConfig.getPercentileValue()).thenReturn(90d);
 		Mockito.when(customApiConfig.getHierarchySelectionCount()).thenReturn(3);
@@ -85,6 +90,9 @@ public class ConfigDetailsServiceImplTest {
 				.thenReturn(Arrays.asList("Days", "Weeks", "Months"));
 		Mockito.when(customApiConfig.getIsGitlabFieldEnable()).thenReturn(false);
 		Mockito.when(customApiConfig.getSprintCountForKpiCalculation()).thenReturn(5);
+		Mockito.when(analyticsConfig.getGrafana()).thenReturn(grafanaAnalyticsConfig);
+		Mockito.when(grafanaAnalyticsConfig.getRollout()).thenReturn(grafanaAnalyticsRolloutconfig);
+		Mockito.when(analyticsConfig.getGoogle()).thenReturn(googleAnalyticsConfig);
 
 		ConfigDetails configDetail = getConfigDetailsObject();
 		ConfigDetails configDetails = configDetailsServiceImpl.getConfigDetails();

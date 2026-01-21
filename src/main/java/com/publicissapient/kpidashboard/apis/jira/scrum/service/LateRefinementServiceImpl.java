@@ -226,11 +226,9 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 
 	private Map<LocalDate, List<JiraIssue>> createLateRefinedMap(SprintDetails sprintDetails) {
 		LocalDate startDate =
-				DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate(), DateUtil.TIME_FORMAT)
-						.toLocalDate();
+				DateUtil.convertingStringToLocalDateTime(sprintDetails.getStartDate()).toLocalDate();
 		LocalDate sprintEndDate =
-				DateUtil.convertingStringToLocalDateTime(sprintDetails.getEndDate(), DateUtil.TIME_FORMAT)
-						.toLocalDate();
+				DateUtil.convertingStringToLocalDateTime(sprintDetails.getEndDate()).toLocalDate();
 		Map<LocalDate, List<JiraIssue>> lateRefinementMap = new HashMap<>();
 		while (!startDate.isAfter(sprintEndDate)) {
 			lateRefinementMap.put(startDate, new ArrayList<>());
@@ -489,6 +487,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			IterationKpiValue iterationKpiValue = new IterationKpiValue();
 			iterationKpiValue.setDataGroup(currentSprintDataCountGroup);
 			iterationKpiValue.setFilter1("OVERALL");
+			setKpiBenchmarkValues(iterationKpiValue, KPICode.LATE_REFINEMENT.getKpiId());
 
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);

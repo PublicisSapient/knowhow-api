@@ -60,20 +60,15 @@ import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 @RunWith(MockitoJUnitRunner.class)
 public class TeamPerformanceSummaryServiceImplTest {
 
-	@Mock
-	private ScmKpiHelperService scmKpiHelperService;
+	@Mock private ScmKpiHelperService scmKpiHelperService;
 
-	@Mock
-	private KpiHelperService kpiHelperService;
+	@Mock private KpiHelperService kpiHelperService;
 
-	@Mock
-	private ConfigHelperService configHelperService;
+	@Mock private ConfigHelperService configHelperService;
 
-	@Mock
-	private FilterHelperService filterHelperService;
+	@Mock private FilterHelperService filterHelperService;
 
-	@InjectMocks
-	private TeamPerformanceSummaryServiceImpl teamPerformanceSummaryService;
+	@InjectMocks private TeamPerformanceSummaryServiceImpl teamPerformanceSummaryService;
 
 	private KpiRequest kpiRequest;
 	private Node projectNode;
@@ -95,7 +90,7 @@ public class TeamPerformanceSummaryServiceImplTest {
 		kpiRequest = new KpiRequest();
 		kpiRequest.setLevel(5);
 		kpiRequest.setLabel("PROJECT");
-		kpiRequest.setIds(new String[] { "7" });
+		kpiRequest.setIds(new String[] {"7"});
 
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put(CommonConstant.DATE, List.of("WEEKS"));
@@ -127,7 +122,7 @@ public class TeamPerformanceSummaryServiceImplTest {
 		ScmCommits commit = new ScmCommits();
 		commit.setIsMergeCommit(false);
 		commit.setAddedLines(100);
-        commit.setRemovedLines(24);
+		commit.setRemovedLines(24);
 		commits.add(commit);
 
 		mergeRequests = new ArrayList<>();
@@ -139,7 +134,8 @@ public class TeamPerformanceSummaryServiceImplTest {
 
 	@Test
 	public void testGetTeamPerformanceSummary_Success() {
-		try (MockedStatic<DeveloperKpiHelper> mockedHelper = Mockito.mockStatic(DeveloperKpiHelper.class)) {
+		try (MockedStatic<DeveloperKpiHelper> mockedHelper =
+				Mockito.mockStatic(DeveloperKpiHelper.class)) {
 			List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 			AccountHierarchyData accountHierarchyData = new AccountHierarchyData();
 			List<Node> nodeList = new ArrayList<>();
@@ -149,16 +145,24 @@ public class TeamPerformanceSummaryServiceImplTest {
 			accountHierarchyData.setNode(nodeList);
 			accountHierarchyDataList.add(accountHierarchyData);
 
-			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
-			when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(accountHierarchyDataList);
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean()))
+					.thenReturn("PROJECT");
+			when(filterHelperService.getFilteredBuilds(any(), anyString()))
+					.thenReturn(accountHierarchyDataList);
 			when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 					.thenReturn(accountHierarchyDataList);
 
-			mockedHelper.when(() -> DeveloperKpiHelper.getScmToolsForProject(any(), any(), any()))
+			mockedHelper
+					.when(() -> DeveloperKpiHelper.getScmToolsForProject(any(), any(), any()))
 					.thenReturn(scmTools);
-			mockedHelper.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), anyString())).thenReturn("main");
-			mockedHelper.when(() -> DeveloperKpiHelper.filterCommitsForBranch(any(), any())).thenReturn(commits);
-			mockedHelper.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
+			mockedHelper
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(), anyString()))
+					.thenReturn("main");
+			mockedHelper
+					.when(() -> DeveloperKpiHelper.filterCommitsForBranch(any(), any()))
+					.thenReturn(commits);
+			mockedHelper
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(), any()))
 					.thenReturn(mergeRequests);
 
 			Map<String, Object> scmDataMap = new HashMap<>();
@@ -168,7 +172,8 @@ public class TeamPerformanceSummaryServiceImplTest {
 			when(scmKpiHelperService.getMergeRequests(any(), any())).thenReturn(mergeRequests);
 			when(scmKpiHelperService.getCommitDetails(any(), any())).thenReturn(commits);
 
-			List<PerformanceSummary> result = teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
+			List<PerformanceSummary> result =
+					teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
 
 			assertNotNull(result);
 			assertFalse(result.isEmpty());
@@ -177,7 +182,8 @@ public class TeamPerformanceSummaryServiceImplTest {
 
 	@Test
 	public void testGetTeamPerformanceSummary_NoScmTools() {
-		try (MockedStatic<DeveloperKpiHelper> mockedHelper = Mockito.mockStatic(DeveloperKpiHelper.class)) {
+		try (MockedStatic<DeveloperKpiHelper> mockedHelper =
+				Mockito.mockStatic(DeveloperKpiHelper.class)) {
 			List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 			AccountHierarchyData accountHierarchyData = new AccountHierarchyData();
 			List<Node> nodeList = new ArrayList<>();
@@ -187,15 +193,19 @@ public class TeamPerformanceSummaryServiceImplTest {
 			accountHierarchyData.setNode(nodeList);
 			accountHierarchyDataList.add(accountHierarchyData);
 
-			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
-			when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(accountHierarchyDataList);
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean()))
+					.thenReturn("PROJECT");
+			when(filterHelperService.getFilteredBuilds(any(), anyString()))
+					.thenReturn(accountHierarchyDataList);
 			when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 					.thenReturn(accountHierarchyDataList);
 
-			mockedHelper.when(() -> DeveloperKpiHelper.getScmToolsForProject(any(), any(), any()))
+			mockedHelper
+					.when(() -> DeveloperKpiHelper.getScmToolsForProject(any(), any(), any()))
 					.thenReturn(Collections.emptyList());
 
-			List<PerformanceSummary> result = teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
+			List<PerformanceSummary> result =
+					teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
 
 			assertNotNull(result);
 			assertTrue(result.isEmpty());
@@ -204,10 +214,13 @@ public class TeamPerformanceSummaryServiceImplTest {
 
 	@Test
 	public void testGetTeamPerformanceSummary_NoFilteredData() {
-		when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
-		when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(Collections.emptyList());
+		when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean()))
+				.thenReturn("PROJECT");
+		when(filterHelperService.getFilteredBuilds(any(), anyString()))
+				.thenReturn(Collections.emptyList());
 
-		List<PerformanceSummary> result = teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
+		List<PerformanceSummary> result =
+				teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
 
 		assertNotNull(result);
 		assertTrue(result.isEmpty());
@@ -224,12 +237,15 @@ public class TeamPerformanceSummaryServiceImplTest {
 		accountHierarchyData.setNode(nodeList);
 		accountHierarchyDataList.add(accountHierarchyData);
 
-		when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean())).thenReturn("PROJECT");
-		when(filterHelperService.getFilteredBuilds(any(), anyString())).thenReturn(accountHierarchyDataList);
+		when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), anyBoolean()))
+				.thenReturn("PROJECT");
+		when(filterHelperService.getFilteredBuilds(any(), anyString()))
+				.thenReturn(accountHierarchyDataList);
 		when(kpiHelperService.getAuthorizedFilteredList(any(), any(), anyBoolean()))
 				.thenReturn(Collections.emptyList());
 
-		List<PerformanceSummary> result = teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
+		List<PerformanceSummary> result =
+				teamPerformanceSummaryService.getTeamPerformanceSummary(kpiRequest);
 
 		assertNotNull(result);
 		assertTrue(result.isEmpty());

@@ -25,24 +25,23 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
 
-    @Serial
-    private static final long serialVersionUID = -3582501141524609828L;
+	@Serial private static final long serialVersionUID = -3582501141524609828L;
 
-    private final String apiKey;
+	private final String apiKey;
 
-    public ApiKeyAuthenticationToken(String apiKey) {
-        super(null);
-        this.apiKey = apiKey;
-        super.setAuthenticated(true);
-    }
+	public ApiKeyAuthenticationToken(String apiKey) {
+		super(null);
+		this.apiKey = apiKey;
+		super.setAuthenticated(true);
+	}
 
-    @Override
-    public Object getCredentials() {
-        return null;
-    }
+	@Override
+	public Object getCredentials() {
+		return null;
+	}
 
-    @Override
-    public Object getPrincipal() {
-        return this.apiKey;
-    }
+	@Override
+	public Object getPrincipal() {
+		return this.apiKey;
+	}
 }

@@ -18,12 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest.contract;
 
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
-import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import java.time.LocalDate;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotBlank;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -33,13 +29,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpServerErrorException;
 
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-
-import java.time.LocalDate;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
 
 @Tag(name = "AI Usage API", description = "API for retrieving AI usage statistics")
 @RequestMapping("/v1/ai-usage")
@@ -48,12 +48,13 @@ public interface AIUsageAPI {
 	@GetMapping("/stats")
 	@Operation(
 			summary = "Get Latest AI Usage Metrics by Level Name with details of components",
-			description = """
-					Fetches the latest AI usage metrics for the specified organizational level.
-					Retrieves AI usage statistics for the hierarchy level specified by levelName,
-					limited to the hierarchy elements the user has access to.
-					The statistics that provide 0 values are not included in the response.
-					""",
+			description =
+					"""
+			Fetches the latest AI usage metrics for the specified organizational level.
+			Retrieves AI usage statistics for the hierarchy level specified by levelName,
+			limited to the hierarchy elements the user has access to.
+			The statistics that provide 0 values are not included in the response.
+			""",
 			responses = {
 				@ApiResponse(
 						responseCode = "200",
@@ -73,19 +74,31 @@ public interface AIUsageAPI {
 						content = @Content(schema = @Schema(implementation = HttpServerErrorException.class)))
 			})
 	ResponseEntity<ServiceResponse> getAIUsageStats(
-			@Parameter(description = "Hierarchy level name", required = true, example = "account / vertical / bu")
-			@RequestParam @NotBlank String levelName,
-			@Parameter(description = "Flag to include user-level AI usage details in the response", example = "true")
-			@RequestParam(required = false, defaultValue = "false")
-			Boolean includeUsers,
+			@Parameter(
+							description = "Hierarchy level name",
+							required = true,
+							example = "account / vertical / bu")
+					@RequestParam
+					@NotBlank
+					String levelName,
+			@Parameter(
+							description = "Flag to include user-level AI usage details in the response",
+							example = "true")
+					@RequestParam(required = false, defaultValue = "false")
+					Boolean includeUsers,
 			@Parameter(description = "Start date in YYYY-MM-DD format", example = "2025-01-01")
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-			LocalDate startDate,
+					@RequestParam(required = false)
+					@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+					LocalDate startDate,
 			@Parameter(description = "End date in YYYY-MM-DD format", example = "2025-01-31")
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-			LocalDate endDate,
+					@RequestParam(required = false)
+					@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+					LocalDate endDate,
 			@PageableDefault(sort = "email", direction = Sort.Direction.ASC)
-			@Parameter(description = "Pagination parameters for fetching users for AI usage statistics details", required = false)
-			Pageable pageable)
+					@Parameter(
+							description =
+									"Pagination parameters for fetching users for AI usage statistics details",
+							required = false)
+					Pageable pageable)
 			throws BadRequestException, EntityNotFoundException;
 }

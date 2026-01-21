@@ -16,6 +16,21 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.innovation.rate;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
+
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
@@ -24,26 +39,11 @@ import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.lang.reflect.Method;
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class InnovationRateNonTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private InnovationRateNonTrendKpiServiceImpl service;
+	@InjectMocks private InnovationRateNonTrendKpiServiceImpl service;
 
 	private CustomDateRange currentPeriodRange;
 	private CustomDateRange previousPeriodRange;
@@ -56,11 +56,11 @@ class InnovationRateNonTrendKpiServiceImplTest {
 	void setUp() {
 		LocalDateTime now = LocalDateTime.of(2024, 1, 15, 0, 0);
 		currentPeriodRange = new CustomDateRange();
-        currentPeriodRange.setStartDateTime(now.minusDays(7));
-        currentPeriodRange.setEndDateTime(now);
+		currentPeriodRange.setStartDateTime(now.minusDays(7));
+		currentPeriodRange.setEndDateTime(now);
 		previousPeriodRange = new CustomDateRange();
-        previousPeriodRange.setStartDateTime(now.minusDays(14));
-        previousPeriodRange.setEndDateTime(now.minusDays(7));
+		previousPeriodRange.setStartDateTime(now.minusDays(14));
+		previousPeriodRange.setEndDateTime(now.minusDays(7));
 
 		tool = new Tool();
 		tool.setBranch("main");
@@ -78,15 +78,27 @@ class InnovationRateNonTrendKpiServiceImplTest {
 		userWiseCommits.put("user1@test.com", List.of(commit1, commit2));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One");
-			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class))).thenAnswer(inv -> {
-				long millis = inv.getArgument(0);
-				return LocalDateTime.ofEpochSecond(millis / 1000, 0, java.time.ZoneOffset.UTC);
-			});
-			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(true);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+					.thenReturn("User One");
+			dateUtilMock
+					.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
+					.thenAnswer(
+							inv -> {
+								long millis = inv.getArgument(0);
+								return LocalDateTime.ofEpochSecond(millis / 1000, 0, java.time.ZoneOffset.UTC);
+							});
+			dateUtilMock
+					.when(
+							() ->
+									DateUtil.isWithinDateTimeRange(
+											any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+					.thenReturn(true);
 
 			List<RepoToolValidationData> result = invokePrepareUserValidationData();
 
@@ -104,15 +116,27 @@ class InnovationRateNonTrendKpiServiceImplTest {
 		userWiseCommits.put("user2@test.com", List.of(commit2));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One", "User Two");
-			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class))).thenAnswer(inv -> {
-				long millis = inv.getArgument(0);
-				return LocalDateTime.ofEpochSecond(millis / 1000, 0, java.time.ZoneOffset.UTC);
-			});
-			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(true);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+					.thenReturn("User One", "User Two");
+			dateUtilMock
+					.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
+					.thenAnswer(
+							inv -> {
+								long millis = inv.getArgument(0);
+								return LocalDateTime.ofEpochSecond(millis / 1000, 0, java.time.ZoneOffset.UTC);
+							});
+			dateUtilMock
+					.when(
+							() ->
+									DateUtil.isWithinDateTimeRange(
+											any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+					.thenReturn(true);
 
 			List<RepoToolValidationData> result = invokePrepareUserValidationData();
 
@@ -127,11 +151,20 @@ class InnovationRateNonTrendKpiServiceImplTest {
 		userWiseCommits.put("user1@test.com", Collections.emptyList());
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One");
-			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(false);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+					.thenReturn("User One");
+			dateUtilMock
+					.when(
+							() ->
+									DateUtil.isWithinDateTimeRange(
+											any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+					.thenReturn(false);
 
 			List<RepoToolValidationData> result = invokePrepareUserValidationData();
 
@@ -146,15 +179,27 @@ class InnovationRateNonTrendKpiServiceImplTest {
 		userWiseCommits.put("user1@test.com", List.of(commit));
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class))).thenReturn("User One");
-			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class))).thenAnswer(inv -> {
-				long millis = inv.getArgument(0);
-				return LocalDateTime.ofEpochSecond(millis / 1000, 0, java.time.ZoneOffset.UTC);
-			});
-			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(false);
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(any(String.class), any(Set.class)))
+					.thenReturn("User One");
+			dateUtilMock
+					.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
+					.thenAnswer(
+							inv -> {
+								long millis = inv.getArgument(0);
+								return LocalDateTime.ofEpochSecond(millis / 1000, 0, java.time.ZoneOffset.UTC);
+							});
+			dateUtilMock
+					.when(
+							() ->
+									DateUtil.isWithinDateTimeRange(
+											any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+					.thenReturn(false);
 
 			List<RepoToolValidationData> result = invokePrepareUserValidationData();
 
@@ -167,16 +212,32 @@ class InnovationRateNonTrendKpiServiceImplTest {
 		ScmCommits commit = new ScmCommits();
 		commit.setAddedLines((int) addedLines);
 		commit.setRemovedLines((int) (totalLines - addedLines));
-		commit.setCommitTimestamp(commitTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+		commit.setCommitTimestamp(
+				commitTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
 		return commit;
 	}
 
 	private List<RepoToolValidationData> invokePrepareUserValidationData() throws Exception {
-		Method method = InnovationRateNonTrendKpiServiceImpl.class.getDeclaredMethod(
-				"prepareUserValidationData", CustomDateRange.class, CustomDateRange.class,
-				Map.class, Set.class, Tool.class, String.class, List.class);
+		Method method =
+				InnovationRateNonTrendKpiServiceImpl.class.getDeclaredMethod(
+						"prepareUserValidationData",
+						CustomDateRange.class,
+						CustomDateRange.class,
+						Map.class,
+						Set.class,
+						Tool.class,
+						String.class,
+						List.class);
 		method.setAccessible(true);
-		return (List<RepoToolValidationData>) method.invoke(service, currentPeriodRange, previousPeriodRange,
-				userWiseCommits, assignees, tool, "TestProject", iterationKpiValueList);
+		return (List<RepoToolValidationData>)
+				method.invoke(
+						service,
+						currentPeriodRange,
+						previousPeriodRange,
+						userWiseCommits,
+						assignees,
+						tool,
+						"TestProject",
+						iterationKpiValueList);
 	}
 }

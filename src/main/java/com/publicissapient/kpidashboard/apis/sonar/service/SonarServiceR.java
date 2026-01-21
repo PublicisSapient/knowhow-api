@@ -108,8 +108,8 @@ public class SonarServiceR {
 				if (filteredAccountDataList.isEmpty()) {
 					return responseList;
 				}
-				//skip using cache when the request is made with an api key
-				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 					Object cachedData =
 							cacheService.getFromApplicationCache(
 									projectKeyCache, KPISource.SONAR.name(), groupId, kpiRequest.getSprintIncluded());

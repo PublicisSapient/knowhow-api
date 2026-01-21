@@ -178,8 +178,7 @@ public final class KpiDataHelper {
 	 *     list of featureId
 	 */
 	public static Map<Pair<String, String>, Map<String, List<String>>> createSubCategoryWiseMap(
-			String subGroupCategory,
-			List<SprintWiseStory> sprintWiseStoryList) {
+			String subGroupCategory, List<SprintWiseStory> sprintWiseStoryList) {
 
 		Map<Pair<String, String>, Map<String, List<String>>> sprintWiseStoryMap = new HashMap<>();
 

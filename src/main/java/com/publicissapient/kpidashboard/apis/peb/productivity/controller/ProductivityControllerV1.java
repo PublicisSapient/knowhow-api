@@ -41,70 +41,157 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/v1/peb/productivity")
 @RequiredArgsConstructor
-@Tag(name = "PEB Productivity API v1", description = "APIs for retrieving productivity metrics and analytics data based on organizational hierarchy levels")
+@Tag(
+		name = "PEB Productivity API v1",
+		description =
+				"APIs for retrieving productivity metrics and analytics data based on organizational hierarchy levels")
 public class ProductivityControllerV1 {
 	private final ProductivityService productivityService;
 
-	@Operation(summary = "Get productivity data by hierarchy level", description = "Retrieves comprehensive productivity metrics and KPIs for a specific organizational hierarchy level. "
-			+ "The hierarchy level determines the scope and aggregation of productivity data returned.", operationId = "getPebProductivityData")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Productivity data retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductivityResponse.class))),
-			@ApiResponse(responseCode = "400", description = """
+	@Operation(
+			summary = "Get productivity data by hierarchy level",
+			description =
+					"Retrieves comprehensive productivity metrics and KPIs for a specific organizational hierarchy level. "
+							+ "The hierarchy level determines the scope and aggregation of productivity data returned.",
+			operationId = "getPebProductivityData")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Productivity data retrieved successfully",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ProductivityResponse.class))),
+				@ApiResponse(
+						responseCode = "400",
+						description =
+								"""
 					Bad Request will be returned in the following situations:
 					- received level name was empty
 					- requested level is too low on the organizational hierarchy
-					"""), @ApiResponse(responseCode = "403", description = """
+					"""),
+				@ApiResponse(
+						responseCode = "403",
+						description =
+								"""
 					Forbidden will be returned in the following situations:
 					- user doesn't have access to any data
 					"""),
-			@ApiResponse(responseCode = "404", description = """
+				@ApiResponse(
+						responseCode = "404",
+						description =
+								"""
 					Not Found will be returned in the following situations:
 					- requested level name does not exist
-					""", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
-			@ApiResponse(responseCode = "500", description = """
+					""",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description =
+								"""
 					Internal Server Error will be returned in the following situations:
 					- multiple levels were found corresponding with the requested level name
 					- no organizational level could be found relating to a 'project' entity
 					- an unexpected error occurred when processing the request
-					""", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))) })
-	@GetMapping({ "", "/" })
+					""",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class)))
+			})
+	@GetMapping({"", "/"})
 	public ResponseEntity<ServiceResponse> getPebProductivityData(
-			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to retrieve productivity "
-					+ "data", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName,
-			@Parameter(name = "parentNodeId", description = "The node id of the organizational entity parent for " +
-					"which to retrieve productivity data", example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
-			@RequestParam(required = false) String parentNodeId) {
+			@Parameter(
+							name = "levelName",
+							description =
+									"The name of the organizational hierarchy level for which to retrieve productivity "
+											+ "data",
+							required = true,
+							example = "project")
+					@RequestParam
+					@NotBlank(message = "The level name is required")
+					String levelName,
+			@Parameter(
+							name = "parentNodeId",
+							description =
+									"The node id of the organizational entity parent for "
+											+ "which to retrieve productivity data",
+							example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
+					@RequestParam(required = false)
+					String parentNodeId) {
 
-		return ResponseEntity.ok(this.productivityService
-				.getProductivityForLevel(new ProductivityRequest(levelName, parentNodeId)));
+		return ResponseEntity.ok(
+				this.productivityService.getProductivityForLevel(
+						new ProductivityRequest(levelName, parentNodeId)));
 	}
 
-	@Operation(summary = "Get productivity trends by hierarchy level", description = """
+	@Operation(
+			summary = "Get productivity trends by hierarchy level",
+			description =
+					"""
 			Retrieves historical productivity trend data for a specific organizational hierarchy level over time. This endpoint provides time-series productivity analytics aggregated by weekly intervals, showing how productivity metrics evolve across different time periods.
 			""")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Productivity trends data retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ServiceResponse.class))),
-			@ApiResponse(responseCode = "400", description = """
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Productivity trends data retrieved successfully",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "400",
+						description =
+								"""
 					Bad Request will be returned in the following situations:
 					- received level name was empty
 					- requested level is too low on the organizational hierarchy
-					"""), @ApiResponse(responseCode = "403", description = """
+					"""),
+				@ApiResponse(
+						responseCode = "403",
+						description =
+								"""
 					Forbidden will be returned in the following situations:
 					- user doesn't have access to any data
-					"""), @ApiResponse(responseCode = "404", description = """
+					"""),
+				@ApiResponse(
+						responseCode = "404",
+						description =
+								"""
 					Not Found will be returned in the following situations:
 					- requested level name does not exist
-					"""), @ApiResponse(responseCode = "500", description = """
+					"""),
+				@ApiResponse(
+						responseCode = "500",
+						description =
+								"""
 					Internal Server Error will be returned in the following situations:
 					- multiple levels were found corresponding with the requested level name
 					- no organizational level could be found relating to a 'project' entity
 					- an unexpected error occurred when processing the request
-					""") })
+					""")
+			})
 	@GetMapping("/trends")
 	public ResponseEntity<ServiceResponse> getPebProductivityTrends(
-			@Parameter(name = "levelName", description = "The name of the organizational hierarchy level for which to"
-					+ " retrieve productivity trends data", required = true, example = "project") @RequestParam @NotBlank(message = "The level name is required") String levelName) {
-		return ResponseEntity.ok(this.productivityService.getProductivityTrendsForLevel(levelName,
-				TemporalAggregationUnit.WEEK, ProductivityService.DEFAULT_NUMBER_OF_TREND_DATA_POINTS));
+			@Parameter(
+							name = "levelName",
+							description =
+									"The name of the organizational hierarchy level for which to"
+											+ " retrieve productivity trends data",
+							required = true,
+							example = "project")
+					@RequestParam
+					@NotBlank(message = "The level name is required")
+					String levelName) {
+		return ResponseEntity.ok(
+				this.productivityService.getProductivityTrendsForLevel(
+						levelName,
+						TemporalAggregationUnit.WEEK,
+						ProductivityService.DEFAULT_NUMBER_OF_TREND_DATA_POINTS));
 	}
 }

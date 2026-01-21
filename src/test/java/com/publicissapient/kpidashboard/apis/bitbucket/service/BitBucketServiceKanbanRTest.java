@@ -72,28 +72,23 @@ public class BitBucketServiceKanbanRTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CodeCommitKanbanServiceImpl codeCommitKanbanServiceImpl;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private CacheService cacheService;
+	@Mock private CodeCommitKanbanServiceImpl codeCommitKanbanServiceImpl;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
 
-	@InjectMocks
-	private BitBucketServiceKanbanR bitbucketServiceKanbanR;
+	@InjectMocks private BitBucketServiceKanbanR bitbucketServiceKanbanR;
 
 	private List<AccountHierarchyDataKanban> accountHierarchyDataKanbanList = new ArrayList<>();
-    private Map<String, BitBucketKPIService<?, ?, ?>> bitbucketServiceCache = new HashMap<>();
+	private Map<String, BitBucketKPIService<?, ?, ?>> bitbucketServiceCache = new HashMap<>();
 
 	@Before
 	public void setup() throws EntityNotFoundException {
-		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory = AccountHierarchyKanbanFilterDataFactory
-				.newInstance();
-		accountHierarchyDataKanbanList = accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
+		AccountHierarchyKanbanFilterDataFactory accountHierarchyKanbanFilterDataFactory =
+				AccountHierarchyKanbanFilterDataFactory.newInstance();
+		accountHierarchyDataKanbanList =
+				accountHierarchyKanbanFilterDataFactory.getAccountHierarchyKanbanDataList();
 
 		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
 		projectConfig.setId(new ObjectId("6335368249794a18e8a4479f"));
@@ -103,15 +98,16 @@ public class BitBucketServiceKanbanRTest {
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		List<HierarchyLevel> hierarchyLevels = hierachyLevelFactory.getHierarchyLevels();
 		Map<String, Integer> map = new HashMap<>();
-		Map<String, HierarchyLevel> hierarchyMap = hierarchyLevels.stream()
-				.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
+		Map<String, HierarchyLevel> hierarchyMap =
+				hierarchyLevels.stream()
+						.collect(Collectors.toMap(HierarchyLevel::getHierarchyLevelId, x -> x));
 		hierarchyMap.forEach((key, value) -> map.put(key, value.getLevel()));
 		when(filterHelperService.getHierarchyIdLevelMap(anyBoolean())).thenReturn(map);
 		when(authorizedProjectsService.filterKanbanProjects(accountHierarchyDataKanbanList))
 				.thenReturn(accountHierarchyDataKanbanList);
 
-		FieldMappingDataFactory fieldMappingDataFactory = FieldMappingDataFactory
-				.newInstance("/json/kanban/kanban_project_field_mappings.json");
+		FieldMappingDataFactory fieldMappingDataFactory =
+				FieldMappingDataFactory.newInstance("/json/kanban/kanban_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		when(filterHelperService.getFilteredBuildsKanban(Mockito.any(), Mockito.any()))
@@ -125,38 +121,53 @@ public class BitBucketServiceKanbanRTest {
 
 		List<KpiElement> resultList;
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+				mockStatic(BitBucketKPIServiceFactory.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
 			when(mockService.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
 			resultList = bitbucketServiceKanbanR.process(kpiRequest);
 			mockedStatic.verify(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
-		assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
+		assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
 	}
 
 	@Test
-	public void when_RequestIsMadeWithApiKey_Expect_NoCachedDataWillBeUsed() throws EntityNotFoundException, ApplicationException {
+	public void when_RequestIsMadeWithApiKey_Expect_NoCachedDataWillBeUsed()
+			throws EntityNotFoundException, ApplicationException {
 		KpiRequest kpiRequest = createKpiRequest(2, "Bitbucket");
 		bitbucketServiceCache.put(KPICode.NUMBER_OF_CHECK_INS.name(), codeCommitKanbanServiceImpl);
 
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class);
-			 MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-					 ApiKeyAuthenticationService.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+						mockStatic(BitBucketKPIServiceFactory.class);
+				MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(
-							() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(true);
 			when(mockService.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
 			bitbucketServiceKanbanR.process(kpiRequest);
 			mockedStatic.verify(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
 		verifyNoInteractions(cacheService);
 	}
@@ -168,17 +179,24 @@ public class BitBucketServiceKanbanRTest {
 
 		List<KpiElement> resultList;
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+				mockStatic(BitBucketKPIServiceFactory.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
 			when(mockService.getKpiData(any(), any(), any())).thenThrow(NullPointerException.class);
 			resultList = bitbucketServiceKanbanR.process(kpiRequest);
 			mockedStatic.verify(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
-		assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+		assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 	}
 
 	@Test
@@ -188,17 +206,24 @@ public class BitBucketServiceKanbanRTest {
 
 		List<KpiElement> resultList;
 		when(kpiHelperService.isToolConfigured(any(), any(), any())).thenReturn(true);
-		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic = mockStatic(BitBucketKPIServiceFactory.class)) {
+		try (MockedStatic<BitBucketKPIServiceFactory> mockedStatic =
+				mockStatic(BitBucketKPIServiceFactory.class)) {
 			CodeCommitKanbanServiceImpl mockService = mock(CodeCommitKanbanServiceImpl.class);
-			mockedStatic.when(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())))
+			mockedStatic
+					.when(
+							() ->
+									BitBucketKPIServiceFactory.getBitBucketKPIService(
+											eq(KPICode.NUMBER_OF_CHECK_INS.name())))
 					.thenReturn(mockService);
 			when(mockService.getKpiData(any(), any(), any())).thenThrow(ApplicationException.class);
 			resultList = bitbucketServiceKanbanR.process(kpiRequest);
 			mockedStatic.verify(
-					() -> BitBucketKPIServiceFactory.getBitBucketKPIService(eq(KPICode.NUMBER_OF_CHECK_INS.name())));
+					() ->
+							BitBucketKPIServiceFactory.getBitBucketKPIService(
+									eq(KPICode.NUMBER_OF_CHECK_INS.name())));
 		}
-		assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+		assertThat(
+				"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 	}
 
 	@Test
@@ -210,31 +235,42 @@ public class BitBucketServiceKanbanRTest {
 	}
 
 	@Test
-	public void when_RequesterShouldHaveFullAccessOnRequestedResource_Expect_GetAuthorizedFilteredListReturnsRequiredResource() {
+	public void
+			when_RequesterShouldHaveFullAccessOnRequestedResource_Expect_GetAuthorizedFilteredListReturnsRequiredResource() {
 		KpiRequest kpiRequest = createKpiRequest(2, "Bitbucket");
 		List<AccountHierarchyDataKanban> expectedAccountHierarchyDataKanbanList = new ArrayList<>();
 		AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
 		accountHierarchyDataKanban.setLabelName("testLabel");
 		expectedAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
 
-		try(MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
-					mockStatic(ApiKeyAuthenticationService.class)) {
-			//Case 1 -> user is super admin and request is not through api key
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+				mockStatic(ApiKeyAuthenticationService.class)) {
+			// Case 1 -> user is super admin and request is not through api key
 			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest).thenReturn(false);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
 
 			List<AccountHierarchyDataKanban> resultedAccountHierarchyDataKanbanList =
-					ReflectionTestUtils.invokeMethod(bitbucketServiceKanbanR, "getAuthorizedFilteredList", kpiRequest,
+					ReflectionTestUtils.invokeMethod(
+							bitbucketServiceKanbanR,
+							"getAuthorizedFilteredList",
+							kpiRequest,
 							expectedAccountHierarchyDataKanbanList);
 
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
 
-			//Case 2 -> user is not super admin and request is through api key
+			// Case 2 -> user is not super admin and request is through api key
 			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest).thenReturn(true);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(true);
 
 			resultedAccountHierarchyDataKanbanList =
-					ReflectionTestUtils.invokeMethod(bitbucketServiceKanbanR, "getAuthorizedFilteredList", kpiRequest,
+					ReflectionTestUtils.invokeMethod(
+							bitbucketServiceKanbanR,
+							"getAuthorizedFilteredList",
+							kpiRequest,
 							expectedAccountHierarchyDataKanbanList);
 
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
@@ -242,7 +278,8 @@ public class BitBucketServiceKanbanRTest {
 	}
 
 	@Test
-	public void when_RequesterIsNotSuperAdminOrRequestIsNotMadeWithApiKey_Expect_GetAuthorizedFilteredListPerformsResourceAccessFiltering() {
+	public void
+			when_RequesterIsNotSuperAdminOrRequestIsNotMadeWithApiKey_Expect_GetAuthorizedFilteredListPerformsResourceAccessFiltering() {
 		KpiRequest kpiRequest = createKpiRequest(2, "Bitbucket");
 		List<AccountHierarchyDataKanban> testAccountHierarchyDataKanbanList = new ArrayList<>();
 		AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
@@ -254,14 +291,20 @@ public class BitBucketServiceKanbanRTest {
 		accountHierarchyDataKanban1.setLabelName("expectedLabel");
 		expectedAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
 
-		try(MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
-					mockStatic(ApiKeyAuthenticationService.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+				mockStatic(ApiKeyAuthenticationService.class)) {
 			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-			when(authorizedProjectsService.filterKanbanProjects(anyList())).thenReturn(expectedAccountHierarchyDataKanbanList);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest).thenReturn(false);
+			when(authorizedProjectsService.filterKanbanProjects(anyList()))
+					.thenReturn(expectedAccountHierarchyDataKanbanList);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
 
 			List<AccountHierarchyDataKanban> resultedAccountHierarchyDataKanbanList =
-					ReflectionTestUtils.invokeMethod(bitbucketServiceKanbanR, "getAuthorizedFilteredList", kpiRequest,
+					ReflectionTestUtils.invokeMethod(
+							bitbucketServiceKanbanR,
+							"getAuthorizedFilteredList",
+							kpiRequest,
 							testAccountHierarchyDataKanbanList);
 
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
@@ -271,17 +314,19 @@ public class BitBucketServiceKanbanRTest {
 	@Test
 	public void when_KanbanKpiRequestIsReceived_Expect_RequestIsPopulatedAccordingly() {
 		KpiRequest kpiRequest1 = new KpiRequest();
-		kpiRequest1.setIds(new String[] { "10" });
+		kpiRequest1.setIds(new String[] {"10"});
 		kpiRequest1.setSelectedMap(Map.of("date", List.of("5")));
 
-		ReflectionTestUtils.invokeMethod(bitbucketServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
+		ReflectionTestUtils.invokeMethod(
+				bitbucketServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
 
 		assertEquals(10, kpiRequest1.getKanbanXaxisDataPoints());
 		assertEquals(CommonConstant.DAYS, kpiRequest1.getDuration());
 
 		kpiRequest1.setSelectedMap(Map.of("date", List.of("Random duration")));
 
-		ReflectionTestUtils.invokeMethod(bitbucketServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
+		ReflectionTestUtils.invokeMethod(
+				bitbucketServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
 
 		assertEquals("RANDOM DURATION", kpiRequest1.getDuration());
 	}
@@ -290,10 +335,15 @@ public class BitBucketServiceKanbanRTest {
 		KpiRequest kpiRequest = new KpiRequest();
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.NUMBER_OF_CHECK_INS.getKpiId(), KPICode.NUMBER_OF_CHECK_INS.name(),
-				"Productivity", "", source);
+		addKpiElement(
+				kpiList,
+				KPICode.NUMBER_OF_CHECK_INS.getKpiId(),
+				KPICode.NUMBER_OF_CHECK_INS.name(),
+				"Productivity",
+				"",
+				source);
 		kpiRequest.setLevel(level);
-		kpiRequest.setIds(new String[] { "5" });
+		kpiRequest.setIds(new String[] {"5"});
 		kpiRequest.setKpiList(kpiList);
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put("date", List.of("DATE"));
@@ -304,7 +354,12 @@ public class BitBucketServiceKanbanRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId(kpiId);

@@ -16,28 +16,27 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy;
 
-import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import com.publicissapient.kpidashboard.apis.enums.KPICode;
 
 @ExtendWith(MockitoExtension.class)
 class KpiStrategyRegistryTest {
 
 	private KpiStrategyRegistry registry;
 
-	@Mock
-	private KpiCalculationStrategy<?> trendStrategy;
+	@Mock private KpiCalculationStrategy<?> trendStrategy;
 
-	@Mock
-	private KpiCalculationStrategy<?> nonTrendStrategy;
+	@Mock private KpiCalculationStrategy<?> nonTrendStrategy;
 
 	@BeforeEach
 	void setUp() {
@@ -49,7 +48,8 @@ class KpiStrategyRegistryTest {
 
 	@Test
 	void testGetStrategy_WithLineChartType() {
-		KpiCalculationStrategy<?> result = registry.getStrategy(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, "line");
+		KpiCalculationStrategy<?> result =
+				registry.getStrategy(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, "line");
 
 		assertNotNull(result);
 		assertEquals(trendStrategy, result);
@@ -57,7 +57,8 @@ class KpiStrategyRegistryTest {
 
 	@Test
 	void testGetStrategy_WithBarChartType() {
-		KpiCalculationStrategy<?> result = registry.getStrategy(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, "bar");
+		KpiCalculationStrategy<?> result =
+				registry.getStrategy(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, "bar");
 
 		assertNotNull(result);
 		assertEquals(nonTrendStrategy, result);
@@ -65,10 +66,10 @@ class KpiStrategyRegistryTest {
 
 	@Test
 	void testGetStrategy_WithLineChartTypeCaseInsensitive() {
-		KpiCalculationStrategy<?> result = registry.getStrategy(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, "LINE");
+		KpiCalculationStrategy<?> result =
+				registry.getStrategy(KPICode.REPO_TOOL_MEAN_TIME_TO_MERGE, "LINE");
 
 		assertNotNull(result);
 		assertEquals(trendStrategy, result);
 	}
-
 }

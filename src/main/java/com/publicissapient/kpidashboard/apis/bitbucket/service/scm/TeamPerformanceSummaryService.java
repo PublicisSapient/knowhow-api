@@ -16,11 +16,11 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm;
 
+import java.util.List;
+
 import com.publicissapient.kpidashboard.apis.bitbucket.model.PerformanceSummary;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 
-import java.util.List;
-
 public interface TeamPerformanceSummaryService {
-    List<PerformanceSummary> getTeamPerformanceSummary(KpiRequest kpiRequest);
+	List<PerformanceSummary> getTeamPerformanceSummary(KpiRequest kpiRequest);
 }

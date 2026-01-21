@@ -308,11 +308,7 @@ public class StoriesWithoutEstimateImpl
 
 			if (CollectionUtils.isNotEmpty(totalIssuesOfSprint)) {
 				populateValidationDataObject(
-						kpiElement,
-						requestTrackerId,
-						totalIssuesOfSprint,
-						validationDataMap,
-						node);
+						kpiElement, requestTrackerId, totalIssuesOfSprint, validationDataMap, node);
 			}
 
 			log.debug(

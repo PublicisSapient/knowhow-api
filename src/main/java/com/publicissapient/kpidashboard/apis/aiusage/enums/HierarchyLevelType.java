@@ -18,17 +18,17 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.enums;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 @AllArgsConstructor
 public enum HierarchyLevelType {
-    ACCOUNT("Account", "account", "acc"),
-    VERTICAL("Vertical", "vertical", "ver"),
-    BUSINESS_UNIT("Business Unit", "bu", "bu");
+	ACCOUNT("Account", "account", "acc"),
+	VERTICAL("Vertical", "vertical", "ver"),
+	BUSINESS_UNIT("Business Unit", "bu", "bu");
 
 	private final String displayName;
 	private final String levelName;
@@ -40,7 +40,8 @@ public enum HierarchyLevelType {
 				return type;
 			}
 		}
-		throw new IllegalArgumentException("No matching HierarchyLevelType for level name: " + lowerCase);
+		throw new IllegalArgumentException(
+				"No matching HierarchyLevelType for level name: " + lowerCase);
 	}
 
 	public static HierarchyLevelType fromHierarchyLevel(String lowerCase) {
@@ -49,14 +50,11 @@ public enum HierarchyLevelType {
 				return type;
 			}
 		}
-		throw new IllegalArgumentException("No matching HierarchyLevelType for hierarchy level name: " + lowerCase);
+		throw new IllegalArgumentException(
+				"No matching HierarchyLevelType for hierarchy level name: " + lowerCase);
 	}
 
 	public static List<String> getLevelNameValues() {
-		return List.of(
-				ACCOUNT.getLevelName(),
-				VERTICAL.getLevelName(),
-				BUSINESS_UNIT.getLevelName()
-		);
+		return List.of(ACCOUNT.getLevelName(), VERTICAL.getLevelName(), BUSINESS_UNIT.getLevelName());
 	}
 }

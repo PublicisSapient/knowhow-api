@@ -524,8 +524,7 @@ public class RefinementRejectionRateServiceImpl
 		Map<Long, String> doneStatusMap = getJiraIssueReleaseStatus().getClosedList();
 
 		if (doneStatusMap != null) {
-			doneStatus =
-					doneStatusMap.values().stream().map(String::toLowerCase).toList();
+			doneStatus = doneStatusMap.values().stream().map(String::toLowerCase).toList();
 		}
 		ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
 		projectList.add(basicProjectConfigId.toString());
@@ -543,8 +542,7 @@ public class RefinementRejectionRateServiceImpl
 												|| !issue.getSprintAssetState().equalsIgnoreCase(CommonConstant.CLOSED)
 												|| !finalDoneStatus.contains(issue.getStatus().toLowerCase()))
 						.toList();
-		List<String> historyData =
-				unAssignedJiraIssues.stream().map(JiraIssue::getNumber).toList();
+		List<String> historyData = unAssignedJiraIssues.stream().map(JiraIssue::getNumber).toList();
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories = new ArrayList<>();
 		getJiraIssuesCustomHistoryFromBaseClass().stream()
 				.filter(his -> historyData.contains(his.getStoryID()))

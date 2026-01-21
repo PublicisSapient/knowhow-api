@@ -179,8 +179,7 @@ public abstract class ZephyrKPIService<R, S, T> extends ToolsKPIService<R, S>
 	 * @param
 	 * @return Map of automated and all regression test cases
 	 */
-	public Map<String, Object> fetchRegressionKPIDataFromDb(
-			List<Node> leafNodeList) {
+	public Map<String, Object> fetchRegressionKPIDataFromDb(List<Node> leafNodeList) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		if (CollectionUtils.isNotEmpty(leafNodeList)) {
 			Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();

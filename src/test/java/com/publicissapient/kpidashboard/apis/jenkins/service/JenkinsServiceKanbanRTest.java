@@ -70,21 +70,14 @@ public class JenkinsServiceKanbanRTest {
 	public Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
 	public Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 
-	@Mock
-	private FilterHelperService filterHelperService;
-	@Mock
-	private KpiHelperService kpiHelperService;
-	@Mock
-	private CacheService cacheService;
-	@Mock
-	private CodeBuildTimeKanbanServiceImpl codeBuildTimeKanbanServiceImpl;
-	@Mock
-	private UserAuthorizedProjectsService authorizedProjectsService;
-	@Mock
-	private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
+	@Mock private FilterHelperService filterHelperService;
+	@Mock private KpiHelperService kpiHelperService;
+	@Mock private CacheService cacheService;
+	@Mock private CodeBuildTimeKanbanServiceImpl codeBuildTimeKanbanServiceImpl;
+	@Mock private UserAuthorizedProjectsService authorizedProjectsService;
+	@Mock private JenkinsKPIServiceFactory jenkinsKPIServiceFactory;
 
-	@InjectMocks
-	private JenkinsServiceKanbanR jenkinsServiceKanbanR;
+	@InjectMocks private JenkinsServiceKanbanR jenkinsServiceKanbanR;
 
 	private final KpiElement buildKpiElement = new KpiElement();
 
@@ -96,14 +89,19 @@ public class JenkinsServiceKanbanRTest {
 
 	@Test
 	public void testProcess1() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
 			initiateRequiredServicesAndFactories();
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(false);
 			kpiRequest = createKpiRequest(4, "Jenkins");
 			kpiRequest.setLabel("PROJECT");
@@ -113,32 +111,44 @@ public class JenkinsServiceKanbanRTest {
 			accountHierarchyDataKanban.setNode(List.of(testNode));
 			when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(Map.of("project", 1));
 			when(filterHelperService.getFirstHierarchyLevel()).thenReturn("firstHierarchyLevel");
-			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true))).thenReturn("test level id");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
 			when(authorizedProjectsService.filterKanbanProjects(anyList()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
 			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
-			when(codeBuildTimeKanbanServiceImpl.getKpiData(any(), any(), any())).thenReturn(kpiRequest.getKpiList().get(0));
+			when(codeBuildTimeKanbanServiceImpl.getKpiData(any(), any(), any()))
+					.thenReturn(kpiRequest.getKpiList().get(0));
 
 			List<KpiElement> resultList = jenkinsServiceKanbanR.process(kpiRequest);
 			assertThat("Kpi Name :", resultList.get(0).getKpiName(), equalTo("CODE_BUILD_TIME_KANBAN"));
-			assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_PASSED));
 		}
 	}
 
 	@Test
 	public void testProcess_throwApplication() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class);
-			 MockedStatic<JenkinsKPIServiceFactory> jenkinsKPIServiceFactoryMockedStatic = mockStatic(JenkinsKPIServiceFactory.class)) {
-						jenkinsKPIServiceFactoryMockedStatic.when(
-					() -> JenkinsKPIServiceFactory.getJenkinsKPIService(eq(KPICode.CODE_BUILD_TIME_KANBAN.name())))
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class);
+				MockedStatic<JenkinsKPIServiceFactory> jenkinsKPIServiceFactoryMockedStatic =
+						mockStatic(JenkinsKPIServiceFactory.class)) {
+			jenkinsKPIServiceFactoryMockedStatic
+					.when(
+							() ->
+									JenkinsKPIServiceFactory.getJenkinsKPIService(
+											eq(KPICode.CODE_BUILD_TIME_KANBAN.name())))
 					.thenReturn(codeBuildTimeKanbanServiceImpl);
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(false);
 			kpiRequest = createKpiRequest(4, "Jenkins");
 			kpiRequest.setLabel("PROJECT");
@@ -148,33 +158,48 @@ public class JenkinsServiceKanbanRTest {
 			accountHierarchyDataKanban.setNode(List.of(testNode));
 			when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(Map.of("project", 1));
 			when(filterHelperService.getFirstHierarchyLevel()).thenReturn("firstHierarchyLevel");
-			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true))).thenReturn("test level id");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
 			when(authorizedProjectsService.filterKanbanProjects(anyList()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
 			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
-			when(codeBuildTimeKanbanServiceImpl.getKpiData(any(), any(), any())).thenThrow(ApplicationException.class);;
+			when(codeBuildTimeKanbanServiceImpl.getKpiData(any(), any(), any()))
+					.thenThrow(ApplicationException.class);
+			;
 
 			List<KpiElement> resultList = jenkinsServiceKanbanR.process(kpiRequest);
 			jenkinsKPIServiceFactoryMockedStatic.verify(
-					() -> JenkinsKPIServiceFactory.getJenkinsKPIService(eq(KPICode.CODE_BUILD_TIME_KANBAN.name())));
-			assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+					() ->
+							JenkinsKPIServiceFactory.getJenkinsKPIService(
+									eq(KPICode.CODE_BUILD_TIME_KANBAN.name())));
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 		}
 	}
 
 	@Test
 	public void testProcess_NullPointer() throws Exception {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class);
-			 MockedStatic<JenkinsKPIServiceFactory> jenkinsKPIServiceFactoryMockedStatic = mockStatic(JenkinsKPIServiceFactory.class)) {
-			jenkinsKPIServiceFactoryMockedStatic.when(
-							() -> JenkinsKPIServiceFactory.getJenkinsKPIService(eq(KPICode.CODE_BUILD_TIME_KANBAN.name())))
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class);
+				MockedStatic<JenkinsKPIServiceFactory> jenkinsKPIServiceFactoryMockedStatic =
+						mockStatic(JenkinsKPIServiceFactory.class)) {
+			jenkinsKPIServiceFactoryMockedStatic
+					.when(
+							() ->
+									JenkinsKPIServiceFactory.getJenkinsKPIService(
+											eq(KPICode.CODE_BUILD_TIME_KANBAN.name())))
 					.thenReturn(codeBuildTimeKanbanServiceImpl);
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(false);
 			kpiRequest = createKpiRequest(4, "Jenkins");
 			kpiRequest.setLabel("PROJECT");
@@ -184,17 +209,23 @@ public class JenkinsServiceKanbanRTest {
 			accountHierarchyDataKanban.setNode(List.of(testNode));
 			when(filterHelperService.getHierarchyIdLevelMap(true)).thenReturn(Map.of("project", 1));
 			when(filterHelperService.getFirstHierarchyLevel()).thenReturn("firstHierarchyLevel");
-			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true))).thenReturn("test level id");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
 			when(authorizedProjectsService.filterKanbanProjects(anyList()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
 			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
-			when(codeBuildTimeKanbanServiceImpl.getKpiData(any(), any(), any())).thenThrow(NullPointerException.class);;
+			when(codeBuildTimeKanbanServiceImpl.getKpiData(any(), any(), any()))
+					.thenThrow(NullPointerException.class);
+			;
 
 			List<KpiElement> resultList = jenkinsServiceKanbanR.process(kpiRequest);
 			jenkinsKPIServiceFactoryMockedStatic.verify(
-					() -> JenkinsKPIServiceFactory.getJenkinsKPIService(eq(KPICode.CODE_BUILD_TIME_KANBAN.name())));
-			assertThat("Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
+					() ->
+							JenkinsKPIServiceFactory.getJenkinsKPIService(
+									eq(KPICode.CODE_BUILD_TIME_KANBAN.name())));
+			assertThat(
+					"Kpi Name :", resultList.get(0).getResponseCode(), equalTo(CommonConstant.KPI_FAILED));
 		}
 	}
 
@@ -210,47 +241,60 @@ public class JenkinsServiceKanbanRTest {
 	@Test
 	public void when_KanbanKpiRequestIsReceived_Expect_RequestIsPopulatedAccordingly() {
 		KpiRequest kpiRequest1 = new KpiRequest();
-		kpiRequest1.setIds(new String[] { "10" });
+		kpiRequest1.setIds(new String[] {"10"});
 		kpiRequest1.setSelectedMap(Map.of("date", List.of("5")));
 
-		ReflectionTestUtils.invokeMethod(jenkinsServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
+		ReflectionTestUtils.invokeMethod(
+				jenkinsServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
 
 		assertEquals(10, kpiRequest1.getKanbanXaxisDataPoints());
 		assertEquals(CommonConstant.DAYS, kpiRequest1.getDuration());
 
 		kpiRequest1.setSelectedMap(Map.of("date", List.of("Random duration")));
 
-		ReflectionTestUtils.invokeMethod(jenkinsServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
+		ReflectionTestUtils.invokeMethod(
+				jenkinsServiceKanbanR, "populateKanbanKpiRequest", kpiRequest1);
 
 		assertEquals("RANDOM DURATION", kpiRequest1.getDuration());
 	}
 
 	@Test
-	public void when_RequesterShouldHaveFullAccessOnRequestedResource_Expect_GetAuthorizedFilteredListReturnsRequiredResource() {
+	public void
+			when_RequesterShouldHaveFullAccessOnRequestedResource_Expect_GetAuthorizedFilteredListReturnsRequiredResource() {
 		kpiRequest = createKpiRequest(4, "Jenkins");
 		List<AccountHierarchyDataKanban> expectedAccountHierarchyDataKanbanList = new ArrayList<>();
 		AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
 		accountHierarchyDataKanban.setLabelName("testLabel");
 		expectedAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
 
-		try(MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
-					mockStatic(ApiKeyAuthenticationService.class)) {
-			//Case 1 -> user is super admin and request is not through api key
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+				mockStatic(ApiKeyAuthenticationService.class)) {
+			// Case 1 -> user is super admin and request is not through api key
 			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest).thenReturn(false);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
 
 			List<AccountHierarchyDataKanban> resultedAccountHierarchyDataKanbanList =
-					ReflectionTestUtils.invokeMethod(jenkinsServiceKanbanR, "getAuthorizedFilteredList", kpiRequest,
+					ReflectionTestUtils.invokeMethod(
+							jenkinsServiceKanbanR,
+							"getAuthorizedFilteredList",
+							kpiRequest,
 							expectedAccountHierarchyDataKanbanList);
 
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
 
-			//Case 2 -> user is not super admin and request is through api key
+			// Case 2 -> user is not super admin and request is through api key
 			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest).thenReturn(true);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(true);
 
 			resultedAccountHierarchyDataKanbanList =
-					ReflectionTestUtils.invokeMethod(jenkinsServiceKanbanR, "getAuthorizedFilteredList", kpiRequest,
+					ReflectionTestUtils.invokeMethod(
+							jenkinsServiceKanbanR,
+							"getAuthorizedFilteredList",
+							kpiRequest,
 							expectedAccountHierarchyDataKanbanList);
 
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
@@ -258,7 +302,8 @@ public class JenkinsServiceKanbanRTest {
 	}
 
 	@Test
-	public void when_RequesterIsNotSuperAdminOrRequestIsNotMadeWithApiKey_Expect_GetAuthorizedFilteredListPerformsResourceAccessFiltering() {
+	public void
+			when_RequesterIsNotSuperAdminOrRequestIsNotMadeWithApiKey_Expect_GetAuthorizedFilteredListPerformsResourceAccessFiltering() {
 		kpiRequest = createKpiRequest(4, "Jenkins");
 		List<AccountHierarchyDataKanban> testAccountHierarchyDataKanbanList = new ArrayList<>();
 		AccountHierarchyDataKanban accountHierarchyDataKanban = new AccountHierarchyDataKanban();
@@ -270,14 +315,20 @@ public class JenkinsServiceKanbanRTest {
 		accountHierarchyDataKanban1.setLabelName("expectedLabel");
 		expectedAccountHierarchyDataKanbanList.add(accountHierarchyDataKanban);
 
-		try(MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
-					mockStatic(ApiKeyAuthenticationService.class)) {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+				mockStatic(ApiKeyAuthenticationService.class)) {
 			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-			when(authorizedProjectsService.filterKanbanProjects(anyList())).thenReturn(expectedAccountHierarchyDataKanbanList);
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest).thenReturn(false);
+			when(authorizedProjectsService.filterKanbanProjects(anyList()))
+					.thenReturn(expectedAccountHierarchyDataKanbanList);
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
+					.thenReturn(false);
 
 			List<AccountHierarchyDataKanban> resultedAccountHierarchyDataKanbanList =
-					ReflectionTestUtils.invokeMethod(jenkinsServiceKanbanR, "getAuthorizedFilteredList", kpiRequest,
+					ReflectionTestUtils.invokeMethod(
+							jenkinsServiceKanbanR,
+							"getAuthorizedFilteredList",
+							kpiRequest,
 							testAccountHierarchyDataKanbanList);
 
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
@@ -285,15 +336,21 @@ public class JenkinsServiceKanbanRTest {
 	}
 
 	@Test
-	public void when_RequestIsMadeWithApiKey_Expect_NoCachedDataWillBeUsed() throws EntityNotFoundException {
-		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic = mockStatic(
-				ApiKeyAuthenticationService.class);
-			 MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
+	public void when_RequestIsMadeWithApiKey_Expect_NoCachedDataWillBeUsed()
+			throws EntityNotFoundException {
+		try (MockedStatic<ApiKeyAuthenticationService> apiKeyAuthenticationServiceMockedStatic =
+						mockStatic(ApiKeyAuthenticationService.class);
+				MockedStatic<KPIHelperUtil> kpiHelperUtilMockedStatic = mockStatic(KPIHelperUtil.class)) {
 			initiateRequiredServicesAndFactories();
 
-			kpiHelperUtilMockedStatic.when(() -> KPIHelperUtil.getTreeLeafNodesGroupedByFilter(any(), eq(null),
-					anyList(), anyString(), anyInt())).thenReturn(createTreeAggregatorDetail());
-			apiKeyAuthenticationServiceMockedStatic.when(ApiKeyAuthenticationService::isApiKeyRequest)
+			kpiHelperUtilMockedStatic
+					.when(
+							() ->
+									KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+											any(), eq(null), anyList(), anyString(), anyInt()))
+					.thenReturn(createTreeAggregatorDetail());
+			apiKeyAuthenticationServiceMockedStatic
+					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(true);
 			kpiRequest = createKpiRequest(4, "Jenkins");
 			kpiRequest.setLabel("PROJECT");
@@ -301,7 +358,8 @@ public class JenkinsServiceKanbanRTest {
 			Node testNode = new Node();
 			testNode.setGroupName("group name");
 			accountHierarchyDataKanban.setNode(List.of(testNode));
-			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true))).thenReturn("test level id");
+			when(filterHelperService.getHierarchyLevelId(anyInt(), anyString(), eq(true)))
+					.thenReturn("test level id");
 			when(filterHelperService.getFilteredBuildsKanban(any(KpiRequest.class), anyString()))
 					.thenReturn(List.of(accountHierarchyDataKanban));
 
@@ -313,11 +371,16 @@ public class JenkinsServiceKanbanRTest {
 	private KpiRequest createKpiRequest(int level, String source) {
 		List<KpiElement> kpiList = new ArrayList<>();
 
-		addKpiElement(kpiList, KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(), KPICode.CODE_BUILD_TIME_KANBAN.name(),
-				"Productivity", "mins", source);
+		addKpiElement(
+				kpiList,
+				KPICode.CODE_BUILD_TIME_KANBAN.getKpiId(),
+				KPICode.CODE_BUILD_TIME_KANBAN.name(),
+				"Productivity",
+				"mins",
+				source);
 		kpiRequest.setLevel(level);
 		kpiRequest.setLabel("project");
-		kpiRequest.setIds(new String[] { "Kanban Project_6335368249794a18e8a4479f" });
+		kpiRequest.setIds(new String[] {"Kanban Project_6335368249794a18e8a4479f"});
 		kpiRequest.setKpiList(kpiList);
 		Map<String, List<String>> selectedMap = new HashMap<>();
 		selectedMap.put("Project", Arrays.asList("Kanban Project_6335368249794a18e8a4479f"));
@@ -326,7 +389,12 @@ public class JenkinsServiceKanbanRTest {
 		return kpiRequest;
 	}
 
-	private void addKpiElement(List<KpiElement> kpiList, String kpiId, String kpiName, String category, String kpiUnit,
+	private void addKpiElement(
+			List<KpiElement> kpiList,
+			String kpiId,
+			String kpiName,
+			String category,
+			String kpiUnit,
 			String source) {
 		buildKpiElement.setKpiId(kpiId);
 		buildKpiElement.setKpiName(kpiName);
@@ -350,14 +418,16 @@ public class JenkinsServiceKanbanRTest {
 	private void initiateRequiredServicesAndFactories() {
 		List<JenkinsKPIService<?, ?, ?>> mockServices = List.of(codeBuildTimeKanbanServiceImpl);
 		jenkinsKPIServiceFactory = JenkinsKPIServiceFactory.builder().services(mockServices).build();
-		when(codeBuildTimeKanbanServiceImpl.getQualifierType()).thenReturn(KPICode.CODE_BUILD_TIME_KANBAN.name());
+		when(codeBuildTimeKanbanServiceImpl.getQualifierType())
+				.thenReturn(KPICode.CODE_BUILD_TIME_KANBAN.name());
 		jenkinsServiceCache.put(KPICode.CODE_BUILD_TIME_KANBAN.name(), codeBuildTimeKanbanServiceImpl);
 		jenkinsKPIServiceFactory.initMyServiceCache();
 	}
 
 	private TreeAggregatorDetail createTreeAggregatorDetail() {
 		TreeAggregatorDetail treeAggregatorDetail = new TreeAggregatorDetail();
-		treeAggregatorDetail.setMapOfListOfProjectNodes(Map.of("project", List.of(new Node(), new Node())));
+		treeAggregatorDetail.setMapOfListOfProjectNodes(
+				Map.of("project", List.of(new Node(), new Node())));
 		return treeAggregatorDetail;
 	}
 }

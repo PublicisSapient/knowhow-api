@@ -25,6 +25,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
+import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.iterationdashboard.JiraIterationServiceR;
@@ -61,6 +63,8 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 import com.publicissapient.kpidashboard.common.repository.application.FieldMappingRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
@@ -89,6 +93,7 @@ public class LateRefinementServiceImplTest {
 	private List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
 	private KpiRequest kpiRequest;
 	@Mock private ForecastingManager forecastingManager;
+	private Map<String, KpiBenchmarkValues> kpiBenchmarkValuesMap = new HashMap<>();
 
 	@Before
 	public void setup() {
@@ -114,6 +119,7 @@ public class LateRefinementServiceImplTest {
 		JiraIssueHistoryDataFactory jiraIssueHistoryDataFactory =
 				JiraIssueHistoryDataFactory.newInstance();
 		jiraIssueCustomHistoryList = jiraIssueHistoryDataFactory.getJiraIssueCustomHistory();
+		populateKpiBenchMark();
 	}
 
 	private void setMockProjectConfig() {
@@ -131,6 +137,16 @@ public class LateRefinementServiceImplTest {
 		configHelperService.setFieldMappingMap(fieldMappingMap);
 	}
 
+	public void populateKpiBenchMark() {
+		BenchmarkPercentiles benchmarkPercentiles =
+				BenchmarkPercentiles.builder().filter("value").build();
+		kpiBenchmarkValuesMap.put(
+				KPICode.LATE_REFINEMENT.getKpiId(),
+				KpiBenchmarkValues.builder()
+						.filterWiseBenchmarkValues(Collections.singletonList(benchmarkPercentiles))
+						.build());
+	}
+
 	@Test
 	public void testGetKpiDataProject_activeSprint() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
@@ -145,6 +161,7 @@ public class LateRefinementServiceImplTest {
 		when(jiraService.getJiraIssuesCustomHistoryForCurrentSprint())
 				.thenReturn(jiraIssueCustomHistoryList);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
+		when(cacheService.getKpiBenchmarkTargets()).thenReturn(kpiBenchmarkValuesMap);
 		try {
 			KpiElement kpiElement =
 					lateRefinementService.getKpiData(
@@ -183,6 +200,7 @@ public class LateRefinementServiceImplTest {
 				.thenReturn(jiraIssueCustomHistoryList);
 		when(jiraService.getJiraIssuesForCurrentSprint()).thenReturn(storyList);
 		doNothing().when(forecastingManager).addForecastsToDataCount(any(), any(), any());
+		when(cacheService.getKpiBenchmarkTargets()).thenReturn(kpiBenchmarkValuesMap);
 		try {
 			KpiElement kpiElement =
 					lateRefinementService.getKpiData(

@@ -111,6 +111,10 @@ jobs:
             -DdepVersion=$COMMON_VERSION \
             -DforceVersion=true
 
+      # ✅ Code Formatting Check (Spotless)
+      - name: Code Formatting Check
+        run: mvn spotless:check
+
       # ✅ Build & Test knowhow-api with both dependencies: common + ai-gateway-client
       - name: Build & Test knowhow-api
         run: mvn clean install -Ddockerfile.skip=true

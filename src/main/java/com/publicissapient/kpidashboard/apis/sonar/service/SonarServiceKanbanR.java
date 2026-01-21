@@ -89,7 +89,8 @@ public class SonarServiceKanbanR {
 
 			kpiHelperService.kpiResolution(kpiRequest.getKpiList());
 
-			if(Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser()) || ApiKeyAuthenticationService.isApiKeyRequest()) {
+			if (Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())
+					|| ApiKeyAuthenticationService.isApiKeyRequest()) {
 				kanbanProjectKeyCache =
 						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 			} else {
@@ -106,8 +107,9 @@ public class SonarServiceKanbanR {
 			populateKanbanKpiRequest(kpiRequest);
 
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-			//skip using cache when the request is made with an api key and also processing by group id will be disabled
-			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 				List<KpiElement> cachedData = getCachedData(kpiRequest, kanbanProjectKeyCache, groupId);
 				if (CollectionUtils.isNotEmpty(cachedData)) {
 					return cachedData;
@@ -127,8 +129,9 @@ public class SonarServiceKanbanR {
 				responseList.add(
 						calculateAllKPIAggregatedMetrics(kpiRequest, kpiEle, treeAggregatorDetail));
 			}
-			//skip using cache when the request is made with an api key and also processing by group id will be disabled
-			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 				setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
 			}
 

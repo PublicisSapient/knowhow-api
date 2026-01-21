@@ -16,23 +16,23 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.innovation.rate;
 
-import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
-import com.publicissapient.kpidashboard.common.model.application.Tool;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.lang.reflect.Method;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
+import com.publicissapient.kpidashboard.common.model.application.Tool;
 
 @ExtendWith(MockitoExtension.class)
 class InnovationRateTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private InnovationRateTrendKpiServiceImpl service;
+	@InjectMocks private InnovationRateTrendKpiServiceImpl service;
 
 	private Tool tool;
 
@@ -45,8 +45,9 @@ class InnovationRateTrendKpiServiceImplTest {
 
 	@Test
 	void testCreateValidationData_WithRepositoryName() throws Exception {
-		RepoToolValidationData result = invokeCreateValidationData("TestProject", tool, "John Doe", 
-				"2024-01-01 to 2024-01-07", 8.5, 100, 150);
+		RepoToolValidationData result =
+				invokeCreateValidationData(
+						"TestProject", tool, "John Doe", "2024-01-01 to 2024-01-07", 8.5, 100, 150);
 
 		assertNotNull(result);
 		assertEquals("TestProject", result.getProjectName());
@@ -64,8 +65,9 @@ class InnovationRateTrendKpiServiceImplTest {
 		tool.setRepositoryName(null);
 		tool.setRepoSlug("repo-slug");
 
-		RepoToolValidationData result = invokeCreateValidationData("TestProject", tool, "Jane Smith", 
-				"2024-01-08 to 2024-01-14", 7.2, 80, 120);
+		RepoToolValidationData result =
+				invokeCreateValidationData(
+						"TestProject", tool, "Jane Smith", "2024-01-08 to 2024-01-14", 7.2, 80, 120);
 
 		assertNotNull(result);
 		assertEquals("repo-slug", result.getRepoUrl());
@@ -77,8 +79,9 @@ class InnovationRateTrendKpiServiceImplTest {
 
 	@Test
 	void testCreateValidationData_WithZeroValues() throws Exception {
-		RepoToolValidationData result = invokeCreateValidationData("TestProject", tool, "Developer", 
-				"2024-01-15 to 2024-01-21", 0.0, 0, 0);
+		RepoToolValidationData result =
+				invokeCreateValidationData(
+						"TestProject", tool, "Developer", "2024-01-15 to 2024-01-21", 0.0, 0, 0);
 
 		assertNotNull(result);
 		assertEquals(0.0, result.getInnovationRate());
@@ -91,13 +94,35 @@ class InnovationRateTrendKpiServiceImplTest {
 		assertEquals("INNOVATION_RATE_TREND", service.getStrategyType());
 	}
 
-	private RepoToolValidationData invokeCreateValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, double innovationRate, long addedLines, long changedLines) throws Exception {
-		Method method = InnovationRateTrendKpiServiceImpl.class.getDeclaredMethod(
-				"createValidationData", String.class, Tool.class, String.class, String.class, 
-				double.class, long.class, long.class);
+	private RepoToolValidationData invokeCreateValidationData(
+			String projectName,
+			Tool tool,
+			String developerName,
+			String dateLabel,
+			double innovationRate,
+			long addedLines,
+			long changedLines)
+			throws Exception {
+		Method method =
+				InnovationRateTrendKpiServiceImpl.class.getDeclaredMethod(
+						"createValidationData",
+						String.class,
+						Tool.class,
+						String.class,
+						String.class,
+						double.class,
+						long.class,
+						long.class);
 		method.setAccessible(true);
-		return (RepoToolValidationData) method.invoke(service, projectName, tool, developerName, 
-				dateLabel, innovationRate, addedLines, changedLines);
+		return (RepoToolValidationData)
+				method.invoke(
+						service,
+						projectName,
+						tool,
+						developerName,
+						dateLabel,
+						innovationRate,
+						addedLines,
+						changedLines);
 	}
 }

@@ -88,7 +88,8 @@ public class ScmPrDeclineRateServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_DECLINE_RATE);
 		kpiElement.setTrendValueList(
-				DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.PR_DECLINE_RATE.getKpiId()));
+				DeveloperKpiHelper.prepareDataCountGroups(
+						trendValuesMap, KPICode.PR_DECLINE_RATE.getKpiId()));
 		return kpiElement;
 	}
 

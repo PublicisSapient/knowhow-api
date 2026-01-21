@@ -21,7 +21,6 @@ package com.publicissapient.kpidashboard.apis.common.rest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import javax.validation.ConstraintViolationException;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -71,7 +70,8 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(RuntimeException.class)
 	public ResponseEntity<ErrorResponse> handleConflict(RuntimeException exception) {
 		return new ResponseEntity<>(
-				logAndBuildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Please try after some time.", exception),
+				logAndBuildResponse(
+						HttpStatus.INTERNAL_SERVER_ERROR, "Please try after some time.", exception),
 				HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
@@ -83,49 +83,68 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(ApplicationException.class)
-	public ResponseEntity<ErrorResponse> handleSpeedyException(ApplicationException applicationException) {
+	public ResponseEntity<ErrorResponse> handleSpeedyException(
+			ApplicationException applicationException) {
 		log.error(applicationException.getMessage(), applicationException);
 		return switch (applicationException.getErrorCode()) {
-		case ApplicationException.DUPLICATE_DATA,
-				ApplicationException.JSON_FORMAT_ERROR ->
-			new ResponseEntity<>(
-					logAndBuildResponse(HttpStatus.BAD_REQUEST,
-							String.format("Bad request.%s%s%s", applicationException.getMessage(), ERROR_CODE_STR,
-									applicationException.getErrorCode()),
-							applicationException),
-					HttpStatus.BAD_REQUEST);
-		case ApplicationException.NOTHING_TO_UPDATE ->
-			new ResponseEntity<>(
-					logAndBuildResponse(HttpStatus.NOT_MODIFIED,
-							String.format("Internal logError.%s%s%s", applicationException.getMessage(), ERROR_CODE_STR,
-									applicationException.getErrorCode()),
-							applicationException),
-					HttpStatus.NOT_MODIFIED);
-		default -> new ResponseEntity<>(
-				logAndBuildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-						String.format("Internal logError.%s%s%s", applicationException.getMessage(), ERROR_CODE_STR,
-								applicationException.getErrorCode()),
-						applicationException),
-				HttpStatus.INTERNAL_SERVER_ERROR);
+			case ApplicationException.DUPLICATE_DATA, ApplicationException.JSON_FORMAT_ERROR ->
+					new ResponseEntity<>(
+							logAndBuildResponse(
+									HttpStatus.BAD_REQUEST,
+									String.format(
+											"Bad request.%s%s%s",
+											applicationException.getMessage(),
+											ERROR_CODE_STR,
+											applicationException.getErrorCode()),
+									applicationException),
+							HttpStatus.BAD_REQUEST);
+			case ApplicationException.NOTHING_TO_UPDATE ->
+					new ResponseEntity<>(
+							logAndBuildResponse(
+									HttpStatus.NOT_MODIFIED,
+									String.format(
+											"Internal logError.%s%s%s",
+											applicationException.getMessage(),
+											ERROR_CODE_STR,
+											applicationException.getErrorCode()),
+									applicationException),
+							HttpStatus.NOT_MODIFIED);
+			default ->
+					new ResponseEntity<>(
+							logAndBuildResponse(
+									HttpStatus.INTERNAL_SERVER_ERROR,
+									String.format(
+											"Internal logError.%s%s%s",
+											applicationException.getMessage(),
+											ERROR_CODE_STR,
+											applicationException.getErrorCode()),
+									applicationException),
+							HttpStatus.INTERNAL_SERVER_ERROR);
 		};
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException accessDeniedException) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.FORBIDDEN, "Access Denied.", accessDeniedException),
+	public ResponseEntity<ErrorResponse> handleAccessDenied(
+			AccessDeniedException accessDeniedException) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.FORBIDDEN, "Access Denied.", accessDeniedException),
 				HttpStatus.FORBIDDEN);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
 			MethodArgumentNotValidException methodArgumentNotValidException) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST,
-				getMethodArgumentNotValidExceptionDetails(methodArgumentNotValidException),
-				methodArgumentNotValidException), HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(
+				logAndBuildResponse(
+						HttpStatus.BAD_REQUEST,
+						getMethodArgumentNotValidExceptionDetails(methodArgumentNotValidException),
+						methodArgumentNotValidException),
+				HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(UnrecognizedPropertyException.class)
-	public ResponseEntity<ErrorResponse> handleUnrecognizedProperty(UnrecognizedPropertyException ex) {
+	public ResponseEntity<ErrorResponse> handleUnrecognizedProperty(
+			UnrecognizedPropertyException ex) {
 		log.error(ex.getMessage());
 		ErrorResponse response = new ErrorResponse();
 		response.addFieldError(ex.getPropertyName(), ex.getMessage());
@@ -136,67 +155,88 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(DeleteLastAdminException.class)
-	public ResponseEntity<ErrorResponse> handleDeletingLastAdmin(DeleteLastAdminException deleteLastAdminException) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, deleteLastAdminException),
+	public ResponseEntity<ErrorResponse> handleDeletingLastAdmin(
+			DeleteLastAdminException deleteLastAdminException) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.BAD_REQUEST, deleteLastAdminException),
 				HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(UserNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(jakarta.ws.rs.BadRequestException.class)
-	public ResponseEntity<ErrorResponse> handleJakartaBadRequestException(jakarta.ws.rs.BadRequestException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<ErrorResponse> handleJakartaBadRequestException(
+			jakarta.ws.rs.BadRequestException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+			IllegalArgumentException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(IllegalStateException.class)
-	public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<ErrorResponse> handleIllegalStateException(
+			IllegalStateException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(ConstraintViolationException.class)
-	public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST,
-				getConstraintViolationExceptionDetails(exception), exception), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+			ConstraintViolationException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(
+						HttpStatus.BAD_REQUEST, getConstraintViolationExceptionDetails(exception), exception),
+				HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(NotImplementedException.class)
-	public ResponseEntity<ErrorResponse> handleNotImplementedException(NotImplementedException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.NOT_IMPLEMENTED, exception),
-				HttpStatus.NOT_IMPLEMENTED);
+	public ResponseEntity<ErrorResponse> handleNotImplementedException(
+			NotImplementedException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.NOT_IMPLEMENTED, exception), HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@ExceptionHandler(ToolNotFoundException.class)
-	public ResponseEntity<ErrorResponse> handleToolNotFoundException(ToolNotFoundException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
+	public ResponseEntity<ErrorResponse> handleToolNotFoundException(
+			ToolNotFoundException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(ProjectNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleProjectNotFound(ProjectNotFoundException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.NOT_FOUND, exception), HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(NotFoundException.class)
-	public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException notFoundException) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.NOT_FOUND, notFoundException), HttpStatus.NOT_FOUND);
+	public ResponseEntity<ErrorResponse> handleNotFoundException(
+			NotFoundException notFoundException) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.NOT_FOUND, notFoundException), HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(PendingApprovalException.class)
-	public ResponseEntity<ErrorResponse> handlePendingApprovalException(PendingApprovalException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.ACCEPTED, exception), HttpStatus.ACCEPTED);
+	public ResponseEntity<ErrorResponse> handlePendingApprovalException(
+			PendingApprovalException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.ACCEPTED, exception), HttpStatus.ACCEPTED);
 	}
 
 	@ExceptionHandler(InvalidAuthTypeConfigException.class)
 	public ResponseEntity<ErrorResponse> handleInvalidAuthTypeConfigException(
 			InvalidAuthTypeConfigException invalidAuthTypeConfigException) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, invalidAuthTypeConfigException),
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.BAD_REQUEST, invalidAuthTypeConfigException),
 				HttpStatus.BAD_REQUEST);
 	}
 
@@ -204,11 +244,13 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Object> handlePushDataExceptions(PushDataException ex) {
 		log.error(ex.getMessage());
 		if (ex.getPushBuildDeployResponse() != null) {
-			return new ResponseEntity<>(new ServiceResponse(false, ex.getMessage(), ex.getPushBuildDeployResponse()),
+			return new ResponseEntity<>(
+					new ServiceResponse(false, ex.getMessage(), ex.getPushBuildDeployResponse()),
 					HttpStatus.BAD_REQUEST);
 		}
 		if (ex.getCode() != null) {
-			return new ResponseEntity<>(new ServiceResponse(false, ex.getMessage(), ex.getPushBuildDeployResponse()),
+			return new ResponseEntity<>(
+					new ServiceResponse(false, ex.getMessage(), ex.getPushBuildDeployResponse()),
 					ex.getCode());
 		}
 		Map<String, String> errorResponse = new HashMap<>();
@@ -217,27 +259,40 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(InternalServerErrorException.class)
-	public ResponseEntity<ErrorResponse> handleInternalServerErrorException(InternalServerErrorException exception) {
-		return new ResponseEntity<>(logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
+	public ResponseEntity<ErrorResponse> handleInternalServerErrorException(
+			InternalServerErrorException exception) {
+		return new ResponseEntity<>(
+				logAndBuildResponse(HttpStatus.BAD_REQUEST, exception), HttpStatus.BAD_REQUEST);
 	}
 
 	private static ErrorResponse logAndBuildResponse(HttpStatus httpStatus, Throwable exception) {
 		log.error(exception.getMessage());
-		return ErrorResponse.builder().code(httpStatus.value()).error(httpStatus.getReasonPhrase())
-				.message(exception.getMessage()).build();
+		return ErrorResponse.builder()
+				.code(httpStatus.value())
+				.error(httpStatus.getReasonPhrase())
+				.message(exception.getMessage())
+				.build();
 	}
 
-	private static ErrorResponse logAndBuildResponse(HttpStatus httpStatus, String customMessage, Throwable exception) {
+	private static ErrorResponse logAndBuildResponse(
+			HttpStatus httpStatus, String customMessage, Throwable exception) {
 		log.error(exception.getMessage());
-		return ErrorResponse.builder().code(httpStatus.value()).error(httpStatus.getReasonPhrase())
-				.message(customMessage).build();
+		return ErrorResponse.builder()
+				.code(httpStatus.value())
+				.error(httpStatus.getReasonPhrase())
+				.message(customMessage)
+				.build();
 	}
 
-	private static String getConstraintViolationExceptionDetails(ConstraintViolationException exception) {
+	private static String getConstraintViolationExceptionDetails(
+			ConstraintViolationException exception) {
 		StringBuilder message = new StringBuilder();
 		exception.getConstraintViolations().stream()
-				.map(constraintViolation -> String.format("Invalid value %s - %s. ",
-						constraintViolation.getInvalidValue(), constraintViolation.getMessage()))
+				.map(
+						constraintViolation ->
+								String.format(
+										"Invalid value %s - %s. ",
+										constraintViolation.getInvalidValue(), constraintViolation.getMessage()))
 				.forEach(message::append);
 		return message.toString();
 	}
@@ -245,6 +300,7 @@ public class GlobalExceptionHandler {
 	private static String getMethodArgumentNotValidExceptionDetails(
 			MethodArgumentNotValidException methodArgumentNotValidException) {
 		return methodArgumentNotValidException.getBindingResult().getFieldErrors().stream()
-				.map(FieldError::getDefaultMessage).collect(Collectors.joining("; "));
+				.map(FieldError::getDefaultMessage)
+				.collect(Collectors.joining("; "));
 	}
 }

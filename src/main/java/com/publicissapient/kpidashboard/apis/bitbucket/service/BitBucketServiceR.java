@@ -121,8 +121,8 @@ public class BitBucketServiceR {
 					return responseList;
 				}
 
-				//skip using cache when the request is made with an api key
-				if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				// skip using cache when the request is made with an api key
+				if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 					Object cachedData =
 							cacheService.getFromApplicationCache(
 									projectKeyCache,
@@ -130,9 +130,9 @@ public class BitBucketServiceR {
 									groupId,
 									kpiRequest.getSprintIncluded());
 					if (!kpiRequest
-							.getRequestTrackerId()
-							.toLowerCase()
-							.contains(KPISource.EXCEL.name().toLowerCase())
+									.getRequestTrackerId()
+									.toLowerCase()
+									.contains(KPISource.EXCEL.name().toLowerCase())
 							&& null != cachedData) {
 						log.info(
 								"[BITBUCKET][{}]. Fetching value from cache for {}",

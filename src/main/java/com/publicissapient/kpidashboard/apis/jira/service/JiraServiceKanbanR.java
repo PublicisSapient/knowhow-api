@@ -53,9 +53,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This class handle all Kanban JIRA based KPI request and call each KPIs
- * service in thread. It is responsible for cache of KPI data at different
- * level.
+ * This class handle all Kanban JIRA based KPI request and call each KPIs service in thread. It is
+ * responsible for cache of KPI data at different level.
  *
  * @author priyanka jain
  */
@@ -73,33 +72,38 @@ public class JiraServiceKanbanR {
 	private final UserAuthorizedProjectsService authorizedProjectsService;
 
 	/**
-	 * This method process Kanban JIRA based kpi request, cache data and call
-	 * service in multiple thread.
+	 * This method process Kanban JIRA based kpi request, cache data and call service in multiple
+	 * thread.
 	 *
-	 * @param kpiRequest
-	 *            JIRA KPI request
+	 * @param kpiRequest JIRA KPI request
 	 * @return List of KPI data
 	 */
-	@SuppressWarnings({ "unchecked", "PMD.AvoidCatchingGenericException" })
+	@SuppressWarnings({"unchecked", "PMD.AvoidCatchingGenericException"})
 	public List<KpiElement> process(KpiRequest kpiRequest) throws EntityNotFoundException {
 
-		log.info("[JIRA KANBAN][{}]. Processing KPI calculation for data {}", kpiRequest.getRequestTrackerId(),
+		log.info(
+				"[JIRA KANBAN][{}]. Processing KPI calculation for data {}",
+				kpiRequest.getRequestTrackerId(),
 				kpiRequest.getKpiList());
-		List<KpiElement> origRequestedKpis = kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
+		List<KpiElement> origRequestedKpis =
+				kpiRequest.getKpiList().stream().map(KpiElement::new).toList();
 		List<KpiElement> responseList = new ArrayList<>();
 		String[] kanbanProjectKeyCache;
 		try {
-			String hierarchyLevelId = filterHelperService.getHierarchyLevelId(kpiRequest.getLevel(),
-					kpiRequest.getLabel(), true);
+			String hierarchyLevelId =
+					filterHelperService.getHierarchyLevelId(
+							kpiRequest.getLevel(), kpiRequest.getLabel(), true);
 			if (StringUtils.isNotEmpty(hierarchyLevelId)) {
 				kpiRequest.setLabel(hierarchyLevelId.toUpperCase());
 			} else {
-				log.error("Organization hierarchy level id could not be found for label {} and level {}",
-						kpiRequest.getLabel(), kpiRequest.getLevel());
+				log.error(
+						"Organization hierarchy level id could not be found for label {} and level {}",
+						kpiRequest.getLabel(),
+						kpiRequest.getLevel());
 			}
 			populateKanbanKpiRequest(kpiRequest);
-			List<AccountHierarchyDataKanban> filteredAccountDataList = filterHelperService
-					.getFilteredBuildsKanban(kpiRequest, hierarchyLevelId);
+			List<AccountHierarchyDataKanban> filteredAccountDataList =
+					filterHelperService.getFilteredBuildsKanban(kpiRequest, hierarchyLevelId);
 			kanbanProjectKeyCache = getProjectKeyCache(kpiRequest, filteredAccountDataList);
 
 			filteredAccountDataList = getAuthorizedFilteredList(kpiRequest, filteredAccountDataList);
@@ -108,59 +112,87 @@ public class JiraServiceKanbanR {
 				return responseList;
 			}
 			Integer groupId = kpiRequest.getKpiList().get(0).getGroupId();
-			//skip using cache when the request is made with an api key and also processing by group id will be disabled
-			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
-				Object cachedData = cacheService.getFromApplicationCache(kanbanProjectKeyCache, KPISource.JIRAKANBAN.name(),
-						groupId, null);
-				if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+				Object cachedData =
+						cacheService.getFromApplicationCache(
+								kanbanProjectKeyCache, KPISource.JIRAKANBAN.name(), groupId, null);
+				if (!kpiRequest
+								.getRequestTrackerId()
+								.toLowerCase()
+								.contains(KPISource.EXCEL.name().toLowerCase())
 						&& null != cachedData) {
-					log.info("[JIRA KANBAN][{}]. Fetching value from cache for {}", kpiRequest.getRequestTrackerId(),
+					log.info(
+							"[JIRA KANBAN][{}]. Fetching value from cache for {}",
+							kpiRequest.getRequestTrackerId(),
 							kpiRequest.getIds());
 					return (List<KpiElement>) cachedData;
 				}
 			}
 
-			TreeAggregatorDetail treeAggregatorDetail = KPIHelperUtil.getTreeLeafNodesGroupedByFilter(kpiRequest, null,
-					filteredAccountDataList, filterHelperService.getFirstHierarchyLevel(), filterHelperService
-							.getHierarchyIdLevelMap(false).getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
+			TreeAggregatorDetail treeAggregatorDetail =
+					KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+							kpiRequest,
+							null,
+							filteredAccountDataList,
+							filterHelperService.getFirstHierarchyLevel(),
+							filterHelperService
+									.getHierarchyIdLevelMap(false)
+									.getOrDefault(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, 0));
 
 			List<ParallelJiraServices> listOfTask = new ArrayList<>();
 			for (KpiElement kpiEle : kpiRequest.getKpiList()) {
-				listOfTask.add(new ParallelJiraServices(kpiRequest, responseList, kpiEle, treeAggregatorDetail));
+				listOfTask.add(
+						new ParallelJiraServices(kpiRequest, responseList, kpiEle, treeAggregatorDetail));
 			}
 
 			ForkJoinTask.invokeAll(listOfTask);
-			List<KpiElement> missingKpis = origRequestedKpis.stream().filter(reqKpi -> responseList.stream()
-					.noneMatch(responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId()))).toList();
+			List<KpiElement> missingKpis =
+					origRequestedKpis.stream()
+							.filter(
+									reqKpi ->
+											responseList.stream()
+													.noneMatch(
+															responseKpi -> reqKpi.getKpiId().equals(responseKpi.getKpiId())))
+							.toList();
 			responseList.addAll(missingKpis);
 
-			//skip using cache when the request is made with an api key and also processing by group id will be disabled
-			if(Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
+			// skip using cache when the request is made with an api key and also processing
+			// by group id will be disabled
+			if (Boolean.FALSE.equals(ApiKeyAuthenticationService.isApiKeyRequest())) {
 				setIntoApplicationCache(kpiRequest, responseList, groupId, kanbanProjectKeyCache);
 			}
 
 		} catch (EntityNotFoundException e) {
-			log.error("[JIRA KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
-					kpiRequest.getRequestTrackerId(), kpiRequest.getKpiList(), e.getMessage());
+			log.error(
+					"[JIRA KANBAN][{}]. Error while KPI calculation for data. No data found {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					e.getMessage());
 			throw e;
 		} catch (Exception e) {
-			log.error("[JIRA KANBAN][{}]. Error while KPI calculation for data {} {}", kpiRequest.getRequestTrackerId(),
-					kpiRequest.getKpiList(), e.getMessage());
+			log.error(
+					"[JIRA KANBAN][{}]. Error while KPI calculation for data {} {}",
+					kpiRequest.getRequestTrackerId(),
+					kpiRequest.getKpiList(),
+					e.getMessage());
 			throw new HttpMessageNotWritableException(e.getMessage(), e);
 		}
 
 		return responseList;
 	}
 
-	private String[] getProjectKeyCache(KpiRequest kpiRequest,
-			List<AccountHierarchyDataKanban> filteredAccountDataList) {
+	private String[] getProjectKeyCache(
+			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 		return authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 	}
 
-	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(KpiRequest kpiRequest,
-			List<AccountHierarchyDataKanban> filteredAccountDataList) {
+	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(
+			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 		kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-		if(Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser()) || ApiKeyAuthenticationService.isApiKeyRequest()) {
+		if (Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())
+				|| ApiKeyAuthenticationService.isApiKeyRequest()) {
 			return filteredAccountDataList;
 		}
 		return authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);
@@ -169,22 +201,24 @@ public class JiraServiceKanbanR {
 	/**
 	 * Sets cache.
 	 *
-	 * @param kpiRequest
-	 *            kpiRequest
-	 * @param responseList
-	 *            responseList
-	 * @param groupId
-	 *            groupId
-	 * @param projects
-	 *            projects
+	 * @param kpiRequest kpiRequest
+	 * @param responseList responseList
+	 * @param groupId groupId
+	 * @param projects projects
 	 */
-	private void setIntoApplicationCache(KpiRequest kpiRequest, List<KpiElement> responseList, Integer groupId,
-			String[] projects) {
-		Integer projectLevel = filterHelperService.getHierarchyIdLevelMap(true)
-				.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
-		if (!kpiRequest.getRequestTrackerId().toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
+	private void setIntoApplicationCache(
+			KpiRequest kpiRequest, List<KpiElement> responseList, Integer groupId, String[] projects) {
+		Integer projectLevel =
+				filterHelperService
+						.getHierarchyIdLevelMap(true)
+						.get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		if (!kpiRequest
+						.getRequestTrackerId()
+						.toLowerCase()
+						.contains(KPISource.EXCEL.name().toLowerCase())
 				&& projectLevel >= kpiRequest.getLevel()) {
-			cacheService.setIntoApplicationCache(projects, responseList, KPISource.JIRAKANBAN.name(), groupId, null);
+			cacheService.setIntoApplicationCache(
+					projects, responseList, KPISource.JIRAKANBAN.name(), groupId, null);
 		}
 	}
 
@@ -212,8 +246,7 @@ public class JiraServiceKanbanR {
 	 */
 	public class ParallelJiraServices extends RecursiveAction {
 
-		@Serial
-		private static final long serialVersionUID = 606012979232602115L;
+		@Serial private static final long serialVersionUID = 606012979232602115L;
 
 		private final KpiRequest kpiRequest;
 		private final TreeAggregatorDetail treeAggregatorDetail;
@@ -221,7 +254,10 @@ public class JiraServiceKanbanR {
 		private final transient KpiElement kpiEle;
 		private final transient List<KpiElement> responseList;
 
-		public ParallelJiraServices(KpiRequest kpiRequest, List<KpiElement> responseList, KpiElement kpiEle,
+		public ParallelJiraServices(
+				KpiRequest kpiRequest,
+				List<KpiElement> responseList,
+				KpiElement kpiEle,
 				TreeAggregatorDetail treeAggregatorDetail) {
 			super();
 			this.kpiRequest = kpiRequest;
@@ -238,19 +274,16 @@ public class JiraServiceKanbanR {
 		}
 
 		/**
-		 * This method call by multiple thread, take object of specific KPI and call
-		 * method of these KPIs
+		 * This method call by multiple thread, take object of specific KPI and call method of these
+		 * KPIs
 		 *
-		 * @param kpiRequest
-		 *            JIRA KPI request
-		 * @param kpiElement
-		 *            kpiElement
-		 * @param treeAggregatorDetail
-		 *            filter tree object
+		 * @param kpiRequest JIRA KPI request
+		 * @param kpiElement kpiElement
+		 * @param treeAggregatorDetail filter tree object
 		 * @return KpiElement kpiElement
 		 */
-		private KpiElement calculateAllKPIAggregatedMetrics(KpiRequest kpiRequest, KpiElement kpiElement,
-				TreeAggregatorDetail treeAggregatorDetail) {
+		private KpiElement calculateAllKPIAggregatedMetrics(
+				KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail) {
 
 			long startTime;
 			JiraKPIService<?, ?, ?> jiraKPIService;
@@ -258,12 +291,15 @@ public class JiraServiceKanbanR {
 			try {
 				jiraKPIService = JiraKPIServiceFactory.getJiraKPIService(kpi.name());
 				startTime = System.currentTimeMillis();
-				TreeAggregatorDetail treeAggregatorDetailClone = (TreeAggregatorDetail) SerializationUtils
-						.clone(treeAggregatorDetail);
-				List<Node> projectNodes = treeAggregatorDetailClone.getMapOfListOfProjectNodes()
-						.get(CommonConstant.PROJECT.toLowerCase());
-				if (CollectionUtils.isNotEmpty(projectNodes) && (projectNodes.size() > 1
-						|| kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
+				TreeAggregatorDetail treeAggregatorDetailClone =
+						(TreeAggregatorDetail) SerializationUtils.clone(treeAggregatorDetail);
+				List<Node> projectNodes =
+						treeAggregatorDetailClone
+								.getMapOfListOfProjectNodes()
+								.get(CommonConstant.PROJECT.toLowerCase());
+				if (CollectionUtils.isNotEmpty(projectNodes)
+						&& (projectNodes.size() > 1
+								|| kpiHelperService.isToolConfigured(kpi, kpiElement, projectNodes.get(0)))) {
 					kpiElement = jiraKPIService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetailClone);
 					kpiElement.setResponseCode(CommonConstant.KPI_PASSED);
 					if (projectNodes.size() == 1) {
@@ -271,7 +307,10 @@ public class JiraServiceKanbanR {
 					}
 				}
 				long processTime = System.currentTimeMillis() - startTime;
-				log.info("[JIRA-KANBAN-{}-TIME][{}]. KPI took {} ms", kpi.name(), kpiRequest.getRequestTrackerId(),
+				log.info(
+						"[JIRA-KANBAN-{}-TIME][{}]. KPI took {} ms",
+						kpi.name(),
+						kpiRequest.getRequestTrackerId(),
 						processTime);
 			} catch (ApplicationException exception) {
 				kpiElement.setResponseCode(CommonConstant.KPI_FAILED);

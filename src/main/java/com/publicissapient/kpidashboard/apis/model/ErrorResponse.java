@@ -39,8 +39,7 @@ public class ErrorResponse {
 
 	private int code;
 
-	@Builder.Default
-	private long timestamp = System.currentTimeMillis();
+	@Builder.Default private long timestamp = System.currentTimeMillis();
 
 	private String error;
 	private String message;

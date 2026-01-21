@@ -16,6 +16,20 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.mttm;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
@@ -25,25 +39,11 @@ import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class MeanTimeToMergeNonTrendKpiServiceImplTest {
 
-	@InjectMocks
-	private MeanTimeToMergeNonTrendKpiServiceImpl service;
+	@InjectMocks private MeanTimeToMergeNonTrendKpiServiceImpl service;
 
 	private KpiRequest kpiRequest;
 	private List<ScmMergeRequests> mergeRequests;
@@ -71,20 +71,33 @@ class MeanTimeToMergeNonTrendKpiServiceImplTest {
 	@Test
 	void testCalculateKpi_WithValidData() {
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			LocalDateTime now = LocalDateTime.of(2024, 1, 15, 0, 0);
 			dateUtilMock.when(DateUtil::getTodayTime).thenReturn(now);
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
 					.thenReturn(Collections.emptyMap());
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, commits,
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							commits,
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -96,8 +109,15 @@ class MeanTimeToMergeNonTrendKpiServiceImplTest {
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(false);
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, commits,
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							commits,
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertTrue(result.isEmpty());
@@ -106,30 +126,52 @@ class MeanTimeToMergeNonTrendKpiServiceImplTest {
 
 	@Test
 	void testCalculateKpi_WithMergedRequests() {
-		ScmMergeRequests mr = createMergeRequest(LocalDateTime.of(2024, 1, 10, 10, 0),
-				LocalDateTime.of(2024, 1, 12, 14, 0), "MERGED");
+		ScmMergeRequests mr =
+				createMergeRequest(
+						LocalDateTime.of(2024, 1, 10, 10, 0), LocalDateTime.of(2024, 1, 12, 14, 0), "MERGED");
 		mergeRequests.add(mr);
 
 		try (MockedStatic<DeveloperKpiHelper> helperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			LocalDateTime now = LocalDateTime.of(2024, 1, 15, 0, 0);
 			dateUtilMock.when(DateUtil::getTodayTime).thenReturn(now);
-			dateUtilMock.when(() -> DateUtil.isWithinDateTimeRange(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+			dateUtilMock
+					.when(
+							() ->
+									DateUtil.isWithinDateTimeRange(
+											any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class)))
 					.thenReturn(true);
-			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
-					.thenAnswer(inv -> LocalDateTime.ofEpochSecond(inv.getArgument(0, Long.class) / 1000, 0, java.time.ZoneOffset.UTC));
+			dateUtilMock
+					.when(() -> DateUtil.convertMillisToLocalDateTime(any(Long.class)))
+					.thenAnswer(
+							inv ->
+									LocalDateTime.ofEpochSecond(
+											inv.getArgument(0, Long.class) / 1000, 0, java.time.ZoneOffset.UTC));
 
 			helperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
-			helperMock.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class))).thenReturn("main");
-			helperMock.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), any(String.class)))
+					.thenReturn("main");
+			helperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.filterMergeRequestsForBranch(any(List.class), any(Tool.class)))
 					.thenReturn(mergeRequests);
-			helperMock.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
+			helperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any(List.class)))
 					.thenReturn(Collections.emptyMap());
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
-			List<IterationKpiValue> result = service.calculateKpi(kpiRequest, mergeRequests, commits,
-					scmTools, validationDataList, assignees, "TestProject");
+			List<IterationKpiValue> result =
+					service.calculateKpi(
+							kpiRequest,
+							mergeRequests,
+							commits,
+							scmTools,
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertFalse(result.isEmpty());
@@ -141,9 +183,11 @@ class MeanTimeToMergeNonTrendKpiServiceImplTest {
 		assertEquals("REPO_TOOL_MEAN_TIME_TO_MERGE_NON_TREND", service.getStrategyType());
 	}
 
-	private ScmMergeRequests createMergeRequest(LocalDateTime createdDate, LocalDateTime mergedAt, String state) {
+	private ScmMergeRequests createMergeRequest(
+			LocalDateTime createdDate, LocalDateTime mergedAt, String state) {
 		ScmMergeRequests mr = new ScmMergeRequests();
-		mr.setCreatedDate(createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+		mr.setCreatedDate(
+				createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
 		mr.setMergedAt(mergedAt);
 		mr.setState(state);
 		return mr;

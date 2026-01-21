@@ -47,14 +47,11 @@ import jakarta.servlet.http.HttpServletRequest;
 @RunWith(MockitoJUnitRunner.class)
 public class KpiIntegrationControllerTest {
 
-	@InjectMocks
-	private KpiIntegrationController kpiIntegrationController;
+	@InjectMocks private KpiIntegrationController kpiIntegrationController;
 
-	@Mock
-	private KpiIntegrationServiceImpl maturityService;
+	@Mock private KpiIntegrationServiceImpl maturityService;
 
-	@Mock
-	private HttpServletRequest httpServletRequest;
+	@Mock private HttpServletRequest httpServletRequest;
 
 	@Test
 	public void testGetScrumKpiValuesSuccess() {
@@ -62,7 +59,8 @@ public class KpiIntegrationControllerTest {
 		when(maturityService.processScrumKpiRequest(kpiRequest))
 				.thenReturn(Collections.singletonList(new KpiElement()));
 
-		ResponseEntity<List<KpiElement>> responseEntity = kpiIntegrationController.getScrumKpiValues(kpiRequest);
+		ResponseEntity<List<KpiElement>> responseEntity =
+				kpiIntegrationController.getScrumKpiValues(kpiRequest);
 
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertFalse(responseEntity.getBody().isEmpty());
@@ -76,7 +74,8 @@ public class KpiIntegrationControllerTest {
 				.thenReturn(Collections.singletonList(new KpiElement()));
 		when(maturityService.processScrumKpiRequest(kpiRequest)).thenReturn(Collections.emptyList());
 
-		ResponseEntity<List<KpiElement>> responseEntity = kpiIntegrationController.getScrumKpiValues(kpiRequest);
+		ResponseEntity<List<KpiElement>> responseEntity =
+				kpiIntegrationController.getScrumKpiValues(kpiRequest);
 
 		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertTrue(responseEntity.getBody().isEmpty());

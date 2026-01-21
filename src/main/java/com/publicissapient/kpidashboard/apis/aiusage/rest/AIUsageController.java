@@ -18,18 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.rest;
 
-import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
-import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
-import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
-import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import java.time.LocalDate;
 
-import jakarta.ws.rs.BadRequestException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import com.publicissapient.kpidashboard.apis.aiusage.rest.contract.AIUsageAPI;
+import com.publicissapient.kpidashboard.apis.aiusage.service.AIUsageService;
+import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import jakarta.ws.rs.BadRequestException;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -39,12 +39,14 @@ public class AIUsageController implements AIUsageAPI {
 	private final AIUsageService aiUsageService;
 
 	@Override
-	public ResponseEntity<ServiceResponse> getAIUsageStats(String levelName,
-														   Boolean includeUsers,
-														   LocalDate startDate,
-														   LocalDate endDate,
-														   Pageable pageable)
+	public ResponseEntity<ServiceResponse> getAIUsageStats(
+			String levelName,
+			Boolean includeUsers,
+			LocalDate startDate,
+			LocalDate endDate,
+			Pageable pageable)
 			throws BadRequestException, EntityNotFoundException {
-		return ResponseEntity.ok(aiUsageService.getAIUsageStats(levelName, startDate, endDate, includeUsers, pageable));
+		return ResponseEntity.ok(
+				aiUsageService.getAIUsageStats(levelName, startDate, endDate, includeUsers, pageable));
 	}
 }

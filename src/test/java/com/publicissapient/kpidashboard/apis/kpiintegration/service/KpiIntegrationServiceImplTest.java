@@ -72,33 +72,20 @@ import jakarta.ws.rs.BadRequestException;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class KpiIntegrationServiceImplTest {
-	@Mock
-	private KpiMasterRepository kpiMasterRepository;
-	@Mock
-	private JiraServiceR jiraService;
-	@Mock
-	private SonarServiceR sonarService;
-	@Mock
-	private ZephyrService zephyrService;
-	@Mock
-	private JenkinsServiceR jenkinsService;
-	@Mock
-	private JiraServiceKanbanR jiraServiceKanbanR;
-	@Mock
-	private SonarServiceKanbanR sonarServiceKanbanR;
-	@Mock
-	private ZephyrServiceKanban zephyrServiceKanban;
-	@Mock
-	private JenkinsServiceKanbanR jenkinsServiceKanbanR;
-	@Mock
-	private BitBucketServiceKanbanR bitBucketServiceKanbanR;
-	@Mock
-	private HierarchyLevelService hierarchyLevelService;
-	@Mock
-	private OrganizationHierarchyRepository organizationHierarchyRepository;
+	@Mock private KpiMasterRepository kpiMasterRepository;
+	@Mock private JiraServiceR jiraService;
+	@Mock private SonarServiceR sonarService;
+	@Mock private ZephyrService zephyrService;
+	@Mock private JenkinsServiceR jenkinsService;
+	@Mock private JiraServiceKanbanR jiraServiceKanbanR;
+	@Mock private SonarServiceKanbanR sonarServiceKanbanR;
+	@Mock private ZephyrServiceKanban zephyrServiceKanban;
+	@Mock private JenkinsServiceKanbanR jenkinsServiceKanbanR;
+	@Mock private BitBucketServiceKanbanR bitBucketServiceKanbanR;
+	@Mock private HierarchyLevelService hierarchyLevelService;
+	@Mock private OrganizationHierarchyRepository organizationHierarchyRepository;
 
-	@InjectMocks
-	private KpiIntegrationServiceImpl kpiIntegrationService;
+	@InjectMocks private KpiIntegrationServiceImpl kpiIntegrationService;
 
 	private final KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 
@@ -112,7 +99,7 @@ public class KpiIntegrationServiceImplTest {
 	private List<KpiElement> kanbanKpiElements;
 
 	@Before
-		public void setup() {
+	public void setup() {
 		kanbanKpiRequest = createKanbanKpiRequest();
 		kanbanKpiMastersList = createKpiMasterList();
 		kanbanKpiElements = createMockKpiElements();
@@ -138,33 +125,41 @@ public class KpiIntegrationServiceImplTest {
 		OrganizationHierarchy organizationHierarchy = new OrganizationHierarchy();
 		organizationHierarchy.setNodeId("123");
 		organizationHierarchy.setNodeName("DTS");
-		when(organizationHierarchyRepository.findByNodeNameAndHierarchyLevelId(anyString(), anyString()))
+		when(organizationHierarchyRepository.findByNodeNameAndHierarchyLevelId(
+						anyString(), anyString()))
 				.thenReturn(organizationHierarchy);
 	}
 
 	@Test
-		public void getMaturityValuesTestSuccess() throws EntityNotFoundException {
-		when(kpiMasterRepository.findByKpiIdIn(kpiIdList)).thenReturn(kpiMasterDataFactory.getSpecificKpis(kpiIdList));
-		when(jiraService.processWithExposedApiToken(kpiRequest, false)).thenReturn(List.of(kpiElement1));
+	public void getMaturityValuesTestSuccess() throws EntityNotFoundException {
+		when(kpiMasterRepository.findByKpiIdIn(kpiIdList))
+				.thenReturn(kpiMasterDataFactory.getSpecificKpis(kpiIdList));
+		when(jiraService.processWithExposedApiToken(kpiRequest, false))
+				.thenReturn(List.of(kpiElement1));
 		boolean withCache = false;
-		when(sonarService.processWithExposedApiToken(kpiRequest, withCache)).thenReturn(List.of(kpiElement2));
-		when(zephyrService.processWithExposedApiToken(kpiRequest, withCache)).thenReturn(List.of(kpiElement2));
-		when(jenkinsService.processWithExposedApiToken(kpiRequest, withCache)).thenReturn(List.of(kpiElement2));
+		when(sonarService.processWithExposedApiToken(kpiRequest, withCache))
+				.thenReturn(List.of(kpiElement2));
+		when(zephyrService.processWithExposedApiToken(kpiRequest, withCache))
+				.thenReturn(List.of(kpiElement2));
+		when(jenkinsService.processWithExposedApiToken(kpiRequest, withCache))
+				.thenReturn(List.of(kpiElement2));
 		List<KpiElement> kpiElementList = kpiIntegrationService.processScrumKpiRequest(kpiRequest);
 		assertEquals(4, kpiElementList.size());
 	}
 
 	@Test
-		public void getMaturityValuesTestEmpty() {
+	public void getMaturityValuesTestEmpty() {
 		kpiIdList = List.of("kpi84");
 		kpiRequest.setKpiIdList(kpiIdList);
-		when(kpiMasterRepository.findByKpiIdIn(kpiIdList)).thenReturn(kpiMasterDataFactory.getSpecificKpis(kpiIdList));
+		when(kpiMasterRepository.findByKpiIdIn(kpiIdList))
+				.thenReturn(kpiMasterDataFactory.getSpecificKpis(kpiIdList));
 		List<KpiElement> kpiElementList = kpiIntegrationService.processScrumKpiRequest(kpiRequest);
 		assertEquals(0, kpiElementList.size());
 	}
 
 	@Test
-		public void when_ValidKpiRequestWithJiraSource_Then_ProcessSuccessfully() throws EntityNotFoundException {
+	public void when_ValidKpiRequestWithJiraSource_Then_ProcessSuccessfully()
+			throws EntityNotFoundException {
 		// Arrange
 		when(kpiMasterRepository.findByKpiIdIn(anyList())).thenReturn(kanbanKpiMastersList);
 		when(jiraServiceKanbanR.process(any(KpiRequest.class))).thenReturn(kanbanKpiElements);
@@ -196,7 +191,8 @@ public class KpiIntegrationServiceImplTest {
 	}
 
 	@Test
-	public void when_ValidKpiRequestWithZephyrSource_Then_ProcessSuccessfully() throws EntityNotFoundException {
+	public void when_ValidKpiRequestWithZephyrSource_Then_ProcessSuccessfully()
+			throws EntityNotFoundException {
 		// Arrange
 		kanbanKpiMastersList.get(0).setKpiSource("ZEPHYR");
 		when(kpiMasterRepository.findByKpiIdIn(anyList())).thenReturn(kanbanKpiMastersList);
@@ -212,7 +208,8 @@ public class KpiIntegrationServiceImplTest {
 	}
 
 	@Test
-	public void when_ValidKpiRequestWithJenkinsSource_Then_ProcessSuccessfully() throws EntityNotFoundException {
+	public void when_ValidKpiRequestWithJenkinsSource_Then_ProcessSuccessfully()
+			throws EntityNotFoundException {
 		// Arrange
 		kanbanKpiMastersList.get(0).setKpiSource("JENKINS");
 		when(kpiMasterRepository.findByKpiIdIn(anyList())).thenReturn(kanbanKpiMastersList);
@@ -228,7 +225,8 @@ public class KpiIntegrationServiceImplTest {
 	}
 
 	@Test
-	public void when_ValidKpiRequestWithBitbucketSource_Then_ProcessSuccessfully() throws EntityNotFoundException {
+	public void when_ValidKpiRequestWithBitbucketSource_Then_ProcessSuccessfully()
+			throws EntityNotFoundException {
 		// Arrange
 		kanbanKpiMastersList.get(0).setKpiSource("BITBUCKET");
 		when(kpiMasterRepository.findByKpiIdIn(anyList())).thenReturn(kanbanKpiMastersList);
@@ -255,20 +253,25 @@ public class KpiIntegrationServiceImplTest {
 		// Assert
 		assertNotNull(result);
 		assertTrue(result.isEmpty());
-		verifyNoInteractions(jiraServiceKanbanR, sonarServiceKanbanR, zephyrServiceKanban,
-				jenkinsServiceKanbanR, bitBucketServiceKanbanR);
+		verifyNoInteractions(
+				jiraServiceKanbanR,
+				sonarServiceKanbanR,
+				zephyrServiceKanban,
+				jenkinsServiceKanbanR,
+				bitBucketServiceKanbanR);
 	}
 
 	@Test
-	public void when_MultipleKpiSourcesPresent_Then_ProcessAllSources() throws EntityNotFoundException {
+	public void when_MultipleKpiSourcesPresent_Then_ProcessAllSources()
+			throws EntityNotFoundException {
 		// Arrange
-		List<KpiMaster> multiSourceKpiList = List.of(
-				createKpiMaster("kpi1", "JIRA"),
-				createKpiMaster("kpi2", "SONAR")
-		);
+		List<KpiMaster> multiSourceKpiList =
+				List.of(createKpiMaster("kpi1", "JIRA"), createKpiMaster("kpi2", "SONAR"));
 		when(kpiMasterRepository.findByKpiIdIn(anyList())).thenReturn(multiSourceKpiList);
-		when(jiraServiceKanbanR.process(any(KpiRequest.class))).thenReturn(List.of(createKpiElement("kpi1")));
-		when(sonarServiceKanbanR.process(any(KpiRequest.class))).thenReturn(List.of(createKpiElement("kpi2")));
+		when(jiraServiceKanbanR.process(any(KpiRequest.class)))
+				.thenReturn(List.of(createKpiElement("kpi1")));
+		when(sonarServiceKanbanR.process(any(KpiRequest.class)))
+				.thenReturn(List.of(createKpiElement("kpi2")));
 
 		// Act
 		List<KpiElement> result = kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest);
@@ -283,11 +286,11 @@ public class KpiIntegrationServiceImplTest {
 	@Test
 	public void when_KpiMasterWithEmptySource_Then_FilterOut() throws EntityNotFoundException {
 		// Arrange
-		List<KpiMaster> kpiListWithEmptySource = List.of(
-				createKpiMaster("kpi1", ""),
-				createKpiMaster("kpi2", null),
-				createKpiMaster("kpi3", "JIRA")
-		);
+		List<KpiMaster> kpiListWithEmptySource =
+				List.of(
+						createKpiMaster("kpi1", ""),
+						createKpiMaster("kpi2", null),
+						createKpiMaster("kpi3", "JIRA"));
 		when(kpiMasterRepository.findByKpiIdIn(anyList())).thenReturn(kpiListWithEmptySource);
 		when(jiraServiceKanbanR.process(any(KpiRequest.class))).thenReturn(kanbanKpiElements);
 
@@ -303,8 +306,9 @@ public class KpiIntegrationServiceImplTest {
 	@Test
 	public void when_NullKpiRequest_Then_ThrowBadRequestException() {
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(null));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class, () -> kpiIntegrationService.processKanbanKPIRequest(null));
 		assertEquals("Received kpi request was null", exception.getMessage());
 	}
 
@@ -314,8 +318,10 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setKpiIdList(Collections.emptyList());
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'kpiIdList' must not be empty", exception.getMessage());
 	}
 
@@ -325,8 +331,10 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setIds(null);
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'ids' must be provided and contain one positive integer", exception.getMessage());
 	}
 
@@ -336,30 +344,36 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setIds(new String[0]);
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'ids' must be provided and contain one positive integer", exception.getMessage());
 	}
 
 	@Test
 	public void when_MultipleIds_Then_ThrowBadRequestException() {
 		// Arrange
-		kanbanKpiRequest.setIds(new String[]{"1", "2"});
+		kanbanKpiRequest.setIds(new String[] {"1", "2"});
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'ids' must contain only one positive integer", exception.getMessage());
 	}
 
 	@Test
 	public void when_NonNumericId_Then_ThrowBadRequestException() {
 		// Arrange
-		kanbanKpiRequest.setIds(new String[]{"abc"});
+		kanbanKpiRequest.setIds(new String[] {"abc"});
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'ids' must contain one valid positive integer", exception.getMessage());
 	}
 
@@ -369,8 +383,10 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setLabel("");
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'label' must be provided", exception.getMessage());
 	}
 
@@ -380,8 +396,10 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setSelectedMap(null);
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'selectedMap' must be provided", exception.getMessage());
 	}
 
@@ -391,8 +409,10 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setSelectedMap(new HashMap<>());
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
 		assertEquals("'selectedMap' must be provided", exception.getMessage());
 	}
 
@@ -404,14 +424,18 @@ public class KpiIntegrationServiceImplTest {
 		kanbanKpiRequest.setSelectedMap(selectedMap);
 
 		// Act & Assert
-		BadRequestException exception = assertThrows(BadRequestException.class,
-				() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
-		assertEquals("'selectedMap.date' must be provided with a valid temporal aggregation unit ex.: Weeks",
+		BadRequestException exception =
+				assertThrows(
+						BadRequestException.class,
+						() -> kpiIntegrationService.processKanbanKPIRequest(kanbanKpiRequest));
+		assertEquals(
+				"'selectedMap.date' must be provided with a valid temporal aggregation unit ex.: Weeks",
 				exception.getMessage());
 	}
 
 	@Test
-	public void when_KpiElementsWithDataCountGroupTrendValues_Then_CalculateOverallMaturity() throws EntityNotFoundException {
+	public void when_KpiElementsWithDataCountGroupTrendValues_Then_CalculateOverallMaturity()
+			throws EntityNotFoundException {
 		// Arrange
 		KpiElement kpiElement = createKpiElementWithDataCountGroup();
 		List<KpiElement> kpiElementsWithMaturity = List.of(kpiElement);
@@ -428,7 +452,8 @@ public class KpiIntegrationServiceImplTest {
 	}
 
 	@Test
-	public void when_KpiElementsWithDataCountTrendValues_Then_CalculateOverallMaturity() throws EntityNotFoundException {
+	public void when_KpiElementsWithDataCountTrendValues_Then_CalculateOverallMaturity()
+			throws EntityNotFoundException {
 		// Arrange
 		KpiElement kpiElement = createKpiElementWithDataCount();
 		List<KpiElement> kpiElementsWithMaturity = List.of(kpiElement);
@@ -447,7 +472,7 @@ public class KpiIntegrationServiceImplTest {
 	private KpiRequest createKanbanKpiRequest() {
 		KpiRequest request = new KpiRequest();
 		request.setKpiIdList(List.of("kpi1"));
-		request.setIds(new String[]{"123"});
+		request.setIds(new String[] {"123"});
 		request.setLabel("project");
 
 		Map<String, List<String>> selectedMap = new HashMap<>();

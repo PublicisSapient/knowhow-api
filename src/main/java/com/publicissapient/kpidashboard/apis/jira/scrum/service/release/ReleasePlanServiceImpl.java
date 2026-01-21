@@ -95,7 +95,10 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 	private final List<JiraIssue> allReleaseTaggedIssue = new ArrayList<>();
 	@Autowired private JiraIssueRepository jiraIssueRepository;
 	@Autowired private ConfigHelperService configHelperService;
-	@Autowired(required = false) private ForecastingManager forecastingManager;
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
+
 	private LocalDateTime tempStartDate = null;
 
 	@Override
@@ -220,12 +223,14 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 				kpiValueIssueCount.setFilter1(ISSUE_COUNT);
 				kpiValueIssueCount.setYAxisLabel(CommonConstant.COUNT);
 				kpiValueIssueCount.setAdditionalInfo(additionalInfoMap);
+				setKpiBenchmarkValues(kpiValueIssueCount, ISSUE_COUNT, KPICode.RELEASE_PLAN.getKpiId());
 
 				IterationKpiValue kpiValueSizeCount = new IterationKpiValue();
 				kpiValueSizeCount.setDataGroup(issueSizeCountDataGroup);
 				kpiValueSizeCount.setFilter1(STORY_POINT);
 				kpiValueSizeCount.setYAxisLabel(CommonConstant.SP);
 				kpiValueSizeCount.setAdditionalInfo(additionalInfoMap);
+				setKpiBenchmarkValues(kpiValueSizeCount, STORY_POINT, KPICode.RELEASE_PLAN.getKpiId());
 
 				// Add forecasts for Release planned trend line
 				addForecastsToReleasePlanned(kpiValueIssueCount, issueCountDataGroup);
@@ -257,9 +262,7 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 						leafNode.getProjectFilter().getBasicProjectConfigId().toString();
 				List<JiraIssue> releaseIssues =
 						jiraIssueRepository.findByNumberInAndBasicProjectConfigId(
-								allIssuesHistory.stream()
-										.map(JiraIssueCustomHistory::getStoryID)
-										.toList(),
+								allIssuesHistory.stream().map(JiraIssueCustomHistory::getStoryID).toList(),
 								basicProjConfigId);
 
 				Map<LocalDate, List<JiraIssueReferTime>> addedIssuesMap = new HashMap<>();
@@ -666,19 +669,22 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 	 * @param kpiValue IterationKpiValue to add forecasts to
 	 * @param dataGroups List of DataCountGroup containing historical data
 	 */
-	private void addForecastsToReleasePlanned(IterationKpiValue kpiValue, List<DataCountGroup> dataGroups) {
+	private void addForecastsToReleasePlanned(
+			IterationKpiValue kpiValue, List<DataCountGroup> dataGroups) {
 		Optional.ofNullable(forecastingManager)
 				.filter(manager -> CollectionUtils.isNotEmpty(dataGroups))
-				.ifPresent(manager -> {
-					List<DataCount> releasePlannedData = dataGroups.stream()
-							.flatMap(group -> group.getValue().stream())
-							.filter(dataCount -> RELEASE_PLANNED.equals(dataCount.getKpiGroup()))
-							.toList();
+				.ifPresent(
+						manager -> {
+							List<DataCount> releasePlannedData =
+									dataGroups.stream()
+											.flatMap(group -> group.getValue().stream())
+											.filter(dataCount -> RELEASE_PLANNED.equals(dataCount.getKpiGroup()))
+											.toList();
 
-					if (CollectionUtils.isNotEmpty(releasePlannedData)) {
-						manager.addForecastsToDataCount(
-								kpiValue, releasePlannedData, KPICode.RELEASE_PLAN.getKpiId());
-					}
-				});
+							if (CollectionUtils.isNotEmpty(releasePlannedData)) {
+								manager.addForecastsToDataCount(
+										kpiValue, releasePlannedData, KPICode.RELEASE_PLAN.getKpiId());
+							}
+						});
 	}
 }

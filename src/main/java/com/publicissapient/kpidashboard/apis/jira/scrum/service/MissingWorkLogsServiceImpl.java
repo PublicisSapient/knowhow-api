@@ -284,12 +284,7 @@ public class MissingWorkLogsServiceImpl
 							/ (Integer) howerMap.get(STORY_LIST);
 
 			if (CollectionUtils.isNotEmpty(totalStory)) {
-				populateValidationDataObject(
-						kpiElement,
-						requestTrackerId,
-						totalStory,
-						validationDataMap
-				);
+				populateValidationDataObject(kpiElement, requestTrackerId, totalStory, validationDataMap);
 			}
 
 			log.debug(

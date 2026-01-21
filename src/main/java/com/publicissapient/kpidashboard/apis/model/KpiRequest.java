@@ -32,8 +32,7 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
 public class KpiRequest implements Serializable {
 
-	@Serial
-	private static final long serialVersionUID = -299083586293015104L;
+	@Serial private static final long serialVersionUID = -299083586293015104L;
 
 	private String requestTrackerId;
 	private int level;

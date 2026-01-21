@@ -18,12 +18,12 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.repository;
 
-import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
+import java.time.LocalDate;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import com.publicissapient.kpidashboard.apis.aiusage.model.AIUsageStatistics;
 
 @Repository
 public interface AIUsageStatisticsRepository extends MongoRepository<AIUsageStatistics, String> {

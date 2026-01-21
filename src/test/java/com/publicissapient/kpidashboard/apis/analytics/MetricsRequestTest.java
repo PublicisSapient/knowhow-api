@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Test class for MetricsRequest DTO
- * 
+ *
  * @author KnowHow Team
  */
 @ExtendWith(MockitoExtension.class)
@@ -35,9 +35,10 @@ class MetricsRequestTest {
 	@Test
 	void testGettersAndSetters() {
 		// Given
-		String expectedMetrics = "# HELP page_views_total Total page views\n" +
-				"# TYPE page_views_total counter\n" +
-				"page_views_total{page=\"/dashboard\",user_role=\"admin\"} 5";
+		String expectedMetrics =
+				"# HELP page_views_total Total page views\n"
+						+ "# TYPE page_views_total counter\n"
+						+ "page_views_total{page=\"/dashboard\",user_role=\"admin\"} 5";
 
 		// When
 		MetricsRequest request = new MetricsRequest();
@@ -77,13 +78,14 @@ class MetricsRequestTest {
 	void testSetMetricsWithMultipleLines() {
 		// Given
 		MetricsRequest request = new MetricsRequest();
-		String multiLineMetrics = "# HELP page_views_total Total page views\n" +
-				"# TYPE page_views_total counter\n" +
-				"page_views_total{page=\"/dashboard\",user_role=\"admin\"} 5\n" +
-				"page_views_total{page=\"/projects\",user_role=\"user\"} 3\n" +
-				"# HELP user_sessions_total Total user sessions\n" +
-				"# TYPE user_sessions_total counter\n" +
-				"user_sessions_total{user_id=\"user123\",login_type=\"standard\"} 1";
+		String multiLineMetrics =
+				"# HELP page_views_total Total page views\n"
+						+ "# TYPE page_views_total counter\n"
+						+ "page_views_total{page=\"/dashboard\",user_role=\"admin\"} 5\n"
+						+ "page_views_total{page=\"/projects\",user_role=\"user\"} 3\n"
+						+ "# HELP user_sessions_total Total user sessions\n"
+						+ "# TYPE user_sessions_total counter\n"
+						+ "user_sessions_total{user_id=\"user123\",login_type=\"standard\"} 1";
 
 		// When
 		request.setMetrics(multiLineMetrics);
@@ -154,7 +156,8 @@ class MetricsRequestTest {
 	void testSetMetricsWithSpecialCharacters() {
 		// Given
 		MetricsRequest request = new MetricsRequest();
-		String metricsWithSpecialChars = "page_views_total{page=\"/dashboard?filter=test&sort=asc\",user_role=\"admin\"} 5";
+		String metricsWithSpecialChars =
+				"page_views_total{page=\"/dashboard?filter=test&sort=asc\",user_role=\"admin\"} 5";
 
 		// When
 		request.setMetrics(metricsWithSpecialChars);
@@ -169,7 +172,12 @@ class MetricsRequestTest {
 		MetricsRequest request = new MetricsRequest();
 		StringBuilder largeMetrics = new StringBuilder();
 		for (int i = 0; i < 100; i++) {
-			largeMetrics.append("page_views_total{page=\"/page").append(i).append("\"} ").append(i).append("\n");
+			largeMetrics
+					.append("page_views_total{page=\"/page")
+					.append(i)
+					.append("\"} ")
+					.append(i)
+					.append("\n");
 		}
 
 		// When

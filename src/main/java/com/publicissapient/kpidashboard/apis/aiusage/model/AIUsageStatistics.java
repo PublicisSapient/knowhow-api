@@ -18,18 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.aiusage.model;
 
-import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageSummary;
-import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.Instant;
 
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.publicissapient.kpidashboard.apis.aiusage.dto.AIUsageSummary;
+import com.publicissapient.kpidashboard.common.model.generic.BasicModel;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

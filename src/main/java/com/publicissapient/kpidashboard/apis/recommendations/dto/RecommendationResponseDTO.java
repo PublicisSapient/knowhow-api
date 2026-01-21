@@ -27,14 +27,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Response DTO for project recommendations API.
- */
+/** Response DTO for project recommendations API. */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Response containing batch-calculated project recommendations with summary and details")
+@Schema(
+		description =
+				"Response containing batch-calculated project recommendations with summary and details")
 public class RecommendationResponseDTO {
 
 	@NotNull(message = "Summary must not be null")

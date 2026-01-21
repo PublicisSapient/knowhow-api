@@ -29,8 +29,7 @@ public class EntityNotFoundException extends Exception {
 
 	private static final int ONE = 1;
 
-	@Serial
-	private static final long serialVersionUID = -6522257525726104870L;
+	@Serial private static final long serialVersionUID = -6522257525726104870L;
 
 	/**
 	 * @param clazz

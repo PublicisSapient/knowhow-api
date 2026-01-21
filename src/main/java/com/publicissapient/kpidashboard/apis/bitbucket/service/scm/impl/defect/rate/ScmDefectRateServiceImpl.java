@@ -16,6 +16,18 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.defect.rate;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
+
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.KpiCalculationStrategy;
@@ -37,24 +49,15 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
+public class ScmDefectRateServiceImpl
+		extends BitBucketKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MERGE_REQUEST_LIST = "mergeRequestList";
@@ -74,7 +77,9 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 
-		log.debug("[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}", kpiRequest.getRequestTrackerId(),
+		log.debug(
+				"[PROJECT-WISE][{}]. Values of leaf node after KPI calculation {}",
+				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
 		if (kpiElement.getChartType().equalsIgnoreCase("line")) {
@@ -85,7 +90,8 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 			Map<String, List<DataCount>> trendValuesMap =
 					getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEFECT_RATE);
 			kpiElement.setTrendValueList(
-					DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.DEFECT_RATE.getKpiId()));
+					DeveloperKpiHelper.prepareDataCountGroups(
+							trendValuesMap, KPICode.DEFECT_RATE.getKpiId()));
 		} else {
 			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
 		}
@@ -103,8 +109,8 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 	}
 
 	@Override
-	public Map<String, Object> fetchKPIDataFromDb(List<Node> leafNodeList, String startDate, String endDate,
-			KpiRequest kpiRequest) {
+	public Map<String, Object> fetchKPIDataFromDb(
+			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
 
 		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
@@ -114,58 +120,70 @@ public class ScmDefectRateServiceImpl extends BitBucketKPIService<Double, List<O
 
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
-		return calculateThresholdValue(fieldMapping.getThresholdValueKPI162(), KPICode.DEFECT_RATE.getKpiId());
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI162(), KPICode.DEFECT_RATE.getKpiId());
 	}
 
 	/**
-	 * Populates KPI value to project leaf nodes. It also gives the trend analysis
-	 * project wise.
+	 * Populates KPI value to project leaf nodes. It also gives the trend analysis project wise.
 	 *
-	 * @param kpiElement
-	 *            kpi element
-	 * @param mapTmp
-	 *            node map
-	 * @param projectLeafNode
-	 *            leaf node of project
-	 * @param kpiRequest
-	 *            kpi request
+	 * @param kpiElement kpi element
+	 * @param mapTmp node map
+	 * @param projectLeafNode leaf node of project
+	 * @param kpiRequest kpi request
 	 */
 	@SuppressWarnings("unchecked")
-	private void calculateProjectKpiTrendData(KpiElement kpiElement, Map<String, Node> mapTmp, Node projectLeafNode,
+	private void calculateProjectKpiTrendData(
+			KpiElement kpiElement,
+			Map<String, Node> mapTmp,
+			Node projectLeafNode,
 			KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 
-		List<Tool> scmTools = DeveloperKpiHelper.getScmToolsForProject(projectLeafNode, configHelperService,
-				kpiHelperService);
+		List<Tool> scmTools =
+				DeveloperKpiHelper.getScmToolsForProject(
+						projectLeafNode, configHelperService, kpiHelperService);
 
 		if (CollectionUtils.isEmpty(scmTools)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No SCM tools found for project {}",
 					projectLeafNode.getProjectFilter());
 			return;
 		}
 
 		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
 
-		List<ScmMergeRequests> mergeRequests = (List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
+		List<ScmMergeRequests> mergeRequests =
+				(List<ScmMergeRequests>) scmDataMap.get(MERGE_REQUEST_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
 		if (CollectionUtils.isEmpty(mergeRequests)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
+			log.error(
+					"[BITBUCKET-AGGREGATED-VALUE]. No merge requests found for project {}", projectLeafNode);
 			return;
 		}
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-		KpiCalculationStrategy<?> strategy = kpiStrategyRegistry.getStrategy(KPICode.DEFECT_RATE,
-				kpiElement.getChartType());
-		Object kpiTrendDataByGroup = strategy.calculateKpi(kpiRequest, mergeRequests, null, scmTools,
-				validationDataList, assignees, projectLeafNode.getProjectFilter().getName());
+		KpiCalculationStrategy<?> strategy =
+				kpiStrategyRegistry.getStrategy(KPICode.DEFECT_RATE, kpiElement.getChartType());
+		Object kpiTrendDataByGroup =
+				strategy.calculateKpi(
+						kpiRequest,
+						mergeRequests,
+						null,
+						scmTools,
+						validationDataList,
+						assignees,
+						projectLeafNode.getProjectFilter().getName());
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
-	private void populateExcelData(String requestTrackerId, List<RepoToolValidationData> validationDataList,
+	private void populateExcelData(
+			String requestTrackerId,
+			List<RepoToolValidationData> validationDataList,
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();

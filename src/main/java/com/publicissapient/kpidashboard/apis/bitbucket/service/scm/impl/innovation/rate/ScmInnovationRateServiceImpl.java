@@ -74,7 +74,8 @@ public class ScmInnovationRateServiceImpl
 			Map<String, List<DataCount>> trendValuesMap =
 					getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.INNOVATION_RATE);
 			kpiElement.setTrendValueList(
-					DeveloperKpiHelper.prepareDataCountGroups(trendValuesMap, KPICode.INNOVATION_RATE.getKpiId()));
+					DeveloperKpiHelper.prepareDataCountGroups(
+							trendValuesMap, KPICode.INNOVATION_RATE.getKpiId()));
 		} else {
 			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
 		}

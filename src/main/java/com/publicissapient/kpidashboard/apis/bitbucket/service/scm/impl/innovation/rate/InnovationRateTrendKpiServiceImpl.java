@@ -16,6 +16,17 @@
 
 package com.publicissapient.kpidashboard.apis.bitbucket.service.scm.impl.innovation.rate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.stereotype.Component;
+
 import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.strategy.AbstractKpiCalculationStrategy;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -30,55 +41,61 @@ import com.publicissapient.kpidashboard.common.model.jira.Assignee;
 import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
 import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
- * Service implementation for calculating Innovation Rate KPI in trend mode.
- * Tracks innovation rate over multiple time periods to show trends.
+ * Service implementation for calculating Innovation Rate KPI in trend mode. Tracks innovation rate
+ * over multiple time periods to show trends.
  */
 @Component
-public class InnovationRateTrendKpiServiceImpl extends AbstractKpiCalculationStrategy<Map<String, List<DataCount>>> {
+public class InnovationRateTrendKpiServiceImpl
+		extends AbstractKpiCalculationStrategy<Map<String, List<DataCount>>> {
 
 	private static final double INNOVATION_RATE_DIVISOR = 10.0;
 	private static final double PERCENTAGE_MULTIPLIER = 100.0;
 	private static final int DECIMAL_SCALE = 2;
+
 	/**
 	 * Calculates Innovation Rate KPI trend data across multiple time periods.
 	 *
-	 * @param kpiRequest         the KPI request containing filters and parameters
-	 * @param mergeRequests      list of merge requests (unused in this implementation)
-	 * @param commits            list of SCM commits
-	 * @param scmTools           list of SCM tools to process
+	 * @param kpiRequest the KPI request containing filters and parameters
+	 * @param mergeRequests list of merge requests (unused in this implementation)
+	 * @param commits list of SCM commits
+	 * @param scmTools list of SCM tools to process
 	 * @param validationDataList list to populate with validation data
-	 * @param assignees          set of assignees for developer mapping
-	 * @param projectName        name of the project
+	 * @param assignees set of assignees for developer mapping
+	 * @param projectName name of the project
 	 * @return map of KPI group to trend data
 	 */
 	@Override
-	public Map<String, List<DataCount>> calculateKpi(KpiRequest kpiRequest, List<ScmMergeRequests> mergeRequests,
-			List<ScmCommits> commits, List<Tool> scmTools, List<RepoToolValidationData> validationDataList,
-			Set<Assignee> assignees, String projectName) {
+	public Map<String, List<DataCount>> calculateKpi(
+			KpiRequest kpiRequest,
+			List<ScmMergeRequests> mergeRequests,
+			List<ScmCommits> commits,
+			List<Tool> scmTools,
+			List<RepoToolValidationData> validationDataList,
+			Set<Assignee> assignees,
+			String projectName) {
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 		String duration = kpiRequest.getDuration();
 
 		for (int i = 0; i < dataPoints; i++) {
-			CustomDateRange periodRange = KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
+			CustomDateRange periodRange =
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 			List<ScmCommits> filteredCommitsList = filterCommitsByDateRange(commits, periodRange);
 
-			scmTools.forEach(tool -> processToolData(tool, filteredCommitsList, assignees, kpiTrendDataByGroup,
-					validationDataList, dateLabel, projectName));
+			scmTools.forEach(
+					tool ->
+							processToolData(
+									tool,
+									filteredCommitsList,
+									assignees,
+									kpiTrendDataByGroup,
+									validationDataList,
+									dateLabel,
+									projectName));
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
@@ -88,32 +105,41 @@ public class InnovationRateTrendKpiServiceImpl extends AbstractKpiCalculationStr
 	/**
 	 * Filters commits within the specified date range.
 	 *
-	 * @param commits   list of commits to filter
+	 * @param commits list of commits to filter
 	 * @param dateRange date range to filter by
 	 * @return filtered list of commits
 	 */
-	private List<ScmCommits> filterCommitsByDateRange(List<ScmCommits> commits, CustomDateRange dateRange) {
+	private List<ScmCommits> filterCommitsByDateRange(
+			List<ScmCommits> commits, CustomDateRange dateRange) {
 		return commits.stream()
-				.filter(commit -> DateUtil.isWithinDateTimeRange(
-						DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
-						dateRange.getStartDateTime(), dateRange.getEndDateTime()))
+				.filter(
+						commit ->
+								DateUtil.isWithinDateTimeRange(
+										DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp()),
+										dateRange.getStartDateTime(),
+										dateRange.getEndDateTime()))
 				.toList();
 	}
 
 	/**
 	 * Processes data for a single SCM tool and calculates innovation rates.
 	 *
-	 * @param tool                  the SCM tool to process
-	 * @param commitsList           list of commits for the period
-	 * @param assignees             set of assignees
-	 * @param kpiTrendDataByGroup   map to populate with trend data
-	 * @param validationDataList    list to populate with validation data
-	 * @param dateLabel             label for the time period
-	 * @param projectName           name of the project
+	 * @param tool the SCM tool to process
+	 * @param commitsList list of commits for the period
+	 * @param assignees set of assignees
+	 * @param kpiTrendDataByGroup map to populate with trend data
+	 * @param validationDataList list to populate with validation data
+	 * @param dateLabel label for the time period
+	 * @param projectName name of the project
 	 */
-	private void processToolData(Tool tool, List<ScmCommits> commitsList, Set<Assignee> assignees,
-			Map<String, List<DataCount>> kpiTrendDataByGroup, List<RepoToolValidationData> validationDataList,
-			String dateLabel, String projectName) {
+	private void processToolData(
+			Tool tool,
+			List<ScmCommits> commitsList,
+			Set<Assignee> assignees,
+			Map<String, List<DataCount>> kpiTrendDataByGroup,
+			List<RepoToolValidationData> validationDataList,
+			String dateLabel,
+			String projectName) {
 		if (!DeveloperKpiHelper.isValidTool(tool)) {
 			return;
 		}
@@ -123,26 +149,30 @@ public class InnovationRateTrendKpiServiceImpl extends AbstractKpiCalculationStr
 		double innovationRate = getInnovationRate(matchingCommits);
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
-		DeveloperKpiHelper.setDataCount(projectName, dateLabel, overallKpiGroup, innovationRate, new HashMap<>(),
+		DeveloperKpiHelper.setDataCount(
+				projectName,
+				dateLabel,
+				overallKpiGroup,
+				innovationRate,
+				new HashMap<>(),
 				kpiTrendDataByGroup);
 
-		Map<String, List<ScmCommits>> userWiseScmCommits = DeveloperKpiHelper.groupCommitsByUser(matchingCommits);
-		validationDataList.addAll(prepareUserValidationData(userWiseScmCommits, assignees, tool, projectName, dateLabel,
-				kpiTrendDataByGroup));
+		Map<String, List<ScmCommits>> userWiseScmCommits =
+				DeveloperKpiHelper.groupCommitsByUser(matchingCommits);
+		validationDataList.addAll(
+				prepareUserValidationData(
+						userWiseScmCommits, assignees, tool, projectName, dateLabel, kpiTrendDataByGroup));
 	}
 
 	/**
-	 * Calculates the innovation rate as the average percentage of added lines.
-	 * Innovation rate = (added lines / total lines affected) * 100 / 10
+	 * Calculates the innovation rate as the average percentage of added lines. Innovation rate =
+	 * (added lines / total lines affected) * 100 / 10
 	 *
 	 * @param commits list of commits
 	 * @return average innovation rate
 	 */
 	private double getInnovationRate(List<ScmCommits> commits) {
-		return commits.stream()
-				.mapToDouble(this::calculateCommitInnovationRate)
-				.average()
-				.orElse(0.0);
+		return commits.stream().mapToDouble(this::calculateCommitInnovationRate).average().orElse(0.0);
 	}
 
 	/**
@@ -165,69 +195,94 @@ public class InnovationRateTrendKpiServiceImpl extends AbstractKpiCalculationStr
 	/**
 	 * Prepares validation data for each user/developer.
 	 *
-	 * @param userWiseCommits      map of user email to their commits
-	 * @param assignees            set of assignees
-	 * @param tool                 the SCM tool
-	 * @param projectName          name of the project
-	 * @param dateLabel            label for the time period
-	 * @param kpiTrendDataByGroup  map to populate with user-level trend data
+	 * @param userWiseCommits map of user email to their commits
+	 * @param assignees set of assignees
+	 * @param tool the SCM tool
+	 * @param projectName name of the project
+	 * @param dateLabel label for the time period
+	 * @param kpiTrendDataByGroup map to populate with user-level trend data
 	 * @return list of validation data for all users
 	 */
-	private List<RepoToolValidationData> prepareUserValidationData(Map<String, List<ScmCommits>> userWiseCommits,
-			Set<Assignee> assignees, Tool tool, String projectName, String dateLabel,
+	private List<RepoToolValidationData> prepareUserValidationData(
+			Map<String, List<ScmCommits>> userWiseCommits,
+			Set<Assignee> assignees,
+			Tool tool,
+			String projectName,
+			String dateLabel,
 			Map<String, List<DataCount>> kpiTrendDataByGroup) {
 		return userWiseCommits.entrySet().stream()
-				.map(entry -> processUserData(entry.getKey(), entry.getValue(), assignees, tool, projectName, dateLabel,
-						kpiTrendDataByGroup))
+				.map(
+						entry ->
+								processUserData(
+										entry.getKey(),
+										entry.getValue(),
+										assignees,
+										tool,
+										projectName,
+										dateLabel,
+										kpiTrendDataByGroup))
 				.toList();
 	}
 
 	/**
 	 * Processes data for a single user.
 	 *
-	 * @param userEmail            user's email
-	 * @param userCommits          user's commits
-	 * @param assignees            set of assignees
-	 * @param tool                 the SCM tool
-	 * @param projectName          name of the project
-	 * @param dateLabel            label for the time period
-	 * @param kpiTrendDataByGroup  map to populate with trend data
+	 * @param userEmail user's email
+	 * @param userCommits user's commits
+	 * @param assignees set of assignees
+	 * @param tool the SCM tool
+	 * @param projectName name of the project
+	 * @param dateLabel label for the time period
+	 * @param kpiTrendDataByGroup map to populate with trend data
 	 * @return validation data for the user
 	 */
-	private RepoToolValidationData processUserData(String userEmail, List<ScmCommits> userCommits,
-			Set<Assignee> assignees, Tool tool, String projectName, String dateLabel,
+	private RepoToolValidationData processUserData(
+			String userEmail,
+			List<ScmCommits> userCommits,
+			Set<Assignee> assignees,
+			Tool tool,
+			String projectName,
+			String dateLabel,
 			Map<String, List<DataCount>> kpiTrendDataByGroup) {
 		String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 		double innovationRate = getInnovationRate(userCommits);
 		int addedLines = userCommits.stream().mapToInt(ScmCommits::getAddedLines).sum();
 		int changedLines = userCommits.stream().mapToInt(ScmCommits::getChangedLines).sum();
 
-		String userKpiGroup = DeveloperKpiHelper.getBranchSubFilter(tool, projectName) + "#" + developerName;
-		DeveloperKpiHelper.setDataCount(projectName, dateLabel, userKpiGroup, innovationRate, new HashMap<>(),
-				kpiTrendDataByGroup);
+		String userKpiGroup =
+				DeveloperKpiHelper.getBranchSubFilter(tool, projectName) + "#" + developerName;
+		DeveloperKpiHelper.setDataCount(
+				projectName, dateLabel, userKpiGroup, innovationRate, new HashMap<>(), kpiTrendDataByGroup);
 
-		return createValidationData(projectName, tool, developerName, dateLabel, innovationRate, addedLines,
-				changedLines);
+		return createValidationData(
+				projectName, tool, developerName, dateLabel, innovationRate, addedLines, changedLines);
 	}
 
 	/**
 	 * Creates validation data object for a developer.
 	 *
-	 * @param projectName    name of the project
-	 * @param tool           the SCM tool
-	 * @param developerName  name of the developer
-	 * @param dateLabel      label for the time period
+	 * @param projectName name of the project
+	 * @param tool the SCM tool
+	 * @param developerName name of the developer
+	 * @param dateLabel label for the time period
 	 * @param innovationRate calculated innovation rate
-	 * @param addedLines     total added lines
-	 * @param changedLines   total changed lines
+	 * @param addedLines total added lines
+	 * @param changedLines total changed lines
 	 * @return populated validation data object
 	 */
-	private RepoToolValidationData createValidationData(String projectName, Tool tool, String developerName,
-			String dateLabel, double innovationRate, long addedLines, long changedLines) {
+	private RepoToolValidationData createValidationData(
+			String projectName,
+			Tool tool,
+			String developerName,
+			String dateLabel,
+			double innovationRate,
+			long addedLines,
+			long changedLines) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
-		validationData.setRepoUrl(tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
+		validationData.setRepoUrl(
+				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
 		validationData.setDate(dateLabel);
 		validationData.setInnovationRate(innovationRate);
