@@ -20,8 +20,8 @@ package com.publicissapient.kpidashboard.apis.repotools.model;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import lombok.Data;
 
@@ -30,9 +30,10 @@ public class RepoToolKpiBulkMetricResponse {
 	private List<List<RepoToolKpiMetricResponse>> values;
 
 	public static RepoToolKpiBulkMetricResponse createMockResponse() {
-		List<RepoToolKpiMetricResponse> mockResponses = IntStream.rangeClosed(1, 20)
-				.mapToObj(RepoToolKpiBulkMetricResponse::createMockResponse)
-				.collect(Collectors.toList());
+		List<RepoToolKpiMetricResponse> mockResponses =
+				IntStream.rangeClosed(1, 20)
+						.mapToObj(RepoToolKpiBulkMetricResponse::createMockResponse)
+						.collect(Collectors.toList());
 
 		RepoToolKpiBulkMetricResponse response = new RepoToolKpiBulkMetricResponse();
 		response.setValues(Arrays.asList(mockResponses));
@@ -41,15 +42,34 @@ public class RepoToolKpiBulkMetricResponse {
 
 	private static RepoToolKpiMetricResponse createMockResponse(int index) {
 		String[] dates = {
-				"2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19",
-				"2025-12-20", "2025-12-21", "2025-12-22", "2025-12-23", "2025-12-24",
-				"2025-12-25", "2025-12-26", "2025-12-27", "2025-12-28", "2025-12-29",
-				"2025-12-30", "2025-12-31", "2026-01-01", "2026-01-02", "2026-01-18"
+			"2025-12-15",
+			"2025-12-16",
+			"2025-12-17",
+			"2025-12-18",
+			"2025-12-19",
+			"2025-12-20",
+			"2025-12-21",
+			"2025-12-22",
+			"2025-12-23",
+			"2025-12-24",
+			"2025-12-25",
+			"2025-12-26",
+			"2025-12-27",
+			"2025-12-28",
+			"2025-12-29",
+			"2025-12-30",
+			"2025-12-31",
+			"2026-01-01",
+			"2026-01-02",
+			"2026-01-18"
 		};
 
-		RepoToolUserDetails user1 = createUser("pratik.basak@publicissapient.com", 85.5 + index, 5 + index, 1200 + index * 50);
-		RepoToolUserDetails user2 = createUser("valsa.anil@publicissapient.com", 78.2 + index, 7 + index, 1800 + index * 60);
-		RepoToolRepositories repo = createRepository("knowhow-api", 82.0 + index, 553 + index * 10, 85.5 + index, 12 + index);
+		RepoToolUserDetails user1 =
+				createUser("pratik.basak@publicissapient.com", 85.5 + index, 5 + index, 1200 + index * 50);
+		RepoToolUserDetails user2 =
+				createUser("valsa.anil@publicissapient.com", 78.2 + index, 7 + index, 1800 + index * 60);
+		RepoToolRepositories repo =
+				createRepository("knowhow-api", 82.0 + index, 553 + index * 10, 85.5 + index, 12 + index);
 
 		RepoToolKpiMetricResponse response = new RepoToolKpiMetricResponse();
 		response.setProjectName("knowhow-api");
@@ -76,7 +96,8 @@ public class RepoToolKpiBulkMetricResponse {
 		return response;
 	}
 
-	private static RepoToolUserDetails createUser(String email, double average, long mergeRequests, long linesChanged) {
+	private static RepoToolUserDetails createUser(
+			String email, double average, long mergeRequests, long linesChanged) {
 		RepoToolUserDetails user = new RepoToolUserDetails();
 		user.setEmail(email);
 		user.setCommitterEmail(email);
@@ -90,7 +111,8 @@ public class RepoToolKpiBulkMetricResponse {
 		return user;
 	}
 
-	private static RepoToolRepositories createRepository(String name, double average, long commitCount, double grade, int mrNumber) {
+	private static RepoToolRepositories createRepository(
+			String name, double average, long commitCount, double grade, int mrNumber) {
 		RepoToolRepositories repo = new RepoToolRepositories();
 		repo.setName(name);
 		repo.setRepository(name);
