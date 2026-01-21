@@ -17,7 +17,6 @@
 
 package com.publicissapient.kpidashboard.apis.notification.rest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,13 +34,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/notifications")
 @Tag(name = "Notification", description = "Operations related to notifications")
+@RequiredArgsConstructor
+@Tag(name = "Notification API", description = "APIs for Notification Management")
 public class NotificationController {
 
-	@Autowired private EmailNotificationService emailNotificationService;
+	private final EmailNotificationService emailNotificationService;
 
 	@Operation(
 			summary = "Send an email notification",

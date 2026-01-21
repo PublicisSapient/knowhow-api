@@ -16,6 +16,7 @@ package com.publicissapient.kpidashboard.apis.jira.service.releasedashboard;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -25,11 +26,14 @@ import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.jira.service.NonTrendKPIService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiValue;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.KpiBenchmarkValues;
 
 /**
  * All Jira NonTrend KPIs service have to implement this class {@link NonTrendKPIService}
@@ -99,5 +103,17 @@ public abstract class JiraReleaseKPIService implements NonTrendKPIService {
 
 	public List<JiraIssueCustomHistory> getJiraIssuesCustomHistoryFromBaseClass() {
 		return jiraService.getJiraIssuesCustomHistoryForCurrentRelease();
+	}
+
+	protected void setKpiBenchmarkValues(
+			IterationKpiValue iterationKpiValue, String filter, String kpiCode) {
+		KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiCode);
+		if (kpiBenchmarkValues != null) {
+			Optional<BenchmarkPercentiles> benchmarkPercentiles =
+					kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
+							.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value#" + filter))
+							.findFirst();
+			benchmarkPercentiles.ifPresent(iterationKpiValue::setBenchmarkPercentiles);
+		}
 	}
 }

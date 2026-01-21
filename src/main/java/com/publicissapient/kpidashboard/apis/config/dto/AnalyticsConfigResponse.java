@@ -14,20 +14,12 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
-
-import com.publicissapient.kpidashboard.common.shared.enums.TrendDirection;
+package com.publicissapient.kpidashboard.apis.config.dto;
 
 import lombok.Builder;
-import lombok.Data;
 
-@Data
 @Builder
-public class KPITrend {
-	private double trendValue;
-
-	private String kpiName;
-	private String kpiCategory;
-
-	private TrendDirection desiredTrend;
-}
+public record AnalyticsConfigResponse(
+		int analyticsGrafanaRolloutPercentage,
+		boolean isAnalyticsGoogleEnabled,
+		boolean isAnalyticsGrafanaEnabled) {}

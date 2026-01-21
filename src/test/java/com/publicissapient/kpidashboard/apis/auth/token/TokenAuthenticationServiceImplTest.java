@@ -27,10 +27,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -426,5 +426,4 @@ public class TokenAuthenticationServiceImplTest {
 		JSONObject result = service.getOrSaveUserByToken(request, authentication);
 		assertNotNull(result);
 	}
-
 }

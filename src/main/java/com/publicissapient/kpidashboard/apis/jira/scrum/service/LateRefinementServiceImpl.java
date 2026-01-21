@@ -487,6 +487,7 @@ public class LateRefinementServiceImpl extends JiraIterationKPIService {
 			IterationKpiValue iterationKpiValue = new IterationKpiValue();
 			iterationKpiValue.setDataGroup(currentSprintDataCountGroup);
 			iterationKpiValue.setFilter1("OVERALL");
+			setKpiBenchmarkValues(iterationKpiValue, KPICode.LATE_REFINEMENT.getKpiId());
 
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);

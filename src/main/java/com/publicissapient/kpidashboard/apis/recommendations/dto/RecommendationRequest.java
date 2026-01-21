@@ -17,11 +17,16 @@
 
 package com.publicissapient.kpidashboard.apis.recommendations.dto;
 
+import com.publicissapient.kpidashboard.common.model.recommendation.batch.RecommendationLevel;
+
 /**
  * Request object for retrieving AI-generated project recommendations at a specific organizational
  * hierarchy level.
  *
  * @param levelName the organizational hierarchy level name (e.g., "project", "account")
  * @param parentNodeId optional parent node ID for filtering to specific organizational subtree
+ * @param recommendationLevel optional recommendation level filter (PROJECT_LEVEL or KPI_LEVEL);
+ *     defaults to PROJECT_LEVEL
  */
-public record RecommendationRequest(String levelName, String parentNodeId) {}
+public record RecommendationRequest(
+		String levelName, String parentNodeId, RecommendationLevel recommendationLevel) {}

@@ -2,7 +2,6 @@ package com.publicissapient.kpidashboard.apis.kpis;
 
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +16,9 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.ProjectAccessUtil;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+
 /**
  * Rest Controller for all kpi field mapping requests.
  *
@@ -24,22 +26,12 @@ import com.publicissapient.kpidashboard.apis.util.ProjectAccessUtil;
  */
 @RestController
 @RequestMapping("/kpiFieldMapping")
+@AllArgsConstructor
+@Tag(name = "KPI Field Mapping Controller", description = "APIs for KPI Field Mapping Structure")
 public class FieldMappingStructureController {
 	private final KpiHelperService kPIHelperService;
 
 	private ProjectAccessUtil projectAccessUtil;
-
-	/**
-	 * Instantiates a new Kpi fieldmapping controller.
-	 *
-	 * @param kPIHelperService the k pi helper service
-	 */
-	@Autowired
-	public FieldMappingStructureController(
-			KpiHelperService kPIHelperService, ProjectAccessUtil projectAccessUtil) {
-		this.kPIHelperService = kPIHelperService;
-		this.projectAccessUtil = projectAccessUtil;
-	}
 
 	@GetMapping(value = "{projectBasicConfigId}/{kpiId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> fetchFieldMappingStructureByKpiFieldMappingData(

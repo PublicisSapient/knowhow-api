@@ -28,6 +28,7 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationRequest;
 import com.publicissapient.kpidashboard.apis.recommendations.dto.RecommendationResponseDTO;
 import com.publicissapient.kpidashboard.apis.recommendations.service.RecommendationService;
+import com.publicissapient.kpidashboard.common.model.recommendation.batch.RecommendationLevel;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -100,10 +101,19 @@ public class RecommendationController {
 									"The node id of the organizational entity parent for which to retrieve recommendations",
 							example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
 					@RequestParam(required = false)
-					String parentNodeId) {
+					String parentNodeId,
+			@Parameter(
+							name = "level",
+							description =
+									"Optional filter for recommendation level. "
+											+ "Use PROJECT_LEVEL for project-wide recommendations or KPI_LEVEL for KPI-specific recommendations. "
+											+ "Defaults to PROJECT_LEVEL for backward compatibility.",
+							example = "PROJECT_LEVEL")
+					@RequestParam(required = false, defaultValue = "PROJECT_LEVEL")
+					RecommendationLevel recommendationLevel) {
 
 		return ResponseEntity.ok(
 				recommendationService.getRecommendationsForLevel(
-						new RecommendationRequest(levelName, parentNodeId)));
+						new RecommendationRequest(levelName, parentNodeId, recommendationLevel)));
 	}
 }

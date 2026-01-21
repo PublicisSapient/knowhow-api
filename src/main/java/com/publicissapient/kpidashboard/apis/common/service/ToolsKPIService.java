@@ -32,6 +32,7 @@ import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.recommendations.service.RecommendationService;
 import com.publicissapient.kpidashboard.apis.util.AggregationUtils;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.AdditionalFilterCategory;
@@ -81,6 +82,8 @@ public abstract class ToolsKPIService<R, S> {
 
 	@Autowired(required = false)
 	private ForecastingManager forecastingManager;
+
+	@Autowired private RecommendationService recommendationService;
 
 	/**
 	 * Calculates the aggregated value for the nodes in the bottom-up fashion. nodeWiseKPIValue is
@@ -672,6 +675,7 @@ public abstract class ToolsKPIService<R, S> {
 		List<DataCount> trendValues = new ArrayList<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
+		setRecommendationActionPlan(selectedIds, kpiElement, kpiRequest.getLabel(), kpiId);
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
 			if (null != node) {
@@ -721,6 +725,7 @@ public abstract class ToolsKPIService<R, S> {
 		List<DataCount> trendValues = new ArrayList<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
+		setRecommendationActionPlan(selectedIds, kpiElement, kpiRequest.getLabel(), kpiId);
 		for (String selectedId : selectedIds) {
 			Node node = nodeWiseKPIValue.get(Pair.of(kpiRequest.getSelecedHierarchyLabel(), selectedId));
 			if (null != node) {
@@ -752,6 +757,8 @@ public abstract class ToolsKPIService<R, S> {
 									aggregateValue,
 									getList(dataCounts, kpiName),
 									calculatedAggValue);
+
+					setKpiBenchmarkValues(maturityDataCount, kpiId, CommonConstant.OVERALL);
 
 					// Add forecasts if configured
 					Optional.ofNullable(forecastingManager)
@@ -812,6 +819,7 @@ public abstract class ToolsKPIService<R, S> {
 		Map<String, List<DataCount>> trendMap = new HashMap<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
+		setRecommendationActionPlan(selectedIds, kpiElement, kpiRequest.getLabel(), kpiId);
 		for (String selectedId : selectedIds) {
 			Node node =
 					nodeWiseKPIValue.get(
@@ -855,7 +863,8 @@ public abstract class ToolsKPIService<R, S> {
 
 	public void setKpiBenchmarkValues(DataCount dataCount, String kpiId, String filter) {
 		KpiBenchmarkValues kpiBenchmarkValues = cacheService.getKpiBenchmarkTargets().get(kpiId);
-		if (null != kpiBenchmarkValues) {
+		if (null != kpiBenchmarkValues
+				&& CollectionUtils.isNotEmpty(kpiBenchmarkValues.getFilterWiseBenchmarkValues())) {
 			Optional<BenchmarkPercentiles> benchmarkPercentiles;
 			if (filter.equalsIgnoreCase(CommonConstant.OVERALL)) {
 				benchmarkPercentiles =
@@ -866,9 +875,45 @@ public abstract class ToolsKPIService<R, S> {
 				benchmarkPercentiles =
 						kpiBenchmarkValues.getFilterWiseBenchmarkValues().stream()
 								.filter(benchmark -> benchmark.getFilter().equalsIgnoreCase("value#" + filter))
-								.findFirst();
+								.findFirst()
+								.or(() -> Optional.of(kpiBenchmarkValues.getFilterWiseBenchmarkValues().get(0)));
 			}
 			benchmarkPercentiles.ifPresent(dataCount::setBenchmarkPercentiles);
+		}
+	}
+
+	/**
+	 * Sets the latest recommendation action plan at the KPI element level. This method is called once
+	 * per KPI to fetch and attach the project-level recommendation.
+	 *
+	 * @param selectedIds project node IDs selected in the request
+	 * @param kpiElement the KpiElement to populate with recommendation
+	 * @param labelName the hierarchy level label name
+	 * @param kpiId the KPI identifier
+	 */
+	public void setRecommendationActionPlan(
+			Set<String> selectedIds, KpiElement kpiElement, String labelName, String kpiId) {
+		if (selectedIds.size() == 1
+				&& (labelName.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)
+						|| labelName.equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_SPRINT)
+						|| "SQD".equalsIgnoreCase(labelName))
+				&& recommendationService != null) {
+
+			Optional<String> projectId = selectedIds.stream().findFirst();
+			Map<String, ProjectBasicConfig> basicConfigMap =
+					(Map<String, ProjectBasicConfig>) cacheService.cacheProjectConfigMapData();
+
+			basicConfigMap.values().stream()
+					.filter(
+							projectBasicConfig ->
+									projectBasicConfig.getProjectNodeId().equalsIgnoreCase(projectId.orElse("")))
+					.findFirst()
+					.flatMap(
+							basicConfig ->
+									Optional.ofNullable(
+											recommendationService.getLatestRecommendationForKpi(
+													basicConfig.getId().toString(), kpiId)))
+					.ifPresent(kpiElement::setRecommendationActionPlan);
 		}
 	}
 
@@ -892,6 +937,7 @@ public abstract class ToolsKPIService<R, S> {
 
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
+		setRecommendationActionPlan(selectedIds, kpiElement, kpiRequest.getLabel(), kpiId);
 
 		for (String selectedId : selectedIds) {
 			Node node =
@@ -929,6 +975,7 @@ public abstract class ToolsKPIService<R, S> {
 												aggregateValue,
 												getList(value, kpiCode.name()),
 												calculatedAggValue);
+								setKpiBenchmarkValues(maturityDataCount, kpiId, key);
 
 								// Add forecasts if configured
 								Optional.ofNullable(forecastingManager)

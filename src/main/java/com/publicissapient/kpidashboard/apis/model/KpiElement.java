@@ -34,6 +34,7 @@ import com.publicissapient.kpidashboard.common.model.application.KpiInfo;
 import com.publicissapient.kpidashboard.common.model.application.MaturityLevel;
 import com.publicissapient.kpidashboard.common.model.application.TotalDefectAgingResponse;
 import com.publicissapient.kpidashboard.common.model.application.ValidationData;
+import com.publicissapient.kpidashboard.common.model.recommendation.batch.RecommendationsActionPlan;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -69,6 +70,7 @@ public class KpiElement implements Serializable { // NOPMD
 	private String kpiSource;
 
 	private Double thresholdValue;
+	@Setter @Getter private transient RecommendationsActionPlan recommendationActionPlan;
 	private String aggregationType;
 
 	private transient Object trendValueList;
@@ -167,6 +169,7 @@ public class KpiElement implements Serializable { // NOPMD
 		this.maxValue = kpiElement.getMaxValue();
 		this.thresholdValue = kpiElement.getThresholdValue();
 		this.kpiInfo = kpiElement.getKpiInfo();
+		this.recommendationActionPlan = kpiElement.getRecommendationActionPlan();
 		if (null != kpiElement.getValue()) {
 			this.value = kpiElement.getValue();
 		} else {

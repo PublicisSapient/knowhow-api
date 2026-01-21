@@ -62,6 +62,11 @@ public class ProjectRecommendationDTO {
 	@Schema(description = "Organizational level of the recommendation")
 	private RecommendationLevel level;
 
+	@Schema(
+			description = "KPI identifier (populated for KPI_LEVEL, null for PROJECT_LEVEL)",
+			example = "kpi14")
+	private String kpiId;
+
 	@Schema(description = "Main recommendation with action plans and severity")
 	private Recommendation recommendations;
 

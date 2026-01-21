@@ -165,9 +165,6 @@ public class CustomApiConfig { // NOPMD
 	@Value("${notification.switch}")
 	private boolean notificationSwitch;
 
-	@Value("${analytics.switch}")
-	private boolean analyticsSwitch;
-
 	// feedback categories
 	@Value("${feedback.categories}")
 	private List<String> feedbackCategories;
@@ -1061,10 +1058,6 @@ public class CustomApiConfig { // NOPMD
 
 	public void setNotificationSwitch(boolean notificationSwitch) {
 		this.notificationSwitch = notificationSwitch;
-	}
-
-	public boolean isAnalyticsSwitch() {
-		return analyticsSwitch;
 	}
 
 	public String getAzureBoardApi() {

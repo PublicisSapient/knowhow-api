@@ -702,28 +702,24 @@ class ProductivityServiceTest {
 								.name("Wastage")
 								.category("efficiency")
 								.variationPercentage(-33.33)
-								.calculationValue(-400.0)
 								.build(),
 						KPIData.builder()
 								.kpiId("kpi128")
 								.name("Work Status")
 								.category("efficiency")
 								.variationPercentage(-41.67)
-								.calculationValue(-500.0)
 								.build(),
 						KPIData.builder()
 								.kpiId("kpi72")
 								.name("Commitment Reliability")
 								.category("productivity")
 								.variationPercentage(-45.45)
-								.calculationValue(-545.4545454545455)
 								.build(),
 						KPIData.builder()
 								.kpiId("kpi39")
 								.name("Sprint Velocity")
 								.category("speed")
 								.variationPercentage(-216.48148148148147)
-								.calculationValue(-18.04)
 								.build());
 
 		testProductivity1.setCategoryScores(testCategoryScores1);
@@ -749,14 +745,12 @@ class ProductivityServiceTest {
 								.name("Work Status")
 								.category("efficiency")
 								.variationPercentage(74.77)
-								.calculationValue(897.2789115646258)
 								.build(),
 						KPIData.builder()
 								.kpiId("kpi72")
 								.name("Commitment Reliability")
 								.category("productivity")
 								.variationPercentage(3.37)
-								.calculationValue(40.4040404040404)
 								.build());
 
 		testProductivity2.setCategoryScores(testCategoryScores2);
