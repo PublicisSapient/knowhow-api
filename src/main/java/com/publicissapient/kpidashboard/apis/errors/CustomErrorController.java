@@ -25,7 +25,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Custom error controller to handle servlet container level errors.
@@ -47,8 +50,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class CustomErrorController implements ErrorController {
 
 	@RequestMapping("/error")
-	public ResponseEntity<Object> handleError(HttpServletRequest request) {
-		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+	public ResponseEntity<Object> handleError(ServletRequest request) {
 		Object exception = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
 
 		// Check if this is a RequestDispatcher error
@@ -59,11 +61,12 @@ public class CustomErrorController implements ErrorController {
 					.body(
 							new ErrorResponse(
 									System.currentTimeMillis(),
-									404,
+									HttpStatus.NOT_FOUND.value(),
 									"Not Found",
 									(String) request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)));
 		}
 
+		Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
 		// Handle other error status codes
 		if (status != null) {
 			int statusCode = Integer.parseInt(status.toString());
@@ -82,22 +85,19 @@ public class CustomErrorController implements ErrorController {
 				.body(
 						new ErrorResponse(
 								System.currentTimeMillis(),
-								500,
+								HttpStatus.INTERNAL_SERVER_ERROR.value(),
 								"Internal Server Error",
 								(String) request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)));
 	}
 
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class ErrorResponse {
-		public long timestamp;
-		public int status;
-		public String error;
-		public String path;
+		private long timestamp;
+		private int status;
 
-		public ErrorResponse(long timestamp, int status, String error, String path) {
-			this.timestamp = timestamp;
-			this.status = status;
-			this.error = error;
-			this.path = path;
-		}
+		private String error;
+		private String path;
 	}
 }
