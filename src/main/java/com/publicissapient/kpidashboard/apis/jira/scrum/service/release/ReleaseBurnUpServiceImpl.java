@@ -886,6 +886,8 @@ public class ReleaseBurnUpServiceImpl extends JiraReleaseKPIService {
 			kpiValueIssueCount.setFilter1(ISSUE_COUNT);
 			kpiValueIssueCount.setYAxisLabel(CommonConstant.COUNT);
 			kpiValueIssueCount.setAdditionalInfo(additionalInfoIssueMap);
+			setKpiBenchmarkValues(kpiValueIssueCount, ISSUE_COUNT, KPICode.RELEASE_BURNUP.getKpiId());
+
 			IterationKpiValue kpiValueSizeCount = new IterationKpiValue();
 			kpiValueSizeCount.setDataGroup(issueSizeCountDataGroup);
 			kpiValueSizeCount.setFilter1(STORY_POINT);
@@ -893,6 +895,7 @@ public class ReleaseBurnUpServiceImpl extends JiraReleaseKPIService {
 			kpiValueSizeCount.setAdditionalInfo(additionalInfoSPMap);
 			iterationKpiValueList.add(kpiValueSizeCount);
 			iterationKpiValueList.add(kpiValueIssueCount);
+			setKpiBenchmarkValues(kpiValueSizeCount, STORY_POINT, KPICode.RELEASE_BURNUP.getKpiId());
 
 			kpiElement.setModalHeads(KPIExcelColumn.RELEASE_BURNUP.getColumns());
 			kpiElement.setExcelColumns(KPIExcelColumn.RELEASE_BURNUP.getColumns());
