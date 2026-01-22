@@ -306,8 +306,8 @@ public class ProductivityService {
 	 * productivity data within each time period. Projects without data are logged but excluded from
 	 * calculations to maintain accuracy.
 	 *
-	 * @param productivityTrendsRequest class representing the starting input required for generating the
-	 *                                     productivity response
+	 * @param productivityTrendsRequest class representing the starting input required for generating
+	 *     the productivity response
 	 * @return ServiceResponse containing {@link ProductivityTrendsResponse} with temporal grouping
 	 *     metadata, hierarchy level name, category variations between first and last periods, and
 	 *     chronologically ordered list of {@link CategoryScoresDTO} objects representing productivity
@@ -639,12 +639,6 @@ public class ProductivityService {
 								"Current user doesn't have access to the parent node id %s or it does not exist",
 								parentNodeId));
 			}
-			if (accountFilteredData.size() > 1) {
-				throw new BadRequestException(
-						String.format(
-								"Multiple organization entities are corresponding with the parent node id '%s'",
-								parentNodeId));
-			}
 			if (accountFilteredData.stream()
 					.anyMatch(
 							parentNodeData ->
@@ -673,10 +667,6 @@ public class ProductivityService {
 	private HierarchyLevelsData
 			constructHierarchyLevelsDataByRequestedLevelNameAndDeliveryMethodology(
 					String levelName, ProjectDeliveryMethodology deliveryMethodology) {
-		if (StringUtils.isEmpty(levelName)) {
-			throw new BadRequestException("Level name must not be empty");
-		}
-
 		Map<String, HierarchyLevel> allHierarchyLevels =
 				this.filterHelperService.getHierarchyLevelMap(deliveryMethodology);
 		if (multipleLevelsAreCorrespondingToLevelName(levelName, allHierarchyLevels)) {
@@ -686,15 +676,28 @@ public class ProductivityService {
 							levelName));
 		}
 
-		Optional<HierarchyLevel> requestedHierarchyLevelOptional =
-				this.accountHierarchyServiceImpl.getHierarchyLevelByLevelName(levelName);
+		Optional<HierarchyLevel> requestedHierarchyLevelOptional;
+		if (deliveryMethodology == ProjectDeliveryMethodology.SCRUM) {
+			requestedHierarchyLevelOptional =
+					this.accountHierarchyServiceImpl.getHierarchyLevelByLevelName(levelName);
+		} else {
+			requestedHierarchyLevelOptional =
+					this.accountHierarchyServiceKanbanImpl.getHierarchyLevelByLevelName(levelName);
+		}
 		if (requestedHierarchyLevelOptional.isEmpty()) {
 			throw new NotFoundException(String.format("Requested level '%s' does not exist", levelName));
 		}
 
-		Optional<HierarchyLevel> projectHierarchyLevelOptional =
-				this.accountHierarchyServiceImpl.getHierarchyLevelByLevelId(
-						CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		Optional<HierarchyLevel> projectHierarchyLevelOptional;
+		if (deliveryMethodology == ProjectDeliveryMethodology.SCRUM) {
+			projectHierarchyLevelOptional =
+					this.accountHierarchyServiceImpl.getHierarchyLevelByLevelId(
+							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		} else {
+			projectHierarchyLevelOptional =
+					this.accountHierarchyServiceKanbanImpl.getHierarchyLevelByLevelId(
+							CommonConstant.HIERARCHY_LEVEL_ID_PROJECT);
+		}
 		if (projectHierarchyLevelOptional.isEmpty()) {
 			throw new InternalServerErrorException(
 					"Could not find any hierarchy level relating to a 'project' entity");
@@ -862,11 +865,17 @@ public class ProductivityService {
 		if (productivityTrendsRequest == null) {
 			throw new BadRequestException("Productivity trends request cannot be null");
 		}
+		if (StringUtils.isBlank(productivityTrendsRequest.levelName())) {
+			throw new BadRequestException("The productivity trends 'levelName' is required");
+		}
 		if (productivityTrendsRequest.limit() < 0) {
 			throw new BadRequestException("The 'limit' cannot be negative");
 		}
 		if (productivityTrendsRequest.temporalAggregationUnit() == null) {
-			throw new BadRequestException("The 'temporalAggregationUnit' cannot be null");
+			throw new BadRequestException("The 'temporalAggregationUnit' is required");
+		}
+		if (productivityTrendsRequest.deliveryMethodology() == null) {
+			throw new BadRequestException("The productivity trends 'deliveryMethodology' is required");
 		}
 	}
 
