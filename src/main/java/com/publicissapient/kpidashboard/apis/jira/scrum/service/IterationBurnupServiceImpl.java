@@ -594,6 +594,7 @@ public class IterationBurnupServiceImpl extends JiraIterationKPIService {
 													.toList(),
 											KPICode.ITERATION_BURNUP.getKpiId()));
 			iterationKpiValue.setAdditionalGroup(Arrays.asList(DOTTED_LINE));
+			setKpiBenchmarkValues(iterationKpiValue, KPICode.ITERATION_BURNUP.getKpiId());
 			List<IterationKpiValue> iterationKpiValueList = new ArrayList<>();
 			iterationKpiValueList.add(iterationKpiValue);
 			kpiElement.setTrendValueList(iterationKpiValueList);
