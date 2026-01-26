@@ -180,6 +180,7 @@ public class ProductivityService {
 		Map<String, List<Double>> kpiTrendValuesGroupedById = new HashMap<>();
 		Map<String, KPIData> kpiDataGroupedById = new HashMap<>();
 
+		int totalNumberOfProjectsWithProductivityData = 0;
 		for (Map.Entry<String, List<AccountFilteredData>>
 				nextChildHierarchyLevelNodeIdProjectTreeNodes :
 						projectChildrenGroupedByRequestedRootNodeIds.entrySet()) {
@@ -197,6 +198,7 @@ public class ProductivityService {
 				if (projectProductivity != null) {
 					// For calculating the break-down details
 					numberOfProjectsWithProductivityData++;
+					totalNumberOfProjectsWithProductivityData++;
 					addProductivityScores(rootNodeCategoryScore, projectProductivity.getCategoryScores());
 
 					// For calculating the summary
@@ -238,19 +240,10 @@ public class ProductivityService {
 								+ "containing productivity data",
 						rootAccountData.getNodeId(),
 						rootAccountData.getNodeName());
-				details.add(
-						OrganizationEntityProductivity.builder()
-								.levelName(
-										pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
-												.getHierarchyLevelName())
-								.organizationEntityName(rootAccountData.getNodeName())
-								.categoryScores(new CategoryScoresDTO())
-								.build());
 			}
 		}
-
-		int totalProjectsNumber = productivityGroupedByNodeId.values().size();
-		setAveragedProductivityScores(summaryCategoryScoresDTO, totalProjectsNumber);
+		setAveragedProductivityScores(
+				summaryCategoryScoresDTO, totalNumberOfProjectsWithProductivityData);
 
 		ProductivityResponse productivityResponse = new ProductivityResponse();
 		productivityResponse.setDetails(details);
@@ -270,7 +263,7 @@ public class ProductivityService {
 				""",
 				productivityRequest.levelName(),
 				projectNodeIds.size(),
-				(projectNodeIds.size() - totalProjectsNumber),
+				(projectNodeIds.size() - totalNumberOfProjectsWithProductivityData),
 				System.currentTimeMillis() - startTime);
 		return new ServiceResponse(
 				Boolean.TRUE, "Productivity data was successfully retrieved", productivityResponse);
@@ -775,7 +768,6 @@ public class ProductivityService {
 							.trendValue(trendValue)
 							.kpiName(kpiData.getName())
 							.kpiCategory(kpiData.getCategory())
-							.desiredTrend(kpiData.getDesiredTrend())
 							.build();
 			if (trendValue >= 0.0) {
 				positive.add(kpiTrend);

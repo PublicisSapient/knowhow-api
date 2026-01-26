@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,6 +42,7 @@ import com.publicissapient.kpidashboard.apis.model.AccountHierarchyDataKanban;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
@@ -74,61 +76,6 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 	@Override
 	public String getQualifierType() {
 		return "Kanban";
-	}
-
-	@SuppressWarnings("unchecked")
-	public Set<AccountFilteredData> getFilteredList(AccountFilterRequest request) {
-		List<AccountHierarchyDataKanban> hierarchyDataAll =
-				(List<AccountHierarchyDataKanban>) cacheService.cacheAccountHierarchyKanbanData();
-		Set<String> basicProjectConfigIds = tokenAuthenticationService.getUserProjects();
-		if (!authorizedProjectsService.ifSuperAdminUser()
-				&& CollectionUtils.isNotEmpty(hierarchyDataAll)) {
-			hierarchyDataAll =
-					hierarchyDataAll.stream()
-							.filter(data -> data.getBasicProjectConfigId() != null)
-							.filter(
-									data ->
-											basicProjectConfigIds.contains(data.getBasicProjectConfigId().toHexString()))
-							.collect(Collectors.toList());
-		}
-		return processAccountFilteredResponse(hierarchyDataAll);
-	}
-
-	private Set<AccountFilteredData> processAccountFilteredResponse(
-			List<AccountHierarchyDataKanban> accountHierarchyDataList) {
-		Set<AccountFilteredData> result = new HashSet<>();
-		accountHierarchyDataList.forEach(
-				accountHierarchyData ->
-						accountHierarchyData
-								.getNode()
-								.forEach(
-										node ->
-												result.add(
-														getAccountFilteredResponse(
-																node.getProjectHierarchy(), node.getLevel()))));
-		return result;
-	}
-
-	private AccountFilteredData getAccountFilteredResponse(ProjectHierarchy acc, int level) {
-		AccountFilteredData data = null;
-		if (null != acc) {
-			data =
-					AccountFilteredData.builder()
-							.nodeId(acc.getNodeId())
-							.nodeName(acc.getNodeName())
-							.nodeDisplayName(acc.getNodeDisplayName())
-							.labelName(acc.getHierarchyLevelId())
-							.parentId(acc.getParentId())
-							.level(level)
-							.build();
-
-			if (acc.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.PROJECT)) {
-				data.setBasicProjectConfigId(acc.getBasicProjectConfigId());
-				data.setOnHold(acc.isOnHold());
-			}
-		}
-
-		return data;
 	}
 
 	/** {Inherit Doc} */
@@ -168,6 +115,79 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 							});
 		}
 		return listHierarchyData;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Set<AccountFilteredData> getFilteredList(AccountFilterRequest request) {
+		List<AccountHierarchyDataKanban> hierarchyDataAll =
+				(List<AccountHierarchyDataKanban>) cacheService.cacheAccountHierarchyKanbanData();
+		Set<String> basicProjectConfigIds = tokenAuthenticationService.getUserProjects();
+		if (!authorizedProjectsService.ifSuperAdminUser()
+				&& CollectionUtils.isNotEmpty(hierarchyDataAll)) {
+			hierarchyDataAll =
+					hierarchyDataAll.stream()
+							.filter(data -> data.getBasicProjectConfigId() != null)
+							.filter(
+									data ->
+											basicProjectConfigIds.contains(data.getBasicProjectConfigId().toHexString()))
+							.collect(Collectors.toList());
+		}
+		return processAccountFilteredResponse(hierarchyDataAll);
+	}
+
+	public Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
+		return this.filterHelperService.getHierarchyLevelMap(true).values().stream()
+				.filter(
+						hierarchyLevel ->
+								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
+										&& hierarchyLevel.getHierarchyLevelId().equalsIgnoreCase(levelId))
+				.findAny();
+	}
+
+	public Optional<HierarchyLevel> getHierarchyLevelByLevelName(String levelName) {
+		return this.filterHelperService.getHierarchyLevelMap(true).values().stream()
+				.filter(
+						hierarchyLevel ->
+								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
+										&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
+				.findAny();
+	}
+
+	private Set<AccountFilteredData> processAccountFilteredResponse(
+			List<AccountHierarchyDataKanban> accountHierarchyDataList) {
+		Set<AccountFilteredData> result = new HashSet<>();
+		accountHierarchyDataList.forEach(
+				accountHierarchyData ->
+						accountHierarchyData
+								.getNode()
+								.forEach(
+										node ->
+												result.add(
+														getAccountFilteredResponse(
+																node.getProjectHierarchy(), node.getLevel()))));
+		return result;
+	}
+
+	private AccountFilteredData getAccountFilteredResponse(ProjectHierarchy acc, int level) {
+		AccountFilteredData data = null;
+		if (null != acc) {
+			data =
+					AccountFilteredData.builder()
+							.nodeId(acc.getNodeId())
+							.nodeName(acc.getNodeName())
+							.nodeDisplayName(acc.getNodeDisplayName())
+							.labelName(acc.getHierarchyLevelId())
+							.parentId(acc.getParentId())
+							.level(level)
+							.build();
+
+			if (acc.getHierarchyLevelId().equalsIgnoreCase(CommonConstant.PROJECT)) {
+				data.setBasicProjectConfigId(acc.getBasicProjectConfigId());
+				data.setOnHold(acc.isOnHold());
+			}
+		}
+
+		return data;
 	}
 
 	/**
