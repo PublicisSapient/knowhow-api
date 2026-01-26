@@ -223,12 +223,14 @@ public class ReleasePlanServiceImpl extends JiraReleaseKPIService {
 				kpiValueIssueCount.setFilter1(ISSUE_COUNT);
 				kpiValueIssueCount.setYAxisLabel(CommonConstant.COUNT);
 				kpiValueIssueCount.setAdditionalInfo(additionalInfoMap);
+				setKpiBenchmarkValues(kpiValueIssueCount, ISSUE_COUNT, KPICode.RELEASE_PLAN.getKpiId());
 
 				IterationKpiValue kpiValueSizeCount = new IterationKpiValue();
 				kpiValueSizeCount.setDataGroup(issueSizeCountDataGroup);
 				kpiValueSizeCount.setFilter1(STORY_POINT);
 				kpiValueSizeCount.setYAxisLabel(CommonConstant.SP);
 				kpiValueSizeCount.setAdditionalInfo(additionalInfoMap);
+				setKpiBenchmarkValues(kpiValueSizeCount, STORY_POINT, KPICode.RELEASE_PLAN.getKpiId());
 
 				// Add forecasts for Release planned trend line
 				addForecastsToReleasePlanned(kpiValueIssueCount, issueCountDataGroup);

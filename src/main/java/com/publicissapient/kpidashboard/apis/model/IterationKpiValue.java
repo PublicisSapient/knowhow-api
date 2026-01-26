@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.kpibenchmark.BenchmarkPercentiles;
 
 import lombok.Data;
 import lombok.Getter;
@@ -51,6 +52,7 @@ public class IterationKpiValue implements Serializable {
 	private transient Map<String, Object> additionalInfo;
 	private String yAxisLabel;
 	private List<DataCount> forecasts; // forecast data points
+	private BenchmarkPercentiles benchmarkPercentiles;
 
 	public IterationKpiValue(String filter1, String filter2, List<IterationKpiData> data) {
 		this.filter1 = filter1;

@@ -92,7 +92,6 @@
     "yaxisLabel": "Percentage",
     "isPositiveTrend": true,
     "showTrend": true,
-    "kpiFilter": "multiSelectDropDown",
     "aggregationCriteria": "average",
     "isAdditionalFilterSupport": true,
     "calculateMaturity": true,
