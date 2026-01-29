@@ -59,6 +59,7 @@ import com.publicissapient.kpidashboard.common.repository.application.AccountHie
 import com.publicissapient.kpidashboard.common.repository.application.KanbanAccountHierarchyRepository;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -148,7 +149,7 @@ public class FilterHelperService {
 
 		hierarchyDataAll.forEach(
 				data -> {
-					// add all which donot have sprint level
+					// add all which do not have sprint level
 					if (data.getLabelName().equalsIgnoreCase(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT)
 							|| data.getNode().stream()
 									.anyMatch(
@@ -387,10 +388,6 @@ public class FilterHelperService {
 		}
 	}
 
-	/**
-	 * @param reversehierarchy
-	 * @param projId
-	 */
 	private void cleanKanbanFilterData(List<String> reversehierarchy, ObjectId projId) {
 
 		List<KanbanAccountHierarchy> projectDataList =
@@ -630,12 +627,39 @@ public class FilterHelperService {
 		return toBeDeleted;
 	}
 
+	/**
+	 * Retrieves hierarchy level mapping based on delivery methodology.
+	 *
+	 * @param isKanban true for Kanban projects, false for Scrum projects
+	 * @return Map of hierarchy level names to HierarchyLevel objects
+	 * @deprecated since version 15.1.0, scheduled for removal in version 16.0.0. Use {@link
+	 *     #getHierarchyLevelMap(ProjectDeliveryMethodology)} instead. Migration: Replace {@code
+	 *     getHierarchyLevelMap(true)} with {@code
+	 *     getHierarchyLevelMap(ProjectDeliveryMethodology.KANBAN)} and {@code
+	 *     getHierarchyLevelMap(false)} with {@code
+	 *     getHierarchyLevelMap(ProjectDeliveryMethodology.SCRUM)}.
+	 */
+	@Deprecated(since = "15.0.1", forRemoval = true)
 	public Map<String, HierarchyLevel> getHierarchyLevelMap(boolean isKanban) {
 		if (isKanban) {
 			return cacheService.getFullKanbanHierarchyLevelMap();
 		} else {
 			return cacheService.getFullHierarchyLevelMap();
 		}
+	}
+
+	public Map<String, HierarchyLevel> getHierarchyLevelMap(
+			ProjectDeliveryMethodology deliveryMethodology) {
+		if (deliveryMethodology == null) {
+			throw new IllegalArgumentException("The delivery methodology must not be null");
+		}
+		if (ProjectDeliveryMethodology.SCRUM == deliveryMethodology) {
+			return cacheService.getFullHierarchyLevelMap();
+		}
+		if (ProjectDeliveryMethodology.KANBAN == deliveryMethodology) {
+			return cacheService.getFullKanbanHierarchyLevelMap();
+		}
+		throw new IllegalArgumentException("Unsupported delivery methodology " + deliveryMethodology);
 	}
 
 	public String getHierarchyLevelId(int level, String label, boolean isKanban) {

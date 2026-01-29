@@ -16,16 +16,22 @@
  */
 package com.publicissapient.kpidashboard.apis.mongock.installation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.publicissapient.kpidashboard.common.model.generic.Processor;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,24 +39,49 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @ChangeUnit(id = "ddl3", order = "003", author = "PSKnowHOW")
+@RequiredArgsConstructor
 public class GlobalConfigChangeLog {
 
-	private final MongoTemplate mongoTemplate;
 	private static final String CLASS_KEY = "_class";
 	private static final String BUILD = "BUILD";
 	private static final String REPO_TOOL_PROVIDER = "repoToolProvider";
 	private static final String TOOL_NAME = "toolName";
 	private static final String TEST_API_URL = "testApiUrl";
+	private static final String SONAR = "Sonar";
 
-	public GlobalConfigChangeLog(MongoTemplate mongoTemplate) {
-		this.mongoTemplate = mongoTemplate;
-	}
+	private final MongoTemplate mongoTemplate;
+
+	@Builder
+	private record ProcessorConfig(String name, String type, String className) {}
 
 	@Execution
 	public void executeGlobalConfig() {
 		insertGlobalConfigData();
 		insertProcessorData();
 		insertRepoToolProviderData();
+	}
+
+	@RollbackExecution
+	public void rollback() {
+		// We are inserting the documents through DDL, no rollback to any collections.
+	}
+
+	// repo tool related info used by repo tool processor
+	public void insertRepoToolProviderData() {
+		mongoTemplate
+				.getCollection("repo_tools_provider")
+				.insertMany(
+						Arrays.asList(
+								new Document(TOOL_NAME, "bitbucket")
+										.append(TEST_API_URL, "https://api.bitbucket.org/2.0/workspaces/")
+										.append("testServerApiUrl", "/bitbucket/rest/api/1.0/projects/")
+										.append(REPO_TOOL_PROVIDER, "bitbucket_oauth2"),
+								new Document(TOOL_NAME, "gitlab")
+										.append(REPO_TOOL_PROVIDER, "gitlab")
+										.append(TEST_API_URL, "/api/v4/projects/"),
+								new Document(TOOL_NAME, "github")
+										.append(TEST_API_URL, "https://api.github.com/users/")
+										.append(REPO_TOOL_PROVIDER, "github")));
 	}
 
 	public void insertGlobalConfigData() {
@@ -82,70 +113,36 @@ public class GlobalConfigChangeLog {
 	}
 
 	public void insertProcessorData() {
-		if (mongoTemplate.getCollection("processor").countDocuments() == 0) {
-			List<Document> processorData =
-					Arrays.asList(
-							createProcessor(
-									"Jira",
-									"AGILE_TOOL",
-									"com.publicissapient.kpidashboard.jira.model.JiraProcessor"),
-							createSonarProcessor(),
-							createProcessor(
-									"Zephyr",
-									"TESTING_TOOLS",
-									"com.publicissapient.kpidashboard.zephyr.model.ZephyrProcessor"),
-							createProcessor(
-									"GitHub", "SCM", "com.publicissapient.kpidashboard.github.model.GitHubProcessor"),
-							createProcessor(
-									"Teamcity",
-									BUILD,
-									"com.publicissapient.kpidashboard.teamcity.model.TeamcityProcessor"),
-							createProcessor(
-									"Bitbucket",
-									"SCM",
-									"com.publicissapient.kpidashboard.bitbucket.model.BitbucketProcessor"),
-							createProcessor(
-									"GitLab", "SCM", "com.publicissapient.kpidashboard.gitlab.model.GitLabProcessor"),
-							createProcessor(
-									"Jenkins",
-									BUILD,
-									"com.publicissapient.kpidashboard.jenkins.model.JenkinsProcessor"),
-							createProcessor(
-									"Bamboo", BUILD, "com.publicissapient.kpidashboard.bamboo.model.BambooProcessor"),
-							createProcessor(
-									"Azure",
-									"AGILE_TOOL",
-									"com.publicissapient.kpidashboard.azure.model.AzureProcessor"),
-							createProcessor(
-									"AzureRepository",
-									"SCM",
-									"com.publicissapient.kpidashboard.azurerepo.model.AzureRepoProcessor"),
-							createProcessor(
-									"AzurePipeline",
-									BUILD,
-									"com.publicissapient.kpidashboard.azurepipeline.model.AzurePipelineProcessor"),
-							createProcessor(
-									"JiraTest",
-									"TESTING_TOOLS",
-									"com.publicissapient.kpidashboard.jiratest.model.JiraTestProcessor"),
-							createProcessor(
-									"GitHubAction",
-									BUILD,
-									"com.publicissapient.kpidashboard.githubaction.model.GitHubActionProcessor"),
-							createProcessor(
-									"RepoTool",
-									"SCM",
-									"com.publicissapient.kpidashboard.repodb.model.RepoDbProcessor"),
-							createProcessor(
-									"ArgoCD",
-									BUILD,
-									"com.publicissapient.kpidashboard.argocd.model.ArgoCDProcessor"));
+		List<ProcessorConfig> processorConfigs = createRequiredProcessorConfigs();
 
-			mongoTemplate.getCollection("processor").insertMany(processorData);
+		List<String> existingProcessorNames =
+				mongoTemplate.findAll(Processor.class, "processor").stream()
+						.filter(
+								processor ->
+										processor != null && StringUtils.isNotEmpty(processor.getProcessorName()))
+						.map(processor -> processor.getProcessorName().toLowerCase())
+						.toList();
+
+		List<Document> processorData = new ArrayList<>();
+
+		for (ProcessorConfig processorConfig : processorConfigs) {
+			if (Boolean.FALSE.equals(
+					existingProcessorNames.contains(processorConfig.name.toLowerCase()))) {
+				if (SONAR.equalsIgnoreCase(processorConfig.name)) {
+					processorData.add(createSonarProcessor());
+				} else {
+					processorData.add(
+							createProcessor(
+									processorConfig.name, processorConfig.type, processorConfig.className));
+				}
+			}
 		}
+
+		mongoTemplate.getCollection("processor").insertMany(processorData);
 	}
 
-	private Document createProcessor(String processorName, String processorType, String className) {
+	private static Document createProcessor(
+			String processorName, String processorType, String className) {
 		return new Document()
 				.append("processorName", processorName)
 				.append("processorType", processorType)
@@ -156,9 +153,9 @@ public class GlobalConfigChangeLog {
 				.append(CLASS_KEY, className);
 	}
 
-	private Document createSonarProcessor() {
+	private static Document createSonarProcessor() {
 		return new Document()
-				.append("processorName", "Sonar")
+				.append("processorName", SONAR)
 				.append("processorType", "SONAR_ANALYSIS")
 				.append("isActive", true)
 				.append("isOnline", true)
@@ -168,7 +165,7 @@ public class GlobalConfigChangeLog {
 				.append("sonarKpiMetrics", createSonarKpiMetrics());
 	}
 
-	private List<String> createSonarKpiMetrics() {
+	private static List<String> createSonarKpiMetrics() {
 		return Arrays.asList(
 				"lines",
 				"ncloc",
@@ -191,26 +188,88 @@ public class GlobalConfigChangeLog {
 				"sqale_rating");
 	}
 
-	// repo tool related info used by repo tool processor
-	public void insertRepoToolProviderData() {
-		mongoTemplate
-				.getCollection("repo_tools_provider")
-				.insertMany(
-						Arrays.asList(
-								new Document(TOOL_NAME, "bitbucket")
-										.append(TEST_API_URL, "https://api.bitbucket.org/2.0/workspaces/")
-										.append("testServerApiUrl", "/bitbucket/rest/api/1.0/projects/")
-										.append(REPO_TOOL_PROVIDER, "bitbucket_oauth2"),
-								new Document(TOOL_NAME, "gitlab")
-										.append(REPO_TOOL_PROVIDER, "gitlab")
-										.append(TEST_API_URL, "/api/v4/projects/"),
-								new Document(TOOL_NAME, "github")
-										.append(TEST_API_URL, "https://api.github.com/users/")
-										.append(REPO_TOOL_PROVIDER, "github")));
-	}
-
-	@RollbackExecution
-	public void rollback() {
-		// We are inserting the documents through DDL, no rollback to any collections.
+	@SuppressWarnings({"java:S138"})
+	private static List<ProcessorConfig> createRequiredProcessorConfigs() {
+		return List.of(
+				ProcessorConfig.builder()
+						.name("Jira")
+						.type("AGILE_TOOL")
+						.className("com.publicissapient.kpidashboard.jira.model.JiraProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("Zephyr")
+						.type("TESTING_TOOLS")
+						.className("com.publicissapient.kpidashboard.jira.model.ZephyrProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("GitHub")
+						.type("SCM")
+						.className("com.publicissapient.kpidashboard.jira.model.GitHubProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("Teamcity")
+						.type(BUILD)
+						.className("com.publicissapient.kpidashboard.jira.model.TeamcityProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("Bitbucket")
+						.type("SCM")
+						.className("com.publicissapient.kpidashboard.jira.model.BitbucketProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("GitLab")
+						.type("SCM")
+						.className("com.publicissapient.kpidashboard.jira.model.GitLabProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("Jenkins")
+						.type(BUILD)
+						.className("com.publicissapient.kpidashboard.jira.model.JenkinsProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("Bamboo")
+						.type(BUILD)
+						.className("com.publicissapient.kpidashboard.jira.model.BambooProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("Azure")
+						.type("AGILE_TOOL")
+						.className("com.publicissapient.kpidashboard.jira.model.AzureProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("AzureRepository")
+						.type("SCM")
+						.className("com.publicissapient.kpidashboard.jira.model.AzureRepoProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("AzurePipeline")
+						.type(BUILD)
+						.className("com.publicissapient.kpidashboard.jira.model.AzurePipelineProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("JiraTest")
+						.type("TESTING_TOOLS")
+						.className("com.publicissapient.kpidashboard.jira.model.JiraTestProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("GitHubAction")
+						.type(BUILD)
+						.className("com.publicissapient.kpidashboard.jira.model.GitHubActionProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("RepoTool")
+						.type("SCM")
+						.className("com.publicissapient.kpidashboard.jira.model.RepoDbProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name("ArgoCD")
+						.type(BUILD)
+						.className("com.publicissapient.kpidashboard.jira.model.ArgoCDProcessor")
+						.build(),
+				ProcessorConfig.builder()
+						.name(SONAR)
+						.type("SONAR_ANALYSIS")
+						.className("com.publicissapient.kpidashboard.jira.model.SonarProcessor")
+						.build());
 	}
 }

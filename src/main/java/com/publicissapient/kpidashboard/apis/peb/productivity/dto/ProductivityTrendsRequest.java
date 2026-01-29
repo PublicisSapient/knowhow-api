@@ -14,25 +14,16 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.kpimaturity.dto;
+package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-import lombok.AllArgsConstructor;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
+import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
+
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-/**
- * DTO representing a column definition for the executive dashboard. Defines the structure and
- * display properties of a column.
- */
-@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class ColumnDefinitionDTO {
-	/** The field name that maps to the data property in the row. */
-	private String field;
-
-	/** The display header text for the column. */
-	private String header;
-}
+public record ProductivityTrendsRequest(
+		String levelName,
+		ProjectDeliveryMethodology deliveryMethodology,
+		TemporalAggregationUnit temporalAggregationUnit,
+		int limit) {}

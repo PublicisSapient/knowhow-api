@@ -13,22 +13,15 @@
  *  See the License for the specific language governing permissions and limitations under the
  *  License.
  */
+
 package com.publicissapient.kpidashboard.apis.kpimaturity.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.List;
 
-/**
- * The root DTO for the executive dashboard API response. Wraps all the dashboard data in a 'data'
- * field.
- */
+import lombok.Data;
+
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class KpiMaturityResponseDTO {
-	/** The main data container for the executive dashboard response. */
-	private KpiMaturityDashboardDataDTO data;
+public class KpiMaturityResponse {
+	private OrganizationEntityKpiMaturity summary;
+	private List<OrganizationEntityKpiMaturity> details;
 }
