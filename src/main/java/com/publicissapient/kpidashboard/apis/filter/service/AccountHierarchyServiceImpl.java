@@ -55,6 +55,7 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectHierarch
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import jakarta.ws.rs.InternalServerErrorException;
@@ -240,7 +241,10 @@ public class AccountHierarchyServiceImpl
 	}
 
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
-		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
+		return this.filterHelperService
+				.getHierarchyLevelMap(ProjectDeliveryMethodology.SCRUM)
+				.values()
+				.stream()
 				.filter(
 						hierarchyLevel ->
 								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
@@ -249,7 +253,10 @@ public class AccountHierarchyServiceImpl
 	}
 
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelName(String levelName) {
-		return this.filterHelperService.getHierarchyLevelMap(false).values().stream()
+		return this.filterHelperService
+				.getHierarchyLevelMap(ProjectDeliveryMethodology.SCRUM)
+				.values()
+				.stream()
 				.filter(
 						hierarchyLevel ->
 								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())

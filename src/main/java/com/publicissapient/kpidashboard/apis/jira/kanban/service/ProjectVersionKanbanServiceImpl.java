@@ -123,6 +123,7 @@ public class ProjectVersionKanbanServiceImpl
 	 * @param kpiElement kpiElement
 	 * @param kpiRequest KpiRequest
 	 */
+	@SuppressWarnings("java:S3776")
 	private void projectWiseLeafNodeValue(
 			Map<String, Node> mapTmp,
 			List<Node> leafNodeList,

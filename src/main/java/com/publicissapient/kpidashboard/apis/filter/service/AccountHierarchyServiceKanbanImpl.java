@@ -46,6 +46,7 @@ import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,8 +57,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class AccountHierarchyServiceKanbanImpl // NOPMD
-implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<AccountFilteredData>> {
+public class AccountHierarchyServiceKanbanImpl
+		implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<AccountFilteredData>> {
 
 	@Autowired private CacheService cacheService;
 
@@ -81,7 +82,6 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 	/** {Inherit Doc} */
 	@Override
 	public List<AccountHierarchyDataKanban> createHierarchyData() {
-
 		List<ProjectBasicConfig> projectBasicConfigList =
 				projectBasicConfigService.getAllProjectsBasicConfigs(true);
 
@@ -136,7 +136,10 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 	}
 
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
-		return this.filterHelperService.getHierarchyLevelMap(true).values().stream()
+		return this.filterHelperService
+				.getHierarchyLevelMap(ProjectDeliveryMethodology.KANBAN)
+				.values()
+				.stream()
 				.filter(
 						hierarchyLevel ->
 								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
@@ -145,7 +148,10 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 	}
 
 	public Optional<HierarchyLevel> getHierarchyLevelByLevelName(String levelName) {
-		return this.filterHelperService.getHierarchyLevelMap(true).values().stream()
+		return this.filterHelperService
+				.getHierarchyLevelMap(ProjectDeliveryMethodology.KANBAN)
+				.values()
+				.stream()
 				.filter(
 						hierarchyLevel ->
 								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
@@ -193,12 +199,6 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 	/**
 	 * Traverse from root node of Account hierarchy till child node to create a Account Hierarchy data
 	 * from that route
-	 *
-	 * @param hierarchy
-	 * @param parentWiseMap
-	 * @param listHierarchyData
-	 * @param accountHierarchyData
-	 * @param hierarchyLevelIdMap
 	 */
 	private void traverseRootToLeaf(
 			ProjectHierarchy hierarchy,
@@ -230,13 +230,7 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 		}
 	}
 
-	/**
-	 * Check is current node is Child Node
-	 *
-	 * @param accountHierarchy
-	 * @param childAccountHierarchy
-	 * @return
-	 */
+	/** Check is current node is Child Node */
 	private boolean isCurrentNodeChild(
 			ProjectHierarchy accountHierarchy, ProjectHierarchy childAccountHierarchy) {
 		if (childAccountHierarchy.getHierarchyLevelId() == null) {
@@ -246,12 +240,7 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 		return StringUtils.equalsIgnoreCase(parentLabel, childAccountHierarchy.getParentId());
 	}
 
-	/**
-	 * Creates account hierarchy data
-	 *
-	 * @param hierarchy
-	 * @param accountHierarchyData
-	 */
+	/** Creates account hierarchy data */
 	private void createHierarchyData(
 			ProjectHierarchy hierarchy,
 			AccountHierarchyDataKanban accountHierarchyData,
