@@ -76,14 +76,7 @@ public class AdminController {
 			consumes = APPLICATION_JSON_VALUE,
 			produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> createToken(
-			@Parameter(
-							description = "API Token Request",
-							required = true,
-							example = """
-			{"apiUser": "user1", "expirationDt": 1704067200000}
-			""")
-					@Valid
-					@RequestBody
+			@Parameter(description = "API Token Request", required = true) @Valid @RequestBody
 					ApiTokenRequest apiTokenRequest) {
 		try {
 			return ResponseEntity.status(HttpStatus.OK)

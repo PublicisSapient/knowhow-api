@@ -29,6 +29,7 @@ import com.publicissapient.kpidashboard.apis.notification.service.EmailNotificat
 import com.publicissapient.kpidashboard.common.model.notification.EmailRequestPayload;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -61,9 +62,20 @@ public class NotificationController {
 			})
 	@PostMapping("/email")
 	public ResponseEntity<ServiceResponse> sendEmail(
-			@RequestParam String templateKey,
-			@RequestParam String notificationSubjectKey,
-			@Valid @RequestBody EmailRequestPayload emailRequestPayload) {
+			@Parameter(
+							description = "Template key for the email",
+							required = true,
+							example = "welcome_email")
+					@RequestParam
+					String templateKey,
+			@Parameter(
+							description = "Notification subject key",
+							required = true,
+							example = "welcome_subject")
+					@RequestParam
+					String notificationSubjectKey,
+			@Parameter(description = "Email request payload", required = true) @Valid @RequestBody
+					EmailRequestPayload emailRequestPayload) {
 		ServiceResponse response =
 				emailNotificationService.sendEmail(
 						templateKey, notificationSubjectKey, emailRequestPayload);

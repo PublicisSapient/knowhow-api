@@ -36,6 +36,10 @@ import com.publicissapient.kpidashboard.common.constant.Role;
 import com.publicissapient.kpidashboard.common.model.application.CapacityMaster;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -60,10 +64,19 @@ public class CapacityMasterController {
 	 * @param capacityMaster data to be saved
 	 * @return service response entity
 	 */
+	@Operation(summary = "Add Capacity Data", description = "API to add capacity data")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully added Capacity Data"),
+				@ApiResponse(responseCode = "400", description = "Bad Request"),
+				@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			})
 	@PostMapping(
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> addCapacity(@RequestBody CapacityMaster capacityMaster) {
+	public ResponseEntity<ServiceResponse> addCapacity(
+			@Parameter(description = "Capacity Master Object", required = true) @RequestBody
+					CapacityMaster capacityMaster) {
 		ServiceResponse response = new ServiceResponse(false, "Failed to add Capacity Data", null);
 		try {
 			policy.checkPermission(capacityMaster, "SAVE_UPDATE_CAPACITY");
@@ -79,8 +92,23 @@ public class CapacityMasterController {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
+	@Operation(
+			summary = "Get the Capacities",
+			description = "API to get the capacities by basicProjectConfigId")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully fetched Capacity Data"),
+				@ApiResponse(responseCode = "400", description = "Bad Request"),
+				@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			})
 	@GetMapping("/{basicProjectConfigId}")
-	public ResponseEntity<ServiceResponse> getCapacities(@PathVariable String basicProjectConfigId) {
+	public ResponseEntity<ServiceResponse> getCapacities(
+			@Parameter(
+							description = "Basic Project Configuration Id",
+							required = true,
+							example = "5f8d04b3e1b2c12d4c8e4b56")
+					@PathVariable
+					String basicProjectConfigId) {
 		ServiceResponse response = null;
 
 		List<CapacityMaster> capacities = capacityMasterService.getCapacities(basicProjectConfigId);
@@ -92,9 +120,19 @@ public class CapacityMasterController {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
+	@Operation(
+			summary = "Add ar update assignee for capacity",
+			description = "API to add or update assignee for capacity")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully added or updated assignee"),
+				@ApiResponse(responseCode = "400", description = "Bad Request"),
+				@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			})
 	@PostMapping(value = "/assignee", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveOrUpdateAssignee(
-			@Valid @RequestBody CapacityMaster capacityMaster) {
+			@Parameter(description = "Capacity Master Object", required = true) @Valid @RequestBody
+					CapacityMaster capacityMaster) {
 		policy.checkPermission(capacityMaster, "SAVE_UPDATE_CAPACITY");
 		ServiceResponse response = new ServiceResponse(false, "Failed to add Capacity Data", null);
 		try {
@@ -108,18 +146,37 @@ public class CapacityMasterController {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
+	@Operation(
+			summary = "Get suggestions for assignee roles",
+			description = "API to get suggestions for assignee roles")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully fetched Roles"),
+				@ApiResponse(responseCode = "400", description = "Bad Request"),
+				@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			})
 	@GetMapping("/assignee/roles")
 	public ResponseEntity<ServiceResponse> assigneeRolesSuggestion() {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(new ServiceResponse(true, "All Roles", Role.getAllRoles()));
 	}
 
+	@Operation(summary = "Save Happiness KPI Data", description = "API to save Happiness KPI Data")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully saved Happiness KPI Data"),
+				@ApiResponse(responseCode = "400", description = "Bad Request"),
+				@ApiResponse(responseCode = "500", description = "Internal Server Error")
+			})
 	@PostMapping(
 			value = "/jira/happiness",
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveHappinessKPIData(
-			@Valid @RequestBody HappinessKpiDTO happinessKpiDTO) {
+			@Parameter(description = "Happiness KPI Data Transfer Object", required = true)
+					@Valid
+					@RequestBody
+					HappinessKpiDTO happinessKpiDTO) {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(happinessKpiService.saveHappinessKpiData(happinessKpiDTO));
 	}

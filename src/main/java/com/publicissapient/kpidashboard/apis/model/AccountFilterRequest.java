@@ -20,14 +20,27 @@ package com.publicissapient.kpidashboard.apis.model;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /** The Account filter request input */
 public class AccountFilterRequest extends BaseModel {
 
+	@Schema(description = "Current selection index", example = "0")
 	private int currentSelection;
+
+	@Schema(description = "Current selection label", example = "Sprint 1")
 	private String currentSelectionLabel;
+
+	@Schema(description = "List of filter data", implementation = AccountFilterResponse.class)
 	private List<AccountFilterResponse> filterDataList;
+
+	@Schema(description = "Indicates if Kanban board is used", example = "true")
 	private Boolean kanban;
+
+	@Schema(description = "List of included sprints", example = "[\"Sprint 1\", \"Sprint 2\"]")
 	private List<String> sprintIncluded;
+
+	@Schema(description = "Indicates if active sprint is included", example = "true")
 	private boolean activeSprintIncluded;
 
 	/**

@@ -76,51 +76,7 @@ public class AutoApproveAccessController {
 	@PostMapping
 	@PreAuthorize("hasPermission(null, 'ENABLE_AUTO_APPROVE')")
 	public ResponseEntity<ServiceResponse> saveAutoApproveRoles(
-			@Parameter(
-							description = "Auto Approve Access Configuration DTO",
-							required = true,
-							example =
-									"""
-					{
-						"id": {
-							"timestamp": 1725342562222,
-							"date": "2025-12-19T16:27:19.316Z"
-						},
-						"enableAutoApprove": "string",
-						"roles": [
-							{
-								"id": {
-									"timestamp": 172534256474,
-									"date": "2025-12-19T16:27:19.316Z"
-								},
-								"roleName": "admin",
-								"roleDescription": "admin role",
-								"createdDate": "2025-12-19T16:27:19.316Z",
-								"lastModifiedDate": "2025-12-19T16:27:19.316Z",
-								"isDeleted": "false",
-								"permissions": [
-									{
-										"id": {
-											"timestamp": 172424255252,
-											"date": "2025-12-19T16:27:19.316Z"
-										},
-										"permissionName": "admin_permission",
-										"operationName": "auto_approve",
-										"resourceName": "project",
-										"resourceId": {
-											"timestamp": 172534256261,
-											"date": "2025-12-19T16:27:19.316Z"
-										},
-										"createdDate": "2025-12-19T16:27:19.316Z",
-										"lastModifiedDate": "2025-12-19T16:27:19.316Z",
-										"isDeleted": "false"
-									}
-								],
-								"displayName": "ABCD"
-							}
-						]
-					}
-					""")
+			@Parameter(description = "Auto Approve Access Configuration DTO", required = true)
 					@Valid
 					@RequestBody
 					AutoApproveAccessConfigDTO autoAcessDTO) {
@@ -198,51 +154,7 @@ public class AutoApproveAccessController {
 							example = "64b0c7f5e1b2c3d4e5f67890")
 					@PathVariable("id")
 					String id,
-			@Parameter(
-							description = "Auto Approve Access Configuration DTO",
-							required = true,
-							example =
-									"""
-					{
-						"id": {
-							"timestamp": 1725342562222,
-							"date": "2025-12-19T16:27:19.316Z"
-						},
-						"enableAutoApprove": "string",
-						"roles": [
-							{
-								"id": {
-									"timestamp": 172534256474,
-									"date": "2025-12-19T16:27:19.316Z"
-								},
-								"roleName": "admin",
-								"roleDescription": "admin role",
-								"createdDate": "2025-12-19T16:27:19.316Z",
-								"lastModifiedDate": "2025-12-19T16:27:19.316Z",
-								"isDeleted": "false",
-								"permissions": [
-									{
-										"id": {
-											"timestamp": 172424255252,
-											"date": "2025-12-19T16:27:19.316Z"
-										},
-										"permissionName": "admin_permission",
-										"operationName": "auto_approve",
-										"resourceName": "project",
-										"resourceId": {
-											"timestamp": 172534256261,
-											"date": "2025-12-19T16:27:19.316Z"
-										},
-										"createdDate": "2025-12-19T16:27:19.316Z",
-										"lastModifiedDate": "2025-12-19T16:27:19.316Z",
-										"isDeleted": "false"
-									}
-								],
-								"displayName": "ABCD"
-							}
-						]
-					}
-					""")
+			@Parameter(description = "Auto Approve Access Configuration DTO", required = true)
 					@Valid
 					@RequestBody
 					AutoApproveAccessConfigDTO autoAcessDTO) {

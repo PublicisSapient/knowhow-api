@@ -16,6 +16,7 @@
 
 package com.publicissapient.kpidashboard.apis.usermanagement.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,8 +26,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Data Transfer Object for User Information Request")
 public class UserRequestDTO {
 
 	@NotBlank(message = "Username cannot be blank")
+	@Schema(description = "Username of the user", example = "john.doe")
 	private String username;
 }

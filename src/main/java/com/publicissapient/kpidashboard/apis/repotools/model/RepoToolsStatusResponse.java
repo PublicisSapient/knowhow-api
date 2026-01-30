@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.repotools.model;
 import java.io.Serial;
 import java.io.Serializable;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,13 +29,26 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "RepoTools Status Response Model")
 public class RepoToolsStatusResponse implements Serializable {
 
 	@Serial private static final long serialVersionUID = 1L;
+
+	@Schema(description = "Project Name", example = "Project Alpha")
 	private String project;
+
+	@Schema(description = "Repository Name", example = "repo-alpha")
 	private String repository;
+
+	@Schema(description = "Repository Provider", example = "GitHub")
 	private String repositoryProvider;
+
+	@Schema(description = "Source of the status", example = "RepoTools")
 	private String source;
+
+	@Schema(description = "Status of the repository analysis", example = "COMPLETED")
 	private String status;
+
+	@Schema(description = "Timestamp of the status update", example = "1627849923000")
 	private Long timestamp;
 }

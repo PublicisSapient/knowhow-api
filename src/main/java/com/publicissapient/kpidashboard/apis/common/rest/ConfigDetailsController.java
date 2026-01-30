@@ -31,6 +31,9 @@ import com.publicissapient.kpidashboard.apis.model.ConfigDetails;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.service.TemplateConfigurationService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,16 @@ public class ConfigDetailsController {
 	 *
 	 * @return ResponseEntity<ConfigDetails>
 	 */
+	@Operation(
+			summary = "Get Configuration Details",
+			description = "Fetches the configuration details required by the front-end application.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved configuration details"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	// Todo: to be removed after V2 become primary view
 	@GetMapping(value = "/configDetails", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ConfigDetails> getConfigDetails() {
@@ -64,6 +77,16 @@ public class ConfigDetailsController {
 	 *
 	 * @return a ServiceResponse containing the configuration template documents
 	 */
+	@Operation(
+			summary = "Get Configuration Template",
+			description = "Fetches the configuration template documents.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved configuration template"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping("/configuration")
 	@ResponseStatus(HttpStatus.OK)
 	public ServiceResponse getConfigurationTemplate() {

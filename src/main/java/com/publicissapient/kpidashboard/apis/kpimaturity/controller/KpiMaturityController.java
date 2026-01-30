@@ -102,7 +102,8 @@ public class KpiMaturityController {
 							description =
 									"Optional identifier of the parent organizational node. "
 											+ "Used for hierarchical KPI maturity analysis and rollup calculations. "
-											+ "If not provided, treats the request as a root-level assessment.")
+											+ "If not provided, treats the request as a root-level assessment.",
+							example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
 					@RequestParam(required = false)
 					String parentNodeId) {
 

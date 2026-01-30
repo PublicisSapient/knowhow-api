@@ -34,6 +34,12 @@ import com.publicissapient.kpidashboard.apis.kpicolumnconfig.service.KpiColumnCo
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.KpiColumnConfigDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -50,11 +56,40 @@ public class KpiColumnConfigController {
 	 *
 	 * @return response
 	 */
+	@Operation(
+			summary = "Get KPI Column Configuration",
+			description = "Retrieves the column configuration for a specific KPI within a project")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved KPI column configuration",
+						content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = ServiceResponse.class))
+						}),
+				@ApiResponse(
+						responseCode = "404",
+						description = "KPI column configuration not found",
+						content = @Content),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error",
+						content = @Content)
+			})
 	@GetMapping(
 			value = "/{basicProjectConfigId}/{kpiId}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getKpiColumnConfiguration(
-			@PathVariable String basicProjectConfigId, @PathVariable String kpiId) {
+			@Parameter(
+							description = "Basic Project Configuration ID",
+							example = "60d21b4667d0d8992e610c85",
+							required = true)
+					@PathVariable
+					String basicProjectConfigId,
+			@Parameter(description = "KPI ID", example = "kpi123", required = true) @PathVariable
+					String kpiId) {
 		KpiColumnConfigDTO kpiColumnConfigDTO =
 				kpiColumnConfigService.getByKpiColumnConfig(basicProjectConfigId, kpiId);
 
@@ -71,12 +106,39 @@ public class KpiColumnConfigController {
 	 * @param kpiColumnConfigDTO *
 	 * @return response
 	 */
+	@Operation(
+			summary = "Post request to save KPI Column Configuration",
+			description = "Saves or updates the column configuration for a specific KPI within a project")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "KPI column configuration saved successfully",
+						content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = ServiceResponse.class))
+						}),
+				@ApiResponse(
+						responseCode = "400",
+						description = "Invalid input data for KPI column configuration",
+						content = @Content),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error",
+						content = @Content)
+			})
 	@PostMapping(
 			value = "/kpiColumnConfig",
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveKpiColumnConfig(
-			@Valid @RequestBody KpiColumnConfigDTO kpiColumnConfigDTO) {
+			@Parameter(
+							description = "KPI Column Configuration data to be saved or updated",
+							required = true)
+					@Valid
+					@RequestBody
+					KpiColumnConfigDTO kpiColumnConfigDTO) {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(kpiColumnConfigService.saveKpiColumnConfig(kpiColumnConfigDTO));
 	}

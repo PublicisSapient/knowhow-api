@@ -16,22 +16,40 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "KPI Recommendation Request Data Transfer Object")
 public class KpiRecommendationRequestDTO implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	@Serial private static final long serialVersionUID = 1L;
 
+	@Schema(description = "List of Identifiers", example = "[\"id1\", \"id2\"]")
 	private String[] ids;
+
+	@Schema(description = "List of KPI Identifiers", example = "[\"kpiId1\", \"kpiId2\"]")
 	private List<String> kpiIdList;
+
+	@Schema(description = "Recommendation for", example = "PROJECT")
 	private String recommendationFor;
+
+	@Schema(
+			description = "Selected Map",
+			example = "{\"key1\": [\"value1\", \"value2\"], \"key2\": [\"value3\"]}")
 	private Map<String, List<String>> selectedMap;
+
+	@Schema(description = "Level", example = "2")
 	private int level;
+
+	@Schema(description = "Label", example = "Sprint 1")
 	private String label;
+
+	@Schema(description = "List of Sprints Included", example = "[\"Sprint 1\", \"Sprint 2\"]")
 	private List<String> sprintIncluded;
 }
