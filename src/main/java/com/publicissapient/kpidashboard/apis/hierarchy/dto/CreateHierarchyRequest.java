@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "Request object for creating a new Hierarchy")
 public class CreateHierarchyRequest {
-	@Schema(description = "Name of the Hierarchy", example = "Default Hierarchy", required = true)
+	@Schema(description = "Name of the Hierarchy", example = "Default Hierarchy")
 	@NotBlank(message = "name cannot be empty")
 	@NotNull(message = "name cannot be null")
 	@NotEmpty(message = "name cannot be empty")
