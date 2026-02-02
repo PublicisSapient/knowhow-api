@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityRequest;
 import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityResponse;
+import com.publicissapient.kpidashboard.apis.peb.productivity.dto.ProductivityTrendsRequest;
 import com.publicissapient.kpidashboard.apis.peb.productivity.service.ProductivityService;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 import com.publicissapient.kpidashboard.common.shared.enums.TemporalAggregationUnit;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -116,6 +118,15 @@ public class ProductivityControllerV1 {
 					@NotBlank(message = "The level name is required")
 					String levelName,
 			@Parameter(
+							name = "deliveryMethodology",
+							description =
+									"The project delivery methodology used for KPI assessment. "
+											+ "Determines which KPI frameworks and benchmarks to apply.",
+							required = true,
+							schema = @Schema(implementation = ProjectDeliveryMethodology.class))
+					@RequestParam
+					ProjectDeliveryMethodology deliveryMethodology,
+			@Parameter(
 							name = "parentNodeId",
 							description =
 									"The node id of the organizational entity parent for "
@@ -123,10 +134,9 @@ public class ProductivityControllerV1 {
 							example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
 					@RequestParam(required = false)
 					String parentNodeId) {
-
 		return ResponseEntity.ok(
 				this.productivityService.getProductivityForLevel(
-						new ProductivityRequest(levelName, parentNodeId)));
+						new ProductivityRequest(levelName, parentNodeId, deliveryMethodology)));
 	}
 
 	@Operation(
@@ -187,11 +197,23 @@ public class ProductivityControllerV1 {
 							example = "project")
 					@RequestParam
 					@NotBlank(message = "The level name is required")
-					String levelName) {
+					String levelName,
+			@Parameter(
+							name = "deliveryMethodology",
+							description =
+									"The project delivery methodology used for KPI assessment. "
+											+ "Determines which KPI frameworks and benchmarks to apply.",
+							required = true,
+							schema = @Schema(implementation = ProjectDeliveryMethodology.class))
+					@RequestParam
+					ProjectDeliveryMethodology deliveryMethodology) {
 		return ResponseEntity.ok(
 				this.productivityService.getProductivityTrendsForLevel(
-						levelName,
-						TemporalAggregationUnit.WEEK,
-						ProductivityService.DEFAULT_NUMBER_OF_TREND_DATA_POINTS));
+						ProductivityTrendsRequest.builder()
+								.levelName(levelName)
+								.deliveryMethodology(deliveryMethodology)
+								.temporalAggregationUnit(TemporalAggregationUnit.WEEK)
+								.limit(ProductivityService.DEFAULT_NUMBER_OF_TREND_DATA_POINTS)
+								.build()));
 	}
 }

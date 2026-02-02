@@ -18,24 +18,18 @@
 
 package com.publicissapient.kpidashboard.apis.auth.service;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
+@Schema(description = "Forgot Password Request Model")
 public class ForgotPasswordRequest {
 
+	@Schema(description = "E-mail address", example = "user@example.com")
 	/** email id, must not be empty */
-	@NotEmpty private String email;
-
-	/**
-	 * @return email
-	 */
-	public String getEmail() {
-		return email;
-	}
-
-	/**
-	 * @param email
-	 */
-	public void setEmail(String email) {
-		this.email = email;
-	}
+	@NotEmpty
+	private String email;
 }

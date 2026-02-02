@@ -31,6 +31,9 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.service.HierarchyLevelService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -41,6 +44,19 @@ public class FilterController {
 
 	private final HierarchyLevelService hierarchyLevelService;
 
+	/**
+	 * Returns filter options.
+	 *
+	 * @return ServiceResponse containing filter options
+	 */
+	@Operation(
+			summary = "Get Filters",
+			description = "Retrieve filter options for Scrum and Kanban hierarchies.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully retrieved filter options"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping("/filters")
 	public ResponseEntity<ServiceResponse> getFilters() {
 

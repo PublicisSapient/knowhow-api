@@ -20,6 +20,7 @@ package com.publicissapient.kpidashboard.apis.auth.service;
 
 import javax.validation.constraints.NotNull;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -28,13 +29,21 @@ import lombok.Data;
  * @author vijkumar18
  */
 @Data
+@Schema(description = "Change Password Request Model")
 public class ChangePasswordRequest {
+	@Schema(description = "E-mail address", example = "john.doe@example.com")
+	@NotNull
+	private String email;
 
-	@NotNull private String email;
+	@Schema(description = "Old Password", example = "OldP@ssw0rd!")
+	@NotNull
+	private String oldPassword;
 
-	@NotNull private String oldPassword;
+	@Schema(description = "New Password", example = "NewP@ssw0rd!")
+	@NotNull
+	private String password;
 
-	@NotNull private String password;
-
-	@NotNull private String user;
+	@Schema(description = "Username", example = "john.doe")
+	@NotNull
+	private String user;
 }

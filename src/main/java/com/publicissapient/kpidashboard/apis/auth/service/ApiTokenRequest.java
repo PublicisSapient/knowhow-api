@@ -20,12 +20,19 @@ package com.publicissapient.kpidashboard.apis.auth.service;
 
 import javax.validation.constraints.NotNull;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /** represents api token request input */
+@Schema(description = "API Token Request Model")
 public class ApiTokenRequest {
 
-	@NotNull private String apiUser;
+	@Schema(description = "API User", example = "apiUser1")
+	@NotNull
+	private String apiUser;
 
-	@NotNull private Long expirationDt;
+	@Schema(description = "Expiration DateTime in epoch milliseconds", example = "1704067200000")
+	@NotNull
+	private Long expirationDt;
 
 	/**
 	 * Gets api user.

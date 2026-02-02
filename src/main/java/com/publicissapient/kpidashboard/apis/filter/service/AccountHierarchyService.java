@@ -45,7 +45,6 @@ public interface AccountHierarchyService<R, S> {
 	/**
 	 * Gets Filter options.
 	 *
-	 * @param filter
 	 * @return {@code List<AccountFilterResponse>}
 	 */
 	S getFilteredList(AccountFilterRequest filter);
@@ -67,11 +66,6 @@ public interface AccountHierarchyService<R, S> {
 	/**
 	 * get Configure projects of Organization Hierarchies Node and Project Hierarchies Nodes using
 	 * ProjectBasicConfig
-	 *
-	 * @param projectBasicConfigList
-	 * @param organizationHierarchyService
-	 * @param projectHierarchyService
-	 * @return
 	 */
 	default List<ProjectHierarchy> getConfigureProjectsHierarchies(
 			List<ProjectBasicConfig> projectBasicConfigList,

@@ -16,4 +16,10 @@
 
 package com.publicissapient.kpidashboard.apis.peb.productivity.dto;
 
-public record ProductivityRequest(String levelName, String parentNodeId) {}
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
+
+import lombok.Builder;
+
+@Builder
+public record ProductivityRequest(
+		String levelName, String parentNodeId, ProjectDeliveryMethodology deliveryMethodology) {}

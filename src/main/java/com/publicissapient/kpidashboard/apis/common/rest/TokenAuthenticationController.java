@@ -29,6 +29,9 @@ import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationServi
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -52,6 +55,17 @@ public class TokenAuthenticationController {
 	 * @param httpServletResponse the http servlet response
 	 * @return ResponseEntity<ServiceResponse>
 	 */
+	@Operation(
+			summary = "Fetch User Details",
+			description =
+					"Fetches user details from Central Auth on first login and saves them into the KnowHow database."
+							+ " For subsequent logins, retrieves user details from the KnowHow database.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully fetched user details"),
+				@ApiResponse(responseCode = "401", description = "Unauthorized - Token is expired"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/fetchUserDetails")
 	public ResponseEntity<ServiceResponse> fetchUserDetails(
 			HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {

@@ -19,7 +19,6 @@
 package com.publicissapient.kpidashboard.apis.auth.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import java.util.Objects;
 
@@ -30,7 +29,6 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.auth.AuthenticationUtil;
@@ -41,6 +39,9 @@ import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.Status;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -81,6 +82,20 @@ public class UserTokenDeletionControllerApplication {
 	 *
 	 * @param request the request
 	 */
+	@Operation(
+			summary = "Logout User from Central Authentication Service",
+			description =
+					"Logs out the user from the central authentication service "
+							+ "by invalidating the session and deleting the authentication token.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "User logged out successfully from Central Authentication Service"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error during logout process")
+			})
 	@GetMapping(value = "/centralUserlogout", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> deleteUserTokenForCentralAuth(
 			HttpServletRequest request, HttpServletResponse response) {
@@ -112,7 +127,21 @@ public class UserTokenDeletionControllerApplication {
 	 *
 	 * @param request the request
 	 */
-	@RequestMapping(value = "/userlogout", method = GET, produces = APPLICATION_JSON_VALUE) // NOSONAR
+	@Operation(
+			summary = "Logout User from Local Authentication Service",
+			description =
+					"Logs out the user from the local authentication service "
+							+ "by invalidating the session and deleting the authentication token.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "User logged out successfully from Local Authentication Service"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error during logout process")
+			})
+	@GetMapping(value = "/userlogout", produces = APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> deleteUserToken(
 			HttpServletRequest request, HttpServletResponse response) {
 		String userName = AuthenticationUtil.getUsernameFromContext();

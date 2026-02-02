@@ -18,43 +18,21 @@
 
 package com.publicissapient.kpidashboard.apis.auth.service;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
+@Schema(description = "Reset Password Request Model")
 public class ResetPasswordRequest {
 
-	@NotEmpty private String password;
+	@Schema(description = "New Password", example = "NewP@ssw0rd!")
+	@NotEmpty
+	private String password;
 
-	@NotEmpty private String resetToken;
-
-	/**
-	 * @return password
-	 */
-	public String getPassword() {
-		return password;
-	}
-
-	/**
-	 * Sets password
-	 *
-	 * @param password
-	 */
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	/**
-	 * @return resetToken
-	 */
-	public String getResetToken() {
-		return resetToken;
-	}
-
-	/**
-	 * Sets resetToken
-	 *
-	 * @param resetToken
-	 */
-	public void setResetToken(String resetToken) {
-		this.resetToken = resetToken;
-	}
+	@Schema(description = "Reset Token", example = "abcdef1234567890")
+	@NotEmpty
+	private String resetToken;
 }

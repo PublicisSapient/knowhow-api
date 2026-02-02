@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,9 +42,11 @@ import com.publicissapient.kpidashboard.apis.model.AccountHierarchyDataKanban;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.service.ProjectHierarchyService;
+import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,8 +57,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class AccountHierarchyServiceKanbanImpl // NOPMD
-implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<AccountFilteredData>> {
+public class AccountHierarchyServiceKanbanImpl
+		implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<AccountFilteredData>> {
 
 	@Autowired private CacheService cacheService;
 
@@ -76,6 +79,44 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 		return "Kanban";
 	}
 
+	/** {Inherit Doc} */
+	@Override
+	public List<AccountHierarchyDataKanban> createHierarchyData() {
+		List<ProjectBasicConfig> projectBasicConfigList =
+				projectBasicConfigService.getAllProjectsBasicConfigs(true);
+
+		List<ProjectHierarchy> configureHierarchies =
+				getConfigureProjectsHierarchies(
+						projectBasicConfigList, organizationHierarchyService, projectHierarchyService);
+
+		Map<String, List<ProjectHierarchy>> parentWiseMap =
+				configureHierarchies.stream()
+						.filter(fd -> fd.getParentId() != null)
+						.collect(Collectors.groupingBy(ProjectHierarchy::getParentId));
+		// Java 8 merge function is used to handle duplicates in the map
+		String firstLevel = filterHelperService.getFirstHierarchyLevel();
+
+		Map<String, Integer> hierarchyLevelIdMap = filterHelperService.getHierarchyIdLevelMap(true);
+
+		List<AccountHierarchyDataKanban> listHierarchyData = new ArrayList<>();
+		if (firstLevel != null) {
+			configureHierarchies.stream()
+					.filter(fd -> fd.getHierarchyLevelId().equalsIgnoreCase(firstLevel))
+					.forEach(
+							rootData -> {
+								AccountHierarchyDataKanban accountHierarchyData = new AccountHierarchyDataKanban();
+								createHierarchyData(rootData, accountHierarchyData, hierarchyLevelIdMap);
+								traverseRootToLeaf(
+										rootData,
+										parentWiseMap,
+										listHierarchyData,
+										accountHierarchyData,
+										hierarchyLevelIdMap);
+							});
+		}
+		return listHierarchyData;
+	}
+
 	@SuppressWarnings("unchecked")
 	public Set<AccountFilteredData> getFilteredList(AccountFilterRequest request) {
 		List<AccountHierarchyDataKanban> hierarchyDataAll =
@@ -92,6 +133,30 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 							.collect(Collectors.toList());
 		}
 		return processAccountFilteredResponse(hierarchyDataAll);
+	}
+
+	public Optional<HierarchyLevel> getHierarchyLevelByLevelId(String levelId) {
+		return this.filterHelperService
+				.getHierarchyLevelMap(ProjectDeliveryMethodology.KANBAN)
+				.values()
+				.stream()
+				.filter(
+						hierarchyLevel ->
+								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelId())
+										&& hierarchyLevel.getHierarchyLevelId().equalsIgnoreCase(levelId))
+				.findAny();
+	}
+
+	public Optional<HierarchyLevel> getHierarchyLevelByLevelName(String levelName) {
+		return this.filterHelperService
+				.getHierarchyLevelMap(ProjectDeliveryMethodology.KANBAN)
+				.values()
+				.stream()
+				.filter(
+						hierarchyLevel ->
+								StringUtils.isNotEmpty(hierarchyLevel.getHierarchyLevelName())
+										&& hierarchyLevel.getHierarchyLevelName().equalsIgnoreCase(levelName))
+				.findAny();
 	}
 
 	private Set<AccountFilteredData> processAccountFilteredResponse(
@@ -131,54 +196,9 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 		return data;
 	}
 
-	/** {Inherit Doc} */
-	@Override
-	public List<AccountHierarchyDataKanban> createHierarchyData() {
-
-		List<ProjectBasicConfig> projectBasicConfigList =
-				projectBasicConfigService.getAllProjectsBasicConfigs(true);
-
-		List<ProjectHierarchy> configureHierarchies =
-				getConfigureProjectsHierarchies(
-						projectBasicConfigList, organizationHierarchyService, projectHierarchyService);
-
-		Map<String, List<ProjectHierarchy>> parentWiseMap =
-				configureHierarchies.stream()
-						.filter(fd -> fd.getParentId() != null)
-						.collect(Collectors.groupingBy(ProjectHierarchy::getParentId));
-		// Java 8 merge function is used to handle duplicates in the map
-		String firstLevel = filterHelperService.getFirstHierarchyLevel();
-
-		Map<String, Integer> hierarchyLevelIdMap = filterHelperService.getHierarchyIdLevelMap(true);
-
-		List<AccountHierarchyDataKanban> listHierarchyData = new ArrayList<>();
-		if (firstLevel != null) {
-			configureHierarchies.stream()
-					.filter(fd -> fd.getHierarchyLevelId().equalsIgnoreCase(firstLevel))
-					.forEach(
-							rootData -> {
-								AccountHierarchyDataKanban accountHierarchyData = new AccountHierarchyDataKanban();
-								createHierarchyData(rootData, accountHierarchyData, hierarchyLevelIdMap);
-								traverseRootToLeaf(
-										rootData,
-										parentWiseMap,
-										listHierarchyData,
-										accountHierarchyData,
-										hierarchyLevelIdMap);
-							});
-		}
-		return listHierarchyData;
-	}
-
 	/**
 	 * Traverse from root node of Account hierarchy till child node to create a Account Hierarchy data
 	 * from that route
-	 *
-	 * @param hierarchy
-	 * @param parentWiseMap
-	 * @param listHierarchyData
-	 * @param accountHierarchyData
-	 * @param hierarchyLevelIdMap
 	 */
 	private void traverseRootToLeaf(
 			ProjectHierarchy hierarchy,
@@ -210,13 +230,7 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 		}
 	}
 
-	/**
-	 * Check is current node is Child Node
-	 *
-	 * @param accountHierarchy
-	 * @param childAccountHierarchy
-	 * @return
-	 */
+	/** Check is current node is Child Node */
 	private boolean isCurrentNodeChild(
 			ProjectHierarchy accountHierarchy, ProjectHierarchy childAccountHierarchy) {
 		if (childAccountHierarchy.getHierarchyLevelId() == null) {
@@ -226,12 +240,7 @@ implements AccountHierarchyService<List<AccountHierarchyDataKanban>, Set<Account
 		return StringUtils.equalsIgnoreCase(parentLabel, childAccountHierarchy.getParentId());
 	}
 
-	/**
-	 * Creates account hierarchy data
-	 *
-	 * @param hierarchy
-	 * @param accountHierarchyData
-	 */
+	/** Creates account hierarchy data */
 	private void createHierarchyData(
 			ProjectHierarchy hierarchy,
 			AccountHierarchyDataKanban accountHierarchyData,

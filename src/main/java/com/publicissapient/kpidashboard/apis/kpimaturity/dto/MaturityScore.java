@@ -13,20 +13,17 @@
  *  See the License for the specific language governing permissions and limitations under the
  *  License.
  */
+
 package com.publicissapient.kpidashboard.apis.kpimaturity.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-/**
- * DTO representing the data container for the executive dashboard response. Contains the matrix
- * structure with all project metrics.
- */
 @Data
 @Builder
-@AllArgsConstructor
-public class KpiMaturityDashboardDataDTO {
-	/** The matrix structure containing all project metrics. */
-	private KpiMaturityMatrixDTO matrix;
+public class MaturityScore {
+	private double score;
+
+	private String level;
+	private String kpiCategory;
 }

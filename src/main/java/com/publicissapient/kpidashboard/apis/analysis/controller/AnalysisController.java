@@ -30,6 +30,7 @@ import com.publicissapient.kpidashboard.apis.analysis.analytics.sprint.service.S
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -77,7 +78,13 @@ public class AnalysisController {
 			})
 	@PostMapping("/analytics/ai-usage/query")
 	public ResponseEntity<ServiceResponse> computeAiUsageAnalyticsData(
-			@RequestBody @Valid BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
+			@Parameter(
+							description =
+									"Request payload containing project IDs and filters for AI usage analytics",
+							required = true)
+					@RequestBody
+					@Valid
+					BaseAnalyticsRequestDTO aiUsageAnalyticsRequestDTO) {
 		return ResponseEntity.ok(
 				aiUsageAnalyticsService.computeAiUsageAnalyticsData(aiUsageAnalyticsRequestDTO));
 	}
@@ -108,7 +115,13 @@ public class AnalysisController {
 			})
 	@PostMapping("/analytics/sprint/query")
 	public ResponseEntity<ServiceResponse> computeSprintAnalyticsData(
-			@RequestBody @Valid BaseAnalyticsRequestDTO sprintAnalyticsRequestDTO) {
+			@Parameter(
+							description =
+									"Request payload containing project IDs and number of sprints for sprint analytics",
+							required = true)
+					@RequestBody
+					@Valid
+					BaseAnalyticsRequestDTO sprintAnalyticsRequestDTO) {
 		return ResponseEntity.ok(
 				sprintAnalyticsService.computeSprintAnalyticsData(sprintAnalyticsRequestDTO));
 	}

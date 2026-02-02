@@ -32,6 +32,9 @@ import com.publicissapient.kpidashboard.apis.datamigration.model.MigrateData;
 import com.publicissapient.kpidashboard.apis.datamigration.service.DataMigrationService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +46,14 @@ public class MigrationController {
 
 	private final DataMigrationService dataMigrationService;
 
+	@Operation(
+			summary = "Validate Data Quality",
+			description = "Validates data quality and identifies erroneous projects.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Data quality validated successfully"),
+				@ApiResponse(responseCode = "204", description = "No content - all projects are valid")
+			})
 	@GetMapping(value = "/validate")
 	public ResponseEntity<ServiceResponse> dataQualityCheck() {
 		List<MigrateData> faultyProjects = dataMigrationService.dataMigration();
@@ -54,6 +65,18 @@ public class MigrationController {
 		}
 	}
 
+	@Operation(
+			summary = "Populate Organization Hierarchy",
+			description = "Populates the organization hierarchy in the database.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "204",
+						description = "Organization hierarchy populated successfully"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error - could not save to database")
+			})
 	@PutMapping(value = "/populateorganization") // put call
 	public ResponseEntity<ServiceResponse> populateOrganizationHierarchy() {
 		try {

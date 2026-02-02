@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityRequest;
-import com.publicissapient.kpidashboard.apis.kpimaturity.dto.KpiMaturityResponseDTO;
 import com.publicissapient.kpidashboard.apis.kpimaturity.service.KpiMaturityService;
+import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.shared.enums.ProjectDeliveryMethodology;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,7 +63,7 @@ public class KpiMaturityController {
 						content =
 								@Content(
 										mediaType = "application/json",
-										schema = @Schema(implementation = KpiMaturityResponseDTO.class))),
+										schema = @Schema(implementation = ServiceResponse.class))),
 				@ApiResponse(
 						responseCode = "400",
 						description = "Invalid request parameters",
@@ -78,7 +78,7 @@ public class KpiMaturityController {
 						content = @Content(mediaType = "application/json"))
 			})
 	@GetMapping({"", "/"})
-	public ResponseEntity<KpiMaturityResponseDTO> getKpiMaturity(
+	public ResponseEntity<ServiceResponse> getKpiMaturity(
 			@Parameter(
 							name = "levelName",
 							description =
@@ -102,7 +102,8 @@ public class KpiMaturityController {
 							description =
 									"Optional identifier of the parent organizational node. "
 											+ "Used for hierarchical KPI maturity analysis and rollup calculations. "
-											+ "If not provided, treats the request as a root-level assessment.")
+											+ "If not provided, treats the request as a root-level assessment.",
+							example = "110ab8b5-0f89-4de1-b353-e9c70d506fe0")
 					@RequestParam(required = false)
 					String parentNodeId) {
 

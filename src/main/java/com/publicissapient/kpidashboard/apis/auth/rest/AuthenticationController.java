@@ -58,6 +58,10 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -92,11 +96,30 @@ public class AuthenticationController {
 	 * @throws IOException the io exception
 	 * @throws ServletException the servlet exception
 	 */
+	@Operation(
+			summary = "Register User",
+			description = "Registers a new user with the provided username, password, and email.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "202", description = "User registration request accepted"),
+				@ApiResponse(
+						responseCode = "200",
+						description = "User registration failed due to invalid input"),
+				@ApiResponse(
+						responseCode = "422",
+						description = "Unprocessable Entity (e.g., duplicate username)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(value = "/registerUser")
 	public ResponseEntity<ServiceResponse> registerUser(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse,
-			@Valid @RequestBody AuthenticationRequest request) {
+			@Parameter(
+							description = "Authentication Request containing username, password, and email",
+							required = true)
+					@Valid
+					@RequestBody
+					AuthenticationRequest request) {
 
 		try {
 			if (!Pattern.matches(CommonConstant.USERNAME_PATTERN, request.getUsername())) {
@@ -195,12 +218,29 @@ public class AuthenticationController {
 	 * @param request the request
 	 * @return the response entity
 	 */
+	@Operation(
+			summary = "Update User Credentials",
+			description = "Updates the user's credentials with the provided username and password.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "User credentials successfully updated"),
+				@ApiResponse(
+						responseCode = "422",
+						description = "Unprocessable Entity (e.g., duplicate username)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/updateUser",
 			consumes = APPLICATION_JSON_VALUE,
 			produces = APPLICATION_JSON_VALUE)
 	// NOSONAR
-	public ResponseEntity<String> updateUser(@Valid @RequestBody AuthenticationRequest request) {
+	public ResponseEntity<String> updateUser(
+			@Parameter(
+							description = "Authentication Request containing username and password",
+							required = true)
+					@Valid
+					@RequestBody
+					AuthenticationRequest request) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(authenticationService.update(request.getUsername(), request.getPassword()));
@@ -211,6 +251,16 @@ public class AuthenticationController {
 	 *
 	 * @return the authentication providers
 	 */
+	@Operation(
+			summary = "Get Authentication Providers",
+			description = "Retrieves the list of available authentication providers.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved authentication providers"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/authenticationProviders", produces = APPLICATION_JSON_VALUE)
 	public List<AuthType> getAuthenticationProviders() {
 		return authProperties.getAuthenticationProviders();
@@ -226,6 +276,15 @@ public class AuthenticationController {
 	 * @throws IOException the io exception
 	 * @throws ServletException the servlet exception
 	 */
+	@Operation(summary = "Change Password", description = "Changes the user's password.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Password successfully changed"),
+				@ApiResponse(
+						responseCode = "422",
+						description = "Unprocessable Entity (e.g., duplicate username)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/changePassword",
 			consumes = APPLICATION_JSON_VALUE,
@@ -234,7 +293,13 @@ public class AuthenticationController {
 	public ResponseEntity<ServiceResponse> changePassword(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse,
-			@Valid @RequestBody ChangePasswordRequest request)
+			@Parameter(
+							description =
+									"Change Password Request containing email, old password, new password, and username",
+							required = true)
+					@Valid
+					@RequestBody
+					ChangePasswordRequest request)
 			throws IOException, ServletException { // NOSONAR
 		try {
 			Pattern pattern = Pattern.compile(CommonConstant.PASSWORD_PATTERN);
@@ -275,6 +340,17 @@ public class AuthenticationController {
 		}
 	}
 
+	@Operation(
+			summary = "Change Password for Central Authentication",
+			description = "Changes the user's password for central authentication.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Password successfully changed"),
+				@ApiResponse(
+						responseCode = "422",
+						description = "Unprocessable Entity (e.g., duplicate username)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/changePassword/central",
 			consumes = APPLICATION_JSON_VALUE,
@@ -283,7 +359,13 @@ public class AuthenticationController {
 	public ResponseEntity<ServiceResponse> changePasswordForCentralAuth(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse,
-			@Valid @RequestBody ChangePasswordRequest request) { // NOSONAR
+			@Parameter(
+							description =
+									"Change Password Request containing email, old password, new password, and username",
+							required = true)
+					@Valid
+					@RequestBody
+					ChangePasswordRequest request) { // NOSONAR
 		return authenticationService.changePasswordForCentralAuth(request);
 	}
 
@@ -293,9 +375,25 @@ public class AuthenticationController {
 	 * @param httpServletResponse
 	 * @return
 	 */
+	@Operation(
+			summary = "Validate User for Password Change",
+			description = "Validates the user for password change.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "User successfully validated"),
+				@ApiResponse(
+						responseCode = "422",
+						description = "Unprocessable Entity (e.g., duplicate username)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	private ResponseEntity<ServiceResponse> isValidUser(
-			boolean isValidUser,
-			@Valid ChangePasswordRequest request,
+			@Parameter(description = "Is Valid User", required = true) boolean isValidUser,
+			@Parameter(
+							description =
+									"Change Password Request containing email, old password, new password, and username",
+							required = true)
+					@Valid
+					ChangePasswordRequest request,
 			HttpServletResponse httpServletResponse) {
 		if (isValidUser) {
 			Authentication authentication =
@@ -308,9 +406,24 @@ public class AuthenticationController {
 		}
 	}
 
+	@Operation(
+			summary = "Get User Details",
+			description = "Retrieves the details of a user by their username.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully retrieved user details"),
+				@ApiResponse(
+						responseCode = "403",
+						description =
+								"Forbidden access (user is not authorized to view the requested user's details)"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@RequestMapping(value = "/users/{username}", method = GET) // NOSONAR
 	public ResponseEntity<ServiceResponse> getUser(
-			@PathVariable String username, Principal principal) {
+			@Parameter(description = "Username of the user to retrieve details for", required = true)
+					@PathVariable
+					String username,
+			Principal principal) {
 
 		username = CommonUtils.handleCrossScriptingTaintedValue(username);
 		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication =
@@ -344,17 +457,16 @@ public class AuthenticationController {
 		}
 	}
 
-	private boolean isAuthorizeForUserDetail(String username, Principal principal) {
-		String loggedInUser = principal.getName();
-		UserInfo loggedInUserInfo = userInfoService.getUserInfo(loggedInUser);
-		return loggedInUser.equals(username)
-				|| loggedInUserInfo.getAuthorities().contains("ROLE_SUPERADMIN");
-	}
-
-	private boolean isPassContainUser(String reqPassword, String username) {
-		return !(StringUtils.containsIgnoreCase(reqPassword, username));
-	}
-
+	@Operation(
+			summary = "Get Auth Details",
+			description = "Retrieves authentication details based on the provided token.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved authentication details"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/authdetails")
 	public ResponseEntity<ServiceResponse> getAuthDetails(
 			HttpServletRequest request, Authentication authentication) {
@@ -366,5 +478,16 @@ public class AuthenticationController {
 		}
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(new ServiceResponse(false, "Invalid token", null));
+	}
+
+	private boolean isAuthorizeForUserDetail(String username, Principal principal) {
+		String loggedInUser = principal.getName();
+		UserInfo loggedInUserInfo = userInfoService.getUserInfo(loggedInUser);
+		return loggedInUser.equals(username)
+				|| loggedInUserInfo.getAuthorities().contains("ROLE_SUPERADMIN");
+	}
+
+	private boolean isPassContainUser(String reqPassword, String username) {
+		return !(StringUtils.containsIgnoreCase(reqPassword, username));
 	}
 }
