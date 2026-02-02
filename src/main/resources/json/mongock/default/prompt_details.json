@@ -51,7 +51,7 @@
     "context" : "You are an AI data scientist, your task is to analyze the KPI data for a project using the steps provided below:",
     "task" : "Analyze the KPI data and generate a comprehensive report.",
     "instructions" : [
-      "1. Extract the correlation coefficients and weights for the benchmark matrix from analysis report generated through large kpi dataset: ANALYSIS_REPORT_PLACEHOLDER.",
+      "1. Extract the correlation coefficients and weights from the given context: ANALYSIS_REPORT_PLACEHOLDER.",
       "2. Compute the pairwise correlation coefficients and weights for the project data",
       "3. Identify significant relationships in the benchmark:-correlation whose value are greater then 0.5 for positive and less than -0.5 for negative",
       "4. Calculate the pairwise scores based on the benchmark comparison using the formula: text(pair_score)_(i,j) = (1 - Delta r) cdot w_(benchmark) - (0.5 cdot Delta r text(if) Delta r > 0.)',Normalize between 0 and 1.",
