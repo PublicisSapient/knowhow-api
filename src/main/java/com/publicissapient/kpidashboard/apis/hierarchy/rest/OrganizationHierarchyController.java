@@ -37,6 +37,10 @@ import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHiera
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +57,16 @@ public class OrganizationHierarchyController {
 
 	private final HierarchyOptionService hierarchyOptionService;
 
+	@Operation(
+			summary = "Get Organization Hierarchies",
+			description = "Retrieve all organization hierarchies.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved organization hierarchies"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping
 	public ResponseEntity<ServiceResponse> getHierarchyLevel() {
 
@@ -73,16 +87,44 @@ public class OrganizationHierarchyController {
 		}
 	}
 
+	@Operation(
+			summary = "Add Hierarchy Option",
+			description = "Add a new hierarchy option under the specified parent hierarchy.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Hierarchy option added successfully"),
+				@ApiResponse(responseCode = "400", description = "Invalid input provided"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping({"", "/{parentid}"})
 	public ServiceResponse addHierarchyOption(
-			@PathVariable(required = false) String parentid,
-			@RequestBody @Valid CreateHierarchyRequest createHierarchyRequest) {
+			@Parameter(description = "Parent Hierarchy ID", example = "60d21b4667d0d8992e610c85")
+					@PathVariable(required = false)
+					String parentid,
+			@Parameter(description = "Hierarchy Creation Request Payload", required = true)
+					@RequestBody
+					@Valid
+					CreateHierarchyRequest createHierarchyRequest) {
 		return hierarchyOptionService.addHierarchyOption(createHierarchyRequest, parentid);
 	}
 
+	@Operation(
+			summary = "Update Organization Hierarchy Name",
+			description = "Update the display name of an existing organization hierarchy.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Hierarchy name updated successfully"),
+				@ApiResponse(responseCode = "400", description = "Invalid input provided"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PutMapping("/{id}")
 	public ServiceResponse updateHierarchy(
-			@PathVariable String id, @Valid @RequestBody UpdateHierarchyRequest request) {
+			@Parameter(description = "Hierarchy ID", example = "60d21b4667d0d8992e610c85") @PathVariable
+					String id,
+			@Parameter(description = "Hierarchy Update Request Payload", required = true)
+					@Valid
+					@RequestBody
+					UpdateHierarchyRequest request) {
 		return organizationHierarchyService.updateName(request.getDisplayName(), id);
 	}
 }

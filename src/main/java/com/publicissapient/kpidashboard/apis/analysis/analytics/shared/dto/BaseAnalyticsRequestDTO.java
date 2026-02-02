@@ -18,6 +18,7 @@ package com.publicissapient.kpidashboard.apis.analysis.analytics.shared.dto;
 
 import java.util.Set;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -30,10 +31,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BaseAnalyticsRequestDTO {
 
+	@Schema(
+			description =
+					"Specifies how many of the most recent sprints should be considered for the analytics computation.",
+			example = "5")
 	@Min(value = 1, message = "The number of sprints taken into account must be at least 1")
 	@Max(value = 20, message = "The number of sprints taken into account must not be greater than 20")
 	@NotNull(message = "The 'numberOfSprintsToInclude' cannot be null")
 	private Integer numberOfSprintsToInclude;
 
+	@Schema(
+			description =
+					"Set of Project Basic Configuration IDs for which the analytics need to be computed.",
+			example = "[\"proj-config-1\", \"proj-config-2\"]")
 	private Set<String> projectBasicConfigIds;
 }

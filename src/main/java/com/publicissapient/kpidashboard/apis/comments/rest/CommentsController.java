@@ -41,6 +41,7 @@ import com.publicissapient.kpidashboard.common.model.comments.CommentViewRequest
 import com.publicissapient.kpidashboard.common.model.comments.CommentViewResponseDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -84,13 +85,17 @@ public class CommentsController {
 										examples =
 												@ExampleObject(
 														value =
-																"{\"success\": true, \"message\": \"Found comments\", \"data\": {\"kpiId\": \"123\", \"comments\": [...]}}"))),
+																"{\"success\": true,"
+																		+ " \"message\": \"Found comments\","
+																		+ " \"data\": {\"kpiId\": \"123\","
+																		+ " \"comments\": [...]}}"))),
 				@ApiResponse(responseCode = "400", description = "Invalid request payload"),
 				@ApiResponse(responseCode = "500", description = "Internal server error")
 			})
 	@PostMapping("/getCommentsByKpiId")
 	public ResponseEntity<ServiceResponse> getCommentsByKPI(
-			@RequestBody CommentRequestDTO commentRequestDTO) {
+			@Parameter(description = "Comment request details", required = true) @RequestBody
+					CommentRequestDTO commentRequestDTO) {
 
 		final Map<String, Object> mappedCommentInfo =
 				commentsService.findCommentByKPIId(
@@ -128,13 +133,16 @@ public class CommentsController {
 										examples =
 												@ExampleObject(
 														value =
-																"{\"success\": true, \"message\": \"Your comment is submitted successfully.\", \"data\": {\"comment\": \"Great work!\"}}"))),
+																"{\"success\": true, "
+																		+ "\"message\": \"Your comment is submitted successfully.\","
+																		+ " \"data\": {\"comment\": \"Great work!\"}}"))),
 				@ApiResponse(responseCode = "400", description = "Invalid request payload"),
 				@ApiResponse(responseCode = "500", description = "Internal server error")
 			})
 	@PostMapping("/submitComments")
 	public ResponseEntity<ServiceResponse> submitComments(
-			@Valid @RequestBody CommentSubmitDTO comment) {
+			@Parameter(description = "Comment submission details", required = true) @Valid @RequestBody
+					CommentSubmitDTO comment) {
 		boolean responseStatus = commentsService.submitComment(comment);
 		if (responseStatus) {
 			return ResponseEntity.status(HttpStatus.OK)
@@ -176,7 +184,8 @@ public class CommentsController {
 			})
 	@PostMapping("/getCommentCount")
 	public ResponseEntity<ServiceResponse> getKpiWiseCommentsCount(
-			@RequestBody CommentViewRequestDTO commentViewRequestDTO) {
+			@Parameter(description = "Comment view request details", required = true) @RequestBody
+					CommentViewRequestDTO commentViewRequestDTO) {
 		Map<String, Integer> kpiWiseCount =
 				commentsService.findCommentByBoard(
 						commentViewRequestDTO.getNodes(),
@@ -218,7 +227,13 @@ public class CommentsController {
 				@ApiResponse(responseCode = "500", description = "Internal server error")
 			})
 	@DeleteMapping("/deleteCommentById/{commentId}")
-	public ResponseEntity<ServiceResponse> deleteComments(@PathVariable String commentId) {
+	public ResponseEntity<ServiceResponse> deleteComments(
+			@Parameter(
+							description = "Comment ID to be deleted",
+							required = true,
+							example = "commentId123")
+					@PathVariable
+					String commentId) {
 		try {
 			commentsService.deleteComments(commentId);
 			return ResponseEntity.status(HttpStatus.OK)
@@ -256,7 +271,8 @@ public class CommentsController {
 			})
 	@PostMapping("/commentsSummary")
 	public ResponseEntity<ServiceResponse> getCommentsSummary(
-			@RequestBody CommentViewRequestDTO commentViewRequestDTO) {
+			@Parameter(description = "Comment view request details", required = true) @RequestBody
+					CommentViewRequestDTO commentViewRequestDTO) {
 
 		List<CommentViewResponseDTO> commentViewAllByBoard =
 				commentsService.findLatestCommentSummary(

@@ -32,6 +32,10 @@ import com.publicissapient.kpidashboard.apis.githubaction.model.GithubActionWork
 import com.publicissapient.kpidashboard.apis.githubaction.service.GithubActionToolConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -42,11 +46,29 @@ public class GithubActionController {
 
 	private final GithubActionToolConfigServiceImpl githubActionToolConfigService;
 
+	@Operation(
+			summary = "Get GitHub Action Workflows",
+			description = "Retrieve GitHub Action workflows for a given repository and connection ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved GitHub Action workflows"),
+				@ApiResponse(responseCode = "400", description = "Invalid input parameters"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/githubAction/workflowName/{connectionId}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ServiceResponse getGithubActionWorkflows(
-			@PathVariable String connectionId, @RequestBody GithubActionRepoDTO repoName) {
+			@Parameter(
+							description = "Connection ID",
+							required = true,
+							example = "60d21b4667d0d8992e610c85")
+					@PathVariable
+					String connectionId,
+			@Parameter(description = "Repository Name", required = true) @RequestBody
+					GithubActionRepoDTO repoName) {
 		ServiceResponse response;
 		List<GithubActionWorkflowsDTO> workFlowList =
 				githubActionToolConfigService.getGitHubWorkFlowList(

@@ -22,15 +22,25 @@ import javax.validation.constraints.NotNull;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /** The Authentication request. */
+@Schema(description = "Authentication Request Model")
 public class AuthenticationRequest {
 
-	@NotNull private String username;
+	@Schema(description = "Username", example = "john.doe")
+	@NotNull
+	private String username;
 
-	@NotNull private String password;
+	@Schema(description = "Password", example = "P@ssw0rd!")
+	@NotNull
+	private String password;
 
-	@NotNull private String email;
+	@Schema(description = "E-mail", example = "john.doe@example.com")
+	@NotNull
+	private String email;
 
+	@Schema(description = "User Role", example = "SUPER_ADMIN")
 	private String userRole;
 
 	/**

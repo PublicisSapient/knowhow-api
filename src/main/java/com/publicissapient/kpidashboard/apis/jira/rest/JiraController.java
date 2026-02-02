@@ -48,6 +48,12 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.application.dto.AssigneeResponseDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,9 +78,33 @@ public class JiraController {
 
 	private final NonTrendServiceFactory serviceFactory;
 
+	@Operation(
+			summary = "Get Jira Scrum KPI Metrics",
+			description =
+					"Processes Jira Scrum KPI requests and returns calculated metrics for the specified KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Jira Scrum KPI metrics calculated successfully",
+						content =
+								@Content(
+										mediaType = MediaType.APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden: Unauthorized to access the Jira Scrum KPIs"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while processing Jira Scrum KPI request")
+			})
 	@PostMapping(value = "/jira/kpi")
 	public ResponseEntity<List<KpiElement>> getJiraAggregatedMetrics(
-			@RequestBody KpiRequest kpiRequest)
+			@Parameter(
+							description = "KPI Request payload containing the list of KPIs to be processed",
+							required = true)
+					@RequestBody
+					KpiRequest kpiRequest)
 			throws MissingServletRequestParameterException, EntityNotFoundException {
 		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira KPI request {}", kpiRequest);
@@ -101,9 +131,33 @@ public class JiraController {
 		}
 	}
 
+	@Operation(
+			summary = "Get Jira Kanban KPI Metrics",
+			description =
+					"Processes Jira Kanban KPI requests and returns calculated metrics for the specified KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Jira Kanban KPI metrics calculated successfully",
+						content =
+								@Content(
+										mediaType = MediaType.APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden: Unauthorized to access the Jira Kanban KPIs"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while processing Jira Kanban KPI request")
+			})
 	@PostMapping(value = "/jirakanban/kpi")
 	public ResponseEntity<List<KpiElement>> getJiraKanbanAggregatedMetrics(
-			@RequestBody KpiRequest kpiRequest)
+			@Parameter(
+							description = "KPI Request payload containing the list of KPIs to be processed",
+							required = true)
+					@RequestBody
+					KpiRequest kpiRequest)
 			throws MissingServletRequestParameterException, EntityNotFoundException {
 		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());
 		log.info("Received Jira Kanban KPI request {}", kpiRequest);
@@ -129,12 +183,49 @@ public class JiraController {
 		return ResponseEntity.ok().body(responseList);
 	}
 
+	@Operation(
+			summary = "Get Jira Board Details",
+			description =
+					"Fetches the list of Jira boards based on the provided board request parameters")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully fetched Jira board details",
+						content =
+								@Content(
+										mediaType = MediaType.APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching Jira board details")
+			})
 	@PostMapping(value = "/jira/board", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getJiraBoardDetailsList(
-			@RequestBody BoardRequestDTO boardRequestDTO) {
+			@Parameter(
+							description = "Board request parameters for fetching Jira board details",
+							required = true)
+					@RequestBody
+					BoardRequestDTO boardRequestDTO) {
 		return jiraToolConfigService.getJiraBoardDetailsList(boardRequestDTO);
 	}
 
+	@Operation(
+			summary = "Get Jira Assignee List",
+			description = "Fetches the list of Jira assignees for the specified project configuration ID")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully fetched Jira assignee list",
+						content =
+								@Content(
+										mediaType = MediaType.APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching Jira assignee list")
+			})
 	@GetMapping(value = "/jira/assignees/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ServiceResponse getJiraAssigneesList(@PathVariable("id") String projectConfigId) {
 		ServiceResponse response;
@@ -149,9 +240,34 @@ public class JiraController {
 		return response;
 	}
 
+	@Operation(
+			summary = "Get Jira Non-Trend KPI Metrics",
+			description =
+					"Processes Jira Non-Trend KPI requests and returns calculated metrics for the specified KPIs")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Jira Non-Trend KPI metrics calculated successfully",
+						content =
+								@Content(
+										mediaType = MediaType.APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden: Unauthorized to access the Jira Non-Trend KPIs"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while processing Jira Non-Trend KPI request")
+			})
 	@PostMapping(value = "/jira/nonTrend/kpi")
 	public ResponseEntity<List<KpiElement>> getJiraIterationMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest)
+			@Parameter(
+							description = "KPI Request payload containing the list of KPIs to be processed",
+							required = true)
+					@NotNull
+					@RequestBody
+					KpiRequest kpiRequest)
 			throws MissingServletRequestParameterException, EntityNotFoundException {
 
 		MDC.put(JIRA_SCRUM_KPI_REQ, kpiRequest.getRequestTrackerId());

@@ -20,12 +20,22 @@ package com.publicissapient.kpidashboard.apis.model;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /** The Account filter response. */
+@Schema(description = "Account filter response object")
 public class AccountFilterResponse extends BaseModel {
 
+	@Schema(description = "Level of the filter", example = "1")
 	private int level;
+
+	@Schema(description = "Label of the filter", example = "Sprint 1")
 	private String label;
+
+	@Schema(description = "Whether to show the filter or not", example = "true")
 	private boolean show;
+
+	@Schema(description = "List of filtered data", implementation = AccountFilteredData.class)
 	private List<AccountFilteredData> filterData;
 
 	/**

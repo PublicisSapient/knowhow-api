@@ -37,6 +37,10 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.testexecution.service.TestExecutionService;
 import com.publicissapient.kpidashboard.common.model.testexecution.TestExecutionData;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -60,11 +64,18 @@ public class TestExecutionController {
 	 * @param testExecution data to be saved
 	 * @return service response entity
 	 */
+	@Operation(summary = "Add Test Execution Data", description = "API to add test execution data")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Test Execution Data added successfully"),
+				@ApiResponse(responseCode = "401", description = "Unauthorized to add Test Execution Data")
+			})
 	@PostMapping(
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> addTestExecutionData(
-			@RequestBody TestExecutionData testExecution) {
+			@Parameter(description = "Test Execution Data to be saved", required = true) @RequestBody
+					TestExecutionData testExecution) {
 		ServiceResponse response =
 				new ServiceResponse(false, "Failed to add  Test Execution Data", null);
 		try {

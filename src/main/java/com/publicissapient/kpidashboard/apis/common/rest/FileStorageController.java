@@ -32,6 +32,10 @@ import com.publicissapient.kpidashboard.apis.model.BaseResponse;
 import com.publicissapient.kpidashboard.apis.model.Logo;
 import com.publicissapient.kpidashboard.apis.util.ValidExtension;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,9 +60,22 @@ public class FileStorageController {
 	 * @param file the file to upload
 	 * @return BaseResponse with <tt>message</tt> and <tt>success status(true or false)</tt> of upload
 	 */
+	@Operation(
+			summary = "Upload Logo Image",
+			description = "Uploads an image file to be used as the logo.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully uploaded logo image"),
+				@ApiResponse(responseCode = "400", description = "Invalid file format or request"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/file/upload")
 	@PreAuthorize("hasPermission('LOGO', 'FILE_UPLOAD')")
-	public BaseResponse uploadImage(@ValidExtension @RequestParam("file") MultipartFile file) {
+	public BaseResponse uploadImage(
+			@Parameter(description = "Image file to upload", required = true, example = "logo.png")
+					@ValidExtension
+					@RequestParam("file")
+					MultipartFile file) {
 		return fileStorageService.upload(file);
 	}
 
@@ -68,6 +85,13 @@ public class FileStorageController {
 	 * @param file the file to upload
 	 * @return BaseResponse with <tt>message</tt> and <tt>success status(true or false)</tt> of upload
 	 */
+	@Operation(summary = "Upload File", description = "Uploads a file of specified type.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully uploaded file"),
+				@ApiResponse(responseCode = "400", description = "Invalid file format or request"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/file/upload/{type}")
 	@PreAuthorize("hasPermission(#type, 'FILE_UPLOAD')")
 	public BaseResponse uploadFile(
@@ -80,9 +104,14 @@ public class FileStorageController {
 	 *
 	 * @return Logo
 	 */
+	@Operation(summary = "Get file logo image")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully retrieved logo image"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping("/file/logo")
 	public Logo getLogo() {
-
 		return fileStorageService.getLogo();
 	}
 
@@ -91,6 +120,14 @@ public class FileStorageController {
 	 *
 	 * @return boolean
 	 */
+	@Operation(
+			summary = "Delete Logo Image",
+			description = "Deletes the currently stored logo image.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully deleted logo image"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping("/file/delete")
 	@PreAuthorize("hasPermission('LOGO', 'DELETE_LOGO')")
 	public boolean deleteLogo() {

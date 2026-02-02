@@ -19,12 +19,15 @@ package com.publicissapient.kpidashboard.apis.hierarchy.dto;
 
 import javax.validation.constraints.NotBlank;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
+@Schema(description = "Request object for updating an existing Hierarchy's display name")
 public class UpdateHierarchyRequest {
+	@Schema(description = "New display name for the Hierarchy", example = "Updated Hierarchy Name")
 	@NotBlank(message = "displayName cannot be empty")
 	@NotNull(message = "displayName cannot be null")
 	@NotEmpty(message = "displayName cannot be empty")

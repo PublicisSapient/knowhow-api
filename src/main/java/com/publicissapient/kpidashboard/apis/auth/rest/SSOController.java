@@ -32,6 +32,10 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 
@@ -42,11 +46,26 @@ import lombok.AllArgsConstructor;
 public class SSOController {
 	private final UserInfoService userInfoService;
 
+	@Operation(
+			summary = "Fetch or Save SSO User Information",
+			description =
+					"Fetches existing SSO user information or saves default information for new SSO users.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully fetched or saved SSO user information"),
+				@ApiResponse(responseCode = "401", description = "Unauthorized access"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(
 			value = "/users/{username}",
 			consumes = APPLICATION_JSON_VALUE,
 			produces = APPLICATION_JSON_VALUE)
-	public ResponseEntity<ServiceResponse> fetchOrSaveUserInfo(@PathVariable String username) {
+	public ResponseEntity<ServiceResponse> fetchOrSaveUserInfo(
+			@Parameter(description = "Username of the SSO user", required = true, example = "john.doe")
+					@PathVariable
+					String username) {
 		ServiceResponse response = new ServiceResponse(false, "Unauthorized", null);
 		UserInfoDTO userInfoDTO =
 				userInfoService.getOrSaveDefaultUserInfo(username, AuthType.SSO, null);
