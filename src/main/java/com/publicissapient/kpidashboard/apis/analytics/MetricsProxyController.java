@@ -23,6 +23,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +54,19 @@ public class MetricsProxyController {
 	 * Proxy endpoint to send metrics to Pushgateway This avoids CORS issues when sending directly
 	 * from frontend
 	 */
+	@Operation(
+			summary = "Send Metrics to Pushgateway",
+			description = "Proxies metrics data to Pushgateway to avoid CORS issues")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Metrics sent successfully"),
+				@ApiResponse(responseCode = "500", description = "Error sending metrics")
+			})
 	@PostMapping("/send")
-	public ResponseEntity<String> sendMetricsToPushgateway(@RequestBody MetricsRequest request) {
+	public ResponseEntity<String> sendMetricsToPushgateway(
+			@Parameter(description = "Metrics data in Prometheus text format", required = true)
+					@RequestBody
+					MetricsRequest request) {
 		try {
 			log.info("Received metrics from frontend, forwarding to Pushgateway");
 			log.debug("Metrics data: {}", request.getMetrics());

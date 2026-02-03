@@ -45,6 +45,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -77,9 +78,39 @@ public class BitBucketController {
 	 * @return the bit bucket aggregated metrics
 	 * @throws Exception the exception
 	 */
+	@Operation(
+			summary = "Get Bitbucket KPI Metrics",
+			description =
+					"Retrieves aggregated KPI metrics for Bitbucket based on the provided KPI request parameters")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved Bitbucket KPI metrics",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden - No KPI metrics found",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ErrorResponse.class)))
+			})
 	@PostMapping(value = "/bitbucket/kpi", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<KpiElement>> getBitBucketAggregatedMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception { // NOSONAR
+			@Parameter(description = "KPI Request Payload", required = true) @NotNull @RequestBody
+					KpiRequest kpiRequest)
+			throws Exception { // NOSONAR
 		MDC.put("BitbucketKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info("Received BitBucket KPI request {}", kpiRequest);
 		long bitbucketRequestStartTime = System.currentTimeMillis();
@@ -112,9 +143,39 @@ public class BitBucketController {
 	 * @return the bit bucket kanban aggregated metrics
 	 * @throws Exception the exception
 	 */
+	@Operation(
+			summary = "Get Bitbucket Kanban KPI Metrics",
+			description =
+					"Retrieves aggregated KPI metrics for Bitbucket Kanban based on the provided KPI request parameters")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved Bitbucket Kanban KPI metrics",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden - No KPI metrics found",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = KpiElement.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ErrorResponse.class)))
+			})
 	@PostMapping(value = "/bitbucketkanban/kpi", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<KpiElement>> getBitBucketKanbanAggregatedMetrics(
-			@NotNull @RequestBody KpiRequest kpiRequest) throws Exception {
+			@Parameter(description = "KPI Request Payload", required = true) @NotNull @RequestBody
+					KpiRequest kpiRequest)
+			throws Exception {
 		MDC.put("BitbucketKpiRequest", kpiRequest.getRequestTrackerId());
 		log.info(" Received BitBucket KPI request {}", kpiRequest);
 		long bitbucketKanbanRequestStartTime = System.currentTimeMillis();
@@ -146,9 +207,35 @@ public class BitBucketController {
 	 * @param projectConfigId basic project config ig
 	 * @return list of members email
 	 */
+	@Operation(
+			summary = "Get Repo Tool Project Members Email",
+			description =
+					"Retrieves email addresses of all project members from the specified repository tool")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved project members' email addresses",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error",
+						content =
+								@Content(
+										mediaType = "application/json",
+										schema = @Schema(implementation = ErrorResponse.class)))
+			})
 	@GetMapping(value = "repotool/assignees/email/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getRepoToolProjectMembers(
-			@PathVariable("id") String projectConfigId) {
+			@Parameter(
+							description = "Unique identifier for the project configuration",
+							required = true,
+							example = "60d21b8667d0d8992e610c85")
+					@PathVariable("id")
+					String projectConfigId) {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(
 						new ServiceResponse(true, "", scmUserService.getScmToolUsersMailList(projectConfigId)));
@@ -184,7 +271,8 @@ public class BitBucketController {
 			})
 	@PostMapping(value = "/team/performance/summary", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> getDeveloperDashboardTeamPerformanceSummary(
-			@NotNull @RequestBody KpiRequest kpiRequest) {
+			@Parameter(description = "KPI Request Payload", required = true) @NotNull @RequestBody
+					KpiRequest kpiRequest) {
 		log.info("Received Developer Dashboard Summary request {}", kpiRequest);
 		long bitbucketRequestStartTime = System.currentTimeMillis();
 

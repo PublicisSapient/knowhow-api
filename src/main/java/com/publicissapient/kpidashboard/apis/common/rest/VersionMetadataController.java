@@ -28,6 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.common.service.VersionMetadataService;
 import com.publicissapient.kpidashboard.apis.model.VersionDetails;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,14 @@ public class VersionMetadataController {
 	 *
 	 * @return the version details
 	 */
+	@Operation(
+			summary = "Get Version Metadata",
+			description = "Fetches the version metadata of the application.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully retrieved version metadata"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/getversionmetadata", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<VersionDetails> getVersionDetails() {
 		log.debug("VersionMetadataController::getVersionDetails start");

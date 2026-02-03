@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -46,12 +49,26 @@ public class CacheController {
 	 *
 	 * @param cacheName the cache name
 	 */
+	@Operation(
+			summary = "Clear Specified Cache",
+			description = "Clears the specified cache by its name.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully cleared specified cache"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/cache/clearCache/{cacheName}", produces = APPLICATION_JSON_VALUE)
 	public void clearCache(@PathVariable String cacheName) {
 		service.clearCache(cacheName);
 	}
 
 	/** Clear all cache. */
+	@Operation(summary = "Clear All Cache", description = "Clears all caches in the application.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully cleared all caches"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/cache/clearAllCache", produces = APPLICATION_JSON_VALUE)
 	public void clearAllCache() {
 		service.clearAllCache();

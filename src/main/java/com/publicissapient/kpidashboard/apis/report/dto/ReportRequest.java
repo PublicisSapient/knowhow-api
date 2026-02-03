@@ -19,6 +19,7 @@ package com.publicissapient.kpidashboard.apis.report.dto;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -27,13 +28,20 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
+@Schema(description = "Data Transfer Object for Report Request")
 public class ReportRequest {
+	@Schema(
+			description =
+					"Unique identifier of the report. If updating an existing report, this field must be provided.",
+			example = "64b8f0c2e1b2c3a4d5e6f7g8")
 	private String id;
 
+	@Schema(description = "Name of the report", example = "Sprint Velocity Report")
 	@NotNull(message = "Report name cannot be null")
 	@NotEmpty(message = "Report name cannot be empty")
 	private String name;
 
+	@Schema(description = "List of KPIs included in the report", implementation = KpiRequest.class)
 	@NotNull(message = "KPIs cannot be null")
 	@NotEmpty(message = "KPIs cannot be empty")
 	@Valid
