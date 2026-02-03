@@ -91,6 +91,7 @@ public class KpiMaturityService {
 			"No kpi maturity data was found for " + "project with node id {} and name {}";
 	private static final String ORGANIZATION_KPI_MATURITY_SUCCESSFULLY_RETRIEVED_MESSAGE =
 			"Successfully retrieved the organization kpi maturity data";
+	private static final String NOT_APPLICABLE = "N/A";
 
 	private final KpiMaturityCustomRepository kpiMaturityCustomRepository;
 
@@ -287,6 +288,16 @@ public class KpiMaturityService {
 								+ "containing productivity data",
 						rootNode.getNodeId(),
 						rootNode.getNodeName());
+				details.add(
+						OrganizationEntityKpiMaturity.builder()
+								.organizationEntityNodeId(rootNode.getNodeId())
+								.levelName(
+										kpiMaturityCalculationContext.hierarchyLevelsData.requestedLevel
+												.getHierarchyLevelName())
+								.organizationEntityName(rootNode.getNodeName())
+								.health(NOT_APPLICABLE)
+								.completionPercentage(0d)
+								.build());
 			}
 		}
 		double overallEfficiencyPercentage =
@@ -304,6 +315,11 @@ public class KpiMaturityService {
 						.health(determineHealthByEfficiencyPercentage(overallEfficiencyPercentage))
 						.completionPercentage((double) Math.round(overallEfficiencyPercentage))
 						.build());
+		details.sort(
+				(a, b) ->
+						Boolean.compare(
+								a.getHealth().equalsIgnoreCase(NOT_APPLICABLE),
+								b.getHealth().equalsIgnoreCase(NOT_APPLICABLE)));
 		kpiMaturityResponse.setDetails(details);
 		return kpiMaturityResponse;
 	}
