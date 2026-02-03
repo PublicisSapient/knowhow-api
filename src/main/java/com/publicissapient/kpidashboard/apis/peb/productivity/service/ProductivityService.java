@@ -247,6 +247,14 @@ public class ProductivityService {
 								+ "containing productivity data",
 						rootAccountData.getNodeId(),
 						rootAccountData.getNodeName());
+				details.add(
+						OrganizationEntityProductivity.builder()
+								.levelName(
+										pebProductivityCalculationContext.hierarchyLevelsData.requestedLevel
+												.getHierarchyLevelName())
+								.organizationEntityName(rootAccountData.getNodeName())
+								.categoryScores(new CategoryScoresDTO())
+								.build());
 			}
 		}
 		setAveragedProductivityScores(
@@ -792,6 +800,7 @@ public class ProductivityService {
 							.trendValue(trendValue)
 							.kpiName(kpiData.getName())
 							.kpiCategory(kpiData.getCategory())
+							.desiredTrend(kpiData.getDesiredTrend())
 							.build();
 			if (trendValue >= 0.0) {
 				positive.add(kpiTrend);
