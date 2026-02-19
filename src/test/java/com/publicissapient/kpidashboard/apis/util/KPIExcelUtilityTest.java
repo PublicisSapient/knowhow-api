@@ -110,14 +110,7 @@ public class KPIExcelUtilityTest {
 						LocalDateTime.now().toString()));
 
 		excelUtility.populateFTPRExcelData(
-				storyIds,
-				jiraIssues,
-				kpiExcelData,
-				issueData,
-				defects,
-				customApiConfig,
-				fieldMapping,
-				node);
+				storyIds, jiraIssues, kpiExcelData, issueData, defects, fieldMapping, node);
 
 		// Assert
 		assertEquals(2, kpiExcelData.size());
@@ -715,7 +708,7 @@ public class KPIExcelUtilityTest {
 						LocalDateTime.now().toString()));
 
 		KPIExcelUtility.populateDirExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Assert
 		assertEquals(3, kpiExcelData.size());
@@ -756,7 +749,7 @@ public class KPIExcelUtilityTest {
 						LocalDateTime.now().toString()));
 
 		KPIExcelUtility.populateDefectDensityExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Assert
 		assertEquals(3, kpiExcelData.size());
@@ -799,7 +792,7 @@ public class KPIExcelUtilityTest {
 						LocalDateTime.now().toString()));
 
 		KPIExcelUtility.populateDefectDensityExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Assert
 		assertEquals(4, kpiExcelData.size());
@@ -841,14 +834,7 @@ public class KPIExcelUtilityTest {
 						LocalDateTime.now().toString()));
 
 		excelUtility.populateFTPRExcelData(
-				storyIds,
-				jiraIssues,
-				kpiExcelData,
-				issueData,
-				defects,
-				customApiConfig,
-				fieldMapping,
-				node);
+				storyIds, jiraIssues, kpiExcelData, issueData, defects, fieldMapping, node);
 		// Assert
 		assertEquals(3, kpiExcelData.size());
 		assertEquals(
@@ -1254,7 +1240,7 @@ public class KPIExcelUtilityTest {
 
 		// Call the method
 		KPIExcelUtility.populateDirExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Verify results
 		assertNotNull(kpiExcelData);
@@ -1273,7 +1259,7 @@ public class KPIExcelUtilityTest {
 
 		// Call the method
 		KPIExcelUtility.populateDirExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
@@ -1298,7 +1284,7 @@ public class KPIExcelUtilityTest {
 
 		// Call the method
 		KPIExcelUtility.populateDefectDensityExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Verify results
 		assertNotNull(kpiExcelData);
@@ -1317,7 +1303,7 @@ public class KPIExcelUtilityTest {
 
 		// Call the method
 		KPIExcelUtility.populateDefectDensityExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Verify results - should not add any data
 		assertEquals(0, kpiExcelData.size());
@@ -1615,7 +1601,7 @@ public class KPIExcelUtilityTest {
 
 		// Call the method
 		KPIExcelUtility.populateDirExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Verify results - should handle null defects gracefully
 		assertNotNull(kpiExcelData);
@@ -1638,7 +1624,7 @@ public class KPIExcelUtilityTest {
 
 		// Call the method
 		KPIExcelUtility.populateDefectDensityExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+				storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 
 		// Verify results - should handle null defects gracefully
 		assertNotNull(kpiExcelData);
