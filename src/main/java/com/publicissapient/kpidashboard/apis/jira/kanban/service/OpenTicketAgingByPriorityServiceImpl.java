@@ -250,12 +250,15 @@ public class OpenTicketAgingByPriorityServiceImpl
 							projectWiseJiraIssueMap.getOrDefault(projectNodeId, new ArrayList<>());
 
 					if (CollectionUtils.isNotEmpty(projectWiseJiraIssueList)) {
+						// Get field mapping for this project
+						FieldMapping fieldMapping =
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId());
 
 						Set<String> priorityList =
 								projectWiseJiraIssueList.stream()
-										.map(
-												issue ->
-														KPIHelperUtil.mappingPriority(issue.getPriority(), customApiConfig))
+										.map(issue -> KPIHelperUtil.mappingPriority(issue.getPriority(), fieldMapping))
 										.collect(Collectors.toSet());
 
 						Map<String, List<KanbanJiraIssue>> rangeWiseJiraIssuesMap = new LinkedHashMap<>();
@@ -266,7 +269,7 @@ public class OpenTicketAgingByPriorityServiceImpl
 						rangeWiseJiraIssuesMap.forEach(
 								(range, issueList) -> {
 									Map<String, Long> priorityCountMap =
-											KPIHelperUtil.setpriorityKanban(issueList, customApiConfig);
+											KPIHelperUtil.setpriorityKanban(issueList, fieldMapping);
 									rangeWisePriorityCountMap.put(range, priorityCountMap);
 								});
 

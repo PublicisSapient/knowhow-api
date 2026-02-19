@@ -175,8 +175,6 @@ public class FTPRServiceImplTest {
 				P4, Stream.of("p4", "p4 - minor", "minor", "4", "low").collect(Collectors.toList()));
 		priorityMap.put(P5, Stream.of("p5 - trivial", "5", "trivial").collect(Collectors.toList()));
 
-		when(customApiSetting.getPriority()).thenReturn(priorityMap);
-
 		try {
 			KpiElement kpiElement =
 					ftprService.getKpiData(

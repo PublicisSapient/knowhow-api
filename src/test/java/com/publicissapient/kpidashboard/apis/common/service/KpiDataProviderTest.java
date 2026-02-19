@@ -137,6 +137,13 @@ public class KpiDataProviderTest {
 		FieldMappingDataFactory fieldMappingDataFactory =
 				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
+		// Set priority values for the test
+		fieldMapping.setPriorityP1(
+				Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "urgent"));
+		fieldMapping.setPriorityP2(Arrays.asList("p2", "critical", "P2 - Critical", "2", "high"));
+		fieldMapping.setPriorityP3(Arrays.asList("p3", "p3-major", "major", "3", "medium"));
+		fieldMapping.setPriorityP4(Arrays.asList("p4", "p4-minor", "minor", "4", "low"));
+		fieldMapping.setPriorityP5(Arrays.asList("p5", "p5-trivial", "trivial", "5"));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -583,7 +590,6 @@ public class KpiDataProviderTest {
 		priorityMap.put(P5, Stream.of("p5 - trivial", "5", "trivial").collect(Collectors.toList()));
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(customApiConfig.getPriority()).thenReturn(priorityMap);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(jiraIssueRepository.findIssuesGroupBySprint(anyMap(), anyMap(), anyString(), anyString()))
 				.thenReturn(storyData);
@@ -628,8 +634,14 @@ public class KpiDataProviderTest {
 					FieldMapping v1 = v;
 					v1.setIncludeRCAForKPI35(Arrays.asList("code issue"));
 					v1.setDefectPriorityKPI35(Arrays.asList("P3"));
+					// Set priority values for the test
+					v1.setPriorityP1(
+							Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "urgent"));
+					v1.setPriorityP2(Arrays.asList("p2", "critical", "P2 - Critical", "2", "high"));
+					v1.setPriorityP3(Arrays.asList("p3", "p3-major", "major", "3", "medium"));
+					v1.setPriorityP4(Arrays.asList("p4", "p4-minor", "minor", "4", "low"));
+					v1.setPriorityP5(Arrays.asList("p5", "p5-trivial", "trivial", "5"));
 				});
-		when(customApiConfig.getPriority()).thenReturn(priority);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		Map<String, Object> result =
@@ -637,6 +649,6 @@ public class KpiDataProviderTest {
 		assertThat(
 				"Total Defects value :",
 				((List<JiraIssue>) (result.get("totalBugData"))).size(),
-				equalTo(9));
+				equalTo(10));
 	}
 }

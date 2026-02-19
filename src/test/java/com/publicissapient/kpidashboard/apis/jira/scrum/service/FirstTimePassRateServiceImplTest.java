@@ -204,10 +204,6 @@ public class FirstTimePassRateServiceImplTest {
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		when(kpiDataProvider.fetchFirstTimePassRateDataFromDb(eq(kpiRequest), any(), any()))
 				.thenReturn(resultListMap);
 		try {

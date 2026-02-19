@@ -42,6 +42,7 @@ import com.publicissapient.kpidashboard.apis.model.*;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
@@ -276,7 +277,8 @@ public class FTPRServiceImpl extends JiraIterationKPIService {
 					allIssues.size());
 			List<JiraIssue> totalJiraIssues = new ArrayList<>();
 			Map<String, Map<String, Integer>> projectWisePriority = new HashMap<>();
-			Map<String, List<String>> configPriority = customApiConfig.getPriority();
+			Map<String, List<String>> configPriority =
+					KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 			Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 			Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
 

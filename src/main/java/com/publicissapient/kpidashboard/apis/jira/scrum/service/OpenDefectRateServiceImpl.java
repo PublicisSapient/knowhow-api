@@ -269,7 +269,10 @@ public class OpenDefectRateServiceImpl
 								excelData,
 								sprintWiseOpenDefectList,
 								sprintWiseTotaldDefectList,
-								storyList);
+								storyList,
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId()));
 					} else {
 						odrForCurrentLeaf = 0.0d;
 					}
@@ -332,7 +335,8 @@ public class OpenDefectRateServiceImpl
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintWiseOpenDefectList,
 			List<JiraIssue> sprintWiseTotaldDefectList,
-			List<JiraIssue> storyList) {
+			List<JiraIssue> storyList,
+			FieldMapping fieldMapping) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 
 			Map<String, JiraIssue> totalDefectList = new HashMap<>();
@@ -345,7 +349,7 @@ public class OpenDefectRateServiceImpl
 					sprintWiseOpenDefectList,
 					excelData,
 					KPICode.OPEN_DEFECT_RATE.getKpiId(),
-					customApiConfig,
+					fieldMapping,
 					storyList);
 		}
 	}

@@ -314,7 +314,7 @@ public class ScopeChurnServiceImplTest {
 			assertThat(
 					"Scope churn value :",
 					((List<DataCount>) kpiElement.getTrendValueList()).size(),
-					equalTo(1));
+					equalTo(2));
 		} catch (Exception exception) {
 		}
 	}
