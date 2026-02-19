@@ -134,7 +134,7 @@ public class KPIExcelUtility {
 			Map<String, JiraIssue> defectIssueMap,
 			KPIExcelData excelData,
 			String defectNumber,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			Node node) {
 
 		JiraIssue defect = defectIssueMap.get(defectNumber);
@@ -144,13 +144,13 @@ public class KPIExcelUtility {
 			excelData.setStoryDesc(checkEmptyName(jiraIssue));
 			excelData.setStoryId(Collections.singletonMap(story, checkEmptyURL(jiraIssue)));
 			setSquads(excelData, jiraIssue);
-			excelData.setPriority(setPriority(customApiConfig, jiraIssue));
+			excelData.setPriority(setPriority(fieldMapping, jiraIssue));
 			Integer totalTimeSpent = Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 			if (defect != null) {
 				excelData.setDefectId(Collections.singletonMap(defectNumber, checkEmptyURL(defect)));
 				excelData.setDefectDesc(checkEmptyName(defect));
 				excelData.setRootCause(defect.getRootCauseList());
-				excelData.setDefectPriority(setPriority(customApiConfig, defect));
+				excelData.setDefectPriority(setPriority(fieldMapping, defect));
 				excelData.setDefectStatus(defect.getStatus());
 				totalTimeSpent =
 						totalTimeSpent + Objects.requireNonNullElse(defect.getTimeSpentInMinutes(), 0);
@@ -205,7 +205,7 @@ public class KPIExcelUtility {
 											defectIssueMap,
 											excelData,
 											defect.getNumber(),
-											customApiConfig,
+											fieldMapping,
 											node);
 									setStoryPoint(fieldMapping, excelData, jiraIssue);
 									kpiExcelData.add(excelData);
@@ -219,7 +219,7 @@ public class KPIExcelUtility {
 								Collections.emptyMap(),
 								excelData,
 								Constant.BLANK,
-								customApiConfig,
+								fieldMapping,
 								node);
 						setStoryPoint(fieldMapping, excelData, jiraIssue);
 						kpiExcelData.add(excelData);
@@ -292,7 +292,7 @@ public class KPIExcelUtility {
 			List<JiraIssue> conditionDefects,
 			List<KPIExcelData> kpiExcelData,
 			String kpiId,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 
 		if (MapUtils.isNotEmpty(totalBugList)) {
@@ -310,13 +310,13 @@ public class KPIExcelUtility {
 						defectIdDetails.put(defectId, checkEmptyURL(jiraIssue));
 						excelData.setDefectId(defectIdDetails);
 						setSquads(excelData, jiraIssue);
-						excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+						excelData.setDefectPriority(setPriority(fieldMapping, jiraIssue));
 						excelData.setRootCause(jiraIssue.getRootCauseList());
 						excelData.setLabels(jiraIssue.getLabels());
 						Integer totalTimeSpentInMinutes =
 								Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 						setStoryExcelData(
-								storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+								storyList, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
 
 						if (kpiId.equalsIgnoreCase(KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId())) {
 							excelData.setDefectStatus(jiraIssue.getStatus());
@@ -340,7 +340,6 @@ public class KPIExcelUtility {
 	 * @param totalBugList totalBugList
 	 * @param dsrValidationDataList dsrValidationDataList
 	 * @param excelDataList excelDataList
-	 * @param customApiConfig
 	 * @param totalStoryWoDrop
 	 */
 	public static void populateDefectSeepageRateExcelData(
@@ -348,7 +347,7 @@ public class KPIExcelUtility {
 			Map<String, JiraIssue> totalBugList,
 			List<DSRValidationData> dsrValidationDataList,
 			List<KPIExcelData> excelDataList,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> totalStoryWoDrop) {
 
 		Map<String, String> labelWiseValidationData =
@@ -375,13 +374,13 @@ public class KPIExcelUtility {
 					excelData.setDefectId(defectIdDetails);
 					excelData.setEscapedDefect(present);
 					excelData.setEscapedIdentifier(label);
-					excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+					excelData.setDefectPriority(setPriority(fieldMapping, jiraIssue));
 					excelData.setRootCause(jiraIssue.getRootCauseList());
 					excelData.setDefectStatus(jiraIssue.getStatus());
 					Integer totalTimeSpentInMinutes =
 							Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 					setStoryExcelData(
-							totalStoryWoDrop, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+							totalStoryWoDrop, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
 					excelDataList.add(excelData);
 				});
 	}
@@ -391,7 +390,7 @@ public class KPIExcelUtility {
 			JiraIssue jiraIssue,
 			KPIExcelData excelData,
 			int totalTimeSpentInMinutes,
-			CustomApiConfig customApiConfig) {
+			FieldMapping fieldMapping) {
 		AtomicInteger totalTimeSpent = new AtomicInteger(totalTimeSpentInMinutes);
 
 		if (CollectionUtils.isNotEmpty(totalStoryWoDrop) && jiraIssue.getDefectStoryID() != null) {
@@ -406,7 +405,7 @@ public class KPIExcelUtility {
 						Map<String, String> storyIdDetails = new HashMap<>();
 						storyIdDetails.put(story.getNumber(), checkEmptyURL(story));
 						excelData.setStoryId(storyIdDetails);
-						excelData.setPriority(setPriority(customApiConfig, story));
+						excelData.setPriority(setPriority(fieldMapping, story));
 
 						if (story.getTimeSpentInMinutes() != null) {
 							totalTimeSpent.addAndGet(story.getTimeSpentInMinutes());
@@ -429,7 +428,7 @@ public class KPIExcelUtility {
 			String sprint,
 			List<JiraIssue> jiraIssues,
 			List<KPIExcelData> kpiExcelData,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 		if (CollectionUtils.isNotEmpty(jiraIssues)) {
 			jiraIssues.stream()
@@ -442,13 +441,13 @@ public class KPIExcelUtility {
 								Map<String, String> defectIdDetails = new HashMap<>();
 								defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
 								excelData.setDefectId(defectIdDetails);
-								excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+								excelData.setDefectPriority(setPriority(fieldMapping, jiraIssue));
 								excelData.setRootCause(jiraIssue.getRootCauseList());
 								excelData.setDefectStatus(jiraIssue.getStatus());
 								Integer totalTimeSpentInMinutes =
 										Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 								setStoryExcelData(
-										storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+										storyList, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
 								kpiExcelData.add(excelData);
 							});
 		}
@@ -466,7 +465,7 @@ public class KPIExcelUtility {
 			String sprint,
 			List<JiraIssue> jiraIssues,
 			List<KPIExcelData> kpiExcelData,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 		if (CollectionUtils.isNotEmpty(jiraIssues)) {
 			jiraIssues.stream()
@@ -485,7 +484,7 @@ public class KPIExcelUtility {
 								Integer totalTimeSpentInMinutes =
 										Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 								setStoryExcelData(
-										storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+										storyList, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
 								kpiExcelData.add(excelData);
 							});
 		}
@@ -494,35 +493,28 @@ public class KPIExcelUtility {
 	/**
 	 * Use to set priority of issue
 	 *
-	 * @param customApiConfig customApiConfig
+	 * @param fieldMapping fieldMapping
 	 * @param jiraIssue jiraIssue
 	 */
-	private static String setPriority(CustomApiConfig customApiConfig, JiraIssue jiraIssue) {
+	private static String setPriority(FieldMapping fieldMapping, JiraIssue jiraIssue) {
 		List<String> priorities;
 		String priority;
 		String issuePriority = " ";
 		if (StringUtils.isNotEmpty(jiraIssue.getPriority())) {
-			if (StringUtils.containsIgnoreCase(
-					customApiConfig.getpriorityP1().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			String priorityLevel = KPIHelperUtil.mappingPriority(jiraIssue.getPriority(), fieldMapping);
+			if (Constant.P1.equalsIgnoreCase(priorityLevel)) {
 				priorities = Arrays.asList("P1 - Blocker", "p1");
 				priority = Constant.P1;
 				issuePriority = getIssuePriority(jiraIssue, priorities, priority);
-			} else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getpriorityP2().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (Constant.P2.equalsIgnoreCase(priorityLevel)) {
 				priorities = Arrays.asList("P2 - Critical", "p2");
 				priority = Constant.P2;
 				issuePriority = getIssuePriority(jiraIssue, priorities, priority);
-			} else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getpriorityP3().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (Constant.P3.equalsIgnoreCase(priorityLevel)) {
 				priorities = Arrays.asList("P3 - Major", "p3");
 				priority = Constant.P3;
 				issuePriority = getIssuePriority(jiraIssue, priorities, priority);
-			} else if (StringUtils.containsIgnoreCase(
-					customApiConfig.getpriorityP4().replaceAll(Constant.WHITESPACE, "").trim(),
-					jiraIssue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (Constant.P4.equalsIgnoreCase(priorityLevel)) {
 				priorities = Arrays.asList("P4 - Minor", "p4");
 				priority = Constant.P4;
 				issuePriority = getIssuePriority(jiraIssue, priorities, priority);
@@ -609,7 +601,6 @@ public class KPIExcelUtility {
 	 * @param createdConditionStories
 	 * @param closedIssuesWithStatus
 	 * @param kpiExcelData
-	 * @param customApiConfig
 	 * @param storyList
 	 */
 	public static void populateCreatedVsResolvedExcelData(
@@ -618,7 +609,7 @@ public class KPIExcelUtility {
 			List<JiraIssue> createdConditionStories,
 			Map<String, String> closedIssuesWithStatus,
 			List<KPIExcelData> kpiExcelData,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 		if (MapUtils.isNotEmpty(totalStoriesMap)) {
 			List<String> createdConditionalList =
@@ -642,13 +633,13 @@ public class KPIExcelUtility {
 						excelData.setCreatedDefectId(storyDetails);
 						excelData.setResolvedStatus(resolvedStatus);
 						excelData.setDefectAddedAfterSprintStart(createdAfterSprint);
-						excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+						excelData.setDefectPriority(setPriority(fieldMapping, jiraIssue));
 						excelData.setRootCause(jiraIssue.getRootCauseList());
 						excelData.setDefectStatus(jiraIssue.getStatus());
 						Integer totalTimeSpentInMinutes =
 								Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 						setStoryExcelData(
-								storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+								storyList, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
 						kpiExcelData.add(excelData);
 					});
 		}
@@ -988,7 +979,7 @@ public class KPIExcelUtility {
 			totalStoriesMap.forEach(
 					(storyId, jiraIssue) -> {
 						KPIExcelData excelData = new KPIExcelData();
-						setSpeedKPIExcelData(sprint, jiraIssue, fieldMapping, excelData, customApiConfig);
+						setSpeedKPIExcelData(sprint, jiraIssue, fieldMapping, excelData);
 						setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 						kpiExcelData.add(excelData);
 					});
@@ -1018,7 +1009,7 @@ public class KPIExcelUtility {
 				JiraIssue jiraIssue = jiraIssueMap.get(issueDetails.getSprintIssue().getNumber());
 				if (jiraIssue != null) {
 					KPIExcelData excelData = new KPIExcelData();
-					setSpeedKPIExcelData(sprint, jiraIssue, fieldMapping, excelData, customApiConfig);
+					setSpeedKPIExcelData(sprint, jiraIssue, fieldMapping, excelData);
 					setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 					kpiExcelData.add(excelData);
 				}
@@ -1037,7 +1028,7 @@ public class KPIExcelUtility {
 			totalStoriesList.forEach(
 					issue -> {
 						KPIExcelData excelData = new KPIExcelData();
-						setSpeedKPIExcelData(sprintName, issue, fieldMapping, excelData, customApiConfig);
+						setSpeedKPIExcelData(sprintName, issue, fieldMapping, excelData);
 						String daysEstimated = "0.0";
 						excelData.setTotalTimeSpent(
 								String.valueOf(
@@ -1185,7 +1176,7 @@ public class KPIExcelUtility {
 			totalStoriesMap.forEach(
 					(storyId, jiraIssue) -> {
 						KPIExcelData excelData = new KPIExcelData();
-						setSpeedKPIExcelData(sprint, jiraIssue, fieldMapping, excelData, customApiConfig);
+						setSpeedKPIExcelData(sprint, jiraIssue, fieldMapping, excelData);
 						setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 						if (initialIssueNumber.contains(storyId)) {
 							excelData.setScopeValue(CommonConstant.INITIAL);
@@ -1393,7 +1384,7 @@ public class KPIExcelUtility {
 					.forEach(
 							sprintIssue -> {
 								KPIExcelData excelData = new KPIExcelData();
-								setSpeedKPIExcelData(sprint, sprintIssue, fieldMapping, excelData, customApiConfig);
+								setSpeedKPIExcelData(sprint, sprintIssue, fieldMapping, excelData);
 								setEstimateAndOrgTimeSpent(sprintIssue, excelData);
 								kpiExcelData.add(excelData);
 							});
@@ -1401,18 +1392,14 @@ public class KPIExcelUtility {
 	}
 
 	private static void setSpeedKPIExcelData(
-			String sprint,
-			JiraIssue jiraIssue,
-			FieldMapping fieldMapping,
-			KPIExcelData excelData,
-			CustomApiConfig customApiConfig) {
+			String sprint, JiraIssue jiraIssue, FieldMapping fieldMapping, KPIExcelData excelData) {
 		excelData.setSprintName(sprint);
 		Map<String, String> storyDetails = new HashMap<>();
 		storyDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
 		excelData.setIssueID(storyDetails);
 		excelData.setIssueDesc(checkEmptyName(jiraIssue));
 		excelData.setIssueType(jiraIssue.getTypeName());
-		excelData.setPriority(setPriority(customApiConfig, jiraIssue));
+		excelData.setPriority(setPriority(fieldMapping, jiraIssue));
 
 		if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
 				&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
@@ -2480,8 +2467,7 @@ public class KPIExcelUtility {
 											.map(
 													jiraIssue -> {
 														KPIExcelData excelData = new KPIExcelData();
-														setSpeedKPIExcelData(
-																sprintName, jiraIssue, fieldMapping, excelData, customApiConfig);
+														setSpeedKPIExcelData(sprintName, jiraIssue, fieldMapping, excelData);
 														setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 														if (entry.getKey().equals(CommonConstant.ADDED)) {
 															excelData.setScopeChange(entry.getKey());
@@ -2855,7 +2841,7 @@ public class KPIExcelUtility {
 	public static void populateDefectWithReopenInfoExcelData(
 			String sprint,
 			List<KPIExcelData> kpiExcelData,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList,
 			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap) {
 		if (MapUtils.isNotEmpty(reopenedDefectInfoMap)) {
@@ -2871,14 +2857,14 @@ public class KPIExcelUtility {
 										defectIdDetails.put(jiraIssue.getNumber(), checkEmptyURL(jiraIssue));
 										excelData.setDefectId(defectIdDetails);
 										setSquads(excelData, jiraIssue);
-										excelData.setDefectPriority(setPriority(customApiConfig, jiraIssue));
+										excelData.setDefectPriority(setPriority(fieldMapping, jiraIssue));
 										excelData.setRootCause(jiraIssue.getRootCauseList());
 										excelData.setDefectStatus(jiraIssue.getStatus());
 										excelData.setLabels(jiraIssue.getLabels());
 										Integer totalTimeSpentInMinutes =
 												Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
 										setStoryExcelData(
-												storyList, jiraIssue, excelData, totalTimeSpentInMinutes, customApiConfig);
+												storyList, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
 
 										excelData.setReopenDate(
 												DateUtil.tranformUTCLocalTimeToZFormat(

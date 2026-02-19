@@ -19,12 +19,14 @@
 package com.publicissapient.kpidashboard.apis.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,6 +52,7 @@ import com.publicissapient.kpidashboard.apis.model.SprintFilter;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectHierarchy;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.KanbanIssueCustomHistory;
@@ -380,7 +383,7 @@ public final class KPIHelperUtil {
 	}
 
 	public static Map<String, Long> setpriorityScrum(
-			List<JiraIssue> sprintWiseDefectDataList, CustomApiConfig customApiConfig) {
+			List<JiraIssue> sprintWiseDefectDataList, FieldMapping fieldMapping) {
 		Map<String, Long> priorityCountMap = new HashMap<>();
 		Long p1Count = 0L;
 		Long p2Count = 0L;
@@ -389,29 +392,30 @@ public final class KPIHelperUtil {
 		Long p5Count = 0L;
 
 		for (JiraIssue issue : sprintWiseDefectDataList) {
-
 			if (StringUtils.isBlank(issue.getPriority())) {
 				p5Count++;
 				priorityCountMap.put(Constant.MISC, p5Count);
 			} else {
-				if (StringUtils.containsIgnoreCase(
-						customApiConfig.getpriorityP1().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+				String normalizedPriority = issue.getPriority().replaceAll("\\s+", "").toLowerCase().trim();
+
+			if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP1()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p1Count++;
 					priorityCountMap.put(Constant.P1, p1Count);
-				} else if (StringUtils.containsIgnoreCase(
-						customApiConfig.getpriorityP2().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP2()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p2Count++;
 					priorityCountMap.put(Constant.P2, p2Count);
-				} else if (StringUtils.containsIgnoreCase(
-						customApiConfig.getpriorityP3().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP3()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p3Count++;
 					priorityCountMap.put(Constant.P3, p3Count);
-				} else if (StringUtils.containsIgnoreCase(
-						customApiConfig.getpriorityP4().replaceAll(Constant.WHITESPACE, "").trim(),
-						issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP4()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p4Count++;
 					priorityCountMap.put(Constant.P4, p4Count);
 				} else {
@@ -467,7 +471,7 @@ public final class KPIHelperUtil {
 	}
 
 	public static Map<String, Long> setpriorityKanban(
-			List<KanbanJiraIssue> sprintWiseDefectDataList, CustomApiConfig customApiConfig) {
+			List<KanbanJiraIssue> sprintWiseDefectDataList, FieldMapping fieldMapping) {
 		Map<String, Long> priorityCountMap = new HashMap<>();
 		Long p1Count = 0L;
 		Long p2Count = 0L;
@@ -479,40 +483,26 @@ public final class KPIHelperUtil {
 				p5Count++;
 				priorityCountMap.put(Constant.MISC, p5Count);
 			} else {
-				if (customApiConfig
-						.getpriorityP1()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+				String normalizedPriority = issue.getPriority().replaceAll("\\s+", "").toLowerCase().trim();
+
+			if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP1()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p1Count++;
 					priorityCountMap.put(Constant.P1, p1Count);
-				} else if (customApiConfig
-						.getpriorityP2()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP2()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p2Count++;
 					priorityCountMap.put(Constant.P2, p2Count);
-				} else if (customApiConfig
-						.getpriorityP3()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP3()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p3Count++;
 					priorityCountMap.put(Constant.P3, p3Count);
-				} else if (customApiConfig
-						.getpriorityP4()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP4()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p4Count++;
 					priorityCountMap.put(Constant.P4, p4Count);
 				} else {
@@ -526,7 +516,7 @@ public final class KPIHelperUtil {
 	}
 
 	public static Map<String, Long> setpriorityKanbanHistory(
-			List<KanbanIssueCustomHistory> sprintWiseDefectDataList, CustomApiConfig customApiConfig) {
+			List<KanbanIssueCustomHistory> sprintWiseDefectDataList, FieldMapping fieldMapping) {
 		Map<String, Long> priorityCountMap = new HashMap<>();
 		Long p1Count = 0L;
 		Long p2Count = 0L;
@@ -538,40 +528,26 @@ public final class KPIHelperUtil {
 				p5Count++;
 				priorityCountMap.put(Constant.MISC, p5Count);
 			} else {
-				if (customApiConfig
-						.getpriorityP1()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+				String normalizedPriority = issue.getPriority().replaceAll("\\s+", "").toLowerCase().trim();
+
+			if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP1()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p1Count++;
 					priorityCountMap.put(Constant.P1, p1Count);
-				} else if (customApiConfig
-						.getpriorityP2()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP2()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p2Count++;
 					priorityCountMap.put(Constant.P2, p2Count);
-				} else if (customApiConfig
-						.getpriorityP3()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP3()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p3Count++;
 					priorityCountMap.put(Constant.P3, p3Count);
-				} else if (customApiConfig
-						.getpriorityP4()
-						.replaceAll(Constant.WHITESPACE, "")
-						.toLowerCase()
-						.trim()
-						.contains(
-								issue.getPriority().replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+			} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP4()).stream()
+						.anyMatch(
+								p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 					p4Count++;
 					priorityCountMap.put(Constant.P4, p4Count);
 				} else {
@@ -584,41 +560,70 @@ public final class KPIHelperUtil {
 		return priorityCountMap;
 	}
 
-	public static String mappingPriority(String priorityFromIssues, CustomApiConfig customApiConfig) {
+	public static String mappingPriority(String priorityFromIssues, FieldMapping fieldMapping) {
 
 		if (StringUtils.isBlank(priorityFromIssues)) {
 			return Constant.MISC;
-		} else if (customApiConfig
-				.getpriorityP1()
-				.replaceAll(Constant.WHITESPACE, "")
-				.toLowerCase()
-				.trim()
-				.contains(priorityFromIssues.replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+		}
+
+		String normalizedPriority = priorityFromIssues.replaceAll("\\s+", "").toLowerCase().trim();
+
+		if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP1()).stream()
+				.anyMatch(p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 			return Constant.P1;
-		} else if (customApiConfig
-				.getpriorityP2()
-				.replaceAll(Constant.WHITESPACE, "")
-				.toLowerCase()
-				.trim()
-				.contains(priorityFromIssues.replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+		} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP2()).stream()
+				.anyMatch(p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 			return Constant.P2;
-		} else if (customApiConfig
-				.getpriorityP3()
-				.replaceAll(Constant.WHITESPACE, "")
-				.toLowerCase()
-				.trim()
-				.contains(priorityFromIssues.replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+		} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP3()).stream()
+				.anyMatch(p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 			return Constant.P3;
-		} else if (customApiConfig
-				.getpriorityP4()
-				.replaceAll(Constant.WHITESPACE, "")
-				.toLowerCase()
-				.trim()
-				.contains(priorityFromIssues.replaceAll(Constant.WHITESPACE, "").toLowerCase().trim())) {
+		} else if (CollectionUtils.emptyIfNull(fieldMapping.getPriorityP4()).stream()
+				.anyMatch(p -> p.replaceAll("\\s+", "").toLowerCase().trim().equals(normalizedPriority))) {
 			return Constant.P4;
 		} else {
 			return Constant.MISC;
 		}
+	}
+
+	/**
+	 * Builds priority map from FieldMapping to replace customApiConfig.getPriority()
+	 * @param fieldMapping the field mapping containing priority configuration
+	 * @return Map with keys P1, P2, P3, P4, P5, MISC mapping to priority value lists
+	 */
+	public static Map<String, List<String>> buildPriorityMapFromFieldMapping(
+			FieldMapping fieldMapping) {
+		Map<String, List<String>> priorityMap = new HashMap<>();
+		priorityMap.put(
+				Constant.P1,
+				Optional.ofNullable(fieldMapping)
+						.map(FieldMapping::getPriorityP1)
+						.orElse(Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent")));
+		priorityMap.put(
+				Constant.P2,
+				Optional.ofNullable(fieldMapping)
+						.map(FieldMapping::getPriorityP2)
+						.orElse(Arrays.asList("p2", "critical", "P2 - Critical", "2", "High")));
+		priorityMap.put(
+				Constant.P3,
+				Optional.ofNullable(fieldMapping)
+						.map(FieldMapping::getPriorityP3)
+						.orElse(Arrays.asList("p3", "P3 - Major", "major", "3", "Medium")));
+		priorityMap.put(
+				Constant.P4,
+				Optional.ofNullable(fieldMapping)
+						.map(FieldMapping::getPriorityP4)
+						.orElse(Arrays.asList("p4", "P4 - Minor", "minor", "4", "Low")));
+		priorityMap.put(
+				Constant.P5,
+				Optional.ofNullable(fieldMapping)
+						.map(FieldMapping::getPriorityP5)
+						.orElse(Arrays.asList("p5", "P5 - Trivial", "trivial", "5", "Unprioritized")));
+		priorityMap.put(
+				Constant.MISC,
+				Optional.ofNullable(fieldMapping)
+						.map(FieldMapping::getPriorityMisc)
+						.orElse(Arrays.asList("MISC", "misc", "Unprioritized", "unprioritized")));
+		return priorityMap;
 	}
 
 	public static Map<String, List<DataCount>> sortTrendMapByKeyOrder(
