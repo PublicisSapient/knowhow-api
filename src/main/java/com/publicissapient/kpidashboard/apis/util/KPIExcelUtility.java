@@ -43,7 +43,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.CommittmentReliabilityServiceImpl;
@@ -112,7 +111,6 @@ public class KPIExcelUtility {
 	 * @param kpiExcelData kpiExcelData
 	 * @param issueData issueData
 	 * @param fieldMapping
-	 * @param customApiConfig
 	 */
 	public static void populateDirExcelData(
 			List<String> storyIds,
@@ -120,7 +118,6 @@ public class KPIExcelUtility {
 			List<KPIExcelData> kpiExcelData,
 			Map<String, JiraIssue> issueData,
 			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig,
 			Node node) {
 		if (CollectionUtils.isNotEmpty(storyIds)) {
 			setQualityKPIExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
@@ -170,7 +167,6 @@ public class KPIExcelUtility {
 			List<KPIExcelData> kpiExcelData,
 			Map<String, JiraIssue> issueData,
 			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig,
 			Node node) {
 		if (CollectionUtils.isNotEmpty(storyIds)) {
 			setQualityKPIExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
@@ -249,7 +245,6 @@ public class KPIExcelUtility {
 			List<KPIExcelData> kpiExcelData,
 			Map<String, JiraIssue> issueData,
 			List<JiraIssue> defects,
-			CustomApiConfig customApiConfig,
 			FieldMapping fieldMapping,
 			Node node) {
 		List<String> collectFTPIds =
@@ -968,8 +963,7 @@ public class KPIExcelUtility {
 			String sprint,
 			Map<String, JiraIssue> totalStoriesMap,
 			List<KPIExcelData> kpiExcelData,
-			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig) {
+			FieldMapping fieldMapping) {
 
 		if (MapUtils.isNotEmpty(totalStoriesMap)) {
 			totalStoriesMap.forEach(
@@ -998,8 +992,7 @@ public class KPIExcelUtility {
 			Set<IssueDetails> issueDetailsSet,
 			List<KPIExcelData> kpiExcelData,
 			FieldMapping fieldMapping,
-			Map<String, JiraIssue> jiraIssueMap,
-			CustomApiConfig customApiConfig) {
+			Map<String, JiraIssue> jiraIssueMap) {
 		if (CollectionUtils.isNotEmpty(issueDetailsSet)) {
 			for (IssueDetails issueDetails : issueDetailsSet) {
 				JiraIssue jiraIssue = jiraIssueMap.get(issueDetails.getSprintIssue().getNumber());
@@ -1018,8 +1011,7 @@ public class KPIExcelUtility {
 			List<JiraIssue> totalStoriesList,
 			List<KPIExcelData> kpiExcelData,
 			Map<String, Double> loggedTimeIssueMap,
-			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig) {
+			FieldMapping fieldMapping) {
 		if (CollectionUtils.isNotEmpty(totalStoriesList)) {
 			totalStoriesList.forEach(
 					issue -> {
@@ -1160,8 +1152,7 @@ public class KPIExcelUtility {
 			CommittmentReliabilityServiceImpl.CommitmentReliabilityValidationData
 					commitmentReliabilityValidationData,
 			List<KPIExcelData> kpiExcelData,
-			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig) {
+			FieldMapping fieldMapping) {
 		if (MapUtils.isNotEmpty(totalStoriesMap)) {
 			Set<String> initialIssueNumber =
 					commitmentReliabilityValidationData.getInitialIssueNumber().stream()
@@ -1371,8 +1362,7 @@ public class KPIExcelUtility {
 			List<KPIExcelData> kpiExcelData,
 			List<JiraIssue> allJiraIssueList,
 			List<String> totalPresentJiraIssue,
-			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig) {
+			FieldMapping fieldMapping) {
 
 		if (CollectionUtils.isNotEmpty(allJiraIssueList)) {
 			allJiraIssueList.stream()
@@ -2453,8 +2443,7 @@ public class KPIExcelUtility {
 			Map<String, String> addedIssueDateMap,
 			Map<String, String> removedIssueDateMap,
 			List<KPIExcelData> excelDataList,
-			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig) {
+			FieldMapping fieldMapping) {
 		if (MapUtils.isNotEmpty(totalSprintStoryMap)) {
 			totalSprintStoryMap.entrySet().stream()
 					.flatMap(
