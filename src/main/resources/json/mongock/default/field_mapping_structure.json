@@ -4922,5 +4922,95 @@
     "fieldDisplayOrder": 1,
     "sectionOrder": 2,
     "mandatory": false
+  },
+  {
+    "fieldName" : "priorityMisc",
+    "fieldLabel" : "Priority Mapping for Miscellaneous",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Map Jira priorities to Miscellaneous category. Issues with these priorities will be categorized as MISC in KnowHOW KPIs."
+    },
+    "fieldDisplayOrder" : 56,
+    "sectionOrder" : 4,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "priorityP5",
+    "fieldLabel" : "Priority Mapping for P5",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Map Jira priorities to P5 (Trivial/Lowest). Issues with these priorities will be categorized as P5 in KnowHOW KPIs."
+    },
+    "fieldDisplayOrder" : 55,
+    "sectionOrder" : 4,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "priorityP4",
+    "fieldLabel" : "Priority Mapping for P4",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Map Jira priorities to P4 (Low/Minor). Issues with these priorities will be categorized as P4 in KnowHOW KPIs."
+    },
+    "fieldDisplayOrder" : 54,
+    "sectionOrder" : 4,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "priorityP3",
+    "fieldLabel" : "Priority Mapping for P3",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Map Jira priorities to P3 (Medium/Major). Issues with these priorities will be categorized as P3 in KnowHOW KPIs."
+    },
+    "fieldDisplayOrder" : 53,
+    "sectionOrder" : 4,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "priorityP2",
+    "fieldLabel" : "Priority Mapping for P2",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Map Jira priorities to P2 (High/Critical). Issues with these priorities will be categorized as P2 in KnowHOW KPIs."
+    },
+    "fieldDisplayOrder" : 52,
+    "sectionOrder" : 4,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "priorityP1",
+    "fieldLabel" : "Priority Mapping for P1",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Map Jira priorities to P1 (Critical/Blocker). Issues with these priorities will be categorized as P1 in KnowHOW KPIs."
+    },
+    "fieldDisplayOrder" : 51,
+    "sectionOrder" : 4,
+    "mandatory" : false,
+    "nodeSpecific" : false
   }
 ]
