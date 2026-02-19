@@ -123,8 +123,7 @@ public class KPIExcelUtility {
 			CustomApiConfig customApiConfig,
 			Node node) {
 		if (CollectionUtils.isNotEmpty(storyIds)) {
-			setQualityKPIExcelData(
-					storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+			setQualityKPIExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 		}
 	}
 
@@ -174,8 +173,7 @@ public class KPIExcelUtility {
 			CustomApiConfig customApiConfig,
 			Node node) {
 		if (CollectionUtils.isNotEmpty(storyIds)) {
-			setQualityKPIExcelData(
-					storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+			setQualityKPIExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 		}
 	}
 
@@ -185,7 +183,6 @@ public class KPIExcelUtility {
 			List<KPIExcelData> kpiExcelData,
 			Map<String, JiraIssue> issueData,
 			FieldMapping fieldMapping,
-			CustomApiConfig customApiConfig,
 			Node node) {
 		storyIds.forEach(
 				story -> {
@@ -257,8 +254,7 @@ public class KPIExcelUtility {
 			Node node) {
 		List<String> collectFTPIds =
 				ftprStories.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
-		setQualityKPIExcelData(
-				storyIds, defects, kpiExcelData, issueData, fieldMapping, customApiConfig, node);
+		setQualityKPIExcelData(storyIds, defects, kpiExcelData, issueData, fieldMapping, node);
 		setFTPRSpecificData(kpiExcelData, collectFTPIds);
 		return kpiExcelData;
 	}
