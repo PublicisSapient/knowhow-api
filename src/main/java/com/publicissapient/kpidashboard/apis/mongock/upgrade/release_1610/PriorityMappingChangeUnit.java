@@ -92,19 +92,19 @@ public class PriorityMappingChangeUnit {
 
 		// Update all documents that don't have priorityP1 field
 		fieldMappingCollection.updateMany(
-				Filters.exists("priorityP1", false),
+				Filters.exists(PRIORITY_P_1, false),
 				Updates.combine(
 						Updates.set(
-								"priorityP1",
+								PRIORITY_P_1,
 								Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent")),
 						Updates.set(
-								"priorityP2", Arrays.asList("p2", "critical", "P2 - Critical", "2", "High")),
-						Updates.set("priorityP3", Arrays.asList("p3", "P3 - Major", "major", "3", "Medium")),
-						Updates.set("priorityP4", Arrays.asList("p4", "P4 - Minor", "minor", "4", "Low")),
+								PRIORITY_P_2, Arrays.asList("p2", "critical", "P2 - Critical", "2", "High")),
+						Updates.set(PRIORITY_P_3, Arrays.asList("p3", "P3 - Major", "major", "3", "Medium")),
+						Updates.set(PRIORITY_P_4, Arrays.asList("p4", "P4 - Minor", "minor", "4", "Low")),
 						Updates.set(
-								"priorityP5", Arrays.asList("p5", "P5 - Trivial", "trivial", "5", "Unprioritized")),
+								PRIORITY_P_5, Arrays.asList("p5", "P5 - Trivial", "trivial", "5", "Unprioritized")),
 						Updates.set(
-								"priorityMisc", Arrays.asList("MISC", "misc", "Unprioritized", "unprioritized"))));
+								PRIORITY_MISC, Arrays.asList("MISC", "misc", "Unprioritized", "unprioritized"))));
 	}
 
 	/** Add FieldMappingStructure entries for priority fields */
@@ -171,12 +171,12 @@ public class PriorityMappingChangeUnit {
 		fieldMappingCollection.updateMany(
 				new Document(),
 				Updates.combine(
-						Updates.unset("priorityP1"),
-						Updates.unset("priorityP2"),
-						Updates.unset("priorityP3"),
-						Updates.unset("priorityP4"),
-						Updates.unset("priorityP5"),
-						Updates.unset("priorityMisc")));
+						Updates.unset(PRIORITY_P_1),
+						Updates.unset(PRIORITY_P_2),
+						Updates.unset(PRIORITY_P_3),
+						Updates.unset(PRIORITY_P_4),
+						Updates.unset(PRIORITY_P_5),
+						Updates.unset(PRIORITY_MISC)));
 	}
 
 	/** Remove FieldMappingStructure entries for priority fields */
