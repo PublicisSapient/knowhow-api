@@ -44,7 +44,13 @@ import lombok.RequiredArgsConstructor;
 		systemVersion = "16.1.0")
 public class PriorityMappingChangeUnit {
 
-	private final MongoTemplate mongoTemplate;
+    public static final String PRIORITY_P_1 = "priorityP1";
+    public static final String PRIORITY_P_2 = "priorityP2";
+    public static final String PRIORITY_P_3 = "priorityP3";
+    public static final String PRIORITY_P_4 = "priorityP4";
+    public static final String PRIORITY_P_5 = "priorityP5";
+    public static final String PRIORITY_MISC = "priorityMisc";
+    private final MongoTemplate mongoTemplate;
 	private static final String FIELD_NAME = "fieldName";
 	private static final String DEFINITION = "definition";
 	private static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
@@ -63,12 +69,12 @@ public class PriorityMappingChangeUnit {
 		fieldMappingCollection.updateMany(
 				new Document(),
 				Updates.combine(
-						Updates.unset("priorityP1"),
-						Updates.unset("priorityP2"),
-						Updates.unset("priorityP3"),
-						Updates.unset("priorityP4"),
-						Updates.unset("priorityP5"),
-						Updates.unset("priorityMisc")));
+						Updates.unset(PRIORITY_P_1),
+						Updates.unset(PRIORITY_P_2),
+						Updates.unset(PRIORITY_P_3),
+						Updates.unset(PRIORITY_P_4),
+						Updates.unset(PRIORITY_P_5),
+						Updates.unset(PRIORITY_MISC)));
 	}
 
 	/** Remove FieldMappingStructure entries for priority fields */
@@ -82,12 +88,36 @@ public class PriorityMappingChangeUnit {
 						new Document(
 								"$in",
 								Arrays.asList(
-										"priorityP1",
-										"priorityP2",
-										"priorityP3",
-										"priorityP4",
-										"priorityP5",
-										"priorityMisc"))));
+                                        PRIORITY_P_1,
+                                        PRIORITY_P_2,
+                                        PRIORITY_P_3,
+                                        PRIORITY_P_4,
+                                        PRIORITY_P_5,
+                                        PRIORITY_MISC))));
+	}
+
+	/**
+	 * Creates a priority field document for field mapping structure
+	 *
+	 * @param fieldName        the name of the priority field
+	 * @param priorityLevel    the priority level (e.g., "P1", "P2")
+	 * @param description      the description for the tooltip
+	 * @param displayOrder     the display order number
+	 * @return Document representing the priority field structure
+	 */
+	private Document createPriorityFieldDocument(
+			String fieldName, String priorityLevel, String description, int displayOrder) {
+		return new Document(FIELD_NAME, fieldName)
+				.append("fieldLabel", "Priority Mapping for " + priorityLevel)
+				.append("fieldType", "chips")
+				.append("fieldCategory", "workflow")
+				.append("section", "WorkFlow Status Mapping")
+				.append("processorCommon", false)
+				.append("tooltip", new Document(DEFINITION, description))
+				.append("fieldDisplayOrder", displayOrder)
+				.append("sectionOrder", 4)
+				.append("mandatory", false)
+				.append("nodeSpecific", false);
 	}
 
 	@RollbackExecution
@@ -102,19 +132,19 @@ public class PriorityMappingChangeUnit {
 
 		// Update all documents that don't have priorityP1 field
 		fieldMappingCollection.updateMany(
-				Filters.exists("priorityP1", false),
+				Filters.exists(PRIORITY_P_1, false),
 				Updates.combine(
 						Updates.set(
-								"priorityP1",
+                                PRIORITY_P_1,
 								Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "Urgent")),
 						Updates.set(
-								"priorityP2", Arrays.asList("p2", "critical", "P2 - Critical", "2", "High")),
-						Updates.set("priorityP3", Arrays.asList("p3", "P3 - Major", "major", "3", "Medium")),
-						Updates.set("priorityP4", Arrays.asList("p4", "P4 - Minor", "minor", "4", "Low")),
+                                PRIORITY_P_2, Arrays.asList("p2", "critical", "P2 - Critical", "2", "High")),
+						Updates.set(PRIORITY_P_3, Arrays.asList("p3", "P3 - Major", "major", "3", "Medium")),
+						Updates.set(PRIORITY_P_4, Arrays.asList("p4", "P4 - Minor", "minor", "4", "Low")),
 						Updates.set(
-								"priorityP5", Arrays.asList("p5", "P5 - Trivial", "trivial", "5", "Unprioritized")),
+                                PRIORITY_P_5, Arrays.asList("p5", "P5 - Trivial", "trivial", "5", "Unprioritized")),
 						Updates.set(
-								"priorityMisc", Arrays.asList("MISC", "misc", "Unprioritized", "unprioritized"))));
+                                PRIORITY_MISC, Arrays.asList("MISC", "misc", "Unprioritized", "unprioritized"))));
 	}
 
 	/** Add FieldMappingStructure entries for priority fields */
@@ -122,113 +152,41 @@ public class PriorityMappingChangeUnit {
 		MongoCollection<Document> fieldMappingStructure =
 				mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
 
-		// PriorityP1
-		Document priorityP1 =
-				new Document(FIELD_NAME, "priorityP1")
-						.append("fieldLabel", "Priority Mapping for P1")
-						.append("fieldType", "chips")
-						.append("fieldCategory", "workflow")
-						.append("section", "WorkFlow Status Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document(
-										DEFINITION,
-										"Map Jira priorities to P1 (Critical/Blocker). Issues with these priorities will be categorized as P1 in KnowHOW KPIs."))
-						.append("fieldDisplayOrder", 51)
-						.append("sectionOrder", 4)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
+		Document priorityP1 = createPriorityFieldDocument(
+				PRIORITY_P_1,
+				"P1",
+				"Map Jira priorities to P1 (Critical/Blocker). Issues with these priorities will be categorized as P1 in KnowHOW KPIs.",
+				51);
 
-		// PriorityP2
-		Document priorityP2 =
-				new Document(FIELD_NAME, "priorityP2")
-						.append("fieldLabel", "Priority Mapping for P2")
-						.append("fieldType", "chips")
-						.append("fieldCategory", "workflow")
-						.append("section", "WorkFlow Status Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document(
-										DEFINITION,
-										"Map Jira priorities to P2 (High/Critical). Issues with these priorities will be categorized as P2 in KnowHOW KPIs."))
-						.append("fieldDisplayOrder", 52)
-						.append("sectionOrder", 4)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
+		Document priorityP2 = createPriorityFieldDocument(
+				PRIORITY_P_2,
+				"P2",
+				"Map Jira priorities to P2 (High/Critical). Issues with these priorities will be categorized as P2 in KnowHOW KPIs.",
+				52);
 
-		// PriorityP3
-		Document priorityP3 =
-				new Document(FIELD_NAME, "priorityP3")
-						.append("fieldLabel", "Priority Mapping for P3")
-						.append("fieldType", "chips")
-						.append("fieldCategory", "workflow")
-						.append("section", "WorkFlow Status Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document(
-										DEFINITION,
-										"Map Jira priorities to P3 (Medium/Major). Issues with these priorities will be categorized as P3 in KnowHOW KPIs."))
-						.append("fieldDisplayOrder", 53)
-						.append("sectionOrder", 4)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
+		Document priorityP3 = createPriorityFieldDocument(
+				PRIORITY_P_3,
+				"P3",
+				"Map Jira priorities to P3 (Medium/Major). Issues with these priorities will be categorized as P3 in KnowHOW KPIs.",
+				53);
 
-		// PriorityP4
-		Document priorityP4 =
-				new Document(FIELD_NAME, "priorityP4")
-						.append("fieldLabel", "Priority Mapping for P4")
-						.append("fieldType", "chips")
-						.append("fieldCategory", "workflow")
-						.append("section", "WorkFlow Status Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document(
-										DEFINITION,
-										"Map Jira priorities to P4 (Low/Minor). Issues with these priorities will be categorized as P4 in KnowHOW KPIs."))
-						.append("fieldDisplayOrder", 54)
-						.append("sectionOrder", 4)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
+		Document priorityP4 = createPriorityFieldDocument(
+				PRIORITY_P_4,
+				"P4",
+				"Map Jira priorities to P4 (Low/Minor). Issues with these priorities will be categorized as P4 in KnowHOW KPIs.",
+				54);
 
-		// PriorityP5
-		Document priorityP5 =
-				new Document(FIELD_NAME, "priorityP5")
-						.append("fieldLabel", "Priority Mapping for P5")
-						.append("fieldType", "chips")
-						.append("fieldCategory", "workflow")
-						.append("section", "WorkFlow Status Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document(
-										DEFINITION,
-										"Map Jira priorities to P5 (Trivial/Lowest). Issues with these priorities will be categorized as P5 in KnowHOW KPIs."))
-						.append("fieldDisplayOrder", 55)
-						.append("sectionOrder", 4)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
+		Document priorityP5 = createPriorityFieldDocument(
+				PRIORITY_P_5,
+				"P5",
+				"Map Jira priorities to P5 (Trivial/Lowest). Issues with these priorities will be categorized as P5 in KnowHOW KPIs.",
+				55);
 
-		// PriorityMisc
-		Document priorityMisc =
-				new Document(FIELD_NAME, "priorityMisc")
-						.append("fieldLabel", "Priority Mapping for Miscellaneous")
-						.append("fieldType", "chips")
-						.append("fieldCategory", "workflow")
-						.append("section", "WorkFlow Status Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document(
-										DEFINITION,
-										"Map Jira priorities to Miscellaneous category. Issues with these priorities will be categorized as MISC in KnowHOW KPIs."))
-						.append("fieldDisplayOrder", 56)
-						.append("sectionOrder", 4)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
+		Document priorityMisc = createPriorityFieldDocument(
+				PRIORITY_MISC,
+				"Miscellaneous",
+				"Map Jira priorities to Miscellaneous category. Issues with these priorities will be categorized as MISC in KnowHOW KPIs.",
+				56);
 
 		fieldMappingStructure.insertMany(
 				Arrays.asList(priorityP1, priorityP2, priorityP3, priorityP4, priorityP5, priorityMisc));
