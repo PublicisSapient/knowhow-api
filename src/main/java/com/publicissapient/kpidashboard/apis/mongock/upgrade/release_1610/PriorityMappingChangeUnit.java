@@ -65,10 +65,10 @@ public class PriorityMappingChangeUnit {
 	/**
 	 * Creates a priority field document for field mapping structure
 	 *
-	 * @param fieldName        the name of the priority field
-	 * @param priorityLevel    the priority level (e.g., "P1", "P2")
-	 * @param description      the description for the tooltip
-	 * @param displayOrder     the display order number
+	 * @param fieldName the name of the priority field
+	 * @param priorityLevel the priority level (e.g., "P1", "P2")
+	 * @param description the description for the tooltip
+	 * @param displayOrder the display order number
 	 * @return Document representing the priority field structure
 	 */
 	private Document createPriorityFieldDocument(
@@ -112,41 +112,47 @@ public class PriorityMappingChangeUnit {
 		MongoCollection<Document> fieldMappingStructure =
 				mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE);
 
-		Document priorityP1 = createPriorityFieldDocument(
-				PRIORITY_P_1,
-				"P1",
-				"Map Jira priorities to P1 (Critical/Blocker). Issues with these priorities will be categorized as P1 in KnowHOW KPIs.",
-				51);
+		Document priorityP1 =
+				createPriorityFieldDocument(
+						PRIORITY_P_1,
+						"P1",
+						"Map Jira priorities to P1 (Critical/Blocker). Issues with these priorities will be categorized as P1 in KnowHOW KPIs.",
+						51);
 
-		Document priorityP2 = createPriorityFieldDocument(
-				PRIORITY_P_2,
-				"P2",
-				"Map Jira priorities to P2 (High/Critical). Issues with these priorities will be categorized as P2 in KnowHOW KPIs.",
-				52);
+		Document priorityP2 =
+				createPriorityFieldDocument(
+						PRIORITY_P_2,
+						"P2",
+						"Map Jira priorities to P2 (High/Critical). Issues with these priorities will be categorized as P2 in KnowHOW KPIs.",
+						52);
 
-		Document priorityP3 = createPriorityFieldDocument(
-				PRIORITY_P_3,
-				"P3",
-				"Map Jira priorities to P3 (Medium/Major). Issues with these priorities will be categorized as P3 in KnowHOW KPIs.",
-				53);
+		Document priorityP3 =
+				createPriorityFieldDocument(
+						PRIORITY_P_3,
+						"P3",
+						"Map Jira priorities to P3 (Medium/Major). Issues with these priorities will be categorized as P3 in KnowHOW KPIs.",
+						53);
 
-		Document priorityP4 = createPriorityFieldDocument(
-				PRIORITY_P_4,
-				"P4",
-				"Map Jira priorities to P4 (Low/Minor). Issues with these priorities will be categorized as P4 in KnowHOW KPIs.",
-				54);
+		Document priorityP4 =
+				createPriorityFieldDocument(
+						PRIORITY_P_4,
+						"P4",
+						"Map Jira priorities to P4 (Low/Minor). Issues with these priorities will be categorized as P4 in KnowHOW KPIs.",
+						54);
 
-		Document priorityP5 = createPriorityFieldDocument(
-				PRIORITY_P_5,
-				"P5",
-				"Map Jira priorities to P5 (Trivial/Lowest). Issues with these priorities will be categorized as P5 in KnowHOW KPIs.",
-				55);
+		Document priorityP5 =
+				createPriorityFieldDocument(
+						PRIORITY_P_5,
+						"P5",
+						"Map Jira priorities to P5 (Trivial/Lowest). Issues with these priorities will be categorized as P5 in KnowHOW KPIs.",
+						55);
 
-		Document priorityMisc = createPriorityFieldDocument(
-				PRIORITY_MISC,
-				"Miscellaneous",
-				"Map Jira priorities to Miscellaneous category. Issues with these priorities will be categorized as MISC in KnowHOW KPIs.",
-				56);
+		Document priorityMisc =
+				createPriorityFieldDocument(
+						PRIORITY_MISC,
+						"Miscellaneous",
+						"Map Jira priorities to Miscellaneous category. Issues with these priorities will be categorized as MISC in KnowHOW KPIs.",
+						56);
 
 		fieldMappingStructure.insertMany(
 				Arrays.asList(priorityP1, priorityP2, priorityP3, priorityP4, priorityP5, priorityMisc));
