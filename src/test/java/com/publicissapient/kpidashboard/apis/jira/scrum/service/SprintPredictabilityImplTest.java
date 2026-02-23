@@ -232,10 +232,6 @@ public class SprintPredictabilityImplTest {
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(sprintPredictability.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		try {
 			KpiElement kpiElement =
 					sprintPredictability.getKpiData(
@@ -264,7 +260,7 @@ public class SprintPredictabilityImplTest {
 					sprintPredictability.getKpiData(
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
-					"Azure Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
+					"Azure Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (Exception exception) {
 		}
 	}
@@ -293,7 +289,7 @@ public class SprintPredictabilityImplTest {
 					sprintPredictability.getKpiData(
 							kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 			assertThat(
-					"DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(0));
+					"DRE Value :", ((List<DataCount>) kpiElement.getTrendValueList()).size(), equalTo(1));
 		} catch (Exception exception) {
 		}
 	}

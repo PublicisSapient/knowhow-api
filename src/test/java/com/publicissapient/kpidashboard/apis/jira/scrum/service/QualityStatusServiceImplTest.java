@@ -148,7 +148,6 @@ public class QualityStatusServiceImplTest {
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9 ";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(customApiConfig.getPriority()).thenReturn(priority);
 		try {
 			KpiElement kpiElement =
 					qualityStatusServiceImpl.getKpiData(
@@ -183,7 +182,6 @@ public class QualityStatusServiceImplTest {
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9 ";
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
-		when(customApiConfig.getPriority()).thenReturn(priority);
 		try {
 			KpiElement kpiElement =
 					qualityStatusServiceImpl.getKpiData(

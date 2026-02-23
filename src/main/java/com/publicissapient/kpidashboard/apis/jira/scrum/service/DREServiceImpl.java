@@ -60,6 +60,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
@@ -158,7 +159,6 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 		List<String> defectType = new ArrayList<>();
 		Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
 		Map<String, List<String>> projectWisePriority = new HashMap<>();
-		Map<String, List<String>> configPriority = customApiConfig.getPriority();
 		Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 		leafNodeList.forEach(
 				leaf -> {
@@ -167,6 +167,8 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 
 					FieldMapping fieldMapping =
 							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+					Map<String, List<String>> configPriority =
+							KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 
 					addPriorityProjectWise(
 							projectWisePriority,
@@ -421,13 +423,18 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 								sprintWiseCloseddDefectListMap.get(currentNodeIdentifier);
 						List<JiraIssue> sprintWiseTotaldDefectList =
 								sprintWiseTotaldDefectListMap.get(currentNodeIdentifier);
+						FieldMapping fieldMapping =
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId());
 						populateExcelDataObject(
 								requestTrackerId,
 								node.getSprintFilter().getName(),
 								excelData,
 								sprintWiseClosedDefectList,
 								sprintWiseTotaldDefectList,
-								storyList);
+								storyList,
+								fieldMapping);
 
 					} else {
 						dreForCurrentLeaf = 0.0d;
@@ -463,7 +470,8 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintWiseClosedDefectList,
 			List<JiraIssue> sprintWiseTotaldDefectList,
-			List<JiraIssue> storyList) {
+			List<JiraIssue> storyList,
+			FieldMapping fieldMapping) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 
 			Map<String, JiraIssue> totalDefectList = new HashMap<>();
@@ -476,7 +484,7 @@ public class DREServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 					sprintWiseClosedDefectList,
 					excelData,
 					KPICode.DEFECT_REMOVAL_EFFICIENCY.getKpiId(),
-					customApiConfig,
+					fieldMapping,
 					storyList);
 		}
 	}

@@ -253,7 +253,6 @@ public class FirstTimePassRateServiceImpl
 									excelDatas,
 									issueMapping,
 									new ArrayList<>(linkedDefects != null ? linkedDefects : new ArrayList<>()),
-									customApiConfig,
 									fieldMapping,
 									node);
 							excelData.addAll(excelDatas);

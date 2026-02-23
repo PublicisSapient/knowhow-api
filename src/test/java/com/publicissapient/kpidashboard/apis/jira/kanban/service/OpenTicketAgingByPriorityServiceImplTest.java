@@ -184,10 +184,6 @@ public class OpenTicketAgingByPriorityServiceImplTest {
 						any(), any(), any(), any(), any(), any()))
 				.thenReturn(kanbanJiraIssueList);
 
-		when(customApiConfig.getpriorityP1()).thenReturn(P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(P3);
-		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRAKANBAN.name()))

@@ -160,6 +160,13 @@ public class DRRServiceImplTest {
 		FieldMappingDataFactory fieldMappingDataFactory =
 				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
+		// Set priority values for the test
+		fieldMapping.setPriorityP1(
+				Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "urgent"));
+		fieldMapping.setPriorityP2(Arrays.asList("p2", "critical", "P2 - Critical", "2", "high"));
+		fieldMapping.setPriorityP3(Arrays.asList("p3", "p3-major", "major", "3", "medium"));
+		fieldMapping.setPriorityP4(Arrays.asList("p4", "p4-minor", "minor", "4", "low"));
+		fieldMapping.setPriorityP5(Arrays.asList("p5", "p5-trivial", "trivial", "5"));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -223,10 +230,6 @@ public class DRRServiceImplTest {
 		when(configHelperService.calculateMaturity()).thenReturn(maturityRangeMap);
 
 		when(customApiSetting.getApplicationDetailedLogger()).thenReturn("on");
-		when(customApiSetting.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiSetting.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiSetting.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiSetting.getpriorityP4()).thenReturn("p4-minor");
 
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
@@ -243,6 +246,7 @@ public class DRRServiceImplTest {
 		resultListMap.put(TOTAL_DEFECT_LIST, totalIssueList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(false);
 		when(kpiDataProvider.fetchDRRData(any(), any(), any())).thenReturn(resultListMap);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		try {
 			KpiElement kpiElement =

@@ -518,8 +518,7 @@ public class ScopeChurnServiceImpl
 						addedIssueDateMap,
 						removedIssueDateMap,
 						excelData,
-						fieldMapping,
-						customApiConfig);
+						fieldMapping);
 			}
 		}
 	}

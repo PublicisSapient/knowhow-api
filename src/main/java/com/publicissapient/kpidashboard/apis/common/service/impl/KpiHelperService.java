@@ -442,11 +442,12 @@ public class KpiHelperService { // NOPMD
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 		Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
 		Map<String, List<String>> projectWisePriority = new HashMap<>();
-		Map<String, List<String>> configPriority = customApiConfig.getPriority();
 		Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 		Map<String, Object> mapOfProjectFiltersFH = new LinkedHashMap<>();
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigID);
+		Map<String, List<String>> configPriority =
+				KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 		basicProjectConfigIds.add(basicProjectConfigID.toString());
 		addPriorityProjectWiseForQualityKPIs(
 				projectWisePriority,
@@ -551,7 +552,6 @@ public class KpiHelperService { // NOPMD
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 		Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
 		Map<String, List<String>> projectWisePriority = new HashMap<>();
-		Map<String, List<String>> configPriority = customApiConfig.getPriority();
 		Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 		Map<String, Object> mapOfProjectFiltersFH = new LinkedHashMap<>();
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
@@ -563,6 +563,8 @@ public class KpiHelperService { // NOPMD
 		mapOfProjectFiltersFH.put(
 				JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature(),
 				CommonUtils.convertToPatternList(fieldMapping.getJiraQAKPI111IssueType()));
+		Map<String, List<String>> configPriority =
+				KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 
 		addPriorityProjectWiseForQualityKPIs(
 				projectWisePriority,
@@ -1526,7 +1528,12 @@ public class KpiHelperService { // NOPMD
 								List<String> jiraClosedStatusList =
 										projectWiseClosedStoryStatus.get(issueCustomHistory.getBasicProjectConfigId());
 								LocalDate startLocalDateTemp = LocalDate.parse(startDate);
-								String fieldValues = basedOnKPIFieldNameFetchValues(fieldName, issueCustomHistory);
+								FieldMapping fieldMapping =
+										configHelperService
+												.getFieldMappingMap()
+												.get(new ObjectId(issueCustomHistory.getBasicProjectConfigId()));
+								String fieldValues =
+										basedOnKPIFieldNameFetchValues(fieldName, issueCustomHistory, fieldMapping);
 								List<KanbanIssueHistory> statusHistoryDetailsList =
 										issueCustomHistory.getHistoryDetails();
 								if (CollectionUtils.isNotEmpty(statusHistoryDetailsList)
@@ -1664,12 +1671,13 @@ public class KpiHelperService { // NOPMD
 	 *
 	 * @param fieldName
 	 * @param issueCustomHistory
+	 * @param fieldMapping
 	 * @return
 	 */
 	private String basedOnKPIFieldNameFetchValues(
-			String fieldName, KanbanIssueCustomHistory issueCustomHistory) {
+			String fieldName, KanbanIssueCustomHistory issueCustomHistory, FieldMapping fieldMapping) {
 		if (fieldName.equals(FIELD_PRIORITY)) {
-			return KPIHelperUtil.mappingPriority(issueCustomHistory.getPriority(), customApiConfig);
+			return KPIHelperUtil.mappingPriority(issueCustomHistory.getPriority(), fieldMapping);
 		} else if (fieldName.equals(FIELD_RCA)
 				&& CollectionUtils.isNotEmpty(issueCustomHistory.getRootCauseList())) {
 			return StringUtils.capitalize(issueCustomHistory.getRootCauseList().get(0));
