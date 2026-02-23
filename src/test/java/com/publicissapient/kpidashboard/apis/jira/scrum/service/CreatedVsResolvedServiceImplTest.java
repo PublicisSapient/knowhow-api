@@ -142,6 +142,13 @@ public class CreatedVsResolvedServiceImplTest {
 		FieldMappingDataFactory fieldMappingDataFactory =
 				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
+		// Set priority values for the test
+		fieldMapping.setPriorityP1(
+				Arrays.asList("p1", "P1 - Blocker", "blocker", "1", "0", "p0", "urgent"));
+		fieldMapping.setPriorityP2(Arrays.asList("p2", "critical", "P2 - Critical", "2", "high"));
+		fieldMapping.setPriorityP3(Arrays.asList("p3", "p3-major", "major", "3", "medium"));
+		fieldMapping.setPriorityP4(Arrays.asList("p4", "p4-minor", "minor", "4", "low"));
+		fieldMapping.setPriorityP5(Arrays.asList("p5", "p5-trivial", "trivial", "5"));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -206,10 +213,6 @@ public class CreatedVsResolvedServiceImplTest {
 		when(createdVsResolvedServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
 
 		when(commonService.sortTrendValueMap(anyMap())).thenReturn(trendValueMap);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(CREATED_VS_RESOLVED_KEY, totalIssueList);
@@ -219,6 +222,7 @@ public class CreatedVsResolvedServiceImplTest {
 		resultListMap.put(STORY_LIST, totalIssueList);
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(false);
 		when(kpiDataProvider.fetchCreatedVsResolvedData(any(), any(), any())).thenReturn(resultListMap);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		try {
 			KpiElement kpiElement =
@@ -261,10 +265,7 @@ public class CreatedVsResolvedServiceImplTest {
 		when(filterHelperService.isFilterSelectedTillSprintLevel(5, false)).thenReturn(true);
 		when(kpiDataCacheService.fetchCreatedVsResolvedData(any(), any(), any(), any()))
 				.thenReturn(resultListMap);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		try {
 			KpiElement kpiElement =

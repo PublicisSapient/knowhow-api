@@ -280,9 +280,9 @@ public class DefectReopenRateQualityServiceImpl
 					sprintWiseCompletedDefectListMap.put(sprintFilter, sprintCompletedDefects);
 
 					Map<String, Long> priorityCountMapReopenedDefects =
-							KPIHelperUtil.setpriorityScrum(sprintReOpenedDefects, customApiConfig);
+							KPIHelperUtil.setpriorityScrum(sprintReOpenedDefects, fieldMapping);
 					Map<String, Long> priorityCountMapCompletedDefects =
-							KPIHelperUtil.setpriorityScrum(sprintCompletedDefects, customApiConfig);
+							KPIHelperUtil.setpriorityScrum(sprintCompletedDefects, fieldMapping);
 					projectWisePriorityList.addAll(priorityCountMapReopenedDefects.keySet());
 					projectWisePriorityList.addAll(priorityCountMapCompletedDefects.keySet());
 					sprintWiseReopenedDefectsPriorityMap.put(sprintFilter, priorityCountMapReopenedDefects);
@@ -296,6 +296,10 @@ public class DefectReopenRateQualityServiceImpl
 							Pair.of(
 									node.getProjectFilter().getBasicProjectConfigId().toString(),
 									node.getSprintFilter().getId());
+
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMapping(
+									node.getProjectFilter().getBasicProjectConfigId());
 
 					Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 					Map<String, Long> reopenedDefectsPriorityMap =
@@ -328,7 +332,7 @@ public class DefectReopenRateQualityServiceImpl
 						reopenedFinalMap.put(CommonConstant.OVERALL, reopenedOverAllCount);
 						completedFinalMap.put(CommonConstant.OVERALL, completedOverAllCount);
 						Map<String, Double> reopenRateByPriorityMap =
-								avgReopenRateByPriority(reopenDefectTransitionMap, customApiConfig);
+								avgReopenRateByPriority(reopenDefectTransitionMap, fieldMapping);
 						projectWisePriorityList.add(CommonConstant.OVERALL);
 						projectWisePriorityList.forEach(
 								priority -> {
@@ -349,7 +353,7 @@ public class DefectReopenRateQualityServiceImpl
 								node.getSprintFilter().getName(),
 								excelData,
 								reopenDefectTransitionMap,
-								customApiConfig,
+								fieldMapping,
 								storyList);
 					}
 					mapTmp.get(node.getId()).setValue(dataCountMap);
@@ -511,18 +515,17 @@ public class DefectReopenRateQualityServiceImpl
 			String sprintName,
 			List<KPIExcelData> excelData,
 			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateDefectWithReopenInfoExcelData(
-					sprintName, excelData, customApiConfig, storyList, reopenedDefectInfoMap);
+					sprintName, excelData, fieldMapping, storyList, reopenedDefectInfoMap);
 		}
 	}
 
 	private Map<String, Double> avgReopenRateByPriority(
-			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap,
-			CustomApiConfig customApiConfig) {
+			Map<String, List<DefectTransitionInfo>> reopenedDefectInfoMap, FieldMapping fieldMapping) {
 		List<DefectTransitionInfo> reopenedDurationList =
 				reopenedDefectInfoMap.values().stream()
 						.flatMap(List::stream)
@@ -535,7 +538,7 @@ public class DefectReopenRateQualityServiceImpl
 								Collectors.groupingBy(
 										info ->
 												StringUtils.capitalize(
-														KPIHelperUtil.mappingPriority(info.getPriority(), customApiConfig)),
+														KPIHelperUtil.mappingPriority(info.getPriority(), fieldMapping)),
 										Collectors.averagingDouble(DefectTransitionInfo::getReopenDuration)));
 
 		avgByPriority.replaceAll((k, v) -> round(v));

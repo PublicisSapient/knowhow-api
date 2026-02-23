@@ -310,6 +310,9 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 		Set<String> projectWisePriorityList = new HashSet<>();
 		sprintWiseMap.forEach(
 				(sprintFilter, sprintWiseStories) -> {
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMapping(new ObjectId(sprintFilter.getLeft()));
+
 					List<String> storyIdList = new ArrayList<>();
 					sprintWiseStories.stream()
 							.map(SprintWiseStory::getStoryList)
@@ -324,7 +327,7 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 					// Below code is needed if defect->sprint linkage is considered
 
 					Map<String, Long> priorityCountMap =
-							KPIHelperUtil.setpriorityScrum(sprintWiseDefectDataList, customApiConfig);
+							KPIHelperUtil.setpriorityScrum(sprintWiseDefectDataList, fieldMapping);
 					projectWisePriorityList.addAll(priorityCountMap.keySet());
 					sprintWiseDefectDataListMap.put(sprintFilter, sprintWiseDefectDataList);
 
@@ -342,6 +345,10 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 							Pair.of(
 									node.getProjectFilter().getBasicProjectConfigId().toString(),
 									node.getSprintFilter().getId());
+
+					FieldMapping fieldMapping =
+							configHelperService.getFieldMapping(
+									node.getProjectFilter().getBasicProjectConfigId());
 
 					Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 					Map<String, Long> priorityMap =
@@ -376,7 +383,7 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 								node.getSprintFilter().getName(),
 								excelData,
 								sprintWiseDefectDataListMap.get(currentNodeIdentifier),
-								customApiConfig,
+								fieldMapping,
 								storyList);
 					}
 					log.debug(
@@ -430,12 +437,12 @@ public class DCServiceImpl extends JiraKPIService<Long, List<Object>, Map<String
 			String sprintName,
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintWiseDefectDataList,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateDefectRelatedExcelData(
-					sprintName, sprintWiseDefectDataList, excelData, customApiConfig, storyList);
+					sprintName, sprintWiseDefectDataList, excelData, fieldMapping, storyList);
 		}
 	}
 

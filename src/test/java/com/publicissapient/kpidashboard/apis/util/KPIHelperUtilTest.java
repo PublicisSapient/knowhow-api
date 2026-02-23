@@ -20,7 +20,6 @@ package com.publicissapient.kpidashboard.apis.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +50,7 @@ import com.publicissapient.kpidashboard.apis.model.AccountHierarchyDataKanban;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
+import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.HierarchyLevel;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.KanbanJiraIssue;
@@ -69,6 +69,7 @@ public class KPIHelperUtilTest {
 	@Mock JiraIssueRepository jiraIssueRepository;
 	@Mock CustomApiConfig customApiConfig;
 	@Mock KanbanJiraIssueRepository kanbanJiraIssueRepository;
+	private FieldMapping fieldMapping;
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();
 	private List<AccountHierarchyDataKanban> accountHierarchyKanbanDataList = new ArrayList<>();
 	private Map<String, Object> filterLevelMap;
@@ -104,6 +105,13 @@ public class KPIHelperUtilTest {
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssueList = jiraIssueDataFactory.findIssueInTypeNames(Arrays.asList("Bug"));
+
+		// Initialize FieldMapping with priority values
+		fieldMapping = new FieldMapping();
+		fieldMapping.setPriorityP1(Arrays.asList(P1.split(",")));
+		fieldMapping.setPriorityP2(Arrays.asList(P2.split(",")));
+		fieldMapping.setPriorityP3(Arrays.asList(P3.split(",")));
+		fieldMapping.setPriorityP4(Arrays.asList(P4.split(",")));
 
 		HierachyLevelFactory hierachyLevelFactory = HierachyLevelFactory.newInstance();
 		filterLevelMap =
@@ -157,26 +165,16 @@ public class KPIHelperUtilTest {
 	@Test
 	public void testSetpriorityScrum() {
 
-		when(customApiConfig.getpriorityP1()).thenReturn(P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(P3);
-		when(customApiConfig.getpriorityP4()).thenReturn(P4);
-
 		Map<String, Long> priorityCountMap =
-				kpiHelperUtil.setpriorityScrum(jiraIssueList, customApiConfig);
+				kpiHelperUtil.setpriorityScrum(jiraIssueList, fieldMapping);
 		assertThat("priority map size", priorityCountMap.size(), equalTo(4));
 	}
 
 	@Test
 	public void testSetpriorityKanban() {
 
-		when(customApiConfig.getpriorityP1()).thenReturn(P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(P3);
-		when(customApiConfig.getpriorityP4()).thenReturn(P4);
-
 		Map<String, Long> priorityCountMap =
-				kpiHelperUtil.setpriorityKanban(kanbanJiraIssueDataList, customApiConfig);
+				kpiHelperUtil.setpriorityKanban(kanbanJiraIssueDataList, fieldMapping);
 		assertThat("priority map size", priorityCountMap.size(), equalTo(2));
 	}
 
