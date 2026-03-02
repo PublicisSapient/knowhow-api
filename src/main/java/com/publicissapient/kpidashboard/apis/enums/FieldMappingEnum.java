@@ -87,7 +87,13 @@ public enum FieldMappingEnum {
 					"epicLink",
 					"jiraSubTaskDefectType",
 					"jiraSubTaskIdentification",
-					"includeActiveSprintInBacklogKPI")),
+					"includeActiveSprintInBacklogKPI",
+					"priorityP1",
+					"priorityP2",
+					"priorityP3",
+					"priorityP4",
+					"priorityP5",
+					"priorityMisc")),
 
 	KPI1(
 			"Processor (Kanban)",
@@ -110,7 +116,13 @@ public enum FieldMappingEnum {
 					"storyPointToHourMapping",
 					"jiraStoryPointsCustomField",
 					"kanbanRCACountIssueType",
-					"jiraSubTaskDefectType")),
+					"jiraSubTaskDefectType",
+					"priorityP1",
+					"priorityP2",
+					"priorityP3",
+					"priorityP4",
+					"priorityP5",
+					"priorityMisc")),
 
 	KPI40(
 			"Issue Count",

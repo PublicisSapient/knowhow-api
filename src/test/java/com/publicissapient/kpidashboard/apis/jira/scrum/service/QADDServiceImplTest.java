@@ -170,10 +170,6 @@ public class QADDServiceImplTest {
 		resultListMap.put("storyData", sprintWiseStoryList);
 		resultListMap.put("defectData", defectList);
 		resultListMap.put(SUBGROUPCATEGORY, SPRINT);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		when(kpiDataProvider.fetchDefectDensityDataFromDb(eq(kpiRequest), any(), any()))
 				.thenReturn(resultListMap);
 		try {
@@ -191,10 +187,6 @@ public class QADDServiceImplTest {
 		resultListMap.put("storyData", sprintWiseStoryList);
 		resultListMap.put("defectData", defectList);
 		resultListMap.put(SUBGROUPCATEGORY, SPRINT);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		when(kpiDataProvider.fetchDefectDensityDataFromDb(eq(kpiRequest), any(), any()))
 				.thenReturn(resultListMap);
 		try {
@@ -212,10 +204,6 @@ public class QADDServiceImplTest {
 		resultListMap.put("storyData", sprintWiseStoryList);
 		resultListMap.put("defectData", defectList);
 		resultListMap.put(SUBGROUPCATEGORY, SPRINT);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		when(kpiDataProvider.fetchDefectDensityDataFromDb(eq(kpiRequest), any(), any()))
 				.thenReturn(resultListMap);
 		try {
@@ -233,10 +221,6 @@ public class QADDServiceImplTest {
 		resultListMap.put("storyData", sprintWiseStoryList);
 		resultListMap.put("defectData", defectList);
 		resultListMap.put(SUBGROUPCATEGORY, SPRINT);
-		when(customApiConfig.getpriorityP1()).thenReturn(Constant.P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(Constant.P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(Constant.P3);
-		when(customApiConfig.getpriorityP4()).thenReturn("p4-minor");
 		when(kpiDataProvider.fetchDefectDensityDataFromDb(eq(kpiRequest), any(), any()))
 				.thenReturn(resultListMap);
 		try {

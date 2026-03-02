@@ -29,6 +29,7 @@ import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.filter.service.FilterHelperService;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.BuildStatus;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -1087,13 +1088,14 @@ public class KpiDataProvider {
 		Map<String, Map<String, List<String>>> statusConfigsOfRejectedStoriesByProject =
 				new HashMap<>();
 		Map<String, Map<String, Integer>> projectWisePriorityCount = new HashMap<>();
-		Map<String, List<String>> configPriority = customApiConfig.getPriority();
 		Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 		basicProjectConfigIds.add(basicProjectConfigId.toString());
 
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+		Map<String, List<String>> configPriority =
+				KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 
 		KpiHelperService.addPriorityCountProjectWiseForQuality(
 				projectWisePriorityCount,
@@ -1277,7 +1279,6 @@ public class KpiDataProvider {
 		Map<String, FieldMapping> projFieldMapping = new HashMap<>();
 		Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
 		Map<String, List<String>> projectWisePriority = new HashMap<>();
-		Map<String, List<String>> configPriority = customApiConfig.getPriority();
 		Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 
 		List<String> basicProjectConfigIds = List.of(basicProjectConfigId.toString());
@@ -1285,6 +1286,9 @@ public class KpiDataProvider {
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 		projFieldMapping.put(basicProjectConfigId.toString(), fieldMapping);
+
+		Map<String, List<String>> configPriority =
+				KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 
 		KpiHelperService.addPriorityProjectWise(
 				projectWisePriority,

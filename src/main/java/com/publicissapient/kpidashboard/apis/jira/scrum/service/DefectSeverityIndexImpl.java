@@ -404,12 +404,12 @@ public class DefectSeverityIndexImpl
 			String sprintName,
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintDefectData,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 
 		if (CollectionUtils.isNotEmpty(projectWiseSeverityList)) {
 			populateExcelDataObject(
-					requestTrackerId, sprintName, excelData, sprintDefectData, customApiConfig, storyList);
+					requestTrackerId, sprintName, excelData, sprintDefectData, fieldMapping, storyList);
 		}
 	}
 
@@ -690,13 +690,17 @@ public class DefectSeverityIndexImpl
 								severityMap);
 
 						// Populate Excel data if needed
+						FieldMapping fieldMapping =
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId());
 						populateExcelDataIfNeeded(
 								context.context.projectWiseSeverityList,
 								context.context.requestTrackerId,
 								node.getSprintFilter().getName(),
 								context.output.excelData,
 								context.sprintData.sprintWiseDefectDataListMap.get(currentNodeIdentifier),
-								customApiConfig,
+								fieldMapping,
 								context.context.storyList);
 					}
 
@@ -777,12 +781,12 @@ public class DefectSeverityIndexImpl
 			String sprintName,
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintWiseDefectDataList,
-			CustomApiConfig customApiConfig,
+			FieldMapping fieldMapping,
 			List<JiraIssue> storyList) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateDefectSeverityRelatedExcelData(
-					sprintName, sprintWiseDefectDataList, excelData, customApiConfig, storyList);
+					sprintName, sprintWiseDefectDataList, excelData, fieldMapping, storyList);
 		}
 	}
 

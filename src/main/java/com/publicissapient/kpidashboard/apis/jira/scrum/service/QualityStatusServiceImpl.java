@@ -58,6 +58,7 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.IterationKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
+import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
@@ -332,9 +333,10 @@ public class QualityStatusServiceImpl extends JiraIterationKPIService {
 											.getProjectFilter()
 											.getBasicProjectConfigId());
 			Map<String, List<String>> projectWisePriority = new HashMap<>();
-			Map<String, List<String>> configPriority = customApiConfig.getPriority();
 			Map<String, Set<String>> projectWiseRCA = new HashMap<>();
 			Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
+			Map<String, List<String>> configPriority =
+					KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 
 			KpiHelperService.addPriorityProjectWise(
 					projectWisePriority,

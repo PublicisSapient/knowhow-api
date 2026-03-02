@@ -463,12 +463,7 @@ public class SprintCapacityServiceImpl
 											(e1, e2) -> e1));
 
 			KPIExcelUtility.populateSprintCapacity(
-					sprintName,
-					sprintCapacityList,
-					excelData,
-					storyIdToLoggedTimeMap,
-					fieldMapping,
-					customApiConfig);
+					sprintName, sprintCapacityList, excelData, storyIdToLoggedTimeMap, fieldMapping);
 		}
 	}
 

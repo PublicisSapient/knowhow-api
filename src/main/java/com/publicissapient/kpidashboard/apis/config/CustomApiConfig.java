@@ -53,9 +53,6 @@ public class CustomApiConfig { // NOPMD
 	// default image name
 	private String applicationDefaultLogo;
 
-	// priority kpi wise. Key : priority. Value: priority value
-	private Map<String, List<String>> priority;
-
 	private Map<String, List<String>> severity;
 	// Severity kpi wise. Key : severity. Value: weightage
 	private Map<String, Integer> severityWeight;
@@ -144,21 +141,6 @@ public class CustomApiConfig { // NOPMD
 
 	@Value("${testconnection.argoCDApi}")
 	private String argoCDTestConnection;
-
-	@Value("${priority.P1}")
-	private String priorityP1;
-
-	@Value("${priority.P2}")
-	private String priorityP2;
-
-	@Value("${priority.P3}")
-	private String priorityP3;
-
-	@Value("${priority.P4}")
-	private String priorityP4;
-
-	@Value("p5-trivial, 5, trivial")
-	private String priorityP5;
 
 	private Map<String, String> notificationSubject;
 
@@ -594,14 +576,6 @@ public class CustomApiConfig { // NOPMD
 		this.dateRangeFilterCounts = dateRangeFilterCounts;
 	}
 
-	public String getPriorityP5() {
-		return priorityP5;
-	}
-
-	public void setPriorityP5(String priorityP5) {
-		this.priorityP5 = priorityP5;
-	}
-
 	public String getApprovalEmailSubject() {
 		return approvalEmailSubject;
 	}
@@ -1002,42 +976,6 @@ public class CustomApiConfig { // NOPMD
 	}
 
 	/**
-	 * P4 priority
-	 *
-	 * @return
-	 */
-	public String getpriorityP4() {
-		return priorityP4;
-	}
-
-	/**
-	 * P3 priority
-	 *
-	 * @return
-	 */
-	public String getpriorityP3() {
-		return priorityP3;
-	}
-
-	/**
-	 * P2 priority
-	 *
-	 * @return
-	 */
-	public String getpriorityP2() {
-		return priorityP2;
-	}
-
-	/**
-	 * P1 priority
-	 *
-	 * @return
-	 */
-	public String getpriorityP1() {
-		return priorityP1;
-	}
-
-	/**
 	 * @return emmStatsMonth
 	 */
 	public String getGitlabTestConnection() {
@@ -1130,24 +1068,6 @@ public class CustomApiConfig { // NOPMD
 
 	public void setJenkinsWeekCount(int jenkinsWeekCount) {
 		this.jenkinsWeekCount = jenkinsWeekCount;
-	}
-
-	/**
-	 * get priority
-	 *
-	 * @return the priority
-	 */
-	public Map<String, List<String>> getPriority() {
-		return priority;
-	}
-
-	/**
-	 * set priority
-	 *
-	 * @param priority to set
-	 */
-	public void setPriority(Map<String, List<String>> priority) {
-		this.priority = priority;
 	}
 
 	public int getNumberOfPastWeeksForKanbanCapacity() {

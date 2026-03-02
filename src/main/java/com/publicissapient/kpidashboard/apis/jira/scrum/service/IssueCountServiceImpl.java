@@ -423,12 +423,7 @@ public class IssueCountServiceImpl
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			String sprintName = node.getSprintFilter().getName();
 			KPIExcelUtility.populateSpeedKPIExcelData(
-					sprintName,
-					excelData,
-					allJiraIssuesList,
-					totalPresentJiraIssue,
-					fieldMapping,
-					customApiConfig);
+					sprintName, excelData, allJiraIssuesList, totalPresentJiraIssue, fieldMapping);
 		}
 	}
 
