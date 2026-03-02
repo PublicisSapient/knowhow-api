@@ -308,6 +308,11 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 							projectWiseClosedJiraIssue.getOrDefault(projectNodeId, new ArrayList<>());
 					if (CollectionUtils.isNotEmpty(kanbanOpenedIssueList)
 							|| CollectionUtils.isNotEmpty(kanbanClosedIssueList)) {
+						// Get field mapping for this project
+						FieldMapping fieldMapping =
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId());
 
 						Map<String, List<DataCount>> projectFilterWiseDataMap = new HashMap<>();
 						List<String> issueClosedStatusList = projectWiseClosedStatusMap.get(projectNodeId);
@@ -327,7 +332,8 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 											priorityList,
 											dateRange.getStartDate(),
 											dateRange.getEndDate(),
-											dateWiseIssueTypeList);
+											dateWiseIssueTypeList,
+											fieldMapping);
 
 							Map<String, Long> closedIssueCountMap =
 									filterKanbanHistoryDataBasedOnStartAndEndDateAndIssueType(
@@ -336,7 +342,8 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 											issueClosedStatusList,
 											dateRange.getStartDate(),
 											dateRange.getEndDate(),
-											dateWiseIssueClosedStatusList);
+											dateWiseIssueClosedStatusList,
+											fieldMapping);
 
 							String date = getRange(dateRange, kpiRequest);
 
@@ -451,7 +458,8 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 			List<String> priorityList,
 			LocalDate startDate,
 			LocalDate endDate,
-			List<KanbanJiraIssue> dateWiseIssueTypeList) {
+			List<KanbanJiraIssue> dateWiseIssueTypeList,
+			FieldMapping fieldMapping) {
 		Predicate<KanbanJiraIssue> predicate =
 				issue ->
 						LocalDateTime.parse(issue.getCreatedDate().split("\\.")[0], DATE_TIME_FORMATTER)
@@ -461,7 +469,7 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 		List<KanbanJiraIssue> filteredIssue =
 				issueList.stream().filter(predicate).collect(Collectors.toList());
 		Map<String, Long> projectIssueTypeMap =
-				KPIHelperUtil.setpriorityKanban(filteredIssue, customApiConfig);
+				KPIHelperUtil.setpriorityKanban(filteredIssue, fieldMapping);
 		// adding missing priority
 
 		priorityList.forEach(priority -> projectIssueTypeMap.computeIfAbsent(priority, val -> 0L));
@@ -475,7 +483,8 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 			List<String> issueClosedStatusList,
 			LocalDate startDate,
 			LocalDate endDate,
-			List<KanbanIssueCustomHistory> dateWiseIssueClosedStatusList) {
+			List<KanbanIssueCustomHistory> dateWiseIssueClosedStatusList,
+			FieldMapping fieldMapping) {
 		Predicate<KanbanIssueHistory> predicate =
 				issue ->
 						issueClosedStatusList.contains(issue.getStatus())
@@ -493,7 +502,7 @@ public class TicketOpenVsClosedByPriorityServiceImpl
 							}
 						});
 		Map<String, Long> projectIssueTypeMap =
-				KPIHelperUtil.setpriorityKanbanHistory(filteredIssue, customApiConfig);
+				KPIHelperUtil.setpriorityKanbanHistory(filteredIssue, fieldMapping);
 
 		// adding missing priority
 		priorityList.forEach(priority -> projectIssueTypeMap.computeIfAbsent(priority, val -> 0L));

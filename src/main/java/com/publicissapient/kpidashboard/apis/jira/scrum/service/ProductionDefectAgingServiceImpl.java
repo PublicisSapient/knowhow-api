@@ -211,10 +211,15 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 					projectWiseJiraIssueMap.getOrDefault(projectNodeId, new ArrayList<>());
 
 			if (CollectionUtils.isNotEmpty(projectWiseJiraIssueList)) {
+				// Get field mapping for this project
+				FieldMapping fieldMapping =
+						configHelperService
+								.getFieldMappingMap()
+								.get(node.getProjectFilter().getBasicProjectConfigId());
 
 				Set<String> priorityList =
 						projectWiseJiraIssueList.stream()
-								.map(issue -> KPIHelperUtil.mappingPriority(issue.getPriority(), customApiConfig))
+								.map(issue -> KPIHelperUtil.mappingPriority(issue.getPriority(), fieldMapping))
 								.collect(Collectors.toSet());
 
 				Map<String, List<JiraIssue>> rangeWiseJiraIssuesMap = new LinkedHashMap<>();
@@ -225,7 +230,7 @@ public class ProductionDefectAgingServiceImpl extends JiraBacklogKPIService<Long
 				rangeWiseJiraIssuesMap.forEach(
 						(range, issueList) -> {
 							Map<String, Long> priorityCountMap =
-									KPIHelperUtil.setpriorityScrum(issueList, customApiConfig);
+									KPIHelperUtil.setpriorityScrum(issueList, fieldMapping);
 							rangeWisePriorityCountMap.put(range, priorityCountMap);
 						});
 

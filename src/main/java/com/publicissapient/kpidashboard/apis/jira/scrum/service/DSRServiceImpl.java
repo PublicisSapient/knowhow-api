@@ -358,7 +358,8 @@ public class DSRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 							validationDataList,
 							excelData,
 							node,
-							totalStoryWoDrop);
+							totalStoryWoDrop,
+							fieldMapping);
 					mapTmp.get(node.getId()).setValue(dataCountMap);
 				});
 		kpiElement.setExcelData(excelData);
@@ -379,7 +380,8 @@ public class DSRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 			List<DSRValidationData> subCategoryWiseUatBugList,
 			List<KPIExcelData> excelData,
 			Node node,
-			List<JiraIssue> totalStoryWoDrop) {
+			List<JiraIssue> totalStoryWoDrop,
+			FieldMapping fieldMapping) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			Map<String, JiraIssue> totalBugList = new HashMap<>();
@@ -391,7 +393,7 @@ public class DSRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 					totalBugList,
 					subCategoryWiseUatBugList,
 					excelData,
-					customApiConfig,
+					fieldMapping,
 					totalStoryWoDrop);
 		}
 	}

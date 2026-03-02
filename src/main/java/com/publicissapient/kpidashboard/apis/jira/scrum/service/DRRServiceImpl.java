@@ -378,14 +378,18 @@ public class DRRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 						List<JiraIssue> sprintWiseCompAndRejectedList =
 								new ArrayList<>(sprintWiseCompletedDefectList);
 						sprintWiseCompAndRejectedList.addAll(sprintWiseRejectedDefectList);
+						FieldMapping fieldMapping =
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId());
 						populateExcelDataObject(
 								requestTrackerId,
 								node.getSprintFilter().getName(),
 								excelData,
 								sprintWiseRejectedDefectList,
 								sprintWiseCompAndRejectedList,
-								storyList);
-
+								storyList,
+								fieldMapping);
 					} else {
 						drrForCurrentLeaf = 0.0d;
 					}
@@ -435,7 +439,8 @@ public class DRRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintWiseRejectedDefectList,
 			List<JiraIssue> sprintWiseCompAndRejectedList,
-			List<JiraIssue> storyList) {
+			List<JiraIssue> storyList,
+			FieldMapping fieldMapping) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 
 			Map<String, JiraIssue> totalDefectList = new HashMap<>();
@@ -447,7 +452,7 @@ public class DRRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 					sprintWiseRejectedDefectList,
 					excelData,
 					KPICode.DEFECT_REJECTION_RATE.getKpiId(),
-					customApiConfig,
+					fieldMapping,
 					storyList);
 		}
 	}

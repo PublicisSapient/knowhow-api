@@ -140,6 +140,11 @@ public class DCServiceImplTest {
 		FieldMappingDataFactory fieldMappingDataFactory =
 				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
+		// Set priority values for the test
+		fieldMapping.setPriorityP1(Arrays.asList(P1.split(",")));
+		fieldMapping.setPriorityP2(Arrays.asList(P2.split(",")));
+		fieldMapping.setPriorityP3(Arrays.asList(P3.split(",")));
+		fieldMapping.setPriorityP4(Arrays.asList(P4.split(",")));
 		fieldMappingMap.put(fieldMapping.getBasicProjectConfigId(), fieldMapping);
 		configHelperService.setProjectConfigMap(projectConfigMap);
 		configHelperService.setFieldMappingMap(fieldMappingMap);
@@ -184,15 +189,13 @@ public class DCServiceImplTest {
 		when(jiraIssueRepository.findIssuesByType(Mockito.any())).thenReturn(totalBugList);
 
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(configHelperService.getFieldMapping(Mockito.any()))
+				.thenReturn(fieldMappingMap.values().iterator().next());
 		String kpiRequestTrackerId = "Excel-Jira-5be544de025de212549176a9";
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(dcServiceImpl.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		when(customApiConfig.getpriorityP1()).thenReturn(P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(P3);
-		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 
 		try {
 			KpiElement kpiElement =

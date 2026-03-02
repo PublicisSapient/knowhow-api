@@ -649,7 +649,8 @@ public class DefectsBreachedSlasServiceImpl
 										generalSeverityValuesBasedOnIncludedSeveritiesList));
 
 		if (CollectionUtils.isNotEmpty(fieldMapping.getExcludedDefectPrioritiesKPI195())) {
-			Map<String, List<String>> priorityGeneralValuesMap = getCustomApiConfig().getPriority();
+			Map<String, List<String>> priorityGeneralValuesMap =
+					KPIHelperUtil.buildPriorityMapFromFieldMapping(fieldMapping);
 			List<String> generalPriorityValuesBasedOnExcludedPriorityList = new ArrayList<>();
 			fieldMapping
 					.getExcludedDefectPrioritiesKPI195()

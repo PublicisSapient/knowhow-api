@@ -376,7 +376,10 @@ public class RCAServiceImpl extends JiraKPIService<Long, List<Object>, Map<Strin
 								excelData,
 								jiraIssueList,
 								node.getSprintFilter().getName(),
-								storyList);
+								storyList,
+								configHelperService
+										.getFieldMappingMap()
+										.get(node.getProjectFilter().getBasicProjectConfigId()));
 					}
 					Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 
@@ -412,13 +415,14 @@ public class RCAServiceImpl extends JiraKPIService<Long, List<Object>, Map<Strin
 			List<KPIExcelData> excelData,
 			List<JiraIssue> sprintWiseDefectDataList,
 			String name,
-			List<JiraIssue> storyList) {
+			List<JiraIssue> storyList,
+			FieldMapping fieldMapping) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
 				&& !Objects.isNull(sprintWiseDefectDataList)
 				&& !sprintWiseDefectDataList.isEmpty()) {
 			KPIExcelUtility.populateDefectRelatedExcelData(
-					name, sprintWiseDefectDataList, excelData, customApiConfig, storyList);
+					name, sprintWiseDefectDataList, excelData, fieldMapping, storyList);
 		}
 	}
 

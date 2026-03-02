@@ -294,13 +294,7 @@ public class DIRServiceImpl extends JiraKPIService<Double, List<Object>, Map<Str
 									.forEach(issue -> issueMapping.putIfAbsent(issue.getNumber(), issue));
 
 							KPIExcelUtility.populateDirExcelData(
-									totalStoryIdList,
-									defectList,
-									excelData,
-									issueMapping,
-									fieldMapping,
-									customApiConfig,
-									node);
+									totalStoryIdList, defectList, excelData, issueMapping, fieldMapping, node);
 						}
 					} else {
 						defectInjectionRateForCurrentLeaf = 0.0d;
