@@ -109,6 +109,7 @@ public class UserInfoControlllerTest {
 
 		// userInfo=new UserInfo();
 		userInfo.setUsername("testuser");
+		userInfo.setEmailAddress("testuser@gmail.com");
 		authorities = new ArrayList<>();
 		authorities.add("ROLE_GUEST");
 	}
@@ -160,12 +161,13 @@ public class UserInfoControlllerTest {
 	 */
 	@Test
 	public void testdeleteUser() throws Exception {
-		when(userNameRequest.getUsername()).thenReturn("testuser");
+		when(userNameRequest.getUserEmail()).thenReturn("testuser@gmail.com");
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
-		when(userInfoRepository.findByUsername("testuser")).thenReturn(userInfo);
+		when(userInfoRepository.findByEmailAddress("testuser@gmail.com")).thenReturn(userInfo);
+		when(userInfo.getAuthorities()).thenReturn(authorities);
 		doReturn(new ServiceResponse(true, "Deleted Successfully", "Ok"))
 				.when(userInfoService)
-				.deleteUser("testuser", false);
+				.deleteUser("testuser@gmail.com", false);
 		ServiceResponse response = userInfoController.deleteUser(userNameRequest).getBody();
 		assert response != null;
 		assertEquals(true, response.getSuccess());
@@ -178,9 +180,9 @@ public class UserInfoControlllerTest {
 	 */
 	@Test
 	public void testdeleteSuperAdminUser() {
-		when(userNameRequest.getUsername()).thenReturn("testuser");
-		when(authenticationService.getLoggedInUser()).thenReturn("testuser");
-		when(userInfoRepository.findByUsername("testuser")).thenReturn(userInfo);
+		when(userNameRequest.getUserEmail()).thenReturn("testuser@gmail.com");
+		when(authenticationService.getLoggedInUser()).thenReturn("testuser@gmail.com");
+		when(userInfoRepository.findByEmailAddress("testuser@gmail.com")).thenReturn(userInfo);
 		ServiceResponse response = userInfoController.deleteUser(userNameRequest).getBody();
 		assert response != null;
 		assertEquals(false, response.getSuccess());
@@ -195,7 +197,8 @@ public class UserInfoControlllerTest {
 	public void testDelete_UserFromCentral() {
 		when(userNameRequest.getUsername()).thenReturn("testuser");
 		when(authenticationService.getLoggedInUser()).thenReturn("testuser");
-		when(userInfoRepository.findByUsername("testuser")).thenReturn(userInfo);
+		List<UserInfo> userInfos = new ArrayList<>();
+		userInfos.add(userInfo);
 		ServiceResponse response = userInfoController.deleteUserFromCentral(userNameRequest).getBody();
 		assert response != null;
 		assertEquals(false, response.getSuccess());
