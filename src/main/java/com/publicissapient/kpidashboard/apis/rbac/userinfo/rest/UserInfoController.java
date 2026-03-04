@@ -107,7 +107,7 @@ public class UserInfoController {
 		log.info("Inside deleteUser() method of UserInfoController ");
 		String userEmail = userNameRequest.getUserEmail();
 		String loggedUserName = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByUserEmail(userEmail);
+		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
 		if ((!loggedUserName.equals(userEmail)
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
 			accessRequestsRepository.deleteByUsername(userEmail);
