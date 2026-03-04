@@ -124,7 +124,6 @@ class ProjectAdminDataAccessPolicyTest {
 		when(organizationHierarchyRepository.findAll()).thenReturn(new ArrayList<>());
 		when(userRepository.findUsersByItemIdsOrCreatedBy(items, userName)).thenReturn(userInfoList);
 
-
 		// when
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
