@@ -15,6 +15,7 @@
  */
 package com.publicissapient.kpidashboard.apis.common.policy.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,8 +24,10 @@ import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
 /**
@@ -35,6 +38,7 @@ import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepositor
 @Component(Constant.ROLE_PROJECT_ADMIN)
 public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 	@Autowired private UserInfoRepository userInfoRepository;
+	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
 
 	@Override
 	public List<UserInfo> getAccessibleMembers(String userName) {
@@ -55,6 +59,23 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 			return Collections.emptyList();
 		}
 
-		return userInfoRepository.findUsersByItemIdsOrCreatedBy(accessibleItemIds, userName);
+		List<String> allAccessibleItemIds = new ArrayList<>(accessibleItemIds);
+		List<OrganizationHierarchy> allHierarchies = organizationHierarchyRepository.findAll();
+		for (String itemId : accessibleItemIds) {
+			allAccessibleItemIds.addAll(getChildNodeIds(itemId, allHierarchies));
+		}
+
+		return userInfoRepository.findUsersByItemIdsOrCreatedBy(allAccessibleItemIds, userName);
+	}
+
+	private List<String> getChildNodeIds(String parentId, List<OrganizationHierarchy> allHierarchies) {
+		List<String> childIds = new ArrayList<>();
+		for (OrganizationHierarchy hierarchy : allHierarchies) {
+			if (parentId.equals(hierarchy.getParentId())) {
+				childIds.add(hierarchy.getNodeId());
+				childIds.addAll(getChildNodeIds(hierarchy.getNodeId(), allHierarchies));
+			}
+		}
+		return childIds;
 	}
 }

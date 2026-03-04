@@ -105,16 +105,16 @@ public class UserInfoController {
 	public ResponseEntity<ServiceResponse> deleteUser(
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
-		String userName = userNameRequest.getUsername();
+		String userEmail = userNameRequest.getUserEmail();
 		String loggedUserName = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByUsername(userName);
-		if ((!loggedUserName.equals(userName)
+		UserInfo userInfo = userInfoRepository.findByUserEmail(userEmail);
+		if ((!loggedUserName.equals(userEmail)
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
-			accessRequestsRepository.deleteByUsername(userName);
-			ServiceResponse response = userInfoService.deleteUser(userName, false);
+			accessRequestsRepository.deleteByUsername(userEmail);
+			ServiceResponse response = userInfoService.deleteUser(userEmail, false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
-			log.info("Unauthorized to perform deletion of user " + userName);
+			log.info("Unauthorized to perform deletion of user " + userEmail);
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(
 							new ServiceResponse(
