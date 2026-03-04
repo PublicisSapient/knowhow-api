@@ -68,7 +68,8 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 		return userInfoRepository.findUsersByItemIdsOrCreatedBy(allAccessibleItemIds, userName);
 	}
 
-	private List<String> getChildNodeIds(String parentId, List<OrganizationHierarchy> allHierarchies) {
+	private List<String> getChildNodeIds(
+			String parentId, List<OrganizationHierarchy> allHierarchies) {
 		List<String> childIds = new ArrayList<>();
 		for (OrganizationHierarchy hierarchy : allHierarchies) {
 			if (parentId.equals(hierarchy.getParentId())) {
