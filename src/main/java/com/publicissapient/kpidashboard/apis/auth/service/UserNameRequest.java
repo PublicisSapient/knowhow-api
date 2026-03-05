@@ -25,4 +25,5 @@ import lombok.Data;
 @Data
 public class UserNameRequest {
 	@NotNull private String username;
+	@NotNull private String userEmail;
 }
