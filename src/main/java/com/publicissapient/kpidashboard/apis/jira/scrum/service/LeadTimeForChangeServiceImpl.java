@@ -20,8 +20,8 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service;
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +45,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -54,8 +55,12 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.jira.scrum.service.leadtime.LeadTimeCalculationStrategy;
+import com.publicissapient.kpidashboard.apis.jira.scrum.service.leadtime.LeadTimeContext;
+import com.publicissapient.kpidashboard.apis.jira.scrum.service.leadtime.LeadTimeStrategyFactory;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
+import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -66,15 +71,18 @@ import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.Deployment;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
-import com.publicissapient.kpidashboard.common.model.jira.ReleaseVersion;
-import com.publicissapient.kpidashboard.common.model.scm.MergeRequests;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
+import com.publicissapient.kpidashboard.common.repository.application.DeploymentRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
-import com.publicissapient.kpidashboard.common.repository.scm.MergeRequestRepository;
+import com.publicissapient.kpidashboard.common.repository.scm.ScmCommitsRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -95,21 +103,27 @@ public class LeadTimeForChangeServiceImpl
 
 	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Autowired private MergeRequestRepository mergeRequestRepository;
+	@Autowired private DeploymentRepository deploymentRepositoryCustom;
+
+	@Autowired private ScmKpiHelperService scmKpiHelperService;
+
+	@Autowired private ScmCommitsRepository scmCommitsRepository;
 
 	@Autowired private CustomApiConfig customApiConfig;
 
 	@Autowired private CacheService cacheService;
+
+	@Autowired private LeadTimeStrategyFactory strategyFactory;
 
 	private static final String JIRA_DATA = "jiraIssueData";
 	private static final String JIRA_HISTORY_DATA = "jiraIssueHistoryData";
 	private static final String MERGE_REQUEST_DATA = "mergeRequestData";
 	private static final String LEAD_TIME_CONFIG_REPO_TOOL = "leadTimeConfigRepoTool";
 	private static final String DOD_STATUS = "dodStatus";
-
 	private static final String STATUS_FIELD = "statusUpdationLog.story.changedTo";
-
 	private static final String STORY_ID = "storyID";
+	private static final String DEPLOYMENT_DATA = "deploymentData";
+	private static final String COMMITS_DATA = "commitsData";
 
 	@Override
 	public String getQualifierType() {
@@ -196,28 +210,88 @@ public class LeadTimeForChangeServiceImpl
 
 		List<JiraIssue> jiraIssueList =
 				jiraIssueRepository.findByRelease(mapOfFilters, uniqueProjectMap);
+		List<String> issueIdList =
+				jiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
 		if (CollectionUtils.isNotEmpty(jiraIssueList)) {
-			List<String> issueIdList =
-					jiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
 
 			mapOfFiltersFH.put(STORY_ID, issueIdList);
 			List<JiraIssueCustomHistory> historyDataList =
 					jiraIssueCustomHistoryRepository.findFeatureCustomHistoryStoryProjectWise(
 							mapOfFiltersFH, uniqueProjectMapFH, Sort.Direction.ASC);
-
-			Map<String, List<MergeRequests>> projectWiseMergeRequestList = new HashMap<>();
-			findMergeRequestList(
-					toBranchForMRList,
-					projectWiseLeadTimeConfigRepoTool,
-					issueIdList,
-					projectWiseMergeRequestList);
-
-			resultListMap.put(JIRA_DATA, jiraIssueList);
-			resultListMap.put(LEAD_TIME_CONFIG_REPO_TOOL, projectWiseLeadTimeConfigRepoTool);
 			resultListMap.put(JIRA_HISTORY_DATA, historyDataList); // logic 1 data
-			resultListMap.put(MERGE_REQUEST_DATA, projectWiseMergeRequestList); // logic 2 data
-			resultListMap.put(DOD_STATUS, projectWiseDodStatus);
 		}
+		Map<String, List<ScmMergeRequests>> projectWiseMergeRequestList = new HashMap<>();
+		Map<String, List<ScmCommits>> commitsByProject = new HashMap<>();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
+		LocalDate localStartDate = LocalDate.parse(startDate, formatter);
+		LocalDate localEndDate = LocalDate.parse(endDate, formatter);
+		findMergeRequestAndCommits(
+				toBranchForMRList,
+				projectWiseLeadTimeConfigRepoTool,
+				localStartDate,
+				localEndDate,
+				projectWiseMergeRequestList,
+				commitsByProject);
+
+		List<Deployment> deploymentList =
+				deploymentRepositoryCustom.findDeploymentList(
+						mapOfFilters,
+						projectBasicConfigIdList.stream().map(ObjectId::new).collect(Collectors.toSet()),
+						startDate,
+						endDate);
+
+		List<Deployment> argoCDDeployments =
+				deploymentList.stream()
+						.filter(
+								d ->
+										ProcessorConstants.ARGOCD.equalsIgnoreCase(d.getTool())
+												|| ProcessorConstants.GITHUBACTION.equalsIgnoreCase(d.getTool()))
+						.toList();
+		if (CollectionUtils.isNotEmpty(argoCDDeployments)) {
+			deploymentList.sort(Comparator.comparing(Deployment::getStartTime));
+			AtomicReference<LocalDateTime> previousDeploymentTime = new AtomicReference<>();
+			deploymentList.forEach(
+					deployment -> {
+						if (previousDeploymentTime.get() != null) {
+							LocalDateTime deployStartDateTime =
+									LocalDateTime.parse(deployment.getStartTime(), formatter);
+							List<String> changeSetShas =
+									commitsByProject.get(deployment.getBasicProjectConfigId().toString()).stream()
+											.filter(
+													commit ->
+															(DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp())
+																			.isAfter(previousDeploymentTime.get())
+																	&& DateUtil.convertMillisToLocalDateTime(
+																					commit.getCommitTimestamp())
+																			.isBefore(deployStartDateTime)))
+											.map(ScmCommits::getSha)
+											.toList();
+							deployment.setChangeSets(changeSetShas);
+						}
+						Optional<ScmCommits> headCommit =
+								commitsByProject.get(deployment.getBasicProjectConfigId().toString()).stream()
+										.filter(
+												commit ->
+														commit
+																.getSha()
+																.equalsIgnoreCase(
+																		deployment.getChangeSets().stream().findFirst().get()))
+										.findFirst();
+						headCommit.ifPresent(
+								scmCommits ->
+										previousDeploymentTime.set(
+												DateUtil.convertMillisToLocalDateTime(scmCommits.getCommitTimestamp())));
+					});
+		}
+		resultListMap.put(JIRA_DATA, jiraIssueList);
+		resultListMap.put(LEAD_TIME_CONFIG_REPO_TOOL, projectWiseLeadTimeConfigRepoTool);
+		resultListMap.put(DOD_STATUS, projectWiseDodStatus);
+		resultListMap.put(MERGE_REQUEST_DATA, projectWiseMergeRequestList); // logic 2 data
+		resultListMap.put(
+				DEPLOYMENT_DATA,
+				deploymentList.stream()
+						.collect(Collectors.groupingBy(d -> d.getBasicProjectConfigId().toString())));
+		resultListMap.put(COMMITS_DATA, commitsByProject);
 		return resultListMap;
 	}
 
@@ -303,24 +377,34 @@ public class LeadTimeForChangeServiceImpl
 	 *
 	 * @param toBranchForMRList to branch name
 	 * @param projectWiseLeadTimeConfigRepoTool config logic of kpi
-	 * @param issueIdList jira issue ids
-	 * @param projectWiseMergeRequestList merge Request list
+	 * @param mergeRequestsByProject merge Request list
 	 */
-	private void findMergeRequestList(
+	private void findMergeRequestAndCommits(
 			Map<String, String> toBranchForMRList,
 			Map<String, String> projectWiseLeadTimeConfigRepoTool,
-			List<String> issueIdList,
-			Map<String, List<MergeRequests>> projectWiseMergeRequestList) {
+			LocalDate startDate,
+			LocalDate endDate,
+			Map<String, List<ScmMergeRequests>> mergeRequestsByProject,
+			Map<String, List<ScmCommits>> commitsByProjects) {
+		CustomDateRange customDateRange = new CustomDateRange();
+		customDateRange.setStartDate(startDate);
+		customDateRange.setEndDate(endDate);
 		projectWiseLeadTimeConfigRepoTool.forEach(
 				(projectBasicConfigId, leadTimeConfigRepoTool) -> {
 					if (CommonConstant.REPO.equals(leadTimeConfigRepoTool)) {
 						String toBranchForMRKPI156 = toBranchForMRList.get(projectBasicConfigId);
-						List<MergeRequests> mergeRequestList =
-								mergeRequestRepository.findMergeRequestListBasedOnBasicProjectConfigId(
-										new ObjectId(projectBasicConfigId),
-										CommonUtils.convertTestFolderToPatternList(new ArrayList<>(issueIdList)),
-										toBranchForMRKPI156);
-						projectWiseMergeRequestList.put(projectBasicConfigId, mergeRequestList);
+						List<ScmMergeRequests> mergeRequests =
+								scmKpiHelperService.getMergeRequests(
+										new ObjectId(projectBasicConfigId), customDateRange);
+						List<ScmCommits> commits =
+								scmKpiHelperService.getCommitDetails(
+										new ObjectId(projectBasicConfigId), customDateRange);
+						mergeRequestsByProject.put(
+								projectBasicConfigId,
+								mergeRequests.stream()
+										.filter(mr -> mr.getToBranch().equalsIgnoreCase(toBranchForMRKPI156))
+										.toList());
+						commitsByProjects.put(projectBasicConfigId, commits);
 					}
 				});
 	}
@@ -396,14 +480,20 @@ public class LeadTimeForChangeServiceImpl
 			String requestTrackerId = getRequestTrackerId();
 
 			List<JiraIssueCustomHistory> historyDataList =
-					(List<JiraIssueCustomHistory>) resultMap.get(JIRA_HISTORY_DATA);
-			List<JiraIssue> jiraIssueList = (List<JiraIssue>) resultMap.get(JIRA_DATA);
+					(List<JiraIssueCustomHistory>)
+							resultMap.getOrDefault(JIRA_HISTORY_DATA, new ArrayList<>());
+			List<JiraIssue> jiraIssueList =
+					(List<JiraIssue>) resultMap.getOrDefault(JIRA_DATA, new ArrayList<>());
 			Map<String, String> projectWiseLeadTimeConfigRepoTool =
 					(Map<String, String>) resultMap.get(LEAD_TIME_CONFIG_REPO_TOOL);
-			Map<String, List<MergeRequests>> projectWiseMergeRequestList =
-					(Map<String, List<MergeRequests>>) resultMap.get(MERGE_REQUEST_DATA);
+			Map<String, List<ScmMergeRequests>> projectWiseMergeRequestList =
+					(Map<String, List<ScmMergeRequests>>) resultMap.get(MERGE_REQUEST_DATA);
 			Map<String, List<String>> projectWiseDodStatus =
 					(Map<String, List<String>>) resultMap.get(DOD_STATUS);
+			Map<String, List<Deployment>> projectWiseDeploymentData =
+					(Map<String, List<Deployment>>) resultMap.get(DEPLOYMENT_DATA);
+			Map<String, List<ScmCommits>> scmCommitsByProject =
+					(Map<String, List<ScmCommits>>) resultMap.get(COMMITS_DATA);
 
 			Map<String, List<JiraIssue>> projectWiseJiraIssueList =
 					jiraIssueList.stream().collect(Collectors.groupingBy(JiraIssue::getBasicProjectConfigId));
@@ -416,10 +506,10 @@ public class LeadTimeForChangeServiceImpl
 						String trendLineName = node.getProjectFilter().getName();
 						String basicProjectConfigId =
 								node.getProjectFilter().getBasicProjectConfigId().toString();
-
 						String leadTimeConfigRepoTool =
 								projectWiseLeadTimeConfigRepoTool.get(basicProjectConfigId);
 						leadTimeTools.add(leadTimeConfigRepoTool);
+
 						List<JiraIssueCustomHistory> jiraIssueHistoryDataList =
 								projectWiseJiraIssueHistoryDataList.get(basicProjectConfigId);
 						List<JiraIssue> jiraIssueDataList = projectWiseJiraIssueList.get(basicProjectConfigId);
@@ -433,42 +523,48 @@ public class LeadTimeForChangeServiceImpl
 										? getLastNWeek(defaultTimeCount)
 										: getLastNMonthCount(defaultTimeCount);
 
-						if (CollectionUtils.isNotEmpty(jiraIssueHistoryDataList)
-								&& CollectionUtils.isNotEmpty(jiraIssueDataList)) {
-							Map<String, JiraIssue> jiraIssueMap =
-									jiraIssueDataList.stream()
-											.collect(Collectors.toMap(JiraIssue::getNumber, Function.identity()));
-							List<DataCount> dataCountList = new ArrayList<>();
+						List<DataCount> dataCountList = new ArrayList<>();
 
-							if (CommonConstant.REPO.equals(leadTimeConfigRepoTool)) {
-								List<MergeRequests> mergeRequestList =
-										projectWiseMergeRequestList.get(basicProjectConfigId);
-								findLeadTimeChangeForRepoTool(
-										mergeRequestList, weekOrMonth, leadTimeMapTimeWise, jiraIssueMap);
-							} else {
-								findLeadTimeChangeForJira(
-										jiraIssueHistoryDataList,
-										weekOrMonth,
-										leadTimeMapTimeWise,
-										jiraIssueMap,
-										dodStatus);
-							}
+						List<ScmMergeRequests> mergeRequestList =
+								projectWiseMergeRequestList.get(basicProjectConfigId);
+						List<Deployment> deploymentList = projectWiseDeploymentData.get(basicProjectConfigId);
+						Map<String, JiraIssue> jiraIssueMap =
+								CollectionUtils.isNotEmpty(jiraIssueDataList)
+										? jiraIssueDataList.stream()
+												.collect(Collectors.toMap(JiraIssue::getNumber, Function.identity()))
+										: new HashMap<>();
 
-							leadTimeMapTimeWise.forEach(
-									(weekOrMonthName, leadTimeListCurrentTime) -> {
-										DataCount dataCount =
-												createDataCount(trendLineName, weekOrMonthName, leadTimeListCurrentTime);
-										dataCountList.add(dataCount);
-									});
-							populateLeadTimeExcelData(
-									excelData,
-									requestTrackerId,
-									trendLineName,
-									leadTimeConfigRepoTool,
-									leadTimeMapTimeWise);
+						LeadTimeCalculationStrategy strategy =
+								strategyFactory.getStrategy(
+										leadTimeConfigRepoTool, CollectionUtils.isNotEmpty(deploymentList));
 
-							mapTmp.get(node.getId()).setValue(dataCountList);
-						}
+						LeadTimeContext context =
+								LeadTimeContext.builder()
+										.weekOrMonth(weekOrMonth)
+										.jiraIssueHistoryDataList(jiraIssueHistoryDataList)
+										.jiraIssueMap(jiraIssueMap)
+										.dodStatus(dodStatus)
+										.mergeRequestList(mergeRequestList)
+										.deploymentList(deploymentList)
+										.scmCommitList(scmCommitsByProject.get(basicProjectConfigId))
+										.build();
+
+						strategy.calculateLeadTime(context, leadTimeMapTimeWise);
+
+						leadTimeMapTimeWise.forEach(
+								(weekOrMonthName, leadTimeListCurrentTime) -> {
+									DataCount dataCount =
+											createDataCount(trendLineName, weekOrMonthName, leadTimeListCurrentTime);
+									dataCountList.add(dataCount);
+								});
+						populateLeadTimeExcelData(
+								excelData,
+								requestTrackerId,
+								trendLineName,
+								leadTimeConfigRepoTool,
+								leadTimeMapTimeWise);
+
+						mapTmp.get(node.getId()).setValue(dataCountList);
 					});
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.LEAD_TIME_FOR_CHANGE.getColumns());
@@ -501,207 +597,6 @@ public class LeadTimeForChangeServiceImpl
 	}
 
 	/**
-	 * find lead time changes differences between closed ticket date and release date
-	 *
-	 * @param jiraIssueHistoryDataList history data list
-	 * @param weekOrMonth date of x axis
-	 * @param leadTimeMapTimeWise lead time in days
-	 * @param jiraIssueMap jira issues
-	 */
-	private void findLeadTimeChangeForJira(
-			List<JiraIssueCustomHistory> jiraIssueHistoryDataList,
-			String weekOrMonth,
-			Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise,
-			Map<String, JiraIssue> jiraIssueMap,
-			List<String> dodStatus) {
-		jiraIssueHistoryDataList.forEach(
-				jiraIssueHistoryData -> {
-					AtomicReference<LocalDateTime> closedTicketDate = new AtomicReference<>();
-					AtomicReference<LocalDateTime> releaseDate = new AtomicReference<>();
-
-					jiraIssueHistoryData
-							.getStatusUpdationLog()
-							.forEach(
-									jiraHistoryChangeLog -> {
-										if (CollectionUtils.isNotEmpty(dodStatus)
-												&& dodStatus.contains(jiraHistoryChangeLog.getChangedTo())) {
-											closedTicketDate.set(
-													DateUtil.localDateTimeToUTC(jiraHistoryChangeLog.getUpdatedOn()));
-										}
-									});
-					if (Objects.nonNull(jiraIssueMap.get(jiraIssueHistoryData.getStoryID()))
-							&& CollectionUtils.isNotEmpty(
-									jiraIssueMap.get(jiraIssueHistoryData.getStoryID()).getReleaseVersions())) {
-						List<ReleaseVersion> releaseVersionList =
-								jiraIssueMap.get(jiraIssueHistoryData.getStoryID()).getReleaseVersions();
-						releaseVersionList.forEach(
-								releaseVersion ->
-										releaseDate.set(
-												DateUtil.convertJodaDateTimeToLocalDateTime(
-														releaseVersion.getReleaseDate())));
-					}
-
-					if (closedTicketDate.get() != null && releaseDate.get() != null) {
-						double leadTimeChangeInDays =
-								KpiDataHelper.calWeekDaysExcludingWeekends(
-										closedTicketDate.get(), releaseDate.get());
-
-						String weekOrMonthName = getDateFormatted(weekOrMonth, releaseDate.get());
-
-						setLeadTimeChangeDataListForJira(
-								leadTimeMapTimeWise,
-								jiraIssueHistoryData,
-								closedTicketDate,
-								releaseDate,
-								leadTimeChangeInDays,
-								weekOrMonthName);
-					}
-				});
-	}
-
-	/**
-	 * find lead time changes differences between closed ticket date and release date using jira
-	 *
-	 * @param leadTimeMapTimeWise lead time list
-	 * @param jiraIssueHistoryData history data
-	 * @param closedTicketDate closed ticket date
-	 * @param releaseDate release date
-	 * @param leadTimeChange lead time
-	 * @param weekOrMonthName date
-	 */
-	private void setLeadTimeChangeDataListForJira(
-			Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise,
-			JiraIssueCustomHistory jiraIssueHistoryData,
-			AtomicReference<LocalDateTime> closedTicketDate,
-			AtomicReference<LocalDateTime> releaseDate,
-			double leadTimeChange,
-			String weekOrMonthName) {
-		LeadTimeChangeData leadTimeChangeData = new LeadTimeChangeData();
-		leadTimeChangeData.setStoryID(jiraIssueHistoryData.getStoryID());
-		leadTimeChangeData.setUrl(jiraIssueHistoryData.getUrl());
-		leadTimeChangeData.setClosedDate(
-				DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
-		leadTimeChangeData.setReleaseDate(
-				DateUtil.dateTimeConverter(
-						releaseDate.get().toString(), DateUtil.HOUR_MINUTE, DateUtil.DISPLAY_DATE_TIME_FORMAT));
-		String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
-		leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
-		leadTimeChangeData.setLeadTime(leadTimeChange);
-		leadTimeChangeData.setDate(weekOrMonthName);
-		leadTimeMapTimeWise.computeIfPresent(
-				weekOrMonthName,
-				(key, leadTimeChangeListCurrentTime) -> {
-					leadTimeChangeListCurrentTime.add(leadTimeChangeData);
-					return leadTimeChangeListCurrentTime;
-				});
-	}
-
-	/**
-	 * find lead time changes differences between merge request ticket date and release date using
-	 * repo tools
-	 *
-	 * @param mergeRequestList Merge request list
-	 * @param weekOrMonth date
-	 * @param leadTimeMapTimeWise lead time in days
-	 * @param jiraIssueMap jira issues
-	 */
-	private void findLeadTimeChangeForRepoTool(
-			List<MergeRequests> mergeRequestList,
-			String weekOrMonth,
-			Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise,
-			Map<String, JiraIssue> jiraIssueMap) {
-		if (CollectionUtils.isNotEmpty(mergeRequestList) && MapUtils.isNotEmpty(jiraIssueMap)) {
-			mergeRequestList.forEach(
-					mergeRequests -> {
-						AtomicReference<LocalDateTime> closedTicketDate = new AtomicReference<>();
-						AtomicReference<LocalDateTime> releaseDate = new AtomicReference<>();
-						LocalDateTime closedDate =
-								DateUtil.convertMillisToLocalDateTime(mergeRequests.getClosedDate());
-						closedTicketDate.set(closedDate);
-						String fromBranch = mergeRequests.getFromBranch();
-						AtomicReference<JiraIssue> matchJiraIssue = new AtomicReference<>();
-						jiraIssueMap.forEach(
-								(key, jiraIssue) -> {
-									String matchIssueKey = ".*" + key + ".*";
-									if (fromBranch.matches(matchIssueKey)) {
-										matchJiraIssue.set(jiraIssue);
-									}
-								});
-
-						if (matchJiraIssue.get() != null) {
-							if (CollectionUtils.isNotEmpty(matchJiraIssue.get().getReleaseVersions())) {
-								matchJiraIssue
-										.get()
-										.getReleaseVersions()
-										.forEach(
-												releaseVersion ->
-														releaseDate.set(
-																DateUtil.convertJodaDateTimeToLocalDateTime(
-																		releaseVersion.getReleaseDate())));
-							}
-
-							setLeadTimeChangeDataForRepo(
-									weekOrMonth,
-									leadTimeMapTimeWise,
-									mergeRequests,
-									closedTicketDate,
-									releaseDate,
-									matchJiraIssue);
-						}
-					});
-		}
-	}
-
-	/**
-	 * set lead time changes data as per repo as per merge request from branch linked with jira issue
-	 * id
-	 *
-	 * @param weekOrMonth date
-	 * @param leadTimeMapTimeWise lead time
-	 * @param mergeRequests MR
-	 * @param closedTicketDate merge date
-	 * @param releaseDate release date
-	 * @param matchJiraIssue linked with branch
-	 */
-	private void setLeadTimeChangeDataForRepo(
-			String weekOrMonth,
-			Map<String, List<LeadTimeChangeData>> leadTimeMapTimeWise,
-			MergeRequests mergeRequests,
-			AtomicReference<LocalDateTime> closedTicketDate,
-			AtomicReference<LocalDateTime> releaseDate,
-			AtomicReference<JiraIssue> matchJiraIssue) {
-		if (closedTicketDate.get() != null && releaseDate.get() != null) {
-			double leadTimeChange =
-					KpiDataHelper.calWeekDaysExcludingWeekends(closedTicketDate.get(), releaseDate.get());
-
-			String weekOrMonthName = getDateFormatted(weekOrMonth, releaseDate.get());
-
-			LeadTimeChangeData leadTimeChangeData = new LeadTimeChangeData();
-			leadTimeChangeData.setStoryID(matchJiraIssue.get().getNumber());
-			leadTimeChangeData.setUrl(matchJiraIssue.get().getUrl());
-			leadTimeChangeData.setMergeID(mergeRequests.getRevisionNumber());
-			leadTimeChangeData.setFromBranch(mergeRequests.getFromBranch());
-			leadTimeChangeData.setClosedDate(
-					DateUtil.tranformUTCLocalTimeToZFormat(closedTicketDate.get()));
-			leadTimeChangeData.setReleaseDate(
-					DateUtil.dateTimeConverter(
-							releaseDate.get().toString(),
-							DateUtil.HOUR_MINUTE,
-							DateUtil.DISPLAY_DATE_TIME_FORMAT));
-			String leadTimeChangeInDays = DateUtil.convertDoubleToDaysAndHoursString(leadTimeChange);
-			leadTimeChangeData.setLeadTimeInDays(leadTimeChangeInDays);
-			leadTimeChangeData.setLeadTime(leadTimeChange);
-			leadTimeChangeData.setDate(weekOrMonthName);
-			leadTimeMapTimeWise.computeIfPresent(
-					weekOrMonthName,
-					(key, leadTimeChangeListCurrentTime) -> {
-						leadTimeChangeListCurrentTime.add(leadTimeChangeData);
-						return leadTimeChangeListCurrentTime;
-					});
-		}
-	}
-
-	/**
 	 * set data count
 	 *
 	 * @param trendLineName project name
@@ -722,16 +617,6 @@ public class LeadTimeForChangeServiceImpl
 		dataCount.setValue(days);
 		dataCount.setHoverValue(new HashMap<>());
 		return dataCount;
-	}
-
-	private String getDateFormatted(String weekOrMonth, LocalDateTime currentDate) {
-		if (weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)) {
-			return DateUtil.getWeekRangeUsingDateTime(currentDate);
-		} else {
-			return currentDate.getYear()
-					+ Constant.DASH
-					+ Month.of(currentDate.toLocalDate().atTime(23, 59, 59).getMonthValue());
-		}
 	}
 
 	@Override

@@ -1079,6 +1079,16 @@ public final class KpiDataHelper {
 		return DateUtil.NOT_APPLICABLE;
 	}
 
+	public static double calWeekMinutes(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+		if (startDateTime != null && endDateTime != null && !startDateTime.isAfter(endDateTime)) {
+			long totalMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+			int weekendDays = countSaturdaysAndSundays(startDateTime, endDateTime);
+			long weekendMinutes = (long) weekendDays * 24 * 60;
+			return totalMinutes - weekendMinutes;
+		}
+		return 0.0d;
+	}
+
 	/**
 	 * @param startDateTime
 	 * @param endDateTime
