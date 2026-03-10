@@ -1084,7 +1084,7 @@ public final class KpiDataHelper {
 			long totalMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
 			int weekendDays = countSaturdaysAndSundays(startDateTime, endDateTime);
 			long weekendMinutes = (long) weekendDays * 24 * 60;
-			return totalMinutes - weekendMinutes;
+			return (double) totalMinutes - weekendMinutes;
 		}
 		return 0.0d;
 	}
