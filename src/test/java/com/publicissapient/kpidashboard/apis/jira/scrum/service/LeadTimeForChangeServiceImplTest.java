@@ -24,6 +24,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -69,6 +71,7 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectBasicCon
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.scm.MergeRequests;
+import com.publicissapient.kpidashboard.common.repository.application.DeploymentRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.scm.MergeRequestRepository;
@@ -90,6 +93,7 @@ public class LeadTimeForChangeServiceImplTest {
 	@Mock private CacheService cacheService;
 
 	@Mock private FilterHelperService filterHelperService;
+	@Mock private DeploymentRepository deploymentRepository;
 
 	private KpiRequest kpiRequest;
 	private Map<String, Object> filterLevelMap;
@@ -128,7 +132,6 @@ public class LeadTimeForChangeServiceImplTest {
 				projectConfig -> {
 					projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
 				});
-		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 
 		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
 				AccountHierarchyFilterDataFactory.newInstance();
@@ -173,8 +176,17 @@ public class LeadTimeForChangeServiceImplTest {
 						any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(deploymentRepository.findDeploymentList(any(), any(), any(), any()))
+				.thenReturn(new ArrayList<>());
+		LocalDateTime startDateTime = LocalDateTime.now().minusMonths(3);
+		LocalDateTime endDateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 		Map<String, Object> leadTimeDataListMap =
-				leadTimeForChangeService.fetchKPIDataFromDb(leafNodeList, null, null, kpiRequest);
+				leadTimeForChangeService.fetchKPIDataFromDb(
+						leafNodeList,
+						startDateTime.format(formatter),
+						endDateTime.format(formatter),
+						kpiRequest);
 		assertNotNull(leadTimeDataListMap);
 	}
 
