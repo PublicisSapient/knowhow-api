@@ -129,7 +129,7 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 							LeadTimeChangeData data =
 									LeadTimeChangeData.builder()
 											.storyID(commit.getSha())
-											.mergeID(earliestMr.getRevisionNumber())
+											.mergeID(earliestMr.getExternalId())
 											.fromBranch(earliestMr.getFromBranch())
 											.closedDate(DateUtil.tranformUTCLocalTimeToZFormat(commitDateTime))
 											.releaseDate(
