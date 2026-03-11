@@ -268,19 +268,21 @@ public class LeadTimeForChangeServiceImpl
 											.toList();
 							deployment.setChangeSets(changeSetShas);
 						}
-						Optional<ScmCommits> headCommit =
-								commitsByProject.get(deployment.getBasicProjectConfigId().toString()).stream()
-										.filter(
-												commit ->
-														commit
-																.getSha()
-																.equalsIgnoreCase(
-																		deployment.getChangeSets().stream().findFirst().get()))
-										.findFirst();
-						headCommit.ifPresent(
-								scmCommits ->
-										previousDeploymentTime.set(
-												DateUtil.convertMillisToLocalDateTime(scmCommits.getCommitTimestamp())));
+						if (!deployment.getChangeSets().isEmpty()) {
+							Optional<ScmCommits> headCommit =
+									commitsByProject.get(deployment.getBasicProjectConfigId().toString()).stream()
+											.filter(
+													commit ->
+															commit
+																	.getSha()
+																	.equalsIgnoreCase(
+																			deployment.getChangeSets().stream().findFirst().get()))
+											.findFirst();
+							headCommit.ifPresent(
+									scmCommits ->
+											previousDeploymentTime.set(
+													DateUtil.convertMillisToLocalDateTime(scmCommits.getCommitTimestamp())));
+						}
 					});
 		}
 		resultListMap.put(JIRA_DATA, jiraIssueList);

@@ -44,6 +44,7 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 
 		Map<String, List<ScmMergeRequests>> mrBySha =
 				context.getMergeRequestList().stream()
+						.filter(mr -> CollectionUtils.isNotEmpty(mr.getCommitShas()))
 						.flatMap(mr -> mr.getCommitShas().stream().map(sha -> Map.entry(sha, mr)))
 						.collect(
 								Collectors.groupingBy(
