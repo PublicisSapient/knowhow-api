@@ -5313,7 +5313,7 @@
         }
       ]
     },
-    "xaxisLabel" : "Sprints",
+    "xaxisLabel" : "Weeks",
     "yaxisLabel" : "Avg. Execution Time (in minutes)",
     "isAdditionalFilterSupport" : false,
     "kpiFilter" : "",
