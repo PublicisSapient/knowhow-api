@@ -115,7 +115,7 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 											.sum();
 
 							double totalLeadTime =
-									(commitToMerge + mergeToDeployStart + totalDeployDuration) / 60 / 1440;
+									(commitToMerge + mergeToDeployStart + totalDeployDuration) / 1440;
 
 							LocalDateTime lastDeployEndTime =
 									deployments.stream()
