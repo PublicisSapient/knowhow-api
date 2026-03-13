@@ -34,6 +34,10 @@ import com.publicissapient.kpidashboard.apis.feedback.service.FeedbackService;
 import com.publicissapient.kpidashboard.apis.model.FeedbackSubmitDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +61,16 @@ public class FeedbackController {
 	/**
 	 * @return feedback categories
 	 */
+	@Operation(
+			summary = "Get Feedback Categories",
+			description = "Retrieve all feedback categories available for submission.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved feedback categories"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping("/categories")
 	public ResponseEntity<ServiceResponse> getFeedbackCategories() {
 		List<String> feedbackCategories = submitFeedbackService.getFeedBackCategories();
@@ -70,9 +84,20 @@ public class FeedbackController {
 	 *
 	 * @return responseEntity with message and status
 	 */
+	@Operation(
+			summary = "Submit Feedback",
+			description = "Submit feedback with details such as category, subject, and message.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Feedback submitted successfully"),
+				@ApiResponse(responseCode = "400", description = "Invalid feedback data"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping("/submitfeedback")
 	public ResponseEntity<ServiceResponse> submitFeedback(
-			@Valid @RequestBody FeedbackSubmitDTO feedback, HttpServletRequest httpServletRequest) {
+			@Parameter(description = "Feedback submission details", required = true) @Valid @RequestBody
+					FeedbackSubmitDTO feedback,
+			HttpServletRequest httpServletRequest) {
 		log.info("creating new request");
 		String loggedUserName = authenticationService.getLoggedInUser();
 		if (loggedUserName != null) {

@@ -29,6 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.publicissapient.kpidashboard.apis.common.service.KpiDataCacheService;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -49,11 +53,27 @@ public class KpiDataCacheController {
 	 *
 	 * @param kpiId the cache name
 	 */
+	@Operation(
+			summary = "Clear Specified Cache",
+			description = "Clears the specified cache for a given project and KPI.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Successfully cleared specified cache"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(
 			value = "/cache/project/{projectId}/kpi/{kpiId}/clear",
 			produces = APPLICATION_JSON_VALUE)
 	public void clearCache(
-			@PathVariable("projectId") String basicProjectConfigId, @PathVariable("kpiId") String kpiId) {
+			@Parameter(
+							description = "Project Basic Config ID",
+							required = true,
+							example = "5f47ac0b6c4d6631b4e8b456")
+					@PathVariable("projectId")
+					String basicProjectConfigId,
+			@Parameter(description = "KPI ID", required = true, example = "kpi12345")
+					@PathVariable("kpiId")
+					String kpiId) {
 		service.clearCache(basicProjectConfigId, kpiId);
 	}
 
@@ -62,8 +82,24 @@ public class KpiDataCacheController {
 	 *
 	 * @param basicProjectConfigId the project basic config id
 	 */
+	@Operation(
+			summary = "Clear All Caches for Project",
+			description = "Clears all caches associated with the specified project.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully cleared all caches for the project"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(value = "/cache/project/{projectId}/clear", produces = APPLICATION_JSON_VALUE)
-	public void clearCacheForProject(@PathVariable("projectId") String basicProjectConfigId) {
+	public void clearCacheForProject(
+			@Parameter(
+							description = "Project Basic Config ID",
+							required = true,
+							example = "5f47ac0b6c4d6631b4e8b456")
+					@PathVariable("projectId")
+					String basicProjectConfigId) {
 		List<String> kpiList = service.getKpiBasedOnSource(CommonConstant.ALL_KPI);
 		kpiList.forEach(kpiId -> service.clearCache(basicProjectConfigId, kpiId));
 	}
@@ -73,11 +109,29 @@ public class KpiDataCacheController {
 	 *
 	 * @param source kpi source
 	 */
+	@Operation(
+			summary = "Clear Caches for Project and Source",
+			description = "Clears caches for a given project and KPI source.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully cleared caches for the project and source"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@GetMapping(
 			value = "/cache/project/{projectId}/source/{source}/clear",
 			produces = APPLICATION_JSON_VALUE)
 	public void clearCacheForProjectAndSource(
-			@PathVariable("source") String source, @PathVariable("projectId") String projectId) {
+			@Parameter(description = "KPI Source", required = true, example = "JIRA")
+					@PathVariable("source")
+					String source,
+			@Parameter(
+							description = "Project Basic Config ID",
+							required = true,
+							example = "5f47ac0b6c4d6631b4e8b456")
+					@PathVariable("projectId")
+					String projectId) {
 		List<String> kpiList = service.getKpiBasedOnSource(source);
 		kpiList.forEach(kpiId -> service.clearCache(projectId, kpiId));
 	}

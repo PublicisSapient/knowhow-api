@@ -198,10 +198,6 @@ public class DefectReopenRateQualityServiceImplTest {
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
 		when(defectReopenRateQualityService.getRequestTrackerId()).thenReturn(kpiRequestTrackerId);
-		when(customApiConfig.getpriorityP1()).thenReturn(P1);
-		when(customApiConfig.getpriorityP2()).thenReturn(P2);
-		when(customApiConfig.getpriorityP3()).thenReturn(P3);
-		when(customApiConfig.getpriorityP4()).thenReturn(P4);
 
 		try {
 			KpiElement kpiElement =

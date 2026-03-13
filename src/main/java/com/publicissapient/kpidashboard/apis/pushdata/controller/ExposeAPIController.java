@@ -34,6 +34,10 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.pushdata.model.dto.ExposeAPITokenRequestDTO;
 import com.publicissapient.kpidashboard.apis.pushdata.service.AuthExposeAPIService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,11 +59,28 @@ public class ExposeAPIController {
 	 * @param exposeAPITokenRequestDTO the expose API token request DTO
 	 * @return the response entity
 	 */
+	@Operation(
+			summary = "Generate and Save Token",
+			description =
+					"API to generate and save token for Expose API based on project configuration ID")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Token generated and saved successfully"),
+				@ApiResponse(responseCode = "400", description = "Invalid request data"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while generating and saving token")
+			})
 	@PreAuthorize(
 			"hasPermission(#exposeAPITokenRequestDTO.basicProjectConfigId, 'SAVE_PROJECT_TOOL')")
 	@PostMapping(value = "/generateToken", consumes = MediaType.APPLICATION_JSON_VALUE) // NOSONAR
 	public ResponseEntity<ServiceResponse> generateAndSaveToken(
-			@RequestBody @Valid ExposeAPITokenRequestDTO exposeAPITokenRequestDTO) {
+			@Parameter(
+							description = "ExposeAPITokenRequestDTO object containing project configuration ID",
+							required = true)
+					@RequestBody
+					@Valid
+					ExposeAPITokenRequestDTO exposeAPITokenRequestDTO) {
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(authExposeAPIService.generateAndSaveToken(exposeAPITokenRequestDTO));
 	}

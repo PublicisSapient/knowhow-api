@@ -1,14 +1,14 @@
 [
   {
-    "categoryId": "categoryOne",
+    "categoryId": "speed",
     "categoryName": "Team Efficiency"
   },
   {
-    "categoryId": "categoryTwo",
+    "categoryId": "quality",
     "categoryName": "Team Quality"
   },
   {
-    "categoryId": "categoryThree",
+    "categoryId": "value",
     "categoryName": "Team Delivery"
   }
 ]

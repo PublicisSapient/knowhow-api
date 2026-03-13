@@ -233,7 +233,6 @@ public class QADDServiceImpl extends JiraKPIService<Double, List<Object>, Map<St
 									excelData,
 									allStoryMap,
 									fieldMapping,
-									customApiConfig,
 									node);
 						}
 					} else {

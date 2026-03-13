@@ -379,7 +379,17 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 
 		// Set filters for each type of board
 		setFiltersForBoards.accept(scrumBoards, 0);
-		kanbanBoards.forEach(boardDTO -> boardDTO.setFilters(copyFiltersWithoutId(filtersMap.get(1))));
+		kanbanBoards.forEach(
+				boardDTO -> {
+					boolean hasKpi159 =
+							boardDTO.getKpis() != null
+									&& boardDTO.getKpis().stream().anyMatch(kpi -> "kpi159".equals(kpi.getKpiId()));
+					if (hasKpi159) {
+						boardDTO.setFilters(copyFiltersWithoutId(filtersMap.get(6)));
+					} else {
+						boardDTO.setFilters(copyFiltersWithoutId(filtersMap.get(1)));
+					}
+				});
 		setFiltersForBoards.accept(otherBoards, 0);
 	}
 

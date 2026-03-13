@@ -34,6 +34,10 @@ import com.publicissapient.kpidashboard.apis.model.KPIExcelValidationDataRespons
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -61,11 +65,26 @@ public class KPIExcelDataController {
 	 * @param kpiID the kpi id
 	 * @return validation kpi data
 	 */
+	@Operation(
+			summary = "Get Validation KPI Excel Data",
+			description =
+					"Fetches the validation KPI Excel data for the specified KPI ID based on the provided filters.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved validation KPI Excel data"),
+				@ApiResponse(responseCode = "500", description = "Internal server error")
+			})
 	@PostMapping(value = "/v1/kpi/{kpiID}", produces = APPLICATION_JSON_VALUE)
 	public ResponseEntity<KPIExcelValidationDataResponse> getValidationKPIData(
 			HttpServletRequest request,
-			@NotNull @RequestBody KpiRequest kpiRequest,
-			@NotNull @PathVariable("kpiID") String kpiID) {
+			@Parameter(description = "KPI Request Object", required = true) @NotNull @RequestBody
+					KpiRequest kpiRequest,
+			@Parameter(description = "KPI ID", required = true, example = "kpi12345")
+					@NotNull
+					@PathVariable("kpiID")
+					String kpiID) {
 		String apiKey = customApiConfig.getxApiKey();
 		Boolean isApiAuth =
 				StringUtils.isNotEmpty(apiKey)

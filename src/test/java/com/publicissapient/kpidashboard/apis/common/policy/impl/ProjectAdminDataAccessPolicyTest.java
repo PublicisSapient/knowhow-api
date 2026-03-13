@@ -32,12 +32,14 @@ import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
 import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import com.publicissapient.kpidashboard.common.repository.application.OrganizationHierarchyRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
 class ProjectAdminDataAccessPolicyTest {
 	@InjectMocks private ProjectAdminDataAccessPolicy policy;
 
 	@Mock private UserInfoRepository userRepository;
+	@Mock private OrganizationHierarchyRepository organizationHierarchyRepository;
 	String userName;
 
 	@BeforeEach
@@ -119,13 +121,14 @@ class ProjectAdminDataAccessPolicyTest {
 		List<UserInfo> userInfoList = new ArrayList<>();
 		userInfoList.add(userInfo);
 		List<String> items = accessNode.getAccessItems().stream().map(AccessItem::getItemId).toList();
-		when(userRepository.findUsersByItemIdsOrCreatedBy(items, "userName")).thenReturn(userInfoList);
+		when(organizationHierarchyRepository.findAll()).thenReturn(new ArrayList<>());
+		when(userRepository.findUsersByItemIdsOrCreatedBy(items, userName)).thenReturn(userInfoList);
 
 		// when
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
 		// then
-		assertEquals(0, result.size());
+		assertEquals(1, result.size());
 		verify(userRepository, times(1)).findByUsername(userName);
 	}
 }

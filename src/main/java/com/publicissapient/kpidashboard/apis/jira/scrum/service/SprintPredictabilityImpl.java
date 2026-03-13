@@ -513,8 +513,7 @@ public class SprintPredictabilityImpl
 						issueDetailsSet,
 						excelData,
 						fieldMapping,
-						jiraIssueMap,
-						customApiConfig);
+						jiraIssueMap);
 			}
 		}
 	}

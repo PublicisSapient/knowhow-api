@@ -411,11 +411,7 @@ public class SprintVelocityServiceImpl
 				jiraIssues.stream()
 						.forEach(issue -> totalSprintStoryMap.putIfAbsent(issue.getNumber(), issue));
 				KPIExcelUtility.populateSprintVelocity(
-						node.getSprintFilter().getName(),
-						totalSprintStoryMap,
-						excelData,
-						fieldMapping,
-						customApiConfig);
+						node.getSprintFilter().getName(), totalSprintStoryMap, excelData, fieldMapping);
 			}
 		}
 	}

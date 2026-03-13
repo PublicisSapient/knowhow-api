@@ -489,7 +489,9 @@ public class CreatedVsResolvedServiceImpl
 					totalCreatedTicketsSprintStart,
 					closedIssuesWithStatus,
 					excelData,
-					customApiConfig,
+					configHelperService
+							.getFieldMappingMap()
+							.get(node.getProjectFilter().getBasicProjectConfigId()),
 					storyList);
 		}
 	}

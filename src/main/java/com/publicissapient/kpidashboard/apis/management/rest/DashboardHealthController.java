@@ -29,6 +29,7 @@ import com.publicissapient.kpidashboard.apis.model.HealthResponseDto;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -95,7 +96,13 @@ public class DashboardHealthController {
 						content = @Content)
 			})
 	@GetMapping("/{boardType}")
-	public ResponseEntity<ServiceResponse> getBoardTypeHealth(@PathVariable String boardType) {
+	public ResponseEntity<ServiceResponse> getBoardTypeHealth(
+			@Parameter(
+							description = "The type of board (e.g., scrum, kanban)",
+							example = "scrum",
+							required = true)
+					@PathVariable
+					String boardType) {
 		log.debug("Received request for board type health: {}", boardType);
 		HealthResponseDto response = dashboardHealthService.getBoardTypeHealth(boardType);
 		return ResponseEntity.ok(
@@ -126,7 +133,18 @@ public class DashboardHealthController {
 			})
 	@GetMapping("/{boardType}/{dashboard}")
 	public ResponseEntity<ServiceResponse> getDashboardDetailHealth(
-			@PathVariable String boardType, @PathVariable String dashboard) {
+			@Parameter(
+							description = "The type of board (e.g., scrum, kanban)",
+							example = "scrum",
+							required = true)
+					@PathVariable
+					String boardType,
+			@Parameter(
+							description = "The name of the dashboard",
+							example = "Sprint Health",
+							required = true)
+					@PathVariable
+					String dashboard) {
 		log.debug("Received request for dashboard detail health: {}/{}", boardType, dashboard);
 		HealthResponseDto response =
 				dashboardHealthService.getDashboardDetailHealth(boardType, dashboard);

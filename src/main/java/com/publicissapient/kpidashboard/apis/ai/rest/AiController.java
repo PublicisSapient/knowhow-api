@@ -21,7 +21,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.io.IOException;
 import javax.validation.constraints.NotNull;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +40,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiRecommendationRequestDTO;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -59,7 +59,7 @@ public class AiController {
 
 	private final SprintGoalsService sprintGoalsService;
 
-	@Autowired private KpiRecommendationServiceImpl kpiRecommendationServiceImpl;
+	private final KpiRecommendationServiceImpl kpiRecommendationServiceImpl;
 
 	private final SearchKPIService searchKPIService;
 
@@ -95,7 +95,12 @@ public class AiController {
 					""")
 			})
 	public ResponseEntity<SummarizeSprintGoalsResponseDTO> summarizeSprintGoals(
-			@Valid @RequestBody SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO)
+			@Parameter(
+							description = "Request payload containing sprint goals to be summarized",
+							required = true)
+					@Valid
+					@RequestBody
+					SummarizeSprintGoalsRequestDTO summarizeSprintGoalsRequestDTO)
 			throws EntityNotFoundException, IOException {
 		return ResponseEntity.ok(
 				sprintGoalsService.summarizeSprintGoals(summarizeSprintGoalsRequestDTO));
@@ -134,7 +139,12 @@ public class AiController {
 					""")
 			})
 	public ResponseEntity<ServiceResponse> getKpiRecommendation(
-			@NotNull @RequestBody KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
+			@Parameter(
+							description = "Request payload containing project details for KPI recommendation",
+							required = true)
+					@NotNull
+					@RequestBody
+					KpiRecommendationRequestDTO kpiRecommendationRequestDTO) {
 		return ResponseEntity.ok()
 				.body(
 						kpiRecommendationServiceImpl.getProjectWiseKpiRecommendation(
@@ -165,7 +175,13 @@ public class AiController {
 					""")
 			})
 	public ResponseEntity<SearchKpiResponseDTO> getRelevantKPIs(
-			@RequestParam(required = true) String query) throws EntityNotFoundException {
+			@Parameter(
+							description = "User query for searching relevant KPIs",
+							required = true,
+							example = "KPIs related to code quality")
+					@RequestParam(required = true)
+					String query)
+			throws EntityNotFoundException {
 		return ResponseEntity.ok().body(searchKPIService.searchRelatedKpi(query));
 	}
 }

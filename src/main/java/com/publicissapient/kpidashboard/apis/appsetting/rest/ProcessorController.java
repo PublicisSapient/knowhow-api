@@ -40,6 +40,10 @@ import com.publicissapient.kpidashboard.common.model.ProcessorExecutionBasicConf
 import com.publicissapient.kpidashboard.common.model.application.dto.ProcessorExecutionTraceLogDTO;
 import com.publicissapient.kpidashboard.common.service.ProcessorExecutionTraceLogService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
@@ -66,6 +70,19 @@ public class ProcessorController {
 	 *
 	 * @return {@code ResponseEntity<ServiceResponse>} with Processor object
 	 */
+	@Operation(
+			summary = "Get All Processor Details",
+			description =
+					"Retrieves details of all processors on the running instance including last executed time and status.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Processor details retrieved successfully"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching processor details")
+			})
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(null, 'GET_PROCESSORS')")
 	public ResponseEntity<ServiceResponse> getAllProcessorDetails() {
@@ -84,10 +101,32 @@ public class ProcessorController {
 	 *
 	 * @return {@code ResponseEntity<ServiceResponse>} with true is triggered successfully success
 	 */
+	@Operation(
+			summary = "Trigger Processor Execution",
+			description =
+					"Triggers the specified processor to run and fetch the latest data from the tool.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Processor triggered successfully"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while triggering the processor")
+			})
 	@PostMapping(path = "/trigger/{processorName}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#projectBasicConfigIds, 'TRIGGER_PROCESSOR')")
 	public ResponseEntity<ServiceResponse> triggerProcessor(
-			@PathVariable String processorName, @RequestBody List<String> projectBasicConfigIds) {
+			@Parameter(
+							description = "Name of the processor to be triggered",
+							required = true,
+							example = "JIRA")
+					@PathVariable
+					String processorName,
+			@Parameter(
+							description = "List of Project Basic Configuration IDs",
+							required = true,
+							example = "[\"60f7c0d5e1b2c12a34567890\", \"60f7c0d5e1b2c12a34567891\"]")
+					@RequestBody
+					List<String> projectBasicConfigIds) {
 		ProcessorExecutionBasicConfig processorExecutionBasicConfig =
 				new ProcessorExecutionBasicConfig();
 		processorExecutionBasicConfig.setProjectBasicConfigIds(projectBasicConfigIds);
@@ -105,10 +144,30 @@ public class ProcessorController {
 		return ResponseEntity.status(responseStatus).body(response);
 	}
 
+	@Operation(
+			summary = "Get the tracelog of processor executions",
+			description =
+					"Retrieves the trace logs of processor executions filtered by "
+							+ "processor name and project configuration ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Processor trace logs retrieved successfully"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching processor trace logs")
+			})
 	@GetMapping("/tracelog")
 	public ResponseEntity<ServiceResponse> getProcessorTraceLog(
-			@RequestParam(required = false) String processorName,
-			@RequestParam(required = false) String basicProjectConfigId) {
+			@Parameter(description = "Name of the processor to filter trace logs", example = "JIRA")
+					@RequestParam(required = false)
+					String processorName,
+			@Parameter(
+							description = "Project Basic Configuration ID to filter trace logs",
+							example = "60f7c0d5e1b2c12a34567890")
+					@RequestParam(required = false)
+					String basicProjectConfigId) {
 
 		List<ProcessorExecutionTraceLogDTO> traceLogs =
 				processorExecutionTraceLogService.getTraceLogDTOs(processorName, basicProjectConfigId);
@@ -118,9 +177,26 @@ public class ProcessorController {
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
+	@Operation(
+			summary = "Trigger Sprint Fetch for a given Sprint ID",
+			description =
+					"Triggers the fetch operation for the specified sprint ID to retrieve the latest sprint data.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Sprint fetch triggered successfully"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while triggering sprint fetch")
+			})
 	@PostMapping(path = "/fetchSprint/{sprintId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#sprintId, 'TRIGGER_SPRINT_FETCH')")
-	public ResponseEntity<ServiceResponse> triggerSprintFetch(@PathVariable String sprintId) {
+	public ResponseEntity<ServiceResponse> triggerSprintFetch(
+			@Parameter(
+							description = "ID of the sprint to be fetched",
+							required = true,
+							example = "SPRINT-1234")
+					@PathVariable
+					String sprintId) {
 
 		ServiceResponse response = processorService.fetchActiveSprint(sprintId);
 
@@ -132,10 +208,19 @@ public class ProcessorController {
 		return ResponseEntity.status(responseStatus).body(response);
 	}
 
+	@Operation(
+			summary = "Trigger the repo fetch config by connection id",
+			description =
+					"Triggers the fetch operation for SCM configuration using the provided connection ID.")
 	@PostMapping(path = "/fetch/scm/{connectionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#connectionId,'CONNECTION_ACCESS')")
 	public ResponseEntity<ServiceResponse> triggerRepoConfigFetchByConnectionId(
-			@PathVariable String connectionId) {
+			@Parameter(
+							description = "Connection ID for SCM configuration",
+							required = true,
+							example = "conn-1234")
+					@PathVariable
+					String connectionId) {
 
 		ServiceResponse response = processorService.fetchScmConfigByConnectionId(connectionId);
 
@@ -154,21 +239,54 @@ public class ProcessorController {
 	 * @param repoToolsStatusResponse status to be saved in trace logs
 	 * @return {@code ResponseEntity<>} with HttpStatus OK if authorized
 	 */
+	@Operation(
+			summary = "Save Repo Tool Status",
+			description =
+					"Saves the status of repository tools by accepting status data from the request body.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Repo tool status saved successfully"),
+				@ApiResponse(
+						responseCode = "401",
+						description = "Unauthorized access while saving repo tool status"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while saving repo tool status")
+			})
 	@PostMapping(path = "/saveRepoToolsStatus", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> saveRepoToolsStatus(
 			HttpServletRequest request,
-			@NonNull @RequestBody RepoToolsStatusResponse repoToolsStatusResponse) {
+			@Parameter(description = "Repository Tools Status Response", required = true)
+					@NonNull
+					@RequestBody
+					RepoToolsStatusResponse repoToolsStatusResponse) {
 		log.info("Received {} request for /saveRepoToolsStatus", request.getMethod());
 		processorService.saveRepoToolTraceLogs(repoToolsStatusResponse);
 		return ResponseEntity.status(HttpStatus.OK).body(null);
 	}
 
+	@Operation(
+			summary = "Trigger Metadata Step for a Project",
+			description =
+					"Triggers the metadata processing step for the specified project configuration ID.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Metadata step triggered successfully"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while triggering metadata step")
+			})
 	@PostMapping(
 			path = "/metadata/step/{projectBasicConfigId}",
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasPermission(#projectBasicConfigId, 'TRIGGER_PROCESSOR')")
 	public ResponseEntity<ServiceResponse> triggerMetaDataStep(
-			@PathVariable String projectBasicConfigId) {
+			@Parameter(
+							description = "Project Basic Configuration ID",
+							required = true,
+							example = "60f7c0d5e1b2c12a34567890")
+					@PathVariable
+					String projectBasicConfigId) {
 		ServiceResponse response = processorService.runMetadataStep(projectBasicConfigId);
 		HttpStatus responseStatus = HttpStatus.OK;
 		if (null == response) {

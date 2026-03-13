@@ -16,6 +16,12 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.ProjectAccessUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 
@@ -33,9 +39,36 @@ public class FieldMappingStructureController {
 
 	private ProjectAccessUtil projectAccessUtil;
 
+	@Operation(
+			summary = "Fetch KPI Field Mapping Structure by KPI ID",
+			description =
+					"Retrieve the field mapping structure associated with a specific KPI ID within a project.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "200",
+						description = "Successfully retrieved the field mapping structure",
+						content =
+								@Content(
+										mediaType = MediaType.APPLICATION_JSON_VALUE,
+										schema = @Schema(implementation = ServiceResponse.class))),
+				@ApiResponse(
+						responseCode = "403",
+						description = "Forbidden: Unauthorized to access the KPI field mapping"),
+				@ApiResponse(
+						responseCode = "500",
+						description = "Internal server error while fetching the KPI field mapping structure")
+			})
 	@GetMapping(value = "{projectBasicConfigId}/{kpiId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ServiceResponse> fetchFieldMappingStructureByKpiFieldMappingData(
-			@PathVariable String projectBasicConfigId, @PathVariable String kpiId) {
+			@Parameter(
+							description = "Project Basic Configuration Id",
+							example = "646f1f4d4f1a2565f0e4c123",
+							required = true)
+					@PathVariable
+					String projectBasicConfigId,
+			@Parameter(description = "KPI Id", example = "kpi1", required = true) @PathVariable
+					String kpiId) {
 		projectBasicConfigId = CommonUtils.handleCrossScriptingTaintedValue(projectBasicConfigId);
 		ServiceResponse response = null;
 		boolean hasProjectAccess = projectAccessUtil.configIdHasUserAccess(projectBasicConfigId);

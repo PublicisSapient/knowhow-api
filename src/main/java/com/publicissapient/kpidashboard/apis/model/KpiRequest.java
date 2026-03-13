@@ -1,13 +1,13 @@
 /*******************************************************************************
  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,29 +30,83 @@ import java.util.UUID;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "KPI Request Model")
 public class KpiRequest implements Serializable {
 
 	@Serial private static final long serialVersionUID = -299083586293015104L;
 
+	@Schema(
+			description = "Unique identifier for tracking the KPI request",
+			example = "JIRA-123e4567-e89b-12d3-a456-426614174000")
 	private String requestTrackerId;
+
+	@Schema(description = "Level of the KPI request", example = "2")
 	private int level;
+
+	@Schema(description = "Label for the KPI request", example = "Sprint Velocity")
 	private String label;
+
+	@Schema(
+			description = "Array of IDs associated with the KPI request",
+			example = "[\"id1\", \"id2\"]")
 	private String[] ids;
+
+	@Schema(
+			description = "List of external IDs associated with the KPI request",
+			example = "[\"extId1\", \"extId2\"]")
 	private List<String> externalIDs;
+
+	@Schema(
+			description = "Array of platform IDs associated with the KPI request",
+			example = "[\"platform1\", \"platform2\"]")
 	private String[] platformIds;
+
+	@Schema(description = "List of KPI elements for the request", implementation = KpiElement.class)
 	private List<KpiElement> kpiList;
+
+	@Schema(description = "List of KPI IDs for the request", example = "[\"kpiId1\", \"kpiId2\"]")
 	private List<String> kpiIdList;
+
+	@Schema(
+			description = "Map of selected filters for the KPI request",
+			example = "{\"priority\": [\"high\", \"medium\"]}")
 	private Map<String, List<String>> selectedMap;
+
+	@Schema(description = "Start date for the KPI request", example = "2023-01-01")
 	private String startDate;
+
+	@Schema(description = "End date for the KPI request", example = "2023-01-31")
 	private String endDate;
+
+	@Schema(description = "Filter to show on trend for the KPI request", example = "PROJECT")
 	private String filterToShowOnTrend = Constant.PROJECT;
+
+	@Schema(
+			description = "List of sprints included in the KPI request",
+			example = "[\"sprint1\", \"sprint2\"]")
 	private List<String> sprintIncluded;
+
+	@Schema(description = "Selected hierarchy label for the KPI request", example = "Team A")
 	private String selecedHierarchyLabel;
+
+	@Schema(description = "Number of data points on the X-axis for Kanban charts", example = "7")
 	private int kanbanXaxisDataPoints = 7;
+
+	@Schema(description = "Number of data points on the X-axis for charts", example = "5")
 	private int xAxisDataPoints = 5;
+
+	@Schema(description = "Duration for the KPI request", example = "MONTH")
 	private String duration = CommonConstant.MONTH;
+
+	@Schema(description = "Hierarchy name for the KPI request", example = "Organization Hierarchy")
 	private String hierarchyName;
+
+	@Schema(description = "Hierarchy ID for the KPI request", example = "hierarchy123")
 	private String hierarchyId;
+
+	@Schema(description = "Level name for the KPI request", example = "Team Level")
 	private String levelName;
 
 	/**

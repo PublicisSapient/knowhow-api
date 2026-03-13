@@ -528,12 +528,7 @@ public class CommittmentReliabilityServiceImpl
 									data.getInitialIssueNumber().stream()
 											.forEach(issue -> totalSprintStoryMap.putIfAbsent(issue.getNumber(), issue));
 									KPIExcelUtility.populateCommittmentReliability(
-											sprintName,
-											totalSprintStoryMap,
-											data,
-											excelData,
-											fieldMapping,
-											customApiConfig);
+											sprintName, totalSprintStoryMap, data, excelData, fieldMapping);
 								});
 			}
 		}
