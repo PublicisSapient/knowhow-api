@@ -115,7 +115,7 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 											.sum();
 
 							long totalLeadTime =
-                                    Math.round(commitToMerge + mergeToDeployStart + totalDeployDuration);
+									Math.round(commitToMerge + mergeToDeployStart + totalDeployDuration);
 
 							LocalDateTime lastDeployEndTime =
 									deployments.stream()
@@ -132,10 +132,11 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 											.storyID(commit.getSha())
 											.mergeID(earliestMr.getExternalId())
 											.fromBranch(earliestMr.getFromBranch())
-                                            .closedDate(DateUtil.dateTimeConverter(
-                                                    commitDateTime.toString(),
-                                                    DateUtil.TIME_FORMAT,
-                                                    DateUtil.DISPLAY_DATE_TIME_FORMAT))
+											.closedDate(
+													DateUtil.dateTimeConverter(
+															commitDateTime.toString(),
+															DateUtil.TIME_FORMAT,
+															DateUtil.DISPLAY_DATE_TIME_FORMAT))
 											.releaseDate(
 													DateUtil.dateTimeConverter(
 															lastDeployEndTime.toString(),
