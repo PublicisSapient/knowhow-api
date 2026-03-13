@@ -114,8 +114,8 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 													})
 											.sum();
 
-							double totalLeadTime =
-									(commitToMerge + mergeToDeployStart + totalDeployDuration) / 1440;
+							long totalLeadTime =
+                                    Math.round(commitToMerge + mergeToDeployStart + totalDeployDuration);
 
 							LocalDateTime lastDeployEndTime =
 									deployments.stream()
@@ -132,14 +132,17 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 											.storyID(commit.getSha())
 											.mergeID(earliestMr.getExternalId())
 											.fromBranch(earliestMr.getFromBranch())
-											.closedDate(DateUtil.tranformUTCLocalTimeToZFormat(commitDateTime))
+                                            .closedDate(DateUtil.dateTimeConverter(
+                                                    commitDateTime.toString(),
+                                                    DateUtil.TIME_FORMAT,
+                                                    DateUtil.DISPLAY_DATE_TIME_FORMAT))
 											.releaseDate(
 													DateUtil.dateTimeConverter(
 															lastDeployEndTime.toString(),
 															DateUtil.HOUR_MINUTE,
 															DateUtil.DISPLAY_DATE_TIME_FORMAT))
-											.leadTimeInDays(DateUtil.convertDoubleToDaysAndHoursString(totalLeadTime))
-											.leadTime(totalLeadTime)
+											.leadTimeInDays(DateUtil.convertMinutesToDaysAndHoursString(totalLeadTime))
+											.leadTime((double) totalLeadTime / 1440)
 											.date(weekOrMonthName)
 											.build();
 
