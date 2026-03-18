@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.rbac.userinfo.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -167,7 +168,7 @@ public class UserInfoControlllerTest {
 		when(userInfo.getAuthorities()).thenReturn(authorities);
 		doReturn(new ServiceResponse(true, "Deleted Successfully", "Ok"))
 				.when(userInfoService)
-				.deleteUser("testuser@abc.com", false);
+				.deleteUser(userInfo, false);
 		ServiceResponse response = userInfoController.deleteUser(userNameRequest).getBody();
 		assert response != null;
 		assertEquals(true, response.getSuccess());
@@ -195,8 +196,10 @@ public class UserInfoControlllerTest {
 	 */
 	@Test
 	public void testDelete_UserFromCentral() {
-		when(userNameRequest.getUsername()).thenReturn("testuser");
-		when(authenticationService.getLoggedInUser()).thenReturn("testuser");
+		when(userNameRequest.getUserEmail()).thenReturn("testuser@abc.com");
+		when(authenticationService.getLoggedInUser()).thenReturn("testuser@abc.com");
+		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
+		when(userInfo.getEmailAddress()).thenReturn("testuser@abc.com");
 		List<UserInfo> userInfos = new ArrayList<>();
 		userInfos.add(userInfo);
 		ServiceResponse response = userInfoController.deleteUserFromCentral(userNameRequest).getBody();
@@ -211,10 +214,12 @@ public class UserInfoControlllerTest {
 	 */
 	@Test
 	public void testDelete_UserFromCentralForSuperAdmin() {
-		when(userNameRequest.getUsername()).thenReturn("testuser");
+		when(userNameRequest.getUserEmail()).thenReturn("testuser@abc.com");
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
-		when(userInfoRepository.findByUsername("testuser")).thenReturn(userInfo);
-		when(userInfoService.deleteUser("testuser", true))
+		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
+		when(userInfo.getEmailAddress()).thenReturn("testuser@abc.com");
+		when(userInfo.getAuthorities()).thenReturn(authorities);
+		when(userInfoService.deleteUser(userInfo, true))
 				.thenReturn(new ServiceResponse(true, "Deleted Successfully", "Ok"));
 		ServiceResponse response = userInfoController.deleteUserFromCentral(userNameRequest).getBody();
 		assert response != null;
