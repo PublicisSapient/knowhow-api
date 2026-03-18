@@ -29,6 +29,7 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 @Component
 public class ProjectAccessUtil {
@@ -46,8 +47,9 @@ public class ProjectAccessUtil {
 	}
 
 	public boolean ifConnectionNotAccessible(Connection connection) {
+		UserInfo userInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
 		return !connection.isSharedConnection()
-				&& (!(connection.getCreatedBy().equals(authenticationService.getLoggedInUser())
+				&& (!(connection.getCreatedBy().equals(userInfo.getUsername())
 						|| userAuthorizedProjectsService.ifSuperAdminUser()));
 	}
 }

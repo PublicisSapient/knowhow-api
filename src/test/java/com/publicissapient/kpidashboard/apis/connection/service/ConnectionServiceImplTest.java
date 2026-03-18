@@ -175,6 +175,11 @@ public class ConnectionServiceImplTest {
 		connection.setCreatedBy("user123");
 		connection.setNotificationCount(0);
 		connection.setBrokenConnection(false);
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("user123");
+		userInfo.setEmailAddress("user123");
+		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
 	}
 
 	/** method includes post processes for test cases */
@@ -265,6 +270,7 @@ public class ConnectionServiceImplTest {
 	public void testSaveConnectionDetailsAzure() {
 		Connection connection = connectionsDataFactory.findConnectionsByType("Azure").get(0);
 		connection.setId(null);
+		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		ServiceResponse response = connectionServiceImpl.saveConnectionDetails(connection);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 		assertNotNull(response.getData());
@@ -274,6 +280,7 @@ public class ConnectionServiceImplTest {
 	public void testSaveConnectionDetailsJenkins() {
 		Connection connection = connectionsDataFactory.findConnectionsByType("Jenkins").get(0);
 		connection.setId(null);
+		when(authenticationService.getLoggedInUser()).thenReturn("test");
 		ServiceResponse response = connectionServiceImpl.saveConnectionDetails(connection);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 		assertNotNull(response.getData());
@@ -294,6 +301,10 @@ public class ConnectionServiceImplTest {
 		when(connectionRepository.findById(new ObjectId("5fdc809fb55d53cc1692543c")))
 				.thenReturn(Optional.of(connection));
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("SUPERADMIN");
+		userInfo.setEmailAddress("user123");
+		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
 		RepoToolsProvider provider = new RepoToolsProvider();
 		provider.setTestApiUrl("https://www.test.com");
 		ServiceResponse response =
@@ -440,6 +451,10 @@ public class ConnectionServiceImplTest {
 		c1.setCloudEnv(false);
 		connList.add(c1);
 		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("test");
+		userInfo.setEmailAddress("user123");
+		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
 		when(connectionRepository.findByTypeAndSharedConnection("Zephyr", false)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
 		assertFalse(serviceResponse.getSuccess());
@@ -492,7 +507,6 @@ public class ConnectionServiceImplTest {
 		when(authenticationService.getLoggedInUser()).thenReturn("superadmin");
 		when(connectionRepository.findById(new ObjectId(id))).thenReturn(testConnectionOpt);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-		when(toolRepositroy.findByConnectionId(new ObjectId(id))).thenReturn(projectToolList);
 		ServiceResponse response = connectionServiceImpl.deleteConnection(id);
 		assertThat("deleted connection ", response.getSuccess(), equalTo(false));
 	}

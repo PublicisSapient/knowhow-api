@@ -51,6 +51,7 @@ import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.data.KpiMasterDataFactory;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -107,6 +108,7 @@ public class UserBoardConfigServiceImplTest {
 	@Mock private FiltersRepository filtersRepository;
 	@Mock private AdditionalFilterCategoryRepository additionalFilterCategoryRepository;
 	@Mock private UserBoardConfigMapper userBoardConfigMapper;
+	@Mock private UserInfoService userInfoService;
 
 	private List<KpiCategory> kpiCategoryList;
 	private List<KpiCategoryMapping> kpiCategoryMappingList;
@@ -132,6 +134,10 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData("user", true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData("user", true));
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("testuser");
+		userInfo.setEmailAddress("testuser");
+		when(userInfoService.getUserInfo(anyString())).thenReturn(userInfo);
 	}
 
 	@Test
@@ -140,10 +146,7 @@ public class UserBoardConfigServiceImplTest {
 		String projId = "id";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
-		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
 		when(authenticationService.getLoggedInUser()).thenReturn(username);
-		when(userBoardConfigRepository.save(getData(username, true)))
-				.thenReturn(getData(username, true));
 		ServiceResponse response =
 				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
 		assertNotNull(response);
@@ -155,8 +158,6 @@ public class UserBoardConfigServiceImplTest {
 		String projId = "id";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(authenticationService.getLoggedInUser()).thenReturn(username);
-		when(userBoardConfigRepository.save(getData(username, true)))
-				.thenReturn(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 
 		ServiceResponse response =
@@ -166,7 +167,7 @@ public class UserBoardConfigServiceImplTest {
 
 	@Test
 	public void testSaveSuperAdminUserBoardConfig() {
-		String username = "user";
+		String username = "testuser";
 		String projId = "all";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
@@ -197,7 +198,7 @@ public class UserBoardConfigServiceImplTest {
 
 	@Test
 	public void testSaveUserBoardConfig_userBoardConfigNull() {
-		String username = "user";
+		String username = "testuser";
 		String projId = "id";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
@@ -308,7 +309,7 @@ public class UserBoardConfigServiceImplTest {
 
 	@Test
 	public void testSaveUserBoardConfig_isshownFalse() {
-		String username = "ADMIN";
+		String username = "testuser";
 		String projId = "proj1";
 		UserBoardConfig data = getData(username, true);
 		data.getScrum().get(0).getKpis().get(0).setShown(false);
@@ -327,7 +328,7 @@ public class UserBoardConfigServiceImplTest {
 
 	@Test
 	public void testSaveUserBoardConfig2() {
-		String username = "SUPERADMIN";
+		String username = "testuser";
 		String projId = "id";
 		UserBoardConfig data = getData(username, true);
 		data.getScrum().get(0).getKpis().get(0).setShown(false);

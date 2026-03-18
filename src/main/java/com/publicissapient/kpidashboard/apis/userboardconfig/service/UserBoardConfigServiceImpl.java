@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.UserBoardConfigEnum;
@@ -52,6 +53,7 @@ import com.publicissapient.kpidashboard.common.model.application.Filters;
 import com.publicissapient.kpidashboard.common.model.application.KpiCategory;
 import com.publicissapient.kpidashboard.common.model.application.KpiCategoryMapping;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.BoardDTO;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.BoardKpisDTO;
 import com.publicissapient.kpidashboard.common.model.userboardconfig.ConfigLevel;
@@ -86,6 +88,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	@Autowired private CacheService cacheService;
 	@Autowired private UserBoardConfigMapper userBoardConfigMapper;
 	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private UserInfoService userInfoService;
 
 	/**
 	 * Retrieves or prepares the user board configuration based on {@link ConfigLevel} and
@@ -97,7 +100,8 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	 */
 	public UserBoardConfigDTO getOrPrepareBoardConfig(
 			ConfigLevel configLevel, String basicProjectConfigId) {
-		final String loggedInUser = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
+		final String loggedInUser = userInfo.getUsername();
 
 		String configId = configLevel == ConfigLevel.PROJECT ? basicProjectConfigId : null;
 		String username = configLevel == ConfigLevel.USER ? loggedInUser : null;
@@ -662,7 +666,8 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 			return new ServiceResponse(false, "User Board Configuration is empty", null);
 		}
 
-		final String loggedInUser = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
+		final String loggedInUser = userInfo.getUsername();
 		if (!loggedInUser.equals(userBoardConfig.getUsername())) {
 			return new ServiceResponse(
 					false, "Logged In user is not authorized to change the board", null);

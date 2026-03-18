@@ -119,8 +119,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 	final ModelMapper modelMapper = new ModelMapper();
 
 	@Override
-	public Collection<GrantedAuthority> getAuthorities(String username) {
-		UserInfo userInfo = userInfoRepository.findByUsername(username);
+	public Collection<GrantedAuthority> getAuthorities(String userEmail) {
+		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
 		List<String> roles = userInfo.getAuthorities();
 		return createAuthorities(roles);
 	}
@@ -132,8 +132,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 	@Override
-	public UserInfo getUserInfo(String username) {
-		return userInfoRepository.findByUsername(username);
+	public UserInfo getUserInfo(String userEmail) {
+		return userInfoRepository.findByEmailAddress(userEmail);
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 				userInfo -> {
 					Authentication auth = authMap.get(userInfo.getUsername());
 					if (auth != null) {
-						userInfo.setEmailAddress(auth.getEmail().toLowerCase());
+						// userInfo.setEmailAddress(auth.getEmail().toLowerCase());
 						if (!auth.isApproved()) {
 							nonApprovedUserList.add(userInfo);
 						}
@@ -398,17 +398,18 @@ public class UserInfoServiceImpl implements UserInfoService {
 	/**
 	 * This method is for deleting the users
 	 *
-	 * @param username username
+	 * @param userInfo userInfo
 	 */
 	@Override
-	public ServiceResponse deleteUser(String username, boolean centralAuthService) {
+	public ServiceResponse deleteUser(UserInfo userInfo, boolean centralAuthService) {
 		try {
-			userInfoRepository.deleteByUsername(username);
-			authenticationService.delete(username);
-			userTokenDeletionService.invalidateSession(username);
-			userBoardConfigService.deleteUser(username);
+			userInfoRepository.deleteByUsernameAndEmailAddress(
+					userInfo.getUsername(), userInfo.getEmailAddress());
+			authenticationService.delete(userInfo.getUsername(), userInfo.getEmailAddress());
+			userTokenDeletionService.invalidateSession(userInfo.getUsername());
+			userBoardConfigService.deleteUser(userInfo.getUsername());
 			if (centralAuthService) {
-				deleteFromCentralAuthUser(username);
+				deleteFromCentralAuthUser(userInfo.getUsername());
 			}
 			cleanAllCache();
 		} catch (Exception exception) {
@@ -416,7 +417,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 			return new ServiceResponse(false, "There is some issue in Repository", "Failed");
 		}
 
-		return new ServiceResponse(true, username + " deleted Successfully", "Ok");
+		return new ServiceResponse(true, userInfo.getUsername() + " deleted Successfully", "Ok");
 	}
 
 	@Override
@@ -426,7 +427,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public UserInfoDTO getOrSaveDefaultUserInfo(String username, AuthType authType, String email) {
-		UserInfo userInfo = getUserInfo(username);
+		UserInfo userInfo = getUserInfo(email);
 		if (null == userInfo) {
 			userInfo = createDefaultUserInfo(username, authType, email);
 			userInfo = save(userInfo);
@@ -461,18 +462,19 @@ public class UserInfoServiceImpl implements UserInfoService {
 		UserTokenData userTokenData = userTokenReopository.findByUserToken(token);
 		UserDetailsResponseDTO userDetailsResponseDTO = new UserDetailsResponseDTO();
 		if (Objects.nonNull(userTokenData)) {
-			String username = userTokenData.getUserName();
-			UserInfo userinfo = userInfoRepository.findByUsername(username);
-			Authentication authentication = authenticationRepository.findByUsername(username);
-			String email =
-					authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
+			String userEmail = userTokenData.getUserName();
+			UserInfo userinfo = userInfoRepository.findByEmailAddress(userEmail);
+			Authentication authentication =
+					authenticationRepository.findByUsernameAndEmail(userinfo.getUsername(), userEmail);
+			String username =
+					authentication == null ? userinfo.getUsername() : authentication.getUsername();
 
 			userDetailsResponseDTO.setUserName(username);
-			userDetailsResponseDTO.setUserEmail(email);
+			userDetailsResponseDTO.setUserEmail(userEmail);
 			userDetailsResponseDTO.setAuthorities(userinfo.getAuthorities());
 			userDetailsResponseDTO.setAuthType(userinfo.getAuthType().toString());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(username);
+					projectAccessManager.getProjectAccessesWithRole(userEmail);
 
 			userDetailsResponseDTO.setProjectsAccess(projectAccessesWithRole);
 			userDetailsResponseDTO.setNotificationEmail(userinfo.getNotificationEmail());
@@ -683,14 +685,14 @@ public class UserInfoServiceImpl implements UserInfoService {
 	 * update notification email alert flag user wise 2 type of notification flag -
 	 * accessAlertNotification and errorAlertNotification
 	 *
-	 * @param loggedUserName
+	 * @param loggedUserEmail
 	 * @param notificationEmail
 	 * @return
 	 */
 	@Override
 	public UserInfo updateNotificationEmail(
-			String loggedUserName, Map<String, Boolean> notificationEmail) {
-		UserInfo userinfo = userInfoRepository.findByUsername(loggedUserName);
+			String loggedUserEmail, Map<String, Boolean> notificationEmail) {
+		UserInfo userinfo = userInfoRepository.findByEmailAddress(loggedUserEmail);
 
 		if (Objects.nonNull(userinfo)
 				&& Objects.nonNull(notificationEmail)

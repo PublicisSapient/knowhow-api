@@ -15,7 +15,7 @@ public interface FeedbackService {
 	 * @param feedback
 	 * @return responseEntity with message and status
 	 */
-	boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserName);
+	boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserEmail);
 
 	/**
 	 * @return categories
