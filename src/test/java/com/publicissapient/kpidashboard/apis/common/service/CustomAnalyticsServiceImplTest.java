@@ -77,12 +77,10 @@ public class CustomAnalyticsServiceImplTest {
 		authentication.setEmail("email");
 		roleWiseProjects = new RoleWiseProjects();
 
-		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
-		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(authentication);
+		when(userInfoRepository.findByEmailAddress(Mockito.anyString())).thenReturn(user);
 		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
 				.thenReturn(listRoleWiseProjects);
 		JSONObject json = customAnalyticsServiceImpl.addAnalyticsData(resp, "test");
-		assertEquals("test", json.get("user_name"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
 	}
 

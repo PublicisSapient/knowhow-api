@@ -51,14 +51,14 @@ class ProjectAdminDataAccessPolicyTest {
 	@Test
 	void shouldReturnEmptyListIfNoUsers() {
 		// given
-		when(userRepository.findByUsername(userName)).thenReturn(null);
+		when(userRepository.findByEmailAddress(userName)).thenReturn(null);
 
 		// when
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
 		// then
 		assertEquals(0, result.size());
-		verify(userRepository, times(1)).findByUsername(userName);
+		verify(userRepository, times(1)).findByEmailAddress(userName);
 	}
 
 	@Test
@@ -68,14 +68,14 @@ class ProjectAdminDataAccessPolicyTest {
 		userInfo.setUsername(userName);
 		userInfo.setProjectsAccess(new ArrayList<>());
 		// given
-		when(userRepository.findByUsername(userName)).thenReturn(userInfo);
+		when(userRepository.findByEmailAddress(userName)).thenReturn(userInfo);
 
 		// when
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
 		// then
 		assertEquals(0, result.size());
-		verify(userRepository, times(1)).findByUsername(userName);
+		verify(userRepository, times(1)).findByEmailAddress(userName);
 	}
 
 	@Test
@@ -89,14 +89,14 @@ class ProjectAdminDataAccessPolicyTest {
 		userInfo.setUsername(userName);
 		userInfo.setProjectsAccess(List.of(access));
 		// given
-		when(userRepository.findByUsername(userName)).thenReturn(userInfo);
+		when(userRepository.findByEmailAddress(userName)).thenReturn(userInfo);
 
 		// when
 		List<UserInfo> result = policy.getAccessibleMembers(userName);
 
 		// then
 		assertEquals(0, result.size());
-		verify(userRepository, times(1)).findByUsername(userName);
+		verify(userRepository, times(1)).findByEmailAddress(userName);
 	}
 
 	@Test
@@ -117,7 +117,7 @@ class ProjectAdminDataAccessPolicyTest {
 		userInfo.setUsername(userName);
 		userInfo.setProjectsAccess(List.of(access));
 		// given
-		when(userRepository.findByUsername(userName)).thenReturn(userInfo);
+		when(userRepository.findByEmailAddress(userName)).thenReturn(userInfo);
 		List<UserInfo> userInfoList = new ArrayList<>();
 		userInfoList.add(userInfo);
 		List<String> items = accessNode.getAccessItems().stream().map(AccessItem::getItemId).toList();
@@ -129,6 +129,6 @@ class ProjectAdminDataAccessPolicyTest {
 
 		// then
 		assertEquals(1, result.size());
-		verify(userRepository, times(1)).findByUsername(userName);
+		verify(userRepository, times(1)).findByEmailAddress(userName);
 	}
 }

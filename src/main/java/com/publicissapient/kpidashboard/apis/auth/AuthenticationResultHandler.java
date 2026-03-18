@@ -49,7 +49,7 @@ public class AuthenticationResultHandler implements AuthenticationSuccessHandler
 			throws IOException, ServletException {
 		authenticationResponseService.handle(response, authentication);
 		// sgu106: Google Analytics data population starts
-		String username = authenticationService.getUsername(authentication);
+		String username = authenticationService.getUserEmail(authentication);
 
 		JSONObject json = customAnalyticsService.addAnalyticsData(response, username);
 		response.setCharacterEncoding("UTF-8");

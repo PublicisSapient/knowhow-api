@@ -274,6 +274,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -305,6 +306,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -320,6 +322,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -335,6 +338,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		when(projectToolConfigService.getProjectToolConfigsByProjectId(any()))
 				.thenReturn(Arrays.asList(listProjectTool));
@@ -356,6 +360,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		listProjectTool.setToolName("Jenkins");
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
@@ -372,6 +377,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -702,6 +708,7 @@ public class ProjectBasicConfigServiceImplTest {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
 		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
 		when(projectAccessManager.getAccessRoleOfNearestParent(any(), any()))
 				.thenReturn(Constant.ROLE_SUPERADMIN);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
@@ -718,6 +725,7 @@ public class ProjectBasicConfigServiceImplTest {
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
+		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		basicConfigDTO.setProjectNodeId(null);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);

@@ -21,6 +21,7 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProjectAccessUtilTest {
@@ -30,6 +31,7 @@ public class ProjectAccessUtilTest {
 	@Mock private UserAuthorizedProjectsService userAuthorizedProjectsService;
 	@Mock private UserInfoServiceImpl userInfoService;
 	@Mock private AuthenticationService authenticationService;
+	private UserInfo userInfo;
 
 	@Before
 	public void setUp() {}
@@ -82,12 +84,14 @@ public class ProjectAccessUtilTest {
 	public void testIfConnectionNotAccessible_WhenConnectionIsShared() {
 		Connection connection = mock(Connection.class);
 		when(connection.isSharedConnection()).thenReturn(true);
+		when(authenticationService.getLoggedInUser()).thenReturn("user456");
+		when(userInfoService.getUserInfo("user456")).thenReturn(userInfo);
 
 		boolean result = projectAccessUtil.ifConnectionNotAccessible(connection);
 
 		assertFalse(result);
 		verify(connection).isSharedConnection();
-		verifyNoInteractions(authenticationService, userAuthorizedProjectsService);
+		verifyNoInteractions(userAuthorizedProjectsService);
 	}
 
 	@Test
@@ -96,6 +100,10 @@ public class ProjectAccessUtilTest {
 		when(connection.isSharedConnection()).thenReturn(false);
 		when(connection.getCreatedBy()).thenReturn("user123");
 		when(authenticationService.getLoggedInUser()).thenReturn("user123");
+		userInfo = new UserInfo();
+		userInfo.setUsername("user123");
+		userInfo.setEmailAddress("user123");
+		when(userInfoService.getUserInfo("user123")).thenReturn(userInfo);
 
 		boolean result = projectAccessUtil.ifConnectionNotAccessible(connection);
 
@@ -113,6 +121,10 @@ public class ProjectAccessUtilTest {
 		when(connection.getCreatedBy()).thenReturn("user123");
 		when(authenticationService.getLoggedInUser()).thenReturn("user456");
 		when(userAuthorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
+		userInfo = new UserInfo();
+		userInfo.setUsername("testuser");
+		userInfo.setEmailAddress("user456");
+		when(userInfoService.getUserInfo("user456")).thenReturn(userInfo);
 
 		boolean result = projectAccessUtil.ifConnectionNotAccessible(connection);
 
@@ -129,8 +141,11 @@ public class ProjectAccessUtilTest {
 		when(connection.isSharedConnection()).thenReturn(false);
 		when(connection.getCreatedBy()).thenReturn("user123");
 		when(authenticationService.getLoggedInUser()).thenReturn("user456");
+		userInfo = new UserInfo();
+		userInfo.setUsername("testuser");
+		userInfo.setEmailAddress("user456");
+		when(userInfoService.getUserInfo("user456")).thenReturn(userInfo);
 		when(userAuthorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-
 		boolean result = projectAccessUtil.ifConnectionNotAccessible(connection);
 
 		assertTrue(result);

@@ -35,7 +35,7 @@ public class SuperAdminDataAccessPolicy implements DataAccessPolicy {
 	@Autowired private UserInfoRepository userInfoRepository;
 
 	@Override
-	public List<UserInfo> getAccessibleMembers(String userName) {
+	public List<UserInfo> getAccessibleMembers(String userEmail) {
 		return userInfoRepository.findAll();
 	}
 }
