@@ -109,7 +109,7 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority(Constant.ROLE_VIEWER);
-		when(userInfoRepository.findByUsername("user")).thenReturn(user);
+		when(userInfoRepository.findByEmailAddress("user")).thenReturn(user);
 		Collection<GrantedAuthority> authorities = service.getAuthorities("user");
 		assertTrue(authorities.contains(authority));
 	}
@@ -250,7 +250,7 @@ public class UserInfoServiceImplTest {
 
 		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
+		when(userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser()))
 				.thenReturn(testUser);
 
 		ServiceResponse result = service.getAllUserInfo();
@@ -272,7 +272,7 @@ public class UserInfoServiceImplTest {
 		userInfoList.add(testUser);
 
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
+		when(userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser()))
 				.thenReturn(testUser);
 		when(dataAccessService.getMembersForUser(roles, authentication.getName()))
 				.thenReturn(userInfoList);
@@ -385,7 +385,11 @@ public class UserInfoServiceImplTest {
 	 */
 	@Test
 	public void deleteUserTest() {
-		ServiceResponse result = service.deleteUser("testuser", "testUser", false);
+		UserInfo u = new UserInfo();
+		u.setUsername("testuser");
+		u.setAuthType(AuthType.SSO);
+		u.setEmailAddress("testEmail@test.com");
+		ServiceResponse result = service.deleteUser(u, false);
 		assertTrue(result.getSuccess());
 	}
 
@@ -409,7 +413,6 @@ public class UserInfoServiceImplTest {
 										100000L)));
 		when(userTokenReopository.findByUserToken(anyString()))
 				.thenReturn(new UserTokenData("dummyUser", "dummyToken", null));
-		when(authenticationRepository.findByUsername(anyString())).thenReturn(new Authentication());
 
 		user.setUsername("dummyUser");
 		user.setAuthType(AuthType.STANDARD);
@@ -422,8 +425,9 @@ public class UserInfoServiceImplTest {
 
 		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
 
-		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
-		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(null);
+		when(userInfoRepository.findByEmailAddress(Mockito.anyString())).thenReturn(user);
+		when(authenticationRepository.findByUsernameAndEmail(Mockito.anyString(), anyString()))
+				.thenReturn(null);
 		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
 				.thenReturn(roleWiseProjects);
 
@@ -466,7 +470,7 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList("ROLE_PROJECT_ADMIN"));
 		user.setEmailAddress("email");
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(user);
+		when(userInfoRepository.findByEmailAddress("testUser")).thenReturn(user);
 		when(userInfoRepository.save(any())).thenReturn(user);
 		UserInfo userInfo = service.updateNotificationEmail("testUser", notificationEmail);
 		assertNotNull(userInfo);

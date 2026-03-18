@@ -300,7 +300,7 @@ public class AuthenticationServiceTest {
 	public void getUsernameTest() {
 		org.springframework.security.core.Authentication authentication1 =
 				new UsernamePasswordAuthenticationToken("test", "TestP");
-		Assertions.assertFalse(authService.getUsername(authentication1).isEmpty());
+		Assertions.assertFalse(authService.getUserEmail(authentication1).isEmpty());
 	}
 
 	@Test

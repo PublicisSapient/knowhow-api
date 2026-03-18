@@ -59,11 +59,10 @@ public class AuthenticationResultHandlerTest {
 	@Test
 	public void testOnSucess() throws IOException, ServletException {
 		JSONObject jsonObject = new JSONObject();
-		Mockito.when(customAnalyticsService.addAnalyticsData(response, "userName"))
-				.thenReturn(jsonObject);
-		Mockito.when(response.getWriter()).thenReturn(servletOutputStream);
+		when(customAnalyticsService.addAnalyticsData(response, "userName")).thenReturn(jsonObject);
+		when(response.getWriter()).thenReturn(servletOutputStream);
 		Mockito.doNothing().when(servletOutputStream).print(Mockito.anyString());
-		when(authenticationService.getUsername(authentication)).thenReturn("userName");
+		when(authenticationService.getUserEmail(authentication)).thenReturn("userName");
 		handler.onAuthenticationSuccess(null, response, authentication);
 		verify(authenticationResponseService).handle(response, authentication);
 	}
