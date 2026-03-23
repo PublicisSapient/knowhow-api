@@ -143,9 +143,6 @@ public class AuthenticationController {
 			boolean isUsernameExistsInUserInfo =
 					authenticationService.isUsernameExistsInUserInfo(request.getUsername());
 
-			boolean isEmailExistsInUserInfo =
-					authenticationService.isEmailExistsInUserInfo(request.getEmail());
-
 			if (isUsernameExists || isUsernameExistsInUserInfo) {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(
@@ -154,7 +151,7 @@ public class AuthenticationController {
 										"Cannot complete the registration process, Try with different username",
 										null));
 			}
-			if (isEmailExist || isEmailExistsInUserInfo) {
+			if (isEmailExist) {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(
 								new ServiceResponse(

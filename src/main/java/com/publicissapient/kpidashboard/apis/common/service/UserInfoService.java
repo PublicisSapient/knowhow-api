@@ -44,10 +44,10 @@ public interface UserInfoService {
 	/**
 	 * Gets authorities.
 	 *
-	 * @param userEmail the user email
+	 * @param username the username
 	 * @return the authorities
 	 */
-	Collection<GrantedAuthority> getAuthorities(String userEmail);
+	Collection<GrantedAuthority> getAuthorities(String username);
 
 	/**
 	 * Gets user info.
@@ -58,7 +58,7 @@ public interface UserInfoService {
 	 */
 	UserInfo getUserInfo(String username, AuthType authType);
 
-	UserInfo getUserInfo(String userEmail);
+	UserInfo getUserInfo(String username);
 
 	/**
 	 * Gets users.
@@ -113,8 +113,12 @@ public interface UserInfoService {
 
 	UserInfo createDefaultUserInfo(String username, AuthType authType, String email);
 
-	/** This method is for deleting the users */
-	ServiceResponse deleteUser(UserInfo userInfo, boolean centralAuthService);
+	/**
+	 * This method is for deleting the users
+	 *
+	 * @param username username
+	 */
+	ServiceResponse deleteUser(String username, boolean centralAuthService);
 
 	List<UserInfo> getUserInfoByAuthType(String userType);
 
@@ -162,11 +166,11 @@ public interface UserInfoService {
 	/**
 	 * update notification email alert flag user wise
 	 *
-	 * @param loggedUserEmail
+	 * @param loggedUserName
 	 * @param notificationEmail
 	 * @return
 	 */
-	UserInfo updateNotificationEmail(String loggedUserEmail, Map<String, Boolean> notificationEmail);
+	UserInfo updateNotificationEmail(String loggedUserName, Map<String, Boolean> notificationEmail);
 
 	/**
 	 * all unapproved users from central auth and also flag which is not whitelist domain as per

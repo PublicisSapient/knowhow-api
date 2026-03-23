@@ -426,7 +426,7 @@ public class ProjectAccessManagerTest {
 
 	@Test
 	public void testGetProjectAccessesWithRole() {
-		when(userInfoRepository.findByEmailAddress(ArgumentMatchers.anyString()))
+		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString()))
 				.thenReturn(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 		List<RoleWiseProjects> list =
 				projectAccessManager.getProjectAccessesWithRole(ArgumentMatchers.anyString());
@@ -463,6 +463,8 @@ public class ProjectAccessManagerTest {
 	public void testHasProjectEditPermission_getProjectAccessesWithRole() {
 		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString()))
 				.thenReturn(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
+		when(projectBasicConfigService.getAllProjectBasicConfigs(ArgumentMatchers.anyBoolean()))
+				.thenReturn(Lists.newArrayList(projectBasicConfigObj()));
 		assertFalse(
 				projectAccessManager.hasProjectEditPermission(
 						new ObjectId("61e4f7852747353d4405c765"),
@@ -478,7 +480,7 @@ public class ProjectAccessManagerTest {
 								Constant.ACCESS_REQUEST_STATUS_PENDING,
 								"hierarchyLevel3Id"));
 		when(authenticationService.getLoggedInUser()).thenReturn("user");
-		when(userInfoRepository.findByEmailAddress(ArgumentMatchers.anyString()))
+		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString()))
 				.thenReturn(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 		assertTrue(projectAccessManager.deleteAccessRequestById("61e4f7852747353d4405c761"));
 	}
