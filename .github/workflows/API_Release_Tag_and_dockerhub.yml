@@ -86,8 +86,9 @@ jobs:
       # Optional: Clone & build knowhow-common if your build requires it
       - name: Clone & Build knowhow-common (optional dependency)
         run: |
-          echo "Cloning knowhow-common branch Z"
-          git clone --branch "${{ inputs.tag_version }}" https://github.com/PublicisSapient/knowhow-common.git
+          echo "Cloning knowhow-common branch"
+          git clone --branch "16.1.0" https://github.com/PublicisSapient/knowhow-common.git
+          # git clone --branch "${{ inputs.tag_version }}" https://github.com/PublicisSapient/knowhow-common.git
           cd knowhow-common
 
       - name: Set project version to release (tag_version)
