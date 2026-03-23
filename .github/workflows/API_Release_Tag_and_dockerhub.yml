@@ -86,10 +86,10 @@ jobs:
       # Optional: Clone & build knowhow-common if your build requires it
       - name: Clone & Build knowhow-common (optional dependency)
         run: |
-          echo "Cloning knowhow-common branch"
-          git clone --branch "16.1.0" https://github.com/PublicisSapient/knowhow-common.git
-          # git clone --branch "${{ inputs.tag_version }}" https://github.com/PublicisSapient/knowhow-common.git
-          cd knowhow-common
+          echo "Cloning knowhow-common branch outside the main repo workspace"
+          git clone --branch "16.1.0" https://github.com/PublicisSapient/knowhow-common.git /tmp/knowhow-common
+          # if you need to build it then:
+          # cd /tmp/knowhow-common && mvn clean install -DskipTests
 
       - name: Set project version to release (tag_version)
         run: |
@@ -109,8 +109,11 @@ jobs:
 
       - name: Push commit + tag to origin/DTS-52074-Tag-dockerhub-push-github-actions
         run: |
+          # avoid staging a submodule path accidentally if knowhow-common exists in the superproject
+          git restore --staged knowhow-common || true
+          git restore knowhow-common || true
           git push origin DTS-52074-Tag-dockerhub-push-github-actions
-          git push origin "${{ inputs.tag_version }}"
+          git push origin --follow-tags
 
       - name: Build jar (skip tests/sonar/unit tests)
         if: ${{ inputs.push_to_dockerhub == 'yes' }}
