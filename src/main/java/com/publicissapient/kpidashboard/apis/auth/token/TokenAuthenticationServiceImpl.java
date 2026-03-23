@@ -336,7 +336,7 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 			json.put(USER_EMAIL, userInfo.getEmailAddress());
 			json.put(USER_AUTHORITIES, userInfo.getAuthorities());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(userInfo.getEmailAddress());
+					projectAccessManager.getProjectAccessesWithRole(userInfo.getUsername());
 			json.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			return json;
 		}

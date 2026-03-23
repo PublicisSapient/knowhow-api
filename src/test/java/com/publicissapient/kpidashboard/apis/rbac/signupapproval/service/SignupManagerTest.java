@@ -76,6 +76,8 @@ public class SignupManagerTest {
 		when(authenticationRepository.save(ArgumentMatchers.any()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		when(authenticationService.getLoggedInUser()).thenReturn("");
+		when(authenticationRepository.findByUsername(anyString()))
+				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		userInfoRepository.deleteById(new ObjectId(testId));
 		when(userInfoRepository.findByUsername(anyString())).thenReturn(userInfoObj());
 		when(authenticationService.getAuthentication(anyString()))
@@ -98,6 +100,8 @@ public class SignupManagerTest {
 		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_APPROVED, true));
 		when(authenticationService.getLoggedInUser()).thenReturn("");
+		when(authenticationRepository.findByUsername(anyString()))
+				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_APPROVED, false));
 		signupManager.grantAccess(testId, grantApprovalListener);
 		verify(grantApprovalListener, atLeastOnce())
 				.onFailure(
@@ -110,6 +114,8 @@ public class SignupManagerTest {
 		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		when(authenticationService.getLoggedInUser()).thenReturn("");
+		when(authenticationRepository.findByUsername(anyString()))
+				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
 		when(authenticationRepository.save(ArgumentMatchers.any()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, true));
 		signupManager.rejectAccessRequest(testId, rejectApprovalListener);
@@ -173,6 +179,7 @@ public class SignupManagerTest {
 		authentication.setEmail("abc@gmail.com");
 
 		when(authenticationService.getLoggedInUser()).thenReturn("adminUser");
+		when(authenticationRepository.findByUsername("adminUser")).thenReturn(authentication);
 		when(authenticationService.getAuthentication(username)).thenReturn(authentication);
 
 		// Act
@@ -193,6 +200,7 @@ public class SignupManagerTest {
 		authentication.setEmail("abc@gmail.com");
 
 		when(authenticationService.getLoggedInUser()).thenReturn("adminUser");
+		when(authenticationRepository.findByUsername("adminUser")).thenReturn(authentication);
 		when(authenticationService.getAuthentication(username)).thenReturn(authentication);
 		when(authenticationRepository.save(authentication)).thenReturn(authentication);
 

@@ -142,7 +142,7 @@ public class AuthenticationServiceTest {
 	@Test
 	public void deleteAuthByUsernameTest() {
 		when(authRepo.findByUsername("Test")).thenReturn(authentication);
-		authService.delete("Test", "test@");
+		authService.delete("Test");
 		Assertions.assertNotNull(authentication);
 	}
 
@@ -300,7 +300,7 @@ public class AuthenticationServiceTest {
 	public void getUsernameTest() {
 		org.springframework.security.core.Authentication authentication1 =
 				new UsernamePasswordAuthenticationToken("test", "TestP");
-		Assertions.assertFalse(authService.getUserEmail(authentication1).isEmpty());
+		Assertions.assertFalse(authService.getUsername(authentication1).isEmpty());
 	}
 
 	@Test

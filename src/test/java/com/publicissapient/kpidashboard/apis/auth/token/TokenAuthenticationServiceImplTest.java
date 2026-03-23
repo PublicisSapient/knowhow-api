@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import javax.crypto.SecretKey;
@@ -231,10 +230,11 @@ public class TokenAuthenticationServiceImplTest {
 		jsonObject.put("username", USERNAME);
 		jsonObject.put("authorities", null);
 		jsonObject.put("emailAddress", null);
-		jsonObject.put("projectsAccess", new LinkedList<>());
+		jsonObject.put("projectsAccess", null);
 		ArrayList<UserTokenData> userTokenDataList = new ArrayList<>();
 		userTokenDataList.add(userTokenData);
 		testUser.setUsername(USERNAME);
+		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(null);
 		when(userTokenReopository.findAllByUserName(null)).thenReturn(userTokenDataList);
 		when(authentication.getDetails()).thenReturn(auth);
 		when(userInfoService.getOrSaveUserInfo(USERNAME, AuthType.STANDARD, new ArrayList<>()))
@@ -378,6 +378,7 @@ public class TokenAuthenticationServiceImplTest {
 		userInfo.setUsername(USERNAME);
 		userInfo.setEmailAddress("test@example.com");
 		userInfo.setAuthorities(Arrays.asList("ROLE_ADMIN"));
+		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(new ArrayList<>());
 		JSONObject result = service.createAuthDetailsJson(userInfo);
 		assertNotNull(result);
 		assertEquals(result.get("username"), USERNAME);

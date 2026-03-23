@@ -1047,9 +1047,9 @@ public class ProjectAccessManager {
 				&& CollectionUtils.isEmpty(userInfo.getProjectsAccess());
 	}
 
-	public List<RoleWiseProjects> getProjectAccessesWithRole(String userEmail) {
+	public List<RoleWiseProjects> getProjectAccessesWithRole(String username) {
 
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
+		UserInfo userInfo = getUserInfo(username);
 		List<RoleWiseProjects> result = new ArrayList<>();
 		if (Objects.nonNull(userInfo)) {
 			List<ProjectsAccess> projectsAccesses = userInfo.getProjectsAccess();
@@ -1152,8 +1152,7 @@ public class ProjectAccessManager {
 			return false;
 		}
 
-		List<RoleWiseProjects> roleWiseProjects =
-				getProjectAccessesWithRole(userInfo.getEmailAddress());
+		List<RoleWiseProjects> roleWiseProjects = getProjectAccessesWithRole(username);
 
 		RoleWiseProjects roleWiseAdminProjects =
 				roleWiseProjects.stream()
@@ -1176,9 +1175,9 @@ public class ProjectAccessManager {
 		boolean isDeletePermitted = false;
 		AccessRequest requestData = getAccessRequest(id);
 		if (null != requestData) {
-			String userEmail = authenticationService.getLoggedInUser();
-			UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
-			if ((userInfo.getUsername().equals(requestData.getUsername())
+			String username = authenticationService.getLoggedInUser();
+			UserInfo userInfo = getUserInfo(username);
+			if ((username.equals(requestData.getUsername())
 							|| userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))
 					&& requestData.getStatus().equals(Constant.ACCESS_REQUEST_STATUS_PENDING)) {
 				isDeletePermitted = true;
