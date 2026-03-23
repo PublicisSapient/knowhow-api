@@ -55,7 +55,6 @@ jobs:
 
       # Optional: Configure Maven to use GitHub Packages (keep if you need private deps)
       - name: Configure Maven settings.xml for GitHub Packages
-        if: ${{ secrets.MAVEN_TOKEN != '' }}
         run: |
           mkdir -p ~/.m2
           cat > ~/.m2/settings.xml <<'EOF'
