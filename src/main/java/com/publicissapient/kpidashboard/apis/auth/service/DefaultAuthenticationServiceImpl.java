@@ -118,7 +118,7 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 		authentication = authenticationRepository.save(authentication);
 		UsernamePasswordAuthenticationToken token =
 				new UsernamePasswordAuthenticationToken(
-						authentication.getEmail(), authentication.getPassword(), new ArrayList<>());
+						authentication.getUsername(), authentication.getPassword(), new ArrayList<>());
 		token.setDetails(AuthType.STANDARD);
 		return token;
 	}
@@ -147,9 +147,8 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 	/** {@inheritDoc} */
 	@Override
-	public void delete(String username, String email) {
-		Authentication authentication =
-				authenticationRepository.findByUsernameAndEmail(username, email);
+	public void delete(String username) {
+		Authentication authentication = authenticationRepository.findByUsername(username);
 		if (authentication != null) {
 			authenticationRepository.delete(authentication);
 		}
@@ -223,7 +222,7 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 		if (authentication.checkPassword(password)) {
 			return new UsernamePasswordAuthenticationToken(
-					authentication.getEmail(), authentication.getPassword(), new ArrayList<>());
+					authentication.getUsername(), authentication.getPassword(), new ArrayList<>());
 		}
 		// commented code to fix the security issues
 		// throw new BadCredentialsException("Login Failed: Invalid credentials
@@ -280,11 +279,6 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 		return userInfoRepository.findByUsername(username) != null;
 	}
 
-	@Override
-	public boolean isEmailExistsInUserInfo(String email) {
-		return userInfoRepository.findByEmailAddress(email) != null;
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	public boolean checkIfValidOldPassword(String email, String oldPassword) {
@@ -307,7 +301,7 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 			Authentication authentication = authenticationRepository.save(auth);
 			token =
 					new UsernamePasswordAuthenticationToken(
-							authentication.getEmail(), authentication.getPassword(), new ArrayList<>());
+							authentication.getUsername(), authentication.getPassword(), new ArrayList<>());
 			token.setDetails(AuthType.STANDARD);
 		}
 		return token;
@@ -349,7 +343,7 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public String getUserEmail(org.springframework.security.core.Authentication authentication) {
+	public String getUsername(org.springframework.security.core.Authentication authentication) {
 
 		if (authentication == null) {
 			return null;

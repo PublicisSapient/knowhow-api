@@ -99,9 +99,9 @@ public class FeedbackController {
 					FeedbackSubmitDTO feedback,
 			HttpServletRequest httpServletRequest) {
 		log.info("creating new request");
-		String loggedUserEmail = authenticationService.getLoggedInUser();
-		if (loggedUserEmail != null) {
-			boolean responseStatus = submitFeedbackService.submitFeedback(feedback, loggedUserEmail);
+		String loggedUserName = authenticationService.getLoggedInUser();
+		if (loggedUserName != null) {
+			boolean responseStatus = submitFeedbackService.submitFeedback(feedback, loggedUserName);
 			if (responseStatus) {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(new ServiceResponse(responseStatus, "Your request has been submitted", feedback));

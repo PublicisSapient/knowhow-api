@@ -42,7 +42,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 	@Autowired private NotificationService notificationService;
 
 	@Override
-	public boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserEmail) {
+	public boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserName) {
 		boolean status = true;
 		List<String> emailAddresses = null;
 
@@ -68,7 +68,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 				log.error(
 						"SubmitFeedbackController: Server Host name is not bind with submit feedback Request mail ");
 			}
-			Map<String, String> customData = createCustomData(feedback, serverPath, loggedUserEmail);
+			Map<String, String> customData = createCustomData(feedback, serverPath, loggedUserName);
 			log.info("Notification message sent with key : {}", NOTIFICATION_KEY);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 			notificationService.sendNotificationEvent(
@@ -88,11 +88,11 @@ public class FeedbackServiceImpl implements FeedbackService {
 	}
 
 	private Map<String, String> createCustomData(
-			FeedbackSubmitDTO feedback, String serverPath, String loggedUserEmail) {
+			FeedbackSubmitDTO feedback, String serverPath, String loggedUserName) {
 		Map<String, String> customData = new HashMap<>();
-		UserInfo userInfo = userInfoService.getUserInfo(loggedUserEmail);
+		UserInfo userInfo = userInfoService.getUserInfo(loggedUserName);
 		if (userInfo != null) {
-			customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userInfo.getUsername());
+			customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), loggedUserName);
 			customData.put(NotificationCustomDataEnum.USER_EMAIL.getValue(), userInfo.getEmailAddress());
 		}
 		customData.put(NotificationCustomDataEnum.SERVER_HOST.getValue(), serverPath);

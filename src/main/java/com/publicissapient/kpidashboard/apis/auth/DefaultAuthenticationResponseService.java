@@ -50,9 +50,9 @@ public class DefaultAuthenticationResponseService implements AuthenticationRespo
 	/** {@inheritDoc} */
 	@Override
 	public void handle(HttpServletResponse response, Authentication authentication) {
-		String userEmail = authentication.getPrincipal().toString();
+		String username = authentication.getPrincipal().toString();
 
-		Collection<GrantedAuthority> authorities = userInfoService.getAuthorities(userEmail);
+		Collection<GrantedAuthority> authorities = userInfoService.getAuthorities(username);
 		AbstractAuthenticationToken authenticationWithAuthorities =
 				new UsernamePasswordAuthenticationToken(
 						authentication.getPrincipal(), authentication.getCredentials(), authorities);
