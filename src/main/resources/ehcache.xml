@@ -21,7 +21,14 @@
 
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.ehcache.org/v3"
-        xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd">
+        xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
+        xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd
+                            http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.0.xsd">
+
+    <!-- Enable management and statistics -->
+    <service>
+        <jsr107:defaults enable-statistics="true" enable-management="true"/>
+    </service>
 
     <cache alias="cache_kpi_master">
         <heap unit="MB">50</heap>
@@ -76,6 +83,19 @@
     </cache>
 
     <cache alias="accountHierarchy">
+        <!-- Enable detailed event logging for debugging -->
+        <listeners>
+            <listener>
+                <class>com.publicissapient.kpidashboard.apis.listener.CacheEventLogger</class>
+                <event-firing-mode>ASYNCHRONOUS</event-firing-mode>
+                <event-ordering-mode>UNORDERED</event-ordering-mode>
+                <events-to-fire-on>CREATED</events-to-fire-on>
+                <events-to-fire-on>UPDATED</events-to-fire-on>
+                <events-to-fire-on>EVICTED</events-to-fire-on>
+                <events-to-fire-on>EXPIRED</events-to-fire-on>
+                <events-to-fire-on>REMOVED</events-to-fire-on>
+            </listener>
+        </listeners>
         <heap unit="MB">25</heap>
     </cache>
 
