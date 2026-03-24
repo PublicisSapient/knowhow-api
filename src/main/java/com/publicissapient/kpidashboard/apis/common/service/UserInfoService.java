@@ -118,7 +118,7 @@ public interface UserInfoService {
 	 *
 	 * @param username username
 	 */
-	ServiceResponse deleteUser(String username, boolean centralAuthService);
+	ServiceResponse deleteUser(String username, String email, boolean centralAuthService);
 
 	List<UserInfo> getUserInfoByAuthType(String userType);
 

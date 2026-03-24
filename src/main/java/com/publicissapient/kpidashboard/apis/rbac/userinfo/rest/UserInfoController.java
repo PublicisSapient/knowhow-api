@@ -106,12 +106,13 @@ public class UserInfoController {
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
 		String userEmail = userNameRequest.getUserEmail();
+		String username = userNameRequest.getUsername();
 		String loggedUserName = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
-		if ((!loggedUserName.equals(userEmail)
+		UserInfo userInfo = userInfoRepository.findByUsernameAndEmailAddress(username, userEmail);
+		if ((!loggedUserName.equals(username)
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
-			accessRequestsRepository.deleteByUsername(userEmail);
-			ServiceResponse response = userInfoService.deleteUser(userEmail, false);
+			accessRequestsRepository.deleteByUsername(username);
+			ServiceResponse response = userInfoService.deleteUser(username, userEmail, false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
 			log.info("Unauthorized to perform deletion of user " + userEmail);
@@ -128,12 +129,13 @@ public class UserInfoController {
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
 		String userName = userNameRequest.getUsername();
+		String email = userNameRequest.getUserEmail();
 		String loggedUserName = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByUsername(userName);
+		UserInfo userInfo = userInfoRepository.findByUsernameAndEmailAddress(userName, email);
 		if ((!loggedUserName.equals(userName)
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
 			accessRequestsRepository.deleteByUsername(userName);
-			ServiceResponse response = userInfoService.deleteUser(userName, true);
+			ServiceResponse response = userInfoService.deleteUser(userName, email, true);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
 			log.info("Unauthorized to perform deletion of user " + userName);
