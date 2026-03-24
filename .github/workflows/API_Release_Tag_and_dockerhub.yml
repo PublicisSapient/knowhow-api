@@ -1,4 +1,4 @@
-name: Release - Tag from DTS-52074-Tag-dockerhub-push-github-actions + Docker Hub Push
+name: Release - Tag from master + Docker Hub Push
 
 on:
   workflow_dispatch:
@@ -35,10 +35,10 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout DTS-52074-Tag-dockerhub-push-github-actions (full history for tagging)
+      - name: Checkout master
         uses: actions/checkout@v4
         with:
-          ref: DTS-52074-Tag-dockerhub-push-github-actions
+          ref: master
           fetch-depth: 0
 
       - name: Set up Git identity (for commits/tags)
@@ -109,12 +109,12 @@ jobs:
         run: |
           git tag -a "${{ inputs.tag_version }}" -m "Release ${{ inputs.tag_version }}"
 
-      - name: Push commit + tag to origin/DTS-52074-Tag-dockerhub-push-github-actions
+      - name: Push commit + tag to origin/master
         run: |
           # avoid staging a submodule path accidentally if knowhow-common exists in the superproject
           git restore --staged knowhow-common || true
           git restore knowhow-common || true
-          git push origin DTS-52074-Tag-dockerhub-push-github-actions
+          git push origin master
           git push origin --follow-tags
 
       - name: Build jar skip tests
@@ -154,6 +154,6 @@ jobs:
           git add -A
           git commit -m "chore: bump version to ${{ inputs.next_dev_version }}" || echo "No changes to commit"
 
-      - name: Push next development version commit to origin/DTS-52074-Tag-dockerhub-push-github-actions
+      - name: Push next development version commit to origin/master
         run: |
-          git push origin DTS-52074-Tag-dockerhub-push-github-actions
+          git push origin master
