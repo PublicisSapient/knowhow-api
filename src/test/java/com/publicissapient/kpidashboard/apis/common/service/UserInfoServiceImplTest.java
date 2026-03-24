@@ -385,7 +385,7 @@ public class UserInfoServiceImplTest {
 	 */
 	@Test
 	public void deleteUserTest() {
-		ServiceResponse result = service.deleteUser("testuser", false);
+		ServiceResponse result = service.deleteUser("testuser", "testUser", false);
 		assertTrue(result.getSuccess());
 	}
 

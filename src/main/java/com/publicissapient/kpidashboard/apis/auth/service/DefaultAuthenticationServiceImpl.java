@@ -147,8 +147,9 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 
 	/** {@inheritDoc} */
 	@Override
-	public void delete(String username) {
-		Authentication authentication = authenticationRepository.findByUsername(username);
+	public void delete(String username, String email) {
+		Authentication authentication =
+				authenticationRepository.findByUsernameAndEmail(username, email);
 		if (authentication != null) {
 			authenticationRepository.delete(authentication);
 		}

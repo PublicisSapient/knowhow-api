@@ -141,8 +141,8 @@ public class AuthenticationServiceTest {
 
 	@Test
 	public void deleteAuthByUsernameTest() {
-		when(authRepo.findByUsername("Test")).thenReturn(authentication);
-		authService.delete("Test");
+		when(authRepo.findByUsernameAndEmail("Test", "test@mail")).thenReturn(authentication);
+		authService.delete("Test", "test@mail");
 		Assertions.assertNotNull(authentication);
 	}
 

@@ -158,7 +158,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 				userInfo -> {
 					Authentication auth = authMap.get(userInfo.getUsername());
 					if (auth != null) {
-						userInfo.setEmailAddress(auth.getEmail().toLowerCase());
+						// userInfo.setEmailAddress(auth.getEmail().toLowerCase());
 						if (!auth.isApproved()) {
 							nonApprovedUserList.add(userInfo);
 						}
@@ -401,10 +401,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 	 * @param username username
 	 */
 	@Override
-	public ServiceResponse deleteUser(String username, boolean centralAuthService) {
+	public ServiceResponse deleteUser(String username, String email, boolean centralAuthService) {
 		try {
-			userInfoRepository.deleteByUsername(username);
-			authenticationService.delete(username);
+			userInfoRepository.deleteByUsernameAndEmailAddress(username, email);
+			authenticationService.delete(username, email);
 			userTokenDeletionService.invalidateSession(username);
 			userBoardConfigService.deleteUser(username);
 			if (centralAuthService) {
