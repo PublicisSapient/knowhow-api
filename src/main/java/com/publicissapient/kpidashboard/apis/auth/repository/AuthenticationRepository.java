@@ -44,6 +44,15 @@ public interface AuthenticationRepository
 	Authentication findByUsername(String username);
 
 	/**
+	 * Find by username authentication.
+	 *
+	 * @param username the username
+	 * @param email the email
+	 * @return the authentication
+	 */
+	Authentication findByUsernameAndEmail(String username, String email);
+
+	/**
 	 * Find by email list.
 	 *
 	 * @param email the email

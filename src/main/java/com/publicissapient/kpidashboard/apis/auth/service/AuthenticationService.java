@@ -71,7 +71,7 @@ public interface AuthenticationService {
 	void delete(ObjectId id);
 
 	/** Deletes an existing authentication instance */
-	void delete(String username);
+	void delete(String username, String email);
 
 	/**
 	 * @param username
