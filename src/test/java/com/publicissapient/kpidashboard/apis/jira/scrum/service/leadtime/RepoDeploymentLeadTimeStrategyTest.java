@@ -56,12 +56,13 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 	@Test
 	void calculateLeadTime_emptyMergeRequests_doesNothing() {
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(Collections.emptyList())
-				.deploymentList(List.of(buildDeployment(SHA, DEPLOY_START, DEPLOY_END)))
-				.scmCommitList(List.of(buildCommit(SHA, 1_000_000L)))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(Collections.emptyList())
+						.deploymentList(List.of(buildDeployment(SHA, DEPLOY_START, DEPLOY_END)))
+						.scmCommitList(List.of(buildCommit(SHA, 1_000_000L)))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -71,12 +72,19 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 	@Test
 	void calculateLeadTime_emptyDeployments_doesNothing() {
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(buildMr(SHA, LocalDateTime.parse(DEPLOY_START, java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)))))
-				.deploymentList(Collections.emptyList())
-				.scmCommitList(List.of(buildCommit(SHA, 1_000_000L)))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(
+								List.of(
+										buildMr(
+												SHA,
+												LocalDateTime.parse(
+														DEPLOY_START,
+														java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)))))
+						.deploymentList(Collections.emptyList())
+						.scmCommitList(List.of(buildCommit(SHA, 1_000_000L)))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -86,12 +94,19 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 	@Test
 	void calculateLeadTime_emptyCommits_doesNothing() {
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(buildMr(SHA, LocalDateTime.parse(DEPLOY_START, java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)))))
-				.deploymentList(List.of(buildDeployment(SHA, DEPLOY_START, DEPLOY_END)))
-				.scmCommitList(Collections.emptyList())
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(
+								List.of(
+										buildMr(
+												SHA,
+												LocalDateTime.parse(
+														DEPLOY_START,
+														java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)))))
+						.deploymentList(List.of(buildDeployment(SHA, DEPLOY_START, DEPLOY_END)))
+						.scmCommitList(Collections.emptyList())
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -104,15 +119,20 @@ class RepoDeploymentLeadTimeStrategyTest {
 	@Test
 	void calculateLeadTime_noMatchingShaBetweenCommitAndMr_skipsCommit() {
 		ScmCommits commit = buildCommit("sha-commit", 1_000_000L);
-		ScmMergeRequests mr = buildMr("sha-mr", LocalDateTime.parse(DEPLOY_START, java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		ScmMergeRequests mr =
+				buildMr(
+						"sha-mr",
+						LocalDateTime.parse(
+								DEPLOY_START, java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 		Deployment deployment = buildDeployment("sha-deploy", DEPLOY_START, DEPLOY_END);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -128,12 +148,13 @@ class RepoDeploymentLeadTimeStrategyTest {
 		Deployment deployment = buildDeployment(SHA, DEPLOY_START, DEPLOY_END);
 		ScmCommits commit = buildCommit(SHA, 1_000_000L);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -144,12 +165,20 @@ class RepoDeploymentLeadTimeStrategyTest {
 	@Test
 	void calculateLeadTime_deploymentWithNullStartTime_skipsCommit() {
 		// commit time: 2024-01-08T08:00:00 UTC
-		long commitMillis = java.time.ZonedDateTime.of(
-				LocalDateTime.parse("2024-01-08T08:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
-				java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+		long commitMillis =
+				java.time.ZonedDateTime.of(
+								LocalDateTime.parse(
+										"2024-01-08T08:00:00",
+										java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
+								java.time.ZoneId.systemDefault())
+						.toInstant()
+						.toEpochMilli();
 
-		ScmMergeRequests mr = buildMr(SHA, LocalDateTime.parse("2024-01-08T09:00:00",
-				java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		ScmMergeRequests mr =
+				buildMr(
+						SHA,
+						LocalDateTime.parse(
+								"2024-01-08T09:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 
 		Deployment deployment = new Deployment();
 		deployment.setChangeSets(List.of(SHA));
@@ -158,12 +187,13 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 		ScmCommits commit = buildCommit(SHA, commitMillis);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -176,24 +206,33 @@ class RepoDeploymentLeadTimeStrategyTest {
 	@Test
 	void calculateLeadTime_validData_populatesLeadTimeMap() {
 		// commit at 08:00, merge at 09:00, deploy 10:00-12:00 — all same weekday
-		long commitMillis = java.time.ZonedDateTime.of(
-				LocalDateTime.parse("2024-01-08T08:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
-				java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+		long commitMillis =
+				java.time.ZonedDateTime.of(
+								LocalDateTime.parse(
+										"2024-01-08T08:00:00",
+										java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
+								java.time.ZoneId.systemDefault())
+						.toInstant()
+						.toEpochMilli();
 
-		ScmMergeRequests mr = buildMr(SHA, LocalDateTime.parse("2024-01-08T09:00:00",
-				java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		ScmMergeRequests mr =
+				buildMr(
+						SHA,
+						LocalDateTime.parse(
+								"2024-01-08T09:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 		mr.setExternalId("MR-1");
 		mr.setFromBranch("feature/test");
 
 		Deployment deployment = buildDeployment(SHA, DEPLOY_START, DEPLOY_END);
 		ScmCommits commit = buildCommit(SHA, commitMillis);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -213,21 +252,30 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 	@Test
 	void calculateLeadTime_monthMode_usesMonthLabel() {
-		long commitMillis = java.time.ZonedDateTime.of(
-				LocalDateTime.parse("2024-01-08T08:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
-				java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+		long commitMillis =
+				java.time.ZonedDateTime.of(
+								LocalDateTime.parse(
+										"2024-01-08T08:00:00",
+										java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
+								java.time.ZoneId.systemDefault())
+						.toInstant()
+						.toEpochMilli();
 
-		ScmMergeRequests mr = buildMr(SHA, LocalDateTime.parse("2024-01-08T09:00:00",
-				java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		ScmMergeRequests mr =
+				buildMr(
+						SHA,
+						LocalDateTime.parse(
+								"2024-01-08T09:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 		Deployment deployment = buildDeployment(SHA, DEPLOY_START, DEPLOY_END);
 		ScmCommits commit = buildCommit(SHA, commitMillis);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.MONTH)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.MONTH)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -240,24 +288,33 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 	@Test
 	void calculateLeadTime_multipleDeployments_usesLatestEndTime() {
-		long commitMillis = java.time.ZonedDateTime.of(
-				LocalDateTime.parse("2024-01-08T08:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
-				java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+		long commitMillis =
+				java.time.ZonedDateTime.of(
+								LocalDateTime.parse(
+										"2024-01-08T08:00:00",
+										java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
+								java.time.ZoneId.systemDefault())
+						.toInstant()
+						.toEpochMilli();
 
-		ScmMergeRequests mr = buildMr(SHA, LocalDateTime.parse("2024-01-08T09:00:00",
-				java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		ScmMergeRequests mr =
+				buildMr(
+						SHA,
+						LocalDateTime.parse(
+								"2024-01-08T09:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 
 		Deployment d1 = buildDeployment(SHA, "2024-01-08T10:00:00", "2024-01-08T11:00:00");
 		Deployment d2 = buildDeployment(SHA, "2024-01-08T10:00:00", "2024-01-08T14:00:00");
 
 		ScmCommits commit = buildCommit(SHA, commitMillis);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(Arrays.asList(d1, d2))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(Arrays.asList(d1, d2))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -265,7 +322,8 @@ class RepoDeploymentLeadTimeStrategyTest {
 		assertThat(result).isNotEmpty();
 		LeadTimeChangeData data = result.values().iterator().next().get(0);
 		// total lead time should reflect the latest end time (14:00), not 11:00
-		// commit->merge = 60 min, merge->deployStart = 60 min, deployDuration = 240 min => 360 min
+		// commit->merge = 60 min, merge->deployStart = 60 min, deployDuration = 240 min
+		// => 360 min
 		assertThat(data.getLeadTime()).isGreaterThan(0);
 	}
 
@@ -273,18 +331,20 @@ class RepoDeploymentLeadTimeStrategyTest {
 	void calculateLeadTime_mrWithNoCommitShas_notIndexed() {
 		ScmMergeRequests mr = new ScmMergeRequests();
 		mr.setCommitShas(null); // no shas — should be filtered out
-		mr.setMergedAt(LocalDateTime.parse("2024-01-08T09:00:00",
-				java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		mr.setMergedAt(
+				LocalDateTime.parse(
+						"2024-01-08T09:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 
 		Deployment deployment = buildDeployment(SHA, DEPLOY_START, DEPLOY_END);
 		ScmCommits commit = buildCommit(SHA, 1_000_000L);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
@@ -294,12 +354,20 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 	@Test
 	void calculateLeadTime_deploymentWithNullChangeSets_notIndexed() {
-		long commitMillis = java.time.ZonedDateTime.of(
-				LocalDateTime.parse("2024-01-08T08:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
-				java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+		long commitMillis =
+				java.time.ZonedDateTime.of(
+								LocalDateTime.parse(
+										"2024-01-08T08:00:00",
+										java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)),
+								java.time.ZoneId.systemDefault())
+						.toInstant()
+						.toEpochMilli();
 
-		ScmMergeRequests mr = buildMr(SHA, LocalDateTime.parse("2024-01-08T09:00:00",
-				java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
+		ScmMergeRequests mr =
+				buildMr(
+						SHA,
+						LocalDateTime.parse(
+								"2024-01-08T09:00:00", java.time.format.DateTimeFormatter.ofPattern(TIME_FORMAT)));
 
 		Deployment deployment = new Deployment();
 		deployment.setChangeSets(null); // filtered out
@@ -308,12 +376,13 @@ class RepoDeploymentLeadTimeStrategyTest {
 
 		ScmCommits commit = buildCommit(SHA, commitMillis);
 
-		LeadTimeContext context = LeadTimeContext.builder()
-				.mergeRequestList(List.of(mr))
-				.deploymentList(List.of(deployment))
-				.scmCommitList(List.of(commit))
-				.weekOrMonth(CommonConstant.WEEK)
-				.build();
+		LeadTimeContext context =
+				LeadTimeContext.builder()
+						.mergeRequestList(List.of(mr))
+						.deploymentList(List.of(deployment))
+						.scmCommitList(List.of(commit))
+						.weekOrMonth(CommonConstant.WEEK)
+						.build();
 
 		Map<String, List<LeadTimeChangeData>> result = new HashMap<>();
 		strategy.calculateLeadTime(context, result);
