@@ -2534,7 +2534,7 @@ public class KPIExcelUtility {
 											Map<String, String> issueDetails = new HashMap<>();
 											issueDetails.put(
 													leadTimeChangeData.getStoryID(), checkEmptyURL(leadTimeChangeData));
-											excelData.setStoryId(issueDetails);
+											excelData.setId(issueDetails);
 											excelData.setLeadTimeForChange(leadTimeChangeData.getLeadTimeInDays());
 											excelData.setReleaseDate(leadTimeChangeData.getReleaseDate());
 											kpiExcelData.add(excelData);
