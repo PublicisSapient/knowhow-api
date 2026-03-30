@@ -119,7 +119,7 @@ public class KPIExcelDropDown {
 													.append(ORDER, 2)
 													.append(IS_SHOWN, true)
 													.append(IS_DEFAULT, true),
-											new Document(COLUMN_NAME, "Story ID")
+											new Document(COLUMN_NAME, "ID")
 													.append(ORDER, 3)
 													.append(IS_SHOWN, true)
 													.append(IS_DEFAULT, true),
