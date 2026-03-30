@@ -1248,10 +1248,12 @@ public class KPIExcelUtility {
 							excelData.setCostOfDelay(epic.getCostOfDelay());
 							String month = Constant.EMPTY_STRING;
 							String epicEndDate = Constant.EMPTY_STRING;
-							if (epic.getEpicEndDate() != null) {
-								month = DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getEpicEndDate());
-								epicEndDate =
-										DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getEpicEndDate());
+							if (epic.getChangeDate() != null) {
+								month =
+										DateUtil.convertToMonthYearFormat(
+												DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getChangeDate())
+														.toString());
+								epicEndDate = DateUtil.convertDate(epic.getChangeDate());
 							}
 							excelData.setMonth(month);
 							excelData.setEpicEndDate(epicEndDate);

@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -231,19 +230,21 @@ public class CostOfDelayKanbanServiceImpl
 			Map<String, List<KanbanJiraIssue>> dateWiseIssue,
 			CustomDateRange dateRange,
 			List<KanbanJiraIssue> kanbanJiraIssueList) {
-		List<KanbanJiraIssue> dummyList = new LinkedList<>();
 		List<KanbanJiraIssue> issueList = new ArrayList<>();
-
-		Double cod = 0.0d;
 
 		for (LocalDate currentDate = dateRange.getStartDate();
 				currentDate.compareTo(dateRange.getStartDate()) >= 0
 						&& dateRange.getEndDate().compareTo(currentDate) >= 0;
 				currentDate = currentDate.plusDays(1)) {
-			dummyList.add(KanbanJiraIssue.builder().costOfDelay(0.0d).projectName("").build());
-			issueList.addAll(dateWiseIssue.getOrDefault(currentDate.toString(), dummyList));
+			String dateKey = currentDate.toString();
+			List<KanbanJiraIssue> issuesForDay = dateWiseIssue.get(dateKey);
+			if (issuesForDay != null) {
+				issuesForDay.forEach(issue -> issue.setChangeDate(dateKey));
+				issueList.addAll(issuesForDay);
+			}
 		}
 
+		Double cod = 0.0d;
 		if (CollectionUtils.isNotEmpty(issueList)) {
 			kanbanJiraIssueList.addAll(issueList);
 			cod = issueList.stream().mapToDouble(KanbanJiraIssue::getCostOfDelay).sum();
