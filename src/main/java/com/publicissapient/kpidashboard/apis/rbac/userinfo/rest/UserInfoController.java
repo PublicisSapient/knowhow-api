@@ -36,6 +36,7 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.rbac.UserDetailsResponseDTO;
@@ -97,6 +98,14 @@ public class UserInfoController {
 		log.info("user info ");
 		ServiceResponse response = userInfoService.updateUserRole(userInfo.getUsername(), userInfo);
 
+		if (!response.getSuccess()
+				&& (UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG.equals(response.getMessage())
+						|| (response.getMessage() != null
+								&& response
+										.getMessage()
+										.startsWith(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG)))) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
