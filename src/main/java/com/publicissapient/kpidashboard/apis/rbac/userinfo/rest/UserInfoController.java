@@ -98,7 +98,8 @@ public class UserInfoController {
 		log.info("user info ");
 		ServiceResponse response = userInfoService.updateUserRole(userInfo.getUsername(), userInfo);
 
-		if (!response.getSuccess()
+		if (response != null
+				&& !response.getSuccess()
 				&& (UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG.equals(response.getMessage())
 						|| (response.getMessage() != null
 								&& response

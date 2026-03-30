@@ -393,10 +393,9 @@ public class UserInfoServiceImplTest {
 	}
 
 	/**
-	 * Scenario 1 (same role):
-	 * User has VIEWER access on parent "bu1" (level "bu").
-	 * SuperAdmin tries to grant VIEWER access on child project "proj1" (level "project").
-	 * Expected: 409 with generic parent-conflict message.
+	 * Scenario 1 (same role): User has VIEWER access on parent "bu1" (level "bu"). SuperAdmin tries
+	 * to grant VIEWER access on child project "proj1" (level "project"). Expected: 409 with generic
+	 * parent-conflict message.
 	 */
 	@Test
 	public void updateUserRole_sameRole_parentConflict_returns409Message() {
@@ -411,12 +410,15 @@ public class UserInfoServiceImplTest {
 		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
-		doAnswer(invocation -> {
-			List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
-			ProjectBasicConfigNode parentNode = configTree.getChildren().get(0);
-			parents.add(parentNode);
-			return null;
-		}).when(projectBasicConfigService).findParents(anyList(), anyList());
+		doAnswer(
+						invocation -> {
+							List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
+							ProjectBasicConfigNode parentNode = configTree.getChildren().get(0);
+							parents.add(parentNode);
+							return null;
+						})
+				.when(projectBasicConfigService)
+				.findParents(anyList(), anyList());
 
 		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
 
@@ -426,10 +428,9 @@ public class UserInfoServiceImplTest {
 	}
 
 	/**
-	 * Scenario 2 (cross-role):
-	 * User has ADMIN access on parent "bu1" (level "bu").
-	 * SuperAdmin tries to grant VIEWER access on child project "proj1" (level "project").
-	 * Expected: 409 with role-specific message containing the existing role.
+	 * Scenario 2 (cross-role): User has ADMIN access on parent "bu1" (level "bu"). SuperAdmin tries
+	 * to grant VIEWER access on child project "proj1" (level "project"). Expected: 409 with
+	 * role-specific message containing the existing role.
 	 */
 	@Test
 	public void updateUserRole_crossRole_parentConflict_returnsRoleSpecificMessage() {
@@ -443,27 +444,29 @@ public class UserInfoServiceImplTest {
 		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
-		doAnswer(invocation -> {
-			List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
-			ProjectBasicConfigNode parentNode = configTree.getChildren().get(0);
-			parents.add(parentNode);
-			return null;
-		}).when(projectBasicConfigService).findParents(anyList(), anyList());
+		doAnswer(
+						invocation -> {
+							List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
+							ProjectBasicConfigNode parentNode = configTree.getChildren().get(0);
+							parents.add(parentNode);
+							return null;
+						})
+				.when(projectBasicConfigService)
+				.findParents(anyList(), anyList());
 
 		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
 
 		assertFalse(result.getSuccess());
-		assertTrue(result.getMessage()
-				.startsWith(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG));
+		assertTrue(
+				result.getMessage().startsWith(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG));
 		assertTrue(result.getMessage().contains("ROLE_PROJECT_ADMIN"));
 		verify(projectAccessManager, never()).updateAccessOfUserInfo(any(), any());
 	}
 
 	/**
-	 * Scenario 3 (no conflict):
-	 * User has VIEWER access on an unrelated node "bu2".
-	 * SuperAdmin grants VIEWER access on "proj1" whose parent is "bu1" (different node).
-	 * Expected: update proceeds normally.
+	 * Scenario 3 (no conflict): User has VIEWER access on an unrelated node "bu2". SuperAdmin grants
+	 * VIEWER access on "proj1" whose parent is "bu1" (different node). Expected: update proceeds
+	 * normally.
 	 */
 	@Test
 	public void updateUserRole_noParentConflict_proceedsNormally() {
@@ -478,12 +481,16 @@ public class UserInfoServiceImplTest {
 		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
-		doAnswer(invocation -> {
-			List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
-			ProjectBasicConfigNode parentNode = configTree.getChildren().get(0); // parent is "bu1"
-			parents.add(parentNode);
-			return null;
-		}).when(projectBasicConfigService).findParents(anyList(), anyList());
+		doAnswer(
+						invocation -> {
+							List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
+							ProjectBasicConfigNode parentNode =
+									configTree.getChildren().get(0); // parent is "bu1"
+							parents.add(parentNode);
+							return null;
+						})
+				.when(projectBasicConfigService)
+				.findParents(anyList(), anyList());
 		when(projectAccessManager.updateAccessOfUserInfo(any(), any())).thenReturn(existingUser);
 
 		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
@@ -493,8 +500,8 @@ public class UserInfoServiceImplTest {
 	}
 
 	/**
-	 * Scenario 4 (no parents in tree):
-	 * Requested item has no parents (top-level node). No conflict should be raised.
+	 * Scenario 4 (no parents in tree): Requested item has no parents (top-level node). No conflict
+	 * should be raised.
 	 */
 	@Test
 	public void updateUserRole_noParentsInTree_proceedsNormally() {

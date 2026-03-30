@@ -51,10 +51,7 @@ import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.util.TestUtil;
-import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
-import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
 import com.publicissapient.kpidashboard.common.model.rbac.Permissions;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
 import com.publicissapient.kpidashboard.common.model.rbac.RoleData;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
@@ -235,15 +232,13 @@ public class UserInfoControlllerTest {
 		assertEquals(true, response.getSuccess());
 	}
 
-	/**
-	 * updateUserRole returns 409 when service signals same-role parent conflict.
-	 */
+	/** updateUserRole returns 409 when service signals same-role parent conflict. */
 	@Test
 	public void updateUserRole_sameRoleParentConflict_returns409() {
 		UserInfoDTO dto = buildUserInfoDTO();
 		when(userInfoService.updateUserRole(any(), any()))
-				.thenReturn(new ServiceResponse(
-						false, UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG, null));
+				.thenReturn(
+						new ServiceResponse(false, UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG, null));
 
 		ResponseEntity<ServiceResponse> response = userInfoController.updateUserRole(dto);
 
@@ -251,9 +246,7 @@ public class UserInfoControlllerTest {
 		assertEquals(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG, response.getBody().getMessage());
 	}
 
-	/**
-	 * updateUserRole returns 409 when service signals cross-role parent conflict.
-	 */
+	/** updateUserRole returns 409 when service signals cross-role parent conflict. */
 	@Test
 	public void updateUserRole_crossRoleParentConflict_returns409() {
 		UserInfoDTO dto = buildUserInfoDTO();
@@ -268,9 +261,7 @@ public class UserInfoControlllerTest {
 		assertEquals(conflictMsg, response.getBody().getMessage());
 	}
 
-	/**
-	 * updateUserRole returns 200 when there is no parent conflict.
-	 */
+	/** updateUserRole returns 200 when there is no parent conflict. */
 	@Test
 	public void updateUserRole_noConflict_returns200() {
 		UserInfoDTO dto = buildUserInfoDTO();
