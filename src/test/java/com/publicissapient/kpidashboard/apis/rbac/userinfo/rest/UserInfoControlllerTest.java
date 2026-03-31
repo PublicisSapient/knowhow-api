@@ -20,11 +20,13 @@ package com.publicissapient.kpidashboard.apis.rbac.userinfo.rest;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.bson.types.ObjectId;
@@ -35,7 +37,9 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -45,6 +49,7 @@ import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.util.TestUtil;
 import com.publicissapient.kpidashboard.common.model.rbac.Permissions;
@@ -224,5 +229,62 @@ public class UserInfoControlllerTest {
 		ServiceResponse response = userInfoController.deleteUserFromCentral(userNameRequest).getBody();
 		assert response != null;
 		assertEquals(true, response.getSuccess());
+	}
+
+	/** updateUserRole returns 409 when service signals same-role parent conflict. */
+	@Test
+	public void updateUserRole_sameRoleParentConflict_returns409() {
+		UserInfoDTO dto = buildUserInfoDTO();
+		when(userInfoService.updateUserRole(any(), any()))
+				.thenReturn(
+						new ServiceResponse(false, UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG, null));
+
+		ResponseEntity<ServiceResponse> response = userInfoController.updateUserRole(dto);
+
+		assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+		assertEquals(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG, response.getBody().getMessage());
+	}
+
+	/** updateUserRole returns 409 when service signals cross-role parent conflict. */
+	@Test
+	public void updateUserRole_crossRoleParentConflict_returns409() {
+		UserInfoDTO dto = buildUserInfoDTO();
+		String conflictMsg =
+				UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG + "ROLE_PROJECT_ADMIN";
+		when(userInfoService.updateUserRole(any(), any()))
+				.thenReturn(new ServiceResponse(false, conflictMsg, null));
+
+		ResponseEntity<ServiceResponse> response = userInfoController.updateUserRole(dto);
+
+		assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+		assertEquals(conflictMsg, response.getBody().getMessage());
+	}
+
+	/** updateUserRole returns 200 when there is no parent conflict. */
+	@Test
+	public void updateUserRole_noConflict_returns200() {
+		UserInfoDTO dto = buildUserInfoDTO();
+		when(userInfoService.updateUserRole(any(), any()))
+				.thenReturn(new ServiceResponse(true, "Updated the role Successfully", null));
+
+		ResponseEntity<ServiceResponse> response = userInfoController.updateUserRole(dto);
+
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertEquals(true, response.getBody().getSuccess());
+	}
+
+	private UserInfoDTO buildUserInfoDTO() {
+		com.publicissapient.kpidashboard.common.model.rbac.AccessNodeDTO nodeDTO =
+				new com.publicissapient.kpidashboard.common.model.rbac.AccessNodeDTO();
+		nodeDTO.setAccessLevel("project");
+		nodeDTO.setAccessItems(new ArrayList<>());
+		com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccessDTO paDTO =
+				new com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccessDTO();
+		paDTO.setRole("ROLE_VIEWER");
+		paDTO.setAccessNodes(new ArrayList<>(Collections.singletonList(nodeDTO)));
+		UserInfoDTO dto = new UserInfoDTO();
+		dto.setUsername("testUser");
+		dto.setProjectsAccess(new ArrayList<>(Collections.singletonList(paDTO)));
+		return dto;
 	}
 }

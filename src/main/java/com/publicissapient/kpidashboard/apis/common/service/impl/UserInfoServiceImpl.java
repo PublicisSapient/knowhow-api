@@ -65,15 +65,7 @@ import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardCo
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
-import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccessDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
-import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserDetailsResponseDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserTokenData;
+import com.publicissapient.kpidashboard.common.model.rbac.*;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoCustomRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
@@ -93,6 +85,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 			"Error while consuming rest service in userInfoServiceImpl";
 	public static final String ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL =
 			"Error while Auth Service API call , Api Key token is invalid : {}";
+	public static final String PARENT_ACCESS_CONFLICT_MSG =
+			"User already has access of parent hierarchy";
+	public static final String PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG =
+			"User already has parent hierarchy access with role: ";
 	@Autowired TokenAuthenticationService tokenAuthenticationService;
 	@Autowired private UserInfoRepository userInfoRepository;
 	@Autowired private UserInfoCustomRepository userInfoCustomRepository;
@@ -290,6 +286,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 		if (existingUserInfo == null) {
 			return new ServiceResponse(false, "No user in user_info collection", userInfo);
 		}
+		String conflictMsg = getParentAccessConflictMessage(existingUserInfo, userInfo);
+		if (conflictMsg != null) {
+			return new ServiceResponse(false, conflictMsg, null);
+		}
 		UserInfo resultUserInfo =
 				projectAccessManager.updateAccessOfUserInfo(existingUserInfo, userInfo);
 		if (resultUserInfo == null) {
@@ -298,6 +298,72 @@ public class UserInfoServiceImpl implements UserInfoService {
 		tokenAuthenticationService.updateExpiryDate(
 				resultUserInfo.getUsername(), LocalDateTime.now().toString());
 		return new ServiceResponse(true, "Updated the role Successfully", resultUserInfo);
+	}
+
+	/**
+	 * Returns a conflict message if any requested child item has a parent already covered in the
+	 * existing user's projectsAccess across ALL roles. Same role -> generic message; different role
+	 * -> role-specific message. Returns null if no conflict.
+	 */
+	private String getParentAccessConflictMessage(
+			UserInfo existingUserInfo, UserInfo requestedUserInfo) {
+		if (CollectionUtils.isEmpty(existingUserInfo.getProjectsAccess())
+				|| requestedUserInfo == null
+				|| CollectionUtils.isEmpty(requestedUserInfo.getProjectsAccess())) {
+			return null;
+		}
+		ProjectBasicConfigNode configTree = projectBasicConfigService.getBasicConfigTree();
+		for (ProjectsAccess requestedAccess : requestedUserInfo.getProjectsAccess()) {
+			String requestedRole = requestedAccess.getRole();
+			for (AccessNode an : requestedAccess.getAccessNodes()) {
+				String accessLevel = an.getAccessLevel();
+				for (AccessItem item : an.getAccessItems()) {
+					ProjectBasicConfigNode searchNode =
+							projectBasicConfigService.findNode(configTree, item.getItemId(), accessLevel);
+					List<ProjectBasicConfigNode> parents = new ArrayList<>();
+					projectBasicConfigService.findParents(Arrays.asList(searchNode), parents);
+					Map<String, Set<String>> globalParentMap = new HashMap<>();
+					parents.forEach(
+							parent ->
+									globalParentMap
+											.computeIfAbsent(parent.getGroupName(), k -> new HashSet<>())
+											.add(parent.getValue()));
+					if (globalParentMap.isEmpty()) {
+						continue;
+					}
+					for (ProjectsAccess existingAccess : existingUserInfo.getProjectsAccess()) {
+						Map<String, Set<String>> existingAccessMap = new HashMap<>();
+						existingAccess
+								.getAccessNodes()
+								.forEach(
+										existingAn -> {
+											Set<String> ids =
+													existingAn.getAccessItems().stream()
+															.map(AccessItem::getItemId)
+															.collect(Collectors.toSet());
+											existingAccessMap.put(existingAn.getAccessLevel(), ids);
+										});
+						if (isParentCovered(globalParentMap, existingAccessMap)) {
+							String existingRole = existingAccess.getRole();
+							return existingRole.equals(requestedRole)
+									? PARENT_ACCESS_CONFLICT_MSG
+									: PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG + existingRole;
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private boolean isParentCovered(
+			Map<String, Set<String>> globalParentMap, Map<String, Set<String>> existingAccessMap) {
+		return globalParentMap.entrySet().stream()
+				.anyMatch(
+						e -> {
+							Set<String> existingIds = existingAccessMap.get(e.getKey());
+							return existingIds != null && e.getValue().stream().anyMatch(existingIds::contains);
+						});
 	}
 
 	private UserInfo createUserInCaseSSOUserNotFound(UserInfo existingUserInfo, UserInfo userInfo) {
