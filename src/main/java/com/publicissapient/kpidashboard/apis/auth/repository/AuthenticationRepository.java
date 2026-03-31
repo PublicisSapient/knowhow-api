@@ -43,8 +43,6 @@ public interface AuthenticationRepository
 	 */
 	Authentication findByUsername(String username);
 
-	Authentication findByUsernameAndEmail(String username, String email);
-
 	/**
 	 * Find by username authentication.
 	 *

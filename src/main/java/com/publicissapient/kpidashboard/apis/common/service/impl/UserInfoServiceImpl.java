@@ -283,7 +283,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 	 */
 	@Override
 	public ServiceResponse updateUserRole(String username, UserInfo userInfo) {
-		UserInfo existingUserInfo = userInfoRepository.findByUsername(username);
+		UserInfo existingUserInfo = userInfoRepository.findByUsernameAndEmailAddress(username, userInfo.getEmailAddress());
 
 		existingUserInfo = createUserInCaseSSOUserNotFound(existingUserInfo, userInfo);
 
@@ -505,6 +505,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public CentralUserInfoDTO getCentralAuthUserInfoDetails(String username, String authCookieToken) {
 		HttpHeaders headers = cookieUtil.setCookieIntoHeader(authCookieToken);
+		String authType = tokenAuthenticationService.getAuthTypeFromToken(authCookieToken);
 		String fetchUserUrl =
 				CommonUtils.getAPIEndPointURL(
 						authProperties.getCentralAuthBaseURL(),

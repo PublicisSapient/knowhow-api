@@ -79,6 +79,7 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	private static final String AUTH_RESPONSE_HEADER = "X-Authentication-Token";
 	private static final String ROLES_CLAIM = "roles";
 	private static final String DETAILS_CLAIM = "details";
+	private static final String EMAIL_CLAIM = "email";
 	private static final String USER_NAME = "username";
 	private static final String USER_EMAIL = "emailAddress";
 	private static final String PROJECTS_ACCESS = "projectsAccess";
@@ -190,10 +191,11 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 					Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 			Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
 			String username = claims.getSubject();
+			String email = claims.get(EMAIL_CLAIM, String.class);
 			Collection<? extends GrantedAuthority> authorities =
 					getAuthorities(claims.get(ROLES_CLAIM, Collection.class));
 			PreAuthenticatedAuthenticationToken authentication =
-					new PreAuthenticatedAuthenticationToken(username, null, authorities);
+					new PreAuthenticatedAuthenticationToken(email, null, authorities);
 			authentication.setDetails(claims.get(DETAILS_CLAIM));
 			Date tokenCreationDate =
 					new Date(claims.getExpiration().getTime() - tokenAuthProperties.getExpirationTime());
@@ -349,5 +351,13 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 		Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwtToken).getPayload();
 		return claims.getSubject();
+	}
+
+	@Override
+	public String getAuthTypeFromToken(String jwtToken) {
+		SecretKey key =
+				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+		Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwtToken).getPayload();
+		return claims.get("details").toString();
 	}
 }

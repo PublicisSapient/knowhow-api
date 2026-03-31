@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import org.apache.commons.collections4.CollectionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -124,10 +125,10 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(
-			HttpServletResponse httpServletResponse, String username, String authToken) {
+			HttpServletResponse httpServletResponse, String username, String authType, String authToken) {
 		Map<String, Object> userMap = new HashMap<>();
 		httpServletResponse.setContentType("application/json");
-		UserInfo userinfoKnowHow = userInfoRepository.findByUsername(username);
+		UserInfo userinfoKnowHow = userInfoRepository.findByUsernameAndAuthType(username, AuthType.valueOf(authType));
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		if (Objects.isNull(userinfoKnowHow)) {
 			CentralUserInfoDTO centralUserInfoDTO =
@@ -141,7 +142,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 				userTokenReopository.save(userTokenData);
 			}
 		}
-		Authentication authentication = authenticationRepository.findByUsername(username);
+		Authentication authentication = authenticationRepository.findByUsernameAndEmail(username, userinfoKnowHow.getEmailAddress());
 		userMap.put(USER_NAME, username);
 		if (Objects.nonNull(userinfoKnowHow)) {
 			String email =
