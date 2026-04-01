@@ -259,11 +259,15 @@ public class LeadTimeForChangeServiceImpl
 									commitsByProject.get(deployment.getBasicProjectConfigId().toString()).stream()
 											.filter(
 													commit ->
-															(DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp())
-																			.isAfter(previousDeploymentTime.get())
-																	&& DateUtil.convertMillisToLocalDateTime(
-																					commit.getCommitTimestamp())
-																			.isBefore(deployStartDateTime)))
+															commit
+																			.getRepositoryName()
+																			.equalsIgnoreCase(getRepoNameFromUrl(deployment.getRepoUrl()))
+																	&& (DateUtil.convertMillisToLocalDateTime(
+																							commit.getCommitTimestamp())
+																					.isAfter(previousDeploymentTime.get())
+																			&& DateUtil.convertMillisToLocalDateTime(
+																							commit.getCommitTimestamp())
+																					.isBefore(deployStartDateTime)))
 											.map(ScmCommits::getSha)
 											.toList();
 							deployment.setChangeSets(changeSetShas);
@@ -295,6 +299,13 @@ public class LeadTimeForChangeServiceImpl
 						.collect(Collectors.groupingBy(d -> d.getBasicProjectConfigId().toString())));
 		resultListMap.put(COMMITS_DATA, commitsByProject);
 		return resultListMap;
+	}
+
+	private String getRepoNameFromUrl(String repoUrl) {
+		if (repoUrl.isEmpty()) {
+			return "";
+		}
+		return repoUrl.substring(repoUrl.lastIndexOf('/') + 1).replace(".git", "");
 	}
 
 	/**
