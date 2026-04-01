@@ -114,6 +114,7 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 		return Jwts.builder()
 				.setSubject(authentication.getName())
+				.claim(EMAIL_CLAIM, authentication.getName())
 				.claim(DETAILS_CLAIM, authentication.getDetails())
 				.claim(ROLES_CLAIM, getRoles(authentication.getAuthorities()))
 				.setExpiration(
