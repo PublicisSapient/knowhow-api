@@ -41,6 +41,7 @@ import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
 import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.AuthenticationEvent;
 import com.publicissapient.kpidashboard.common.constant.Status;
 import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
@@ -85,15 +86,17 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	/** {@inheritDoc} */
 	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, String username) {
+	public JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, String userEmail) {
 		JSONObject json = new JSONObject();
 		httpServletResponse.setContentType("application/json");
 		httpServletResponse.setCharacterEncoding("UTF-8");
-		UserInfo userinfo = userInfoRepository.findByUsername(username);
-		Authentication authentication = authenticationRepository.findByUsername(username);
-		String email = authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
+		UserInfo userinfo = userInfoRepository.findByEmailAddress(userEmail);
+		Authentication authentication =
+				authenticationRepository.findByUsernameAndEmail(userinfo.getUsername(), userEmail);
+		String username =
+				authentication == null ? userinfo.getUsername() : authentication.getUsername();
 		json.put(USER_NAME, username);
-		json.put(USER_EMAIL, email);
+		json.put(USER_EMAIL, userEmail);
 		json.put(USER_ID, userinfo.getId().toString());
 		json.put(USER_AUTH_TYPE, userinfo.getAuthType().toString());
 		json.put(USER_AUTHORITIES, userinfo.getAuthorities());
@@ -103,7 +106,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		usersSessionService.createUsersSessionInfo(userinfo, AuthenticationEvent.LOGIN, Status.SUCCESS);
 
 		List<RoleWiseProjects> projectAccessesWithRole =
-				projectAccessManager.getProjectAccessesWithRole(username);
+				projectAccessManager.getProjectAccessesWithRole(userEmail);
 
 		if (projectAccessesWithRole != null) {
 			JsonElement element =
@@ -122,10 +125,11 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(
-			HttpServletResponse httpServletResponse, String username, String authToken) {
+			HttpServletResponse httpServletResponse, String username, String authType, String authToken) {
 		Map<String, Object> userMap = new HashMap<>();
 		httpServletResponse.setContentType("application/json");
-		UserInfo userinfoKnowHow = userInfoRepository.findByUsername(username);
+		UserInfo userinfoKnowHow =
+				userInfoRepository.findByUsernameAndAuthType(username, AuthType.valueOf(authType));
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		if (Objects.isNull(userinfoKnowHow)) {
 			CentralUserInfoDTO centralUserInfoDTO =
@@ -139,7 +143,9 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 				userTokenReopository.save(userTokenData);
 			}
 		}
-		Authentication authentication = authenticationRepository.findByUsername(username);
+		Authentication authentication =
+				authenticationRepository.findByUsernameAndEmail(
+						username, userinfoKnowHow.getEmailAddress());
 		userMap.put(USER_NAME, username);
 		if (Objects.nonNull(userinfoKnowHow)) {
 			String email =
@@ -152,7 +158,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 			userMap.put(USER_AUTH_TYPE, userinfoKnowHow.getAuthType().toString());
 			userMap.put(NOTIFICATION_EMAIL, userinfoKnowHow.getNotificationEmail());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(username);
+					projectAccessManager.getProjectAccessesWithRole(email);
 			if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
 				userMap.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			} else {
