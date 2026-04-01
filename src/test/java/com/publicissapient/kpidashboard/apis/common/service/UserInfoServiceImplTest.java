@@ -109,7 +109,7 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority(Constant.ROLE_VIEWER);
-		when(userInfoRepository.findByUsername("user")).thenReturn(user);
+		when(userInfoRepository.findByEmailAddress("user")).thenReturn(user);
 		Collection<GrantedAuthority> authorities = service.getAuthorities("user");
 		assertTrue(authorities.contains(authority));
 	}
@@ -250,7 +250,7 @@ public class UserInfoServiceImplTest {
 
 		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
+		when(userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser()))
 				.thenReturn(testUser);
 
 		ServiceResponse result = service.getAllUserInfo();
@@ -272,7 +272,7 @@ public class UserInfoServiceImplTest {
 		userInfoList.add(testUser);
 
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
+		when(userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser()))
 				.thenReturn(testUser);
 		when(dataAccessService.getMembersForUser(roles, authentication.getName()))
 				.thenReturn(userInfoList);
@@ -304,6 +304,7 @@ public class UserInfoServiceImplTest {
 		UserInfo testUser = new UserInfo();
 		testUser.setUsername("User");
 		testUser.setProjectsAccess(paList);
+		testUser.setEmailAddress("test@test");
 
 		List<String> auth = new ArrayList<>();
 		auth.add(ROLE_SUPERADMIN);
@@ -311,9 +312,11 @@ public class UserInfoServiceImplTest {
 		testUser.setAuthorities(auth);
 
 		UserInfo userInfoDTO = new UserInfo();
+		userInfoDTO.setEmailAddress("test@test");
 		userInfoDTO.setProjectsAccess(paList);
 
-		when(userInfoRepository.findByUsername("User")).thenReturn(testUser);
+		when(userInfoRepository.findByUsernameAndEmailAddress("User", "test@test"))
+				.thenReturn(testUser);
 		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
 				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", userInfoDTO);
@@ -322,7 +325,6 @@ public class UserInfoServiceImplTest {
 
 	@Test
 	public void validateUpdateUserRole_Null_UserInfo() {
-		when(userInfoRepository.findByUsername("User")).thenReturn(null);
 		ServiceResponse result = service.updateUserRole("User", new UserInfo());
 		assertFalse(result.getSuccess());
 	}
@@ -342,8 +344,11 @@ public class UserInfoServiceImplTest {
 
 		UserInfo u = new UserInfo();
 		u.setProjectsAccess(paList);
+		u.setEmailAddress("test@test");
 
-		when(userInfoRepository.findByUsername("User")).thenReturn(testUser);
+		testUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("User", "test@test"))
+				.thenReturn(testUser);
 		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
 				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", u);
@@ -403,11 +408,13 @@ public class UserInfoServiceImplTest {
 		UserInfo existingUser = buildUserWithAccess(role, "bu", "bu1");
 		UserInfo requestedUser = buildUserWithAccess(role, "project", "proj1");
 		requestedUser.setUsername("testUser");
+		requestedUser.setEmailAddress("test@test");
 
 		ProjectBasicConfigNode configTree = buildConfigTree("bu", "bu1", "project", "proj1");
 		ProjectBasicConfigNode childNode = configTree.getChildren().get(0).getChildren().get(0);
 
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
 		doAnswer(
@@ -441,7 +448,9 @@ public class UserInfoServiceImplTest {
 		ProjectBasicConfigNode configTree = buildConfigTree("bu", "bu1", "project", "proj1");
 		ProjectBasicConfigNode childNode = configTree.getChildren().get(0).getChildren().get(0);
 
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
+		requestedUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
 		doAnswer(
@@ -477,8 +486,9 @@ public class UserInfoServiceImplTest {
 
 		ProjectBasicConfigNode configTree = buildConfigTree("bu", "bu1", "project", "proj1");
 		ProjectBasicConfigNode childNode = configTree.getChildren().get(0).getChildren().get(0);
-
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
+		requestedUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
 		doAnswer(
@@ -517,7 +527,9 @@ public class UserInfoServiceImplTest {
 		searchNode.setGroupName("bu");
 		searchNode.setChildren(new ArrayList<>());
 
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(existingUser);
+		requestedUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
 		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
 		when(projectBasicConfigService.findNode(configTree, "bu2", "bu")).thenReturn(searchNode);
 		// findParents adds nothing -> globalParentMap stays empty -> no conflict
@@ -550,7 +562,6 @@ public class UserInfoServiceImplTest {
 		u.setUsername("user");
 		u.setAuthType(AuthType.SSO);
 		u.setEmailAddress("testEmail@test.com");
-		when(userInfoRepository.findByUsername("User")).thenReturn(null);
 		when(userInfoRepository.save(any())).thenReturn(testUser);
 		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
 				.thenReturn(testUser);
@@ -565,7 +576,11 @@ public class UserInfoServiceImplTest {
 	 */
 	@Test
 	public void deleteUserTest() {
-		ServiceResponse result = service.deleteUser("testuser", "testUser", false);
+		UserInfo u = new UserInfo();
+		u.setUsername("testuser");
+		u.setAuthType(AuthType.SSO);
+		u.setEmailAddress("testEmail@test.com");
+		ServiceResponse result = service.deleteUser(u, false);
 		assertTrue(result.getSuccess());
 	}
 
@@ -589,7 +604,6 @@ public class UserInfoServiceImplTest {
 										100000L)));
 		when(userTokenReopository.findByUserToken(anyString()))
 				.thenReturn(new UserTokenData("dummyUser", "dummyToken", null));
-		when(authenticationRepository.findByUsername(anyString())).thenReturn(new Authentication());
 
 		user.setUsername("dummyUser");
 		user.setAuthType(AuthType.STANDARD);
@@ -602,8 +616,9 @@ public class UserInfoServiceImplTest {
 
 		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
 
-		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
-		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(null);
+		when(userInfoRepository.findByEmailAddress(Mockito.anyString())).thenReturn(user);
+		when(authenticationRepository.findByUsernameAndEmail(Mockito.anyString(), anyString()))
+				.thenReturn(null);
 		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
 				.thenReturn(roleWiseProjects);
 
@@ -646,7 +661,7 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList("ROLE_PROJECT_ADMIN"));
 		user.setEmailAddress("email");
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(user);
+		when(userInfoRepository.findByEmailAddress("testUser")).thenReturn(user);
 		when(userInfoRepository.save(any())).thenReturn(user);
 		UserInfo userInfo = service.updateNotificationEmail("testUser", notificationEmail);
 		assertNotNull(userInfo);

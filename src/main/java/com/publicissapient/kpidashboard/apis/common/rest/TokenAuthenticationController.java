@@ -72,11 +72,12 @@ public class TokenAuthenticationController {
 
 		String authToken = tokenAuthenticationService.getAuthToken(httpServletRequest);
 		String userName = tokenAuthenticationService.getUserNameFromToken(authToken);
+		String authType = tokenAuthenticationService.getAuthTypeFromToken(authToken);
 		ServiceResponse serviceResponse;
 		if (null != authToken) {
 			Map<String, Object> userMap =
 					customAnalyticsService.addAnalyticsDataAndSaveCentralUser(
-							httpServletResponse, userName, authToken);
+							httpServletResponse, userName, authType, authToken);
 			serviceResponse = new ServiceResponse(true, "User Details fetched successfully", userMap);
 			return ResponseEntity.status(HttpStatus.OK).body(serviceResponse);
 		} else {

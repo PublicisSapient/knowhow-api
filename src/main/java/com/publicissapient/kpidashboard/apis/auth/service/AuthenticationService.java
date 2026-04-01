@@ -129,6 +129,14 @@ public interface AuthenticationService {
 	boolean isUsernameExistsInUserInfo(String username);
 
 	/**
+	 * Checks if email already exists in USERINFO collection
+	 *
+	 * @param email the email
+	 * @return true if email already exists in db
+	 */
+	boolean isEmailExistsInUserInfo(String email);
+
+	/**
 	 * Check if valid old Password
 	 *
 	 * @param email email id
@@ -185,7 +193,7 @@ public interface AuthenticationService {
 	 * @param authentication authentication object
 	 * @return username
 	 */
-	String getUsername(org.springframework.security.core.Authentication authentication);
+	String getUserEmail(org.springframework.security.core.Authentication authentication);
 
 	List<UserAccessApprovalResponseDTO> getAuthenticationByApproved(boolean approved);
 

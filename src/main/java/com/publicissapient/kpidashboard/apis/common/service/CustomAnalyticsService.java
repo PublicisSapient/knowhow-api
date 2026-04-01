@@ -48,7 +48,7 @@ public interface CustomAnalyticsService {
 	 * @return JSON of analytics data
 	 */
 	Map<String, Object> addAnalyticsDataAndSaveCentralUser(
-			HttpServletResponse httpServletResponse, String username, String authToken);
+			HttpServletResponse httpServletResponse, String username, String authType, String authToken);
 
 	JSONObject getAnalyticsCheck();
 }
