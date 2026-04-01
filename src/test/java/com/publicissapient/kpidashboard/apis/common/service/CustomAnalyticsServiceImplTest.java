@@ -19,6 +19,8 @@
 package com.publicissapient.kpidashboard.apis.common.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -92,16 +94,19 @@ public class CustomAnalyticsServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList("ROLE_VIEWER"));
 		user.setId(new ObjectId("6373796960277453212bc610"));
+		user.setEmailAddress("user@user");
 		authentication = new Authentication();
 		authentication.setEmail("email");
 		roleWiseProjects = new RoleWiseProjects();
 
-		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
-		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(authentication);
+		when(userInfoRepository.findByUsernameAndAuthType(Mockito.anyString(), any())).thenReturn(user);
+		when(authenticationRepository.findByUsernameAndEmail(Mockito.anyString(), anyString()))
+				.thenReturn(authentication);
 		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
 				.thenReturn(listRoleWiseProjects);
 		Map<String, Object> json =
-				customAnalyticsServiceImpl.addAnalyticsDataAndSaveCentralUser(resp, "test", "token");
+				customAnalyticsServiceImpl.addAnalyticsDataAndSaveCentralUser(
+						resp, "test", "SAML", "token");
 		assertEquals("test", json.get("user_name"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
 	}

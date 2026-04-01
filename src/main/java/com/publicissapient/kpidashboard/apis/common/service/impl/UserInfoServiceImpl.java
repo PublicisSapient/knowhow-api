@@ -279,7 +279,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 	 */
 	@Override
 	public ServiceResponse updateUserRole(String username, UserInfo userInfo) {
-		UserInfo existingUserInfo = userInfoRepository.findByUsernameAndEmailAddress(username, userInfo.getEmailAddress());
+		UserInfo existingUserInfo =
+				userInfoRepository.findByUsernameAndEmailAddress(username, userInfo.getEmailAddress());
 
 		existingUserInfo = createUserInCaseSSOUserNotFound(existingUserInfo, userInfo);
 

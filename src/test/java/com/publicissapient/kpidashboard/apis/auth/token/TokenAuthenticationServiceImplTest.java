@@ -120,6 +120,7 @@ public class TokenAuthenticationServiceImplTest {
 		return Jwts.builder()
 				.subject(auth.getName())
 				.claim(DETAILS_CLAIM, auth.getDetails())
+				.claim("email", "test@mail")
 				.claim(ROLES_CLAIM, authorities)
 				.expiration(new Date(System.currentTimeMillis() + expirationTime))
 				.signWith(key)
@@ -176,7 +177,7 @@ public class TokenAuthenticationServiceImplTest {
 		Assert.assertNotNull(authentication);
 		assertTrue(authentication.isAuthenticated());
 		assertNotNull(authentication.getAuthorities());
-		assertEquals(authentication.getName(), USERNAME);
+		assertEquals(authentication.getName(), "test@mail");
 		assertNotNull(authentication.getDetails());
 	}
 
@@ -187,7 +188,7 @@ public class TokenAuthenticationServiceImplTest {
 		Assert.assertNotNull(authentication);
 		assertTrue(authentication.isAuthenticated());
 		assertNotNull(authentication.getAuthorities());
-		assertEquals(authentication.getName(), USERNAME);
+		assertEquals(authentication.getName(), "test@mail");
 		assertNotNull(authentication.getDetails());
 	}
 

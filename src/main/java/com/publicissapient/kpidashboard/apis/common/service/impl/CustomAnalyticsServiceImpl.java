@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.publicissapient.kpidashboard.common.constant.AuthType;
 import org.apache.commons.collections4.CollectionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -42,6 +41,7 @@ import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
 import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.AuthenticationEvent;
 import com.publicissapient.kpidashboard.common.constant.Status;
 import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
@@ -128,7 +128,8 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 			HttpServletResponse httpServletResponse, String username, String authType, String authToken) {
 		Map<String, Object> userMap = new HashMap<>();
 		httpServletResponse.setContentType("application/json");
-		UserInfo userinfoKnowHow = userInfoRepository.findByUsernameAndAuthType(username, AuthType.valueOf(authType));
+		UserInfo userinfoKnowHow =
+				userInfoRepository.findByUsernameAndAuthType(username, AuthType.valueOf(authType));
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		if (Objects.isNull(userinfoKnowHow)) {
 			CentralUserInfoDTO centralUserInfoDTO =
@@ -142,7 +143,9 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 				userTokenReopository.save(userTokenData);
 			}
 		}
-		Authentication authentication = authenticationRepository.findByUsernameAndEmail(username, userinfoKnowHow.getEmailAddress());
+		Authentication authentication =
+				authenticationRepository.findByUsernameAndEmail(
+						username, userinfoKnowHow.getEmailAddress());
 		userMap.put(USER_NAME, username);
 		if (Objects.nonNull(userinfoKnowHow)) {
 			String email =
