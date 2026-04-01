@@ -359,6 +359,6 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 		SecretKey key =
 				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 		Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwtToken).getPayload();
-		return claims.get("details").toString();
+		return claims.get(DETAILS_CLAIM).toString();
 	}
 }
