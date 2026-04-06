@@ -26,16 +26,21 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
+import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 @Configuration
 @EnableMongoAuditing
 public class AuditConfiguration {
 
 	private AuthenticationService authenticationService;
+	private UserInfoService userInfoService;
 
 	@Autowired
-	public AuditConfiguration(AuthenticationService authenticationService) {
+	public AuditConfiguration(
+			AuthenticationService authenticationService, UserInfoService userInfoService) {
 		this.authenticationService = authenticationService;
+		this.userInfoService = userInfoService;
 	}
 
 	@Bean
@@ -46,7 +51,8 @@ public class AuditConfiguration {
 	class AuditorAwareImpl implements AuditorAware<String> {
 		@Override
 		public Optional<String> getCurrentAuditor() {
-			return Optional.ofNullable(authenticationService.getLoggedInUser());
+			UserInfo userInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
+			return Optional.ofNullable(userInfo.getUsername());
 		}
 	}
 }
