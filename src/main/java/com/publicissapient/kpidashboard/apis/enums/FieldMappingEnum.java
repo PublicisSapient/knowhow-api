@@ -776,7 +776,7 @@ public enum FieldMappingEnum {
 	KPI114(
 			"Value delivered (Cost of Delay)",
 			KPISource.JIRAKANBAN.name(),
-			Arrays.asList("thresholdValueKPI114")),
+			Arrays.asList("thresholdValueKPI114", "closedIssueStatusToConsiderKpi114")),
 
 	KPI159(
 			"Number of Check-ins (Developer) ",
