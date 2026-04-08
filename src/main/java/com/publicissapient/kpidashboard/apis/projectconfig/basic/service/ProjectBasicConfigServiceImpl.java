@@ -51,6 +51,7 @@ import com.publicissapient.kpidashboard.apis.capacity.service.CapacityMasterServ
 import com.publicissapient.kpidashboard.apis.cleanup.ToolDataCleanUpService;
 import com.publicissapient.kpidashboard.apis.cleanup.ToolDataCleanUpServiceFactory;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.Filters;
 import com.publicissapient.kpidashboard.apis.errors.ProjectNotFoundException;
@@ -80,10 +81,8 @@ import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessRequest;
 import com.publicissapient.kpidashboard.common.model.rbac.ProjectBasicConfigNode;
-import com.publicissapient.kpidashboard.common.repository.application.AccountHierarchyRepository;
-import com.publicissapient.kpidashboard.common.repository.application.HierarchyLevelRepository;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectBasicConfigRepository;
-import com.publicissapient.kpidashboard.common.repository.application.ProjectHierarchyRepository;
 import com.publicissapient.kpidashboard.common.repository.application.ProjectToolConfigRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.AssigneeDetailsRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.BoardMetadataRepository;
@@ -142,9 +141,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 	@Autowired private HappinessKpiDataRepository happinessKpiDataRepository;
 
 	@Autowired private OrganizationHierarchyService organizationHierarchyService;
-	@Autowired private AccountHierarchyRepository accountHierarchyRepository;
-	@Autowired private ProjectHierarchyRepository projectHierarchyRepository;
-	@Autowired private HierarchyLevelRepository hierarchyLevelRepository;
+	@Autowired private UserInfoService userInfoService;
 
 	@Autowired private ConfigHelperService configHelperService;
 
@@ -166,18 +163,20 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 			basicConfig =
 					basicConfigRepository.findByProjectNodeId(projectBasicConfigDTO.getProjectNodeId());
 		}
-		String username = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
 		if (basicConfig != null) {
 			response = new ServiceResponse(false, "Try with different Project name.", null);
 		} else {
-			tokenAuthenticationService.updateExpiryDate(username, LocalDateTime.now().toString());
+			tokenAuthenticationService.updateExpiryDate(
+					userInfo.getUsername(), LocalDateTime.now().toString());
 			String accessRoleOfParent =
-					projectAccessManager.getAccessRoleOfNearestParent(projectBasicConfigDTO, username);
+					projectAccessManager.getAccessRoleOfNearestParent(
+							projectBasicConfigDTO, userInfo.getUsername());
 			ModelMapper mapper = new ModelMapper();
 			basicConfig = mapper.map(projectBasicConfigDTO, ProjectBasicConfig.class);
 			basicConfig.setCreatedAt(
 					DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
-			basicConfig.setCreatedBy(authenticationService.getLoggedInUser());
+			basicConfig.setCreatedBy(userInfo.getUsername());
 			if (StringUtils.isEmpty(projectBasicConfigDTO.getProjectNodeId())) {
 				basicConfig.setProjectNodeId(UUID.randomUUID().toString());
 			}
@@ -187,10 +186,10 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				configHelperService.updateCacheProjectBasicConfig(basicConfig);
 				cloneProjectToolConfigAndDependencies(savedProjectBasicConfig);
 				if (!projectAccessManager
-						.getUserInfo(username)
+						.getUserInfo(userInfo.getUsername())
 						.getAuthorities()
 						.contains(Constant.ROLE_SUPERADMIN)) {
-					addNewProjectIntoUserInfo(savedProjectBasicConfig, username);
+					addNewProjectIntoUserInfo(savedProjectBasicConfig, userInfo.getUsername());
 				}
 				addProjectNodeToOrganizationHierarchy(
 						projectBasicConfigDTO, basicConfig.getProjectNodeId());

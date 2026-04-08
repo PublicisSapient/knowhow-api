@@ -75,8 +75,6 @@ public class UserServiceImpl implements UserService {
 			userInfo.setAuthorities(new ArrayList<>());
 			userInfo.setEmailAddress(username.concat(DOMAIN_NAME));
 			userInfo.setProjectsAccess(Collections.emptyList());
-			userInfo.setCreatedBy(authenticationService.getLoggedInUser());
-
 			log.info("Saving new user with username: {} and authType: {}", username, AuthType.SAML);
 			savedUserInfo = userInfoService.save(userInfo);
 			responseMessage = "User information saved successfully";

@@ -41,8 +41,8 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
 
 	@Override
-	public List<UserInfo> getAccessibleMembers(String userName) {
-		UserInfo fullUserDoc = userInfoRepository.findByUsername(userName);
+	public List<UserInfo> getAccessibleMembers(String userEmail) {
+		UserInfo fullUserDoc = userInfoRepository.findByEmailAddress(userEmail);
 		if (fullUserDoc == null || fullUserDoc.getProjectsAccess().isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -65,7 +65,8 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 			allAccessibleItemIds.addAll(getChildNodeIds(itemId, allHierarchies));
 		}
 
-		return userInfoRepository.findUsersByItemIdsOrCreatedBy(allAccessibleItemIds, userName);
+		return userInfoRepository.findUsersByItemIdsOrCreatedBy(
+				allAccessibleItemIds, fullUserDoc.getUsername());
 	}
 
 	private List<String> getChildNodeIds(
