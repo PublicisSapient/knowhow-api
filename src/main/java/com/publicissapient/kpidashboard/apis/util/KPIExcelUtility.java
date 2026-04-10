@@ -1253,7 +1253,7 @@ public class KPIExcelUtility {
 										DateUtil.convertToMonthYearFormat(
 												DateUtil.tranformUTCLocalDateTimeStringToZFormat(epic.getChangeDate())
 														.toString());
-								epicEndDate = DateUtil.convertDate(epic.getChangeDate());
+								epicEndDate = DateUtil.convertDate(epic.getChangeDate().split("T")[0]);
 							}
 							excelData.setMonth(month);
 							excelData.setEpicEndDate(epicEndDate);
