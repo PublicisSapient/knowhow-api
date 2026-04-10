@@ -91,7 +91,9 @@ class UserServiceImplTest {
 		savedUserInfo.setAuthorities(new ArrayList<>());
 		savedUserInfo.setEmailAddress("");
 		savedUserInfo.setProjectsAccess(List.of(access));
-
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("loggedInUser");
+		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser())).thenReturn(userInfo);
 		when(userInfoService.save(any())).thenReturn(savedUserInfo);
 
 		// Act
@@ -124,7 +126,9 @@ class UserServiceImplTest {
 		savedUserInfo.setAuthorities(new ArrayList<>());
 		savedUserInfo.setEmailAddress("");
 		savedUserInfo.setProjectsAccess(Collections.emptyList());
-
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("loggedInUser");
+		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser())).thenReturn(userInfo);
 		when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
 
 		// Act
@@ -170,7 +174,9 @@ class UserServiceImplTest {
 		savedUserInfo.setAuthorities(new ArrayList<>());
 		savedUserInfo.setEmailAddress("");
 		savedUserInfo.setProjectsAccess(Collections.emptyList());
-
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("loggedInUser");
+		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser())).thenReturn(userInfo);
 		when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
 
 		// Act
@@ -202,7 +208,9 @@ class UserServiceImplTest {
 		savedUserInfo.setAuthorities(new ArrayList<>());
 		savedUserInfo.setEmailAddress("");
 		savedUserInfo.setProjectsAccess(Collections.emptyList());
-
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("loggedInUser");
+		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser())).thenReturn(userInfo);
 		when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
 
 		// Act
@@ -232,6 +240,10 @@ class UserServiceImplTest {
 		savedUserInfo.setProjectsAccess(Collections.emptyList());
 
 		when(userInfoService.save(any(UserInfo.class))).thenReturn(savedUserInfo);
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("loggedInUser");
+		when(userInfoService.getUserInfo(authenticationService.getLoggedInUser())).thenReturn(userInfo);
 
 		// Act
 		ServiceResponse result = userService.saveUserInfo(username);

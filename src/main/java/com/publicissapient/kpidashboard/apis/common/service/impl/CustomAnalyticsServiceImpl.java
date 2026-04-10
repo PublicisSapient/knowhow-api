@@ -188,6 +188,8 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		centralUserInfo.setFirstName(centralUserInfoDTO.getFirstName());
 		centralUserInfo.setLastName(centralUserInfoDTO.getLastName());
 		centralUserInfo.setDisplayName(centralUserInfoDTO.getDisplayName());
+		centralUserInfo.setCreatedBy(username);
+		centralUserInfo.setUpdatedBy(username);
 		// to create Super admin User info for first time user
 		if (userInfoRepository.count() == 0) {
 			centralUserInfo.setAuthorities(Collections.singletonList(Constant.ROLE_SUPERADMIN));

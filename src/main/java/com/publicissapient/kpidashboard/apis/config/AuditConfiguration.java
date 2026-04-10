@@ -17,6 +17,7 @@
 
 package com.publicissapient.kpidashboard.apis.config;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,35 +25,54 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
-import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 @Configuration
-@EnableMongoAuditing
+@EnableMongoAuditing(modifyOnCreate = false, setDates = true)
 public class AuditConfiguration {
 
 	private AuthenticationService authenticationService;
-	private UserInfoService userInfoService;
 
 	@Autowired
-	public AuditConfiguration(
-			AuthenticationService authenticationService, UserInfoService userInfoService) {
+	public AuditConfiguration(AuthenticationService authenticationService) {
 		this.authenticationService = authenticationService;
-		this.userInfoService = userInfoService;
 	}
 
 	@Bean
 	public AuditorAware<String> auditorProvider() {
-		return new AuditorAwareImpl();
+		return () -> Optional.empty();
 	}
 
-	class AuditorAwareImpl implements AuditorAware<String> {
+	@Component
+	class ConditionalAuditListener extends AbstractMongoEventListener<Object> {
 		@Override
-		public Optional<String> getCurrentAuditor() {
-			UserInfo userInfo = userInfoService.getUserInfo(authenticationService.getLoggedInUser());
-			return Optional.ofNullable(userInfo.getUsername());
+		public void onBeforeConvert(BeforeConvertEvent<Object> event) {
+			Object entity = event.getSource();
+			String currentUser = authenticationService.getLoggedInUser();
+			if (currentUser == null) return;
+
+			Field createdByField = ReflectionUtils.findField(entity.getClass(), "createdBy");
+			if (createdByField != null) {
+				ReflectionUtils.makeAccessible(createdByField);
+				Object createdBy = ReflectionUtils.getField(createdByField, entity);
+				if (createdBy == null || ((String) createdBy).isEmpty()) {
+					ReflectionUtils.setField(createdByField, entity, currentUser);
+				}
+			}
+
+			Field updatedByField = ReflectionUtils.findField(entity.getClass(), "updatedBy");
+			if (updatedByField != null) {
+				ReflectionUtils.makeAccessible(updatedByField);
+				Object updatedBy = ReflectionUtils.getField(updatedByField, entity);
+				if (updatedBy == null || ((String) updatedBy).isEmpty()) {
+					ReflectionUtils.setField(updatedByField, entity, currentUser);
+				}
+			}
 		}
 	}
 }
