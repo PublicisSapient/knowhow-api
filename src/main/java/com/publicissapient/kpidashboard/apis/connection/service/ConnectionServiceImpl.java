@@ -56,6 +56,7 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -137,8 +138,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 
 		List<Connection> nonAuthConnection = new ArrayList<>();
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser());
+				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						user.username(), user.email(), user.authType());
 
 		connectionData.stream()
 				.filter(
@@ -252,8 +255,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 			return new ServiceResponse(true, "Found type@" + type, typeList);
 		}
 
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser());
+				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						user.username(), user.email(), user.authType());
 
 		List<Connection> nonAuthConnection = new ArrayList<>();
 		typeList.stream()
@@ -293,8 +298,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 			List<Connection> publicConnections =
 					connectionRepository.findByTypeAndSharedConnection(conn.getType(), true);
 
+			UserInfoPrincipal user = authenticationService.getLoggedInUser();
 			UserInfo userInfo =
-					userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser());
+					userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+							user.username(), user.email(), user.authType());
 			List<Connection> privateConnections =
 					connectionRepository.findByTypeAndSharedConnection(conn.getType(), false).stream()
 							.filter(e -> e.getConnectionUsers().contains(userInfo.getUsername()))
@@ -468,8 +475,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 							+ " is already exists. Please try again with different name",
 					null);
 		}
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser());
+				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						user.username(), user.email(), user.authType());
 
 		if (!authorizedProjectsService.ifSuperAdminUser()
 				&& !existingConnection.getCreatedBy().equals(userInfo.getUsername())) {
@@ -860,8 +869,10 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (!exisConnectionOpt.isPresent()) {
 			return new ServiceResponse(false, "No connectionId found to delete", null);
 		}
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser());
+				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						user.username(), user.email(), user.authType());
 		Connection existingConnection = exisConnectionOpt.get();
 		if (!authorizedProjectsService.ifSuperAdminUser()
 				&& !existingConnection.getCreatedBy().equals(userInfo.getUsername())) {

@@ -48,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.DeleteLastAdminException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.UserNotFoundException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
@@ -115,8 +116,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 	final ModelMapper modelMapper = new ModelMapper();
 
 	@Override
-	public Collection<GrantedAuthority> getAuthorities(String userEmail) {
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
+	public Collection<GrantedAuthority> getAuthorities(UserInfoPrincipal userInfoPrincipal) {
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						userInfoPrincipal.username(), userInfoPrincipal.email(), userInfoPrincipal.authType());
 		List<String> roles = userInfo.getAuthorities();
 		return createAuthorities(roles);
 	}
@@ -128,8 +131,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 	@Override
-	public UserInfo getUserInfo(String userEmail) {
-		return userInfoRepository.findByEmailAddress(userEmail);
+	public UserInfo getUserInfo(UserInfoPrincipal userInfoPrincipal) {
+		return userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+				userInfoPrincipal.username(), userInfoPrincipal.email(), userInfoPrincipal.authType());
 	}
 
 	@Override
@@ -139,7 +143,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 		List<String> roles = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
 
 		List<UserInfo> userInfoList =
-				dataAccessService.getMembersForUser(roles, authenticationService.getLoggedInUser());
+				dataAccessService.getMembersForUser(roles, authenticationService.getLoggedInUser().email());
 		List<String> userNames = userInfoList.stream().map(UserInfo::getUsername).toList();
 
 		List<Authentication> authentications = authenticationRepository.findByUsernameIn(userNames);
@@ -476,7 +480,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 			userTokenDeletionService.invalidateSession(userInfo.getUsername());
 			userBoardConfigService.deleteUser(userInfo.getUsername());
 			if (centralAuthService) {
-				deleteFromCentralAuthUser(userInfo.getUsername());
+				deleteFromCentralAuthUser(userInfo.getUsername(), userInfo.getAuthType().name());
 			}
 			cleanAllCache();
 		} catch (Exception exception) {
@@ -494,7 +498,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public UserInfoDTO getOrSaveDefaultUserInfo(String username, AuthType authType, String email) {
-		UserInfo userInfo = getUserInfo(email);
+		UserInfo userInfo = getUserInfo(new UserInfoPrincipal(username, email, authType.name()));
 		if (null == userInfo) {
 			userInfo = createDefaultUserInfo(username, authType, email);
 			userInfo = save(userInfo);
@@ -529,19 +533,21 @@ public class UserInfoServiceImpl implements UserInfoService {
 		UserTokenData userTokenData = userTokenReopository.findByUserToken(token);
 		UserDetailsResponseDTO userDetailsResponseDTO = new UserDetailsResponseDTO();
 		if (Objects.nonNull(userTokenData)) {
-			String userEmail = userTokenData.getUserName();
-			UserInfo userinfo = userInfoRepository.findByEmailAddress(userEmail);
+			String userName = userTokenData.getUserName();
+			String email = userTokenData.getEmail();
+			UserInfo userinfo = userInfoRepository.findByUsernameAndEmailAddress(userName, email);
 			Authentication authentication =
-					authenticationRepository.findByUsernameAndEmail(userinfo.getUsername(), userEmail);
+					authenticationRepository.findByUsernameAndEmail(userName, email);
 			String username =
 					authentication == null ? userinfo.getUsername() : authentication.getUsername();
 
 			userDetailsResponseDTO.setUserName(username);
-			userDetailsResponseDTO.setUserEmail(userEmail);
+			userDetailsResponseDTO.setUserEmail(email);
 			userDetailsResponseDTO.setAuthorities(userinfo.getAuthorities());
 			userDetailsResponseDTO.setAuthType(userinfo.getAuthType().toString());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(userEmail);
+					projectAccessManager.getProjectAccessesWithRole(
+							new UserInfoPrincipal(username, email, userinfo.getAuthType().name()));
 
 			userDetailsResponseDTO.setProjectsAccess(projectAccessesWithRole);
 			userDetailsResponseDTO.setNotificationEmail(userinfo.getNotificationEmail());
@@ -717,10 +723,11 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 	@Override
-	public boolean deleteFromCentralAuthUser(String user) {
+	public boolean deleteFromCentralAuthUser(String user, String authType) {
 		String apiKey = authProperties.getResourceAPIKey();
 		UserNameRequest userNameRequest = new UserNameRequest();
 		userNameRequest.setUsername(user);
+		userNameRequest.setAuthType(authType);
 		HttpHeaders headers = cookieUtil.getHeadersForApiKey(apiKey, true);
 		String deleteUserUrl =
 				CommonUtils.getAPIEndPointURL(

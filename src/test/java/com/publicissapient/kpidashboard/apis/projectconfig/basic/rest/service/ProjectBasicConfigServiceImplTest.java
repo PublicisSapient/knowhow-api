@@ -62,6 +62,7 @@ import com.publicissapient.kpidashboard.apis.abac.ContextAwarePolicyEnforcement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.capacity.service.CapacityMasterService;
@@ -269,12 +270,13 @@ public class ProjectBasicConfigServiceImplTest {
 	public void addConfigTest_superAdminAddProject_success() {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -301,12 +303,13 @@ public class ProjectBasicConfigServiceImplTest {
 	public void addConfigTest_nonSuperadminProjectViewerAddProject_success() {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("guest");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("guest", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -317,12 +320,13 @@ public class ProjectBasicConfigServiceImplTest {
 	public void addConfigTest_nonSuperadminAdd_success() {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("guest");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("guest", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -333,12 +337,13 @@ public class ProjectBasicConfigServiceImplTest {
 		basicConfig.setClonedFrom(new ObjectId("5fd9ab0995fe13000165d0ba"));
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("guest");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("guest", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		when(projectToolConfigService.getProjectToolConfigsByProjectId(any()))
 				.thenReturn(Arrays.asList(listProjectTool));
@@ -355,12 +360,13 @@ public class ProjectBasicConfigServiceImplTest {
 		basicConfig.setClonedFrom(new ObjectId("5fd9ab0995fe13000165d0ba"));
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("guest");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("guest", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		listProjectTool.setToolName("Jenkins");
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
@@ -372,12 +378,13 @@ public class ProjectBasicConfigServiceImplTest {
 	public void addConfigTest_nonSuperadmin_success() {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("guest");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("guest", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("guest")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -404,6 +411,8 @@ public class ProjectBasicConfigServiceImplTest {
 				.thenReturn(traceLogs);
 		when(assigneeDetailsRepository.findByBasicProjectConfigId(any()))
 				.thenReturn(new AssigneeDetails());
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "", ""));
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -421,7 +430,8 @@ public class ProjectBasicConfigServiceImplTest {
 		ph.add(projectHierarchy);
 
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
-
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "", ""));
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
@@ -441,6 +451,8 @@ public class ProjectBasicConfigServiceImplTest {
 	@Test
 	public void updateConfigTest_diffIdSameName_failure() {
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "", ""));
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -450,7 +462,8 @@ public class ProjectBasicConfigServiceImplTest {
 	@Test
 	public void updateConfigTest_updateNotOccured_failure() {
 		when(basicConfigRepository.findById(any())).thenReturn(basicConfigOpt);
-
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "", ""));
 		ServiceResponse response =
 				projectBasicConfigServiceImpl.updateBasicConfig("5f855dec29cf840345f2deef", basicConfigDTO);
 		assertThat("Status: ", response.getSuccess(), equalTo(true));
@@ -707,8 +720,9 @@ public class ProjectBasicConfigServiceImplTest {
 	public void addConfigTest_superAdminAddProjects() {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
-		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getAccessRoleOfNearestParent(any(), any()))
 				.thenReturn(Constant.ROLE_SUPERADMIN);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);
@@ -720,12 +734,13 @@ public class ProjectBasicConfigServiceImplTest {
 	public void addConfigTest_projectNodeIdIsNull_success() {
 		when(basicConfigRepository.save(any(ProjectBasicConfig.class))).thenReturn(basicConfig);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("GUEST");
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setAuthorities(Lists.newArrayList("ROLE_GUEST"));
-		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(projectAccessManager.getUserInfo(any())).thenReturn(userInfo);
 		basicConfigDTO.setProjectNodeId(null);
 		ServiceResponse response = projectBasicConfigServiceImpl.addBasicConfig(basicConfigDTO);

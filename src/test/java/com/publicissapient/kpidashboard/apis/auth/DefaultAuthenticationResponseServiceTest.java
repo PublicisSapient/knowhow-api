@@ -20,7 +20,7 @@ package com.publicissapient.kpidashboard.apis.auth;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
@@ -42,6 +42,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
@@ -75,7 +76,7 @@ public class DefaultAuthenticationResponseServiceTest {
 				Arrays.asList(
 						new SimpleGrantedAuthority("ROLE_VIEWER"),
 						new SimpleGrantedAuthority("ROLE_SUPERADMIN"));
-		Mockito.doReturn(authorities).when(userInfoService).getAuthorities(anyString());
+		Mockito.doReturn(authorities).when(userInfoService).getAuthorities(any());
 	}
 
 	@Test
@@ -89,7 +90,7 @@ public class DefaultAuthenticationResponseServiceTest {
 				.addAuthentication(Mockito.any(HttpServletResponse.class), captorAuthentication.capture());
 
 		UsernamePasswordAuthenticationToken capture = captorAuthentication.getValue();
-		assertEquals(USERNAME, capture.getName());
+		assertEquals(USERNAME, ((UserInfoPrincipal) capture.getPrincipal()).username());
 		assertEquals(PASSWORD, capture.getCredentials().toString());
 
 		Collection<GrantedAuthority> authorities = capture.getAuthorities();
@@ -103,7 +104,7 @@ public class DefaultAuthenticationResponseServiceTest {
 
 	private Authentication createAuthentication() {
 		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-				new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+				new UsernamePasswordAuthenticationToken(new UserInfoPrincipal(USERNAME, "", ""), PASSWORD);
 		usernamePasswordAuthenticationToken.setDetails(AuthType.STANDARD);
 		return usernamePasswordAuthenticationToken;
 	}

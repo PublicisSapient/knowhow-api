@@ -50,6 +50,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Sets;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
@@ -97,8 +98,10 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	@Override
 	public void addAuthentication(HttpServletResponse response, Authentication authentication) {
 		String jwt = createJwtToken(authentication);
+		UserInfoPrincipal userInfoPrincipal = (UserInfoPrincipal) authentication.getPrincipal();
 		UserTokenData data = new UserTokenData();
-		data.setUserName(authentication.getName());
+		data.setUserName(userInfoPrincipal.username());
+		data.setEmail(userInfoPrincipal.email());
 		data.setUserToken(jwt);
 		userTokenReopository.deleteAllByUserName(authentication.getName());
 		userTokenReopository.save(data);
@@ -112,9 +115,10 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	public String createJwtToken(Authentication authentication) {
 		SecretKey key =
 				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+		UserInfoPrincipal user = (UserInfoPrincipal) authentication.getPrincipal();
 		return Jwts.builder()
-				.setSubject(authentication.getName())
-				.claim(EMAIL_CLAIM, authentication.getName())
+				.setSubject(user.username())
+				.claim(EMAIL_CLAIM, user.email())
 				.claim(DETAILS_CLAIM, authentication.getDetails())
 				.claim(ROLES_CLAIM, getRoles(authentication.getAuthorities()))
 				.setExpiration(
@@ -196,7 +200,10 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 			Collection<? extends GrantedAuthority> authorities =
 					getAuthorities(claims.get(ROLES_CLAIM, Collection.class));
 			PreAuthenticatedAuthenticationToken authentication =
-					new PreAuthenticatedAuthenticationToken(email, null, authorities);
+					new PreAuthenticatedAuthenticationToken(
+							new UserInfoPrincipal(username, email, claims.get(DETAILS_CLAIM, String.class)),
+							null,
+							authorities);
 			authentication.setDetails(claims.get(DETAILS_CLAIM));
 			Date tokenCreationDate =
 					new Date(claims.getExpiration().getTime() - tokenAuthProperties.getExpirationTime());
@@ -310,6 +317,7 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 					request.getHeader(USER_NAME) != null
 							? request.getHeader(USER_NAME)
 							: authentication.getName();
+			UserInfoPrincipal userInfoPrincipal = (UserInfoPrincipal) authentication.getPrincipal();
 			List<UserTokenData> userTokenDataList = userTokenReopository.findAllByUserName(userName);
 			UserTokenData userTokenData = getLatestUser(userTokenDataList);
 			if (userTokenData != null) {
@@ -319,6 +327,7 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 				userTokenData =
 						new UserTokenData(
 								userName,
+								userInfoPrincipal.email(),
 								cookieUtil.getAuthCookie(request).getValue(),
 								LocalDateTime.now().toString());
 				userTokenReopository.save(userTokenData);
@@ -339,7 +348,7 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 			json.put(USER_EMAIL, userInfo.getEmailAddress());
 			json.put(USER_AUTHORITIES, userInfo.getAuthorities());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(userInfo.getEmailAddress());
+					projectAccessManager.getProjectAccessesWithRole(authenticationService.getLoggedInUser());
 			json.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			return json;
 		}
@@ -355,10 +364,18 @@ public class TokenAuthenticationServiceImpl implements TokenAuthenticationServic
 	}
 
 	@Override
+	public String getEmailFromToken(String jwtToken) {
+		SecretKey key =
+				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+		Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwtToken).getPayload();
+		return claims.get(EMAIL_CLAIM, String.class);
+	}
+
+	@Override
 	public String getAuthTypeFromToken(String jwtToken) {
 		SecretKey key =
 				Keys.hmacShaKeyFor(tokenAuthProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 		Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwtToken).getPayload();
-		return claims.get(DETAILS_CLAIM).toString();
+		return claims.get(DETAILS_CLAIM, String.class);
 	}
 }

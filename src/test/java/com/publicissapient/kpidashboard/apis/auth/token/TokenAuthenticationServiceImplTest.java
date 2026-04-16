@@ -61,6 +61,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.google.common.collect.Sets;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.UserTokenAuthenticationDTO;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
@@ -118,7 +119,7 @@ public class TokenAuthenticationServiceImplTest {
 		SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
 
 		return Jwts.builder()
-				.subject(auth.getName())
+				.subject(username)
 				.claim(DETAILS_CLAIM, auth.getDetails())
 				.claim("email", "test@mail")
 				.claim(ROLES_CLAIM, authorities)
@@ -131,7 +132,8 @@ public class TokenAuthenticationServiceImplTest {
 		Collection<GrantedAuthority> authorities =
 				Sets.newHashSet(new SimpleGrantedAuthority("ROLE_ADMIN"));
 		UsernamePasswordAuthenticationToken auth =
-				new UsernamePasswordAuthenticationToken(username, "password", authorities);
+				new UsernamePasswordAuthenticationToken(
+						new UserInfoPrincipal(username, "test", "STANDARD"), "password", authorities);
 		auth.setDetails(AuthType.STANDARD.name());
 		return auth;
 	}
@@ -177,7 +179,8 @@ public class TokenAuthenticationServiceImplTest {
 		Assert.assertNotNull(authentication);
 		assertTrue(authentication.isAuthenticated());
 		assertNotNull(authentication.getAuthorities());
-		assertEquals(authentication.getName(), "test@mail");
+		assertEquals(
+				authentication.getPrincipal(), new UserInfoPrincipal(USERNAME, "test@mail", "STANDARD"));
 		assertNotNull(authentication.getDetails());
 	}
 
@@ -188,14 +191,16 @@ public class TokenAuthenticationServiceImplTest {
 		Assert.assertNotNull(authentication);
 		assertTrue(authentication.isAuthenticated());
 		assertNotNull(authentication.getAuthorities());
-		assertEquals(authentication.getName(), "test@mail");
+		assertEquals(
+				authentication.getPrincipal(), new UserInfoPrincipal(USERNAME, "test@mail", "STANDARD"));
 		assertNotNull(authentication.getDetails());
 	}
 
 	@Test
 	public void validateGetUserProjects() {
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		Set<String> result = service.getUserProjects();
 		assertNotNull(result);
 	}
@@ -205,7 +210,8 @@ public class TokenAuthenticationServiceImplTest {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		HttpServletResponse response = mock(HttpServletResponse.class);
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		List<RoleWiseProjects> result = service.refreshToken(request, response);
 		assertEquals(result.size(), 0);
 	}
@@ -224,6 +230,7 @@ public class TokenAuthenticationServiceImplTest {
 		UserTokenData userTokenData =
 				new UserTokenData(
 						USERNAME,
+						"",
 						createTestJwtToken(USERNAME, VALID_JWT_SECRET, 100000L),
 						"2023-01-19T12:33:14.013");
 		UserInfo testUser = new UserInfo();
@@ -346,8 +353,8 @@ public class TokenAuthenticationServiceImplTest {
 	@Test
 	public void testGetLatestUserWithValidData() {
 		List<UserTokenData> userTokenDataList = new ArrayList<>();
-		UserTokenData data1 = new UserTokenData("user1", "token1", "2023-01-19T12:33:14.013");
-		UserTokenData data2 = new UserTokenData("user2", "token2", "2023-01-20T12:33:14.013");
+		UserTokenData data1 = new UserTokenData("user1", "email", "token1", "2023-01-19T12:33:14.013");
+		UserTokenData data2 = new UserTokenData("user2", "email", "token2", "2023-01-20T12:33:14.013");
 		userTokenDataList.add(data1);
 		userTokenDataList.add(data2);
 		UserTokenData result = service.getLatestUser(userTokenDataList);
@@ -358,7 +365,7 @@ public class TokenAuthenticationServiceImplTest {
 	@Test
 	public void testUpdateExpiryDate() {
 		List<UserTokenData> dataList = new ArrayList<>();
-		UserTokenData data = new UserTokenData(USERNAME, "token", "2023-01-19T12:33:14.013");
+		UserTokenData data = new UserTokenData(USERNAME, "email", "token", "2023-01-19T12:33:14.013");
 		dataList.add(data);
 		when(userTokenReopository.findAllByUserName(USERNAME)).thenReturn(dataList);
 		service.updateExpiryDate(USERNAME, "2023-01-20T12:33:14.013");
@@ -395,8 +402,9 @@ public class TokenAuthenticationServiceImplTest {
 
 	@Test
 	public void testGetUserProjectsWithEmptyAccess() {
-		when(authenticationService.getLoggedInUser()).thenReturn(USERNAME);
-		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(new ArrayList<>());
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal(USERNAME, "", ""));
+		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(new ArrayList<>());
 		Set<String> result = service.getUserProjects();
 		assertNotNull(result);
 		assertTrue(result.isEmpty());
@@ -404,7 +412,8 @@ public class TokenAuthenticationServiceImplTest {
 
 	@Test
 	public void testGetUserProjectsWithValidAccess() {
-		when(authenticationService.getLoggedInUser()).thenReturn(USERNAME);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal(USERNAME, "", ""));
 		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
 		RoleWiseProjects roleProject = new RoleWiseProjects();
 		List<ProjectsForAccessRequest> projects = new ArrayList<>();
@@ -413,7 +422,7 @@ public class TokenAuthenticationServiceImplTest {
 		projects.add(project);
 		roleProject.setProjects(projects);
 		roleWiseProjects.add(roleProject);
-		when(projectAccessManager.getProjectAccessesWithRole(USERNAME)).thenReturn(roleWiseProjects);
+		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(roleWiseProjects);
 		Set<String> result = service.getUserProjects();
 		assertNotNull(result);
 		assertFalse(result.isEmpty());

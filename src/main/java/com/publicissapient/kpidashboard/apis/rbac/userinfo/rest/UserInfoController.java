@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
@@ -115,10 +116,11 @@ public class UserInfoController {
 	public ResponseEntity<ServiceResponse> deleteUser(
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
+		String userName = userNameRequest.getUsername();
 		String userEmail = userNameRequest.getUserEmail();
-		String loggedUserEmail = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
-		if ((!loggedUserEmail.equals(userEmail)
+		UserInfoPrincipal loggedUser = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoRepository.findByUsernameAndEmailAddress(userName, userEmail);
+		if ((!loggedUser.email().equals(userEmail)
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
 			accessRequestsRepository.deleteByUsername(userInfo.getUsername());
 			ServiceResponse response = userInfoService.deleteUser(userInfo, false);
@@ -138,9 +140,11 @@ public class UserInfoController {
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
 		String userEmail = userNameRequest.getUserEmail();
-		String loggedUserEmail = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
-		if ((!loggedUserEmail.equals(userInfo.getEmailAddress())
+		String username = userNameRequest.getUsername();
+
+		UserInfoPrincipal loggedUser = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoRepository.findByUsernameAndEmailAddress(username, userEmail);
+		if ((!loggedUser.email().equals(userInfo.getEmailAddress())
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
 			accessRequestsRepository.deleteByUsername(userInfo.getUsername());
 			ServiceResponse response = userInfoService.deleteUser(userInfo, true);
@@ -183,7 +187,7 @@ public class UserInfoController {
 	@PostMapping("/notificationPreferences")
 	public ResponseEntity<ServiceResponse> updateFlagEmailNotification(
 			@Valid @RequestBody Map<String, Boolean> notificationEmail) {
-		String loggedUserEmail = authenticationService.getLoggedInUser();
+		String loggedUserEmail = authenticationService.getLoggedInUser().email();
 
 		UserInfo userInfo = userInfoService.updateNotificationEmail(loggedUserEmail, notificationEmail);
 

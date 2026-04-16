@@ -18,6 +18,8 @@
 
 package com.publicissapient.kpidashboard.apis.auth;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,10 +61,9 @@ public class AuthenticationResultHandlerTest {
 	@Test
 	public void testOnSucess() throws IOException, ServletException {
 		JSONObject jsonObject = new JSONObject();
-		when(customAnalyticsService.addAnalyticsData(response, "userName")).thenReturn(jsonObject);
+		when(customAnalyticsService.addAnalyticsData(eq(response), any())).thenReturn(jsonObject);
 		when(response.getWriter()).thenReturn(servletOutputStream);
 		Mockito.doNothing().when(servletOutputStream).print(Mockito.anyString());
-		when(authenticationService.getUserEmail(authentication)).thenReturn("userName");
 		handler.onAuthenticationSuccess(null, response, authentication);
 		verify(authenticationResponseService).handle(response, authentication);
 	}

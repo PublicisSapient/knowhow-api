@@ -40,6 +40,7 @@ import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.common.service.impl.CustomAnalyticsServiceImpl;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
@@ -79,10 +80,13 @@ public class CustomAnalyticsServiceImplTest {
 		authentication.setEmail("email");
 		roleWiseProjects = new RoleWiseProjects();
 
-		when(userInfoRepository.findByEmailAddress(Mockito.anyString())).thenReturn(user);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
-				.thenReturn(listRoleWiseProjects);
-		JSONObject json = customAnalyticsServiceImpl.addAnalyticsData(resp, "test");
+		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						anyString(), anyString(), anyString()))
+				.thenReturn(user);
+		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(listRoleWiseProjects);
+		JSONObject json =
+				customAnalyticsServiceImpl.addAnalyticsData(
+						resp, new UserInfoPrincipal("test", "test", "sso"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
 	}
 
@@ -102,11 +106,10 @@ public class CustomAnalyticsServiceImplTest {
 		when(userInfoRepository.findByUsernameAndAuthType(Mockito.anyString(), any())).thenReturn(user);
 		when(authenticationRepository.findByUsernameAndEmail(Mockito.anyString(), anyString()))
 				.thenReturn(authentication);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
-				.thenReturn(listRoleWiseProjects);
+		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(listRoleWiseProjects);
 		Map<String, Object> json =
 				customAnalyticsServiceImpl.addAnalyticsDataAndSaveCentralUser(
-						resp, "test", "SAML", "token");
+						resp, "test", "SAML", "test", "token");
 		assertEquals("test", json.get("user_name"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
 	}

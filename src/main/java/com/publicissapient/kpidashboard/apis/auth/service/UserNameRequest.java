@@ -26,4 +26,5 @@ import lombok.Data;
 public class UserNameRequest {
 	@NotNull private String username;
 	@NotNull private String userEmail;
+	@NotNull private String authType;
 }

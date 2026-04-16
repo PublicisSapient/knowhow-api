@@ -57,6 +57,7 @@ import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
+import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -83,6 +84,7 @@ public class AuthenticationController {
 	private final AuthenticationResponseService authenticationResponseService;
 	private final AuthProperties authProperties;
 	private final UserInfoService userInfoService;
+	private final UserInfoRepository userInfoRepository;
 	private final SignupManager signupManager;
 	private TokenAuthenticationService tokenAuthenticationService;
 
@@ -437,7 +439,9 @@ public class AuthenticationController {
 					.body(new ServiceResponse(false, "user not found with username " + username, null));
 		}
 
-		UserInfo userInfo = userInfoService.getUserInfo(username);
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndEmailAddress(
+						authentication.getUsername(), authentication.getEmail());
 
 		List<String> authorities =
 				userInfo.getAuthorities() == null ? new ArrayList<>() : userInfo.getAuthorities();
@@ -485,7 +489,8 @@ public class AuthenticationController {
 
 	private boolean isAuthorizeForUserDetail(String username, Principal principal) {
 		String loggedInUser = principal.getName();
-		UserInfo loggedInUserInfo = userInfoService.getUserInfo(loggedInUser);
+		UserInfo loggedInUserInfo =
+				userInfoService.getUserInfo(authenticationService.getLoggedInUser());
 		return loggedInUser.equals(username)
 				|| loggedInUserInfo.getAuthorities().contains("ROLE_SUPERADMIN");
 	}

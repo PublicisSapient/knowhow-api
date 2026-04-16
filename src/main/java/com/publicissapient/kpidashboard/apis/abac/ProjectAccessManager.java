@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
@@ -1047,9 +1048,11 @@ public class ProjectAccessManager {
 				&& CollectionUtils.isEmpty(userInfo.getProjectsAccess());
 	}
 
-	public List<RoleWiseProjects> getProjectAccessesWithRole(String userEmail) {
+	public List<RoleWiseProjects> getProjectAccessesWithRole(UserInfoPrincipal userInfoPrincipal) {
 
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndEmailAddress(
+						userInfoPrincipal.username(), userInfoPrincipal.email());
 		List<RoleWiseProjects> result = new ArrayList<>();
 		if (Objects.nonNull(userInfo)) {
 			List<ProjectsAccess> projectsAccesses = userInfo.getProjectsAccess();
@@ -1153,7 +1156,7 @@ public class ProjectAccessManager {
 		}
 
 		List<RoleWiseProjects> roleWiseProjects =
-				getProjectAccessesWithRole(userInfo.getEmailAddress());
+				getProjectAccessesWithRole(authenticationService.getLoggedInUser());
 
 		RoleWiseProjects roleWiseAdminProjects =
 				roleWiseProjects.stream()
@@ -1176,8 +1179,12 @@ public class ProjectAccessManager {
 		boolean isDeletePermitted = false;
 		AccessRequest requestData = getAccessRequest(id);
 		if (null != requestData) {
-			String userEmail = authenticationService.getLoggedInUser();
-			UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
+			UserInfoPrincipal userInfoPrincipal = authenticationService.getLoggedInUser();
+			UserInfo userInfo =
+					userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+							userInfoPrincipal.username(),
+							userInfoPrincipal.email(),
+							userInfoPrincipal.authType());
 			if ((userInfo.getUsername().equals(requestData.getUsername())
 							|| userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))
 					&& requestData.getStatus().equals(Constant.ACCESS_REQUEST_STATUS_PENDING)) {
