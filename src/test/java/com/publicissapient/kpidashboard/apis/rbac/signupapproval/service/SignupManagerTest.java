@@ -42,6 +42,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
@@ -75,7 +76,8 @@ public class SignupManagerTest {
 	public void testRejectAccessRequestSuccess() throws Exception {
 		when(authenticationRepository.save(ArgumentMatchers.any()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
-		when(authenticationService.getLoggedInUser()).thenReturn("");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		userInfoRepository.deleteById(new ObjectId(testId));
 		when(userInfoRepository.findByUsername(anyString())).thenReturn(userInfoObj());
 		when(authenticationService.getAuthentication(anyString()))
@@ -97,7 +99,8 @@ public class SignupManagerTest {
 	public void testGrantAccessRequestFailure() throws Exception {
 		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_APPROVED, true));
-		when(authenticationService.getLoggedInUser()).thenReturn("");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		signupManager.grantAccess(testId, grantApprovalListener);
 		verify(grantApprovalListener, atLeastOnce())
 				.onFailure(
@@ -109,7 +112,8 @@ public class SignupManagerTest {
 	public void testRejectAccessRequestFailure() throws Exception {
 		when(authenticationService.getAuthentication(anyString()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, false));
-		when(authenticationService.getLoggedInUser()).thenReturn("");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		when(authenticationRepository.save(ArgumentMatchers.any()))
 				.thenReturn(authenticationObj(Constant.ACCESS_REQUEST_STATUS_REJECTED, true));
 		signupManager.rejectAccessRequest(testId, rejectApprovalListener);
@@ -172,7 +176,8 @@ public class SignupManagerTest {
 		authentication.setApproved(true);
 		authentication.setEmail("abc@gmail.com");
 
-		when(authenticationService.getLoggedInUser()).thenReturn("adminUser");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("adminUser", "", ""));
 		when(authenticationService.getAuthentication(username)).thenReturn(authentication);
 
 		// Act
@@ -192,7 +197,8 @@ public class SignupManagerTest {
 		authentication.setApproved(false);
 		authentication.setEmail("abc@gmail.com");
 
-		when(authenticationService.getLoggedInUser()).thenReturn("adminUser");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("adminUser", "", ""));
 		when(authenticationService.getAuthentication(username)).thenReturn(authentication);
 		when(authenticationRepository.save(authentication)).thenReturn(authentication);
 

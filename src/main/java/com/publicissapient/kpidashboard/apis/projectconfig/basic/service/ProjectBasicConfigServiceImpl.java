@@ -288,7 +288,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				clonedToolConfig.setBasicProjectConfigId(savedProjectBasicConfig.getId());
 				clonedToolConfig.setCreatedAt(
 						DateUtil.dateTimeFormatter(LocalDateTime.now(), CommonConstant.TIME_FORMAT));
-				clonedToolConfig.setCreatedBy(authenticationService.getLoggedInUser());
+				clonedToolConfig.setCreatedBy(authenticationService.getLoggedInUser().username());
 				clonedToolConfig.setUpdatedAt(
 						DateUtil.dateTimeFormatter(LocalDateTime.now(), CommonConstant.TIME_FORMAT));
 				clonedToolConfig.setProjectId(savedProjectBasicConfig.getId().toString());
@@ -313,7 +313,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 				clonedFieldMapping.setBasicProjectConfigId(savedProjectBasicConfig.getId());
 				clonedFieldMapping.setUpdatedAt(
 						DateUtil.dateTimeFormatter(LocalDateTime.now(), CommonConstant.TIME_FORMAT));
-				clonedFieldMapping.setUpdatedBy(authenticationService.getLoggedInUser());
+				clonedFieldMapping.setUpdatedBy(authenticationService.getLoggedInUser().username());
 				clonedFieldMapping.setProjectId(savedProjectBasicConfig.getId().toString());
 				fieldMappingService.saveFieldMapping(clonedFieldMapping);
 			} catch (CloneNotSupportedException e) {
@@ -407,7 +407,7 @@ public class ProjectBasicConfigServiceImpl implements ProjectBasicConfigService 
 			basicConfig.setCreatedAt(savedConfig.getCreatedAt());
 			basicConfig.setUpdatedAt(
 					DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
-			basicConfig.setUpdatedBy(authenticationService.getLoggedInUser());
+			basicConfig.setUpdatedBy(authenticationService.getLoggedInUser().username());
 			ProjectBasicConfig updatedBasicConfig = basicConfigRepository.save(basicConfig);
 
 			OrganizationHierarchy orgHierarchy =

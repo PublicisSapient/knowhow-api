@@ -2,6 +2,7 @@ package com.publicissapient.kpidashboard.apis.feedback.service;
 
 import java.util.List;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.model.FeedbackSubmitDTO;
 
 /**
@@ -15,7 +16,7 @@ public interface FeedbackService {
 	 * @param feedback
 	 * @return responseEntity with message and status
 	 */
-	boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserEmail);
+	boolean submitFeedback(FeedbackSubmitDTO feedback, UserInfoPrincipal loggedUser);
 
 	/**
 	 * @return categories

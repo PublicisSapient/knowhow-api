@@ -46,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.cleanup.SonarDataCleanUpService;
 import com.publicissapient.kpidashboard.apis.cleanup.ToolDataCleanUpServiceFactory;
@@ -124,6 +125,8 @@ public class ProjectToolConfigServiceImplTest {
 
 		connection.setConnectionName("TestConn");
 		connection.setId(new ObjectId("5fb3a6412064a35b8069930a"));
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("guest", "", ""));
 	}
 
 	/** method includes post processes for test cases */

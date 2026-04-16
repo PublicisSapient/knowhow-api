@@ -49,6 +49,7 @@ import org.modelmapper.ModelMapper;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
@@ -137,7 +138,7 @@ public class UserBoardConfigServiceImplTest {
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("testuser");
 		userInfo.setEmailAddress("testuser");
-		when(userInfoService.getUserInfo(anyString())).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 	}
 
 	@Test
@@ -146,7 +147,8 @@ public class UserBoardConfigServiceImplTest {
 		String projId = "id";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
-		when(authenticationService.getLoggedInUser()).thenReturn(username);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal(username, "", ""));
 		ServiceResponse response =
 				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
 		assertNotNull(response);
@@ -157,7 +159,8 @@ public class UserBoardConfigServiceImplTest {
 		String username = "user";
 		String projId = "id";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
-		when(authenticationService.getLoggedInUser()).thenReturn(username);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal(username, "", ""));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 
 		ServiceResponse response =
@@ -172,7 +175,8 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
-		when(authenticationService.getLoggedInUser()).thenReturn(username);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal(username, "", ""));
 		ServiceResponse response =
 				userBoardConfigServiceImpl.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, projId);
 		assertNotNull(response.getData());
@@ -183,7 +187,8 @@ public class UserBoardConfigServiceImplTest {
 		String username = "user1";
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
-		when(authenticationService.getLoggedInUser()).thenReturn("invalid");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "testuser@abc.com", ""));
 		assertNull(
 				userBoardConfigServiceImpl
 						.saveBoardConfig(userBoardConfigDTO, ConfigLevel.USER, "proj1")
@@ -203,10 +208,10 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfigDTO userBoardConfigDTO = convertToUserBoardConfigDTO(getData(username, true));
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO)).thenReturn(getData(username, true));
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
-		when(authenticationService.getLoggedInUser()).thenReturn(username);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal(username, "", ""));
 		when(userBoardConfigRepository.save(getData(username, true))).thenReturn(null);
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO);
-		when(authenticationService.getLoggedInUser()).thenReturn(username);
 
 		assertNotNull(
 				userBoardConfigServiceImpl
@@ -217,7 +222,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_success() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
@@ -228,7 +233,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_null_success() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
@@ -240,7 +245,7 @@ public class UserBoardConfigServiceImplTest {
 	public void testGetAdminUserBoardConfig_success() {
 		String username = "testuser";
 		String projId = "id";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.PROJECT, projId);
 		assertNotNull(userBoardConfigDTO);
@@ -251,7 +256,7 @@ public class UserBoardConfigServiceImplTest {
 	public void testGetAdminUserBoardConfigNull_success() {
 		String username = "testuser";
 		String projId = "id";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(ConfigLevel.PROJECT, projId);
 		assertNotNull(userBoardConfigDTO);
@@ -261,7 +266,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetUserBoardConfig_DefaultOrPrepareBoardConfig_success() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		Iterable<KpiMaster> kpiMasters = kpiMasterDataFactory.getKpiList();
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
@@ -274,7 +279,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetBoardConfig_proj() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		Iterable<KpiMaster> kpiMasters = kpiMasterDataFactory.getKpiList();
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
@@ -286,7 +291,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetBoardConfig_user() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		Iterable<KpiMaster> kpiMasters = kpiMasterDataFactory.getKpiList();
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
@@ -300,7 +305,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetUserBoardConfig_NoOrPrepareBoardConfigFound_success() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
@@ -314,7 +319,7 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfig data = getData(username, true);
 		data.getScrum().get(0).getKpis().get(0).setShown(false);
 		UserBoardConfigDTO userBoardConfigDTO1 = convertToUserBoardConfigDTO(data);
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO1)).thenReturn(data);
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO1);
 		when(userBoardConfigRepository.save(data)).thenReturn(data);
@@ -333,7 +338,7 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfig data = getData(username, true);
 		data.getScrum().get(0).getKpis().get(0).setShown(false);
 		UserBoardConfigDTO userBoardConfigDTO1 = convertToUserBoardConfigDTO(data);
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		when(userBoardConfigRepository.save(data)).thenReturn(data);
 		when(userBoardConfigMapper.toEntity(userBoardConfigDTO1)).thenReturn(data);
 		when(userBoardConfigMapper.toDto(any())).thenReturn(userBoardConfigDTO1);
@@ -348,7 +353,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_AddKpi() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		Iterable<KpiMaster> kpiMasters = kpiMasterDataFactory.getKpiList();
 		when(configHelperService.loadKpiMaster()).thenReturn(kpiMasters);
@@ -377,7 +382,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_NoChangeInKpis() {
 		String username = "user";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		List<String> kpiIdList =
 				Arrays.asList(
@@ -398,7 +403,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_DeleteKpis() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		List<String> kpiIdList =
 				Arrays.asList(
@@ -433,7 +438,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_AddIterationKpi() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		List<String> kpiIdList =
 				Arrays.asList(
@@ -553,7 +558,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_Add2IterationKpi() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		List<String> kpiIdList =
 				Arrays.asList(
@@ -611,7 +616,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_AddIterationKpiIn_Middle() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		List<String> kpiIdList =
 				Arrays.asList(
@@ -669,7 +674,7 @@ public class UserBoardConfigServiceImplTest {
 	@Test
 	public void testGetOrPrepareBoardConfig_AddIterationKpiDragDrop() {
 		String username = "testuser";
-		doReturn(username).when(authenticationService).getLoggedInUser();
+		doReturn(new UserInfoPrincipal(username, "", "")).when(authenticationService).getLoggedInUser();
 		KpiMasterDataFactory kpiMasterDataFactory = KpiMasterDataFactory.newInstance();
 		List<String> kpiIdList =
 				Arrays.asList(

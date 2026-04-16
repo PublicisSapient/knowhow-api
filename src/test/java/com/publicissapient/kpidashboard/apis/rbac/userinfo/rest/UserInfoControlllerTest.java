@@ -45,6 +45,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
@@ -168,8 +169,9 @@ public class UserInfoControlllerTest {
 	@Test
 	public void testdeleteUser() throws Exception {
 		when(userNameRequest.getUserEmail()).thenReturn("testuser@abc.com");
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
-		when(userInfoRepository.findByEmailAddress("testuser@abc.com")).thenReturn(userInfo);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
+		when(userInfoRepository.findByUsernameAndEmailAddress(any(), any())).thenReturn(userInfo);
 		when(userInfo.getAuthorities()).thenReturn(authorities);
 		doReturn(new ServiceResponse(true, "Deleted Successfully", "Ok"))
 				.when(userInfoService)
@@ -187,8 +189,9 @@ public class UserInfoControlllerTest {
 	@Test
 	public void testdeleteSuperAdminUser() {
 		when(userNameRequest.getUserEmail()).thenReturn("testuser@abc.com");
-		when(authenticationService.getLoggedInUser()).thenReturn("testuser@abc.com");
-		when(userInfoRepository.findByEmailAddress("testuser@abc.com")).thenReturn(userInfo);
+		when(userNameRequest.getUsername()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "testuser@abc.com", ""));
 		ServiceResponse response = userInfoController.deleteUser(userNameRequest).getBody();
 		assert response != null;
 		assertEquals(false, response.getSuccess());
@@ -202,8 +205,11 @@ public class UserInfoControlllerTest {
 	@Test
 	public void testDelete_UserFromCentral() {
 		when(userNameRequest.getUserEmail()).thenReturn("testuser@abc.com");
-		when(authenticationService.getLoggedInUser()).thenReturn("testuser@abc.com");
-		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
+		when(userNameRequest.getUsername()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "testuser@abc.com", ""));
+		when(userInfoRepository.findByUsernameAndEmailAddress(anyString(), anyString()))
+				.thenReturn(userInfo);
 		when(userInfo.getEmailAddress()).thenReturn("testuser@abc.com");
 		List<UserInfo> userInfos = new ArrayList<>();
 		userInfos.add(userInfo);
@@ -220,8 +226,11 @@ public class UserInfoControlllerTest {
 	@Test
 	public void testDelete_UserFromCentralForSuperAdmin() {
 		when(userNameRequest.getUserEmail()).thenReturn("testuser@abc.com");
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
-		when(userInfoRepository.findByEmailAddress(anyString())).thenReturn(userInfo);
+		when(userNameRequest.getUsername()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
+		when(userInfoRepository.findByUsernameAndEmailAddress(anyString(), anyString()))
+				.thenReturn(userInfo);
 		when(userInfo.getEmailAddress()).thenReturn("testuser@abc.com");
 		when(userInfo.getAuthorities()).thenReturn(authorities);
 		when(userInfoService.deleteUser(userInfo, true))

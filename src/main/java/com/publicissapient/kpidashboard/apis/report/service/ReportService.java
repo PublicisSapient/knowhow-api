@@ -73,7 +73,7 @@ public class ReportService {
 	public ServiceResponse create(ReportRequest reportRequest) {
 		log.info("Creating a new report with name: {}", CommonUtils.sanitize(reportRequest.getName()));
 		// Get the current user
-		String createdBy = authenticationService.getLoggedInUser();
+		String createdBy = authenticationService.getLoggedInUser().username();
 		// Check if a report with the same name already exists for the current user
 		Optional<Report> existingByNameAndCreatedBy =
 				reportRepository.findByNameAndCreatedBy(reportRequest.getName(), createdBy);
@@ -164,7 +164,9 @@ public class ReportService {
 		Set<KPI> kpisSet = new HashSet<>(kpis);
 		// Use the custom repository method to find a matching report
 		return reportRepository.findByNameAndCreatedByAndKpis(
-				reportRequest.getName(), new ArrayList<>(kpisSet), authenticationService.getLoggedInUser());
+				reportRequest.getName(),
+				new ArrayList<>(kpisSet),
+				authenticationService.getLoggedInUser().username());
 	}
 
 	/**

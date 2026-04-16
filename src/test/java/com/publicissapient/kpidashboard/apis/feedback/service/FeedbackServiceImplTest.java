@@ -22,6 +22,7 @@ import static com.mongodb.assertions.Assertions.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -49,6 +50,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -126,10 +128,12 @@ public class FeedbackServiceImplTest {
 		userInfo.setId(new ObjectId("61e4f7852747353d4405c762"));
 		userInfo.setAuthorities(Lists.newArrayList());
 		userInfo.setEmailAddress("xyz@example.com");
-		when(userInfoService.getUserInfo(anyString())).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		when(globalConfigRepository.findAll()).thenReturn(globalConfigs);
 		String loggedUserName = "testDummyUser";
-		boolean response = feedbackServiceImpl.submitFeedback(feedbackSubmitDTO, loggedUserName);
+		boolean response =
+				feedbackServiceImpl.submitFeedback(
+						feedbackSubmitDTO, new UserInfoPrincipal(loggedUserName, "test", "STANDARD"));
 		assertThat("status: ", response, equalTo(true));
 	}
 
@@ -147,10 +151,12 @@ public class FeedbackServiceImplTest {
 		when(globalConfigRepository.findAll()).thenReturn(globalConfigs);
 		when(customApiConfig.getFeedbackEmailSubject()).thenReturn("Feedback Subject");
 		when(commonService.getApiHost()).thenReturn("http://localhost");
-		when(userInfoService.getUserInfo(loggedUserName)).thenReturn(new UserInfo());
+		when(userInfoService.getUserInfo(any())).thenReturn(new UserInfo());
 
 		// Act
-		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+		boolean result =
+				feedbackServiceImpl.submitFeedback(
+						feedback, new UserInfoPrincipal(loggedUserName, "test", "STANDARD"));
 
 		// Assert
 		assertTrue(result);
@@ -166,7 +172,9 @@ public class FeedbackServiceImplTest {
 		when(globalConfigRepository.findAll()).thenReturn(Collections.emptyList());
 
 		// Act
-		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+		boolean result =
+				feedbackServiceImpl.submitFeedback(
+						feedback, new UserInfoPrincipal(loggedUserName, "test", "STANDARD"));
 
 		// Assert
 		assertFalse(result);
@@ -182,7 +190,9 @@ public class FeedbackServiceImplTest {
 		String loggedUserName = "testUser";
 
 		// Act
-		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+		boolean result =
+				feedbackServiceImpl.submitFeedback(
+						feedback, new UserInfoPrincipal(loggedUserName, "test", "STANDARD"));
 
 		// Assert
 		assertFalse(result);
@@ -206,7 +216,9 @@ public class FeedbackServiceImplTest {
 		when(commonService.getApiHost()).thenThrow(new UnknownHostException());
 
 		// Act
-		boolean result = feedbackServiceImpl.submitFeedback(feedback, loggedUserName);
+		boolean result =
+				feedbackServiceImpl.submitFeedback(
+						feedback, new UserInfoPrincipal(loggedUserName, "test", "STANDARD"));
 
 		// Assert
 		assertFalse(result);

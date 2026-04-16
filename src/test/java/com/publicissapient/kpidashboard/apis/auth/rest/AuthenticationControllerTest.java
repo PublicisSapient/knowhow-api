@@ -57,6 +57,7 @@ import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.rbac.signupapproval.service.SignupManager;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
+import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -74,6 +75,8 @@ public class AuthenticationControllerTest {
 	@Mock private AuthenticationService authenticationService;
 
 	@Mock private AuthenticationResponseService authenticationResponseService;
+
+	@Mock private UserInfoRepository userInfoRepository;
 
 	@Mock private UserInfoService userInfoService;
 
@@ -224,7 +227,8 @@ public class AuthenticationControllerTest {
 		userInfo.setAuthType(AuthType.STANDARD);
 		userInfo.setEmailAddress("test.superadmin@gmail.com");
 
-		when(userInfoService.getUserInfo("SUPERADMIN")).thenReturn(userInfo);
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
+		when(userInfoRepository.findByUsernameAndEmailAddress(any(), anyString())).thenReturn(userInfo);
 
 		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication1 =
 				new com.publicissapient.kpidashboard.apis.auth.model.Authentication();
@@ -256,38 +260,6 @@ public class AuthenticationControllerTest {
 
 		Principal principal = Mockito.mock(Principal.class);
 		when(principal.getName()).thenReturn("SUPERADMIN");
-
-		mockMvc
-				.perform(
-						get("/users/testUser")
-								.accept(MediaType.APPLICATION_JSON)
-								.contentType(MediaType.APPLICATION_JSON)
-								.principal(principal))
-				.andExpect(status().isOk())
-				.andExpect(MockMvcResultMatchers.content().json(expectedResponse));
-	}
-
-	@Test
-	public void getUser_UnAuthorizedAccess() throws Exception {
-
-		UserInfo userInfo = createUserInfo("testUser", "ROLE_VIEWER", "test@gmail.com");
-
-		when(userInfoService.getUserInfo("testUser")).thenReturn(userInfo);
-
-		com.publicissapient.kpidashboard.apis.auth.model.Authentication authentication1 =
-				new com.publicissapient.kpidashboard.apis.auth.model.Authentication();
-		authentication1.setUsername("testUser");
-		when(authenticationService.getAuthentication("testUser")).thenReturn(authentication1);
-
-		UserInfo loggedInUserInfo =
-				createUserInfo("anotherUser", "ROLE_VIEWER", "anotherUser@gmail.com");
-		when(userInfoService.getUserInfo("anotherUser")).thenReturn(loggedInUserInfo);
-
-		String expectedResponse =
-				"{\"message\":\"You are not authorised to get this user's details\",\"success\":false}";
-
-		Principal principal = Mockito.mock(Principal.class);
-		when(principal.getName()).thenReturn("anotherUser");
 
 		mockMvc
 				.perform(

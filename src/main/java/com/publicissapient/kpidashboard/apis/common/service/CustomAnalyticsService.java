@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.json.simple.JSONObject;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
+
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -35,10 +37,10 @@ public interface CustomAnalyticsService {
 	 * Creates and return JSON object containing analytics data.
 	 *
 	 * @param httpServletResponse HttpServletResponse
-	 * @param username user name
+	 * @param user name
 	 * @return JSON of analytics data
 	 */
-	JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, String username);
+	JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, UserInfoPrincipal user);
 
 	/**
 	 * Creates and return JSON object containing analytics data.
@@ -48,7 +50,11 @@ public interface CustomAnalyticsService {
 	 * @return JSON of analytics data
 	 */
 	Map<String, Object> addAnalyticsDataAndSaveCentralUser(
-			HttpServletResponse httpServletResponse, String username, String authType, String authToken);
+			HttpServletResponse httpServletResponse,
+			String username,
+			String authType,
+			String email,
+			String authToken);
 
 	JSONObject getAnalyticsCheck();
 }

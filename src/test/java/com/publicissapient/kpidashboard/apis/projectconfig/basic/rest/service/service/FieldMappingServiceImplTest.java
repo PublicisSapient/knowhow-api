@@ -55,6 +55,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -143,6 +144,8 @@ public class FieldMappingServiceImplTest {
 		when(configHelperService.loadFieldMappingStructure()).thenReturn(fieldMappingStructureList);
 		when(kpiHelperService.getFieldMappingStructure(anyList(), anyList()))
 				.thenReturn(fieldMappingStructureList);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "", ""));
 	}
 
 	@Test
@@ -456,8 +459,6 @@ public class FieldMappingServiceImplTest {
 				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
-		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
-
 		ProjectToolConfig projectToolConfig =
 				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		FieldMappingResponse response = new FieldMappingResponse();
@@ -479,8 +480,6 @@ public class FieldMappingServiceImplTest {
 		mapOfProjectDetails.put(
 				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-
-		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
 		ProjectToolConfig projectToolConfig =
 				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
@@ -510,8 +509,6 @@ public class FieldMappingServiceImplTest {
 		Set<String> configIds = new HashSet<>();
 		configIds.add(scrumFieldMapping.getBasicProjectConfigId().toString());
 
-		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
-
 		// ProjectToolConfig projectToolConfig =
 		// createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		FieldMappingResponse response = new FieldMappingResponse();
@@ -540,8 +537,6 @@ public class FieldMappingServiceImplTest {
 				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
 
-		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
-
 		ProjectToolConfig projectToolConfig =
 				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
 		projectToolConfig.setToolName(ProcessorConstants.AZURE);
@@ -567,8 +562,6 @@ public class FieldMappingServiceImplTest {
 		mapOfProjectDetails.put(
 				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-
-		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
 		ProjectToolConfig projectToolConfig =
 				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());
@@ -599,8 +592,6 @@ public class FieldMappingServiceImplTest {
 		mapOfProjectDetails.put(
 				scrumFieldMapping.getBasicProjectConfigId().toString(), projectBasicConfigOpt.get());
 		when(cacheService.cacheProjectConfigMapData()).thenReturn(mapOfProjectDetails);
-
-		when(authenticationService.getLoggedInUser()).thenReturn("currentUser");
 
 		ProjectToolConfig projectToolConfig =
 				createProjectToolConfig(scrumFieldMapping.getBasicProjectConfigId());

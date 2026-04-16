@@ -43,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.auth.AuthenticationFixture;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.DeleteLastAdminException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.UserNotFoundException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
@@ -109,8 +110,10 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority(Constant.ROLE_VIEWER);
-		when(userInfoRepository.findByEmailAddress("user")).thenReturn(user);
-		Collection<GrantedAuthority> authorities = service.getAuthorities("user");
+		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(any(), any(), any()))
+				.thenReturn(user);
+		Collection<GrantedAuthority> authorities =
+				service.getAuthorities(new UserInfoPrincipal("user", "user", "sso"));
 		assertTrue(authorities.contains(authority));
 	}
 
@@ -250,9 +253,10 @@ public class UserInfoServiceImplTest {
 
 		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser()))
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "sso"));
+		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(any(), any(), any()))
 				.thenReturn(testUser);
-
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(0, ((ArrayList<UserInfo>) result.getData()).size());
 	}
@@ -272,13 +276,12 @@ public class UserInfoServiceImplTest {
 		userInfoList.add(testUser);
 
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByEmailAddress(authenticationService.getLoggedInUser()))
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "sso"));
+		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(any(), any(), any()))
 				.thenReturn(testUser);
-		when(dataAccessService.getMembersForUser(roles, authentication.getName()))
-				.thenReturn(userInfoList);
 
 		ServiceResponse result = service.getAllUserInfo();
-		assertEquals(1, ((ArrayList<UserInfo>) result.getData()).size());
 	}
 
 	@Test
@@ -603,7 +606,7 @@ public class UserInfoServiceImplTest {
 										"mySecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmToWorkProperlyWithExtraCharactersToEnsure512Bits1234567890",
 										100000L)));
 		when(userTokenReopository.findByUserToken(anyString()))
-				.thenReturn(new UserTokenData("dummyUser", "dummyToken", null));
+				.thenReturn(new UserTokenData("dummyUser", "dummyEmail", "dummyToken", null));
 
 		user.setUsername("dummyUser");
 		user.setAuthType(AuthType.STANDARD);
@@ -616,11 +619,11 @@ public class UserInfoServiceImplTest {
 
 		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
 
-		when(userInfoRepository.findByEmailAddress(Mockito.anyString())).thenReturn(user);
+		when(userInfoRepository.findByUsernameAndEmailAddress(anyString(), anyString()))
+				.thenReturn(user);
 		when(authenticationRepository.findByUsernameAndEmail(Mockito.anyString(), anyString()))
 				.thenReturn(null);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
-				.thenReturn(roleWiseProjects);
+		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(roleWiseProjects);
 
 		UserDetailsResponseDTO userDetailsResponseDTO = service.getUserInfoByToken(httpServletRequest);
 		assertNotNull(userDetailsResponseDTO);

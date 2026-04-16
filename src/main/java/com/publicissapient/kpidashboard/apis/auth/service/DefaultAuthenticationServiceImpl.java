@@ -52,6 +52,7 @@ import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.PendingApprovalException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
 import com.publicissapient.kpidashboard.apis.auth.model.SystemUser;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.token.CookieUtil;
 import com.publicissapient.kpidashboard.apis.errors.APIKeyInvalidException;
@@ -60,6 +61,7 @@ import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
+import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -116,9 +118,16 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 			authentication.setApproved(true);
 		}
 		authentication = authenticationRepository.save(authentication);
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndEmailAddress(
+						authentication.getUsername(), authentication.getEmail());
+
 		UsernamePasswordAuthenticationToken token =
 				new UsernamePasswordAuthenticationToken(
-						authentication.getEmail(), authentication.getPassword(), new ArrayList<>());
+						new UserInfoPrincipal(
+								userInfo.getUsername(), userInfo.getEmailAddress(), userInfo.getAuthType().name()),
+						authentication.getPassword(),
+						new ArrayList<>());
 		token.setDetails(AuthType.STANDARD);
 		return token;
 	}
@@ -222,8 +231,15 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 		}
 
 		if (authentication.checkPassword(password)) {
+			UserInfo userInfo =
+					userInfoRepository.findByUsernameAndEmailAddress(
+							authentication.getUsername(), authentication.getEmail());
+
 			return new UsernamePasswordAuthenticationToken(
-					authentication.getEmail(), authentication.getPassword(), new ArrayList<>());
+					new UserInfoPrincipal(
+							userInfo.getUsername(), userInfo.getEmailAddress(), userInfo.getAuthType().name()),
+					authentication.getPassword(),
+					new ArrayList<>());
 		}
 		// commented code to fix the security issues
 		// throw new BadCredentialsException("Login Failed: Invalid credentials
@@ -305,9 +321,18 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 			Authentication auth = authenticateList.get(0);
 			auth.setPassword(password);
 			Authentication authentication = authenticationRepository.save(auth);
+			UserInfo userInfo =
+					userInfoRepository.findByUsernameAndEmailAddress(
+							authentication.getUsername(), authentication.getEmail());
+
 			token =
 					new UsernamePasswordAuthenticationToken(
-							authentication.getEmail(), authentication.getPassword(), new ArrayList<>());
+							new UserInfoPrincipal(
+									userInfo.getUsername(),
+									userInfo.getEmailAddress(),
+									userInfo.getAuthType().name()),
+							authentication.getPassword(),
+							new ArrayList<>());
 			token.setDetails(AuthType.STANDARD);
 		}
 		return token;
@@ -336,15 +361,14 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 	}
 
 	@Override
-	public String getLoggedInUser() {
+	public UserInfoPrincipal getLoggedInUser() {
 		org.springframework.security.core.Authentication authentication =
 				SecurityContextHolder.getContext().getAuthentication();
 		if (authentication != null
 				&& authentication.isAuthenticated()
 				&& !authentication.getName().equals("anonymousUser")) {
-			return authentication.getPrincipal().toString();
+			return (UserInfoPrincipal) authentication.getPrincipal();
 		}
-		// If running via Cron, return a default system user
 		return SystemUser.SYSTEM.getName();
 	}
 
