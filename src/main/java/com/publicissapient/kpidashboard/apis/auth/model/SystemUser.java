@@ -19,15 +19,15 @@
 package com.publicissapient.kpidashboard.apis.auth.model;
 
 public enum SystemUser {
-	SYSTEM("SYSTEM");
+	SYSTEM(new UserInfoPrincipal("SYSTEM", null, null));
 
-	private final String name;
+	private final UserInfoPrincipal name;
 
-	SystemUser(String name) {
+	SystemUser(UserInfoPrincipal name) {
 		this.name = name;
 	}
 
-	public String getName() {
+	public UserInfoPrincipal getName() {
 		return name;
 	}
 }

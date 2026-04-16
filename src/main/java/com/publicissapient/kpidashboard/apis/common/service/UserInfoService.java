@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
@@ -47,7 +48,7 @@ public interface UserInfoService {
 	 * @param userEmail the user email
 	 * @return the authorities
 	 */
-	Collection<GrantedAuthority> getAuthorities(String userEmail);
+	Collection<GrantedAuthority> getAuthorities(UserInfoPrincipal userInfoPrincipal);
 
 	/**
 	 * Gets user info.
@@ -58,7 +59,7 @@ public interface UserInfoService {
 	 */
 	UserInfo getUserInfo(String username, AuthType authType);
 
-	UserInfo getUserInfo(String userEmail);
+	UserInfo getUserInfo(UserInfoPrincipal userInfoPrincipal);
 
 	/**
 	 * Gets users.
@@ -151,7 +152,7 @@ public interface UserInfoService {
 
 	boolean updateUserApprovalStatus(String userNameRequest);
 
-	boolean deleteFromCentralAuthUser(String user);
+	boolean deleteFromCentralAuthUser(String user, String authType);
 
 	CentralUserInfoDTO getCentralAuthUserInfoDetails(String username, String authCookieToken);
 

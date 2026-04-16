@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.springframework.http.ResponseEntity;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
 
@@ -185,7 +186,7 @@ public interface AuthenticationService {
 	 *
 	 * @return logged in user
 	 */
-	String getLoggedInUser();
+	UserInfoPrincipal getLoggedInUser();
 
 	/**
 	 * Gets username from authentication object

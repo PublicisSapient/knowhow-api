@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
@@ -86,17 +87,21 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	/** {@inheritDoc} */
 	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, String userEmail) {
+	public JSONObject addAnalyticsData(
+			HttpServletResponse httpServletResponse, UserInfoPrincipal userInfoPrincipal) {
 		JSONObject json = new JSONObject();
 		httpServletResponse.setContentType("application/json");
 		httpServletResponse.setCharacterEncoding("UTF-8");
-		UserInfo userinfo = userInfoRepository.findByEmailAddress(userEmail);
+		UserInfo userinfo =
+				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
+						userInfoPrincipal.username(), userInfoPrincipal.email(), userInfoPrincipal.authType());
 		Authentication authentication =
-				authenticationRepository.findByUsernameAndEmail(userinfo.getUsername(), userEmail);
+				authenticationRepository.findByUsernameAndEmail(
+						userinfo.getUsername(), userInfoPrincipal.email());
 		String username =
 				authentication == null ? userinfo.getUsername() : authentication.getUsername();
 		json.put(USER_NAME, username);
-		json.put(USER_EMAIL, userEmail);
+		json.put(USER_EMAIL, userInfoPrincipal.email());
 		json.put(USER_ID, userinfo.getId().toString());
 		json.put(USER_AUTH_TYPE, userinfo.getAuthType().toString());
 		json.put(USER_AUTHORITIES, userinfo.getAuthorities());
@@ -106,7 +111,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		usersSessionService.createUsersSessionInfo(userinfo, AuthenticationEvent.LOGIN, Status.SUCCESS);
 
 		List<RoleWiseProjects> projectAccessesWithRole =
-				projectAccessManager.getProjectAccessesWithRole(userEmail);
+				projectAccessManager.getProjectAccessesWithRole(userInfoPrincipal);
 
 		if (projectAccessesWithRole != null) {
 			JsonElement element =
@@ -125,7 +130,11 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(
-			HttpServletResponse httpServletResponse, String username, String authType, String authToken) {
+			HttpServletResponse httpServletResponse,
+			String username,
+			String authType,
+			String email,
+			String authToken) {
 		Map<String, Object> userMap = new HashMap<>();
 		httpServletResponse.setContentType("application/json");
 		UserInfo userinfoKnowHow =
@@ -139,7 +148,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 				setUserDetailsFromCentralAuth(username, centralUserInfoDTO, centralUserInfo);
 				userinfoKnowHow = centralUserInfo;
 				UserTokenData userTokenData =
-						new UserTokenData(username, authToken, LocalDateTime.now().toString());
+						new UserTokenData(username, email, authToken, LocalDateTime.now().toString());
 				userTokenReopository.save(userTokenData);
 			}
 		}
@@ -148,17 +157,15 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 						username, userinfoKnowHow.getEmailAddress());
 		userMap.put(USER_NAME, username);
 		if (Objects.nonNull(userinfoKnowHow)) {
-			String email =
-					authentication == null
-							? userinfoKnowHow.getEmailAddress().toLowerCase()
-							: authentication.getEmail().toLowerCase();
+
 			userMap.put(USER_EMAIL, email);
 			userMap.put(USER_ID, userinfoKnowHow.getId().toString());
 			userMap.put(USER_AUTHORITIES, userinfoKnowHow.getAuthorities());
 			userMap.put(USER_AUTH_TYPE, userinfoKnowHow.getAuthType().toString());
 			userMap.put(NOTIFICATION_EMAIL, userinfoKnowHow.getNotificationEmail());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(email);
+					projectAccessManager.getProjectAccessesWithRole(
+							new UserInfoPrincipal(username, email, authType));
 			if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
 				userMap.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			} else {

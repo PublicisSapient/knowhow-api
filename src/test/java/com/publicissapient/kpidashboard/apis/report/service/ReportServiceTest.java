@@ -41,6 +41,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.errors.DuplicateReportException;
 import com.publicissapient.kpidashboard.apis.errors.EntityNotFoundException;
@@ -91,7 +92,8 @@ public class ReportServiceTest {
 
 	@Test
 	public void testCreateReport_Success() {
-		when(authenticationService.getLoggedInUser()).thenReturn("user1");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("user1", "", ""));
 		when(reportRepository.findByNameAndCreatedBy(anyString(), anyString()))
 				.thenReturn(Optional.empty());
 		when(reportRepository.save(any(Report.class))).thenReturn(report);
@@ -105,7 +107,8 @@ public class ReportServiceTest {
 
 	@Test(expected = DuplicateReportException.class)
 	public void testCreateReport_DuplicateName() {
-		when(authenticationService.getLoggedInUser()).thenReturn("user1");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("user1", "", ""));
 		when(reportRepository.findByNameAndCreatedBy(anyString(), anyString()))
 				.thenReturn(Optional.of(report));
 

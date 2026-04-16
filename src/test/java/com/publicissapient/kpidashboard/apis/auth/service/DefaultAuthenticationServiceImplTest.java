@@ -31,6 +31,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.publicissapient.kpidashboard.apis.auth.model.SystemUser;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultAuthenticationServiceImplTest {
@@ -45,15 +46,15 @@ public class DefaultAuthenticationServiceImplTest {
 		String expectedUsername = "testUser ";
 		when(authentication.getName()).thenReturn(expectedUsername);
 		when(authentication.isAuthenticated()).thenReturn(true);
-		when(authentication.getPrincipal()).thenReturn(expectedUsername);
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal(expectedUsername, "", ""));
 		when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 
 		// Act
-		String loggedInUser = yourService.getLoggedInUser();
+		UserInfoPrincipal loggedInUser = yourService.getLoggedInUser();
 
 		// Assert
-		assertEquals(expectedUsername, loggedInUser);
+		assertEquals(expectedUsername, loggedInUser.username());
 	}
 
 	@Test
@@ -65,7 +66,7 @@ public class DefaultAuthenticationServiceImplTest {
 		SecurityContextHolder.setContext(securityContext);
 
 		// Act
-		String loggedInUser = yourService.getLoggedInUser();
+		UserInfoPrincipal loggedInUser = yourService.getLoggedInUser();
 
 		// Assert
 		assertEquals(SystemUser.SYSTEM.getName(), loggedInUser);
@@ -78,7 +79,7 @@ public class DefaultAuthenticationServiceImplTest {
 		SecurityContextHolder.setContext(securityContext);
 
 		// Act
-		String loggedInUser = yourService.getLoggedInUser();
+		UserInfoPrincipal loggedInUser = yourService.getLoggedInUser();
 
 		// Assert
 		assertEquals(SystemUser.SYSTEM.getName(), loggedInUser);

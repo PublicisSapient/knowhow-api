@@ -197,7 +197,7 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 
 		log.info("Successfully pushed project_tools into db");
 		projectToolConfig.setCreatedAt(DateUtil.getTodayTime().toString());
-		projectToolConfig.setCreatedBy(authenticationService.getLoggedInUser());
+		projectToolConfig.setCreatedBy(authenticationService.getLoggedInUser().username());
 		projectToolConfig.setUpdatedAt(DateUtil.getTodayTime().toString());
 		toolRepository.save(projectToolConfig);
 		cacheService.clearCache(CommonConstant.CACHE_PROJECT_TOOL_CONFIG);
@@ -316,10 +316,10 @@ public class ProjectToolConfigServiceImpl implements ProjectToolConfigService {
 				projectToolConfig.getAzureRefreshActiveSprintReport());
 		if (Boolean.TRUE.equals(projectToolConfig.getAzureRefreshActiveSprintReport())) {
 			projectTool.setAzureRefreshActiveSprintReportUpdatedBy(
-					authenticationService.getLoggedInUser());
+					authenticationService.getLoggedInUser().username());
 			projectTool.setAzureRefreshActiveSprintReportUpdatedOn(System.currentTimeMillis());
 		}
-		projectTool.setUpdatedBy(authenticationService.getLoggedInUser());
+		projectTool.setUpdatedBy(authenticationService.getLoggedInUser().username());
 		log.info("Successfully update project_tools  into db");
 		toolRepository.save(projectTool);
 		cacheService.clearCache(CommonConstant.CACHE_TOOL_CONFIG_MAP);

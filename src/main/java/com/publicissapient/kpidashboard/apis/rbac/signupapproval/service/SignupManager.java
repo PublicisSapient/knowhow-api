@@ -51,7 +51,7 @@ public class SignupManager {
 	 * @param grantApprovalListener
 	 */
 	public void grantAccess(String username, GrantApprovalListener grantApprovalListener) {
-		String superAdminEmail = authenticationService.getLoggedInUser().toLowerCase();
+		String superAdminEmail = authenticationService.getLoggedInUser().email().toLowerCase();
 		Authentication authentication = getAuthenticationByUserName(username);
 		if (authentication.isApproved()) {
 			if (grantApprovalListener != null) {
@@ -144,7 +144,7 @@ public class SignupManager {
 	 */
 	public void rejectAccessRequest(String username, RejectApprovalListener listener) {
 
-		String superAdminEmail = authenticationService.getLoggedInUser().toLowerCase();
+		String superAdminEmail = authenticationService.getLoggedInUser().email().toLowerCase();
 		Authentication authentication = getAuthenticationByUserName(username);
 		Authentication updatedAuthenticationRequest =
 				updateAuthenticationApprovalStatus(authentication);

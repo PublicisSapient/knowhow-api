@@ -27,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
@@ -50,9 +51,9 @@ public class DefaultAuthenticationResponseService implements AuthenticationRespo
 	/** {@inheritDoc} */
 	@Override
 	public void handle(HttpServletResponse response, Authentication authentication) {
-		String userEmail = authentication.getPrincipal().toString();
 
-		Collection<GrantedAuthority> authorities = userInfoService.getAuthorities(userEmail);
+		Collection<GrantedAuthority> authorities =
+				userInfoService.getAuthorities((UserInfoPrincipal) authentication.getPrincipal());
 		AbstractAuthenticationToken authenticationWithAuthorities =
 				new UsernamePasswordAuthenticationToken(
 						authentication.getPrincipal(), authentication.getCredentials(), authorities);

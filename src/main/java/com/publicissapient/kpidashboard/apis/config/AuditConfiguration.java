@@ -17,7 +17,6 @@
 
 package com.publicissapient.kpidashboard.apis.config;
 
-import java.lang.reflect.Field;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +24,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
-import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.stereotype.Component;
-import org.springframework.util.ReflectionUtils;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 
 @Configuration
-@EnableMongoAuditing(modifyOnCreate = false, setDates = true)
+@EnableMongoAuditing
 public class AuditConfiguration {
 
 	private AuthenticationService authenticationService;
@@ -45,34 +41,14 @@ public class AuditConfiguration {
 
 	@Bean
 	public AuditorAware<String> auditorProvider() {
-		return () -> Optional.empty();
+		return new AuditorAwareImpl();
 	}
 
-	@Component
-	class ConditionalAuditListener extends AbstractMongoEventListener<Object> {
+	class AuditorAwareImpl implements AuditorAware<String> {
 		@Override
-		public void onBeforeConvert(BeforeConvertEvent<Object> event) {
-			Object entity = event.getSource();
-			String currentUser = authenticationService.getLoggedInUser();
-			if (currentUser == null) return;
-
-			Field createdByField = ReflectionUtils.findField(entity.getClass(), "createdBy");
-			if (createdByField != null) {
-				ReflectionUtils.makeAccessible(createdByField);
-				Object createdBy = ReflectionUtils.getField(createdByField, entity);
-				if (createdBy == null || ((String) createdBy).isEmpty()) {
-					ReflectionUtils.setField(createdByField, entity, currentUser);
-				}
-			}
-
-			Field updatedByField = ReflectionUtils.findField(entity.getClass(), "updatedBy");
-			if (updatedByField != null) {
-				ReflectionUtils.makeAccessible(updatedByField);
-				Object updatedBy = ReflectionUtils.getField(updatedByField, entity);
-				if (updatedBy == null || ((String) updatedBy).isEmpty()) {
-					ReflectionUtils.setField(updatedByField, entity, currentUser);
-				}
-			}
+		public Optional<String> getCurrentAuditor() {
+			UserInfoPrincipal currentUser = authenticationService.getLoggedInUser();
+			return Optional.ofNullable(currentUser.username());
 		}
 	}
 }

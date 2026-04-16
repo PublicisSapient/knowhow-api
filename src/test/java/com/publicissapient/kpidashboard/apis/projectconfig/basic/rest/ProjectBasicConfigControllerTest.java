@@ -39,6 +39,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.publicissapient.kpidashboard.apis.abac.ContextAwarePolicyEnforcement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.data.ProjectBasicConfigDataFactory;
@@ -108,7 +109,8 @@ public class ProjectBasicConfigControllerTest {
 	@Test
 	public void testAddBasicConfig() throws Exception {
 		SecurityContextHolder.setContext(securityContext);
-		when(authenticationService.getLoggedInUser()).thenReturn("standarduser");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("standarduser", "", ""));
 		this.mockMvc
 				.perform(
 						MockMvcRequestBuilders.post("/basicconfigs")
