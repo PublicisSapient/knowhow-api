@@ -24,7 +24,7 @@
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
-      <pattern>%d %-5level %logger{36} - %msg%n</pattern>
+      <pattern>%d %-5level %logger{36} - traceId=%X{traceId:-} spanId=%X{spanId:-} - %msg%n</pattern>
     </encoder>
   </appender>
  <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -44,7 +44,9 @@
                 <pattern>
             <pattern>
               {
-                "app":"CustomAPI"
+                "app":"CustomAPI",
+                "traceId":"%X{traceId:-}",
+                "spanId":"%X{spanId:-}"
               }
             </pattern>
           </pattern>
@@ -106,7 +108,9 @@
                 <pattern>
             <pattern>
               {
-                "app":"CustomAPIRequestResponse"
+                "app":"CustomAPIRequestResponse",
+                "traceId":"%X{traceId:-}",
+                "spanId":"%X{spanId:-}"
               }
             </pattern>
           </pattern>
