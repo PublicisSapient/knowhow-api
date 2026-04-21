@@ -80,13 +80,11 @@ public class CustomAnalyticsServiceImplTest {
 		authentication.setEmail("email");
 		roleWiseProjects = new RoleWiseProjects();
 
-		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						anyString(), anyString(), anyString()))
-				.thenReturn(user);
+		when(userInfoRepository.findByUsernameAndAuthType(anyString(), any())).thenReturn(user);
 		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(listRoleWiseProjects);
 		JSONObject json =
 				customAnalyticsServiceImpl.addAnalyticsData(
-						resp, new UserInfoPrincipal("test", "test", "sso"));
+						resp, new UserInfoPrincipal("test", "test", "SSO"));
 		assertEquals(json.get("authorities"), user.getAuthorities());
 	}
 
