@@ -64,6 +64,7 @@ import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.util.RestAPIUtils;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfig;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
@@ -140,8 +141,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		List<Connection> nonAuthConnection = new ArrayList<>();
 		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						user.username(), user.email(), user.authType());
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 
 		connectionData.stream()
 				.filter(
@@ -257,8 +258,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						user.username(), user.email(), user.authType());
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 
 		List<Connection> nonAuthConnection = new ArrayList<>();
 		typeList.stream()
@@ -300,8 +301,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 			UserInfoPrincipal user = authenticationService.getLoggedInUser();
 			UserInfo userInfo =
-					userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-							user.username(), user.email(), user.authType());
+					userInfoRepository.findByUsernameAndAuthType(
+							user.username(), AuthType.valueOf(user.authType()));
 			List<Connection> privateConnections =
 					connectionRepository.findByTypeAndSharedConnection(conn.getType(), false).stream()
 							.filter(e -> e.getConnectionUsers().contains(userInfo.getUsername()))
@@ -477,8 +478,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						user.username(), user.email(), user.authType());
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 
 		if (!authorizedProjectsService.ifSuperAdminUser()
 				&& !existingConnection.getCreatedBy().equals(userInfo.getUsername())) {
@@ -871,8 +872,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 		UserInfoPrincipal user = authenticationService.getLoggedInUser();
 		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						user.username(), user.email(), user.authType());
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 		Connection existingConnection = exisConnectionOpt.get();
 		if (!authorizedProjectsService.ifSuperAdminUser()
 				&& !existingConnection.getCreatedBy().equals(userInfo.getUsername())) {

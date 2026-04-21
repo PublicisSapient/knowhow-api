@@ -93,8 +93,8 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		httpServletResponse.setContentType("application/json");
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		UserInfo userinfo =
-				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						userInfoPrincipal.username(), userInfoPrincipal.email(), userInfoPrincipal.authType());
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 		Authentication authentication =
 				authenticationRepository.findByUsernameAndEmail(
 						userinfo.getUsername(), userInfoPrincipal.email());

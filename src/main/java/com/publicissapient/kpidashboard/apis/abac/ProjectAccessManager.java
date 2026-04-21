@@ -58,6 +58,7 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
@@ -1051,8 +1052,8 @@ public class ProjectAccessManager {
 	public List<RoleWiseProjects> getProjectAccessesWithRole(UserInfoPrincipal userInfoPrincipal) {
 
 		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddress(
-						userInfoPrincipal.username(), userInfoPrincipal.email());
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 		List<RoleWiseProjects> result = new ArrayList<>();
 		if (Objects.nonNull(userInfo)) {
 			List<ProjectsAccess> projectsAccesses = userInfo.getProjectsAccess();
@@ -1181,10 +1182,8 @@ public class ProjectAccessManager {
 		if (null != requestData) {
 			UserInfoPrincipal userInfoPrincipal = authenticationService.getLoggedInUser();
 			UserInfo userInfo =
-					userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-							userInfoPrincipal.username(),
-							userInfoPrincipal.email(),
-							userInfoPrincipal.authType());
+					userInfoRepository.findByUsernameAndAuthType(
+							userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 			if ((userInfo.getUsername().equals(requestData.getUsername())
 							|| userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))
 					&& requestData.getStatus().equals(Constant.ACCESS_REQUEST_STATUS_PENDING)) {

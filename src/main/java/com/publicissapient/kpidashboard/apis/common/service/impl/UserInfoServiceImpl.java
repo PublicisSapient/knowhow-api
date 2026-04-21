@@ -118,8 +118,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public Collection<GrantedAuthority> getAuthorities(UserInfoPrincipal userInfoPrincipal) {
 		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						userInfoPrincipal.username(), userInfoPrincipal.email(), userInfoPrincipal.authType());
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 		List<String> roles = userInfo.getAuthorities();
 		return createAuthorities(roles);
 	}
@@ -132,8 +132,8 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public UserInfo getUserInfo(UserInfoPrincipal userInfoPrincipal) {
-		return userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-				userInfoPrincipal.username(), userInfoPrincipal.email(), userInfoPrincipal.authType());
+		return userInfoRepository.findByUsernameAndAuthType(
+				userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 	}
 
 	@Override
@@ -578,7 +578,6 @@ public class UserInfoServiceImpl implements UserInfoService {
 	@Override
 	public CentralUserInfoDTO getCentralAuthUserInfoDetails(String username, String authCookieToken) {
 		HttpHeaders headers = cookieUtil.setCookieIntoHeader(authCookieToken);
-		String authType = tokenAuthenticationService.getAuthTypeFromToken(authCookieToken);
 		String fetchUserUrl =
 				CommonUtils.getAPIEndPointURL(
 						authProperties.getCentralAuthBaseURL(),

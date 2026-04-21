@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.abac;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -137,9 +138,7 @@ public class ProjectAccessManagerTest {
 		Authentication authentication = new Authentication();
 		authentication.setEmail("email@email.com");
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		when(accessRequestsRepository.findByUsernameAndStatus(
-						ArgumentMatchers.any(), ArgumentMatchers.any()))
-				.thenReturn(null);
+		when(accessRequestsRepository.findByUsernameAndStatus(any(), any())).thenReturn(null);
 		when(accessRequestsRepository.saveAll(
 						getAccessRequestList(
 								Constant.ROLE_PROJECT_ADMIN,
@@ -237,9 +236,7 @@ public class ProjectAccessManagerTest {
 		projectsAccess.setAccessNodes(Lists.newArrayList(accessNode));
 		userInfo.setProjectsAccess(Lists.newArrayList(projectsAccess));
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		when(accessRequestsRepository.findByUsernameAndStatus(
-						ArgumentMatchers.any(), ArgumentMatchers.any()))
-				.thenReturn(null);
+		when(accessRequestsRepository.findByUsernameAndStatus(any(), any())).thenReturn(null);
 		when(accessRequestsRepository.saveAll(
 						getAccessRequestList(
 								Constant.ROLE_PROJECT_ADMIN,
@@ -371,7 +368,7 @@ public class ProjectAccessManagerTest {
 								Constant.ROLE_PROJECT_ADMIN,
 								Constant.ACCESS_REQUEST_STATUS_REJECTED,
 								"hierarchyLevel3Id"));
-		when(accessRequestsRepository.save(ArgumentMatchers.any()))
+		when(accessRequestsRepository.save(any()))
 				.thenReturn(
 						accessRequestObj(
 								Constant.ROLE_PROJECT_ADMIN,
@@ -395,7 +392,7 @@ public class ProjectAccessManagerTest {
 								Constant.ROLE_PROJECT_ADMIN,
 								Constant.ACCESS_REQUEST_STATUS_PENDING,
 								"hierarchyLevel3Id"));
-		when(accessRequestsRepository.save(ArgumentMatchers.any()))
+		when(accessRequestsRepository.save(any()))
 				.thenReturn(
 						accessRequestObj(
 								Constant.ROLE_PROJECT_ADMIN,
@@ -403,8 +400,7 @@ public class ProjectAccessManagerTest {
 								"hierarchyLevel3Id"));
 		projectAccessManager.rejectAccessRequest(
 				"61e4f7852747353d4405c761", ArgumentMatchers.anyString(), rejectAccessListener);
-		verify(rejectAccessListener, atLeastOnce())
-				.onFailure(ArgumentMatchers.any(), ArgumentMatchers.anyString());
+		verify(rejectAccessListener, atLeastOnce()).onFailure(any(), ArgumentMatchers.anyString());
 	}
 
 	@Test
@@ -428,11 +424,11 @@ public class ProjectAccessManagerTest {
 
 	@Test
 	public void testGetProjectAccessesWithRole() {
-		when(userInfoRepository.findByUsernameAndEmailAddress(anyString(), anyString()))
+		when(userInfoRepository.findByUsernameAndAuthType(anyString(), any()))
 				.thenReturn(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 		List<RoleWiseProjects> list =
 				projectAccessManager.getProjectAccessesWithRole(
-						new UserInfoPrincipal("user", "user", "sso"));
+						new UserInfoPrincipal("user", "user", "SSO"));
 		assertEquals(list.size(), 1);
 	}
 
@@ -467,7 +463,7 @@ public class ProjectAccessManagerTest {
 		when(userInfoRepository.findByUsername(ArgumentMatchers.anyString()))
 				.thenReturn(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 		when(authenticationService.getLoggedInUser())
-				.thenReturn(new UserInfoPrincipal("user", "user", "sso"));
+				.thenReturn(new UserInfoPrincipal("user", "user", "SSO"));
 		assertFalse(
 				projectAccessManager.hasProjectEditPermission(
 						new ObjectId("61e4f7852747353d4405c765"),
@@ -484,8 +480,7 @@ public class ProjectAccessManagerTest {
 								"hierarchyLevel3Id"));
 		when(authenticationService.getLoggedInUser())
 				.thenReturn(new UserInfoPrincipal("user", "user", "SAML"));
-		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(
-						anyString(), anyString(), anyString()))
+		when(userInfoRepository.findByUsernameAndAuthType(anyString(), any()))
 				.thenReturn(userInfoObj(Constant.ROLE_PROJECT_ADMIN));
 		assertTrue(projectAccessManager.deleteAccessRequestById("61e4f7852747353d4405c761"));
 	}
@@ -543,10 +538,8 @@ public class ProjectAccessManagerTest {
 		Authentication authentication = new Authentication();
 		authentication.setEmail("email@email.com");
 		when(userInfoRepository.findByUsername(userInfo.getUsername())).thenReturn(userInfo);
-		when(accessRequestsRepository.findByUsernameAndStatus(
-						ArgumentMatchers.any(), ArgumentMatchers.any()))
-				.thenReturn(null);
-		when(accessRequestsRepository.saveAll(ArgumentMatchers.any()))
+		when(accessRequestsRepository.findByUsernameAndStatus(any(), any())).thenReturn(null);
+		when(accessRequestsRepository.saveAll(any()))
 				.thenReturn(
 						getAccessRequestList(
 								Constant.ROLE_PROJECT_ADMIN, Constant.ACCESS_REQUEST_STATUS_PENDING, "Project"));
