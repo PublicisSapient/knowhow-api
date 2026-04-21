@@ -110,10 +110,9 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority(Constant.ROLE_VIEWER);
-		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(any(), any(), any()))
-				.thenReturn(user);
+		when(userInfoRepository.findByUsernameAndAuthType(any(), any())).thenReturn(user);
 		Collection<GrantedAuthority> authorities =
-				service.getAuthorities(new UserInfoPrincipal("user", "user", "sso"));
+				service.getAuthorities(new UserInfoPrincipal("user", "user", "SSO"));
 		assertTrue(authorities.contains(authority));
 	}
 
@@ -254,9 +253,8 @@ public class UserInfoServiceImplTest {
 		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
 		when(authenticationService.getLoggedInUser())
-				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "sso"));
-		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(any(), any(), any()))
-				.thenReturn(testUser);
+				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "SSO"));
+		when(userInfoRepository.findByUsernameAndAuthType(any(), any())).thenReturn(testUser);
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(0, ((ArrayList<UserInfo>) result.getData()).size());
 	}
@@ -277,9 +275,8 @@ public class UserInfoServiceImplTest {
 
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
 		when(authenticationService.getLoggedInUser())
-				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "sso"));
-		when(userInfoRepository.findByUsernameAndEmailAddressAndAuthType(any(), any(), any()))
-				.thenReturn(testUser);
+				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "SSO"));
+		when(userInfoRepository.findByUsernameAndAuthType(any(), any())).thenReturn(testUser);
 
 		ServiceResponse result = service.getAllUserInfo();
 	}
