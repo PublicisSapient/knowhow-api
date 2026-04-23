@@ -89,8 +89,8 @@ public class SonarServiceKanbanR {
 
 			kpiHelperService.kpiResolution(kpiRequest.getKpiList());
 
-			if (Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())
-					|| ApiKeyAuthenticationService.isApiKeyRequest()) {
+			if (ApiKeyAuthenticationService.isApiKeyRequest()
+					|| Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())) {
 				kanbanProjectKeyCache =
 						authorizedProjectsService.getKanbanProjectKey(filteredAccountDataList, kpiRequest);
 			} else {
