@@ -285,7 +285,6 @@ public class JenkinsServiceKanbanRTest {
 			assertEquals(expectedAccountHierarchyDataKanbanList, resultedAccountHierarchyDataKanbanList);
 
 			// Case 2 -> user is not super admin and request is through api key
-			when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
 			apiKeyAuthenticationServiceMockedStatic
 					.when(ApiKeyAuthenticationService::isApiKeyRequest)
 					.thenReturn(true);
