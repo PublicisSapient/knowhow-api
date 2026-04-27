@@ -27,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessNode;
@@ -40,42 +41,42 @@ class ProjectAdminDataAccessPolicyTest {
 
 	@Mock private UserInfoRepository userRepository;
 	@Mock private OrganizationHierarchyRepository organizationHierarchyRepository;
-	String userName;
+	UserInfoPrincipal userInfoPrincipal;
 
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		userName = "tempName";
+		userInfoPrincipal = new UserInfoPrincipal("SUPERADMIN", "", "SSO");
 	}
 
 	@Test
 	void shouldReturnEmptyListIfNoUsers() {
 		// given
-		when(userRepository.findByEmailAddress(userName)).thenReturn(null);
+		when(userRepository.findByUsernameAndAuthType(any(), any())).thenReturn(null);
 
 		// when
-		List<UserInfo> result = policy.getAccessibleMembers(userName);
+		List<UserInfo> result = policy.getAccessibleMembers(userInfoPrincipal);
 
 		// then
 		assertEquals(0, result.size());
-		verify(userRepository, times(1)).findByEmailAddress(userName);
+		verify(userRepository, times(1)).findByUsernameAndAuthType(any(), any());
 	}
 
 	@Test
 	void shouldReturnEmptyListIfNoProjectIsAvailable() {
 
 		UserInfo userInfo = new UserInfo();
-		userInfo.setUsername(userName);
+		userInfo.setUsername(userInfoPrincipal.username());
 		userInfo.setProjectsAccess(new ArrayList<>());
 		// given
-		when(userRepository.findByEmailAddress(userName)).thenReturn(userInfo);
+		when(userRepository.findByUsernameAndAuthType(any(), any())).thenReturn(userInfo);
 
 		// when
-		List<UserInfo> result = policy.getAccessibleMembers(userName);
+		List<UserInfo> result = policy.getAccessibleMembers(userInfoPrincipal);
 
 		// then
 		assertEquals(0, result.size());
-		verify(userRepository, times(1)).findByEmailAddress(userName);
+		verify(userRepository, times(1)).findByUsernameAndAuthType(any(), any());
 	}
 
 	@Test
@@ -86,17 +87,17 @@ class ProjectAdminDataAccessPolicyTest {
 		access.setAccessNodes(new ArrayList<>());
 
 		UserInfo userInfo = new UserInfo();
-		userInfo.setUsername(userName);
+		userInfo.setUsername(userInfoPrincipal.username());
 		userInfo.setProjectsAccess(List.of(access));
 		// given
-		when(userRepository.findByEmailAddress(userName)).thenReturn(userInfo);
+		when(userRepository.findByUsernameAndAuthType(any(), any())).thenReturn(userInfo);
 
 		// when
-		List<UserInfo> result = policy.getAccessibleMembers(userName);
+		List<UserInfo> result = policy.getAccessibleMembers(userInfoPrincipal);
 
 		// then
 		assertEquals(0, result.size());
-		verify(userRepository, times(1)).findByEmailAddress(userName);
+		verify(userRepository, times(1)).findByUsernameAndAuthType(any(), any());
 	}
 
 	@Test
@@ -114,21 +115,22 @@ class ProjectAdminDataAccessPolicyTest {
 		access.setAccessNodes(List.of(accessNode));
 
 		UserInfo userInfo = new UserInfo();
-		userInfo.setUsername(userName);
+		userInfo.setUsername(userInfoPrincipal.username());
 		userInfo.setProjectsAccess(List.of(access));
 		// given
-		when(userRepository.findByEmailAddress(userName)).thenReturn(userInfo);
+		when(userRepository.findByUsernameAndAuthType(any(), any())).thenReturn(userInfo);
 		List<UserInfo> userInfoList = new ArrayList<>();
 		userInfoList.add(userInfo);
 		List<String> items = accessNode.getAccessItems().stream().map(AccessItem::getItemId).toList();
 		when(organizationHierarchyRepository.findAll()).thenReturn(new ArrayList<>());
-		when(userRepository.findUsersByItemIdsOrCreatedBy(items, userName)).thenReturn(userInfoList);
+		when(userRepository.findUsersByItemIdsOrCreatedBy(items, userInfoPrincipal.username()))
+				.thenReturn(userInfoList);
 
 		// when
-		List<UserInfo> result = policy.getAccessibleMembers(userName);
+		List<UserInfo> result = policy.getAccessibleMembers(userInfoPrincipal);
 
 		// then
 		assertEquals(1, result.size());
-		verify(userRepository, times(1)).findByEmailAddress(userName);
+		verify(userRepository, times(1)).findByUsernameAndAuthType(any(), any());
 	}
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
@@ -58,7 +59,7 @@ class DataAccessServiceTest {
 	void shouldReturnMembersForSuperAdmin() {
 		// given
 		List<String> providedRoles = List.of("SUPER_ADMIN");
-		String user = "superAdminUser";
+		UserInfoPrincipal user = new UserInfoPrincipal("superAdminUser", "", "SSO");
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("user1");
 		List<UserInfo> expectedMembers = List.of(userInfo, new UserInfo());
@@ -81,7 +82,7 @@ class DataAccessServiceTest {
 	void shouldReturnMembersForProjectAdmin() {
 		// given
 		List<String> providedRoles = List.of("PROJECT_ADMIN", "READ_ONLY_USER");
-		String user = "projectAdminUser";
+		UserInfoPrincipal user = new UserInfoPrincipal("projectAdminUser", "", "SSO");
 		UserInfo userInfo = new UserInfo();
 		userInfo.setUsername("member1");
 		List<UserInfo> expectedMembers = List.of(userInfo);
@@ -102,7 +103,7 @@ class DataAccessServiceTest {
 	void shouldReturnMembersForReadOnlyUser() {
 		// given
 		List<String> providedRoles = List.of("READ_ONLY_USER");
-		String user = "readOnlyUser";
+		UserInfoPrincipal user = new UserInfoPrincipal("user", "", "SSO");
 		List<UserInfo> expectedMembers = List.of(); // empty list
 		when(readOnlyPolicy.getAccessibleMembers(user)).thenReturn(expectedMembers);
 
@@ -121,7 +122,7 @@ class DataAccessServiceTest {
 	@Test
 	void shouldThrowExceptionIfNoPolicyDefined() {
 		List<String> providedRoles = List.of("UNKNOWN_ROLE");
-		String user = "someUser";
+		UserInfoPrincipal user = new UserInfoPrincipal("user", "", "SSO");
 
 		IllegalArgumentException exception =
 				assertThrows(

@@ -26,7 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
@@ -50,7 +50,8 @@ class SuperAdminDataAccessPolicyTest {
 		when(userRepository.findAll()).thenReturn(allUsers);
 
 		// when
-		List<UserInfo> result = policy.getAccessibleMembers(Constant.ROLE_SUPERADMIN);
+		List<UserInfo> result =
+				policy.getAccessibleMembers(new UserInfoPrincipal("SUPERADMIN", "", "SSO"));
 
 		// then
 		assertEquals(2, result.size());
@@ -64,7 +65,8 @@ class SuperAdminDataAccessPolicyTest {
 		when(userRepository.findAll()).thenReturn(List.of());
 
 		// when
-		List<UserInfo> result = policy.getAccessibleMembers(Constant.ROLE_SUPERADMIN);
+		List<UserInfo> result =
+				policy.getAccessibleMembers(new UserInfoPrincipal("SUPERADMIN", "", "SSO"));
 
 		// then
 		assertEquals(0, result.size());
