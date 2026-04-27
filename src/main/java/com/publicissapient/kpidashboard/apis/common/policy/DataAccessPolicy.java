@@ -18,11 +18,12 @@ package com.publicissapient.kpidashboard.apis.common.policy;
 
 import java.util.List;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
 /**
  * @author gursinh49
  */
 public interface DataAccessPolicy {
-	List<UserInfo> getAccessibleMembers(String userEmail);
+	List<UserInfo> getAccessibleMembers(UserInfoPrincipal userInfoPrincipal);
 }

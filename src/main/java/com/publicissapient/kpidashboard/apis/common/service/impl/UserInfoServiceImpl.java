@@ -143,7 +143,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 		List<String> roles = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
 
 		List<UserInfo> userInfoList =
-				dataAccessService.getMembersForUser(roles, authenticationService.getLoggedInUser().email());
+				dataAccessService.getMembersForUser(roles, authenticationService.getLoggedInUser());
 		List<String> userNames = userInfoList.stream().map(UserInfo::getUsername).toList();
 
 		List<Authentication> authentications = authenticationRepository.findByUsernameIn(userNames);

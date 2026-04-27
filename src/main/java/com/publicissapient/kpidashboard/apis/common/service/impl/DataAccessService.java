@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
@@ -32,7 +33,7 @@ public class DataAccessService {
 		this.policies = policies;
 	}
 
-	public List<UserInfo> getMembersForUser(List<String> providedRole, String user) {
+	public List<UserInfo> getMembersForUser(List<String> providedRole, UserInfoPrincipal user) {
 
 		for (Map.Entry<String, DataAccessPolicy> entry : policies.entrySet()) {
 			String role = entry.getKey();
