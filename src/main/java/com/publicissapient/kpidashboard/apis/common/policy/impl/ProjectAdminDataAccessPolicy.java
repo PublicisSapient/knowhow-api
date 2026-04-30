@@ -22,8 +22,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessItem;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
@@ -41,8 +43,10 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 	@Autowired private OrganizationHierarchyRepository organizationHierarchyRepository;
 
 	@Override
-	public List<UserInfo> getAccessibleMembers(String userName) {
-		UserInfo fullUserDoc = userInfoRepository.findByUsername(userName);
+	public List<UserInfo> getAccessibleMembers(UserInfoPrincipal userInfoPrincipal) {
+		UserInfo fullUserDoc =
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 		if (fullUserDoc == null || fullUserDoc.getProjectsAccess().isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -65,7 +69,8 @@ public class ProjectAdminDataAccessPolicy implements DataAccessPolicy {
 			allAccessibleItemIds.addAll(getChildNodeIds(itemId, allHierarchies));
 		}
 
-		return userInfoRepository.findUsersByItemIdsOrCreatedBy(allAccessibleItemIds, userName);
+		return userInfoRepository.findUsersByItemIdsOrCreatedBy(
+				allAccessibleItemIds, fullUserDoc.getUsername());
 	}
 
 	private List<String> getChildNodeIds(

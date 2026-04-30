@@ -35,6 +35,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.DeleteProjectTraceLogServiceImpl;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
@@ -64,7 +65,8 @@ public class DeleteProjectTraceLogServiceImplTest {
 
 	@Test
 	public void validateSave() {
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", ""));
 		service.save(new ProjectBasicConfig());
 		verify(deleteProjectTraceLogRepository, times(1)).save(captor.capture());
 	}

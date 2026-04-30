@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
@@ -44,10 +45,10 @@ public interface UserInfoService {
 	/**
 	 * Gets authorities.
 	 *
-	 * @param username the username
+	 * @param userEmail the user email
 	 * @return the authorities
 	 */
-	Collection<GrantedAuthority> getAuthorities(String username);
+	Collection<GrantedAuthority> getAuthorities(UserInfoPrincipal userInfoPrincipal);
 
 	/**
 	 * Gets user info.
@@ -58,7 +59,7 @@ public interface UserInfoService {
 	 */
 	UserInfo getUserInfo(String username, AuthType authType);
 
-	UserInfo getUserInfo(String username);
+	UserInfo getUserInfo(UserInfoPrincipal userInfoPrincipal);
 
 	/**
 	 * Gets users.
@@ -113,12 +114,8 @@ public interface UserInfoService {
 
 	UserInfo createDefaultUserInfo(String username, AuthType authType, String email);
 
-	/**
-	 * This method is for deleting the users
-	 *
-	 * @param username username
-	 */
-	ServiceResponse deleteUser(String username, boolean centralAuthService);
+	/** This method is for deleting the users */
+	ServiceResponse deleteUser(UserInfo userInfo, boolean centralAuthService);
 
 	List<UserInfo> getUserInfoByAuthType(String userType);
 
@@ -155,7 +152,7 @@ public interface UserInfoService {
 
 	boolean updateUserApprovalStatus(String userNameRequest);
 
-	boolean deleteFromCentralAuthUser(String user);
+	boolean deleteFromCentralAuthUser(String user, String authType);
 
 	CentralUserInfoDTO getCentralAuthUserInfoDetails(String username, String authCookieToken);
 
@@ -166,11 +163,11 @@ public interface UserInfoService {
 	/**
 	 * update notification email alert flag user wise
 	 *
-	 * @param loggedUserName
+	 * @param loggedUserEmail
 	 * @param notificationEmail
 	 * @return
 	 */
-	UserInfo updateNotificationEmail(String loggedUserName, Map<String, Boolean> notificationEmail);
+	UserInfo updateNotificationEmail(String loggedUserEmail, Map<String, Boolean> notificationEmail);
 
 	/**
 	 * all unapproved users from central auth and also flag which is not whitelist domain as per

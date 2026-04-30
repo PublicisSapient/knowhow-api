@@ -48,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.DeleteLastAdminException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.UserNotFoundException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
@@ -65,15 +66,7 @@ import com.publicissapient.kpidashboard.apis.userboardconfig.service.UserBoardCo
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
-import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccess;
-import com.publicissapient.kpidashboard.common.model.rbac.ProjectsAccessDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.RoleWiseProjects;
-import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserDetailsResponseDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
-import com.publicissapient.kpidashboard.common.model.rbac.UserInfoDTO;
-import com.publicissapient.kpidashboard.common.model.rbac.UserTokenData;
+import com.publicissapient.kpidashboard.common.model.rbac.*;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoCustomRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserTokenReopository;
@@ -93,6 +86,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 			"Error while consuming rest service in userInfoServiceImpl";
 	public static final String ERROR_WHILE_CONSUMING_AUTH_SERVICE_IN_USER_INFO_SERVICE_IMPL =
 			"Error while Auth Service API call , Api Key token is invalid : {}";
+	public static final String PARENT_ACCESS_CONFLICT_MSG =
+			"User already has access of parent hierarchy";
+	public static final String PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG =
+			"User already has parent hierarchy access with role: ";
 	@Autowired TokenAuthenticationService tokenAuthenticationService;
 	@Autowired private UserInfoRepository userInfoRepository;
 	@Autowired private UserInfoCustomRepository userInfoCustomRepository;
@@ -119,8 +116,10 @@ public class UserInfoServiceImpl implements UserInfoService {
 	final ModelMapper modelMapper = new ModelMapper();
 
 	@Override
-	public Collection<GrantedAuthority> getAuthorities(String username) {
-		UserInfo userInfo = userInfoRepository.findByUsername(username);
+	public Collection<GrantedAuthority> getAuthorities(UserInfoPrincipal userInfoPrincipal) {
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 		List<String> roles = userInfo.getAuthorities();
 		return createAuthorities(roles);
 	}
@@ -132,8 +131,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 	@Override
-	public UserInfo getUserInfo(String username) {
-		return userInfoRepository.findByUsername(username);
+	public UserInfo getUserInfo(UserInfoPrincipal userInfoPrincipal) {
+		return userInfoRepository.findByUsernameAndAuthType(
+				userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 				userInfo -> {
 					Authentication auth = authMap.get(userInfo.getUsername());
 					if (auth != null) {
-						userInfo.setEmailAddress(auth.getEmail().toLowerCase());
+						// userInfo.setEmailAddress(auth.getEmail().toLowerCase());
 						if (!auth.isApproved()) {
 							nonApprovedUserList.add(userInfo);
 						}
@@ -283,12 +283,17 @@ public class UserInfoServiceImpl implements UserInfoService {
 	 */
 	@Override
 	public ServiceResponse updateUserRole(String username, UserInfo userInfo) {
-		UserInfo existingUserInfo = userInfoRepository.findByUsername(username);
+		UserInfo existingUserInfo =
+				userInfoRepository.findByUsernameAndEmailAddress(username, userInfo.getEmailAddress());
 
 		existingUserInfo = createUserInCaseSSOUserNotFound(existingUserInfo, userInfo);
 
 		if (existingUserInfo == null) {
 			return new ServiceResponse(false, "No user in user_info collection", userInfo);
+		}
+		String conflictMsg = getParentAccessConflictMessage(existingUserInfo, userInfo);
+		if (conflictMsg != null) {
+			return new ServiceResponse(false, conflictMsg, null);
 		}
 		UserInfo resultUserInfo =
 				projectAccessManager.updateAccessOfUserInfo(existingUserInfo, userInfo);
@@ -298,6 +303,72 @@ public class UserInfoServiceImpl implements UserInfoService {
 		tokenAuthenticationService.updateExpiryDate(
 				resultUserInfo.getUsername(), LocalDateTime.now().toString());
 		return new ServiceResponse(true, "Updated the role Successfully", resultUserInfo);
+	}
+
+	/**
+	 * Returns a conflict message if any requested child item has a parent already covered in the
+	 * existing user's projectsAccess across ALL roles. Same role -> generic message; different role
+	 * -> role-specific message. Returns null if no conflict.
+	 */
+	private String getParentAccessConflictMessage(
+			UserInfo existingUserInfo, UserInfo requestedUserInfo) {
+		if (CollectionUtils.isEmpty(existingUserInfo.getProjectsAccess())
+				|| requestedUserInfo == null
+				|| CollectionUtils.isEmpty(requestedUserInfo.getProjectsAccess())) {
+			return null;
+		}
+		ProjectBasicConfigNode configTree = projectBasicConfigService.getBasicConfigTree();
+		for (ProjectsAccess requestedAccess : requestedUserInfo.getProjectsAccess()) {
+			String requestedRole = requestedAccess.getRole();
+			for (AccessNode an : requestedAccess.getAccessNodes()) {
+				String accessLevel = an.getAccessLevel();
+				for (AccessItem item : an.getAccessItems()) {
+					ProjectBasicConfigNode searchNode =
+							projectBasicConfigService.findNode(configTree, item.getItemId(), accessLevel);
+					List<ProjectBasicConfigNode> parents = new ArrayList<>();
+					projectBasicConfigService.findParents(Arrays.asList(searchNode), parents);
+					Map<String, Set<String>> globalParentMap = new HashMap<>();
+					parents.forEach(
+							parent ->
+									globalParentMap
+											.computeIfAbsent(parent.getGroupName(), k -> new HashSet<>())
+											.add(parent.getValue()));
+					if (globalParentMap.isEmpty()) {
+						continue;
+					}
+					for (ProjectsAccess existingAccess : existingUserInfo.getProjectsAccess()) {
+						Map<String, Set<String>> existingAccessMap = new HashMap<>();
+						existingAccess
+								.getAccessNodes()
+								.forEach(
+										existingAn -> {
+											Set<String> ids =
+													existingAn.getAccessItems().stream()
+															.map(AccessItem::getItemId)
+															.collect(Collectors.toSet());
+											existingAccessMap.put(existingAn.getAccessLevel(), ids);
+										});
+						if (isParentCovered(globalParentMap, existingAccessMap)) {
+							String existingRole = existingAccess.getRole();
+							return existingRole.equals(requestedRole)
+									? PARENT_ACCESS_CONFLICT_MSG
+									: PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG + existingRole;
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private boolean isParentCovered(
+			Map<String, Set<String>> globalParentMap, Map<String, Set<String>> existingAccessMap) {
+		return globalParentMap.entrySet().stream()
+				.anyMatch(
+						e -> {
+							Set<String> existingIds = existingAccessMap.get(e.getKey());
+							return existingIds != null && e.getValue().stream().anyMatch(existingIds::contains);
+						});
 	}
 
 	private UserInfo createUserInCaseSSOUserNotFound(UserInfo existingUserInfo, UserInfo userInfo) {
@@ -398,17 +469,18 @@ public class UserInfoServiceImpl implements UserInfoService {
 	/**
 	 * This method is for deleting the users
 	 *
-	 * @param username username
+	 * @param userInfo userInfo
 	 */
 	@Override
-	public ServiceResponse deleteUser(String username, boolean centralAuthService) {
+	public ServiceResponse deleteUser(UserInfo userInfo, boolean centralAuthService) {
 		try {
-			userInfoRepository.deleteByUsername(username);
-			authenticationService.delete(username);
-			userTokenDeletionService.invalidateSession(username);
-			userBoardConfigService.deleteUser(username);
+			userInfoRepository.deleteByUsernameAndEmailAddress(
+					userInfo.getUsername(), userInfo.getEmailAddress());
+			authenticationService.delete(userInfo.getUsername(), userInfo.getEmailAddress());
+			userTokenDeletionService.invalidateSession(userInfo.getUsername());
+			userBoardConfigService.deleteUser(userInfo.getUsername());
 			if (centralAuthService) {
-				deleteFromCentralAuthUser(username);
+				deleteFromCentralAuthUser(userInfo.getUsername(), userInfo.getAuthType().name());
 			}
 			cleanAllCache();
 		} catch (Exception exception) {
@@ -416,7 +488,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 			return new ServiceResponse(false, "There is some issue in Repository", "Failed");
 		}
 
-		return new ServiceResponse(true, username + " deleted Successfully", "Ok");
+		return new ServiceResponse(true, userInfo.getUsername() + " deleted Successfully", "Ok");
 	}
 
 	@Override
@@ -426,7 +498,7 @@ public class UserInfoServiceImpl implements UserInfoService {
 
 	@Override
 	public UserInfoDTO getOrSaveDefaultUserInfo(String username, AuthType authType, String email) {
-		UserInfo userInfo = getUserInfo(username);
+		UserInfo userInfo = getUserInfo(new UserInfoPrincipal(username, email, authType.name()));
 		if (null == userInfo) {
 			userInfo = createDefaultUserInfo(username, authType, email);
 			userInfo = save(userInfo);
@@ -461,18 +533,21 @@ public class UserInfoServiceImpl implements UserInfoService {
 		UserTokenData userTokenData = userTokenReopository.findByUserToken(token);
 		UserDetailsResponseDTO userDetailsResponseDTO = new UserDetailsResponseDTO();
 		if (Objects.nonNull(userTokenData)) {
-			String username = userTokenData.getUserName();
-			UserInfo userinfo = userInfoRepository.findByUsername(username);
-			Authentication authentication = authenticationRepository.findByUsername(username);
-			String email =
-					authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
+			String userName = userTokenData.getUserName();
+			String email = userTokenData.getEmail();
+			UserInfo userinfo = userInfoRepository.findByUsernameAndEmailAddress(userName, email);
+			Authentication authentication =
+					authenticationRepository.findByUsernameAndEmail(userName, email);
+			String username =
+					authentication == null ? userinfo.getUsername() : authentication.getUsername();
 
 			userDetailsResponseDTO.setUserName(username);
 			userDetailsResponseDTO.setUserEmail(email);
 			userDetailsResponseDTO.setAuthorities(userinfo.getAuthorities());
 			userDetailsResponseDTO.setAuthType(userinfo.getAuthType().toString());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(username);
+					projectAccessManager.getProjectAccessesWithRole(
+							new UserInfoPrincipal(username, email, userinfo.getAuthType().name()));
 
 			userDetailsResponseDTO.setProjectsAccess(projectAccessesWithRole);
 			userDetailsResponseDTO.setNotificationEmail(userinfo.getNotificationEmail());
@@ -647,10 +722,11 @@ public class UserInfoServiceImpl implements UserInfoService {
 	}
 
 	@Override
-	public boolean deleteFromCentralAuthUser(String user) {
+	public boolean deleteFromCentralAuthUser(String user, String authType) {
 		String apiKey = authProperties.getResourceAPIKey();
 		UserNameRequest userNameRequest = new UserNameRequest();
 		userNameRequest.setUsername(user);
+		userNameRequest.setAuthType(authType);
 		HttpHeaders headers = cookieUtil.getHeadersForApiKey(apiKey, true);
 		String deleteUserUrl =
 				CommonUtils.getAPIEndPointURL(
@@ -683,14 +759,14 @@ public class UserInfoServiceImpl implements UserInfoService {
 	 * update notification email alert flag user wise 2 type of notification flag -
 	 * accessAlertNotification and errorAlertNotification
 	 *
-	 * @param loggedUserName
+	 * @param loggedUserEmail
 	 * @param notificationEmail
 	 * @return
 	 */
 	@Override
 	public UserInfo updateNotificationEmail(
-			String loggedUserName, Map<String, Boolean> notificationEmail) {
-		UserInfo userinfo = userInfoRepository.findByUsername(loggedUserName);
+			String loggedUserEmail, Map<String, Boolean> notificationEmail) {
+		UserInfo userinfo = userInfoRepository.findByEmailAddress(loggedUserEmail);
 
 		if (Objects.nonNull(userinfo)
 				&& Objects.nonNull(notificationEmail)

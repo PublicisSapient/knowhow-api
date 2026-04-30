@@ -97,32 +97,22 @@ public class RepoDeploymentLeadTimeStrategy implements LeadTimeCalculationStrate
 							LocalDateTime deployStartDateTime =
 									LocalDateTime.parse(earliestDeployment.getStartTime(), formatter);
 
-							double commitToMerge = KpiDataHelper.calWeekMinutes(commitDateTime, mergeDateTime);
-							double mergeToDeployStart =
-									KpiDataHelper.calWeekMinutes(mergeDateTime, deployStartDateTime);
-
-							double totalDeployDuration =
-									deployments.stream()
-											.filter(d -> d.getStartTime() != null && d.getEndTime() != null)
-											.mapToDouble(
-													d -> {
-														LocalDateTime startDateTime =
-																LocalDateTime.parse(d.getStartTime(), formatter);
-														LocalDateTime endDateTime =
-																LocalDateTime.parse(d.getEndTime(), formatter);
-														return KpiDataHelper.calWeekMinutes(startDateTime, endDateTime);
-													})
-											.sum();
-
-							long totalLeadTime =
-									Math.round(commitToMerge + mergeToDeployStart + totalDeployDuration);
-
 							LocalDateTime lastDeployEndTime =
 									deployments.stream()
 											.filter(d -> d.getEndTime() != null)
 											.map(d -> LocalDateTime.parse(d.getEndTime(), formatter))
 											.max(Comparator.naturalOrder())
-											.orElse(deployStartDateTime);
+											.orElse(LocalDateTime.parse(earliestDeployment.getEndTime(), formatter));
+
+							double commitToMerge = KpiDataHelper.calWeekMinutes(commitDateTime, mergeDateTime);
+							double mergeToDeployStart =
+									KpiDataHelper.calWeekMinutes(mergeDateTime, deployStartDateTime);
+
+							double totalDeployDuration =
+									KpiDataHelper.calWeekMinutes(deployStartDateTime, lastDeployEndTime);
+
+							long totalLeadTime =
+									Math.round(commitToMerge + mergeToDeployStart + totalDeployDuration);
 
 							String weekOrMonthName =
 									getDateFormatted(context.getWeekOrMonth(), lastDeployEndTime);

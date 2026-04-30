@@ -61,6 +61,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -175,6 +176,11 @@ public class ConnectionServiceImplTest {
 		connection.setCreatedBy("user123");
 		connection.setNotificationCount(0);
 		connection.setBrokenConnection(false);
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("user123");
+		userInfo.setEmailAddress("user123");
+		when(userInfoRepository.findByUsernameAndAuthType(anyString(), any())).thenReturn(userInfo);
 	}
 
 	/** method includes post processes for test cases */
@@ -243,7 +249,8 @@ public class ConnectionServiceImplTest {
 	/** 1. Creating a connection */
 	@Test
 	public void testSaveConnectionDetails1() {
-		when(authenticationService.getLoggedInUser()).thenReturn("superadmin");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("superadmin", "", "SSO"));
 		ServiceResponse response =
 				connectionServiceImpl.saveConnectionDetails(
 						connectionsDataFactory.findConnectionsByType("Sonar").get(0));
@@ -265,6 +272,8 @@ public class ConnectionServiceImplTest {
 	public void testSaveConnectionDetailsAzure() {
 		Connection connection = connectionsDataFactory.findConnectionsByType("Azure").get(0);
 		connection.setId(null);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		ServiceResponse response = connectionServiceImpl.saveConnectionDetails(connection);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 		assertNotNull(response.getData());
@@ -274,6 +283,8 @@ public class ConnectionServiceImplTest {
 	public void testSaveConnectionDetailsJenkins() {
 		Connection connection = connectionsDataFactory.findConnectionsByType("Jenkins").get(0);
 		connection.setId(null);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		ServiceResponse response = connectionServiceImpl.saveConnectionDetails(connection);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 		assertNotNull(response.getData());
@@ -293,7 +304,12 @@ public class ConnectionServiceImplTest {
 		connection.setPrivateKey("Private Key");
 		when(connectionRepository.findById(new ObjectId("5fdc809fb55d53cc1692543c")))
 				.thenReturn(Optional.of(connection));
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "", "SSO"));
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("SUPERADMIN");
+		userInfo.setEmailAddress("user123");
+		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
 		RepoToolsProvider provider = new RepoToolsProvider();
 		provider.setTestApiUrl("https://www.test.com");
 		ServiceResponse response =
@@ -324,7 +340,8 @@ public class ConnectionServiceImplTest {
 		Connection connectionInput = connectionsByType.get(0);
 		connectionInput.setBaseUrl("https://test.abc.com");
 		connectionInput.setAccessToken("testAccessToken");
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SAML"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connectionInput);
 		when(connectionRepository.findByTypeAndSharedConnection("Zephyr", true)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
@@ -351,7 +368,8 @@ public class ConnectionServiceImplTest {
 		connList.add(c1);
 		Connection connectionInput = connectionsByType.get(0);
 		connectionInput.setPassword("Password");
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connectionInput);
 		when(connectionRepository.findByTypeAndSharedConnection("Jira", true)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
@@ -380,7 +398,8 @@ public class ConnectionServiceImplTest {
 		connectionInput.setBearerToken(true);
 		connectionInput.setPassword("password");
 		connectionInput.setPatOAuthToken("authToken");
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connectionInput);
 		when(connectionRepository.findByTypeAndSharedConnection("Jira", true)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
@@ -408,7 +427,8 @@ public class ConnectionServiceImplTest {
 		Connection connectionInput = connectionsByType.get(0);
 		connectionInput.setBearerToken(true);
 		connectionInput.setPassword("password");
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connectionInput);
 		when(connectionRepository.findByTypeAndSharedConnection("Jira", true)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
@@ -439,10 +459,14 @@ public class ConnectionServiceImplTest {
 		c1.setApiEndPoint("/rest/atm/1.0");
 		c1.setCloudEnv(false);
 		connList.add(c1);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("test");
+		userInfo.setEmailAddress("user123");
 		when(connectionRepository.findByTypeAndSharedConnection("Zephyr", false)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
-		assertFalse(serviceResponse.getSuccess());
+		assertTrue(serviceResponse.getSuccess());
 	}
 
 	/** 3. Input String id is null */
@@ -489,10 +513,10 @@ public class ConnectionServiceImplTest {
 	@Test
 	public void deleteConnection_Success() {
 		String id = "5fc4d61f80b6350f048a93e5";
-		when(authenticationService.getLoggedInUser()).thenReturn("superadmin");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.findById(new ObjectId(id))).thenReturn(testConnectionOpt);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-		when(toolRepositroy.findByConnectionId(new ObjectId(id))).thenReturn(projectToolList);
 		ServiceResponse response = connectionServiceImpl.deleteConnection(id);
 		assertThat("deleted connection ", response.getSuccess(), equalTo(false));
 	}
@@ -569,7 +593,8 @@ public class ConnectionServiceImplTest {
 		dataConnection.add(listDataConnection);
 		when(connectionRepository.findAllWithoutSecret()).thenReturn(dataConnection);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-		// when(authenticationService.getLoggedInUser()).thenReturn("user91");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("user91", "", "SSO"));
 		ServiceResponse response = connectionServiceImpl.getAllConnection();
 		assertThat("status: ", response.getSuccess(), equalTo(true));
 		dataConnection.get(0).getConnectionUsers().get(0).equals("user91");
@@ -598,7 +623,8 @@ public class ConnectionServiceImplTest {
 		Connection connectionInput = connectionsByType.get(0);
 		connectionInput.setBaseUrl("https://abc.com");
 		connectionInput.setAccessToken("testAccessToken");
-		when(authenticationService.getLoggedInUser()).thenReturn("test User");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.findByTypeAndSharedConnection("Sonar", false)).thenReturn(connList);
 
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
@@ -613,7 +639,8 @@ public class ConnectionServiceImplTest {
 		String type = "GitLab";
 		when(connectionRepository.findAllWithoutSecret()).thenReturn(dataConnection1);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-		when(authenticationService.getLoggedInUser()).thenReturn("user91");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("user91", "", "SSO"));
 		ServiceResponse response = connectionServiceImpl.getConnectionByType(type);
 		dataConnection1.get(0).getConnectionUsers().get(0).equals("user91");
 		assertThat("status", response.getSuccess(), equalTo(true));
@@ -625,6 +652,7 @@ public class ConnectionServiceImplTest {
 		when(connectionRepository.findById(new ObjectId(id))).thenReturn(testConnectionOpt);
 		when(toolRepositroy.findByConnectionId(new ObjectId(id))).thenReturn(projectToolList);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(true);
+		when(authenticationService.getLoggedInUser()).thenReturn(new UserInfoPrincipal("", "", "SSO"));
 		Set<ObjectId> basicProjectConfigIds = new HashSet<>();
 		basicProjectConfigIds.add(new ObjectId("5fc4d61f80b6350f048a93da"));
 		ServiceResponse response = connectionServiceImpl.deleteConnection(id);
@@ -651,7 +679,8 @@ public class ConnectionServiceImplTest {
 		connectionInput.setBaseUrl("https://test.server.com//gitlab");
 		connectionInput.setUsername("test");
 		connectionInput.setAccessToken("testAccessToken");
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connectionInput);
 		when(connectionRepository.findByTypeAndSharedConnection("GitHub", true)).thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connectionInput);
@@ -702,7 +731,8 @@ public class ConnectionServiceImplTest {
 				.thenReturn(Optional.of(existingConnection));
 		when(connectionRepository.findByConnectionName(anyString())).thenReturn(existingConnection);
 		when(authorizedProjectsService.ifSuperAdminUser()).thenReturn(false);
-		when(authenticationService.getLoggedInUser()).thenReturn("anotherUser");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("another", "", "SSO"));
 
 		ServiceResponse serviceResponse =
 				connectionServiceImpl.updateConnection(
@@ -717,7 +747,7 @@ public class ConnectionServiceImplTest {
 		listDataConnection.setType(type);
 		dataConnection1.add(listDataConnection);
 		dataConnection1.add(listDataConnection1);
-
+		when(authenticationService.getLoggedInUser()).thenReturn(new UserInfoPrincipal("", "", "SSO"));
 		when(connectionRepository.findAllWithoutSecret()).thenReturn(dataConnection1);
 		ServiceResponse response = connectionServiceImpl.getConnectionByType(type);
 		dataConnection1.get(0).getConnectionUsers().get(0).equals("user91");
@@ -745,7 +775,8 @@ public class ConnectionServiceImplTest {
 		c2.setConnectionUsers(connUsers);
 		connList.add(c1);
 		connList.add(c2);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
 				.thenReturn(connList);
 		ServiceResponse serviceResponse = connectionServiceImpl.saveConnectionDetails(connList.get(1));
@@ -774,7 +805,8 @@ public class ConnectionServiceImplTest {
 		c2.setConnectionUsers(connUsers);
 		connList.add(c1);
 		connList.add(c2);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
 		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
 				.thenReturn(connList);
@@ -805,7 +837,8 @@ public class ConnectionServiceImplTest {
 		c2.setConnectionUsers(connUsers);
 		connList.add(c1);
 		connList.add(c2);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
 		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
 				.thenReturn(connList);
@@ -835,7 +868,8 @@ public class ConnectionServiceImplTest {
 		c2.setConnectionUsers(connUsers);
 		connList.add(c1);
 		connList.add(c2);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		// when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
 		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
 				.thenReturn(connList);
@@ -865,7 +899,8 @@ public class ConnectionServiceImplTest {
 		c2.setConnectionUsers(connUsers);
 		connList.add(c1);
 		connList.add(c2);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		// when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(1));
 		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
 				.thenReturn(connList);
@@ -887,7 +922,8 @@ public class ConnectionServiceImplTest {
 		c2.setUsername("testUser");
 		c2.setConnectionUsers(connUsers);
 		connList.add(c2);
-		when(authenticationService.getLoggedInUser()).thenReturn("test");
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("test", "", "SSO"));
 		// when(connectionRepository.save(any(Connection.class))).thenReturn(connList.get(0));
 		when(connectionRepository.findByTypeAndSharedConnection(anyString(), anyBoolean()))
 				.thenReturn(connList);

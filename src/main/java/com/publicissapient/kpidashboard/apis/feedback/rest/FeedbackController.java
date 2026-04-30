@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.feedback.service.FeedbackService;
 import com.publicissapient.kpidashboard.apis.model.FeedbackSubmitDTO;
@@ -99,9 +100,9 @@ public class FeedbackController {
 					FeedbackSubmitDTO feedback,
 			HttpServletRequest httpServletRequest) {
 		log.info("creating new request");
-		String loggedUserName = authenticationService.getLoggedInUser();
-		if (loggedUserName != null) {
-			boolean responseStatus = submitFeedbackService.submitFeedback(feedback, loggedUserName);
+		UserInfoPrincipal loggedUser = authenticationService.getLoggedInUser();
+		if (loggedUser != null) {
+			boolean responseStatus = submitFeedbackService.submitFeedback(feedback, loggedUser);
 			if (responseStatus) {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(new ServiceResponse(responseStatus, "Your request has been submitted", feedback));

@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -42,7 +43,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 	@Autowired private NotificationService notificationService;
 
 	@Override
-	public boolean submitFeedback(FeedbackSubmitDTO feedback, String loggedUserName) {
+	public boolean submitFeedback(FeedbackSubmitDTO feedback, UserInfoPrincipal loggedUser) {
 		boolean status = true;
 		List<String> emailAddresses = null;
 
@@ -68,7 +69,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 				log.error(
 						"SubmitFeedbackController: Server Host name is not bind with submit feedback Request mail ");
 			}
-			Map<String, String> customData = createCustomData(feedback, serverPath, loggedUserName);
+			Map<String, String> customData = createCustomData(feedback, serverPath, loggedUser);
 			log.info("Notification message sent with key : {}", NOTIFICATION_KEY);
 			String templateKey = customApiConfig.getMailTemplate().getOrDefault(NOTIFICATION_KEY, "");
 			notificationService.sendNotificationEvent(
@@ -88,11 +89,11 @@ public class FeedbackServiceImpl implements FeedbackService {
 	}
 
 	private Map<String, String> createCustomData(
-			FeedbackSubmitDTO feedback, String serverPath, String loggedUserName) {
+			FeedbackSubmitDTO feedback, String serverPath, UserInfoPrincipal loggedUser) {
 		Map<String, String> customData = new HashMap<>();
-		UserInfo userInfo = userInfoService.getUserInfo(loggedUserName);
+		UserInfo userInfo = userInfoService.getUserInfo(loggedUser);
 		if (userInfo != null) {
-			customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), loggedUserName);
+			customData.put(NotificationCustomDataEnum.USER_NAME.getValue(), userInfo.getUsername());
 			customData.put(NotificationCustomDataEnum.USER_EMAIL.getValue(), userInfo.getEmailAddress());
 		}
 		customData.put(NotificationCustomDataEnum.SERVER_HOST.getValue(), serverPath);

@@ -27,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 
@@ -49,9 +50,10 @@ public class AuthenticationResultHandler implements AuthenticationSuccessHandler
 			throws IOException, ServletException {
 		authenticationResponseService.handle(response, authentication);
 		// sgu106: Google Analytics data population starts
-		String username = authenticationService.getUsername(authentication);
 
-		JSONObject json = customAnalyticsService.addAnalyticsData(response, username);
+		JSONObject json =
+				customAnalyticsService.addAnalyticsData(
+						response, (UserInfoPrincipal) authentication.getPrincipal());
 		response.setCharacterEncoding("UTF-8");
 		PrintWriter out = response.getWriter();
 		out.print(json.toJSONString());

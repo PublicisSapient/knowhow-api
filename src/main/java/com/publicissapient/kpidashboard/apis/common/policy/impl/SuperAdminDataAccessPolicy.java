@@ -20,6 +20,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.policy.DataAccessPolicy;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
@@ -35,7 +36,7 @@ public class SuperAdminDataAccessPolicy implements DataAccessPolicy {
 	@Autowired private UserInfoRepository userInfoRepository;
 
 	@Override
-	public List<UserInfo> getAccessibleMembers(String userName) {
+	public List<UserInfo> getAccessibleMembers(UserInfoPrincipal userInfo) {
 		return userInfoRepository.findAll();
 	}
 }

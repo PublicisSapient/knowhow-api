@@ -35,12 +35,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.common.service.CustomAnalyticsService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
 import com.publicissapient.kpidashboard.apis.common.service.UsersSessionService;
 import com.publicissapient.kpidashboard.apis.config.AnalyticsConfig;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.AuthenticationEvent;
 import com.publicissapient.kpidashboard.common.constant.Status;
 import com.publicissapient.kpidashboard.common.model.rbac.CentralUserInfoDTO;
@@ -85,15 +87,21 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	/** {@inheritDoc} */
 	@SuppressWarnings("unchecked")
 	@Override
-	public JSONObject addAnalyticsData(HttpServletResponse httpServletResponse, String username) {
+	public JSONObject addAnalyticsData(
+			HttpServletResponse httpServletResponse, UserInfoPrincipal userInfoPrincipal) {
 		JSONObject json = new JSONObject();
 		httpServletResponse.setContentType("application/json");
 		httpServletResponse.setCharacterEncoding("UTF-8");
-		UserInfo userinfo = userInfoRepository.findByUsername(username);
-		Authentication authentication = authenticationRepository.findByUsername(username);
-		String email = authentication == null ? userinfo.getEmailAddress() : authentication.getEmail();
+		UserInfo userinfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
+		Authentication authentication =
+				authenticationRepository.findByUsernameAndEmail(
+						userinfo.getUsername(), userInfoPrincipal.email());
+		String username =
+				authentication == null ? userinfo.getUsername() : authentication.getUsername();
 		json.put(USER_NAME, username);
-		json.put(USER_EMAIL, email);
+		json.put(USER_EMAIL, userInfoPrincipal.email());
 		json.put(USER_ID, userinfo.getId().toString());
 		json.put(USER_AUTH_TYPE, userinfo.getAuthType().toString());
 		json.put(USER_AUTHORITIES, userinfo.getAuthorities());
@@ -103,7 +111,7 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		usersSessionService.createUsersSessionInfo(userinfo, AuthenticationEvent.LOGIN, Status.SUCCESS);
 
 		List<RoleWiseProjects> projectAccessesWithRole =
-				projectAccessManager.getProjectAccessesWithRole(username);
+				projectAccessManager.getProjectAccessesWithRole(userInfoPrincipal);
 
 		if (projectAccessesWithRole != null) {
 			JsonElement element =
@@ -122,10 +130,15 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> addAnalyticsDataAndSaveCentralUser(
-			HttpServletResponse httpServletResponse, String username, String authToken) {
+			HttpServletResponse httpServletResponse,
+			String username,
+			String authType,
+			String email,
+			String authToken) {
 		Map<String, Object> userMap = new HashMap<>();
 		httpServletResponse.setContentType("application/json");
-		UserInfo userinfoKnowHow = userInfoRepository.findByUsername(username);
+		UserInfo userinfoKnowHow =
+				userInfoRepository.findByUsernameAndAuthType(username, AuthType.valueOf(authType));
 		httpServletResponse.setCharacterEncoding("UTF-8");
 		if (Objects.isNull(userinfoKnowHow)) {
 			CentralUserInfoDTO centralUserInfoDTO =
@@ -135,24 +148,24 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 				setUserDetailsFromCentralAuth(username, centralUserInfoDTO, centralUserInfo);
 				userinfoKnowHow = centralUserInfo;
 				UserTokenData userTokenData =
-						new UserTokenData(username, authToken, LocalDateTime.now().toString());
+						new UserTokenData(username, email, authToken, LocalDateTime.now().toString());
 				userTokenReopository.save(userTokenData);
 			}
 		}
-		Authentication authentication = authenticationRepository.findByUsername(username);
+		Authentication authentication =
+				authenticationRepository.findByUsernameAndEmail(
+						username, userinfoKnowHow.getEmailAddress());
 		userMap.put(USER_NAME, username);
 		if (Objects.nonNull(userinfoKnowHow)) {
-			String email =
-					authentication == null
-							? userinfoKnowHow.getEmailAddress().toLowerCase()
-							: authentication.getEmail().toLowerCase();
+
 			userMap.put(USER_EMAIL, email);
 			userMap.put(USER_ID, userinfoKnowHow.getId().toString());
 			userMap.put(USER_AUTHORITIES, userinfoKnowHow.getAuthorities());
 			userMap.put(USER_AUTH_TYPE, userinfoKnowHow.getAuthType().toString());
 			userMap.put(NOTIFICATION_EMAIL, userinfoKnowHow.getNotificationEmail());
 			List<RoleWiseProjects> projectAccessesWithRole =
-					projectAccessManager.getProjectAccessesWithRole(username);
+					projectAccessManager.getProjectAccessesWithRole(
+							new UserInfoPrincipal(username, email, authType));
 			if (CollectionUtils.isNotEmpty(projectAccessesWithRole)) {
 				userMap.put(PROJECTS_ACCESS, projectAccessesWithRole);
 			} else {
@@ -182,6 +195,8 @@ public class CustomAnalyticsServiceImpl implements CustomAnalyticsService {
 		centralUserInfo.setFirstName(centralUserInfoDTO.getFirstName());
 		centralUserInfo.setLastName(centralUserInfoDTO.getLastName());
 		centralUserInfo.setDisplayName(centralUserInfoDTO.getDisplayName());
+		centralUserInfo.setCreatedBy(username);
+		centralUserInfo.setUpdatedBy(username);
 		// to create Super admin User info for first time user
 		if (userInfoRepository.count() == 0) {
 			centralUserInfo.setAuthorities(Collections.singletonList(Constant.ROLE_SUPERADMIN));

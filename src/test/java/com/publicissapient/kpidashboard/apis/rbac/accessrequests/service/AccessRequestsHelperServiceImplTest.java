@@ -42,6 +42,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.google.common.collect.Lists;
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
@@ -318,7 +319,7 @@ public class AccessRequestsHelperServiceImplTest {
 		testListAccessRequestsData.add(testAccessRequestsData);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("superadmin");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("superadmin", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = accessRequestsHelperServiceImpl.getAccessRequestByStatus(testStatus);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
@@ -338,7 +339,7 @@ public class AccessRequestsHelperServiceImplTest {
 		when(accessRequestsRepository.findByStatus(testStatus)).thenReturn(testListAccessRequestsData);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("superadmin");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("superadmin", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(userInfo);
 		ServiceResponse response = accessRequestsHelperServiceImpl.getAccessRequestByStatus(testStatus);
 		assertThat("status: ", response.getSuccess(), equalTo(true));
@@ -458,7 +459,7 @@ public class AccessRequestsHelperServiceImplTest {
 		approvedStatus = false;
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("superadmin");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("superadmin", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(userInfo);
 		when(accessRequestsRepository.findByStatus(testStatus)).thenReturn(null);
 		when(authenticationRepository.findByApproved(approvedStatus)).thenReturn(null);
@@ -480,7 +481,7 @@ public class AccessRequestsHelperServiceImplTest {
 		testListAccessRequestsData.add(testAccessRequestsData);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("superadmin");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("superadmin", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(userInfo);
 		when(accessRequestsRepository.findByStatus(testStatus)).thenReturn(testListAccessRequestsData);
 		when(authenticationRepository.findByApproved(approvedStatus)).thenReturn(null);
@@ -503,7 +504,7 @@ public class AccessRequestsHelperServiceImplTest {
 		testListAuthentication.add(testAuthentication);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("superadmin");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("superadmin", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(userInfo);
 		when(accessRequestsRepository.findByStatus(testStatus)).thenReturn(null);
 		when(authenticationRepository.findByApproved(approvedStatus))
@@ -538,7 +539,7 @@ public class AccessRequestsHelperServiceImplTest {
 		testUsername = "guest";
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("guest");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("guest", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(nonSuperadminUserInfo);
 		when(accessRequestsRepository.findByUsernameAndStatus(testUsername, testStatus))
 				.thenReturn(null);
@@ -558,7 +559,7 @@ public class AccessRequestsHelperServiceImplTest {
 		testListAccessRequestsData.add(testAccessRequestsData);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("guest");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("guest", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(nonSuperadminUserInfo);
 		when(accessRequestsRepository.findByUsernameAndStatus(testUsername, testStatus))
 				.thenReturn(testListAccessRequestsData);
@@ -600,7 +601,7 @@ public class AccessRequestsHelperServiceImplTest {
 				.thenReturn(testListAccessRequestsData);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("guest2");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("guest", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(projectAdminUserInfo);
 		when(accessManager.getProjectBasicOnRoleList(any(), any())).thenReturn(basicconfigList);
 
@@ -619,7 +620,7 @@ public class AccessRequestsHelperServiceImplTest {
 		testListAccessRequestsData.add(testAccessRequestsData);
 		SecurityContextHolder.setContext(securityContext);
 		when(SecurityContextHolder.getContext().getAuthentication()).thenReturn(authentication);
-		when(authentication.getPrincipal()).thenReturn("guest2");
+		when(authentication.getPrincipal()).thenReturn(new UserInfoPrincipal("guest", "", ""));
 		when(userInfoServiceImpl.getUserInfo(any())).thenReturn(projectAdminUserInfo);
 		when(accessRequestsRepository.findByStatusAndAccessLevel(anyString(), anyString()))
 				.thenReturn(testListAccessRequestsData);

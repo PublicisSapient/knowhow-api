@@ -56,6 +56,7 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.abac.UserAuthorizedProjectsService;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -63,6 +64,7 @@ import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.repotools.service.RepoToolsConfigServiceImpl;
 import com.publicissapient.kpidashboard.apis.util.RestAPIUtils;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.ProcessorConstants;
 import com.publicissapient.kpidashboard.common.model.application.ProjectToolConfig;
 import com.publicissapient.kpidashboard.common.model.connection.Connection;
@@ -137,12 +139,15 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 
 		List<Connection> nonAuthConnection = new ArrayList<>();
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 
 		connectionData.stream()
 				.filter(
 						e ->
-								!e.isSharedConnection()
-										&& !e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
+								!e.isSharedConnection() && !e.getConnectionUsers().contains(userInfo.getUsername()))
 				.forEach(nonAuthConnection::add);
 
 		if (CollectionUtils.isNotEmpty(nonAuthConnection)) {
@@ -251,12 +256,16 @@ public class ConnectionServiceImpl implements ConnectionService {
 			return new ServiceResponse(true, "Found type@" + type, typeList);
 		}
 
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
+
 		List<Connection> nonAuthConnection = new ArrayList<>();
 		typeList.stream()
 				.filter(
 						e ->
-								!e.isSharedConnection()
-										&& !e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
+								!e.isSharedConnection() && !e.getConnectionUsers().contains(userInfo.getUsername()))
 				.forEach(nonAuthConnection::add);
 
 		if (CollectionUtils.isNotEmpty(nonAuthConnection)) {
@@ -283,7 +292,6 @@ public class ConnectionServiceImpl implements ConnectionService {
 			log.info("connectionName is empty");
 			return new ServiceResponse(false, CONNECTION_EMPTY_MSG, null);
 		}
-		String username = authenticationService.getLoggedInUser();
 		Connection connName = connectionRepository.findByConnectionName(conn.getConnectionName());
 		String api = "save";
 
@@ -291,9 +299,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 			List<Connection> publicConnections =
 					connectionRepository.findByTypeAndSharedConnection(conn.getType(), true);
 
+			UserInfoPrincipal user = authenticationService.getLoggedInUser();
+			UserInfo userInfo =
+					userInfoRepository.findByUsernameAndAuthType(
+							user.username(), AuthType.valueOf(user.authType()));
 			List<Connection> privateConnections =
 					connectionRepository.findByTypeAndSharedConnection(conn.getType(), false).stream()
-							.filter(e -> e.getConnectionUsers().contains(authenticationService.getLoggedInUser()))
+							.filter(e -> e.getConnectionUsers().contains(userInfo.getUsername()))
 							.collect(Collectors.toList());
 
 			Connection existingPublicConn = findConnectionWithSameDetails(conn, publicConnections, api);
@@ -309,11 +321,11 @@ public class ConnectionServiceImpl implements ConnectionService {
 			} else {
 
 				List<String> connectionUser = new ArrayList<>();
-				connectionUser.add(username);
+				connectionUser.add(userInfo.getUsername());
 				encryptSecureFields(conn);
 				conn.setCreatedAt(DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
-				conn.setCreatedBy(username);
-				conn.setUpdatedBy(username);
+				conn.setCreatedBy(userInfo.getUsername());
+				conn.setUpdatedBy(userInfo.getUsername());
 				conn.setConnectionUsers(connectionUser);
 				log.info("Successfully pushed connection into db");
 				connectionRepository.save(conn);
@@ -434,7 +446,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 	 */
 	@Override
 	public ServiceResponse updateConnection(String id, Connection connection) {
-		String username = authenticationService.getLoggedInUser();
+
 		if (connection == null) {
 			log.info("connection is null");
 			return new ServiceResponse(false, "Invalid connection", null);
@@ -464,9 +476,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 							+ " is already exists. Please try again with different name",
 					null);
 		}
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 
 		if (!authorizedProjectsService.ifSuperAdminUser()
-				&& !existingConnection.getCreatedBy().equals(authenticationService.getLoggedInUser())) {
+				&& !existingConnection.getCreatedBy().equals(userInfo.getUsername())) {
 			return new ServiceResponse(
 					false,
 					existingConnection.getConnectionName()
@@ -476,7 +492,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 
 		List<Connection> filteredConn =
-				getFilteredConnection(username, connection, existingConnection.getId());
+				getFilteredConnection(userInfo.getUsername(), connection, existingConnection.getId());
 		Connection existingOtherConn = findConnectionWithSameDetails(connection, filteredConn, api);
 
 		if (null != existingOtherConn && !existingOtherConn.getId().toHexString().equals(id)) {
@@ -484,7 +500,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 		}
 
 		encryptSecureFields(connection);
-		mapConnection(connection, existingConnection);
+		mapConnection(connection, existingConnection, userInfo.getUsername());
 		saveConnection(existingConnection);
 		log.info("Successfully modified connection {}", existingConnection.getConnectionName());
 		final ModelMapper modelMapper = new ModelMapper();
@@ -584,7 +600,8 @@ public class ConnectionServiceImpl implements ConnectionService {
 				.collect(Collectors.toList());
 	}
 
-	private void mapConnection(Connection connection, Connection existingConnection) {
+	private void mapConnection(
+			Connection connection, Connection existingConnection, String username) {
 		existingConnection.setType(connection.getType());
 
 		if (StringUtils.isNotEmpty(connection.getAccessToken())) {
@@ -624,7 +641,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 				DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT));
 		existingConnection.setSharedConnection(connection.isSharedConnection());
 		existingConnection.setAccessTokenEnabled(connection.isAccessTokenEnabled());
-		existingConnection.setUpdatedBy(authenticationService.getLoggedInUser());
+		existingConnection.setUpdatedBy(username);
 		existingConnection.setPatOAuthToken(connection.getPatOAuthToken());
 		existingConnection.setBearerToken(connection.isBearerToken());
 		existingConnection.setJaasKrbAuth(connection.isJaasKrbAuth());
@@ -853,9 +870,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 		if (!exisConnectionOpt.isPresent()) {
 			return new ServiceResponse(false, "No connectionId found to delete", null);
 		}
+		UserInfoPrincipal user = authenticationService.getLoggedInUser();
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						user.username(), AuthType.valueOf(user.authType()));
 		Connection existingConnection = exisConnectionOpt.get();
 		if (!authorizedProjectsService.ifSuperAdminUser()
-				&& !existingConnection.getCreatedBy().equals(authenticationService.getLoggedInUser())) {
+				&& !existingConnection.getCreatedBy().equals(userInfo.getUsername())) {
 			return new ServiceResponse(
 					false,
 					existingConnection.getConnectionName()

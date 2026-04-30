@@ -32,10 +32,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserNameRequest;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
 import com.publicissapient.kpidashboard.apis.common.service.UserInfoService;
+import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.rbac.UserDetailsResponseDTO;
@@ -97,6 +99,15 @@ public class UserInfoController {
 		log.info("user info ");
 		ServiceResponse response = userInfoService.updateUserRole(userInfo.getUsername(), userInfo);
 
+		if (response != null
+				&& !response.getSuccess()
+				&& (UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG.equals(response.getMessage())
+						|| (response.getMessage() != null
+								&& response
+										.getMessage()
+										.startsWith(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG)))) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+		}
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 
@@ -105,13 +116,14 @@ public class UserInfoController {
 	public ResponseEntity<ServiceResponse> deleteUser(
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
+		String userName = userNameRequest.getUsername();
 		String userEmail = userNameRequest.getUserEmail();
-		String loggedUserName = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByEmailAddress(userEmail);
-		if ((!loggedUserName.equals(userEmail)
+		UserInfoPrincipal loggedUser = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoRepository.findByUsernameAndEmailAddress(userName, userEmail);
+		if ((!loggedUser.email().equals(userEmail)
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
-			accessRequestsRepository.deleteByUsername(userEmail);
-			ServiceResponse response = userInfoService.deleteUser(userEmail, false);
+			accessRequestsRepository.deleteByUsername(userInfo.getUsername());
+			ServiceResponse response = userInfoService.deleteUser(userInfo, false);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
 			log.info("Unauthorized to perform deletion of user " + userEmail);
@@ -127,16 +139,18 @@ public class UserInfoController {
 	public ResponseEntity<ServiceResponse> deleteUserFromCentral(
 			@Valid @RequestBody UserNameRequest userNameRequest) {
 		log.info("Inside deleteUser() method of UserInfoController ");
-		String userName = userNameRequest.getUsername();
-		String loggedUserName = authenticationService.getLoggedInUser();
-		UserInfo userInfo = userInfoRepository.findByUsername(userName);
-		if ((!loggedUserName.equals(userName)
+		String userEmail = userNameRequest.getUserEmail();
+		String username = userNameRequest.getUsername();
+
+		UserInfoPrincipal loggedUser = authenticationService.getLoggedInUser();
+		UserInfo userInfo = userInfoRepository.findByUsernameAndEmailAddress(username, userEmail);
+		if ((!loggedUser.email().equals(userInfo.getEmailAddress())
 				&& !userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))) {
-			accessRequestsRepository.deleteByUsername(userName);
-			ServiceResponse response = userInfoService.deleteUser(userName, true);
+			accessRequestsRepository.deleteByUsername(userInfo.getUsername());
+			ServiceResponse response = userInfoService.deleteUser(userInfo, true);
 			return ResponseEntity.status(HttpStatus.OK).body(response);
 		} else {
-			log.info("Unauthorized to perform deletion of user " + userName);
+			log.info("Unauthorized to perform deletion of user " + userInfo.getUsername());
 			return ResponseEntity.status(HttpStatus.FORBIDDEN)
 					.body(
 							new ServiceResponse(
@@ -173,9 +187,9 @@ public class UserInfoController {
 	@PostMapping("/notificationPreferences")
 	public ResponseEntity<ServiceResponse> updateFlagEmailNotification(
 			@Valid @RequestBody Map<String, Boolean> notificationEmail) {
-		String loggedUserName = authenticationService.getLoggedInUser();
+		String loggedUserEmail = authenticationService.getLoggedInUser().email();
 
-		UserInfo userInfo = userInfoService.updateNotificationEmail(loggedUserName, notificationEmail);
+		UserInfo userInfo = userInfoService.updateNotificationEmail(loggedUserEmail, notificationEmail);
 
 		if (Objects.nonNull(userInfo)) {
 			return ResponseEntity.status(HttpStatus.OK)

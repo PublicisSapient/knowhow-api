@@ -167,8 +167,8 @@ public class JenkinsServiceKanbanR {
 	private List<AccountHierarchyDataKanban> getAuthorizedFilteredList(
 			KpiRequest kpiRequest, List<AccountHierarchyDataKanban> filteredAccountDataList) {
 		kpiHelperService.kpiResolution(kpiRequest.getKpiList());
-		if (Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())
-				|| ApiKeyAuthenticationService.isApiKeyRequest()) {
+		if (ApiKeyAuthenticationService.isApiKeyRequest()
+				|| Boolean.TRUE.equals(authorizedProjectsService.ifSuperAdminUser())) {
 			return filteredAccountDataList;
 		}
 		return authorizedProjectsService.filterKanbanProjects(filteredAccountDataList);

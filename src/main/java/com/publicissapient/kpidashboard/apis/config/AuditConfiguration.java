@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 
 @Configuration
@@ -46,7 +47,8 @@ public class AuditConfiguration {
 	class AuditorAwareImpl implements AuditorAware<String> {
 		@Override
 		public Optional<String> getCurrentAuditor() {
-			return Optional.ofNullable(authenticationService.getLoggedInUser());
+			UserInfoPrincipal currentUser = authenticationService.getLoggedInUser();
+			return Optional.ofNullable(currentUser.username());
 		}
 	}
 }

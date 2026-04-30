@@ -300,7 +300,7 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 			// Iterate over responses
 			FieldMappingHelper.removeDuplicateFieldsFromResponse(
 					originalFieldMappingRequestList, responseHashMap);
-			final String loggedInUser = authenticationService.getLoggedInUser();
+			final String loggedInUser = authenticationService.getLoggedInUser().username();
 			List<FieldMappingResponse> fieldMappingResponseList =
 					new ArrayList<>(responseHashMap.values());
 			String cleanTraceLog = "false";
@@ -549,7 +549,7 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 						.stream()
 								.collect(
 										Collectors.toMap(FieldMappingStructure::getFieldName, Function.identity()));
-		String loggedInUser = authenticationService.getLoggedInUser();
+		String loggedInUser = authenticationService.getLoggedInUser().username();
 		for (Field field : fields) {
 			FieldMappingHelper.setAccessible(field);
 			try {

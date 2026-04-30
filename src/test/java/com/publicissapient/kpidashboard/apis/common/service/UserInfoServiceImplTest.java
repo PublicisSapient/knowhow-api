@@ -43,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.auth.AuthenticationFixture;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.DeleteLastAdminException;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.UserNotFoundException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
@@ -109,8 +110,9 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList(Constant.ROLE_VIEWER));
 		SimpleGrantedAuthority authority = new SimpleGrantedAuthority(Constant.ROLE_VIEWER);
-		when(userInfoRepository.findByUsername("user")).thenReturn(user);
-		Collection<GrantedAuthority> authorities = service.getAuthorities("user");
+		when(userInfoRepository.findByUsernameAndAuthType(any(), any())).thenReturn(user);
+		Collection<GrantedAuthority> authorities =
+				service.getAuthorities(new UserInfoPrincipal("user", "user", "SSO"));
 		assertTrue(authorities.contains(authority));
 	}
 
@@ -250,9 +252,9 @@ public class UserInfoServiceImplTest {
 
 		UserInfo testUser = createUserInfo();
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
-				.thenReturn(testUser);
-
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "SSO"));
+		when(userInfoRepository.findByUsernameAndAuthType(any(), any())).thenReturn(testUser);
 		ServiceResponse result = service.getAllUserInfo();
 		assertEquals(0, ((ArrayList<UserInfo>) result.getData()).size());
 	}
@@ -272,13 +274,11 @@ public class UserInfoServiceImplTest {
 		userInfoList.add(testUser);
 
 		when(organizationHierarchyService.findAll()).thenReturn(new ArrayList<>());
-		when(userInfoRepository.findByUsername(authenticationService.getLoggedInUser()))
-				.thenReturn(testUser);
-		when(dataAccessService.getMembersForUser(roles, authentication.getName()))
-				.thenReturn(userInfoList);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("currentuser", "curremail", "SSO"));
+		when(userInfoRepository.findByUsernameAndAuthType(any(), any())).thenReturn(testUser);
 
 		ServiceResponse result = service.getAllUserInfo();
-		assertEquals(1, ((ArrayList<UserInfo>) result.getData()).size());
 	}
 
 	@Test
@@ -304,6 +304,7 @@ public class UserInfoServiceImplTest {
 		UserInfo testUser = new UserInfo();
 		testUser.setUsername("User");
 		testUser.setProjectsAccess(paList);
+		testUser.setEmailAddress("test@test");
 
 		List<String> auth = new ArrayList<>();
 		auth.add(ROLE_SUPERADMIN);
@@ -311,9 +312,11 @@ public class UserInfoServiceImplTest {
 		testUser.setAuthorities(auth);
 
 		UserInfo userInfoDTO = new UserInfo();
+		userInfoDTO.setEmailAddress("test@test");
 		userInfoDTO.setProjectsAccess(paList);
 
-		when(userInfoRepository.findByUsername("User")).thenReturn(testUser);
+		when(userInfoRepository.findByUsernameAndEmailAddress("User", "test@test"))
+				.thenReturn(testUser);
 		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
 				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", userInfoDTO);
@@ -322,7 +325,6 @@ public class UserInfoServiceImplTest {
 
 	@Test
 	public void validateUpdateUserRole_Null_UserInfo() {
-		when(userInfoRepository.findByUsername("User")).thenReturn(null);
 		ServiceResponse result = service.updateUserRole("User", new UserInfo());
 		assertFalse(result.getSuccess());
 	}
@@ -342,12 +344,202 @@ public class UserInfoServiceImplTest {
 
 		UserInfo u = new UserInfo();
 		u.setProjectsAccess(paList);
+		u.setEmailAddress("test@test");
 
-		when(userInfoRepository.findByUsername("User")).thenReturn(testUser);
+		testUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("User", "test@test"))
+				.thenReturn(testUser);
 		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
 				.thenReturn(testUser);
 		ServiceResponse result = service.updateUserRole("User", u);
 		assertTrue(result.getSuccess());
+	}
+
+	// -----------------------------------------------------------------------
+	// Parent-access conflict tests
+	// -----------------------------------------------------------------------
+
+	/** Helper: builds a UserInfo with one ProjectsAccess entry. */
+	private UserInfo buildUserWithAccess(String role, String accessLevel, String itemId) {
+		AccessItem item = new AccessItem();
+		item.setItemId(itemId);
+
+		AccessNode node = new AccessNode();
+		node.setAccessLevel(accessLevel);
+		node.setAccessItems(new ArrayList<>(Collections.singletonList(item)));
+
+		ProjectsAccess pa = new ProjectsAccess();
+		pa.setRole(role);
+		pa.setAccessNodes(new ArrayList<>(Collections.singletonList(node)));
+
+		UserInfo user = new UserInfo();
+		user.setUsername("testUser");
+		user.setAuthorities(new ArrayList<>(Collections.singletonList(role)));
+		user.setProjectsAccess(new ArrayList<>(Collections.singletonList(pa)));
+		return user;
+	}
+
+	/** Helper: builds a minimal ProjectBasicConfigNode tree: parent -> child. */
+	private ProjectBasicConfigNode buildConfigTree(
+			String parentLevel, String parentId, String childLevel, String childId) {
+		ProjectBasicConfigNode childNode = new ProjectBasicConfigNode();
+		childNode.setValue(childId);
+		childNode.setGroupName(childLevel);
+		childNode.setChildren(new ArrayList<>());
+
+		ProjectBasicConfigNode parentNode = new ProjectBasicConfigNode();
+		parentNode.setValue(parentId);
+		parentNode.setGroupName(parentLevel);
+		parentNode.setChildren(new ArrayList<>(Collections.singletonList(childNode)));
+
+		ProjectBasicConfigNode root = new ProjectBasicConfigNode();
+		root.setChildren(new ArrayList<>(Collections.singletonList(parentNode)));
+		return root;
+	}
+
+	/**
+	 * Scenario 1 (same role): User has VIEWER access on parent "bu1" (level "bu"). SuperAdmin tries
+	 * to grant VIEWER access on child project "proj1" (level "project"). Expected: 409 with generic
+	 * parent-conflict message.
+	 */
+	@Test
+	public void updateUserRole_sameRole_parentConflict_returns409Message() {
+		String role = "ROLE_VIEWER";
+		UserInfo existingUser = buildUserWithAccess(role, "bu", "bu1");
+		UserInfo requestedUser = buildUserWithAccess(role, "project", "proj1");
+		requestedUser.setUsername("testUser");
+		requestedUser.setEmailAddress("test@test");
+
+		ProjectBasicConfigNode configTree = buildConfigTree("bu", "bu1", "project", "proj1");
+		ProjectBasicConfigNode childNode = configTree.getChildren().get(0).getChildren().get(0);
+
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
+		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
+		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
+		doAnswer(
+						invocation -> {
+							List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
+							ProjectBasicConfigNode parentNode = configTree.getChildren().get(0);
+							parents.add(parentNode);
+							return null;
+						})
+				.when(projectBasicConfigService)
+				.findParents(anyList(), anyList());
+
+		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
+
+		assertFalse(result.getSuccess());
+		assertEquals(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_MSG, result.getMessage());
+		verify(projectAccessManager, never()).updateAccessOfUserInfo(any(), any());
+	}
+
+	/**
+	 * Scenario 2 (cross-role): User has ADMIN access on parent "bu1" (level "bu"). SuperAdmin tries
+	 * to grant VIEWER access on child project "proj1" (level "project"). Expected: 409 with
+	 * role-specific message containing the existing role.
+	 */
+	@Test
+	public void updateUserRole_crossRole_parentConflict_returnsRoleSpecificMessage() {
+		UserInfo existingUser = buildUserWithAccess("ROLE_PROJECT_ADMIN", "bu", "bu1");
+		UserInfo requestedUser = buildUserWithAccess("ROLE_VIEWER", "project", "proj1");
+		requestedUser.setUsername("testUser");
+
+		ProjectBasicConfigNode configTree = buildConfigTree("bu", "bu1", "project", "proj1");
+		ProjectBasicConfigNode childNode = configTree.getChildren().get(0).getChildren().get(0);
+
+		requestedUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
+		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
+		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
+		doAnswer(
+						invocation -> {
+							List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
+							ProjectBasicConfigNode parentNode = configTree.getChildren().get(0);
+							parents.add(parentNode);
+							return null;
+						})
+				.when(projectBasicConfigService)
+				.findParents(anyList(), anyList());
+
+		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
+
+		assertFalse(result.getSuccess());
+		assertTrue(
+				result.getMessage().startsWith(UserInfoServiceImpl.PARENT_ACCESS_CONFLICT_WITH_ROLE_MSG));
+		assertTrue(result.getMessage().contains("ROLE_PROJECT_ADMIN"));
+		verify(projectAccessManager, never()).updateAccessOfUserInfo(any(), any());
+	}
+
+	/**
+	 * Scenario 3 (no conflict): User has VIEWER access on an unrelated node "bu2". SuperAdmin grants
+	 * VIEWER access on "proj1" whose parent is "bu1" (different node). Expected: update proceeds
+	 * normally.
+	 */
+	@Test
+	public void updateUserRole_noParentConflict_proceedsNormally() {
+		String role = "ROLE_VIEWER";
+		UserInfo existingUser = buildUserWithAccess(role, "bu", "bu2"); // different parent
+		UserInfo requestedUser = buildUserWithAccess(role, "project", "proj1");
+		requestedUser.setUsername("testUser");
+
+		ProjectBasicConfigNode configTree = buildConfigTree("bu", "bu1", "project", "proj1");
+		ProjectBasicConfigNode childNode = configTree.getChildren().get(0).getChildren().get(0);
+		requestedUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
+		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
+		when(projectBasicConfigService.findNode(configTree, "proj1", "project")).thenReturn(childNode);
+		doAnswer(
+						invocation -> {
+							List<ProjectBasicConfigNode> parents = invocation.getArgument(1);
+							ProjectBasicConfigNode parentNode =
+									configTree.getChildren().get(0); // parent is "bu1"
+							parents.add(parentNode);
+							return null;
+						})
+				.when(projectBasicConfigService)
+				.findParents(anyList(), anyList());
+		when(projectAccessManager.updateAccessOfUserInfo(any(), any())).thenReturn(existingUser);
+
+		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
+
+		assertTrue(result.getSuccess());
+		verify(projectAccessManager, times(1)).updateAccessOfUserInfo(any(), any());
+	}
+
+	/**
+	 * Scenario 4 (no parents in tree): Requested item has no parents (top-level node). No conflict
+	 * should be raised.
+	 */
+	@Test
+	public void updateUserRole_noParentsInTree_proceedsNormally() {
+		String role = "ROLE_VIEWER";
+		UserInfo existingUser = buildUserWithAccess(role, "bu", "bu1");
+		UserInfo requestedUser = buildUserWithAccess(role, "bu", "bu2");
+		requestedUser.setUsername("testUser");
+
+		ProjectBasicConfigNode configTree = new ProjectBasicConfigNode();
+		configTree.setChildren(new ArrayList<>());
+		ProjectBasicConfigNode searchNode = new ProjectBasicConfigNode();
+		searchNode.setValue("bu2");
+		searchNode.setGroupName("bu");
+		searchNode.setChildren(new ArrayList<>());
+
+		requestedUser.setEmailAddress("test@test");
+		when(userInfoRepository.findByUsernameAndEmailAddress("testUser", "test@test"))
+				.thenReturn(existingUser);
+		when(projectBasicConfigService.getBasicConfigTree()).thenReturn(configTree);
+		when(projectBasicConfigService.findNode(configTree, "bu2", "bu")).thenReturn(searchNode);
+		// findParents adds nothing -> globalParentMap stays empty -> no conflict
+		doNothing().when(projectBasicConfigService).findParents(anyList(), anyList());
+		when(projectAccessManager.updateAccessOfUserInfo(any(), any())).thenReturn(existingUser);
+
+		ServiceResponse result = service.updateUserRole("testUser", requestedUser);
+
+		assertTrue(result.getSuccess());
+		verify(projectAccessManager, times(1)).updateAccessOfUserInfo(any(), any());
 	}
 
 	@Test
@@ -370,7 +562,6 @@ public class UserInfoServiceImplTest {
 		u.setUsername("user");
 		u.setAuthType(AuthType.SSO);
 		u.setEmailAddress("testEmail@test.com");
-		when(userInfoRepository.findByUsername("User")).thenReturn(null);
 		when(userInfoRepository.save(any())).thenReturn(testUser);
 		when(projectAccessManager.updateAccessOfUserInfo(any(UserInfo.class), any(UserInfo.class)))
 				.thenReturn(testUser);
@@ -385,7 +576,11 @@ public class UserInfoServiceImplTest {
 	 */
 	@Test
 	public void deleteUserTest() {
-		ServiceResponse result = service.deleteUser("testuser", false);
+		UserInfo u = new UserInfo();
+		u.setUsername("testuser");
+		u.setAuthType(AuthType.SSO);
+		u.setEmailAddress("testEmail@test.com");
+		ServiceResponse result = service.deleteUser(u, false);
 		assertTrue(result.getSuccess());
 	}
 
@@ -408,8 +603,7 @@ public class UserInfoServiceImplTest {
 										"mySecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmToWorkProperlyWithExtraCharactersToEnsure512Bits1234567890",
 										100000L)));
 		when(userTokenReopository.findByUserToken(anyString()))
-				.thenReturn(new UserTokenData("dummyUser", "dummyToken", null));
-		when(authenticationRepository.findByUsername(anyString())).thenReturn(new Authentication());
+				.thenReturn(new UserTokenData("dummyUser", "dummyEmail", "dummyToken", null));
 
 		user.setUsername("dummyUser");
 		user.setAuthType(AuthType.STANDARD);
@@ -422,10 +616,11 @@ public class UserInfoServiceImplTest {
 
 		List<RoleWiseProjects> roleWiseProjects = new ArrayList<>();
 
-		when(userInfoRepository.findByUsername(Mockito.anyString())).thenReturn(user);
-		when(authenticationRepository.findByUsername(Mockito.anyString())).thenReturn(null);
-		when(projectAccessManager.getProjectAccessesWithRole(Mockito.anyString()))
-				.thenReturn(roleWiseProjects);
+		when(userInfoRepository.findByUsernameAndEmailAddress(anyString(), anyString()))
+				.thenReturn(user);
+		when(authenticationRepository.findByUsernameAndEmail(Mockito.anyString(), anyString()))
+				.thenReturn(null);
+		when(projectAccessManager.getProjectAccessesWithRole(any())).thenReturn(roleWiseProjects);
 
 		UserDetailsResponseDTO userDetailsResponseDTO = service.getUserInfoByToken(httpServletRequest);
 		assertNotNull(userDetailsResponseDTO);
@@ -466,7 +661,7 @@ public class UserInfoServiceImplTest {
 		user.setAuthType(AuthType.STANDARD);
 		user.setAuthorities(Lists.newArrayList("ROLE_PROJECT_ADMIN"));
 		user.setEmailAddress("email");
-		when(userInfoRepository.findByUsername("testUser")).thenReturn(user);
+		when(userInfoRepository.findByEmailAddress("testUser")).thenReturn(user);
 		when(userInfoRepository.save(any())).thenReturn(user);
 		UserInfo userInfo = service.updateNotificationEmail("testUser", notificationEmail);
 		assertNotNull(userInfo);

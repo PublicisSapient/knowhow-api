@@ -29,6 +29,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import com.publicissapient.kpidashboard.apis.abac.policy.PolicyEnforcement;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 
@@ -47,8 +48,7 @@ public class AbacPermissionEvaluator implements PermissionEvaluator {
 	@Override
 	public boolean hasPermission(
 			Authentication authentication, Object targetDomainObject, Object permission) {
-		String userName = (String) authentication.getPrincipal();
-		UserInfo user = userInfoService.getUserInfo(userName);
+		UserInfo user = userInfoService.getUserInfo((UserInfoPrincipal) authentication.getPrincipal());
 
 		Map<String, Object> environment = new HashMap<>();
 

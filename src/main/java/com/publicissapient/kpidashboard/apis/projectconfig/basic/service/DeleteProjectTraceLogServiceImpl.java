@@ -39,7 +39,7 @@ public class DeleteProjectTraceLogServiceImpl implements DeleteProjectTraceLogSe
 
 	@Override
 	public void save(ProjectBasicConfig projectBasicConfig) {
-		String loggedInUser = authenticationService.getLoggedInUser();
+		String loggedInUser = authenticationService.getLoggedInUser().username();
 		DeleteProjectTraceLog traceLog = createTraceLog(projectBasicConfig, loggedInUser);
 
 		deleteProjectTraceLogRepository.save(traceLog);

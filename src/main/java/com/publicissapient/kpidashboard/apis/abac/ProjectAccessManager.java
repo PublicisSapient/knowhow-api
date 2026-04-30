@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.service.UserTokenDeletionService;
@@ -57,6 +58,7 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.NotificationCustomDataEnum;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.projectconfig.basic.service.ProjectBasicConfigService;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.OrganizationHierarchy;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
@@ -1047,9 +1049,11 @@ public class ProjectAccessManager {
 				&& CollectionUtils.isEmpty(userInfo.getProjectsAccess());
 	}
 
-	public List<RoleWiseProjects> getProjectAccessesWithRole(String username) {
+	public List<RoleWiseProjects> getProjectAccessesWithRole(UserInfoPrincipal userInfoPrincipal) {
 
-		UserInfo userInfo = getUserInfo(username);
+		UserInfo userInfo =
+				userInfoRepository.findByUsernameAndAuthType(
+						userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
 		List<RoleWiseProjects> result = new ArrayList<>();
 		if (Objects.nonNull(userInfo)) {
 			List<ProjectsAccess> projectsAccesses = userInfo.getProjectsAccess();
@@ -1152,7 +1156,8 @@ public class ProjectAccessManager {
 			return false;
 		}
 
-		List<RoleWiseProjects> roleWiseProjects = getProjectAccessesWithRole(username);
+		List<RoleWiseProjects> roleWiseProjects =
+				getProjectAccessesWithRole(authenticationService.getLoggedInUser());
 
 		RoleWiseProjects roleWiseAdminProjects =
 				roleWiseProjects.stream()
@@ -1175,9 +1180,11 @@ public class ProjectAccessManager {
 		boolean isDeletePermitted = false;
 		AccessRequest requestData = getAccessRequest(id);
 		if (null != requestData) {
-			String username = authenticationService.getLoggedInUser();
-			UserInfo userInfo = getUserInfo(username);
-			if ((username.equals(requestData.getUsername())
+			UserInfoPrincipal userInfoPrincipal = authenticationService.getLoggedInUser();
+			UserInfo userInfo =
+					userInfoRepository.findByUsernameAndAuthType(
+							userInfoPrincipal.username(), AuthType.valueOf(userInfoPrincipal.authType()));
+			if ((userInfo.getUsername().equals(requestData.getUsername())
 							|| userInfo.getAuthorities().contains(Constant.ROLE_SUPERADMIN))
 					&& requestData.getStatus().equals(Constant.ACCESS_REQUEST_STATUS_PENDING)) {
 				isDeletePermitted = true;

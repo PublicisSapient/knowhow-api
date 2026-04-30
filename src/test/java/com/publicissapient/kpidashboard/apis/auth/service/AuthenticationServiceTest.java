@@ -44,6 +44,7 @@ import com.publicissapient.kpidashboard.apis.auth.AuthProperties;
 import com.publicissapient.kpidashboard.apis.auth.exceptions.PendingApprovalException;
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.UserInfo;
 import com.publicissapient.kpidashboard.common.repository.rbac.UserInfoRepository;
 
@@ -65,6 +66,12 @@ public class AuthenticationServiceTest {
 		authentication.setPassword("Ps123");
 		authentication.setEmail("abc@example.com");
 		authentication.setApproved(false);
+
+		UserInfo userInfo = new UserInfo();
+		userInfo.setUsername("test");
+		userInfo.setEmailAddress("ps@test.com");
+		userInfo.setAuthType(AuthType.SAML);
+		when(userInfoRepository.findByUsernameAndEmailAddress(any(), any())).thenReturn(userInfo);
 	}
 
 	@Test
@@ -141,8 +148,8 @@ public class AuthenticationServiceTest {
 
 	@Test
 	public void deleteAuthByUsernameTest() {
-		when(authRepo.findByUsername("Test")).thenReturn(authentication);
-		authService.delete("Test");
+		when(authRepo.findByUsernameAndEmail("Test", "test@mail")).thenReturn(authentication);
+		authService.delete("Test", "test@mail");
 		Assertions.assertNotNull(authentication);
 	}
 
@@ -300,7 +307,7 @@ public class AuthenticationServiceTest {
 	public void getUsernameTest() {
 		org.springframework.security.core.Authentication authentication1 =
 				new UsernamePasswordAuthenticationToken("test", "TestP");
-		Assertions.assertFalse(authService.getUsername(authentication1).isEmpty());
+		Assertions.assertFalse(authService.getUserEmail(authentication1).isEmpty());
 	}
 
 	@Test

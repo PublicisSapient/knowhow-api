@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,6 +36,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeature;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -56,7 +56,9 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.jira.KanbanIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.KanbanJiraIssue;
+import com.publicissapient.kpidashboard.common.repository.jira.KanbanJiraIssueHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.KanbanJiraIssueRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
@@ -71,8 +73,12 @@ public class CostOfDelayKanbanServiceImpl
 	static final DateTimeFormatter DATE_TIME_FORMATTER =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 	private static final String COD_DATA = "costOfDelayData";
+	private static final String COD_HISTORY_DATA = "costOfDelayHistoryData";
+	private static final String COD_CLOSE_STATUSES = "costOfDelayCloseStatuses";
+	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private KanbanJiraIssueRepository jiraKanbanIssueRepository;
+	@Autowired private KanbanJiraIssueHistoryRepository kanbanJiraIssueHistoryRepository;
 
 	@Override
 	public Double calculateKPIMetrics(Map<String, Object> subCategoryMap) {
@@ -91,6 +97,8 @@ public class CostOfDelayKanbanServiceImpl
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		List<String> projectList = new ArrayList<>();
+		List<ObjectId> basicProjectConfigIds = new ArrayList<>();
+		Map<ObjectId, FieldMapping> fieldMappingMap = configHelperService.getFieldMappingMap();
 
 		if (CollectionUtils.isNotEmpty(leafNodeList)) {
 
@@ -98,20 +106,33 @@ public class CostOfDelayKanbanServiceImpl
 					leaf -> {
 						ObjectId basicProjectConfigId = leaf.getProjectFilter().getBasicProjectConfigId();
 						projectList.add(basicProjectConfigId.toString());
+						basicProjectConfigIds.add(basicProjectConfigId);
 					});
 		}
+
+		FieldMapping fieldMapping =
+				fieldMappingMap.get(basicProjectConfigIds.isEmpty() ? null : basicProjectConfigIds.get(0));
+		List<String> jiraCloseStatuses = new ArrayList<>();
+		if (fieldMapping != null
+				&& CollectionUtils.isNotEmpty(fieldMapping.getClosedIssueStatusToConsiderKpi114())) {
+			jiraCloseStatuses.addAll(fieldMapping.getClosedIssueStatusToConsiderKpi114());
+		}
+
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
 				projectList.stream().distinct().collect(Collectors.toList()));
-		mapOfFilters.put(
-				JiraFeature.STATUS.getFieldValueInFeature(),
-				Arrays.asList(NormalizedJira.STATUS.getValue()));
+		mapOfFilters.put(JiraFeature.STATUS.getFieldValueInFeature(), jiraCloseStatuses);
 		mapOfFilters.put(
 				JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
 				Arrays.asList(NormalizedJira.ISSUE_TYPE.getValue()));
 
 		List<KanbanJiraIssue> codList = jiraKanbanIssueRepository.findCostOfDelayByType(mapOfFilters);
+		List<KanbanIssueCustomHistory> codHistory =
+				kanbanJiraIssueHistoryRepository.findByStoryIDInAndBasicProjectConfigIdIn(
+						codList.stream().map(KanbanJiraIssue::getNumber).toList(), projectList);
 		resultListMap.put(COD_DATA, codList);
+		resultListMap.put(COD_HISTORY_DATA, codHistory);
+		resultListMap.put(COD_CLOSE_STATUSES, jiraCloseStatuses);
 		return resultListMap;
 	}
 
@@ -163,9 +184,16 @@ public class CostOfDelayKanbanServiceImpl
 		String endDate = dateRange.getEndDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
 		Map<String, Object> resultMap = fetchKPIDataFromDb(projectList, startDate, endDate, kpiRequest);
+		List<KanbanIssueCustomHistory> historyList =
+				(List<KanbanIssueCustomHistory>) resultMap.get(COD_HISTORY_DATA);
+		List<String> closeStatuses = (List<String>) resultMap.get(COD_CLOSE_STATUSES);
+		Map<String, String> storyIdToClosedDateMap =
+				buildStoryIdToClosedDateMap(historyList, closeStatuses);
 		Map<String, Map<String, List<KanbanJiraIssue>>> projectandDayWiseDelay =
-				createProjectandDayWiseDelay((List<KanbanJiraIssue>) resultMap.get(COD_DATA));
-		kpiWithoutFilter(projectandDayWiseDelay, mapTmp, projectList, kpiElement);
+				createProjectandDayWiseDelay(
+						(List<KanbanJiraIssue>) resultMap.get(COD_DATA), storyIdToClosedDateMap);
+		kpiWithoutFilter(
+				projectandDayWiseDelay, storyIdToClosedDateMap, mapTmp, projectList, kpiElement);
 	}
 
 	/**
@@ -176,6 +204,7 @@ public class CostOfDelayKanbanServiceImpl
 	 */
 	private void kpiWithoutFilter(
 			Map<String, Map<String, List<KanbanJiraIssue>>> projectandDayWiseDelay,
+			Map<String, String> storyIdToClosedDateMap,
 			Map<String, Node> mapTmp,
 			List<Node> projectList,
 			KpiElement kpiElement) {
@@ -196,7 +225,8 @@ public class CostOfDelayKanbanServiceImpl
 									KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
 											currentDateTime, CommonConstant.MONTH);
 							Double cod =
-									filterDataBasedOnStartAndEndDate(dateWiseIssue, dateRange, kanbanJiraIssueList);
+									filterDataBasedOnStartAndEndDate(
+											dateWiseIssue, dateRange, kanbanJiraIssueList, storyIdToClosedDateMap);
 							String date =
 									DateUtil.convertToMonthYearFormat(dateRange.getStartDateTime().toString());
 							dataCount.add(getDataCountObject(cod, projectName, date));
@@ -230,20 +260,27 @@ public class CostOfDelayKanbanServiceImpl
 	private Double filterDataBasedOnStartAndEndDate(
 			Map<String, List<KanbanJiraIssue>> dateWiseIssue,
 			CustomDateRange dateRange,
-			List<KanbanJiraIssue> kanbanJiraIssueList) {
-		List<KanbanJiraIssue> dummyList = new LinkedList<>();
+			List<KanbanJiraIssue> kanbanJiraIssueList,
+			Map<String, String> storyIdToClosedDateMap) {
 		List<KanbanJiraIssue> issueList = new ArrayList<>();
-
-		Double cod = 0.0d;
 
 		for (LocalDate currentDate = dateRange.getStartDate();
 				currentDate.compareTo(dateRange.getStartDate()) >= 0
 						&& dateRange.getEndDate().compareTo(currentDate) >= 0;
 				currentDate = currentDate.plusDays(1)) {
-			dummyList.add(KanbanJiraIssue.builder().costOfDelay(0.0d).projectName("").build());
-			issueList.addAll(dateWiseIssue.getOrDefault(currentDate.toString(), dummyList));
+			String dateKey = currentDate.toString();
+			List<KanbanJiraIssue> issuesForDay = dateWiseIssue.get(dateKey);
+			if (issuesForDay != null) {
+				issuesForDay.forEach(
+						issue -> {
+							String activityDate = storyIdToClosedDateMap.getOrDefault(issue.getNumber(), dateKey);
+							issue.setChangeDate(activityDate.split("[.Z]")[0]);
+						});
+				issueList.addAll(issuesForDay);
+			}
 		}
 
+		Double cod = 0.0d;
 		if (CollectionUtils.isNotEmpty(issueList)) {
 			kanbanJiraIssueList.addAll(issueList);
 			cod = issueList.stream().mapToDouble(KanbanJiraIssue::getCostOfDelay).sum();
@@ -252,22 +289,48 @@ public class CostOfDelayKanbanServiceImpl
 		return cod;
 	}
 
+	private Map<String, String> buildStoryIdToClosedDateMap(
+			List<KanbanIssueCustomHistory> historyList, List<String> closeStatuses) {
+		Map<String, String> map = new HashMap<>();
+		if (CollectionUtils.isEmpty(historyList) || CollectionUtils.isEmpty(closeStatuses)) {
+			return map;
+		}
+		List<String> lowerCloseStatuses = closeStatuses.stream().map(String::toLowerCase).toList();
+		for (KanbanIssueCustomHistory history : historyList) {
+			if (CollectionUtils.isNotEmpty(history.getHistoryDetails())) {
+				history.getHistoryDetails().stream()
+						.filter(
+								h ->
+										h.getStatus() != null
+												&& lowerCloseStatuses.contains(h.getStatus().toLowerCase())
+												&& h.getActivityDate() != null)
+						.findFirst()
+						.ifPresent(h -> map.put(history.getStoryID(), h.getActivityDate()));
+			}
+		}
+		return map;
+	}
+
 	/**
-	 * Group list of data by project and changed date.
+	 * Group list of data by project and closed activity date from history.
 	 *
 	 * @param resultList
+	 * @param storyIdToClosedDateMap
 	 * @return
 	 */
 	private Map<String, Map<String, List<KanbanJiraIssue>>> createProjectandDayWiseDelay(
-			List<KanbanJiraIssue> resultList) {
+			List<KanbanJiraIssue> resultList, Map<String, String> storyIdToClosedDateMap) {
 		return resultList.stream()
 				.filter(p -> p.getProjectID() != null)
+				.filter(p -> storyIdToClosedDateMap.containsKey(p.getNumber()))
 				.collect(
 						Collectors.groupingBy(
 								KanbanJiraIssue::getBasicProjectConfigId,
 								Collectors.groupingBy(
 										f ->
-												LocalDate.parse(f.getChangeDate().split("\\.")[0], DATE_TIME_FORMATTER)
+												LocalDate.parse(
+																storyIdToClosedDateMap.get(f.getNumber()).split("\\.")[0],
+																DATE_TIME_FORMATTER)
 														.toString())));
 	}
 

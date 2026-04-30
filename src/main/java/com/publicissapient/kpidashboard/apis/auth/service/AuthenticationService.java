@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.springframework.http.ResponseEntity;
 
 import com.publicissapient.kpidashboard.apis.auth.model.Authentication;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
 
@@ -71,7 +72,7 @@ public interface AuthenticationService {
 	void delete(ObjectId id);
 
 	/** Deletes an existing authentication instance */
-	void delete(String username);
+	void delete(String username, String email);
 
 	/**
 	 * @param username
@@ -129,6 +130,14 @@ public interface AuthenticationService {
 	boolean isUsernameExistsInUserInfo(String username);
 
 	/**
+	 * Checks if email already exists in USERINFO collection
+	 *
+	 * @param email the email
+	 * @return true if email already exists in db
+	 */
+	boolean isEmailExistsInUserInfo(String email);
+
+	/**
 	 * Check if valid old Password
 	 *
 	 * @param email email id
@@ -177,7 +186,7 @@ public interface AuthenticationService {
 	 *
 	 * @return logged in user
 	 */
-	String getLoggedInUser();
+	UserInfoPrincipal getLoggedInUser();
 
 	/**
 	 * Gets username from authentication object
@@ -185,7 +194,7 @@ public interface AuthenticationService {
 	 * @param authentication authentication object
 	 * @return username
 	 */
-	String getUsername(org.springframework.security.core.Authentication authentication);
+	String getUserEmail(org.springframework.security.core.Authentication authentication);
 
 	List<UserAccessApprovalResponseDTO> getAuthenticationByApproved(boolean approved);
 

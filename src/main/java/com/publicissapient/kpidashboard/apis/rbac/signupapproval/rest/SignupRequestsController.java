@@ -43,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
 import com.publicissapient.kpidashboard.apis.rbac.signupapproval.policy.GrantApprovalListener;
 import com.publicissapient.kpidashboard.apis.rbac.signupapproval.policy.RejectApprovalListener;
 import com.publicissapient.kpidashboard.apis.rbac.signupapproval.service.SignupManager;
+import com.publicissapient.kpidashboard.common.constant.AuthType;
 import com.publicissapient.kpidashboard.common.model.rbac.AccessRequestDecision;
 import com.publicissapient.kpidashboard.common.model.rbac.AuthenticationDTO;
 import com.publicissapient.kpidashboard.common.model.rbac.UserAccessApprovalResponseDTO;
@@ -196,7 +197,8 @@ public class SignupRequestsController {
 		} else if (Constant.ACCESS_REQUEST_STATUS_REJECTED.equalsIgnoreCase(
 				accessRequestDecision.getStatus())) {
 			log.info("Reject access For Central Auth {}", username);
-			boolean rejectedCentral = userInfoService.deleteFromCentralAuthUser(username);
+			boolean rejectedCentral =
+					userInfoService.deleteFromCentralAuthUser(username, AuthType.STANDARD.name());
 			if (rejectedCentral) {
 				return ResponseEntity.status(HttpStatus.OK)
 						.body(new ServiceResponse(true, "Rejected For that User", true));

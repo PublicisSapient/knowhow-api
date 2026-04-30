@@ -217,6 +217,10 @@ public class BacklogReadinessEfficiencyServiceImpl
 				AtomicLong overAllCycleTime = new AtomicLong(0);
 				List<IterationKpiModalValue> overAllmodalValues = new ArrayList<>();
 
+				List<JiraIssue> sprintVelocityIssues = (List<JiraIssue>) resultMap.get(SPRINT_VELOCITY_KEY);
+				List<SprintDetails> sprintDetailsList =
+						(List<SprintDetails>) resultMap.get(SPRINT_WISE_SPRINT_DETAIL_MAP);
+
 				typeAndPriorityWiseIssues.forEach(
 						(issueType, priorityWiseIssue) ->
 								priorityWiseIssue.forEach(
@@ -250,6 +254,21 @@ public class BacklogReadinessEfficiencyServiceImpl
 															0, overAllStoryPoints.get(0) + jiraIssue.getStoryPoints());
 												}
 											}
+											List<JiraIssue> typeAndPriorityFilteredVelocityIssues =
+													CollectionUtils.isNotEmpty(sprintVelocityIssues)
+															? sprintVelocityIssues.stream()
+																	.filter(
+																			i ->
+																					issueType.equalsIgnoreCase(i.getTypeName())
+																							&& priority.equalsIgnoreCase(i.getPriority()))
+																	.collect(Collectors.toList())
+															: new ArrayList<>();
+											Double typeAndPriorityAvgVelocity =
+													getAverageSprintCapacity(
+															projectNode,
+															sprintDetailsList,
+															typeAndPriorityFilteredVelocityIssues,
+															fieldMapping);
 											List<IterationKpiData> data = new ArrayList<>();
 											IterationKpiData issuesForDevelopment =
 													new IterationKpiData(
@@ -260,9 +279,14 @@ public class BacklogReadinessEfficiencyServiceImpl
 															null,
 															SP,
 															modalValues);
+											double filterStrength =
+													(typeAndPriorityAvgVelocity == 0D)
+															? DEFAULT_BACKLOG_STRENGTH
+															: (double) Math.round(storyPoint / typeAndPriorityAvgVelocity * 100)
+																	/ 100;
 											IterationKpiData backLogStrength =
 													new IterationKpiData(
-															BACKLOG_STRENGTH, DEFAULT_BACKLOG_STRENGTH, null, null, SPRINT, null);
+															BACKLOG_STRENGTH, filterStrength, null, null, SPRINT, null);
 											log.debug(
 													"Issue type: {} priority: {} Cycle time: {}",
 													issueType,

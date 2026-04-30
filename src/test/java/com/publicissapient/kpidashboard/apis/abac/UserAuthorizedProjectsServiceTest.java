@@ -18,7 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.abac;
 
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +38,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.service.AuthenticationService;
 import com.publicissapient.kpidashboard.apis.auth.token.TokenAuthenticationService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -102,16 +103,18 @@ public class UserAuthorizedProjectsServiceTest {
 	@Test
 	public void ifSuperAdminUser() {
 		UserInfo userInfo = userInfoDataFactory.getUserInfoByRole("ROLE_SUPERADMIN");
-		when(authenticationService.getLoggedInUser()).thenReturn("SUPERADMIN");
-		when(userInfoService.getUserInfo(anyString())).thenReturn(userInfo);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("SUPERADMIN", "test", "STANDARD"));
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		Assertions.assertTrue(userAuthorizedProjectsService.ifSuperAdminUser());
 	}
 
 	@Test
 	public void ifNotSuperAdminUser() {
 		UserInfo userInfo = userInfoDataFactory.getUserInfoByRole("ROLE_VIEWER");
-		when(authenticationService.getLoggedInUser()).thenReturn("ROLE_VIEWER");
-		when(userInfoService.getUserInfo(anyString())).thenReturn(userInfo);
+		when(authenticationService.getLoggedInUser())
+				.thenReturn(new UserInfoPrincipal("ROLE_VIEWER", "test", "STANDARD"));
+		when(userInfoService.getUserInfo(any())).thenReturn(userInfo);
 		Assertions.assertFalse(userAuthorizedProjectsService.ifSuperAdminUser());
 	}
 

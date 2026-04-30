@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.publicissapient.kpidashboard.apis.abac.ProjectAccessManager;
+import com.publicissapient.kpidashboard.apis.auth.model.UserInfoPrincipal;
 import com.publicissapient.kpidashboard.apis.auth.repository.AuthenticationRepository;
 import com.publicissapient.kpidashboard.apis.autoapprove.service.AutoApproveAccessService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.UserInfoServiceImpl;
@@ -186,7 +187,7 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 	private List<AccessRequestDTO> getAccessRequestBasedonStatusAndRole(String status) {
 		List<AccessRequest> accessRequest = null;
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		UserInfo userInfo = userInfoServiceImpl.getUserInfo((String) auth.getPrincipal());
+		UserInfo userInfo = userInfoServiceImpl.getUserInfo((UserInfoPrincipal) auth.getPrincipal());
 
 		if (userInfo.getAuthorities().contains(SUPERADMINROLENAME)) {
 			accessRequest = repository.findByStatus(status);
@@ -303,7 +304,7 @@ public class AccessRequestsHelperServiceImpl implements AccessRequestsHelperServ
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		List<AccessRequest> accessRequest = null;
 		String message = "Found Pending Approval Count";
-		UserInfo user = userInfoServiceImpl.getUserInfo((String) auth.getPrincipal());
+		UserInfo user = userInfoServiceImpl.getUserInfo((UserInfoPrincipal) auth.getPrincipal());
 		List<NotificationDataDTO> notificationDataList = new ArrayList<>();
 		if (user.getAuthorities().contains(SUPERADMINROLENAME)) {
 			accessRequest = repository.findByStatus(status);
