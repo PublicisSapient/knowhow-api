@@ -99,6 +99,15 @@ jobs:
             -DprocessAllModules=true \
             -DgenerateBackupPoms=false
 
+      - name: Update common dependency to release version
+        run: |
+          mvn -B -ntp versions:use-dep-version \
+            -Dincludes=com.publicissapient.kpidashboard:common \
+            -DdepVersion="${{ inputs.tag_version }}" \
+            -DforceVersion=true \
+            -DprocessAllModules=true \
+            -DgenerateBackupPoms=false
+
       - name: Commit release version change
         run: |
           git add -A
@@ -145,6 +154,15 @@ jobs:
         run: |
           mvn -B -ntp versions:set \
             -DnewVersion="${{ inputs.next_dev_version }}" \
+            -DprocessAllModules=true \
+            -DgenerateBackupPoms=false
+
+      - name: Update common dependency to next development version
+        run: |
+          mvn -B -ntp versions:use-dep-version \
+            -Dincludes=com.publicissapient.kpidashboard:common \
+            -DdepVersion="${{ inputs.next_dev_version }}" \
+            -DforceVersion=true \
             -DprocessAllModules=true \
             -DgenerateBackupPoms=false
 
