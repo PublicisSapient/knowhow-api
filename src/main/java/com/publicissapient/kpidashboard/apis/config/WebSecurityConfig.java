@@ -65,7 +65,7 @@ import lombok.AllArgsConstructor;
 @EnableWebSecurity
 @EnableConfigurationProperties
 @AllArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true) // NOSONAR
+@EnableGlobalMethodSecurity(prePostEnabled = false) // NOSONAR
 public class WebSecurityConfig implements WebMvcConfigurer {
 
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
