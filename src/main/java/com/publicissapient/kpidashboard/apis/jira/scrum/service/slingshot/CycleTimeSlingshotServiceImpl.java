@@ -29,6 +29,7 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -141,6 +142,8 @@ public class CycleTimeSlingshotServiceImpl extends JiraKPIService<Long, List<Obj
         List<KPIExcelData> excelData = new ArrayList<>();
         Set<String> issueTypeFilter = new LinkedHashSet<>();
 
+
+
     }
 
     @Override
@@ -171,20 +174,10 @@ public class CycleTimeSlingshotServiceImpl extends JiraKPIService<Long, List<Obj
                         uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
                     }
 
-                    List<String> status = new ArrayList<>();
+
                     Map<String, List<String>> issueTypesByGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI200();
-                    status.addAll(issueTypesByGroups.values().stream().flatMap())
-                    if (Optional.ofNullable(fieldMapping.getJiraDodKPI171()).isPresent()) {
-                        status.addAll(fieldMapping.getJiraDodKPI171());
-                    }
 
-                    if (Optional.ofNullable(fieldMapping.getJiraDorKPI171()).isPresent()) {
-                        status.addAll(fieldMapping.getJiraDorKPI171());
-                    }
-
-                    if (Optional.ofNullable(fieldMapping.getJiraLiveStatusKPI171()).isPresent()) {
-                        status.addAll(fieldMapping.getJiraLiveStatusKPI171());
-                    }
+                    List<String> status = new ArrayList<>(issueTypesByGroups.values().stream().flatMap(Collection::stream).toList());
                     mapOfProjectFilters.put(
                             "statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
                     uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -195,6 +188,7 @@ public class CycleTimeSlingshotServiceImpl extends JiraKPIService<Long, List<Obj
                     List<JiraIssueCustomHistory> filteredProjectHistory =
                             BacklogKpiHelper.filterProjectHistories(
                                     jiraIssueCustomHistoryList, uniqueProjectMap, startDate, endDate);
+
                     resultListMap.put(basicProjectConfigId.toString(), filteredProjectHistory);
                 });
         return resultListMap;
