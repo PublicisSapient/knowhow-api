@@ -39,8 +39,10 @@ public class CycleTimeSlingshotFieldMappingChangeUnit {
 
 	@Execution
 	public void execution() {
-		Query query = new Query(Criteria.where("fieldName")
-				.in("jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202"));
+		Query query =
+				new Query(
+						Criteria.where("fieldName")
+								.in("jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202"));
 		mongoTemplate.remove(query, FIELD_MAPPING_STRUCTURE);
 	}
 

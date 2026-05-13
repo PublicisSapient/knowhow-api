@@ -42,56 +42,67 @@ public class CycleTimeSlingshotFieldMappingChangeUnit {
 
 	@Execution
 	public void execute() {
-		Document issueTypeDoc = new Document()
-				.append("fieldName", "jiraIssueTypeKPI202")
-				.append("fieldLabel", "Issue types to consider")
-				.append("fieldType", "chips")
-				.append("fieldCategory", "Issue_Type")
-				.append("toggleLabel", null)
-				.append("section", "Issue Types Mapping")
-				.append("processorCommon", false)
-				.append("tooltip", new Document("definition", "All issue types considered for Cycle calculation"))
-				.append("options", null)
-				.append("filterGroup", null)
-				.append("nestedFields", null)
-				.append("placeHolderText", null)
-				.append("fieldDisplayOrder", 1)
-				.append("toggleLabelLeft", null)
-				.append("toggleLabelRight", null)
-				.append("sectionOrder", 2)
-				.append("mandatory", true)
-				.append("readOnly", null)
-				.append("nodeSpecific", false);
+		Document issueTypeDoc =
+				new Document()
+						.append("fieldName", "jiraIssueTypeKPI202")
+						.append("fieldLabel", "Issue types to consider")
+						.append("fieldType", "chips")
+						.append("fieldCategory", "Issue_Type")
+						.append("toggleLabel", null)
+						.append("section", "Issue Types Mapping")
+						.append("processorCommon", false)
+						.append(
+								"tooltip",
+								new Document("definition", "All issue types considered for Cycle calculation"))
+						.append("options", null)
+						.append("filterGroup", null)
+						.append("nestedFields", null)
+						.append("placeHolderText", null)
+						.append("fieldDisplayOrder", 1)
+						.append("toggleLabelLeft", null)
+						.append("toggleLabelRight", null)
+						.append("sectionOrder", 2)
+						.append("mandatory", true)
+						.append("readOnly", null)
+						.append("nodeSpecific", false);
 
-		Document workflowGroupDoc = new Document()
-				.append("fieldName", "jiraIssueStatusGroupByCategoryKPI202")
-				.append("fieldLabel", "Workfow groups")
-				.append("fieldType", "chips")
-				.append("fieldCategory", "workflow")
-				.append("toggleLabel", null)
-				.append("section", "WorkFlow Status Mapping")
-				.append("processorCommon", false)
-				.append("tooltip", new Document("definition",
-						"Workflow status/es that identify that a backlog item is ready to be taken in a sprint based on Definition of Ready (DOR)"))
-				.append("options", null)
-				.append("filterGroup", null)
-				.append("nestedFields", null)
-				.append("placeHolderText", null)
-				.append("fieldDisplayOrder", 2)
-				.append("toggleLabelLeft", null)
-				.append("toggleLabelRight", null)
-				.append("sectionOrder", null)
-				.append("mandatory", true)
-				.append("readOnly", null)
-				.append("nodeSpecific", false);
+		Document workflowGroupDoc =
+				new Document()
+						.append("fieldName", "jiraIssueStatusGroupByCategoryKPI202")
+						.append("fieldLabel", "Workfow groups")
+						.append("fieldType", "chips")
+						.append("fieldCategory", "workflow")
+						.append("toggleLabel", null)
+						.append("section", "WorkFlow Status Mapping")
+						.append("processorCommon", false)
+						.append(
+								"tooltip",
+								new Document(
+										"definition",
+										"Workflow status/es that identify that a backlog item is ready to be taken in a sprint based on Definition of Ready (DOR)"))
+						.append("options", null)
+						.append("filterGroup", null)
+						.append("nestedFields", null)
+						.append("placeHolderText", null)
+						.append("fieldDisplayOrder", 2)
+						.append("toggleLabelLeft", null)
+						.append("toggleLabelRight", null)
+						.append("sectionOrder", null)
+						.append("mandatory", true)
+						.append("readOnly", null)
+						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertMany(List.of(issueTypeDoc, workflowGroupDoc));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.insertMany(List.of(issueTypeDoc, workflowGroupDoc));
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		Query query = new Query(Criteria.where("fieldName")
-				.in("jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202"));
+		Query query =
+				new Query(
+						Criteria.where("fieldName")
+								.in("jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202"));
 		mongoTemplate.remove(query, FIELD_MAPPING_STRUCTURE);
 	}
 }
