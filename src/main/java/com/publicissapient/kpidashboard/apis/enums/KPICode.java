@@ -321,7 +321,7 @@ public enum KPICode {
 	 */
 	SPRINT_ANALYTICS("kpi199", KPISource.JIRA.name()),
 
-	CYCLE_TIME_SLINGSHOT("kpi200", KPISource.JIRA.name());
+	CYCLE_TIME_SLINGSHOT("kpi202", KPISource.JIRA.name());
 
 	// @formatter:on
 

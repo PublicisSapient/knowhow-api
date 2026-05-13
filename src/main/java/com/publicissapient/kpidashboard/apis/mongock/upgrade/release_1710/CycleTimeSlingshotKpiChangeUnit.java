@@ -40,7 +40,7 @@ public class CycleTimeSlingshotKpiChangeUnit {
 	public void execute() {
 		Document kpiDocument =
 				new Document()
-						.append("kpiId", "kpi200")
+						.append("kpiId", "kpi202")
 						.append("kpiName", "Cycle Time")
 						.append("maxValue", "")
 						.append("kpiUnit", "Days")
@@ -51,12 +51,11 @@ public class CycleTimeSlingshotKpiChangeUnit {
 						.append("groupId", 45)
 						.append("thresholdValue", "")
 						.append("kanban", false)
-						.append("chartType", "table")
+						.append("chartType", "stacked-bar-chart")
 						.append("yAxisLabel", "")
 						.append("xAxisLabel", "")
 						.append("isAdditionalfFilterSupport", false)
 						.append("kpiFilter", "multiSelectDropDown")
-						.append("boxType", "3_column")
 						.append("calculateMaturity", false)
 						.append(
 								"kpiInfo",

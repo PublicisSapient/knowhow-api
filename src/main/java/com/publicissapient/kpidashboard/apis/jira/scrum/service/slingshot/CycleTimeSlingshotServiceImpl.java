@@ -178,42 +178,38 @@ public class CycleTimeSlingshotServiceImpl
 					jiraIssueCustomHistory -> {
 						List<DataValue> dataValueList = new ArrayList<>();
 						LinkedHashMap<String, List<String>> groupMap =
-								fieldMapping.getJiraIssueStatusGroupByCategoryKPI200();
+								fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
 						Iterator<Map.Entry<String, List<String>>> iterator = groupMap.entrySet().iterator();
 						Map.Entry<String, List<String>> current = iterator.hasNext() ? iterator.next() : null;
 						while (current != null) {
-							Map.Entry<String, List<String>> next = iterator.hasNext() ? iterator.next() : null;
-							if (next != null) {
-								List<String> currentStatuses = current.getValue();
-								List<String> nextStatuses = next.getValue();
-								Optional<JiraHistoryChangeLog> startTime =
-										jiraIssueCustomHistory.getStatusUpdationLog().stream()
-												.sorted(
-														(status1, status2) ->
-																status2.getUpdatedOn().compareTo(status1.getUpdatedOn()))
-												.filter(status -> currentStatuses.contains(status.getChangedTo()))
-												.findFirst();
-								Optional<JiraHistoryChangeLog> endTime =
-										jiraIssueCustomHistory.getStatusUpdationLog().stream()
-												.sorted(
-														(status1, status2) ->
-																status1.getUpdatedOn().compareTo(status2.getUpdatedOn()))
-												.filter(status -> nextStatuses.contains(status.getChangedTo()))
-												.findFirst();
-								if (startTime.isPresent() && endTime.isPresent()) {
-									double diffHours =
-											KpiDataHelper.calWeekMinutes(
-															startTime.get().getUpdatedOn(), endTime.get().getUpdatedOn())
-													/ 60;
-									DataValue dataValue = new DataValue();
-									dataValue.setName(current.getKey() + "->" + next.getKey());
-									dataValue.setData(Double.toString(diffHours));
-									dataValue.setValue(diffHours);
-									dataValueList.add(dataValue);
-								}
+							List<String> currentStatuses = current.getValue();
+							Optional<JiraHistoryChangeLog> startTime =
+									jiraIssueCustomHistory.getStatusUpdationLog().stream()
+											.sorted(
+													(status1, status2) ->
+															status1.getUpdatedOn().compareTo(status2.getUpdatedOn()))
+											.filter(status -> currentStatuses.contains(status.getChangedTo()))
+											.findFirst();
+							Optional<JiraHistoryChangeLog> endTime =
+									jiraIssueCustomHistory.getStatusUpdationLog().stream()
+											.sorted(
+													(status1, status2) ->
+															status2.getUpdatedOn().compareTo(status1.getUpdatedOn()))
+											.filter(status -> currentStatuses.contains(status.getChangedTo()))
+											.findFirst();
+							if (startTime.isPresent() && endTime.isPresent()) {
+								double diffHours =
+										KpiDataHelper.calWeekMinutes(
+														startTime.get().getUpdatedOn(), endTime.get().getUpdatedOn())
+												/ 60;
+								DataValue dataValue = new DataValue();
+								dataValue.setName(current.getKey());
+								dataValue.setData(Double.toString(diffHours));
+								dataValue.setValue(diffHours);
+								dataValueList.add(dataValue);
 							}
 							// Process current and next
-							current = next;
+							current = iterator.hasNext() ? iterator.next() : null;
 						}
 						cycleMap.put(
 								jiraIssueCustomHistory.getStoryID() + "#" + jiraIssueCustomHistory.getStoryType(),
@@ -261,18 +257,18 @@ public class CycleTimeSlingshotServiceImpl
 					FieldMapping fieldMapping =
 							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
-					if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI200()).isPresent()) {
+					if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI202()).isPresent()) {
 
 						KpiDataHelper.prepareFieldMappingDefectTypeTransformation(
 								mapOfProjectFilters,
 								fieldMapping.getJiradefecttype(),
-								fieldMapping.getJiraIssueTypeKPI200(),
+								fieldMapping.getJiraIssueTypeKPI202(),
 								JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
 						uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 					}
 
 					Map<String, List<String>> issueTypesByGroups =
-							fieldMapping.getJiraIssueStatusGroupByCategoryKPI200();
+							fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
 
 					List<String> status =
 							new ArrayList<>(
