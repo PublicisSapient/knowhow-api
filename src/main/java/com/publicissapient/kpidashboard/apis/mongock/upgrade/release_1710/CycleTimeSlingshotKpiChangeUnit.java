@@ -38,35 +38,46 @@ public class CycleTimeSlingshotKpiChangeUnit {
 
 	@Execution
 	public void execute() {
-		Document kpiDocument = new Document()
-				.append("kpiId", "kpi200")
-				.append("kpiName", "Cycle Time")
-				.append("maxValue", "")
-				.append("kpiUnit", "Days")
-				.append("isDeleted", "False")
-				.append("defaultOrder", 1)
-				.append("kpiCategory", "Slingshot")
-				.append("kpiSource", "Jira")
-				.append("groupId", 45)
-				.append("thresholdValue", "")
-				.append("kanban", false)
-				.append("chartType", "table")
-				.append("yAxisLabel", "")
-				.append("xAxisLabel", "")
-				.append("isAdditionalfFilterSupport", false)
-				.append("kpiFilter", "multiSelectDropDown")
-				.append("boxType", "3_column")
-				.append("calculateMaturity", false)
-				.append("kpiInfo", new Document()
-						.append("definition", "Cycle time helps ascertain time spent on each step of the complete issue lifecycle. It is being depicted in the visualization as 3 core cycles - Intake to DOR, DOR to DOD, DOD to Live")
-						.append("details", java.util.List.of(
+		Document kpiDocument =
+				new Document()
+						.append("kpiId", "kpi200")
+						.append("kpiName", "Cycle Time")
+						.append("maxValue", "")
+						.append("kpiUnit", "Days")
+						.append("isDeleted", "False")
+						.append("defaultOrder", 1)
+						.append("kpiCategory", "Slingshot")
+						.append("kpiSource", "Jira")
+						.append("groupId", 45)
+						.append("thresholdValue", "")
+						.append("kanban", false)
+						.append("chartType", "table")
+						.append("yAxisLabel", "")
+						.append("xAxisLabel", "")
+						.append("isAdditionalfFilterSupport", false)
+						.append("kpiFilter", "multiSelectDropDown")
+						.append("boxType", "3_column")
+						.append("calculateMaturity", false)
+						.append(
+								"kpiInfo",
 								new Document()
-										.append("type", "link")
-										.append("kpiLinkDetail", new Document()
-												.append("text", "Detailed Information at")
-												.append("link", "https://knowhow.tools.publicis.sapient.com/wiki/kpi171-Cycle+Time")))))
-				.append("combinedKpiSource", "Jira/Azure/Rally")
-				.append("aggregationCriteria", "average");
+										.append(
+												"definition",
+												"Cycle time helps ascertain time spent on each step of the complete issue lifecycle. It is being depicted in the visualization as 3 core cycles - Intake to DOR, DOR to DOD, DOD to Live")
+										.append(
+												"details",
+												java.util.List.of(
+														new Document()
+																.append("type", "link")
+																.append(
+																		"kpiLinkDetail",
+																		new Document()
+																				.append("text", "Detailed Information at")
+																				.append(
+																						"link",
+																						"https://knowhow.tools.publicis.sapient.com/wiki/kpi171-Cycle+Time")))))
+						.append("combinedKpiSource", "Jira/Azure/Rally")
+						.append("aggregationCriteria", "average");
 
 		mongoTemplate.getCollection("kpi_master").insertOne(kpiDocument);
 	}
