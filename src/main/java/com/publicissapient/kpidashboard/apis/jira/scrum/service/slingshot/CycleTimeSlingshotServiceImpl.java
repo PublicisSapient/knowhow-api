@@ -224,7 +224,7 @@ public class CycleTimeSlingshotServiceImpl
 								} else {
 									if (windowStart != null) {
 										isPresent = true;
-										if(currentStatuses.contains(log.getChangedFrom()))
+										if (currentStatuses.contains(log.getChangedFrom()))
 											windowEnd = log.getUpdatedOn();
 										minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
 										windowStart = windowEnd = null;
