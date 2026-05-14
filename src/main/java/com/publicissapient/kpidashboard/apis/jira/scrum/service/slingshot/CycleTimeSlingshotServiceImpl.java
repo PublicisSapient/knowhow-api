@@ -2,6 +2,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -208,33 +209,42 @@ public class CycleTimeSlingshotServiceImpl
 						Map.Entry<String, List<String>> current = iterator.hasNext() ? iterator.next() : null;
 						while (current != null) {
 							List<String> currentStatuses = current.getValue();
-							Optional<JiraHistoryChangeLog> startTime =
-									jiraIssueCustomHistory.getStatusUpdationLog().stream()
-											.sorted(
-													(status1, status2) ->
-															status1.getUpdatedOn().compareTo(status2.getUpdatedOn()))
-											.filter(status -> currentStatuses.contains(status.getChangedTo()))
-											.findFirst();
-							Optional<JiraHistoryChangeLog> endTime =
-									jiraIssueCustomHistory.getStatusUpdationLog().stream()
-											.sorted(
-													(status1, status2) ->
-															status2.getUpdatedOn().compareTo(status1.getUpdatedOn()))
-											.filter(status -> currentStatuses.contains(status.getChangedFrom()))
-											.findFirst();
-							if (startTime.isPresent() && endTime.isPresent()) {
-								double diffHours =
-										KpiDataHelper.calWeekMinutes(
-														startTime.get().getUpdatedOn(), endTime.get().getUpdatedOn())
-												/ 60;
+							List<JiraHistoryChangeLog> changeLogs = jiraIssueCustomHistory.getStatusUpdationLog();
+							LocalDateTime windowStart = null;
+							LocalDateTime windowEnd = null;
+							double minsDiff = 0;
+							boolean isPresent = false;
+							for (JiraHistoryChangeLog log : changeLogs) {
+								String changedTo = log.getChangedTo();
+								if (currentStatuses.contains(changedTo)) {
+									if (windowStart == null) {
+										windowStart = log.getUpdatedOn();
+									}
+									windowEnd = log.getUpdatedOn();
+								} else {
+									if (windowStart != null) {
+										isPresent = true;
+										if(currentStatuses.contains(log.getChangedFrom()))
+											windowEnd = log.getUpdatedOn();
+										minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
+										windowStart = windowEnd = null;
+									}
+								}
+							}
+							if (windowStart != null && iterator.hasNext()) {
+								isPresent = true;
+								minsDiff += KpiDataHelper.calWeekMinutes(windowStart, LocalDateTime.now());
+							}
+
+							if (isPresent) {
+								double diffHours = minsDiff / 60;
 								DataValue dataValue = new DataValue();
-								String nextGroup = reverseGroupMap.get(endTime.get().getChangedTo());
-								dataValue.setName(
-										nextGroup != null ? current.getKey() + "->" + nextGroup : current.getKey());
+								dataValue.setName(current.getKey());
 								dataValue.setData(Double.toString(diffHours));
 								dataValue.setValue(diffHours);
 								dataValueList.add(dataValue);
 							}
+
 							current = iterator.hasNext() ? iterator.next() : null;
 						}
 						cycleMap.put(
