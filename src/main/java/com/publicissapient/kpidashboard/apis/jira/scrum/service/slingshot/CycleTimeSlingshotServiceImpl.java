@@ -15,9 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -26,8 +23,11 @@ import org.springframework.stereotype.Service;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeatureHistory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -199,9 +199,11 @@ public class CycleTimeSlingshotServiceImpl
 						List<DataValue> dataValueList = new ArrayList<>();
 						LinkedHashMap<String, List<String>> groupMap =
 								fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
-						Map<String, String> reverseGroupMap = groupMap.entrySet().stream()
-								.flatMap(e -> e.getValue().stream().map(status -> Map.entry(status, e.getKey())))
-								.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+						Map<String, String> reverseGroupMap =
+								groupMap.entrySet().stream()
+										.flatMap(
+												e -> e.getValue().stream().map(status -> Map.entry(status, e.getKey())))
+										.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 						Iterator<Map.Entry<String, List<String>>> iterator = groupMap.entrySet().iterator();
 						Map.Entry<String, List<String>> current = iterator.hasNext() ? iterator.next() : null;
 						while (current != null) {
@@ -227,7 +229,8 @@ public class CycleTimeSlingshotServiceImpl
 												/ 60;
 								DataValue dataValue = new DataValue();
 								String nextGroup = reverseGroupMap.get(endTime.get().getChangedTo());
-								dataValue.setName(nextGroup!=null?current.getKey()+"->"+nextGroup:current.getKey());
+								dataValue.setName(
+										nextGroup != null ? current.getKey() + "->" + nextGroup : current.getKey());
 								dataValue.setData(Double.toString(diffHours));
 								dataValue.setValue(diffHours);
 								dataValueList.add(dataValue);
@@ -248,7 +251,7 @@ public class CycleTimeSlingshotServiceImpl
 		Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 		cycleMap.forEach(
 				(key, value) -> {
-					if(CollectionUtils.isNotEmpty(value)) {
+					if (CollectionUtils.isNotEmpty(value)) {
 						String[] issueFilter = key.split("#");
 						String filterKey = duration + "#" + issueFilter[1];
 						DataCount dataCount = new DataCount();
