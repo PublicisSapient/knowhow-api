@@ -3,6 +3,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,6 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -52,6 +56,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CycleTimeSlingshotServiceImpl
 		extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
+
+	private static final String SEARCH_BY_ISSUE_TYPE = "Issue Type";
+	private static final String SEARCH_BY_DURATION = "Duration";
+	private static final Set<String> durationFilter =
+			new LinkedHashSet<>(
+					Arrays.asList(
+							"Past Week", "Past 2 Weeks", "Past Month", "Past 3 Months", "Past 6 Months"));
 
 	private final ConfigHelperService configHelperService;
 	private final JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
@@ -163,6 +174,15 @@ public class CycleTimeSlingshotServiceImpl
 							getDataCountObject(leafNode.getProjectFilter().getName(), cycleMap, label);
 					mapTmp.get(leafNode.getId()).setValue(dataCountMap);
 				});
+		IterationKpiFiltersOptions filter1 =
+				new IterationKpiFiltersOptions(SEARCH_BY_DURATION, durationFilter);
+		IterationKpiFiltersOptions filter2 =
+				new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypeFilter);
+		IterationKpiFilters iterationKpiFilters = new IterationKpiFilters(filter1, filter2);
+		// Modal Heads Options
+		kpiElement.setFilters(iterationKpiFilters);
+		kpiElement.setExcelData(excelData);
+		kpiElement.setModalHeads(KPIExcelColumn.CYCLE_TIME.getColumns());
 	}
 
 	private Map<String, List<DataValue>> getCycleTimeDataCount(
@@ -179,6 +199,9 @@ public class CycleTimeSlingshotServiceImpl
 						List<DataValue> dataValueList = new ArrayList<>();
 						LinkedHashMap<String, List<String>> groupMap =
 								fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
+						Map<String, String> reverseGroupMap = groupMap.entrySet().stream()
+								.flatMap(e -> e.getValue().stream().map(status -> Map.entry(status, e.getKey())))
+								.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 						Iterator<Map.Entry<String, List<String>>> iterator = groupMap.entrySet().iterator();
 						Map.Entry<String, List<String>> current = iterator.hasNext() ? iterator.next() : null;
 						while (current != null) {
@@ -195,7 +218,7 @@ public class CycleTimeSlingshotServiceImpl
 											.sorted(
 													(status1, status2) ->
 															status2.getUpdatedOn().compareTo(status1.getUpdatedOn()))
-											.filter(status -> currentStatuses.contains(status.getChangedTo()))
+											.filter(status -> currentStatuses.contains(status.getChangedFrom()))
 											.findFirst();
 							if (startTime.isPresent() && endTime.isPresent()) {
 								double diffHours =
@@ -203,12 +226,12 @@ public class CycleTimeSlingshotServiceImpl
 														startTime.get().getUpdatedOn(), endTime.get().getUpdatedOn())
 												/ 60;
 								DataValue dataValue = new DataValue();
-								dataValue.setName(current.getKey());
+								String nextGroup = reverseGroupMap.get(endTime.get().getChangedTo());
+								dataValue.setName(nextGroup!=null?current.getKey()+"->"+nextGroup:current.getKey());
 								dataValue.setData(Double.toString(diffHours));
 								dataValue.setValue(diffHours);
 								dataValueList.add(dataValue);
 							}
-							// Process current and next
 							current = iterator.hasNext() ? iterator.next() : null;
 						}
 						cycleMap.put(
@@ -225,15 +248,17 @@ public class CycleTimeSlingshotServiceImpl
 		Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 		cycleMap.forEach(
 				(key, value) -> {
-					String[] issueFilter = key.split("#");
-					String filterKey = duration + "#" + issueFilter[1];
-					DataCount dataCount = new DataCount();
-					dataCount.setSProjectName(trendLineName);
-					dataCount.setDataValue(value);
-					dataCount.setKpiGroup(filterKey);
-					dataCount.setSubFilter(issueFilter[0]);
-					dataCount.setHoverValue(new HashMap<>());
-					dataCountMap.computeIfAbsent(filterKey, k -> new ArrayList<>()).add(dataCount);
+					if(CollectionUtils.isNotEmpty(value)) {
+						String[] issueFilter = key.split("#");
+						String filterKey = duration + "#" + issueFilter[1];
+						DataCount dataCount = new DataCount();
+						dataCount.setSProjectName(trendLineName);
+						dataCount.setDataValue(value);
+						dataCount.setKpiGroup(filterKey);
+						dataCount.setSubFilter(issueFilter[0]);
+						dataCount.setHoverValue(new HashMap<>());
+						dataCountMap.computeIfAbsent(filterKey, k -> new ArrayList<>()).add(dataCount);
+					}
 				});
 		return dataCountMap;
 	}
