@@ -132,8 +132,8 @@ public class CycleTimeSlingshotServiceImpl
 
 		LinkedHashMap<String, Object> filterDuration =
 				(LinkedHashMap<String, Object>) leadTimeReq.getFilterDuration();
-		int value; // Default value for 'value'
-		String duration; // Default value for 'duration'
+		int value;
+		String duration;
 		String startDate = null;
 		String endDate = DateUtil.getTodayDate().toString();
 
