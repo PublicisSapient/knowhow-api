@@ -78,7 +78,7 @@ public class CycleTimeSlingshotServiceImpl
 	public KpiElement getKpiData(
 			KpiRequest kpiRequest, KpiElement kpiElement, TreeAggregatorDetail treeAggregatorDetail)
 			throws ApplicationException {
-		log.info("LEAD-TIME -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
+		log.info("CYCLE TIME SLINGSHOT -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
 		List<Node> projectList =
 				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
 		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
@@ -244,14 +244,13 @@ public class CycleTimeSlingshotServiceImpl
 							}
 
 							if (isPresent) {
-								double diffHours =
-										Math.round(KpiDataHelper.calculateTimeInDays(minsDiff / 60) * 100.0) / 100.0;
+								double diffHours = Math.round((minsDiff / 1440) * 10.0) / 10.0;
 								DataValue dataValue = new DataValue();
 								dataValue.setName(current.getKey());
 								dataValue.setData(Double.toString(diffHours));
 								dataValue.setValue(diffHours);
 								dataValueList.add(dataValue);
-								cycleTimeByGroup.put(current.getKey(), diffHours + " hrs");
+								cycleTimeByGroup.put(current.getKey(), diffHours + " Days");
 								issueTypeFilter.add(jiraIssueCustomHistory.getStoryType());
 							}
 
