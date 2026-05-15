@@ -1126,6 +1126,17 @@ public final class KpiDataHelper {
 		return timeInMin;
 	}
 
+	public static double calculateTimeInDays(double timeInHours) {
+		double timeInMin = (timeInHours / 24) * 8 * 60;
+		long remainingTimeInMin = (long) ((timeInHours % 24) * 60);
+		if (remainingTimeInMin >= 480) {
+			timeInMin = timeInMin + 480;
+		} else {
+			timeInMin = timeInMin + remainingTimeInMin;
+		}
+		return timeInMin;
+	}
+
 	private static int countSaturdaysAndSundays(LocalDateTime startDate, LocalDateTime endDate) {
 		int count = 0;
 		while (!startDate.isAfter(endDate)) {
