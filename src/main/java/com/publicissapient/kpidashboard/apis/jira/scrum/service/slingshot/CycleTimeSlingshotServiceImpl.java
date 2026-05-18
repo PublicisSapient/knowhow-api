@@ -16,9 +16,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.enums.KPISource;
-import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
-import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -28,6 +25,7 @@ import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperServ
 import com.publicissapient.kpidashboard.apis.enums.JiraFeatureHistory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
@@ -39,6 +37,7 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.BacklogKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
+import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
@@ -46,10 +45,10 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.DataValue;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -149,7 +148,7 @@ public class CycleTimeSlingshotServiceImpl
 		}
 		if (duration.equalsIgnoreCase(CommonConstant.WEEK)) {
 			startDate = DateUtil.getTodayDate().minusWeeks(value).toString();
-		} else if (duration.equalsIgnoreCase(CommonConstant.MONTH)) {
+		} else {
 			startDate = DateUtil.getTodayDate().minusMonths(value).toString();
 		}
 		Map<String, Map<Integer, String>> durationLabels = new HashMap<>();
@@ -181,7 +180,8 @@ public class CycleTimeSlingshotServiceImpl
 							getDataCountObject(leafNode.getProjectFilter().getName(), cycleMap, label);
 					mapTmp.get(leafNode.getId()).setValue(dataCountMap);
 				});
-		populateExcelDataObject(kpiRequest.getRequestTrackerId(), cycleTimeValidationDataList, excelData);
+		populateExcelDataObject(
+				kpiRequest.getRequestTrackerId(), cycleTimeValidationDataList, excelData);
 		IterationKpiFiltersOptions filter1 =
 				new IterationKpiFiltersOptions(SEARCH_BY_DURATION, durationFilter);
 		IterationKpiFiltersOptions filter2 =
@@ -200,75 +200,77 @@ public class CycleTimeSlingshotServiceImpl
 			List<CycleTimeValidationData> cycleTimeList) {
 
 		Map<String, List<DataValue>> cycleMap = new LinkedHashMap<>();
-
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistoriesList)) {
-			LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
-
 			jiraIssueCustomHistoriesList.forEach(
-					jiraIssueCustomHistory -> {
-						List<DataValue> dataValueList = new ArrayList<>();
-						List<CycleTimeGroup> cycleTimeGroups =
-								fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
-						Iterator<CycleTimeGroup> iterator = cycleTimeGroups.iterator();
-						CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
-						 while (current!=null){
-							List<String> currentStatuses = current.getStatuses();
-							List<JiraHistoryChangeLog> changeLogs = jiraIssueCustomHistory.getStatusUpdationLog();
-							LocalDateTime windowStart = null;
-							LocalDateTime windowEnd = null;
-							double minsDiff = 0;
-							boolean isPresent = false;
-							for (JiraHistoryChangeLog log : changeLogs) {
-								String changedTo = log.getChangedTo();
-								if (currentStatuses.contains(changedTo)) {
-									if (windowStart == null) {
-										windowStart = log.getUpdatedOn();
-									}
-									windowEnd = log.getUpdatedOn();
-								} else {
-									if (windowStart != null) {
-										isPresent = true;
-										if (currentStatuses.contains(log.getChangedFrom()))
-											windowEnd = log.getUpdatedOn();
-										minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
-										windowStart = windowEnd = null;
-									}
-								}
-							}
-							if (windowStart != null && iterator.hasNext()) {
-								isPresent = true;
-								minsDiff += KpiDataHelper.calWeekMinutes(windowStart, LocalDateTime.now());
-							}
-
-							if (isPresent) {
-								double diffHours = Math.round((minsDiff / 1440) * 10.0) / 10.0;
-								DataValue dataValue = new DataValue();
-								dataValue.setName(current.getLabel());
-								dataValue.setData(Double.toString(diffHours));
-								dataValue.setValue(diffHours);
-								dataValueList.add(dataValue);
-								cycleTimeByGroup.put(current.getLabel(), diffHours + " Days");
-								issueTypeFilter.add(jiraIssueCustomHistory.getStoryType());
-							}
-
-							current = iterator.hasNext() ? iterator.next() : null;
-						}
-						if (CollectionUtils.isNotEmpty(dataValueList)) {
-							cycleTimeList.add(CycleTimeValidationData.builder()
-									.issueNumber(jiraIssueCustomHistory.getStoryID())
-											.url(jiraIssueCustomHistory.getUrl())
-									.issueType(jiraIssueCustomHistory.getStoryType())
-									.issueDesc(jiraIssueCustomHistory.getDescription())
-									.groupMap(cycleTimeByGroup)
-									.build());
-							cycleMap.put(
-									jiraIssueCustomHistory.getStoryID() + "#" + jiraIssueCustomHistory.getStoryType(),
-									dataValueList);
-						}
-					});
+					history ->
+							processIssueHistory(history, fieldMapping, issueTypeFilter, cycleTimeList, cycleMap));
 		}
-
 		return cycleMap;
+	}
+
+	private void processIssueHistory(
+			JiraIssueCustomHistory history,
+			FieldMapping fieldMapping,
+			Set<String> issueTypeFilter,
+			List<CycleTimeValidationData> cycleTimeList,
+			Map<String, List<DataValue>> cycleMap) {
+		List<DataValue> dataValueList = new ArrayList<>();
+		LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
+		Iterator<CycleTimeGroup> iterator =
+				fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+		CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
+		while (current != null) {
+			double minsDiff =
+					calculateGroupMinutes(current.getStatuses(), history.getStatusUpdationLog(), iterator);
+			if (minsDiff > 0) {
+				double diffDays = Math.round((minsDiff / 1440) * 10.0) / 10.0;
+				DataValue dataValue = new DataValue();
+				dataValue.setName(current.getLabel());
+				dataValue.setData(Double.toString(diffDays));
+				dataValue.setValue(diffDays);
+				dataValueList.add(dataValue);
+				cycleTimeByGroup.put(current.getLabel(), diffDays + " Days");
+				issueTypeFilter.add(history.getStoryType());
+			}
+			current = iterator.hasNext() ? iterator.next() : null;
+		}
+		if (CollectionUtils.isNotEmpty(dataValueList)) {
+			cycleTimeList.add(
+					CycleTimeValidationData.builder()
+							.issueNumber(history.getStoryID())
+							.url(history.getUrl())
+							.issueType(history.getStoryType())
+							.issueDesc(history.getDescription())
+							.groupMap(cycleTimeByGroup)
+							.build());
+			cycleMap.put(history.getStoryID() + "#" + history.getStoryType(), dataValueList);
+		}
+	}
+
+	private double calculateGroupMinutes(
+			List<String> currentStatuses,
+			List<JiraHistoryChangeLog> changeLogs,
+			Iterator<CycleTimeGroup> iterator) {
+		LocalDateTime windowStart = null;
+		LocalDateTime windowEnd = null;
+		double minsDiff = 0;
+		boolean isPresent = false;
+		for (JiraHistoryChangeLog log : changeLogs) {
+			if (currentStatuses.contains(log.getChangedTo())) {
+				if (windowStart == null) windowStart = log.getUpdatedOn();
+				windowEnd = log.getUpdatedOn();
+			} else if (windowStart != null) {
+				isPresent = true;
+				if (currentStatuses.contains(log.getChangedFrom())) windowEnd = log.getUpdatedOn();
+				minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
+				windowStart = windowEnd = null;
+			}
+		}
+		if (windowStart != null && iterator.hasNext()) {
+			isPresent = true;
+			minsDiff += KpiDataHelper.calWeekMinutes(windowStart, LocalDateTime.now());
+		}
+		return isPresent ? minsDiff : 0;
 	}
 
 	private Map<String, List<DataCount>> getDataCountObject(
@@ -276,15 +278,15 @@ public class CycleTimeSlingshotServiceImpl
 		Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 		cycleMap.forEach(
 				(key, value) -> {
-						String[] issueFilter = key.split("#");
-						String filterKey = duration + "#" + issueFilter[1];
-						DataCount dataCount = new DataCount();
-						dataCount.setSProjectName(trendLineName);
-						dataCount.setDataValue(value);
-						dataCount.setKpiGroup(filterKey);
-						dataCount.setSubFilter(issueFilter[0]);
-						dataCount.setHoverValue(new HashMap<>());
-						dataCountMap.computeIfAbsent(filterKey, k -> new ArrayList<>()).add(dataCount);
+					String[] issueFilter = key.split("#");
+					String filterKey = duration + "#" + issueFilter[1];
+					DataCount dataCount = new DataCount();
+					dataCount.setSProjectName(trendLineName);
+					dataCount.setDataValue(value);
+					dataCount.setKpiGroup(filterKey);
+					dataCount.setSubFilter(issueFilter[0]);
+					dataCount.setHoverValue(new HashMap<>());
+					dataCountMap.computeIfAbsent(filterKey, k -> new ArrayList<>()).add(dataCount);
 				});
 		return dataCountMap;
 	}
@@ -323,7 +325,10 @@ public class CycleTimeSlingshotServiceImpl
 
 					List<String> status =
 							new ArrayList<>(
-									issueTypesByGroups.stream().map(CycleTimeGroup::getStatuses).flatMap(Collection::stream).toList());
+									issueTypesByGroups.stream()
+											.map(CycleTimeGroup::getStatuses)
+											.flatMap(Collection::stream)
+											.toList());
 					mapOfProjectFilters.put(
 							"statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
 					uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -348,5 +353,4 @@ public class CycleTimeSlingshotServiceImpl
 			KPIExcelUtility.populateCycleTimeSlingshot(cycleTimeList, excelData);
 		}
 	}
-
 }

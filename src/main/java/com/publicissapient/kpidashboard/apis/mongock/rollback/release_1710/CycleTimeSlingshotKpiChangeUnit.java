@@ -14,7 +14,7 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
+package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1710;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -27,8 +27,8 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
-		id = "cycle_time_slingshot_kpi_insert",
-		order = "17101",
+		id = "r_cycle_time_slingshot_kpi_insert",
+		order = "017101",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class CycleTimeSlingshotKpiChangeUnit {
 
 	private final MongoTemplate mongoTemplate;
 
-	@Execution
+	@RollbackExecution
 	public void execute() {
 		Document kpiDocument =
 				new Document()
@@ -81,7 +81,7 @@ public class CycleTimeSlingshotKpiChangeUnit {
 		mongoTemplate.getCollection("kpi_master").insertOne(kpiDocument);
 	}
 
-	@RollbackExecution
+	@Execution
 	public void rollback() {
 		Query query = new Query(Criteria.where("kpiId").is("kpi202"));
 		mongoTemplate.remove(query, "kpi_master");

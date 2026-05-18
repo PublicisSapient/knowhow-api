@@ -5319,5 +5319,43 @@
     "kpiFilter" : "",
     "boxType" : "chart",
     "calculateMaturity" : false
+  },
+  {
+    "kpiId": "kpi202",
+    "kpiName": "Cycle Time",
+    "maxValue": "",
+    "kpiUnit": "Days",
+    "isDeleted": "False",
+    "defaultOrder": 1,
+    "kpiSource": "Jira",
+    "combinedKpiSource": "Jira/Azure",
+    "kpiCategory": "Slingshot",
+    "groupId": 45,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": "stacked-bar-chart",
+    "yAxisLabel": "",
+    "xAxisLabel": "",
+    "isAdditionalFilterSupport": false,
+    "kpiFilter": "dropDown",
+    "calculateMaturity": false,
+    "isAggregationStacks": false,
+    "aggregationCriteria": "sum",
+    "kpiInfo": {
+      "definition": "Cycle time measures the duration of each stage within an issue's complete lifecycle. It is visualized through stacked bar chart by breaking down the time spent in each individual cycle.",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi202-Cycle+Time"
+          }
+        }
+      ],
+      "formula": null
+    },
+    "isPositiveTrend": false,
+    "kpiBaseLine": "0",
+    "showTrend": false
   }
 ]
