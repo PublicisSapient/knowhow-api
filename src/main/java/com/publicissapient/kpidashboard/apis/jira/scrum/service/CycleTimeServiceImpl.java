@@ -134,7 +134,7 @@ public class CycleTimeServiceImpl extends JiraKPIService<Long, List<Object>, Map
 			KpiRequest kpiRequest) {
 		KpiElement leadTimeReq =
 				kpiRequest.getKpiList().stream()
-						.filter(k -> k.getKpiId().equalsIgnoreCase("kpi202"))
+						.filter(k -> k.getKpiId().equalsIgnoreCase("kpi171"))
 						.findFirst()
 						.orElse(new KpiElement());
 
