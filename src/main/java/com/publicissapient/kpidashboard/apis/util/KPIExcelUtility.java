@@ -1137,6 +1137,20 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populateCycleTimeSlingshot(
+			List<CycleTimeValidationData> cycleTimeList, List<KPIExcelData> excelDataList) {
+		for (CycleTimeValidationData cycleTime : cycleTimeList) {
+			KPIExcelData excelData = new KPIExcelData();
+			Map<String, String> storyId = new HashMap<>();
+			storyId.put(cycleTime.getIssueNumber(), cycleTime.getUrl());
+			excelData.setIssueID(storyId);
+			excelData.setIssueDesc(cycleTime.getIssueDesc());
+			excelData.setIssueType(cycleTime.getIssueType());
+			excelData.setGroupMap(cycleTime.getGroupMap());
+			excelDataList.add(excelData);
+		}
+	}
+
 	/**
 	 * TO GET Constant.EXCEL_YES/"N" from complete list of defects if defect is present in conditional
 	 * list then Constant.EXCEL_YES else Constant.EMPTY_STRING kpi specific

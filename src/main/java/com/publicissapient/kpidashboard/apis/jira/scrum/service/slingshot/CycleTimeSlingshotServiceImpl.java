@@ -16,6 +16,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
+import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -67,7 +70,6 @@ public class CycleTimeSlingshotServiceImpl
 
 	private final ConfigHelperService configHelperService;
 	private final JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
-	private final JiraIssueRepository jiraIssueRepository;
 
 	@Override
 	public String getQualifierType() {
@@ -159,7 +161,6 @@ public class CycleTimeSlingshotServiceImpl
 				Optional.ofNullable(durationLabels.get(duration)).map(m -> m.get(value)).orElse("Unknown");
 		Map<String, Object> resultMap =
 				fetchKPIDataFromDb(leafNodeList, startDate, endDate, kpiRequest);
-		List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
 		List<KPIExcelData> excelData = new ArrayList<>();
 		Set<String> issueTypeFilter = new LinkedHashSet<>();
 		List<CycleTimeValidationData> cycleTimeValidationDataList = new ArrayList<>();
@@ -180,6 +181,7 @@ public class CycleTimeSlingshotServiceImpl
 							getDataCountObject(leafNode.getProjectFilter().getName(), cycleMap, label);
 					mapTmp.get(leafNode.getId()).setValue(dataCountMap);
 				});
+		populateExcelDataObject(kpiRequest.getRequestTrackerId(), cycleTimeValidationDataList, excelData);
 		IterationKpiFiltersOptions filter1 =
 				new IterationKpiFiltersOptions(SEARCH_BY_DURATION, durationFilter);
 		IterationKpiFiltersOptions filter2 =
@@ -205,17 +207,12 @@ public class CycleTimeSlingshotServiceImpl
 			jiraIssueCustomHistoriesList.forEach(
 					jiraIssueCustomHistory -> {
 						List<DataValue> dataValueList = new ArrayList<>();
-						LinkedHashMap<String, List<String>> groupMap =
+						List<CycleTimeGroup> cycleTimeGroups =
 								fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
-						Map<String, String> reverseGroupMap =
-								groupMap.entrySet().stream()
-										.flatMap(
-												e -> e.getValue().stream().map(status -> Map.entry(status, e.getKey())))
-										.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-						Iterator<Map.Entry<String, List<String>>> iterator = groupMap.entrySet().iterator();
-						Map.Entry<String, List<String>> current = iterator.hasNext() ? iterator.next() : null;
-						while (current != null) {
-							List<String> currentStatuses = current.getValue();
+						Iterator<CycleTimeGroup> iterator = cycleTimeGroups.iterator();
+						CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
+						 while (current!=null){
+							List<String> currentStatuses = current.getStatuses();
 							List<JiraHistoryChangeLog> changeLogs = jiraIssueCustomHistory.getStatusUpdationLog();
 							LocalDateTime windowStart = null;
 							LocalDateTime windowEnd = null;
@@ -246,24 +243,24 @@ public class CycleTimeSlingshotServiceImpl
 							if (isPresent) {
 								double diffHours = Math.round((minsDiff / 1440) * 10.0) / 10.0;
 								DataValue dataValue = new DataValue();
-								dataValue.setName(current.getKey());
+								dataValue.setName(current.getLabel());
 								dataValue.setData(Double.toString(diffHours));
 								dataValue.setValue(diffHours);
 								dataValueList.add(dataValue);
-								cycleTimeByGroup.put(current.getKey(), diffHours + " Days");
+								cycleTimeByGroup.put(current.getLabel(), diffHours + " Days");
 								issueTypeFilter.add(jiraIssueCustomHistory.getStoryType());
 							}
 
 							current = iterator.hasNext() ? iterator.next() : null;
 						}
 						if (CollectionUtils.isNotEmpty(dataValueList)) {
-							CycleTimeValidationData cycleTimeValidationData =
-									CycleTimeValidationData.builder()
-											.issueNumber(jiraIssueCustomHistory.getStoryID())
-											.issueType(jiraIssueCustomHistory.getStoryType())
-											.issueDesc(jiraIssueCustomHistory.getDescription())
-											.groupMap(cycleTimeByGroup)
-											.build();
+							cycleTimeList.add(CycleTimeValidationData.builder()
+									.issueNumber(jiraIssueCustomHistory.getStoryID())
+											.url(jiraIssueCustomHistory.getUrl())
+									.issueType(jiraIssueCustomHistory.getStoryType())
+									.issueDesc(jiraIssueCustomHistory.getDescription())
+									.groupMap(cycleTimeByGroup)
+									.build());
 							cycleMap.put(
 									jiraIssueCustomHistory.getStoryID() + "#" + jiraIssueCustomHistory.getStoryType(),
 									dataValueList);
@@ -279,7 +276,6 @@ public class CycleTimeSlingshotServiceImpl
 		Map<String, List<DataCount>> dataCountMap = new HashMap<>();
 		cycleMap.forEach(
 				(key, value) -> {
-					if (CollectionUtils.isNotEmpty(value)) {
 						String[] issueFilter = key.split("#");
 						String filterKey = duration + "#" + issueFilter[1];
 						DataCount dataCount = new DataCount();
@@ -289,7 +285,6 @@ public class CycleTimeSlingshotServiceImpl
 						dataCount.setSubFilter(issueFilter[0]);
 						dataCount.setHoverValue(new HashMap<>());
 						dataCountMap.computeIfAbsent(filterKey, k -> new ArrayList<>()).add(dataCount);
-					}
 				});
 		return dataCountMap;
 	}
@@ -323,12 +318,12 @@ public class CycleTimeSlingshotServiceImpl
 						uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 					}
 
-					Map<String, List<String>> issueTypesByGroups =
+					List<CycleTimeGroup> issueTypesByGroups =
 							fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
 
 					List<String> status =
 							new ArrayList<>(
-									issueTypesByGroups.values().stream().flatMap(Collection::stream).toList());
+									issueTypesByGroups.stream().map(CycleTimeGroup::getStatuses).flatMap(Collection::stream).toList());
 					mapOfProjectFilters.put(
 							"statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
 					uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
@@ -344,4 +339,14 @@ public class CycleTimeSlingshotServiceImpl
 				});
 		return resultListMap;
 	}
+
+	private void populateExcelDataObject(
+			String requestTrackerId,
+			List<CycleTimeValidationData> cycleTimeList,
+			List<KPIExcelData> excelData) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+			KPIExcelUtility.populateCycleTimeSlingshot(cycleTimeList, excelData);
+		}
+	}
+
 }
