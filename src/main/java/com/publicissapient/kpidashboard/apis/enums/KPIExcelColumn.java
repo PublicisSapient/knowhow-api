@@ -1153,8 +1153,19 @@ public enum KPIExcelColumn {
 			"kpi196", Arrays.asList("Sprint Name", "Test Case ID", "Test Case Type", "Execution Time")),
 	TEST_EXECUTION_TIME_KANBAN(
 			"kpi197", Arrays.asList("Project Name", "Test Case ID", "Test Case Type", "Execution Time")),
+
 	CYCLE_TIME_SLINGSHOT(
-			"kpi202", Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Group Map"));
+			"kpi202", Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Group Map")),
+	FLOW_EFFICIENCY_SLINGSHOT(
+			"kpi203",
+			Arrays.asList(
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Size (In Story Points)",
+					"Wait Time",
+					"Total Time",
+					"Flow Efficiency"));
 
 	// @formatter:on
 
