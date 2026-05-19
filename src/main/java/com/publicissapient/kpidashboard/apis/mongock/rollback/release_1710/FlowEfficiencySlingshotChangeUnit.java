@@ -36,6 +36,7 @@ public class FlowEfficiencySlingshotChangeUnit {
 	private static final String SECTION = "section";
 	private static final String TOOLTIP = "tooltip";
 	private final MongoTemplate mongoTemplate;
+	private static final String FIELD_LABEL = "fieldLabel";
 
 	public FlowEfficiencySlingshotChangeUnit(MongoTemplate mongoTemplate) {
 		this.mongoTemplate = mongoTemplate;
@@ -104,7 +105,7 @@ public class FlowEfficiencySlingshotChangeUnit {
 
 		Document closeStatusDocument =
 				new Document(FIELD_NAME, "jiraIssueClosedStateKPI203")
-						.append("fieldLabel", "Status to identify Close Statuses")
+						.append(FIELD_LABEL, "Status to identify Close Statuses")
 						.append(FIELD_TYPE, CHIPS)
 						.append(SECTION, WORKFLOW_STATUS_MAPPING)
 						.append(
@@ -115,7 +116,7 @@ public class FlowEfficiencySlingshotChangeUnit {
 
 		Document waitStatusDocument =
 				new Document(FIELD_NAME, "jiraIssueWaitStateKPI203")
-						.append("fieldLabel", "Status to identify Wait Statuses")
+						.append(FIELD_LABEL, "Status to identify Wait Statuses")
 						.append(FIELD_TYPE, CHIPS)
 						.append(SECTION, WORKFLOW_STATUS_MAPPING)
 						.append(
