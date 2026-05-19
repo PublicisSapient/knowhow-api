@@ -374,7 +374,7 @@ public class UserBoardConfigServiceImplTest {
 		UserBoardConfigDTO userBoardConfigDTO =
 				userBoardConfigServiceImpl.getOrPrepareBoardConfig(
 						ConfigLevel.USER, listOfReqProjects.getBasicProjectConfigIds().get(0));
-		assertEquals(userBoardConfigDTO.getOthers().size(), 1);
+		assertEquals(userBoardConfigDTO.getOthers().size(), 2);
 		assertNotNull(userBoardConfigDTO);
 		assertEquals(userBoardConfigDTO.getUsername(), username);
 	}

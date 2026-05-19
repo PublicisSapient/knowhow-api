@@ -27,7 +27,7 @@ import lombok.Getter;
 @Getter
 public enum UserBoardConfigEnum {
 	SCRUM_KANBAN_BOARD(Arrays.asList("Iteration", "Developer", "Dora", "Release", "Backlog")),
-	OTHER_BOARD(Arrays.asList("KPI Maturity"));
+	OTHER_BOARD(Arrays.asList("KPI Maturity", "Slingshot"));
 
 	private final List<String> boardName;
 

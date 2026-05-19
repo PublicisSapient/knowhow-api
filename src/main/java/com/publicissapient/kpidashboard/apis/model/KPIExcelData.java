@@ -18,6 +18,7 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -546,4 +547,7 @@ public class KPIExcelData {
 
 	@JsonProperty("ID")
 	private Map<String, String> id;
+
+	@JsonProperty("GroupMap")
+	private LinkedHashMap<String, String> groupMap;
 }
