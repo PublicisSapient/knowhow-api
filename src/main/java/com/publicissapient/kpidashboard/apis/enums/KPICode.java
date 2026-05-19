@@ -319,7 +319,11 @@ public enum KPICode {
 	 * Dashboard. It reuses the field mapping configuration from the ITR KPI. Not intended for actual
 	 * analytics calculation, only for configuration purposes.
 	 */
-	SPRINT_ANALYTICS("kpi199", KPISource.JIRA.name());
+	SPRINT_ANALYTICS("kpi199", KPISource.JIRA.name()),
+
+	CYCLE_TIME_SLINGSHOT("kpi202", KPISource.JIRA.name()),
+	FLOW_EFFICIENCY_SLINGSHOT("kpi203", KPISource.JIRA.name()),
+	;
 
 	// @formatter:on
 
