@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class CycleTimeSlingshotFieldMappingChangeUnit {
 
 	private static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
+	private static final String FIELD_NAME = "fieldName";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -44,7 +45,7 @@ public class CycleTimeSlingshotFieldMappingChangeUnit {
 	public void execution() {
 		Query query =
 				new Query(
-						Criteria.where("fieldName")
+						Criteria.where(FIELD_NAME)
 								.in("jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202"));
 		mongoTemplate.remove(query, FIELD_MAPPING_STRUCTURE);
 	}
@@ -53,7 +54,7 @@ public class CycleTimeSlingshotFieldMappingChangeUnit {
 	public void rollback() {
 		Document issueTypeDoc =
 				new Document()
-						.append("fieldName", "jiraIssueTypeKPI202")
+						.append(FIELD_NAME, "jiraIssueTypeKPI202")
 						.append("fieldLabel", "Issue types to consider")
 						.append("fieldType", "chips")
 						.append("fieldCategory", "Issue_Type")
@@ -77,7 +78,7 @@ public class CycleTimeSlingshotFieldMappingChangeUnit {
 
 		Document workflowGroupDoc =
 				new Document()
-						.append("fieldName", "jiraIssueStatusGroupByCategoryKPI202")
+						.append(FIELD_NAME, "jiraIssueStatusGroupByCategoryKPI202")
 						.append("fieldLabel", "Workfow groups")
 						.append("fieldType", "chips")
 						.append("fieldCategory", "workflow")

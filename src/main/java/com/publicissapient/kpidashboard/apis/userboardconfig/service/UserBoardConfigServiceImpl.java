@@ -588,7 +588,7 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 			BoardKpisDTO boardKpis = new BoardKpisDTO();
 			boardKpis.setKpiId(kpiMaster.getKpiId());
 			boardKpis.setKpiName(kpiMaster.getKpiName());
-			boardKpis.setShown(true);
+			boardKpis.setShown(!"Slingshot".equalsIgnoreCase(kpiMaster.getKpiCategory()));
 			boardKpis.setIsEnabled(true);
 			boardKpis.setOrder(kpiMaster.getDefaultOrder());
 			boardKpis.setSubCategoryBoard(kpiMaster.getKpiSubCategory());
