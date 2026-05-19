@@ -92,7 +92,7 @@
     <dependency>
       <groupId>com.publicissapient.kpidashboard</groupId>
       <artifactId>common</artifactId>
-      <version>17.0.0</version>
+      <version>17.1.0</version>
       <exclusions>
         <exclusion>
           <groupId>com.diffplug.spotless</groupId>
