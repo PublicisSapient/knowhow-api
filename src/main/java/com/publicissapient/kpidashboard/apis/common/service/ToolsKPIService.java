@@ -72,6 +72,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.OPEN_TICKET_AGING_BY_PRIORITY.name(),
 							KPICode.PI_PREDICTABILITY.name()));
 
+	private static final Set<String> NON_LIMIT_KPIS = new HashSet<>(Arrays.asList(KPICode.CYCLE_TIME_SLINGSHOT.name()));
+
 	@Autowired private CustomApiConfig customApiConfig;
 
 	@Autowired private CommonService commonService;
@@ -1000,7 +1002,9 @@ public abstract class ToolsKPIService<R, S> {
 	 * @return list
 	 */
 	private List<DataCount> getList(List<DataCount> value, String kpiName) {
-		if (reverseTrendList.contains(kpiName)) {
+		if (NON_LIMIT_KPIS.contains(kpiName)) {
+			return value;
+		} else if (reverseTrendList.contains(kpiName)) {
 			return value.stream().limit(Constant.TREND_LIMIT).toList();
 		} else {
 			return Lists.reverse(value).stream().limit(Constant.TREND_LIMIT).toList();
