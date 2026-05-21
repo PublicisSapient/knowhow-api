@@ -89,9 +89,9 @@ public class CycleTimeSlingshotServiceImpl
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedMultipleValueGroupMap(
-				treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.CYCLE_TIME);
+				treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.CYCLE_TIME_SLINGSHOT);
 		Map<String, List<DataCount>> trendValuesMap =
-				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CYCLE_TIME);
+				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CYCLE_TIME_SLINGSHOT);
 
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach(
