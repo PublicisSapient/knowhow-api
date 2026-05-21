@@ -72,7 +72,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.OPEN_TICKET_AGING_BY_PRIORITY.name(),
 							KPICode.PI_PREDICTABILITY.name()));
 
-	private static final Set<String> NON_LIMIT_KPIS = new HashSet<>(Arrays.asList(KPICode.CYCLE_TIME_SLINGSHOT.name()));
+	private static final Set<String> NON_LIMIT_KPIS =
+			new HashSet<>(Arrays.asList(KPICode.CYCLE_TIME_SLINGSHOT.name()));
 
 	@Autowired private CustomApiConfig customApiConfig;
 
