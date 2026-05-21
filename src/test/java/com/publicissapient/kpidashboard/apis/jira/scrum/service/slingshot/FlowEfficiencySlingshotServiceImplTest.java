@@ -68,7 +68,6 @@ public class FlowEfficiencySlingshotServiceImplTest {
 	List<Node> leafNodeList = new ArrayList<>();
 	TreeAggregatorDetail treeAggregatorDetail;
 	private KpiRequest kpiRequest;
-	private KpiElement kpiElement;
 	private List<JiraIssueCustomHistory> issueBacklogHistoryDataList = new ArrayList<>();
 	private Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
 
