@@ -877,7 +877,8 @@ public abstract class ToolsKPIService<R, S> {
 			KpiElement kpiElement,
 			Map<Pair<String, String>, Node> nodeWiseKPIValue,
 			KPICode kpiCode) {
-		return commonService.sortTrendValueMap(getTrendValuesMapUnSorted(kpiRequest, kpiElement, nodeWiseKPIValue, kpiCode));
+		return commonService.sortTrendValueMap(
+				getTrendValuesMapUnSorted(kpiRequest, kpiElement, nodeWiseKPIValue, kpiCode));
 	}
 
 	public void setKpiBenchmarkValues(DataCount dataCount, String kpiId, String filter) {

@@ -64,7 +64,8 @@ public class CycleTimeSlingshotServiceImpl
 	private static final String SEARCH_BY_DURATION = "Duration";
 	private static final Set<String> durationFilter =
 			new LinkedHashSet<>(
-					Arrays.asList("Past 6 Months", "Past 3 Months", "Past Month", "Past 2 Weeks", "Past Week"));
+					Arrays.asList(
+							"Past 6 Months", "Past 3 Months", "Past Month", "Past 2 Weeks", "Past Week"));
 
 	private final ConfigHelperService configHelperService;
 	private final JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
@@ -90,7 +91,8 @@ public class CycleTimeSlingshotServiceImpl
 		calculateAggregatedMultipleValueGroupMap(
 				treeAggregatorDetail.getRoot(), nodeWiseKPIValue, KPICode.CYCLE_TIME_SLINGSHOT);
 		Map<String, List<DataCount>> trendValuesMap =
-				getTrendValuesMapUnSorted(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CYCLE_TIME_SLINGSHOT);
+				getTrendValuesMapUnSorted(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CYCLE_TIME_SLINGSHOT);
 
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
 		trendValuesMap.forEach(

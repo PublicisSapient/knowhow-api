@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,7 +41,6 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.BacklogKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -302,7 +299,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 
 							Map<String, List<Double>> cycleTimeByfilterMap =
 									filterMap.computeIfAbsent(
-											  current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
+											current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
 
 							double finalMinsDiff = minsDiff;
 							monthRangeMap.forEach(

@@ -71,7 +71,8 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.remove(new Query(Criteria.where("kpiId").in("kpi204", "kpi202")), "kpi_column_configs");
+		mongoTemplate.remove(
+				new Query(Criteria.where("kpiId").in("kpi204", "kpi202")), "kpi_column_configs");
 	}
 
 	private Document columnDetail(String name, int order) {
