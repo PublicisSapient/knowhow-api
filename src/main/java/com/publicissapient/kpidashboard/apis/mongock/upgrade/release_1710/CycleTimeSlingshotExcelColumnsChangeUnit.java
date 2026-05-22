@@ -52,8 +52,6 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 										columnDetail("Issue Description", 3),
 										columnDetail("Group Map", 4)));
 
-		mongoTemplate.getCollection("kpi_column_configs").insertOne(doc);
-
 		Document doc2 =
 				new Document()
 						.append("basicProjectConfigId", null)
@@ -66,7 +64,7 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 										columnDetail("Issue Description", 3),
 										columnDetail("Group Map", 4)));
 
-		mongoTemplate.getCollection("kpi_column_configs").insertOne(doc);
+		mongoTemplate.getCollection("kpi_column_configs").insertMany(List.of(doc, doc2));
 	}
 
 	@RollbackExecution
