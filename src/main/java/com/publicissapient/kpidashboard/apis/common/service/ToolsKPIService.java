@@ -812,14 +812,14 @@ public abstract class ToolsKPIService<R, S> {
 	 * @param nodeWiseKPIValue nodeWiseKPIValue
 	 * @return map of string and list of trendvalue
 	 */
-	public Map<String, List<DataCount>> getTrendValuesMap(
+	public Map<String, List<DataCount>> getTrendValuesMapUnSorted(
 			KpiRequest kpiRequest,
 			KpiElement kpiElement,
 			Map<Pair<String, String>, Node> nodeWiseKPIValue,
 			KPICode kpiCode) {
 		String kpiName = kpiCode.name();
 		String kpiId = kpiCode.getKpiId();
-		Map<String, List<DataCount>> trendMap = new HashMap<>();
+		Map<String, List<DataCount>> trendMap = new LinkedHashMap<>();
 		Set<String> selectedIds = getSelectedIds(kpiRequest);
 		calculateThresholdValue(selectedIds, kpiElement, kpiRequest.getLabel());
 		setRecommendationActionPlan(selectedIds, kpiElement, kpiRequest.getLabel(), kpiId);
@@ -861,7 +861,23 @@ public abstract class ToolsKPIService<R, S> {
 				}
 			}
 		}
-		return commonService.sortTrendValueMap(trendMap);
+		return trendMap;
+	}
+
+	/**
+	 * This method return trend value for KPIs containing filter or map as value
+	 *
+	 * @param kpiRequest kpiRequest
+	 * @param kpiElement
+	 * @param nodeWiseKPIValue nodeWiseKPIValue
+	 * @return map of string and list of trendvalue
+	 */
+	public Map<String, List<DataCount>> getTrendValuesMap(
+			KpiRequest kpiRequest,
+			KpiElement kpiElement,
+			Map<Pair<String, String>, Node> nodeWiseKPIValue,
+			KPICode kpiCode) {
+		return commonService.sortTrendValueMap(getTrendValuesMapUnSorted(kpiRequest, kpiElement, nodeWiseKPIValue, kpiCode));
 	}
 
 	public void setKpiBenchmarkValues(DataCount dataCount, String kpiId, String filter) {

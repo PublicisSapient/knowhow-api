@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -88,11 +90,11 @@ public class CycleTimeTrendSlingshotServiceImpl
 		// in case if only projects or sprint filters are applied
 		projectWiseLeafNodeValue(kpiElement, projectList.get(0), kpiRequest);
 
-		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
+		Map<Pair<String, String>, Node> nodeWiseKPIValue = new LinkedHashMap<>();
 		calculateAggregatedMultipleValueGroupMap(
 				projectList.get(0), nodeWiseKPIValue, KPICode.CYCLE_TIME_TREND_SLINGSHOT);
 		Map<String, List<DataCount>> trendValuesMap =
-				getTrendValuesMap(
+				getTrendValuesMapUnSorted(
 						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CYCLE_TIME_TREND_SLINGSHOT);
 
 		Map<String, Map<String, List<DataCount>>> priorityTypeProjectWiseDc = new LinkedHashMap<>();
@@ -196,14 +198,13 @@ public class CycleTimeTrendSlingshotServiceImpl
 								.getFieldMappingMap()
 								.get(leafNode.getProjectFilter().getBasicProjectConfigId())
 						: new FieldMapping();
-		issueTypesSet.add(CommonConstant.OVERALL);
 		List<JiraIssueCustomHistory> allIssueHistory =
 				(List<JiraIssueCustomHistory>)
 						resultMap.get(leafNode.getProjectFilter().getBasicProjectConfigId().toString());
 
 		Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeAndStatusWiseJiraIssueMap =
 				new LinkedHashMap<>();
-		Map<String, Map<String, List<Double>>> filterMap = new HashMap<>();
+		Map<String, Map<String, List<Double>>> filterMap = new LinkedHashMap<>();
 		filterDataBasedOnXAxisRangeWise(
 				rangeList,
 				allIssueHistory,
@@ -247,9 +248,9 @@ public class CycleTimeTrendSlingshotServiceImpl
 		if (leafNode != null) leafNode.setValue(datacountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =
-				new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypesSet);
-		IterationKpiFiltersOptions filter2 =
 				new IterationKpiFiltersOptions(SEARCH_BY_CYCLE_GROUP, groupMapSet);
+		IterationKpiFiltersOptions filter2 =
+				new IterationKpiFiltersOptions(SEARCH_BY_ISSUE_TYPE, issueTypesSet);
 		IterationKpiFilters iterationKpiFilters = new IterationKpiFilters(filter1, filter2);
 		List<String> xAxisRange = new ArrayList<>(rangeList);
 		Collections.reverse(xAxisRange);
@@ -301,7 +302,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 
 							Map<String, List<Double>> cycleTimeByfilterMap =
 									filterMap.computeIfAbsent(
-											current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
+											  current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
 
 							double finalMinsDiff = minsDiff;
 							monthRangeMap.forEach(

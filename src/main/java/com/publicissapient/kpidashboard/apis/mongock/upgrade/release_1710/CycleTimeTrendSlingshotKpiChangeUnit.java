@@ -14,7 +14,7 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1720;
+package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
