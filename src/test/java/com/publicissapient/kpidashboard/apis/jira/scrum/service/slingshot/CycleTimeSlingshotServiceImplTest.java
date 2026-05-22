@@ -98,8 +98,6 @@ public class CycleTimeSlingshotServiceImplTest {
 		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
 		Mockito.when(cacheService.getAdditionalFilterHierarchyLevel()).thenReturn(new HashMap<>());
 		Mockito.when(cacheService.getKpiBenchmarkTargets()).thenReturn(new HashMap<>());
-		Mockito.when(commonService.sortTrendValueMap(Mockito.anyMap()))
-				.thenAnswer(i -> i.getArgument(0));
 		Class<?> parentClass = ToolsKPIService.class;
 		ReflectionTestUtils.setField(
 				service, parentClass, "cacheService", cacheService, CacheService.class);
