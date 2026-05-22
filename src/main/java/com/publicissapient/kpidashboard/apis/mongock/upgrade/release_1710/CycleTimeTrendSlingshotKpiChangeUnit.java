@@ -28,9 +28,9 @@ import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
 		id = "cycle_time_trend_slingshot_kpi_insert",
-		order = "17201",
+		order = "17105",
 		author = "kunkambl",
-		systemVersion = "17.2.0")
+		systemVersion = "17.1.0")
 @RequiredArgsConstructor
 public class CycleTimeTrendSlingshotKpiChangeUnit {
 

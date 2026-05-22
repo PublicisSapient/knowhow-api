@@ -30,9 +30,9 @@ import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
 		id = "cycle_time_trend_slingshot_excel_insert",
-		order = "17202",
+		order = "17106",
 		author = "kunkambl",
-		systemVersion = "17.2.0")
+		systemVersion = "17.1.0")
 @RequiredArgsConstructor
 public class CycleTimeSlingshotExcelColumnsChangeUnit {
 
@@ -53,11 +53,25 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 										columnDetail("Group Map", 4)));
 
 		mongoTemplate.getCollection("kpi_column_configs").insertOne(doc);
+
+		Document doc2 =
+				new Document()
+						.append("basicProjectConfigId", null)
+						.append("kpiId", "kpi204")
+						.append(
+								"kpiColumnDetails",
+								List.of(
+										columnDetail("Issue ID", 1),
+										columnDetail("Issue Type", 2),
+										columnDetail("Issue Description", 3),
+										columnDetail("Group Map", 4)));
+
+		mongoTemplate.getCollection("kpi_column_configs").insertOne(doc);
 	}
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.remove(new Query(Criteria.where("kpiId").is("kpi202")), "kpi_column_configs");
+		mongoTemplate.remove(new Query(Criteria.where("kpiId").in("kpi204", "kpi202")), "kpi_column_configs");
 	}
 
 	private Document columnDetail(String name, int order) {
