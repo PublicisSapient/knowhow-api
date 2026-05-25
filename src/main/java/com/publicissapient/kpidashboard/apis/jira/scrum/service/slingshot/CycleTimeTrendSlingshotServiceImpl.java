@@ -1,9 +1,7 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
-import static java.time.temporal.ChronoUnit.DAYS;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +57,6 @@ public class CycleTimeTrendSlingshotServiceImpl
 		extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String ISSUE_COUNT = "Issue Count";
-	private static final String HISTORY = "history";
-	private static final String OVERALL = "Overall";
 	private static final String SEARCH_BY_ISSUE_TYPE = "Filter by issue type";
 	private static final String SEARCH_BY_CYCLE_GROUP = "Filter by cycle group";
 
@@ -85,7 +82,9 @@ public class CycleTimeTrendSlingshotServiceImpl
 				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT);
 
 		// in case if only projects or sprint filters are applied
-		projectWiseLeafNodeValue(kpiElement, projectList.get(0), kpiRequest);
+		if (CollectionUtils.isNotEmpty(projectList)) {
+			projectWiseLeafNodeValue(kpiElement, projectList.get(0), kpiRequest);
+		}
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new LinkedHashMap<>();
 		calculateAggregatedMultipleValueGroupMap(
@@ -133,36 +132,9 @@ public class CycleTimeTrendSlingshotServiceImpl
 		Map<String, Object> resultListMap = new HashMap<>();
 		leafNodeList.forEach(
 				leafNode -> {
-					Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
-
 					ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
-					Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
-
-					FieldMapping fieldMapping =
-							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
-
-					if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI202()).isPresent()) {
-
-						KpiDataHelper.prepareFieldMappingDefectTypeTransformation(
-								mapOfProjectFilters,
-								fieldMapping.getJiradefecttype(),
-								fieldMapping.getJiraIssueTypeKPI202(),
-								JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
-						uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
-					}
-
-					List<CycleTimeGroup> issueTypesByGroups =
-							fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
-
-					List<String> status =
-							new ArrayList<>(
-									issueTypesByGroups.stream()
-											.map(CycleTimeGroup::getStatuses)
-											.flatMap(Collection::stream)
-											.toList());
-					mapOfProjectFilters.put(
-							"statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
-					uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+					Map<String, Map<String, Object>> uniqueProjectMap =
+							getUniqueProjectMap(basicProjectConfigId);
 
 					List<JiraIssueCustomHistory> jiraIssueCustomHistoryList =
 							jiraIssueCustomHistoryRepository.findByBasicProjectConfigIdIn(
@@ -176,9 +148,39 @@ public class CycleTimeTrendSlingshotServiceImpl
 		return resultListMap;
 	}
 
+	private Map<String, Map<String, Object>> getUniqueProjectMap(ObjectId basicProjectConfigId) {
+		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
+		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
+
+		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+
+		if (Optional.ofNullable(fieldMapping.getJiraIssueTypeKPI202()).isPresent()) {
+
+			KpiDataHelper.prepareFieldMappingDefectTypeTransformation(
+					mapOfProjectFilters,
+					fieldMapping.getJiradefecttype(),
+					fieldMapping.getJiraIssueTypeKPI202(),
+					JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature());
+			uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+		}
+
+		List<CycleTimeGroup> issueTypesByGroups =
+				fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
+
+		List<String> status =
+				new ArrayList<>(
+						issueTypesByGroups.stream()
+								.map(CycleTimeGroup::getStatuses)
+								.flatMap(Collection::stream)
+								.toList());
+		mapOfProjectFilters.put(
+				"statusUpdationLog.story.changedTo", CommonUtils.convertToPatternList(status));
+		uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
+		return uniqueProjectMap;
+	}
+
 	private void projectWiseLeafNodeValue(
 			KpiElement kpiElement, Node leafNode, KpiRequest kpiRequest) {
-		String requestTrackerId = getRequestTrackerId();
 
 		String startDate = DateUtil.getTodayDate().minusMonths(6).toString();
 		String endDate = DateUtil.getTodayDate().toString();
@@ -190,26 +192,23 @@ public class CycleTimeTrendSlingshotServiceImpl
 		Set<String> groupMapSet = new LinkedHashSet<>();
 		List<String> rangeList = customApiConfig.getFlowEfficiencyXAxisRange();
 		FieldMapping fieldMapping =
-				leafNode != null
-						? configHelperService
-								.getFieldMappingMap()
-								.get(leafNode.getProjectFilter().getBasicProjectConfigId())
-						: new FieldMapping();
+				configHelperService
+						.getFieldMappingMap()
+						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 		List<JiraIssueCustomHistory> allIssueHistory =
 				(List<JiraIssueCustomHistory>)
 						resultMap.get(leafNode.getProjectFilter().getBasicProjectConfigId().toString());
 
-		Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeAndStatusWiseJiraIssueMap =
+		Map<String, List<JiraIssueCustomHistory>> rangeAndStatusWiseJiraIssueMap =
 				new LinkedHashMap<>();
 		Map<String, Map<String, List<Double>>> filterMap = new LinkedHashMap<>();
+
+		Map<String, Map<String, Object>> uniqueProjectMap =
+				getUniqueProjectMap(leafNode.getProjectFilter().getBasicProjectConfigId());
+		initializeRangeMapForProjects(
+				rangeAndStatusWiseJiraIssueMap, allIssueHistory, rangeList, uniqueProjectMap);
 		filterDataBasedOnXAxisRangeWise(
-				rangeList,
-				allIssueHistory,
-				rangeAndStatusWiseJiraIssueMap,
-				filterMap,
-				fieldMapping,
-				issueTypesSet,
-				groupMapSet);
+				rangeAndStatusWiseJiraIssueMap, filterMap, fieldMapping, issueTypesSet, groupMapSet);
 
 		Map<String, List<DataCount>> datacountMap = new LinkedHashMap<>();
 
@@ -224,9 +223,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 								DataCount dataCount = new DataCount();
 								double totalDays =
 										Math.round(
-														((dataList.stream()
-																				.collect(Collectors.summingDouble(Double::doubleValue)))
-																		/ 1440)
+														(dataList.stream().mapToDouble(Double::doubleValue).sum() / 1440)
 																* 10.0)
 												/ 10.0;
 								dataCount.setValue(totalDays);
@@ -242,7 +239,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 					datacountMap.put(key, dataCountList);
 				});
 
-		if (leafNode != null) leafNode.setValue(datacountMap);
+		leafNode.setValue(datacountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =
 				new IterationKpiFiltersOptions(SEARCH_BY_CYCLE_GROUP, groupMapSet);
@@ -258,65 +255,84 @@ public class CycleTimeTrendSlingshotServiceImpl
 	}
 
 	private void filterDataBasedOnXAxisRangeWise(
-			List<String> xAxisRange,
-			List<JiraIssueCustomHistory> projectWiseJiraIssueList,
-			Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeWiseJiraIssuesMap,
+			Map<String, List<JiraIssueCustomHistory>> rangeWiseJiraIssuesMap,
 			Map<String, Map<String, List<Double>>> filterMap,
 			FieldMapping fieldMapping,
 			Set<String> issueTypesSet,
 			Set<String> groupMapSet) {
-		Map<Long, String> monthRangeMap = new HashMap<>();
-		BacklogKpiHelper.initializeRangeMapForProjects(
-				rangeWiseJiraIssuesMap, xAxisRange, monthRangeMap);
 
-		projectWiseJiraIssueList.forEach(
-				history -> {
-					Iterator<CycleTimeGroup> iterator =
-							fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
-					CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
-					while (current != null) {
-						LocalDateTime windowStart = null;
-						LocalDateTime windowEnd = null;
-						double minsDiff = 0;
-						for (JiraHistoryChangeLog log : history.getStatusUpdationLog()) {
-							if (current.getStatuses().contains(log.getChangedTo())) {
-								if (windowStart == null) windowStart = log.getUpdatedOn();
-								windowEnd = log.getUpdatedOn();
-							} else if (windowStart != null) {
-								if (current.getStatuses().contains(log.getChangedFrom()))
-									windowEnd = log.getUpdatedOn();
-								minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
-								windowStart = null;
-							}
-						}
-						if (windowStart != null && iterator.hasNext()) {
-							windowEnd = LocalDateTime.now();
-							minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
-						}
-						if (minsDiff > 0) {
+		rangeWiseJiraIssuesMap.forEach(
+				(range, projectWiseJiraIssueList) ->
+						projectWiseJiraIssueList.forEach(
+								history -> {
+									Iterator<CycleTimeGroup> iterator =
+											fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+									CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
+									while (current != null) {
+										setCycleTime(current, history, filterMap, range, iterator.hasNext());
+										groupMapSet.add(current.getLabel());
+										issueTypesSet.add(history.getStoryType());
+										current = iterator.hasNext() ? iterator.next() : null;
+									}
+								}));
+	}
 
-							long daysBetween = DAYS.between(windowEnd.toLocalDate(), LocalDate.now());
+	private void setCycleTime(
+			CycleTimeGroup current,
+			JiraIssueCustomHistory history,
+			Map<String, Map<String, List<Double>>> filterMap,
+			String range,
+			Boolean hasNext) {
+		LocalDateTime windowStart = null;
+		LocalDateTime windowEnd = null;
+		double minsDiff = 0;
+		for (JiraHistoryChangeLog log : history.getStatusUpdationLog()) {
+			if (current.getStatuses().contains(log.getChangedTo())) {
+				if (windowStart == null) windowStart = log.getUpdatedOn();
+				windowEnd = log.getUpdatedOn();
+			} else if (windowStart != null) {
+				if (current.getStatuses().contains(log.getChangedFrom())) windowEnd = log.getUpdatedOn();
+				minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
+				windowStart = null;
+			}
+		}
+		if (windowStart != null && hasNext) {
+			windowEnd = LocalDateTime.now();
+			minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
+		}
+		if (minsDiff > 0) {
 
-							Map<String, List<Double>> cycleTimeByfilterMap =
-									filterMap.computeIfAbsent(
-											current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
+			Map<String, List<Double>> cycleTimeByfilterMap =
+					filterMap.computeIfAbsent(
+							current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
 
-							double finalMinsDiff = minsDiff;
-							monthRangeMap.forEach(
-									(noOfDay, range) -> {
-										if (noOfDay > daysBetween) {
-											cycleTimeByfilterMap
-													.computeIfAbsent(range, k -> new ArrayList<>())
-													.add(finalMinsDiff);
-										}
-									});
-							filterMap.put(
-									current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
-							groupMapSet.add(current.getLabel());
-							issueTypesSet.add(history.getStoryType());
-						}
-						current = iterator.hasNext() ? iterator.next() : null;
+			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
+			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
+		}
+	}
+
+	public static void initializeRangeMapForProjects(
+			Map<String, List<JiraIssueCustomHistory>> rangeWiseJiraIssuesMap,
+			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList,
+			List<String> xAxisRange,
+			Map<String, Map<String, Object>> uniqueProjectMap) {
+
+		xAxisRange.forEach(
+				range -> {
+					String currentDate = DateUtil.getTodayDate().toString();
+					String startDate;
+					String[] rangeSplit = range.trim().split(" ");
+					if (rangeSplit[2].contains("Months")) {
+						startDate =
+								DateUtil.getTodayDate().minusMonths(Integer.parseInt(rangeSplit[1])).toString();
+					} else {
+						startDate =
+								DateUtil.getTodayDate().minusWeeks(Integer.parseInt(rangeSplit[1])).toString();
 					}
+					rangeWiseJiraIssuesMap.put(
+							range,
+							BacklogKpiHelper.filterProjectHistories(
+									jiraIssueCustomHistoryList, uniqueProjectMap, startDate, currentDate));
 				});
 	}
 }
