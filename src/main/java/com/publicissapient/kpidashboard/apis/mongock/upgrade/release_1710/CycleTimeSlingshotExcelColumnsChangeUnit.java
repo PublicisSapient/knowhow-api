@@ -36,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CycleTimeSlingshotExcelColumnsChangeUnit {
 
+	private static final String KPI_ID = "kpiId";
+
 	private final MongoTemplate mongoTemplate;
 
 	@Execution
@@ -43,7 +45,7 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 		Document doc =
 				new Document()
 						.append("basicProjectConfigId", null)
-						.append("kpiId", "kpi202")
+						.append(KPI_ID, "kpi202")
 						.append(
 								"kpiColumnDetails",
 								List.of(
@@ -55,7 +57,7 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 		Document doc2 =
 				new Document()
 						.append("basicProjectConfigId", null)
-						.append("kpiId", "kpi204")
+						.append(KPI_ID, "kpi204")
 						.append(
 								"kpiColumnDetails",
 								List.of(
@@ -70,7 +72,7 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 	@RollbackExecution
 	public void rollback() {
 		mongoTemplate.remove(
-				new Query(Criteria.where("kpiId").in("kpi204", "kpi202")), "kpi_column_configs");
+				new Query(Criteria.where(KPI_ID).in("kpi204", "kpi202")), "kpi_column_configs");
 	}
 
 	private Document columnDetail(String name, int order) {
