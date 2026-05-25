@@ -1156,6 +1156,8 @@ public enum KPIExcelColumn {
 
 	CYCLE_TIME_SLINGSHOT(
 			"kpi202", Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Group Map")),
+	CYCLE_TIME_TREND_SLINGSHOT(
+			"kpi204", Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Group Map")),
 	FLOW_EFFICIENCY_SLINGSHOT(
 			"kpi203",
 			Arrays.asList(
