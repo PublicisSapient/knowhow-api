@@ -87,7 +87,6 @@ public class FlowEfficiencySlingshotServiceImpl
 		log.info("FLOW-EFFICIENCY-SLINGSHOT {}", kpiRequest.getRequestTrackerId());
 		Node project =
 				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT).get(0);
-		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
 		projectWiseLeafNodeValue(kpiElement, project, kpiRequest);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
