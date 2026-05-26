@@ -850,7 +850,8 @@ public enum FieldMappingEnum {
 	KPI202(
 			"Cycle Time",
 			KPISource.JIRA.name(),
-			List.of("jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202", "thresholdValueKPI202")),
+			List.of(
+					"jiraIssueTypeKPI202", "jiraIssueStatusGroupByCategoryKPI202", "thresholdValueKPI202")),
 	KPI203(
 			"Flow Efficiency",
 			KPISource.JIRA.name(),

@@ -283,7 +283,6 @@ public class CycleTimeTrendSlingshotServiceImpl
 										issueTypesSet.add(history.getStoryType());
 										current = iterator.hasNext() ? iterator.next() : null;
 									}
-
 								}));
 	}
 
@@ -312,8 +311,8 @@ public class CycleTimeTrendSlingshotServiceImpl
 		}
 		if (minsDiff > 0) {
 
-			Map<String, List<Double>> overallMap = filterMap.computeIfAbsent(
-					OVERALL + "#" + history.getStoryType(), k -> new HashMap<>());
+			Map<String, List<Double>> overallMap =
+					filterMap.computeIfAbsent(OVERALL + "#" + history.getStoryType(), k -> new HashMap<>());
 
 			overallMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
 			filterMap.put(OVERALL + "#" + history.getStoryType(), overallMap);
@@ -323,7 +322,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 							current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
 
 			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
-            filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
+			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
 		}
 	}
 
