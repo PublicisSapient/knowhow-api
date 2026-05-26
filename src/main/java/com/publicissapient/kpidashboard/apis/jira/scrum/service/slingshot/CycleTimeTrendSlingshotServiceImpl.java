@@ -150,6 +150,12 @@ public class CycleTimeTrendSlingshotServiceImpl
 		return resultListMap;
 	}
 
+	@Override
+	public Double calculateThresholdValue(FieldMapping fieldMapping) {
+		return calculateThresholdValue(
+				fieldMapping.getThresholdValueKPI202(), KPICode.CYCLE_TIME_TREND_SLINGSHOT.getKpiId());
+	}
+
 	private Map<String, Map<String, Object>> getUniqueProjectMap(ObjectId basicProjectConfigId) {
 		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
 		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
