@@ -59,6 +59,8 @@ public class CycleTimeTrendSlingshotServiceImpl
 	private static final String ISSUE_COUNT = "Issue Count";
 	private static final String SEARCH_BY_ISSUE_TYPE = "Filter by issue type";
 	private static final String SEARCH_BY_CYCLE_GROUP = "Filter by cycle group";
+	private static final String MONTHS = "Months";
+	private static final String OVERALL = "Overall";
 
 	@Autowired ConfigHelperService configHelperService;
 
@@ -190,6 +192,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 		List<KPIExcelData> excelData = new ArrayList<>();
 		Set<String> issueTypesSet = new LinkedHashSet<>();
 		Set<String> groupMapSet = new LinkedHashSet<>();
+		groupMapSet.add(OVERALL);
 		List<String> rangeList = customApiConfig.getFlowEfficiencyXAxisRange();
 		FieldMapping fieldMapping =
 				configHelperService
@@ -274,6 +277,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 										issueTypesSet.add(history.getStoryType());
 										current = iterator.hasNext() ? iterator.next() : null;
 									}
+
 								}));
 	}
 
@@ -302,12 +306,18 @@ public class CycleTimeTrendSlingshotServiceImpl
 		}
 		if (minsDiff > 0) {
 
+			Map<String, List<Double>> overallMap = filterMap.computeIfAbsent(
+					OVERALL + "#" + history.getStoryType(), k -> new HashMap<>());
+
+			overallMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
+			filterMap.put(OVERALL + "#" + history.getStoryType(), overallMap);
+
 			Map<String, List<Double>> cycleTimeByfilterMap =
 					filterMap.computeIfAbsent(
 							current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
 
 			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
-			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
+            filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
 		}
 	}
 
@@ -322,7 +332,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 					String currentDate = DateUtil.getTodayDate().toString();
 					String startDate;
 					String[] rangeSplit = range.trim().split(" ");
-					if (rangeSplit[2].contains("Months")) {
+					if (rangeSplit[2].contains(MONTHS)) {
 						startDate =
 								DateUtil.getTodayDate().minusMonths(Integer.parseInt(rangeSplit[1])).toString();
 					} else {
