@@ -82,6 +82,35 @@ public class KpiElement implements Serializable { // NOPMD
 	private String overAllMaturityValue;
 	private List<String> maturityRange;
 
+	private boolean kpiSprintSwitch;
+	private String labelXAxis;
+
+	public String getLabelXAxis() {
+		return labelXAxis;
+	}
+
+	public void setLabelXAxis(String xAxisLabel) {
+		this.labelXAxis = xAxisLabel;
+	}
+
+	/**
+	 * Is kpi sprint switch boolean.
+	 *
+	 * @return the boolean
+	 */
+	public boolean isKpiSprintSwitch() {
+		return kpiSprintSwitch;
+	}
+
+	/**
+	 * Sets kpi sprint switch.
+	 *
+	 * @param kpiSprintSwitch the kpi sprint switch
+	 */
+	public void setKpiSprintSwitch(boolean kpiSprintSwitch) {
+		this.kpiSprintSwitch = kpiSprintSwitch;
+	}
+
 	public List<MaturityLevel> getMaturityLevel() {
 		return maturityLevel;
 	}
