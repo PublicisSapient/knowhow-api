@@ -54,6 +54,9 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	public static final String CYCLE_TIME_TREND_SLINGSHOT = "CYCLE_TIME_TREND_SLINGSHOT";
 	public static final String HIERARCHY_LEVEL_ONE = "hierarchyLevelOne";
+	public static final String VALUE = "value";
+	public static final String DURATION = "duration";
+	public static final String WEEK = "week";
 
 	@Mock CacheService cacheService;
 	@Mock ConfigHelperService configHelperService;
@@ -230,8 +233,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
-		filterDuration.put("value", 1);
-		filterDuration.put("duration", "week");
+		filterDuration.put(VALUE, 1);
+		filterDuration.put(DURATION, WEEK);
 		kpiRequest.getKpiList().forEach(k -> k.setFilterDuration(filterDuration));
 
 		KpiElement result =
@@ -249,7 +252,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
 		filterDuration.put("value", 3);
-		filterDuration.put("duration", "month");
+		filterDuration.put(DURATION, "month");
 		kpiRequest.getKpiList().forEach(k -> k.setFilterDuration(filterDuration));
 
 		KpiElement result =
@@ -403,7 +406,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
 		filterDuration.put("value", 2);
-		filterDuration.put("duration", "week");
+		filterDuration.put(DURATION, WEEK);
 		kpiRequest.getKpiList().forEach(k -> k.setFilterDuration(filterDuration));
 
 		KpiElement result =
@@ -421,7 +424,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
 		filterDuration.put("value", 99);
-		filterDuration.put("duration", "month");
+		filterDuration.put(DURATION, "month");
 		kpiRequest.getKpiList().forEach(k -> k.setFilterDuration(filterDuration));
 
 		KpiElement result =
