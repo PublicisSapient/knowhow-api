@@ -109,27 +109,6 @@ public class KpiRequest implements Serializable {
 	@Schema(description = "Level name for the KPI request", example = "Team Level")
 	private String levelName;
 
-	@Schema(description = "KPI level boolean switch for range or sprint data", example = "true")
-	private boolean kpiSprintSwitch;
-
-	/**
-	 * Is kpi sprint switch boolean.
-	 *
-	 * @return the boolean
-	 */
-	public boolean isKpiSprintSwitch() {
-		return kpiSprintSwitch;
-	}
-
-	/**
-	 * Sets kpi sprint switch.
-	 *
-	 * @param kpiSprintSwitch the kpi sprint switch
-	 */
-	public void setKpiSprintSwitch(boolean kpiSprintSwitch) {
-		this.kpiSprintSwitch = kpiSprintSwitch;
-	}
-
 	/**
 	 * Gets kpi list.
 	 *

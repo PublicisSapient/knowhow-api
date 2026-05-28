@@ -50,6 +50,8 @@ import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHi
 @RunWith(MockitoJUnitRunner.class)
 public class CycleTimeTrendSlingshotServiceImplTest {
 
+	public static final String CYCLE_TIME_TREND_SLINGSHOT = "CYCLE_TIME_TREND_SLINGSHOT";
+	public static final String HIERARCHY_LEVEL_ONE = "hierarchyLevelOne";
 	@Mock CacheService cacheService;
 	@Mock ConfigHelperService configHelperService;
 	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
@@ -135,7 +137,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Test
 	public void testGetQualifierType() {
-		assertEquals("CYCLE_TIME_TREND_SLINGSHOT", service.getQualifierType());
+		assertEquals(CYCLE_TIME_TREND_SLINGSHOT, service.getQualifierType());
 	}
 
 	@Test
@@ -147,7 +149,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 	public void testFetchKPIDataFromDb() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		List<Node> leafNodeList =
 				KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), new ArrayList<>(), false);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);

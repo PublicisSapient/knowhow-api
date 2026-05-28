@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -81,6 +82,27 @@ public class KpiElement implements Serializable { // NOPMD
 	// maturity value for overall filter
 	private String overAllMaturityValue;
 	private List<String> maturityRange;
+
+	private boolean kpiSprintSwitch;
+
+	/**
+	 * Is kpi sprint switch boolean.
+	 *
+	 * @return the boolean
+	 */
+	public boolean isKpiSprintSwitch() {
+		return kpiSprintSwitch;
+	}
+
+	/**
+	 * Sets kpi sprint switch.
+	 *
+	 * @param kpiSprintSwitch the kpi sprint switch
+	 */
+	public void setKpiSprintSwitch(boolean kpiSprintSwitch) {
+		this.kpiSprintSwitch = kpiSprintSwitch;
+	}
+
 
 	public List<MaturityLevel> getMaturityLevel() {
 		return maturityLevel;

@@ -51,8 +51,10 @@ public class CycleTimeTrendSlingshotServiceImpl
 		extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String HISTORY = "history";
-	public static final String TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL = "cycleTimeTrendSlingshotDurationRangeServiceImpl";
-	public static final String TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL = "cycleTimeTrendSlingshotSprintsServiceImpl";
+	public static final String TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL =
+			"cycleTimeTrendSlingshotDurationRangeServiceImpl";
+	public static final String TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL =
+			"cycleTimeTrendSlingshotSprintsServiceImpl";
 	private List<String> sprintIdList = Collections.synchronizedList(new ArrayList<>());
 
 	@Autowired ConfigHelperService configHelperService;
@@ -87,24 +89,27 @@ public class CycleTimeTrendSlingshotServiceImpl
 		sprintIdList =
 				treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER).stream()
 						.map(node -> node.getSprintFilter().getId())
-						.collect(Collectors.toList());
+						.toList();
 		// in case if only projects or sprint filters are applied
 		if (CollectionUtils.isNotEmpty(projectList)) {
 			String startDate = DateUtil.getTodayDate().minusMonths(6).toString();
 			String endDate = DateUtil.getTodayDate().toString();
 			Map<String, Object> resultMap =
 					fetchKPIDataFromDb(projectList, startDate, endDate, kpiRequest);
-			if (kpiRequest.isKpiSprintSwitch()) {
-				log.info("CYCLE TIME SLINGSHOT SPRINT WISE -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
+			if (kpiElement.isKpiSprintSwitch()) {
+				log.info(
+						"CYCLE TIME SLINGSHOT SPRINT WISE -> requestTrackerId[{}]",
+						kpiRequest.getRequestTrackerId());
 				strategyMap
 						.get(TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL)
 						.projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
 			} else {
-				log.info("CYCLE TIME SLINGSHOT DURATION RANGE WISE -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
+				log.info(
+						"CYCLE TIME SLINGSHOT DURATION RANGE WISE -> requestTrackerId[{}]",
+						kpiRequest.getRequestTrackerId());
 				strategyMap
 						.get(TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL)
 						.projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
-
 			}
 		}
 
