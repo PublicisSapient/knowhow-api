@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +25,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
-
+import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
@@ -196,7 +195,6 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		// Each group should have 2 DataCount entries (one per sprint)
 		datacountMap.values().forEach(list -> assertEquals(2, list.size()));
 	}
-
 
 	@Test
 	public void testProjectWiseLeafNodeValue_issueNotInHistoryIsSkipped() {
