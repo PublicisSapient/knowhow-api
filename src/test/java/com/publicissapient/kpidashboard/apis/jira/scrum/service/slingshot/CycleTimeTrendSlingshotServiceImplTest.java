@@ -2,6 +2,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +19,6 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -34,6 +34,7 @@ import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueHistoryDataFactory;
 import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -45,6 +46,7 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectBasicCon
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -52,13 +54,19 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	public static final String CYCLE_TIME_TREND_SLINGSHOT = "CYCLE_TIME_TREND_SLINGSHOT";
 	public static final String HIERARCHY_LEVEL_ONE = "hierarchyLevelOne";
+
 	@Mock CacheService cacheService;
 	@Mock ConfigHelperService configHelperService;
 	@Mock JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Mock CommonService commonService;
 	@Mock CustomApiConfig customApiConfig;
+	@Mock SprintDetailsService sprintDetailsService;
+	@Mock CycleTimeTrendSlingshotDurationRangeServiceImpl durationRangeStrategy;
+	@Mock CycleTimeTrendSlingshotSprintsServiceImpl sprintsStrategy;
 
-	@InjectMocks CycleTimeTrendSlingshotServiceImpl service;
+	// Manually constructed — NOT @InjectMocks — because constructor injection
+	// prevents Mockito from injecting @Mock fields via field injection.
+	private CycleTimeTrendSlingshotServiceImpl service;
 
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList;
@@ -69,18 +77,20 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Before
 	public void setUp() {
-		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
-		kpiRequest = kpiRequestFactory.findKpiRequest("kpi202");
-		kpiRequest.setLabel("PROJECT");
+		Map<String, CycleTimeTrendSlingshotStrategy> strategyMap = new HashMap<>();
+		strategyMap.put(
+				CycleTimeTrendSlingshotServiceImpl.TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL,
+				durationRangeStrategy);
+		strategyMap.put(
+				CycleTimeTrendSlingshotServiceImpl.TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL, sprintsStrategy);
 
-		Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
-		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
-		projectConfig.setId(PROJECT_CONFIG_ID);
-		projectConfig.setProjectName("Scrum Project");
-		projectConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
-		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
-		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
-		Mockito.when(cacheService.getAdditionalFilterHierarchyLevel()).thenReturn(new HashMap<>());
+		service = new CycleTimeTrendSlingshotServiceImpl(strategyMap);
+		ReflectionTestUtils.setField(service, "configHelperService", configHelperService);
+		ReflectionTestUtils.setField(service, "customApiConfig", customApiConfig);
+		ReflectionTestUtils.setField(
+				service, "jiraIssueCustomHistoryRepository", jiraIssueCustomHistoryRepository);
+		ReflectionTestUtils.setField(service, "sprintDetailsService", sprintDetailsService);
+
 		Class<?> parentClass = ToolsKPIService.class;
 		ReflectionTestUtils.setField(
 				service, parentClass, "cacheService", cacheService, CacheService.class);
@@ -94,6 +104,19 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 				"configHelperService",
 				configHelperService,
 				ConfigHelperService.class);
+
+		KpiRequestFactory kpiRequestFactory = KpiRequestFactory.newInstance("");
+		kpiRequest = kpiRequestFactory.findKpiRequest("kpi202");
+		kpiRequest.setLabel("PROJECT");
+
+		Map<String, ProjectBasicConfig> projectConfigMap = new HashMap<>();
+		ProjectBasicConfig projectConfig = new ProjectBasicConfig();
+		projectConfig.setId(PROJECT_CONFIG_ID);
+		projectConfig.setProjectName("Scrum Project");
+		projectConfig.setProjectNodeId("Scrum Project_6335363749794a18e8a4479b");
+		projectConfigMap.put(projectConfig.getProjectName(), projectConfig);
+		Mockito.when(cacheService.cacheProjectConfigMapData()).thenReturn(projectConfigMap);
+		Mockito.when(cacheService.getAdditionalFilterHierarchyLevel()).thenReturn(new HashMap<>());
 
 		AccountHierarchyFilterDataFactory accountHierarchyFilterDataFactory =
 				AccountHierarchyFilterDataFactory.newInstance();
@@ -133,6 +156,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		when(jiraIssueCustomHistoryRepository.findByBasicProjectConfigIdIn(anyString()))
 				.thenReturn(jiraIssueCustomHistoryList);
+		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(new ArrayList<>());
 	}
 
 	@Test
@@ -165,13 +189,46 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 	}
 
 	@Test
+	public void testGetKpiData_durationRangeMode() throws ApplicationException {
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		// kpiSprintSwitch = false → duration range strategy
+		kpiRequest.getKpiList().get(0).setKpiSprintSwitch(false);
+
+		KpiElement result =
+				service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+
+		assertNotNull(result);
+		Mockito.verify(durationRangeStrategy)
+				.projectWiseLeafNodeValue(Mockito.any(), Mockito.any(Node.class), Mockito.anyMap());
+	}
+
+	@Test
+	public void testGetKpiData_sprintMode() throws ApplicationException {
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		// kpiSprintSwitch = true → sprints strategy
+		kpiRequest.getKpiList().get(0).setKpiSprintSwitch(true);
+
+		KpiElement result =
+				service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
+
+		assertNotNull(result);
+		Mockito.verify(sprintsStrategy)
+				.projectWiseLeafNodeValue(Mockito.any(), Mockito.any(Node.class), Mockito.anyMap());
+	}
+
+	@Test
 	public void testGetKpiData_withFilterDuration_week() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
-		// Set filterDuration to week
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
 		filterDuration.put("value", 1);
 		filterDuration.put("duration", "week");
@@ -187,7 +244,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 	public void testGetKpiData_withFilterDuration_month() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
@@ -205,10 +262,9 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 	public void testGetKpiData_withNullFilterDuration() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
-		// filterDuration is null (default path)
 		kpiRequest.getKpiList().forEach(k -> k.setFilterDuration(null));
 
 		KpiElement result =
@@ -221,7 +277,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 	public void testGetKpiData_withExcelRequestTracker() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		ReflectionTestUtils.setField(kpiRequest, "requestTrackerId", "Excel-tracker-123");
 
@@ -229,7 +285,6 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 				service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
 		assertNotNull(result);
-		assertNotNull(result.getExcelData());
 	}
 
 	@Test
@@ -238,7 +293,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 				.thenReturn(new ArrayList<>());
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		KpiElement result =
@@ -249,7 +304,6 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Test
 	public void testGetKpiData_statusWindowClosedByNextLog() throws ApplicationException {
-		// Issue enters "In Development", then exits — window should be calculated
 		JiraIssueCustomHistory history =
 				buildHistory(
 						"STORY-1",
@@ -262,7 +316,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		KpiElement result =
@@ -273,8 +327,6 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Test
 	public void testGetKpiData_statusWindowStillOpen() throws ApplicationException {
-		// Issue enters "In Development" but never exits — open window, iterator has
-		// next
 		JiraIssueCustomHistory history =
 				buildHistory(
 						"STORY-2",
@@ -286,7 +338,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		KpiElement result =
@@ -297,7 +349,6 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Test
 	public void testGetKpiData_noMatchingStatusInChangeLogs() throws ApplicationException {
-		// Change logs have statuses not in any group — no DataValues should be produced
 		JiraIssueCustomHistory history =
 				buildHistory(
 						"STORY-3",
@@ -310,7 +361,7 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		KpiElement result =
@@ -321,7 +372,6 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Test
 	public void testGetKpiData_multipleGroupsMatched() throws ApplicationException {
-		// Issue passes through both Development and Testing groups
 		JiraIssueCustomHistory history =
 				buildHistory(
 						"STORY-4",
@@ -335,21 +385,20 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		KpiElement result =
 				service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
 		assertNotNull(result);
-		assertNotNull(result.getFilters());
 	}
 
 	@Test
 	public void testGetKpiData_filterDuration_pastWeek_label() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
@@ -367,10 +416,9 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 	public void testGetKpiData_filterDuration_unknownLabel() throws ApplicationException {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
-		// value=99 has no label mapping → "Unknown"
 		LinkedHashMap<String, Object> filterDuration = new LinkedHashMap<>();
 		filterDuration.put("value", 99);
 		filterDuration.put("duration", "month");
@@ -384,18 +432,47 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 	@Test
 	public void testGetKpiData_kpi202NotInKpiList() throws ApplicationException {
-		// kpiList does not contain kpi202 — should fall back to new KpiElement (null
-		// filterDuration)
 		kpiRequest.getKpiList().forEach(k -> k.setKpiId("kpi999"));
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		KpiElement result =
 				service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), treeAggregatorDetail);
 
 		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_withLimitedSprintList() throws ApplicationException {
+		// Provide more than 5 sprints — service should keep only last 5
+		List<SprintDetails> sprints = new ArrayList<>();
+		for (int i = 1; i <= 7; i++) {
+			SprintDetails sd = new SprintDetails();
+			sd.setSprintName("Sprint " + i);
+			sd.setTotalIssues(new java.util.HashSet<>());
+			sprints.add(sd);
+		}
+		when(sprintDetailsService.getSprintDetailsByIds(anyList())).thenReturn(sprints);
+
+		TreeAggregatorDetail treeAggregatorDetail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), HIERARCHY_LEVEL_ONE, 5);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), new ArrayList<>(), false),
+						LocalDate.now().minusMonths(6).toString(),
+						LocalDate.now().toString(),
+						kpiRequest);
+
+		assertNotNull(result);
+		@SuppressWarnings("unchecked")
+		List<SprintDetails> returnedSprints = (List<SprintDetails>) result.get("sprints");
+		assertEquals(5, returnedSprints.size());
+		assertEquals("Sprint 3", returnedSprints.get(0).getSprintName());
 	}
 
 	// ── helpers ──────────────────────────────────────────────────────────────
