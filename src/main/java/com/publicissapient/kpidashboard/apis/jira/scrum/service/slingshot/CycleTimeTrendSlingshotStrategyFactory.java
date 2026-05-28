@@ -1,23 +1,21 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class CycleTimeTrendSlingshotStrategyFactory {
 
-    private final Map<String, CycleTimeTrendSlingshotStrategy> strategyMap;
+	private final Map<String, CycleTimeTrendSlingshotStrategy> strategyMap;
 
-    public CycleTimeTrendSlingshotStrategyFactory(Map<String, CycleTimeTrendSlingshotStrategy> strategyMap) {
-        this.strategyMap = strategyMap;
-    }
+	public CycleTimeTrendSlingshotStrategyFactory(
+			Map<String, CycleTimeTrendSlingshotStrategy> strategyMap) {
+		this.strategyMap = strategyMap;
+	}
 
-    public CycleTimeTrendSlingshotStrategy process(String type) {
+	public CycleTimeTrendSlingshotStrategy process(String type) {
 
-        return strategyMap.get(type);
-
-    }
-
+		return strategyMap.get(type);
+	}
 }

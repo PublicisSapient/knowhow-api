@@ -2,23 +2,16 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
-import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -30,12 +23,9 @@ import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperServic
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.JiraFeatureHistory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
-import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
-import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
-import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
@@ -43,12 +33,13 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.BacklogKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
-import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
@@ -60,6 +51,8 @@ public class CycleTimeTrendSlingshotServiceImpl
 		extends JiraKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String HISTORY = "history";
+	public static final String TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL = "cycleTimeTrendSlingshotDurationRangeServiceImpl";
+	public static final String TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL = "cycleTimeTrendSlingshotSprintsServiceImpl";
 	private List<String> sprintIdList = Collections.synchronizedList(new ArrayList<>());
 
 	@Autowired ConfigHelperService configHelperService;
@@ -68,18 +61,18 @@ public class CycleTimeTrendSlingshotServiceImpl
 
 	@Autowired JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
-	@Autowired
-	SprintDetailsService sprintDetailsService;
+	@Autowired SprintDetailsService sprintDetailsService;
 
 	@Autowired KpiHelperService kpiHelperService;
 
 	private final Map<String, CycleTimeTrendSlingshotStrategy> strategyMap;
 
-    public CycleTimeTrendSlingshotServiceImpl(Map<String, CycleTimeTrendSlingshotStrategy> strategyMap) {
-        this.strategyMap = strategyMap;
-    }
+	public CycleTimeTrendSlingshotServiceImpl(
+			Map<String, CycleTimeTrendSlingshotStrategy> strategyMap) {
+		this.strategyMap = strategyMap;
+	}
 
-    @Override
+	@Override
 	public String getQualifierType() {
 		return KPICode.CYCLE_TIME_TREND_SLINGSHOT.name();
 	}
@@ -99,11 +92,19 @@ public class CycleTimeTrendSlingshotServiceImpl
 		if (CollectionUtils.isNotEmpty(projectList)) {
 			String startDate = DateUtil.getTodayDate().minusMonths(6).toString();
 			String endDate = DateUtil.getTodayDate().toString();
-			Map<String, Object> resultMap = fetchKPIDataFromDb(projectList,startDate, endDate, kpiRequest);
-			if(false) {
-				strategyMap.get("cycleTimeTrendSlingshotDurationRangeServiceImpl").projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
+			Map<String, Object> resultMap =
+					fetchKPIDataFromDb(projectList, startDate, endDate, kpiRequest);
+			if (kpiRequest.isKpiSprintSwitch()) {
+				log.info("CYCLE TIME SLINGSHOT SPRINT WISE -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
+				strategyMap
+						.get(TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL)
+						.projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
 			} else {
-				strategyMap.get("cycleTimeTrendSlingshotSprintsServiceImpl").projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
+				log.info("CYCLE TIME SLINGSHOT DURATION RANGE WISE -> requestTrackerId[{}]", kpiRequest.getRequestTrackerId());
+				strategyMap
+						.get(TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL)
+						.projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
+
 			}
 		}
 
@@ -164,8 +165,10 @@ public class CycleTimeTrendSlingshotServiceImpl
 							BacklogKpiHelper.filterProjectHistories(
 									jiraIssueCustomHistoryList, uniqueProjectMap, startDate, endDate);
 
-					List<SprintDetails> sprintDetailsList = sprintDetailsService.getSprintDetailsByIds(sprintIdList);
-					List<SprintDetails> limitedSprintList = sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 5)).toList();
+					List<SprintDetails> sprintDetailsList =
+							sprintDetailsService.getSprintDetailsByIds(sprintIdList);
+					List<SprintDetails> limitedSprintList =
+							sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 5)).toList();
 					resultListMap.put(HISTORY, filteredProjectHistory);
 					resultListMap.put("sprints", limitedSprintList);
 				});
@@ -208,5 +211,4 @@ public class CycleTimeTrendSlingshotServiceImpl
 		uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 		return uniqueProjectMap;
 	}
-
 }
