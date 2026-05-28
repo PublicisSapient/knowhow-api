@@ -45,6 +45,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 	private static final String MONTHS = "Months";
 	private static final String OVERALL = "Overall";
 	private static final String HISTORY = "history";
+	public static final String X_AXIS_LABEL = "Range";
 
 	private final CustomApiConfig customApiConfig;
 	private final ConfigHelperService configHelperService;
@@ -115,6 +116,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 		Collections.reverse(xAxisRange);
 		kpiElement.setFilters(iterationKpiFilters);
 		kpiElement.setxAxisValues(xAxisRange);
+		kpiElement.setLabelXAxis(X_AXIS_LABEL);
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_SLINGSHOT.getColumns());
 	}

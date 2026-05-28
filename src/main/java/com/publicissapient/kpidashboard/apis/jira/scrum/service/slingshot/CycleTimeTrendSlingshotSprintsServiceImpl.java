@@ -36,6 +36,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 	private static final String OVERALL = "Overall";
 	private static final String HISTORY = "history";
 	private static final String SPRINT_DETAILS = "sprints";
+	public static final String X_AXIS_LABEL = "Sprint";
 
 	private final CustomApiConfig customApiConfig;
 	private final ConfigHelperService configHelperService;
@@ -98,6 +99,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 		IterationKpiFilters iterationKpiFilters = new IterationKpiFilters(filter1, filter2);
 		kpiElement.setFilters(iterationKpiFilters);
 		kpiElement.setExcelData(excelData);
+		kpiElement.setLabelXAxis(X_AXIS_LABEL);
 		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_SLINGSHOT.getColumns());
 	}
 
