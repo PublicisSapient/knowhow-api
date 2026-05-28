@@ -33,19 +33,29 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 		sprintWiseJiraIssuesMap.forEach(
 				(sprint, projectWiseJiraIssueList) ->
 						projectWiseJiraIssueList.forEach(
-								history -> {
-									if (history != null) {
-										Iterator<CycleTimeGroup> iterator =
-												fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
-										CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
-										while (current != null) {
-											setCycleTime(current, history, filterMap, sprint, iterator.hasNext());
-											groupMapSet.add(current.getLabel());
-											issueTypesSet.add(history.getStoryType());
-											current = iterator.hasNext() ? iterator.next() : null;
-										}
-									}
-								}));
+								history ->
+										processHistory(
+												filterMap, fieldMapping, issueTypesSet, groupMapSet, sprint, history)));
+	}
+
+	private void processHistory(
+			Map<String, Map<String, List<Double>>> filterMap,
+			FieldMapping fieldMapping,
+			Set<String> issueTypesSet,
+			Set<String> groupMapSet,
+			String sprint,
+			JiraIssueCustomHistory history) {
+		if (history != null) {
+			Iterator<CycleTimeGroup> iterator =
+					fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+			CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
+			while (current != null) {
+				setCycleTime(current, history, filterMap, sprint, iterator.hasNext());
+				groupMapSet.add(current.getLabel());
+				issueTypesSet.add(history.getStoryType());
+				current = iterator.hasNext() ? iterator.next() : null;
+			}
+		}
 	}
 
 	private void setCycleTime(
