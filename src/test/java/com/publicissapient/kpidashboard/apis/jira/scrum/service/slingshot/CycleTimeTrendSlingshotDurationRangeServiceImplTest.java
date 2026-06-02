@@ -98,7 +98,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", issueHistoryList);
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(leafNode.getValue());
 	}
@@ -110,7 +110,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", issueHistoryList);
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(kpiElement.getFilters());
 	}
@@ -122,7 +122,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", issueHistoryList);
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		List<String> xAxis = kpiElement.getxAxisValues();
 		assertNotNull(xAxis);
@@ -138,7 +138,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", issueHistoryList);
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertEquals("Range", kpiElement.getLabelXAxis());
 	}
@@ -150,7 +150,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", issueHistoryList);
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(kpiElement.getExcelColumns());
 	}
@@ -162,7 +162,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", new ArrayList<>());
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(leafNode.getValue());
 		// datacountMap should be empty when no issues match
@@ -185,7 +185,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", List.of(history));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		@SuppressWarnings("unchecked")
 		Map<String, List<?>> datacountMap = (Map<String, List<?>>) leafNode.getValue();
@@ -210,7 +210,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("history", List.of(history));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		// Just verify no exception and value is set
 		assertNotNull(leafNode.getValue());

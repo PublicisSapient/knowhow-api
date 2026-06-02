@@ -205,7 +205,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		assertNotNull(result);
 		Mockito.verify(durationRangeStrategy)
-				.projectWiseLeafNodeValue(Mockito.any(), Mockito.any(Node.class), Mockito.anyMap());
+				.projectWiseLeafNodeValue(
+						Mockito.any(), Mockito.any(Node.class), Mockito.anyMap(), anyString());
 	}
 
 	@Test
@@ -222,7 +223,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		assertNotNull(result);
 		Mockito.verify(sprintsStrategy)
-				.projectWiseLeafNodeValue(Mockito.any(), Mockito.any(Node.class), Mockito.anyMap());
+				.projectWiseLeafNodeValue(
+						Mockito.any(), Mockito.any(Node.class), Mockito.anyMap(), anyString());
 	}
 
 	@Test

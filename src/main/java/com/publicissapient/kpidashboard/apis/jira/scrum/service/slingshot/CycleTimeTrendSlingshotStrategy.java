@@ -4,13 +4,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
+import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
@@ -21,21 +26,28 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 	private static final String OVERALL = "Overall";
 
 	abstract void projectWiseLeafNodeValue(
-			KpiElement kpiElement, Node leafNode, Map<String, Object> resultMap);
+			KpiElement kpiElement, Node leafNode, Map<String, Object> resultMap, String requestTrackerId);
 
 	protected void filterDataBasedOnXAxisRangeWise(
 			Map<String, List<JiraIssueCustomHistory>> sprintWiseJiraIssuesMap,
 			Map<String, Map<String, List<Double>>> filterMap,
 			FieldMapping fieldMapping,
 			Set<String> issueTypesSet,
-			Set<String> groupMapSet) {
+			Set<String> groupMapSet,
+			List<CycleTimeValidationData> cycleTimeList) {
 
 		sprintWiseJiraIssuesMap.forEach(
 				(sprint, projectWiseJiraIssueList) ->
 						projectWiseJiraIssueList.forEach(
 								history ->
 										processHistory(
-												filterMap, fieldMapping, issueTypesSet, groupMapSet, sprint, history)));
+												filterMap,
+												fieldMapping,
+												issueTypesSet,
+												groupMapSet,
+												sprint,
+												history,
+												cycleTimeList)));
 	}
 
 	private void processHistory(
@@ -44,13 +56,23 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			Set<String> issueTypesSet,
 			Set<String> groupMapSet,
 			String sprint,
-			JiraIssueCustomHistory history) {
+			JiraIssueCustomHistory history,
+			List<CycleTimeValidationData> cycleTimeList) {
 		if (history != null) {
+			LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
 			Iterator<CycleTimeGroup> iterator =
 					fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
 			CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
 			while (current != null) {
-				setCycleTime(current, history, filterMap, sprint, iterator.hasNext());
+				setCycleTime(current, history, filterMap, sprint, iterator.hasNext(), cycleTimeByGroup);
+				cycleTimeList.add(
+						CycleTimeValidationData.builder()
+								.issueNumber(history.getStoryID())
+								.url(history.getUrl())
+								.issueType(history.getStoryType())
+								.issueDesc(history.getDescription())
+								.groupMap(cycleTimeByGroup)
+								.build());
 				groupMapSet.add(current.getLabel());
 				issueTypesSet.add(history.getStoryType());
 				current = iterator.hasNext() ? iterator.next() : null;
@@ -63,7 +85,8 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			JiraIssueCustomHistory history,
 			Map<String, Map<String, List<Double>>> filterMap,
 			String range,
-			Boolean hasNext) {
+			Boolean hasNext,
+			LinkedHashMap<String, String> cycleTimeByGroup) {
 		LocalDateTime windowStart = null;
 		LocalDateTime windowEnd = null;
 		double minsDiff = 0;
@@ -95,6 +118,16 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 
 			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
 			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
+			cycleTimeByGroup.put(current.getLabel(), minsDiff + " Days");
+		}
+	}
+
+	protected void populateExcelDataObject(
+			String requestTrackerId,
+			List<CycleTimeValidationData> cycleTimeList,
+			List<KPIExcelData> excelData) {
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+			KPIExcelUtility.populateCycleTimeSlingshot(cycleTimeList, excelData);
 		}
 	}
 }

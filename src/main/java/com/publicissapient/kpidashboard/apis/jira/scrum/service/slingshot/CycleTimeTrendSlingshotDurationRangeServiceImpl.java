@@ -26,6 +26,7 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.BacklogKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.CommonUtils;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
+import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
@@ -51,7 +52,10 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 	private final ConfigHelperService configHelperService;
 
 	public void projectWiseLeafNodeValue(
-			KpiElement kpiElement, Node leafNode, Map<String, Object> resultMap) {
+			KpiElement kpiElement,
+			Node leafNode,
+			Map<String, Object> resultMap,
+			String requestTrackerId) {
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		Set<String> issueTypesSet = new LinkedHashSet<>();
@@ -68,13 +72,19 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 		Map<String, List<JiraIssueCustomHistory>> rangeAndStatusWiseJiraIssueMap =
 				new LinkedHashMap<>();
 		Map<String, Map<String, List<Double>>> filterMap = new LinkedHashMap<>();
+		List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
 
 		Map<String, Map<String, Object>> uniqueProjectMap =
 				getUniqueProjectMap(leafNode.getProjectFilter().getBasicProjectConfigId());
 		initializeRangeMapForProjects(
 				rangeAndStatusWiseJiraIssueMap, allIssueHistory, rangeList, uniqueProjectMap);
 		filterDataBasedOnXAxisRangeWise(
-				rangeAndStatusWiseJiraIssueMap, filterMap, fieldMapping, issueTypesSet, groupMapSet);
+				rangeAndStatusWiseJiraIssueMap,
+				filterMap,
+				fieldMapping,
+				issueTypesSet,
+				groupMapSet,
+				cycleTimeList);
 
 		Map<String, List<DataCount>> datacountMap = new LinkedHashMap<>();
 
@@ -105,6 +115,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 					datacountMap.put(key, dataCountList);
 				});
 
+		populateExcelDataObject(requestTrackerId, cycleTimeList, excelData);
 		leafNode.setValue(datacountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =
@@ -118,7 +129,7 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 		kpiElement.setxAxisValues(xAxisRange);
 		kpiElement.setLabelXAxis(X_AXIS_LABEL);
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_SLINGSHOT.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_TREND_SLINGSHOT.getColumns());
 	}
 
 	private Map<String, Map<String, Object>> getUniqueProjectMap(ObjectId basicProjectConfigId) {

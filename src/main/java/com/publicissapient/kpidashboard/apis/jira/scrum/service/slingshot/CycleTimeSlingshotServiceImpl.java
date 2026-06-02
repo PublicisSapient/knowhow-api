@@ -197,7 +197,7 @@ public class CycleTimeSlingshotServiceImpl
 		// Modal Heads Options
 		kpiElement.setFilters(iterationKpiFilters);
 		kpiElement.setExcelData(excelData);
-		kpiElement.setModalHeads(KPIExcelColumn.CYCLE_TIME.getColumns());
+		kpiElement.setModalHeads(KPIExcelColumn.CYCLE_TIME_SLINGSHOT.getColumns());
 	}
 
 	private Map<String, List<DataValue>> getCycleTimeDataCount(
