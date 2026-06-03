@@ -98,7 +98,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, buildSprintList("Sprint 1"));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(leafNode.getValue());
 	}
@@ -109,7 +109,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, buildSprintList("Sprint 1"));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(kpiElement.getFilters());
 	}
@@ -120,7 +120,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, buildSprintList("Sprint 1"));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertEquals("Sprint", kpiElement.getLabelXAxis());
 	}
@@ -131,7 +131,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, buildSprintList("Sprint 1"));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		assertNotNull(kpiElement.getExcelColumns());
 	}
@@ -142,7 +142,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, new ArrayList<>());
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		Map<?, ?> value = (Map<?, ?>) leafNode.getValue();
 		assertTrue(value.isEmpty());
@@ -154,7 +154,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(new ArrayList<>(), buildSprintList("Sprint 1"));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		// sprint map is built but no history matches → filterMap is empty
 		Map<?, ?> value = (Map<?, ?>) leafNode.getValue();
@@ -187,7 +187,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(List.of(h1, h2), sprints);
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		@SuppressWarnings("unchecked")
 		Map<String, List<DataCount>> datacountMap = (Map<String, List<DataCount>>) leafNode.getValue();
@@ -205,7 +205,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, List.of(sprint));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		// null history entries are silently added to the list but produce no cycle time
 		assertNotNull(leafNode.getValue());
@@ -228,7 +228,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(List.of(history), List.of(sprint));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		Map<?, ?> value = (Map<?, ?>) leafNode.getValue();
 		assertTrue(value.isEmpty());
@@ -251,7 +251,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(List.of(history), List.of(sprint));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		@SuppressWarnings("unchecked")
 		Map<String, List<DataCount>> datacountMap = (Map<String, List<DataCount>>) leafNode.getValue();
@@ -269,7 +269,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImplTest {
 		KpiElement kpiElement = new KpiElement();
 		Map<String, Object> resultMap = buildResultMap(issueHistoryList, List.of(emptySprintDetails));
 
-		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap);
+		service.projectWiseLeafNodeValue(kpiElement, leafNode, resultMap, "");
 
 		Map<?, ?> value = (Map<?, ?>) leafNode.getValue();
 		assertTrue(value.isEmpty());

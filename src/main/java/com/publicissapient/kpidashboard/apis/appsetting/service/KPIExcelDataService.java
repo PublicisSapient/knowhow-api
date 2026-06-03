@@ -804,6 +804,7 @@ public class KPIExcelDataService {
 						kpiElement.setKpiId(kpi.getKpiId());
 						kpiElement.setKpiName(kpi.name());
 						kpiElement.setKpiSource(KPISource.EXCEL.name() + "-" + source);
+						kpiElement.setKpiSprintSwitch(true);
 						kpiElement.setKpiCategory(
 								masterList.stream()
 										.filter(kpiMaster -> kpiMaster.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
