@@ -65,18 +65,19 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
 			while (current != null) {
 				setCycleTime(current, history, filterMap, sprint, iterator.hasNext(), cycleTimeByGroup);
-				cycleTimeList.add(
-						CycleTimeValidationData.builder()
-								.issueNumber(history.getStoryID())
-								.url(history.getUrl())
-								.issueType(history.getStoryType())
-								.issueDesc(history.getDescription())
-								.groupMap(cycleTimeByGroup)
-								.build());
 				groupMapSet.add(current.getLabel());
 				issueTypesSet.add(history.getStoryType());
 				current = iterator.hasNext() ? iterator.next() : null;
 			}
+			cycleTimeList.add(
+					CycleTimeValidationData.builder()
+							.issueNumber(history.getStoryID())
+							.url(history.getUrl())
+							.issueType(history.getStoryType())
+							.issueDesc(history.getDescription())
+							.sprintName(sprint)
+							.groupMap(cycleTimeByGroup)
+							.build());
 		}
 	}
 
@@ -118,7 +119,7 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 
 			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
 			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
-			cycleTimeByGroup.put(current.getLabel(), minsDiff + " Days");
+			cycleTimeByGroup.put(current.getLabel(), Math.round((minsDiff / 1440) * 10.0) + " Days");
 		}
 	}
 
