@@ -143,7 +143,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testCalculateThresholdValue() throws ApplicationException {
+	public void testCalculateThresholdValue() {
 		FieldMappingDataFactory factory =
 				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		FieldMapping fieldMapping = factory.getFieldMappings().get(0);
@@ -152,7 +152,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testFetchKPIDataFromDb_withCachedData() throws ApplicationException {
+	public void testFetchKPIDataFromDb_withCachedData() {
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(SPRINTVELOCITYKEY, totalIssueList);
 		resultListMap.put(SPRINT_WISE_SPRINTDETAILS, sprintDetailsList);
@@ -170,7 +170,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testFetchKPIDataFromDb_withDbData() throws ApplicationException {
+	public void testFetchKPIDataFromDb_withDbData() {
 		Map<String, Object> resultListMap = new HashMap<>();
 		resultListMap.put(SPRINTVELOCITYKEY, totalIssueList);
 		resultListMap.put(SPRINT_WISE_SPRINTDETAILS, sprintDetailsList);
