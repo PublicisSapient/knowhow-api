@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -95,8 +96,6 @@ public class SprintVelocitySlingshotServiceImpl
 	 * @param kpiRequest
 	 * @param kpiElement
 	 * @param treeAggregatorDetail
-	 * @return KpiElement
-	 * @throws ApplicationException
 	 */
 	@Override
 	public KpiElement getKpiData(
@@ -333,18 +332,11 @@ public class SprintVelocitySlingshotServiceImpl
 			KpiRequest kpiRequest) {
 
 		String requestTrackerId = getRequestTrackerId();
-		sprintLeafNodeList.sort(
-				(node1, node2) ->
-						node1
-								.getSprintFilter()
-								.getStartDate()
-								.compareTo(node2.getSprintFilter().getStartDate()));
+		sprintLeafNodeList.sort(Comparator.comparing(node -> node.getSprintFilter().getStartDate()));
 		long time = System.currentTimeMillis();
 		Map<String, Object> sprintVelocityStoryMap =
 				fetchKPIDataFromDb(sprintLeafNodeList, null, null, kpiRequest);
-		log.info(
-				"Sprint Velocity taking fetchKPIDataFromDb {}",
-				String.valueOf(System.currentTimeMillis() - time));
+		log.info("Sprint Velocity taking fetchKPIDataFromDb {}", System.currentTimeMillis() - time);
 
 		List<JiraIssue> allJiraIssue = (List<JiraIssue>) sprintVelocityStoryMap.get(SPRINTVELOCITYKEY);
 
@@ -411,7 +403,7 @@ public class SprintVelocitySlingshotServiceImpl
 					} else {
 						dataCount.setValue(0.0);
 					}
-					mapTmp.get(node.getId()).setValue(new ArrayList<DataCount>(Arrays.asList(dataCount)));
+					mapTmp.get(node.getId()).setValue(new ArrayList<>(List.of(dataCount)));
 					trendValueList.add(dataCount);
 				});
 		kpiElement.setExcelData(excelData);

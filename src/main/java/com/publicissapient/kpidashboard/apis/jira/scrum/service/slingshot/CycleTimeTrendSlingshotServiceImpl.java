@@ -175,7 +175,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 					List<SprintDetails> sprintDetailsList =
 							sprintDetailsService.getSprintDetailsByIds(sprintIdList);
 					List<SprintDetails> limitedSprintList =
-							sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 5)).toList();
+							sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 15)).toList();
 					resultListMap.put(HISTORY, filteredProjectHistory);
 					resultListMap.put("sprints", limitedSprintList);
 				});

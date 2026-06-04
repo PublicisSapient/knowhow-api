@@ -476,8 +476,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 		assertNotNull(result);
 		@SuppressWarnings("unchecked")
 		List<SprintDetails> returnedSprints = (List<SprintDetails>) result.get("sprints");
-		assertEquals(5, returnedSprints.size());
-		assertEquals("Sprint 3", returnedSprints.get(0).getSprintName());
+		assertEquals(7, returnedSprints.size());
+		assertEquals("Sprint 1", returnedSprints.get(0).getSprintName());
 	}
 
 	// ── helpers ──────────────────────────────────────────────────────────────
