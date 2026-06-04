@@ -73,7 +73,9 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.PI_PREDICTABILITY.name()));
 
 	private static final Set<String> NON_LIMIT_KPIS =
-			new HashSet<>(Arrays.asList(KPICode.CYCLE_TIME_SLINGSHOT.name()));
+			new HashSet<>(
+					Arrays.asList(
+							KPICode.CYCLE_TIME_SLINGSHOT.name(), KPICode.CYCLE_TIME_TREND_SLINGSHOT.name()));
 
 	@Autowired private CustomApiConfig customApiConfig;
 

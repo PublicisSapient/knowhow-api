@@ -12,13 +12,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.common.model.application.CycleTimeValidationData;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
@@ -38,12 +38,14 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 	private static final String SPRINT_DETAILS = "sprints";
 	public static final String X_AXIS_LABEL = "Sprint";
 
-	private final CustomApiConfig customApiConfig;
 	private final ConfigHelperService configHelperService;
 
 	@Override
 	public void projectWiseLeafNodeValue(
-			KpiElement kpiElement, Node leafNode, Map<String, Object> resultMap) {
+			KpiElement kpiElement,
+			Node leafNode,
+			Map<String, Object> resultMap,
+			String requestTrackerId) {
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		Set<String> issueTypesSet = new LinkedHashSet<>();
@@ -59,10 +61,16 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 
 		Map<String, List<JiraIssueCustomHistory>> sprintWiseJiraIssuesMap = new LinkedHashMap<>();
 		Map<String, Map<String, List<Double>>> filterMap = new LinkedHashMap<>();
+		List<CycleTimeValidationData> cycleTimeList = new ArrayList<>();
 
 		initializeRangeMapForProjects(sprintWiseJiraIssuesMap, allIssueHistory, sprintDetails);
 		filterDataBasedOnXAxisRangeWise(
-				sprintWiseJiraIssuesMap, filterMap, fieldMapping, issueTypesSet, groupMapSet);
+				sprintWiseJiraIssuesMap,
+				filterMap,
+				fieldMapping,
+				issueTypesSet,
+				groupMapSet,
+				cycleTimeList);
 
 		Map<String, List<DataCount>> datacountMap = new LinkedHashMap<>();
 
@@ -90,6 +98,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 					datacountMap.put(key, dataCountList);
 				});
 
+		populateExcelDataObject(requestTrackerId, cycleTimeList, excelData);
 		leafNode.setValue(datacountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =
@@ -100,7 +109,7 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 		kpiElement.setFilters(iterationKpiFilters);
 		kpiElement.setExcelData(excelData);
 		kpiElement.setLabelXAxis(X_AXIS_LABEL);
-		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_SLINGSHOT.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_TREND_SLINGSHOT.getColumns());
 	}
 
 	private static void initializeRangeMapForProjects(

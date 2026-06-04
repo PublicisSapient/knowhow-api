@@ -1146,6 +1146,7 @@ public class KPIExcelUtility {
 			excelData.setIssueID(storyId);
 			excelData.setIssueDesc(cycleTime.getIssueDesc());
 			excelData.setIssueType(cycleTime.getIssueType());
+			excelData.setSprintName(cycleTime.getSprintName());
 			excelData.setGroupMap(cycleTime.getGroupMap());
 			excelDataList.add(excelData);
 		}

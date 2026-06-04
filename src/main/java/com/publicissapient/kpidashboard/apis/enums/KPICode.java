@@ -323,7 +323,8 @@ public enum KPICode {
 
 	CYCLE_TIME_SLINGSHOT("kpi202", KPISource.JIRA.name()),
 	FLOW_EFFICIENCY_SLINGSHOT("kpi203", KPISource.JIRA.name()),
-	CYCLE_TIME_TREND_SLINGSHOT("kpi204", KPISource.JIRA.name());
+	CYCLE_TIME_TREND_SLINGSHOT("kpi204", KPISource.JIRA.name()),
+	SPRINT_VELOCITY_SLINGSHOT("kpi205", KPISource.JIRA.name());
 
 	// @formatter:on
 

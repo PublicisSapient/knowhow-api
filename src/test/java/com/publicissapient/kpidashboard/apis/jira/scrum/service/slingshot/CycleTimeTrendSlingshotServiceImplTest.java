@@ -205,7 +205,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		assertNotNull(result);
 		Mockito.verify(durationRangeStrategy)
-				.projectWiseLeafNodeValue(Mockito.any(), Mockito.any(Node.class), Mockito.anyMap());
+				.projectWiseLeafNodeValue(
+						Mockito.any(), Mockito.any(Node.class), Mockito.anyMap(), anyString());
 	}
 
 	@Test
@@ -222,7 +223,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 
 		assertNotNull(result);
 		Mockito.verify(sprintsStrategy)
-				.projectWiseLeafNodeValue(Mockito.any(), Mockito.any(Node.class), Mockito.anyMap());
+				.projectWiseLeafNodeValue(
+						Mockito.any(), Mockito.any(Node.class), Mockito.anyMap(), anyString());
 	}
 
 	@Test
@@ -474,8 +476,8 @@ public class CycleTimeTrendSlingshotServiceImplTest {
 		assertNotNull(result);
 		@SuppressWarnings("unchecked")
 		List<SprintDetails> returnedSprints = (List<SprintDetails>) result.get("sprints");
-		assertEquals(5, returnedSprints.size());
-		assertEquals("Sprint 3", returnedSprints.get(0).getSprintName());
+		assertEquals(7, returnedSprints.size());
+		assertEquals("Sprint 1", returnedSprints.get(0).getSprintName());
 	}
 
 	// ── helpers ──────────────────────────────────────────────────────────────
