@@ -102,14 +102,16 @@ public class CycleTimeTrendSlingshotServiceImpl
 						kpiRequest.getRequestTrackerId());
 				strategyMap
 						.get(TREND_SLINGSHOT_SPRINTS_SERVICE_IMPL)
-						.projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
+						.projectWiseLeafNodeValue(
+								kpiElement, projectList.get(0), resultMap, kpiRequest.getRequestTrackerId());
 			} else {
 				log.info(
 						"CYCLE TIME SLINGSHOT DURATION RANGE WISE -> requestTrackerId[{}]",
 						kpiRequest.getRequestTrackerId());
 				strategyMap
 						.get(TREND_SLINGSHOT_DURATION_RANGE_SERVICE_IMPL)
-						.projectWiseLeafNodeValue(kpiElement, projectList.get(0), resultMap);
+						.projectWiseLeafNodeValue(
+								kpiElement, projectList.get(0), resultMap, kpiRequest.getRequestTrackerId());
 			}
 		}
 
@@ -173,7 +175,7 @@ public class CycleTimeTrendSlingshotServiceImpl
 					List<SprintDetails> sprintDetailsList =
 							sprintDetailsService.getSprintDetailsByIds(sprintIdList);
 					List<SprintDetails> limitedSprintList =
-							sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 5)).toList();
+							sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 15)).toList();
 					resultListMap.put(HISTORY, filteredProjectHistory);
 					resultListMap.put("sprints", limitedSprintList);
 				});
