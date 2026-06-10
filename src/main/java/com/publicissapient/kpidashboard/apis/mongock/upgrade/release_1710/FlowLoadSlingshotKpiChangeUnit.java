@@ -14,7 +14,11 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
-@ChangeUnit(id = "flow_load_slingshot_kpi", order = "17112", author = "kunkambl")
+@ChangeUnit(
+		id = "flow_load_slingshot_kpi",
+		order = "17112",
+		author = "kunkambl",
+		systemVersion = "17.1.0")
 public class FlowLoadSlingshotKpiChangeUnit {
 
 	private static final String KPI_206 = "kpi206";
