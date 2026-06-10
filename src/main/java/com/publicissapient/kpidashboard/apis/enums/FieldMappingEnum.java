@@ -864,6 +864,14 @@ public enum FieldMappingEnum {
 					"jiraIterationCompletionStatusKPI205",
 					"jiraIterationIssueTypeKPI205",
 					"thresholdValueKPI205")),
+	KPI206(
+			"Flow Load",
+			KPISource.JIRA.name(),
+			Arrays.asList(
+					"storyFirstStatusKPI206",
+					"jiraStatusForQaKPI206",
+					"jiraStatusForInProgressKPI206",
+					"jiraIssueTypeNamesKPI206"))
 	;
 
 	/** kanban field mapping enums end * */
