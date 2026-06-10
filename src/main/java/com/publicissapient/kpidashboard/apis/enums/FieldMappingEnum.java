@@ -871,8 +871,7 @@ public enum FieldMappingEnum {
 					"storyFirstStatusKPI206",
 					"jiraStatusForQaKPI206",
 					"jiraStatusForInProgressKPI206",
-					"jiraIssueTypeNamesKPI206"))
-	;
+					"jiraIssueTypeNamesKPI206"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;
