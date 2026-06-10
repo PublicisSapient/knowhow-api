@@ -445,6 +445,7 @@ public enum FieldMappingEnum {
 					"jiraIssueTypeNamesKPI148")),
 
 	KPI146("Flow Distribution", KPISource.JIRA.name(), Arrays.asList("jiraIssueTypeNamesKPI146")),
+	KPI207("Flow Distribution Slingshot", KPISource.JIRA.name(), Arrays.asList("jiraIssueTypeNamesKPI207")),
 
 	KPI151(
 			"Backlog Count By Status",

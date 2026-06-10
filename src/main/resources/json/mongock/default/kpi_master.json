@@ -5357,5 +5357,39 @@
     "isPositiveTrend": false,
     "kpiBaseLine": "0",
     "showTrend": false
+  },
+  {
+    "kpiId": "Kpi207",
+    "kpiName": "Flow Distribution Slingshot",
+    "kpiUnit": "",
+    "isDeleted": "False",
+    "defaultOrder": 5,
+    "kpiCategory": "Slingshot",
+    "kpiSource": "Jira",
+    "combinedKpiSource": "Jira/Azure",
+    "groupId": 46,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": "stacked-area",
+    "kpiInfo": {
+      "definition": "Flow Distribution evaluates the amount of each kind of work (issue types) which are open in the backlog over a period of time.",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi146-Flow+Distribution"
+          }
+        }
+      ]
+    },
+    "xaxisLabel": "Time",
+    "yaxisLabel": "Count",
+    "isPositiveTrend": false,
+    "kpiFilter": "",
+    "showTrend": false,
+    "aggregationCriteria": "sum",
+    "isAdditionalFilterSupport": false,
+    "calculateMaturity": false
   }
 ]
