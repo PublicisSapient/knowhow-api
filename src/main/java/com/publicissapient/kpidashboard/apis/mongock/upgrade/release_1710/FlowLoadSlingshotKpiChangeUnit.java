@@ -63,10 +63,9 @@ public class FlowLoadSlingshotKpiChangeUnit {
                 .append("hideOverallFilter", false)
                 .append("kpiSource", "Jira")
                 .append("kanban", false)
-                .append("groupId", 11)
+                .append("groupId", 35)
                 .append("kpiInfo", new Document()
                         .append("definition", "Number of flow items currently in progress in the value stream (WIP). Too high = thrashing; too low = underutilisation. Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.")
-                        .append(CLASS, "com.publicissapient.kpidashboard.common.model.application.KpiInfo")
                         .append("details", Arrays.asList(
                                 new Document("type", "link")
                                         .append("kpiLinkDetail", new Document()

@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.nd4j.common.collection.IntArrayKeyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +34,6 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
-import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +45,6 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 
     @Autowired private CustomApiConfig customApiConfig;
     @Autowired private ConfigHelperService configHelperService;
-    @Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
     @Override
     public String getQualifierType() {
@@ -66,18 +63,18 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
                             .getFieldMappingMap()
                             .get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
-            List<JiraIssueCustomHistory> issuesHistory = new ArrayList<>();
+            List<JiraIssueCustomHistory> issuesHistory = getJiraIssuesCustomHistoryFromBaseClass();
 
             if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI206())) {
+                List<String> issueTypes = fieldMapping.getJiraIssueTypeNamesKPI206().stream().map(String::toLowerCase).toList();
                 issuesHistory = getJiraIssuesCustomHistoryFromBaseClass();
                 issuesHistory =
                         issuesHistory.stream()
                                 .filter(
                                         jiraIssue ->
-                                                fieldMapping
-                                                        .getJiraIssueTypeNamesKPI206()
-                                                        .contains(jiraIssue.getStoryType()))
-                                .collect(Collectors.toList());
+                                                issueTypes
+                                                        .contains(jiraIssue.getStoryType().toLowerCase()))
+                                .toList();
             }
 
             resultListMap.put(ISSUE_HISTORY, issuesHistory);

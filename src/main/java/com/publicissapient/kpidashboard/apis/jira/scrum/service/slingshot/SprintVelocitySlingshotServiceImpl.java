@@ -72,10 +72,8 @@ public class SprintVelocitySlingshotServiceImpl
 
 	private static final String VELOCITY = "Velocity";
 	private static final String AVERAGE_VELOCITY = "AverageVelocity";
-	private static final String SEPARATOR_ASTERISK = "*************************************";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
 
-	private static final String STORY_LOG = "Story[{}]: {}";
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
@@ -259,12 +257,9 @@ public class SprintVelocitySlingshotServiceImpl
 			String projId = projectNode.getProjectFilter().getBasicProjectConfigId().toString();
 			String trendLineName = projectNode.getProjectFilter().getName();
 
-//					populateExcelDataObject(
-//							requestTrackerId, excelData, currentSprintLeafVelocityMap, projectNode, fieldMapping);
-//					setSprintWiseLogger(
-//							projectNode.getSprintFilter().getName(),
-//							currentSprintLeafVelocityMap.get(currentNodeIdentifier),
-//							sprintVelocityForCurrentLeaf);
+					populateExcelDataObject(
+							requestTrackerId, excelData, new HashSet<>(allJiraIssue), projectNode, fieldMapping);
+
 
 			DataCount dataCount = new DataCount();
 			dataCount.setData(String.valueOf(roundingOff(value)));
@@ -337,52 +332,17 @@ public class SprintVelocitySlingshotServiceImpl
 	private void populateExcelDataObject(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
-			Map<Pair<String, String>, Set<JiraIssue>> currentSprintLeafVelocityMap,
+			Set<JiraIssue> jiraIssueSet,
 			Node node,
 			FieldMapping fieldMapping) {
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			Pair<String, String> currentNodeIdentifier =
-					Pair.of(
-							node.getProjectFilter().getBasicProjectConfigId().toString(),
-							node.getSprintFilter().getId());
-
-			if (MapUtils.isNotEmpty(currentSprintLeafVelocityMap)
-					&& CollectionUtils.isNotEmpty(currentSprintLeafVelocityMap.get(currentNodeIdentifier))) {
-				Set<JiraIssue> jiraIssues = currentSprintLeafVelocityMap.get(currentNodeIdentifier);
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase()) && CollectionUtils.isNotEmpty(jiraIssueSet)) {
 				Map<String, JiraIssue> totalSprintStoryMap = new HashMap<>();
-				jiraIssues.stream()
+				jiraIssueSet
 						.forEach(issue -> totalSprintStoryMap.putIfAbsent(issue.getNumber(), issue));
 				KPIExcelUtility.populateSprintVelocity(
-						node.getSprintFilter().getName(), totalSprintStoryMap, excelData, fieldMapping);
+						node.getProjectFilter().getName(), totalSprintStoryMap, excelData, fieldMapping);
 			}
-		}
-	}
 
-	/**
-	 * Sets Sprint wise Logger
-	 *
-	 * @param sprint
-	 * @param issueDetailsSet
-	 * @param sprintVelocity
-	 */
-	private void setSprintWiseLogger(
-			String sprint, Set<JiraIssue> issueDetailsSet, Double sprintVelocity) {
-
-		if (customApiConfig.getApplicationDetailedLogger().equalsIgnoreCase("on")) {
-			log.info(SEPARATOR_ASTERISK);
-			log.info("************* SPRINT WISE Sprint Velocity *******************");
-			log.info("Sprint: {}", sprint);
-			if (CollectionUtils.isNotEmpty(issueDetailsSet)) {
-				List<String> storyIdList = issueDetailsSet.stream().map(JiraIssue::getNumber).toList();
-				log.info(STORY_LOG, storyIdList.size(), storyIdList);
-				List<Double> storyPointIdList =
-						issueDetailsSet.stream().map(JiraIssue::getStoryPoints).toList();
-				log.info(STORY_LOG, storyIdList.size(), storyPointIdList);
-			}
-			log.info("Sprint Velocity: {}", sprintVelocity);
-			log.info(SEPARATOR_ASTERISK);
-			log.info(SEPARATOR_ASTERISK);
-		}
 	}
 
 	@Override
