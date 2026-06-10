@@ -226,10 +226,9 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		}
 
 		// When issue is created after end date
-		else if (DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate())
+		else if (!DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate())
 				.toLocalDate()
 				.isAfter(endDate)) {
-		} else {
 			for (int index = 0; index + 1 < statusChangeLog.size(); index++) {
 				JiraHistoryChangeLog changeLog = statusChangeLog.get(index);
 				JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(index + 1);
@@ -250,8 +249,6 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 			LocalDate intervalStartDate = lastChangeLog.getUpdatedOn().toLocalDate();
 			if (intervalStartDate.isAfter(endDate)) return;
 			LocalDate intervalEndDate = endDate;
-			int[] list = new int[10];
-			Arrays.stream(list).boxed().min(Integer::compareTo).get();
 			savingDateRangeInMap(
 					startDate,
 					endDate,
@@ -287,8 +284,7 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		Map<Long, String> doneStatusMap = getJiraIssueReleaseStatus().getClosedList();
 		List<String> doneStatus = new ArrayList<>();
 		if (doneStatusMap != null)
-			doneStatus =
-					doneStatusMap.values().stream().map(String::toLowerCase).collect(Collectors.toList());
+			doneStatus = doneStatusMap.values().stream().map(String::toLowerCase).toList();
 		return !doneStatus.contains(status.toLowerCase())
 				&& (fieldMapping.getStoryFirstStatusKPI206().equalsIgnoreCase(status)
 						|| (CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI206())

@@ -1,6 +1,7 @@
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -22,9 +23,7 @@ public class FlowLoadSlingshotKpiChangeUnit {
 	private static final String WORKFLOW = "workflow";
 	private static final String WORKFLOW_STATUS_MAPPING = "WorkFlow Status Mapping";
 	private static final String DEFINITION = "definition";
-	private static final String CLASS = "_class";
-	private static final String FIELD_MAPPING_TOOLTIP_CLASS =
-			"com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip";
+	private static final String CHIPS = "chips";
 	private static final String PROCESSOR_COMMON = "processorCommon";
 	private static final String MANDATORY = "mandatory";
 	private static final String NODE_SPECIFIC = "nodeSpecific";
@@ -80,11 +79,11 @@ public class FlowLoadSlingshotKpiChangeUnit {
 								"kpiInfo",
 								new Document()
 										.append(
-												"definition",
+												DEFINITION,
 												"Number of flow items currently in progress in the value stream (WIP). Too high = thrashing; too low = underutilisation. Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.")
 										.append(
 												"details",
-												Arrays.asList(
+												Collections.singletonList(
 														new Document("type", "link")
 																.append(
 																		"kpiLinkDetail",
@@ -110,7 +109,7 @@ public class FlowLoadSlingshotKpiChangeUnit {
 						createFieldMapping(
 								"jiraIssueTypeNamesKPI206",
 								"Issue types to be included",
-								"chips",
+								CHIPS,
 								"Issue_Type",
 								"Issue Types Mapping",
 								"All issue types used by your Jira project"),
@@ -124,14 +123,14 @@ public class FlowLoadSlingshotKpiChangeUnit {
 						createFieldMapping(
 								"jiraStatusForInProgressKPI206",
 								"Status to identify issues in development",
-								"chips",
+								CHIPS,
 								WORKFLOW,
 								WORKFLOW_STATUS_MAPPING,
 								"All statuses that denote incomplete issues but have advanced from their initial creation status."),
 						createFieldMapping(
 								"jiraStatusForQaKPI206",
 								"Status to identify issues in testing",
-								"chips",
+								CHIPS,
 								WORKFLOW,
 								WORKFLOW_STATUS_MAPPING,
 								"All workflow statuses used to identify issues in testing state"));
@@ -153,11 +152,7 @@ public class FlowLoadSlingshotKpiChangeUnit {
 				.append("fieldCategory", fieldCategory)
 				.append("section", section)
 				.append(PROCESSOR_COMMON, false)
-				.append(
-						"tooltip",
-						new Document()
-								.append(DEFINITION, definition)
-								.append(CLASS, FIELD_MAPPING_TOOLTIP_CLASS))
+				.append("tooltip", new Document().append(DEFINITION, definition))
 				.append(MANDATORY, true)
 				.append(NODE_SPECIFIC, false);
 	}
@@ -167,12 +162,12 @@ public class FlowLoadSlingshotKpiChangeUnit {
 
 		List<Document> columns =
 				Arrays.asList(
-						createColumn("Date", 0, true, true),
-						createColumn("In-Analysis", 1, true, false),
-						createColumn("In-Testing", 2, true, false),
-						createColumn("In-Progress", 3, true, false),
-						createColumn("In-Development", 4, true, false),
-						createColumn("Open", 5, true, false));
+						createColumn("Date", 0, true),
+						createColumn("In-Analysis", 1, false),
+						createColumn("In-Testing", 2, false),
+						createColumn("In-Progress", 3, false),
+						createColumn("In-Development", 4, false),
+						createColumn("Open", 5, false));
 
 		Document kpiColumnConfig =
 				new Document().append(KPI_ID, KPI_206).append("kpiColumnDetails", columns);
@@ -180,11 +175,11 @@ public class FlowLoadSlingshotKpiChangeUnit {
 		collection.insertOne(kpiColumnConfig);
 	}
 
-	private Document createColumn(String columnName, int order, boolean isShown, boolean isDefault) {
+	private Document createColumn(String columnName, int order, boolean isDefault) {
 		return new Document()
 				.append("columnName", columnName)
 				.append("order", order)
-				.append("isShown", isShown)
+				.append("isShown", true)
 				.append("isDefault", isDefault);
 	}
 }
