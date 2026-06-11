@@ -99,7 +99,7 @@ public class FlowDistributionSlingshotServiceImpl
 								.filter(
 										jiraIssueCustomHistory ->
 												fieldMapping
-														.getJiraIssueTypeNamesKPI146()
+														.getJiraIssueTypeNamesKPI207()
 														.contains(jiraIssueCustomHistory.getStoryType()))
 								.collect(Collectors.toList());
 			}
