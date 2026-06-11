@@ -23,6 +23,7 @@ public class SlingshotKpisUpdateChangeLog {
 	private static final String FIELD_KPI_ID = "kpiId";
 	private static final String FIELD_X_AXIS_LABEL = "xAxisLabel";
 	private static final String FIELD_DEFAULT_ORDER = "defaultOrder";
+	private static final String KPI_DEFINITION = "kpiInfo.definition";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -33,22 +34,45 @@ public class SlingshotKpisUpdateChangeLog {
 
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi205")),
-				Update.update(FIELD_X_AXIS_LABEL, "Weeks").set(FIELD_DEFAULT_ORDER, 1));
+				Update.update(FIELD_X_AXIS_LABEL, "Weeks")
+						.set(FIELD_DEFAULT_ORDER, 3)
+						.set(
+								KPI_DEFINITION,
+								"""
+								Number of flow items completed per unit time, segmented by flow item type.
+								"Count of issues where status transitioned to Done within the period, grouped by Flow Item Type custom field."""));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi203")),
-				Update.update(FIELD_X_AXIS_LABEL, "Range").set(FIELD_DEFAULT_ORDER, 4));
+				Update.update(FIELD_X_AXIS_LABEL, "Range")
+						.set(FIELD_DEFAULT_ORDER, 4)
+						.set(
+								KPI_DEFINITION,
+								"Ratio of active work time to total flow time. Shows how much of an item's lifetime is spent moving forward versus waiting."));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi202")),
-				Update.update(FIELD_DEFAULT_ORDER, 2));
+				Update.update(FIELD_DEFAULT_ORDER, 1)
+						.set(
+								KPI_DEFINITION,
+								"Elapsed wall-clock time from when work started (entered an active state) to when it reached Done.")
+						.set("kpiWidth", 50));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi204")),
-				Update.update(FIELD_DEFAULT_ORDER, 3));
+				Update.update(FIELD_DEFAULT_ORDER, 2));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi206")),
-				Update.update(FIELD_DEFAULT_ORDER, 5));
+				Update.update(FIELD_DEFAULT_ORDER, 5)
+						.set(
+								KPI_DEFINITION,
+								"""
+						Number of flow items currently in progress in the value stream (WIP).
+						Too high = thrashing; too low = underutilisation.
+						"Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.."""));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi207")),
-				Update.update(FIELD_DEFAULT_ORDER, 6));
+				Update.update(FIELD_DEFAULT_ORDER, 6)
+						.set(
+								KPI_DEFINITION,
+								"Percentage mix of completed work across Features, Defects, Risk, and Tech Debt."));
 
 		bulkOps.execute();
 	}
