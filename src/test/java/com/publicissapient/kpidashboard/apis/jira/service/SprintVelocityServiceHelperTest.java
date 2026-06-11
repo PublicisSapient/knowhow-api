@@ -25,10 +25,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.data.FieldMappingDataFactory;
 import com.publicissapient.kpidashboard.apis.data.JiraIssueDataFactory;
 import com.publicissapient.kpidashboard.apis.data.SprintDetailsDataFactory;
@@ -43,14 +48,17 @@ import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
  */
 public class SprintVelocityServiceHelperTest {
 
-	SprintVelocityServiceHelper sprintVelocityServiceHelper;
+	@InjectMocks SprintVelocityServiceHelper sprintVelocityServiceHelper;
+
+	@Mock ConfigHelperService configHelperService;
+
 	List<SprintDetails> sprintDetails = new ArrayList<>();
 	FieldMapping fieldMapping = new FieldMapping();
 	private List<JiraIssue> storyList = new ArrayList<>();
 
 	@Before
 	public void setUp() {
-		sprintVelocityServiceHelper = new SprintVelocityServiceHelper();
+		MockitoAnnotations.openMocks(this);
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		storyList = jiraIssueDataFactory.getJiraIssues();
 		sprintDetails = SprintDetailsDataFactory.newInstance().getSprintDetails();
@@ -58,6 +66,10 @@ public class SprintVelocityServiceHelperTest {
 		FieldMappingDataFactory fieldMappingDataFactory =
 				FieldMappingDataFactory.newInstance("/json/default/scrum_project_field_mappings.json");
 		fieldMapping = fieldMappingDataFactory.getFieldMappings().get(0);
+
+		Map<ObjectId, FieldMapping> fieldMappingMap = new HashMap<>();
+		sprintDetails.forEach(sd -> fieldMappingMap.put(sd.getBasicProjectConfigId(), fieldMapping));
+		org.mockito.Mockito.when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 	}
 
 	@Test

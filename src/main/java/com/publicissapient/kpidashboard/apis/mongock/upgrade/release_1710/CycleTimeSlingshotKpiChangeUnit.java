@@ -41,7 +41,7 @@ public class CycleTimeSlingshotKpiChangeUnit {
 		Document kpiDocument =
 				new Document()
 						.append("kpiId", "kpi202")
-						.append("kpiName", "Cycle Time")
+						.append("kpiName", "Flow Time")
 						.append("maxValue", "")
 						.append("kpiUnit", "Days")
 						.append("isDeleted", "False")
@@ -62,7 +62,7 @@ public class CycleTimeSlingshotKpiChangeUnit {
 								new Document()
 										.append(
 												"definition",
-												"Cycle time measures the duration of each stage within an issue's complete lifecycle. It is visualized through stacked bar chart by breaking down the time spent in each individual cycle.")
+												"Elapsed wall-clock time from when work started (entered an active state) to when it reached Done.")
 										.append(
 												"details",
 												java.util.List.of(

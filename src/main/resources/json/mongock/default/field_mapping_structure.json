@@ -3324,6 +3324,18 @@
     "mandatory": true
   },
   {
+    "fieldName": "jiraIssueTypeNamesKPI207",
+    "fieldLabel": "Issue types to be included",
+    "fieldType": "chips",
+    "fieldCategory": "Issue_Type",
+    "processorCommon": false,
+    "section": "Issue Types Mapping",
+    "tooltip": {
+      "definition": "All issue types used by your Jira project"
+    },
+    "mandatory": true
+  },
+  {
     "fieldName": "jiraIssueTypeNamesKPI151",
     "fieldLabel": "Issue types to be included",
     "fieldType": "chips",
