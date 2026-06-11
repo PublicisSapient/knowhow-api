@@ -794,6 +794,7 @@ public enum KPIExcelColumn {
 	HAPPINESS_INDEX_RATE("kpi149", Arrays.asList("Sprint Name", "User Name", "Sprint Rating")),
 
 	FLOW_DISTRIBUTION("Kpi146", Arrays.asList("Date")),
+	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", Arrays.asList("Date")),
 	FLOW_LOAD("kpi148", Arrays.asList("Date")),
 	FLOW_LOAD_SLINGSHOT("kpi148", Arrays.asList("Date")),
 	RELEASE_BURNUP(

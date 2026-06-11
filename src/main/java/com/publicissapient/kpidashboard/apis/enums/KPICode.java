@@ -217,6 +217,7 @@ public enum KPICode {
 	REFINEMENT_REJECTION_RATE("kpi139", KPISource.JIRA.name()),
 	/** Flow Distribution */
 	FLOW_DISTRIBUTION("kpi146", KPISource.JIRA.name()),
+	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", KPISource.JIRA.name()),
 	/** Happiness index Rate */
 	HAPPINESS_INDEX_RATE("kpi149", KPISource.JIRA.name()),
 	/*
