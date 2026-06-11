@@ -664,8 +664,10 @@ public class KPIExcelDataService {
 		category.add(CommonConstant.BACKLOG);
 		Callable<List<KpiElement>> jiraKpiDataTask =
 				() -> {
+					String kpiId = pair.getValue().getKpiList().get(0).getKpiId();
 					if (category.contains(pair.getValue().getKpiList().get(0).getKpiCategory())
-							|| pair.getValue().getKpiList().get(0).getKpiId().equalsIgnoreCase("kpi148")) {
+							|| kpiId.equalsIgnoreCase("kpi148")
+							|| kpiId.equalsIgnoreCase("kpi207")) {
 						// when request coming from ITERATION/RELEASE/BACKLOG board
 						if (Boolean.TRUE.equals(apiAuth)) {
 							return serviceFactory

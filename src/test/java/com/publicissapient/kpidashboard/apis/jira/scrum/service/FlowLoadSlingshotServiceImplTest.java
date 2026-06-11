@@ -60,7 +60,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueReleaseStatus;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FlowLoadServiceImplTest {
+public class FlowLoadSlingshotServiceImplTest {
 	private static final String ISSUE_BACKLOG_HISTORY = "Issue Backlog History";
 	@Mock CacheService cacheService;
 	@Mock private JiraBacklogServiceR jiraService;
