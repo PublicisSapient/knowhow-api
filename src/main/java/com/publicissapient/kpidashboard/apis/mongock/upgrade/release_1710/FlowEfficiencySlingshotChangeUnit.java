@@ -66,7 +66,7 @@ public class FlowEfficiencySlingshotChangeUnit {
 								"kpiInfo",
 								new Document(
 										DEFINITION,
-										"Flow load indicates how many items are currently in the backlog. This KPI emphasizes on limiting work in progress to enabling a fast flow of issues"))
+										"Ratio of active work time to total flow time. Shows how much of an item's lifetime is spent moving forward versus waiting."))
 						.append("xAxisLabel", "Duration")
 						.append("yAxisLabel", "Percentage")
 						.append("isPositiveTrend", false)
