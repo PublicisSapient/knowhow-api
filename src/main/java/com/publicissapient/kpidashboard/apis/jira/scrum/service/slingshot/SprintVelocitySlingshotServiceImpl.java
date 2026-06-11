@@ -216,7 +216,7 @@ public class SprintVelocitySlingshotServiceImpl
 		Map<String, Set<JiraIssue>> jiraIssuesByDateRange = new HashMap<>();
 		Map<String, Double> velocityByDateRange = new HashMap<>();
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
 					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(endDate, CommonConstant.WEEK);
 
