@@ -22,6 +22,7 @@ import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FlowDistributionSlingshotServiceImpl
 		extends JiraBacklogKPIService<Double, List<Object>> {
 	public static final String BACKLOG_CUSTOM_HISTORY = "backlogCustomHistory";
+	public static final String FIELD_MAPPING = "fieldMapping";
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private CustomApiConfig customApiConfig;
@@ -42,6 +44,22 @@ public class FlowDistributionSlingshotServiceImpl
 	private static String combineType(String storyType) {
 		// logic to combine multiple words into a single key
 		return storyType.replaceAll("\\s+", "-");
+	}
+
+	/**
+	 * Returns the LocalDateTime when the issue last transitioned to a closed status, or null if it
+	 * has never reached a closed status.
+	 */
+	private LocalDateTime getClosedDate(JiraIssueCustomHistory issue, List<String> closedStatuses) {
+		if (CollectionUtils.isEmpty(closedStatuses)) {
+			return null;
+		}
+		return issue.getStatusUpdationLog().stream()
+				.filter(log -> closedStatuses.contains(log.getChangedTo()))
+				.map(JiraHistoryChangeLog::getUpdatedOn)
+				.filter(Objects::nonNull)
+				.max(LocalDateTime::compareTo)
+				.orElse(null);
 	}
 
 	@Override
@@ -74,7 +92,7 @@ public class FlowDistributionSlingshotServiceImpl
 
 			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList = new ArrayList<>();
 
-			if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI146())) {
+			if (CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueTypeNamesKPI207())) {
 				jiraIssueCustomHistoryList = getJiraIssuesCustomHistoryFromBaseClass();
 				jiraIssueCustomHistoryList =
 						jiraIssueCustomHistoryList.stream()
@@ -87,6 +105,7 @@ public class FlowDistributionSlingshotServiceImpl
 			}
 
 			resultListMap.put(BACKLOG_CUSTOM_HISTORY, new ArrayList<>(jiraIssueCustomHistoryList));
+			resultListMap.put(FIELD_MAPPING, fieldMapping);
 		}
 		return resultListMap;
 	}
@@ -117,17 +136,21 @@ public class FlowDistributionSlingshotServiceImpl
 
 		List<JiraIssueCustomHistory> jiraIssueCustomHistories =
 				(List<JiraIssueCustomHistory>) resultMap.get(BACKLOG_CUSTOM_HISTORY);
+		FieldMapping fieldMapping = (FieldMapping) resultMap.get(FIELD_MAPPING);
 
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
 
+			List<String> closedStatuses =
+					CollectionUtils.isNotEmpty(fieldMapping.getJiraIssueClosedStateKPI207())
+							? fieldMapping.getJiraIssueClosedStateKPI207()
+							: Collections.emptyList();
+
 			Map<String, Map<String, Integer>> groupByDateAndTypeCount =
 					jiraIssueCustomHistories.stream()
+							.filter(issue -> getClosedDate(issue, closedStatuses) != null)
 							.collect(
 									Collectors.groupingBy(
-											issue ->
-													DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
-															.toLocalDate()
-															.toString(),
+											issue -> getClosedDate(issue, closedStatuses).toLocalDate().toString(),
 											Collectors.groupingBy(
 													issue -> combineType(issue.getStoryType()),
 													Collectors.summingInt(issue -> 1))));

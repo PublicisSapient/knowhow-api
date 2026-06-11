@@ -1,5 +1,6 @@
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
@@ -34,6 +35,13 @@ public class FlowDistributionSlingshotChangeUnit {
 	private static final String MANDATORY = "mandatory";
 	private static final String CLASS = "_class";
 	private static final String CHIPS = "chips";
+	private static final String KEY_BASIC_PROJECT_CONFIG_ID = "basicProjectConfigId";
+	private static final String KEY_KPI_COLUMN_DETAILS = "kpiColumnDetails";
+	private static final String KPI_EXCEL_COLUMN_CONFIG = "kpi_column_configs";
+	private static final String KEY_COLUMN_NAME = "columnName";
+	private static final String KEY_ORDER = "order";
+	private static final String KEY_IS_SHOWN = "isShown";
+	private static final String KEY_IS_DEFAULT = "isDefault";
 
 	private static final String TOOLTIP_CLASS =
 			"com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip";
@@ -44,6 +52,23 @@ public class FlowDistributionSlingshotChangeUnit {
 	public void execution() {
 		insertFlowDistributionKpi();
 		insertFieldMappingStructure();
+		insertExcelColumnConfig();
+	}
+
+	private void insertExcelColumnConfig() {
+		Document kpiColumnConfig =
+				new Document(KEY_BASIC_PROJECT_CONFIG_ID, null)
+						.append(KPI_ID, KPI_207)
+						.append(
+								KEY_KPI_COLUMN_DETAILS,
+								new Document[] {
+									new Document(KEY_COLUMN_NAME, "Date")
+											.append(KEY_ORDER, 1)
+											.append(KEY_IS_SHOWN, true)
+											.append(KEY_IS_DEFAULT, false)
+								});
+
+		mongoTemplate.insert(kpiColumnConfig, KPI_EXCEL_COLUMN_CONFIG);
 	}
 
 	private void insertFlowDistributionKpi() {
@@ -51,7 +76,7 @@ public class FlowDistributionSlingshotChangeUnit {
 		Document kpiDocument =
 				new Document()
 						.append(KPI_ID, KPI_207)
-						.append("kpiName", "Flow Distribution Slingshot")
+						.append("kpiName", "Flow Distribution")
 						.append("kpiUnit", "")
 						.append("isDeleted", "False")
 						.append("defaultOrder", 5)
@@ -106,8 +131,22 @@ public class FlowDistributionSlingshotChangeUnit {
 								new Document(DEFINITION, "All issue types used by your Jira project")
 										.append(CLASS, TOOLTIP_CLASS))
 						.append(MANDATORY, true);
+		Document closeStatusDocument =
+				new Document(FIELD_NAME, "jiraIssueClosedStateKPI207")
+						.append(FIELD_LABEL, "Status to identify Close Statuses")
+						.append(FIELD_TYPE, CHIPS)
+						.append(SECTION, "WorkFlow Status Mapping")
+						.append(FIELD_CATEGORY, "workflow")
+						.append(MANDATORY, true)
+						.append(
+								TOOLTIP,
+								new Document(
+										DEFINITION,
+										"All statuses that signify an issue is 'DONE' based on 'Definition Of Done'"));
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(fieldMappingDocument);
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.insertMany(Arrays.asList(fieldMappingDocument, closeStatusDocument));
 	}
 
 	@RollbackExecution
