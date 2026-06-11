@@ -796,7 +796,7 @@ public enum KPIExcelColumn {
 	FLOW_DISTRIBUTION("Kpi146", Arrays.asList("Date")),
 	FLOW_DISTRIBUTION_SLINGSHOT("Kpi207", Arrays.asList("Date")),
 	FLOW_LOAD("kpi148", Arrays.asList("Date")),
-
+	FLOW_LOAD_SLINGSHOT("kpi148", Arrays.asList("Date")),
 	RELEASE_BURNUP(
 			"kpi150",
 			Arrays.asList(

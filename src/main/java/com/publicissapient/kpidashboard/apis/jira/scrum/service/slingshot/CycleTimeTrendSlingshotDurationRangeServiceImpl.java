@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -61,7 +62,9 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 		Set<String> issueTypesSet = new LinkedHashSet<>();
 		Set<String> groupMapSet = new LinkedHashSet<>();
 		groupMapSet.add(OVERALL);
-		List<String> rangeList = customApiConfig.getFlowEfficiencyXAxisRange();
+		List<String> rangeList =
+				new CopyOnWriteArrayList<>(customApiConfig.getFlowEfficiencyXAxisRange());
+		Collections.reverse(rangeList);
 		FieldMapping fieldMapping =
 				configHelperService
 						.getFieldMappingMap()
