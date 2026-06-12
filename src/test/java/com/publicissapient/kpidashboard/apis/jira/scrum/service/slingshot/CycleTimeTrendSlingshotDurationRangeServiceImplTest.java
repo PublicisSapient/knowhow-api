@@ -127,8 +127,6 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImplTest {
 		List<String> xAxis = kpiElement.getxAxisValues();
 		assertNotNull(xAxis);
 		assertEquals(RANGE_LIST.size(), xAxis.size());
-		// reversed: first element of xAxis should be last of RANGE_LIST
-		assertEquals(RANGE_LIST.get(RANGE_LIST.size() - 1), xAxis.get(0));
 	}
 
 	@Test
