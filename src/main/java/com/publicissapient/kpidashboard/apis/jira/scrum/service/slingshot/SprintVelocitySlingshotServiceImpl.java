@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,7 +56,7 @@ public class SprintVelocitySlingshotServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String VELOCITY = "Velocity";
-	private static final String AVERAGE_VELOCITY = "AverageVelocity";
+	private static final String AVERAGE_VELOCITY = "Average Velocity";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
 
 	@Autowired private CustomApiConfig customApiConfig;
@@ -213,8 +214,8 @@ public class SprintVelocitySlingshotServiceImpl
 						.getFieldMappingMap()
 						.get(projectNode.getProjectFilter().getBasicProjectConfigId());
 
-		Map<String, Set<JiraIssue>> jiraIssuesByDateRange = new HashMap<>();
-		Map<String, Double> velocityByDateRange = new HashMap<>();
+		Map<String, Set<JiraIssue>> jiraIssuesByDateRange = new LinkedHashMap<>();
+		Map<String, Double> velocityByDateRange = new LinkedHashMap<>();
 
 		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
@@ -279,7 +280,7 @@ public class SprintVelocitySlingshotServiceImpl
 
 					double averageVelocity = getAverageVelocity(velocityByDateRange, key);
 					if (averageVelocity >= 0) {
-						dataCount.setLineValue(averageVelocity);
+						dataCount.setLineValue(roundingOff(averageVelocity));
 						Map<String, Object> hoverValue = new HashMap<>();
 						hoverValue.put(AVERAGE_VELOCITY, roundingOff(averageVelocity));
 						hoverValue.put(VELOCITY, roundingOff((Double) dataCount.getValue()));

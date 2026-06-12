@@ -123,7 +123,7 @@ public class FlowDistributionSlingshotServiceImpl
 
 		// this method fetch dates for past history data
 		CustomDateRange dateRange =
-				KpiDataHelper.getMonthsForPastDataHistory(customApiConfig.getFlowKpiMonthCount());
+				KpiDataHelper.getMonthsForPastDataHistory(customApiConfig.getSlingShotFlowKpiMonthCount());
 
 		// get start and end date in yyyy-mm-dd format
 		String startDate = dateRange.getStartDate().format(DATE_FORMATTER);
