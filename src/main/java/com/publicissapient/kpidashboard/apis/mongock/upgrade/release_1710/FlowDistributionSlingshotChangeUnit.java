@@ -65,7 +65,7 @@ public class FlowDistributionSlingshotChangeUnit {
 									new Document(KEY_COLUMN_NAME, "Date")
 											.append(KEY_ORDER, 1)
 											.append(KEY_IS_SHOWN, true)
-											.append(KEY_IS_DEFAULT, false)
+											.append(KEY_IS_DEFAULT, true)
 								});
 
 		mongoTemplate.insert(kpiColumnConfig, KPI_EXCEL_COLUMN_CONFIG);

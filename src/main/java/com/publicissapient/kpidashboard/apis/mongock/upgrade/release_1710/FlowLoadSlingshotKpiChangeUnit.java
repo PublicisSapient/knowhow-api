@@ -78,7 +78,7 @@ public class FlowLoadSlingshotKpiChangeUnit {
 						.append("hideOverallFilter", false)
 						.append("kpiSource", "Jira")
 						.append("kanban", false)
-						.append("groupId", 35)
+						.append("groupId", 46)
 						.append(
 								"kpiInfo",
 								new Document()

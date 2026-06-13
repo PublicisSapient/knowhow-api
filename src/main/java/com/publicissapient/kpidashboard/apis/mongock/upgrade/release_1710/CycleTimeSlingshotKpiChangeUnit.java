@@ -48,7 +48,7 @@ public class CycleTimeSlingshotKpiChangeUnit {
 						.append("defaultOrder", 1)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSource", "Jira")
-						.append("groupId", 34)
+						.append("groupId", 45)
 						.append("thresholdValue", "")
 						.append("kanban", false)
 						.append("chartType", "stacked-bar-chart")

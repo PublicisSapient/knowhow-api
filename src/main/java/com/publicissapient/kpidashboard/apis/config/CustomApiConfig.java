@@ -347,7 +347,9 @@ public class CustomApiConfig { // NOPMD
 	private int executiveTimeoutMinutes;
 
 	@Value("${slingShotFlowKpiMonthCount:3}")
-	@Getter @Setter private int slingShotFlowKpiMonthCount;
+	@Getter
+	@Setter
+	private int slingShotFlowKpiMonthCount;
 
 	public String getDefectRateUrl() {
 		return defectRateUrl;
