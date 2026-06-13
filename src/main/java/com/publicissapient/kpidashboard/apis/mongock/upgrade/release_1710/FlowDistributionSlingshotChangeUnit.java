@@ -1,10 +1,11 @@
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.mongodb.client.model.ReplaceOptions;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -56,19 +57,22 @@ public class FlowDistributionSlingshotChangeUnit {
 	}
 
 	private void insertExcelColumnConfig() {
+		Document filter = new Document(KEY_BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, KPI_207);
+
 		Document kpiColumnConfig =
 				new Document(KEY_BASIC_PROJECT_CONFIG_ID, null)
 						.append(KPI_ID, KPI_207)
 						.append(
 								KEY_KPI_COLUMN_DETAILS,
-								new Document[] {
-									new Document(KEY_COLUMN_NAME, "Date")
-											.append(KEY_ORDER, 1)
-											.append(KEY_IS_SHOWN, true)
-											.append(KEY_IS_DEFAULT, true)
-								});
+								List.of(
+										new Document(KEY_COLUMN_NAME, "Date")
+												.append(KEY_ORDER, 1)
+												.append(KEY_IS_SHOWN, true)
+												.append(KEY_IS_DEFAULT, true)));
 
-		mongoTemplate.insert(kpiColumnConfig, KPI_EXCEL_COLUMN_CONFIG);
+		mongoTemplate
+				.getCollection(KPI_EXCEL_COLUMN_CONFIG)
+				.replaceOne(filter, kpiColumnConfig, new ReplaceOptions().upsert(true));
 	}
 
 	private void insertFlowDistributionKpi() {
@@ -114,7 +118,9 @@ public class FlowDistributionSlingshotChangeUnit {
 						.append("isAdditionalFilterSupport", false)
 						.append("calculateMaturity", false);
 
-		mongoTemplate.getCollection(KPI_MASTER).insertOne(kpiDocument);
+		mongoTemplate
+				.getCollection(KPI_MASTER)
+				.replaceOne(new Document(KPI_ID, KPI_207), kpiDocument, new ReplaceOptions().upsert(true));
 	}
 
 	private void insertFieldMappingStructure() {
@@ -146,7 +152,16 @@ public class FlowDistributionSlingshotChangeUnit {
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE)
-				.insertMany(Arrays.asList(fieldMappingDocument, closeStatusDocument));
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueTypeNamesKPI207"),
+						fieldMappingDocument,
+						new ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueClosedStateKPI207"),
+						closeStatusDocument,
+						new ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

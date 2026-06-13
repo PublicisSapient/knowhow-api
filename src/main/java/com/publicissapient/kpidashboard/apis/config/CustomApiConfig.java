@@ -351,6 +351,11 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private int slingShotFlowKpiMonthCount;
 
+	@Value("${flowDistributionIncludeHistoricalData:false}")
+	@Getter
+	@Setter
+	private boolean flowDistributionIncludeHistoricalData;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}

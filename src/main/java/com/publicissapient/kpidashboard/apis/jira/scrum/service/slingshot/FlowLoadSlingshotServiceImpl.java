@@ -71,9 +71,17 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 				issuesHistory = getJiraIssuesCustomHistoryFromBaseClass();
 				issuesHistory =
 						issuesHistory.stream()
-								.filter(jiraIssue -> issueTypes.contains(jiraIssue.getStoryType().toLowerCase()))
+								.filter(
+										jiraIssue ->
+												jiraIssue.getStoryType() != null
+														&& issueTypes.contains(jiraIssue.getStoryType().toLowerCase()))
 								.toList();
 			}
+
+			log.info(
+					"Flow Load Slingshot (kpi206) -> issues fetched: {} for project: {}",
+					issuesHistory != null ? issuesHistory.size() : 0,
+					leafNode.getProjectFilter().getName());
 
 			resultListMap.put(ISSUE_HISTORY, issuesHistory);
 		}
@@ -111,16 +119,28 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 				configHelperService
 						.getFieldMappingMap()
 						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
+
+		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
+				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())) {
+			log.warn(
+					"Flow Load Slingshot (kpi206): storyFirstStatusKPI206 and jiraStatusForInProgressKPI206 are not configured"
+							+ " in field mapping for project {}. Only QA statuses {} will be tracked.",
+					leafNode.getProjectFilter().getName(),
+					fieldMapping.getJiraStatusForQaKPI206());
+		}
+
 		// Iterating Over All issues history's statusUpdationLog and saving start and
 		// end date for each status
-		jiraIssueCustomHistories.forEach(
-				jiraIssueCustomHistory ->
-						createDateRangeForStatuses(
-								endDate,
-								startDate,
-								statusesWithStartAndEndDate,
-								jiraIssueCustomHistory,
-								fieldMapping));
+		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
+			jiraIssueCustomHistories.forEach(
+					jiraIssueCustomHistory ->
+							createDateRangeForStatuses(
+									endDate,
+									startDate,
+									statusesWithStartAndEndDate,
+									jiraIssueCustomHistory,
+									fieldMapping));
+		}
 
 		Map<String, Map<String, Integer>> dateWithStatusCount = new HashMap<>();
 		LocalDate tempStartDate = startDate;
@@ -285,12 +305,25 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		List<String> doneStatus = new ArrayList<>();
 		if (doneStatusMap != null)
 			doneStatus = doneStatusMap.values().stream().map(String::toLowerCase).toList();
-		return !doneStatus.contains(status.toLowerCase())
-				&& (fieldMapping.getStoryFirstStatusKPI206().equalsIgnoreCase(status)
-						|| (CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
-								&& fieldMapping.getJiraStatusForInProgressKPI206().contains(status))
-						|| (CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForQaKPI206())
-								&& fieldMapping.getJiraStatusForQaKPI206().contains(status)));
+		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
+				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
+				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForQaKPI206())) {
+			return false;
+		}
+		String statusLower = status.toLowerCase();
+		boolean inProgressMatch =
+				CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
+						&& fieldMapping.getJiraStatusForInProgressKPI206().stream()
+								.anyMatch(s -> s.equalsIgnoreCase(status));
+		boolean qaMatch =
+				CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForQaKPI206())
+						&& fieldMapping.getJiraStatusForQaKPI206().stream()
+								.anyMatch(s -> s.equalsIgnoreCase(status));
+		return !doneStatus.contains(statusLower)
+				&& (org.apache.commons.lang3.StringUtils.equalsIgnoreCase(
+								fieldMapping.getStoryFirstStatusKPI206(), status)
+						|| inProgressMatch
+						|| qaMatch);
 	}
 
 	private void populateTrendValueList(

@@ -21,6 +21,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.client.model.ReplaceOptions;
+
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -78,7 +80,10 @@ public class CycleTimeSlingshotKpiChangeUnit {
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("aggregationCriteria", "sum");
 
-		mongoTemplate.getCollection("kpi_master").insertOne(kpiDocument);
+		mongoTemplate
+				.getCollection("kpi_master")
+				.replaceOne(
+						new Document("kpiId", "kpi202"), kpiDocument, new ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

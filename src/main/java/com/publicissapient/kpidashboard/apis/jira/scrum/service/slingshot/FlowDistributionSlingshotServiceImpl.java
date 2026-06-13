@@ -168,12 +168,14 @@ public class FlowDistributionSlingshotServiceImpl
 							.map(sortedByDateTypeCountMap::tailMap)
 							.orElse(new TreeMap<>());
 
-			// fetching the start date backlog type count
-			Map<String, Integer> startDateTypeCount =
-					startDateTypeCount(startDate, sortedByDateTypeCountMap);
+			if (customApiConfig.isFlowDistributionIncludeHistoricalData()) {
+				// fetching the start date backlog type count
+				Map<String, Integer> startDateTypeCount =
+						startDateTypeCount(startDate, sortedByDateTypeCountMap);
 
-			// adding start date backlog count for cumulativeAddition
-			addStartDateTypeCount(startDate, sortedByDateTypeCountMap, startDateTypeCount);
+				// adding start date backlog count for cumulativeAddition
+				addStartDateTypeCount(startDate, sortedByDateTypeCountMap, startDateTypeCount);
+			}
 
 			Map<String, Map<String, Integer>> cumulativeAddedCountMap =
 					createCumulativeTypeCount(startDate, endDate, sortedByDateTypeCountMap);

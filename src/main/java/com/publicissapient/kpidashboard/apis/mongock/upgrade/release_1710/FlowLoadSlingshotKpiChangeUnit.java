@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.ReplaceOptions;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -102,7 +103,8 @@ public class FlowLoadSlingshotKpiChangeUnit {
 						.append("isAdditionalFilterSupport", false)
 						.append("combinedKpiSource", "Jira/Azure/Rally");
 
-		collection.insertOne(kpiMaster);
+		collection.replaceOne(
+				new Document(KPI_ID, KPI_206), kpiMaster, new ReplaceOptions().upsert(true));
 	}
 
 	private void insertFieldMappings(MongoTemplate mongoTemplate) {
@@ -139,7 +141,11 @@ public class FlowLoadSlingshotKpiChangeUnit {
 								WORKFLOW_STATUS_MAPPING,
 								"All workflow statuses used to identify issues in testing state"));
 
-		collection.insertMany(mappings);
+		for (Document mapping : mappings) {
+			String fieldName = mapping.getString(FIELD_NAME);
+			collection.replaceOne(
+					new Document(FIELD_NAME, fieldName), mapping, new ReplaceOptions().upsert(true));
+		}
 	}
 
 	private Document createFieldMapping(
@@ -173,10 +179,13 @@ public class FlowLoadSlingshotKpiChangeUnit {
 						createColumn("In-Development", 4, false),
 						createColumn("Open", 5, false));
 
+		Document filter = new Document("basicProjectConfigId", null).append(KPI_ID, KPI_206);
 		Document kpiColumnConfig =
-				new Document().append(KPI_ID, KPI_206).append("kpiColumnDetails", columns);
+				new Document("basicProjectConfigId", null)
+						.append(KPI_ID, KPI_206)
+						.append("kpiColumnDetails", columns);
 
-		collection.insertOne(kpiColumnConfig);
+		collection.replaceOne(filter, kpiColumnConfig, new ReplaceOptions().upsert(true));
 	}
 
 	private Document createColumn(String columnName, int order, boolean isDefault) {

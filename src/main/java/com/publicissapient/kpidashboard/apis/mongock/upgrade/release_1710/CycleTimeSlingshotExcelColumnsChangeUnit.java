@@ -23,6 +23,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.client.model.ReplaceOptions;
+
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -67,7 +69,19 @@ public class CycleTimeSlingshotExcelColumnsChangeUnit {
 										columnDetail("Sprint Name", 4),
 										columnDetail("Group Map", 5)));
 
-		mongoTemplate.getCollection("kpi_column_configs").insertMany(List.of(doc, doc2));
+		ReplaceOptions upsertOptions = new ReplaceOptions().upsert(true);
+		mongoTemplate
+				.getCollection("kpi_column_configs")
+				.replaceOne(
+						new Document("basicProjectConfigId", null).append(KPI_ID, "kpi202"),
+						doc,
+						upsertOptions);
+		mongoTemplate
+				.getCollection("kpi_column_configs")
+				.replaceOne(
+						new Document("basicProjectConfigId", null).append(KPI_ID, "kpi204"),
+						doc2,
+						upsertOptions);
 	}
 
 	@RollbackExecution
