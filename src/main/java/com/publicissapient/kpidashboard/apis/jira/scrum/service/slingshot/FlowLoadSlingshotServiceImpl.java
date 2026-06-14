@@ -173,7 +173,9 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 
 		if (MapUtils.isNotEmpty(dateWithStatusCount)) {
 			populateTrendValueList(trendValueList, dateWithStatusCount);
-			populateExcelDataObject(requestTrackerId, excelData, dateWithStatusCount);
+			Map<String, Map<String, List<String>>> dateStatusIdsMap =
+					buildDateStatusIdsMap(jiraIssueCustomHistories, startDate, endDate, fieldMapping);
+			populateExcelDataObject(requestTrackerId, excelData, dateStatusIdsMap);
 			log.debug(
 					"FlowLoadServiceImpl -> request id : {} dateWithStatusCount : {}",
 					requestTrackerId,
@@ -182,6 +184,114 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
 		kpiElement.setTrendValueList(trendValueList);
+	}
+
+	private Map<String, Map<String, List<String>>> buildDateStatusIdsMap(
+			List<JiraIssueCustomHistory> jiraIssueCustomHistories,
+			LocalDate startDate,
+			LocalDate endDate,
+			FieldMapping fieldMapping) {
+
+		Map<String, Map<String, List<String>>> dateStatusIdsMap = new HashMap<>();
+		LocalDate current = startDate;
+		while (!current.isAfter(endDate)) {
+			dateStatusIdsMap.put(current.toString(), new HashMap<>());
+			current = current.plusDays(1);
+		}
+
+		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
+			for (JiraIssueCustomHistory issue : jiraIssueCustomHistories) {
+				List<JiraHistoryChangeLog> statusChangeLog = issue.getStatusUpdationLog();
+				int size = statusChangeLog.size();
+				if (size == 0) continue;
+				String storyID = issue.getStoryID();
+
+				List<Pair<String, Pair<LocalDate, LocalDate>>> ranges =
+						extractStatusRanges(issue, statusChangeLog, size, startDate, endDate, fieldMapping);
+
+				for (Pair<String, Pair<LocalDate, LocalDate>> range : ranges) {
+					String status = range.getKey();
+					LocalDate rangeStart = range.getValue().getKey();
+					LocalDate rangeEnd = range.getValue().getValue();
+					LocalDate day = rangeStart;
+					while (!day.isAfter(rangeEnd)) {
+						Map<String, List<String>> statusIds = dateStatusIdsMap.get(day.toString());
+						if (statusIds != null) {
+							statusIds.computeIfAbsent(status, k -> new ArrayList<>()).add(storyID);
+						}
+						day = day.plusDays(1);
+					}
+				}
+			}
+		}
+
+		dateStatusIdsMap.entrySet().removeIf(e -> e.getValue().isEmpty());
+		return dateStatusIdsMap;
+	}
+
+	private List<Pair<String, Pair<LocalDate, LocalDate>>> extractStatusRanges(
+			JiraIssueCustomHistory issue,
+			List<JiraHistoryChangeLog> statusChangeLog,
+			int size,
+			LocalDate startDate,
+			LocalDate endDate,
+			FieldMapping fieldMapping) {
+
+		List<Pair<String, Pair<LocalDate, LocalDate>>> ranges = new ArrayList<>();
+
+		if (statusChangeLog.get(size - 1).getUpdatedOn().toLocalDate().isBefore(startDate)) {
+			addRangeIfValid(
+					ranges,
+					fieldMapping,
+					statusChangeLog.get(size - 1).getChangedTo(),
+					startDate,
+					endDate,
+					startDate,
+					endDate);
+		} else if (!DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
+				.toLocalDate()
+				.isAfter(endDate)) {
+			for (int i = 0; i + 1 < size; i++) {
+				JiraHistoryChangeLog changeLog = statusChangeLog.get(i);
+				JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(i + 1);
+				addRangeIfValid(
+						ranges,
+						fieldMapping,
+						changeLog.getChangedTo(),
+						startDate,
+						endDate,
+						changeLog.getUpdatedOn().toLocalDate(),
+						nextChangeLog.getUpdatedOn().toLocalDate());
+			}
+			JiraHistoryChangeLog lastLog = statusChangeLog.get(size - 1);
+			LocalDate intervalStart = lastLog.getUpdatedOn().toLocalDate();
+			if (!intervalStart.isAfter(endDate)) {
+				addRangeIfValid(
+						ranges,
+						fieldMapping,
+						lastLog.getChangedTo(),
+						startDate,
+						endDate,
+						intervalStart,
+						endDate);
+			}
+		}
+		return ranges;
+	}
+
+	private void addRangeIfValid(
+			List<Pair<String, Pair<LocalDate, LocalDate>>> ranges,
+			FieldMapping fieldMapping,
+			String status,
+			LocalDate startDate,
+			LocalDate endDate,
+			LocalDate intervalStart,
+			LocalDate intervalEnd) {
+		if (!isStatusValid(fieldMapping, status)) return;
+		if (intervalEnd.isBefore(startDate) || intervalStart.isAfter(endDate)) return;
+		if (intervalStart.isBefore(startDate)) intervalStart = startDate;
+		if (intervalEnd.isAfter(endDate)) intervalEnd = endDate;
+		ranges.add(Pair.of(status.replace(" ", "-"), Pair.of(intervalStart, intervalEnd)));
 	}
 
 	private void calculateStatusCountForEachDay(
@@ -343,10 +453,10 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 	private void populateExcelDataObject(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
-			Map<String, Map<String, Integer>> dateWithStatusCount) {
+			Map<String, Map<String, List<String>>> dateStatusIdsMap) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
-				&& !Objects.isNull(dateWithStatusCount)) {
-			KPIExcelUtility.populateFlowKPI(dateWithStatusCount, excelData);
+				&& !Objects.isNull(dateStatusIdsMap)) {
+			KPIExcelUtility.populateFlowKPIWithIds(dateStatusIdsMap, excelData);
 		}
 	}
 }

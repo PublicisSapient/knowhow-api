@@ -159,17 +159,33 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 													issue -> combineType(issue.getStoryType()),
 													Collectors.summingInt(issue -> 1))));
 
+			Map<String, Map<String, List<String>>> groupByDateAndTypeIds =
+					jiraIssueCustomHistories.stream()
+							.collect(
+									Collectors.groupingBy(
+											issue ->
+													DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
+															.toLocalDate()
+															.toString(),
+											Collectors.groupingBy(
+													issue -> combineType(issue.getStoryType()),
+													Collectors.mapping(
+															JiraIssueCustomHistory::getStoryID, Collectors.toList()))));
+
 			// Sort the groupByDateAndTypeCount map by date in ascending order
 			TreeMap<String, Map<String, Integer>> sortedByDateTypeCountMap =
 					new TreeMap<>(groupByDateAndTypeCount);
 
-			// Get the map from the start date or the immediate next date for modal window
-			Map<String, Map<String, Integer>> mapAfterStartDate =
-					sortedByDateTypeCountMap.entrySet().stream()
+			TreeMap<String, Map<String, List<String>>> sortedByDateTypeIdsMap =
+					new TreeMap<>(groupByDateAndTypeIds);
+
+			// Get the map from the start date or the immediate next date for explore table
+			Map<String, Map<String, List<String>>> mapAfterStartDateIds =
+					sortedByDateTypeIdsMap.entrySet().stream()
 							.filter(entry -> entry.getKey().compareTo(startDate) >= 0)
 							.findFirst()
 							.map(Map.Entry::getKey)
-							.map(sortedByDateTypeCountMap::tailMap)
+							.map(sortedByDateTypeIdsMap::tailMap)
 							.orElse(new TreeMap<>());
 
 			// fetching the start date backlog type count
@@ -183,7 +199,7 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 					createCumulativeTypeCount(startDate, endDate, sortedByDateTypeCountMap);
 
 			populateTrendValueList(trendValueList, cumulativeAddedCountMap);
-			populateExcelDataObject(requestTrackerId, excelData, mapAfterStartDate);
+			populateExcelDataObject(requestTrackerId, excelData, mapAfterStartDateIds);
 			log.info(
 					"FlowDistributionServiceImpl -> request id : {} dateWiseCountMap : {}",
 					requestTrackerId,
@@ -219,15 +235,15 @@ public class FlowDistributionServiceImpl extends JiraBacklogKPIService<Double, L
 	 *
 	 * @param requestTrackerId
 	 * @param excelData
-	 * @param dateTypeCountMap
+	 * @param dateTypeIdsMap
 	 */
 	private void populateExcelDataObject(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
-			Map<String, Map<String, Integer>> dateTypeCountMap) {
+			Map<String, Map<String, List<String>>> dateTypeIdsMap) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
-				&& !Objects.isNull(dateTypeCountMap)) {
-			KPIExcelUtility.populateFlowKPI(dateTypeCountMap, excelData);
+				&& !Objects.isNull(dateTypeIdsMap)) {
+			KPIExcelUtility.populateFlowKPIWithIds(dateTypeIdsMap, excelData);
 		}
 	}
 
