@@ -356,6 +356,11 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private boolean flowDistributionIncludeHistoricalData;
 
+	@Value("${slingshotSprintVelocityMultiGranularity:false}")
+	@Getter
+	@Setter
+	private boolean slingshotSprintVelocityMultiGranularity;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}
