@@ -3735,6 +3735,228 @@
         "isDefault" : true
       }
     ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi205",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Sprint Name",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Squad",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Type",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Priority",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Story Points",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Original Time Estimate (in hours)",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Time Spent (in hours)",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi202",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Issue ID",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Type",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Group Map",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi203",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Issue ID",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Type",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Size (In Story Points)",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Wait Time",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Total Time",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Flow Efficiency",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi204",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Issue ID",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Type",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Group Map",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi206",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Date",
+        "order" : 0,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "In-Analysis",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : false
+      },
+      {
+        "columnName" : "In-Testing",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : false
+      },
+      {
+        "columnName" : "In-Progress",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : false
+      },
+      {
+        "columnName" : "In-Development",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : false
+      },
+      {
+        "columnName" : "Open",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : false
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi207",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Date",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : false
+      }
+    ]
   }
 ]
 

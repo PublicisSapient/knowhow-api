@@ -2,17 +2,23 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -42,6 +48,7 @@ import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
@@ -55,8 +62,17 @@ public class SprintVelocitySlingshotServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String VELOCITY = "Velocity";
-	private static final String AVERAGE_VELOCITY = "AverageVelocity";
+	private static final String AVERAGE_VELOCITY = "Average Velocity";
+	private static final String COMMITTED_SCOPE = "Committed Scope";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
+	private static final String NON_VELOCITY_ISSUES = "NON_VELOCITY_ISSUES";
+	private static final String WEEKLY = "Weekly";
+	private static final String BI_WEEKLY = "Bi-Weekly";
+	private static final String MONTHLY = "Monthly";
+	private static final DateTimeFormatter WEEK_LABEL_FORMATTER =
+			DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+	private static final DateTimeFormatter MONTH_LABEL_FORMATTER =
+			DateTimeFormatter.ofPattern("MMM-yyyy", Locale.ENGLISH);
 
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ConfigHelperService configHelperService;
@@ -101,7 +117,26 @@ public class SprintVelocitySlingshotServiceImpl
 		calculateAggregatedValue(root, nodeWiseKPIValue, KPICode.SPRINT_VELOCITY);
 		List<DataCount> trendValues =
 				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.SPRINT_VELOCITY);
-		kpiElement.setTrendValueList(trendValues);
+
+		if (customApiConfig.isSlingshotSprintVelocityMultiGranularity()) {
+			List<DataCountGroup> groups = new ArrayList<>();
+			DataCountGroup weeklyGroup = new DataCountGroup();
+			weeklyGroup.setFilter(WEEKLY);
+			weeklyGroup.setValue(trendValues);
+			groups.add(weeklyGroup);
+			DataCountGroup biWeeklyGroup = new DataCountGroup();
+			biWeeklyGroup.setFilter(BI_WEEKLY);
+			biWeeklyGroup.setValue(wrapAggregated(trendValues, this::aggregateWeeklyToBiWeekly));
+			groups.add(biWeeklyGroup);
+			DataCountGroup monthlyGroup = new DataCountGroup();
+			monthlyGroup.setFilter(MONTHLY);
+			monthlyGroup.setValue(wrapAggregated(trendValues, this::aggregateWeeklyToMonthly));
+			groups.add(monthlyGroup);
+			kpiElement.setTrendValueList(groups);
+		} else {
+			kpiElement.setTrendValueList(trendValues);
+		}
+
 		log.debug(
 				"[SPRINT-VELOCITY-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
 				kpiRequest.getRequestTrackerId(),
@@ -130,25 +165,45 @@ public class SprintVelocitySlingshotServiceImpl
 		List<String> closedStatuses =
 				CollectionUtils.isEmpty(fieldMapping.getJiraTicketClosedStatus())
 						? new ArrayList<>()
-						: fieldMapping.getJiraTicketClosedStatus();
+						: new ArrayList<>(fieldMapping.getJiraTicketClosedStatus());
 		closedStatuses.addAll(
 				CollectionUtils.isEmpty(fieldMapping.getJiraIterationCompletionStatusKPI205())
 						? List.of()
 						: fieldMapping.getJiraIterationCompletionStatusKPI205());
+
+		List<String> issueTypesKPI205 =
+				CollectionUtils.isEmpty(fieldMapping.getJiraIterationIssueTypeKPI205())
+						? List.of()
+						: fieldMapping.getJiraIterationIssueTypeKPI205().stream()
+								.map(String::toLowerCase)
+								.toList();
 
 		List<JiraIssue> jiraIssueList =
 				jiraIssueRepository.findByBasicProjectConfigId(basicProjectConfigId.toString());
 
 		LocalDateTime endDateTime = LocalDateTime.now();
 		LocalDateTime startDateTime = endDateTime.minusWeeks(11);
+		List<String> closedStatusesLower = closedStatuses.stream().map(String::toLowerCase).toList();
+
 		List<JiraIssue> jiraIssuesFiltered =
 				jiraIssueList.stream()
 						.filter(
 								jiraIssue ->
-										closedStatuses.stream()
-														.map(String::toLowerCase)
-														.toList()
-														.contains(jiraIssue.getStatus().toLowerCase())
+										(issueTypesKPI205.isEmpty()
+														|| issueTypesKPI205.contains(jiraIssue.getTypeName().toLowerCase()))
+												&& closedStatusesLower.contains(jiraIssue.getStatus().toLowerCase())
+												&& DateUtil.isWithinDateTimeRange(
+														DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate()),
+														startDateTime,
+														endDateTime))
+						.toList();
+
+		List<JiraIssue> nonVelocityIssues =
+				jiraIssueList.stream()
+						.filter(
+								jiraIssue ->
+										(issueTypesKPI205.isEmpty()
+														|| issueTypesKPI205.contains(jiraIssue.getTypeName().toLowerCase()))
 												&& DateUtil.isWithinDateTimeRange(
 														DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate()),
 														startDateTime,
@@ -156,6 +211,7 @@ public class SprintVelocitySlingshotServiceImpl
 						.toList();
 
 		resultListMap.put(JIRA_ISSUES, jiraIssuesFiltered);
+		resultListMap.put(NON_VELOCITY_ISSUES, nonVelocityIssues);
 
 		return resultListMap;
 	}
@@ -207,14 +263,27 @@ public class SprintVelocitySlingshotServiceImpl
 		log.info("Sprint Velocity taking fetchKPIDataFromDb {}", System.currentTimeMillis() - time);
 
 		List<JiraIssue> allJiraIssue = (List<JiraIssue>) sprintVelocityStoryMap.get(JIRA_ISSUES);
+		List<JiraIssue> allNonVelocityIssues =
+				(List<JiraIssue>) sprintVelocityStoryMap.get(NON_VELOCITY_ISSUES);
 
 		FieldMapping fieldMapping =
 				configHelperService
 						.getFieldMappingMap()
 						.get(projectNode.getProjectFilter().getBasicProjectConfigId());
 
-		Map<String, Set<JiraIssue>> jiraIssuesByDateRange = new HashMap<>();
-		Map<String, Double> velocityByDateRange = new HashMap<>();
+		Map<String, Set<JiraIssue>> jiraIssuesByDateRange = new LinkedHashMap<>();
+		Map<String, Double> velocityByDateRange = new LinkedHashMap<>();
+		Map<String, Double> committedScopeByDateRange = new LinkedHashMap<>();
+
+		Map<String, LocalDateTime> issueDateTimeCache = new HashMap<>();
+		allJiraIssue.forEach(
+				ji ->
+						issueDateTimeCache.put(
+								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate())));
+		allNonVelocityIssues.forEach(
+				ji ->
+						issueDateTimeCache.putIfAbsent(
+								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate())));
 
 		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
@@ -225,15 +294,31 @@ public class SprintVelocitySlingshotServiceImpl
 							.filter(
 									jiraIssue ->
 											DateUtil.isWithinDateTimeRange(
-													DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate()),
+													issueDateTimeCache.get(jiraIssue.getNumber()),
 													periodRange.getStartDateTime(),
 													periodRange.getEndDateTime()))
 							.collect(Collectors.toSet());
+
+			Set<JiraIssue> nonVelocityIssuesSet =
+					allNonVelocityIssues.stream()
+							.filter(
+									jiraIssue ->
+											DateUtil.isWithinDateTimeRange(
+													issueDateTimeCache.get(jiraIssue.getNumber()),
+													periodRange.getStartDateTime(),
+													periodRange.getEndDateTime()))
+							.collect(Collectors.toSet());
+
 			double periodSpringVelocity;
+			double periodCommittedScope;
 			if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
 					&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
 				periodSpringVelocity =
 						issueDetailsSet.stream()
+								.mapToDouble(ji -> Optional.ofNullable(ji.getStoryPoints()).orElse(0.0d))
+								.sum();
+				periodCommittedScope =
+						nonVelocityIssuesSet.stream()
 								.mapToDouble(ji -> Optional.ofNullable(ji.getStoryPoints()).orElse(0.0d))
 								.sum();
 			} else {
@@ -246,26 +331,36 @@ public class SprintVelocitySlingshotServiceImpl
 								.sum();
 				double inHours = totalOriginalEstimate / 60;
 				periodSpringVelocity = inHours / fieldMapping.getStoryPointToHourMapping();
+
+				double nonVelocityEstimate =
+						nonVelocityIssuesSet.stream()
+								.filter(
+										jiraIssue ->
+												Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
+								.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes)
+								.sum();
+				double nonVelocityHours = nonVelocityEstimate / 60;
+				periodCommittedScope = nonVelocityHours / fieldMapping.getStoryPointToHourMapping();
 			}
 
 			String dateLabel = KpiHelperService.getDateRange(periodRange, CommonConstant.WEEK);
 
 			jiraIssuesByDateRange.put(dateLabel, issueDetailsSet);
 			velocityByDateRange.put(dateLabel, periodSpringVelocity);
+			committedScopeByDateRange.put(dateLabel, periodCommittedScope);
 
 			endDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, endDate);
 		}
 
 		List<KPIExcelData> excelData = new ArrayList<>();
+		populateExcelDataObject(
+				requestTrackerId, excelData, new HashSet<>(allJiraIssue), projectNode, fieldMapping);
 		Map<String, Integer> avgVelocityCount = new HashMap<>();
 
 		velocityByDateRange.forEach(
 				(key, value) -> {
 					String projId = projectNode.getProjectFilter().getBasicProjectConfigId().toString();
 					String trendLineName = projectNode.getProjectFilter().getName();
-
-					populateExcelDataObject(
-							requestTrackerId, excelData, new HashSet<>(allJiraIssue), projectNode, fieldMapping);
 
 					DataCount dataCount = new DataCount();
 					dataCount.setData(String.valueOf(roundingOff(value)));
@@ -278,11 +373,14 @@ public class SprintVelocitySlingshotServiceImpl
 					}
 
 					double averageVelocity = getAverageVelocity(velocityByDateRange, key);
+					double committedScope = committedScopeByDateRange.getOrDefault(key, 0.0);
 					if (averageVelocity >= 0) {
-						dataCount.setLineValue(averageVelocity);
+						dataCount.setLineValue(roundingOff(averageVelocity));
+						dataCount.setAggregationValue(roundingOff(committedScope));
 						Map<String, Object> hoverValue = new HashMap<>();
-						hoverValue.put(AVERAGE_VELOCITY, roundingOff(averageVelocity));
 						hoverValue.put(VELOCITY, roundingOff((Double) dataCount.getValue()));
+						hoverValue.put(AVERAGE_VELOCITY, roundingOff(averageVelocity));
+						hoverValue.put(COMMITTED_SCOPE, roundingOff(committedScope));
 						dataCount.setHoverValue(hoverValue);
 						avgVelocityCount.put(projId, avgVelocityCount.get(projId) + 1);
 					} else {
@@ -353,5 +451,115 @@ public class SprintVelocitySlingshotServiceImpl
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
 				fieldMapping.getThresholdValueKPI205(), KPICode.SPRINT_VELOCITY.getKpiId());
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<DataCount> wrapAggregated(
+			List<DataCount> projectDataCounts, Function<List<DataCount>, List<DataCount>> aggregator) {
+		List<DataCount> result = new ArrayList<>();
+		for (DataCount projectDc : projectDataCounts) {
+			if (projectDc.getValue() instanceof List<?> innerList) {
+				DataCount wrapper = new DataCount();
+				wrapper.setData(projectDc.getData());
+				wrapper.setValue(aggregator.apply((List<DataCount>) innerList));
+				result.add(wrapper);
+			}
+		}
+		return result;
+	}
+
+	private List<DataCount> aggregateWeeklyToBiWeekly(List<DataCount> weeklyList) {
+		List<DataCount> biWeeklyList = new ArrayList<>();
+		for (int i = 0; i < weeklyList.size(); i += 2) {
+			List<DataCount> pair = weeklyList.subList(i, Math.min(i + 2, weeklyList.size()));
+			double pairVelocity =
+					pair.stream()
+							.mapToDouble(dc -> dc.getValue() instanceof Number n ? n.doubleValue() : 0.0)
+							.sum();
+			double pairCommittedScope =
+					pair.stream()
+							.filter(dc -> dc.getAggregationValue() instanceof Number)
+							.mapToDouble(dc -> ((Number) dc.getAggregationValue()).doubleValue())
+							.sum();
+			double avgLineValue =
+					pair.stream()
+							.filter(dc -> dc.getLineValue() instanceof Number)
+							.mapToDouble(dc -> ((Number) dc.getLineValue()).doubleValue())
+							.average()
+							.orElse(0.0);
+			String firstId = pair.get(0).getsSprintID();
+			String lastId = pair.get(pair.size() - 1).getsSprintID();
+			String startPart =
+					firstId != null && firstId.contains(" to ") ? firstId.split(" to ")[0].trim() : firstId;
+			String endPart =
+					lastId != null && lastId.contains(" to ") ? lastId.split(" to ")[1].trim() : lastId;
+			String biWeekLabel = startPart + " to " + endPart;
+			DataCount dc = new DataCount();
+			dc.setSProjectName(pair.get(0).getSProjectName());
+			dc.setSSprintID(biWeekLabel);
+			dc.setSSprintName(biWeekLabel);
+			dc.setData(String.valueOf(roundingOff(pairVelocity)));
+			dc.setValue(roundingOff(pairVelocity));
+			dc.setLineValue(roundingOff(avgLineValue));
+			dc.setAggregationValue(roundingOff(pairCommittedScope));
+			Map<String, Object> hoverValue = new HashMap<>();
+			hoverValue.put(VELOCITY, roundingOff(pairVelocity));
+			hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
+			hoverValue.put(COMMITTED_SCOPE, roundingOff(pairCommittedScope));
+			dc.setHoverValue(hoverValue);
+			biWeeklyList.add(dc);
+		}
+		return biWeeklyList;
+	}
+
+	private List<DataCount> aggregateWeeklyToMonthly(List<DataCount> weeklyList) {
+		Map<YearMonth, List<DataCount>> byMonth = new LinkedHashMap<>();
+		for (DataCount dc : weeklyList) {
+			String sprintId = dc.getsSprintID();
+			if (sprintId == null) continue;
+			try {
+				String startPart =
+						sprintId.contains(" to ") ? sprintId.split(" to ")[0].trim() : sprintId.trim();
+				LocalDate startDate = LocalDate.parse(startPart, WEEK_LABEL_FORMATTER);
+				byMonth.computeIfAbsent(YearMonth.from(startDate), k -> new ArrayList<>()).add(dc);
+			} catch (Exception e) {
+				log.warn("Could not parse week label for monthly grouping: {}", sprintId);
+			}
+		}
+		List<DataCount> monthlyList = new ArrayList<>();
+		byMonth.forEach(
+				(ym, monthSlice) -> {
+					double monthVelocity =
+							monthSlice.stream()
+									.mapToDouble(dc -> dc.getValue() instanceof Number n ? n.doubleValue() : 0.0)
+									.sum();
+					double monthCommittedScope =
+							monthSlice.stream()
+									.filter(dc -> dc.getAggregationValue() instanceof Number)
+									.mapToDouble(dc -> ((Number) dc.getAggregationValue()).doubleValue())
+									.sum();
+					double avgLineValue =
+							monthSlice.stream()
+									.filter(dc -> dc.getLineValue() instanceof Number)
+									.mapToDouble(dc -> ((Number) dc.getLineValue()).doubleValue())
+									.average()
+									.orElse(0.0);
+					String monthLabel = ym.format(MONTH_LABEL_FORMATTER);
+					DataCount dc = new DataCount();
+					dc.setSProjectName(monthSlice.get(0).getSProjectName());
+					dc.setSSprintID(monthLabel);
+					dc.setSSprintName(monthLabel);
+					dc.setData(String.valueOf(roundingOff(monthVelocity)));
+					dc.setValue(roundingOff(monthVelocity));
+					dc.setLineValue(roundingOff(avgLineValue));
+					dc.setAggregationValue(roundingOff(monthCommittedScope));
+					Map<String, Object> hoverValue = new HashMap<>();
+					hoverValue.put(VELOCITY, roundingOff(monthVelocity));
+					hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
+					hoverValue.put(COMMITTED_SCOPE, roundingOff(monthCommittedScope));
+					dc.setHoverValue(hoverValue);
+					monthlyList.add(dc);
+				});
+		return monthlyList;
 	}
 }

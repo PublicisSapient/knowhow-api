@@ -346,7 +346,20 @@ public class CustomApiConfig { // NOPMD
 	@Value("${executive.dashboard.timeout.minutes:3}")
 	private int executiveTimeoutMinutes;
 
-	@Getter @Setter private int slingShotFlowKpiMonthCount;
+	@Value("${slingShotFlowKpiMonthCount:3}")
+	@Getter
+	@Setter
+	private int slingShotFlowKpiMonthCount;
+
+	@Value("${flowDistributionIncludeHistoricalData:false}")
+	@Getter
+	@Setter
+	private boolean flowDistributionIncludeHistoricalData;
+
+	@Value("${slingshotSprintVelocityMultiGranularity:false}")
+	@Getter
+	@Setter
+	private boolean slingshotSprintVelocityMultiGranularity;
 
 	public String getDefectRateUrl() {
 		return defectRateUrl;

@@ -5,6 +5,8 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import com.mongodb.client.model.ReplaceOptions;
+
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -127,7 +129,9 @@ public class SprintVelocitySlingshotChangeUnit {
 						.append("yaxisOrder", null)
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("forecastModel", "exponentialSmoothing");
-		mongoTemplate.getCollection(KPI_MASTER).insertOne(kpiDocument);
+		mongoTemplate
+				.getCollection(KPI_MASTER)
+				.replaceOne(new Document(KPI_ID, KPI_205), kpiDocument, new ReplaceOptions().upsert(true));
 	}
 
 	private Document trendDoc(String type, String operator) {
@@ -139,40 +143,45 @@ public class SprintVelocitySlingshotChangeUnit {
 	}
 
 	private void insertFieldMappingStructure() {
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE)
-				.insertMany(
-						List.of(
-								buildFieldMappingDoc(
-										new FieldMappingParams(
-												"thresholdValueKPI205",
-												"Target KPI Value",
-												"number",
-												null,
-												"Project Level Threshold"),
-										1,
-										6,
-										"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"),
-								buildFieldMappingDoc(
-										new FieldMappingParams(
-												"jiraIterationCompletionStatusKPI205",
-												"Status to identify completed issues",
-												CHIPS,
-												"workflow",
-												WORKFLOW_STATUS_MAPPING),
-										8,
-										4,
-										"All workflow statuses used to identify completed issues. If multiple statuses are specified, the first status an issue transitions to will be considered."),
-								buildFieldMappingDoc(
-										new FieldMappingParams(
-												"jiraIterationIssueTypeKPI205",
-												"Issue types filter for completed issues",
-												CHIPS,
-												"Issue_Type",
-												"Issue Types Mapping"),
-										1,
-										2,
-										"Completed issues of the specified issue types will be considered. If left blank, all issue types will be included by default.")));
+		List.of(
+						buildFieldMappingDoc(
+								new FieldMappingParams(
+										"thresholdValueKPI205",
+										"Target KPI Value",
+										"number",
+										null,
+										"Project Level Threshold"),
+								1,
+								6,
+								"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"),
+						buildFieldMappingDoc(
+								new FieldMappingParams(
+										"jiraIterationCompletionStatusKPI205",
+										"Status to identify completed issues",
+										CHIPS,
+										"workflow",
+										WORKFLOW_STATUS_MAPPING),
+								8,
+								4,
+								"All workflow statuses used to identify completed issues. If multiple statuses are specified, the first status an issue transitions to will be considered."),
+						buildFieldMappingDoc(
+								new FieldMappingParams(
+										"jiraIterationIssueTypeKPI205",
+										"Issue types filter for completed issues",
+										CHIPS,
+										"Issue_Type",
+										"Issue Types Mapping"),
+								1,
+								2,
+								"Completed issues of the specified issue types will be considered. If left blank, all issue types will be included by default."))
+				.forEach(
+						doc ->
+								mongoTemplate
+										.getCollection(FIELD_MAPPING_STRUCTURE)
+										.replaceOne(
+												new Document(FIELD_NAME, doc.getString(FIELD_NAME)),
+												doc,
+												new ReplaceOptions().upsert(true)));
 	}
 
 	private record FieldMappingParams(
@@ -221,7 +230,10 @@ public class SprintVelocitySlingshotChangeUnit {
 										columnDoc("Story Points", 7),
 										columnDoc("Original Time Estimate (in hours)", 8),
 										columnDoc("Time Spent (in hours)", 9)));
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS).insertOne(kpiColumnConfigDocument);
+		Document filter = new Document("basicProjectConfigId", null).append(KPI_ID, KPI_205);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS)
+				.replaceOne(filter, kpiColumnConfigDocument, new ReplaceOptions().upsert(true));
 	}
 
 	private Document columnDoc(String name, int order) {
