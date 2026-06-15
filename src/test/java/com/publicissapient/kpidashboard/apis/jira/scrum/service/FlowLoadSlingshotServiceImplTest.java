@@ -115,7 +115,7 @@ public class FlowLoadSlingshotServiceImplTest {
 
 	@Test
 	public void getKpiData() throws ApplicationException {
-		when(customApiConfig.getFlowKpiMonthCount()).thenReturn(12);
+		// when(customApiConfig.getSlingShotFlowKpiMonthCount()).thenReturn(12);
 		String kpiRequestTrackerId = "Jira-Excel-QADD-track001";
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
