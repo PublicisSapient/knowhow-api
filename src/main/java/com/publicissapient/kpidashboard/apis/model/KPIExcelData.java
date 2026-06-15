@@ -372,7 +372,7 @@ public class KPIExcelData {
 	private String createdDuringIteration;
 
 	@JsonProperty("Count")
-	private Map<String, Integer> count;
+	private Map<String, String> count;
 
 	@JsonProperty("Scope")
 	private String scopeValue;

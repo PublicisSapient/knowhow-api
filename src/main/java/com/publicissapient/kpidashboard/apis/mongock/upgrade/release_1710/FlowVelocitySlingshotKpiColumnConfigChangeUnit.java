@@ -31,63 +31,50 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
-		id = "cycle_time_trend_slingshot_excel_insert",
-		order = "17106",
+		id = "flow_velocity_slingshot_kpi_column_config",
+		order = "17115",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
 @RequiredArgsConstructor
-public class CycleTimeSlingshotExcelColumnsChangeUnit {
+public class FlowVelocitySlingshotKpiColumnConfigChangeUnit {
 
 	private static final String KPI_ID = "kpiId";
+	private static final String KPI_205 = "kpi205";
+	private static final String KPI_COLUMN_CONFIGS = "kpi_column_configs";
+	private static final String BASIC_PROJECT_CONFIG_ID = "basicProjectConfigId";
 
 	private final MongoTemplate mongoTemplate;
 
 	@Execution
 	public void execute() {
-		Document doc =
-				new Document()
-						.append("basicProjectConfigId", null)
-						.append(KPI_ID, "kpi202")
+		Document filter = new Document(BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, KPI_205);
+
+		Document replacement =
+				new Document(BASIC_PROJECT_CONFIG_ID, null)
+						.append(KPI_ID, KPI_205)
 						.append(
 								"kpiColumnDetails",
 								List.of(
-										columnDetail("Issue ID", 1),
-										columnDetail("Issue Type", 2),
+										columnDetail("Sprint Name", 1),
+										columnDetail("Issue ID", 2),
 										columnDetail("Issue Description", 3),
-										columnDetail("Group Map", 4)));
+										columnDetail("Squad", 4),
+										columnDetail("Issue Type", 5),
+										columnDetail("Priority", 6),
+										columnDetail("Story Points", 7),
+										columnDetail("Original Time Estimate (in hours)", 8),
+										columnDetail("Time Spent (in hours)", 9)));
 
-		Document doc2 =
-				new Document()
-						.append("basicProjectConfigId", null)
-						.append(KPI_ID, "kpi204")
-						.append(
-								"kpiColumnDetails",
-								List.of(
-										columnDetail("Issue ID", 1),
-										columnDetail("Issue Type", 2),
-										columnDetail("Issue Description", 3),
-										columnDetail("Sprint Name", 4),
-										columnDetail("Group Map", 5)));
-
-		ReplaceOptions upsertOptions = new ReplaceOptions().upsert(true);
 		mongoTemplate
-				.getCollection("kpi_column_configs")
-				.replaceOne(
-						new Document("basicProjectConfigId", null).append(KPI_ID, "kpi202"),
-						doc,
-						upsertOptions);
-		mongoTemplate
-				.getCollection("kpi_column_configs")
-				.replaceOne(
-						new Document("basicProjectConfigId", null).append(KPI_ID, "kpi204"),
-						doc2,
-						upsertOptions);
+				.getCollection(KPI_COLUMN_CONFIGS)
+				.replaceOne(filter, replacement, new ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		mongoTemplate.remove(
-				new Query(Criteria.where(KPI_ID).in("kpi204", "kpi202")), "kpi_column_configs");
+				new Query(Criteria.where(KPI_ID).is(KPI_205).and(BASIC_PROJECT_CONFIG_ID).isNull()),
+				KPI_COLUMN_CONFIGS);
 	}
 
 	private Document columnDetail(String name, int order) {

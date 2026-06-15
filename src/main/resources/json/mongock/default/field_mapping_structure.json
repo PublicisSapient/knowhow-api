@@ -3336,6 +3336,174 @@
     "mandatory": true
   },
   {
+    "fieldName": "jiraIssueClosedStateKPI207",
+    "fieldLabel": "Status to identify Close Statuses",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All statuses that signify an issue is 'DONE' based on 'Definition Of Done'"
+    },
+    "mandatory": true
+  },
+  {
+    "fieldName": "jiraIssueTypeKPI202",
+    "fieldLabel": "Issue types to consider",
+    "fieldType": "chips",
+    "fieldCategory": "Issue_Type",
+    "processorCommon": false,
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 2,
+    "section": "Issue Types Mapping",
+    "tooltip": {
+      "definition": "All issue types considered for Cycle calculation"
+    },
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "jiraIssueStatusGroupByCategoryKPI202",
+    "fieldLabel": "Workfow groups",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "fieldDisplayOrder": 2,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "Workflow status/es that identify that a backlog item is ready to be taken in a sprint based on Definition of Ready (DOR)"
+    },
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "jiraIssueClosedStateKPI203",
+    "fieldLabel": "Status to identify Close Statuses",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All statuses that signify an issue is 'DONE' based on 'Definition Of Done'"
+    },
+    "mandatory": true
+  },
+  {
+    "fieldName": "jiraIssueWaitStateKPI203",
+    "fieldLabel": "Status to identify Wait Statuses",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "The statuses wherein no activity takes place and signifies that issue is in queue"
+    },
+    "mandatory": true
+  },
+  {
+    "fieldName": "thresholdValueKPI203",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "processorCommon": false,
+    "section": "Project Level Threshold",
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    }
+  },
+  {
+    "fieldName": "thresholdValueKPI205",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "processorCommon": false,
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 6,
+    "section": "Project Level Threshold",
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "mandatory": false
+  },
+  {
+    "fieldName": "jiraIterationCompletionStatusKPI205",
+    "fieldLabel": "Status to identify completed issues",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "fieldDisplayOrder": 8,
+    "sectionOrder": 4,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All workflow statuses used to identify completed issues. If multiple statuses are specified, the first status an issue transitions to will be considered."
+    },
+    "mandatory": false
+  },
+  {
+    "fieldName": "jiraIterationIssueTypeKPI205",
+    "fieldLabel": "Issue types filter for completed issues",
+    "fieldType": "chips",
+    "fieldCategory": "Issue_Type",
+    "processorCommon": false,
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 2,
+    "section": "Issue Types Mapping",
+    "tooltip": {
+      "definition": "Completed issues of the specified issue types will be considered. If left blank, all issue types will be included by default."
+    },
+    "mandatory": false
+  },
+  {
+    "fieldName": "jiraIssueTypeNamesKPI206",
+    "fieldLabel": "Issue types to be included",
+    "fieldType": "chips",
+    "fieldCategory": "Issue_Type",
+    "processorCommon": false,
+    "section": "Issue Types Mapping",
+    "tooltip": {
+      "definition": "All issue types used by your Jira project"
+    },
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "storyFirstStatusKPI206",
+    "fieldLabel": "Status to identify issues in refinement",
+    "fieldType": "text",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All issue types that identify with a Story."
+    },
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "jiraStatusForInProgressKPI206",
+    "fieldLabel": "Status to identify issues in development",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All statuses that denote incomplete issues but have advanced from their initial creation status."
+    },
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
+    "fieldName": "jiraStatusForQaKPI206",
+    "fieldLabel": "Status to identify issues in testing",
+    "fieldType": "chips",
+    "fieldCategory": "workflow",
+    "processorCommon": false,
+    "section": "WorkFlow Status Mapping",
+    "tooltip": {
+      "definition": "All workflow statuses used to identify issues in testing state"
+    },
+    "mandatory": true,
+    "nodeSpecific": false
+  },
+  {
     "fieldName": "jiraIssueTypeNamesKPI151",
     "fieldLabel": "Issue types to be included",
     "fieldType": "chips",
