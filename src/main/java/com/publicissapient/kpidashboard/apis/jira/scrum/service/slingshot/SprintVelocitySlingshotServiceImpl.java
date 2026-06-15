@@ -204,10 +204,13 @@ public class SprintVelocitySlingshotServiceImpl
 								jiraIssue ->
 										(issueTypesKPI205.isEmpty()
 														|| issueTypesKPI205.contains(jiraIssue.getTypeName().toLowerCase()))
-												&& DateUtil.isWithinDateTimeRange(
-														DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate()),
-														startDateTime,
-														endDateTime))
+												&& jiraIssue.getCreatedDate() != null
+												&& !DateUtil.convertToUTCLocalDateTime(jiraIssue.getCreatedDate())
+														.isAfter(endDateTime)
+												&& (!closedStatusesLower.contains(jiraIssue.getStatus().toLowerCase())
+														|| (jiraIssue.getChangeDate() != null
+																&& !DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate())
+																		.isBefore(startDateTime))))
 						.toList();
 
 		resultListMap.put(JIRA_ISSUES, jiraIssuesFiltered);
@@ -275,15 +278,37 @@ public class SprintVelocitySlingshotServiceImpl
 		Map<String, Double> velocityByDateRange = new LinkedHashMap<>();
 		Map<String, Double> committedScopeByDateRange = new LinkedHashMap<>();
 
+		List<String> committedClosedStatusesLower =
+				CollectionUtils.isEmpty(fieldMapping.getJiraTicketClosedStatus())
+						? new ArrayList<>()
+						: new ArrayList<>(
+								fieldMapping.getJiraTicketClosedStatus().stream()
+										.map(String::toLowerCase)
+										.toList());
+		if (!CollectionUtils.isEmpty(fieldMapping.getJiraIterationCompletionStatusKPI205())) {
+			committedClosedStatusesLower.addAll(
+					fieldMapping.getJiraIterationCompletionStatusKPI205().stream()
+							.map(String::toLowerCase)
+							.toList());
+		}
+
 		Map<String, LocalDateTime> issueDateTimeCache = new HashMap<>();
 		allJiraIssue.forEach(
 				ji ->
 						issueDateTimeCache.put(
 								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate())));
+
+		Map<String, LocalDateTime> nonVelocityCreatedDateCache = new HashMap<>();
+		Map<String, LocalDateTime> nonVelocityChangeDateCache = new HashMap<>();
 		allNonVelocityIssues.forEach(
-				ji ->
-						issueDateTimeCache.putIfAbsent(
-								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate())));
+				ji -> {
+					nonVelocityCreatedDateCache.put(
+							ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getCreatedDate()));
+					if (ji.getChangeDate() != null) {
+						nonVelocityChangeDateCache.put(
+								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate()));
+					}
+				});
 
 		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
@@ -302,11 +327,19 @@ public class SprintVelocitySlingshotServiceImpl
 			Set<JiraIssue> nonVelocityIssuesSet =
 					allNonVelocityIssues.stream()
 							.filter(
-									jiraIssue ->
-											DateUtil.isWithinDateTimeRange(
-													issueDateTimeCache.get(jiraIssue.getNumber()),
-													periodRange.getStartDateTime(),
-													periodRange.getEndDateTime()))
+									jiraIssue -> {
+										LocalDateTime created = nonVelocityCreatedDateCache.get(jiraIssue.getNumber());
+										if (created == null || created.isAfter(periodRange.getEndDateTime())) {
+											return false;
+										}
+										if (committedClosedStatusesLower.contains(
+												jiraIssue.getStatus().toLowerCase())) {
+											LocalDateTime closedAt =
+													nonVelocityChangeDateCache.get(jiraIssue.getNumber());
+											return closedAt != null && !closedAt.isBefore(periodRange.getStartDateTime());
+										}
+										return true;
+									})
 							.collect(Collectors.toSet());
 
 			double periodSpringVelocity;
