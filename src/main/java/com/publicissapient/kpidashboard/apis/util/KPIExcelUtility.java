@@ -2343,10 +2343,41 @@ public class KPIExcelUtility {
 				kpiExcelData.setDate(
 						DateUtil.tranformUTCLocalTimeToZFormat(
 								LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
-				kpiExcelData.setCount(typeCountMap);
+				Map<String, String> countStrMap = new HashMap<>();
+				typeCountMap.forEach((k, v) -> countStrMap.put(k, String.valueOf(v)));
+				kpiExcelData.setCount(countStrMap);
 				excelData.add(kpiExcelData);
 			}
 		}
+	}
+
+	public static void populateFlowKPIWithIds(
+			Map<String, Map<String, List<String>>> dateTypeIdsMap, List<KPIExcelData> excelData) {
+		for (Map.Entry<String, Map<String, List<String>>> entry : dateTypeIdsMap.entrySet()) {
+			String date = entry.getKey();
+			Map<String, List<String>> typeIdsMap = entry.getValue();
+			KPIExcelData kpiExcelData = new KPIExcelData();
+			if (MapUtils.isNotEmpty(typeIdsMap)) {
+				kpiExcelData.setDate(
+						DateUtil.tranformUTCLocalTimeToZFormat(
+								LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
+				Map<String, String> typeFormattedMap = new HashMap<>();
+				typeIdsMap.forEach((type, ids) -> typeFormattedMap.put(type, formatIssueIds(ids)));
+				kpiExcelData.setCount(typeFormattedMap);
+				excelData.add(kpiExcelData);
+			}
+		}
+	}
+
+	private static String formatIssueIds(List<String> ids) {
+		int count = ids.size();
+		if (count == 0) return "0";
+		List<String> displayIds = count > 10 ? ids.subList(0, 10) : ids;
+		String joined = String.join(" | ", displayIds);
+		if (count > 10) {
+			return count + " - " + joined + " | more";
+		}
+		return count + " - " + joined;
 	}
 
 	public static void populateHappinessIndexExcelData(

@@ -16,12 +16,12 @@
 
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
-import java.util.List;
-
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+
+import com.mongodb.client.model.ReplaceOptions;
 
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
@@ -95,7 +95,16 @@ public class CycleTimeSlingshotFieldMappingChangeUnit {
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE)
-				.insertMany(List.of(issueTypeDoc, workflowGroupDoc));
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueTypeKPI202"),
+						issueTypeDoc,
+						new ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueStatusGroupByCategoryKPI202"),
+						workflowGroupDoc,
+						new ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

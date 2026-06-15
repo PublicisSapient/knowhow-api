@@ -282,14 +282,14 @@ public class SprintVelocitySlingshotServiceImplTest {
 		issue1.setNumber("ISSUE-1");
 		issue1.setEstimate("5.0");
 		issue1.setStatus("Done");
-		issue1.setChangeDate("2023-11-01 10:00:00");
+		issue1.setChangeDate("2023-11-01T10:00:00");
 		issues.add(issue1);
 
 		JiraIssue issue2 = new JiraIssue();
 		issue2.setNumber("ISSUE-2");
 		issue2.setEstimate("10.0");
 		issue2.setStatus("Closed");
-		issue2.setChangeDate("2023-11-02 10:00:00");
+		issue2.setChangeDate("2023-11-02T10:00:00");
 		issues.add(issue2);
 
 		return issues;
@@ -302,14 +302,14 @@ public class SprintVelocitySlingshotServiceImplTest {
 		issue1.setNumber("ISSUE-1");
 		issue1.setStoryPoints(5.0);
 		issue1.setStatus("Done");
-		issue1.setChangeDate("2023-11-01 10:00:00");
+		issue1.setChangeDate("2023-11-01T10:00:00");
 		issues.add(issue1);
 
 		JiraIssue issue2 = new JiraIssue();
 		issue2.setNumber("ISSUE-2");
 		issue2.setStoryPoints(8.0);
 		issue2.setStatus("Closed");
-		issue2.setChangeDate("2023-11-02 10:00:00");
+		issue2.setChangeDate("2023-11-02T10:00:00");
 		issues.add(issue2);
 
 		return issues;
@@ -322,14 +322,14 @@ public class SprintVelocitySlingshotServiceImplTest {
 		issue1.setNumber("ISSUE-1");
 		issue1.setAggregateTimeOriginalEstimateMinutes(480); // 8 hours
 		issue1.setStatus("Done");
-		issue1.setChangeDate("2023-11-01 10:00:00");
+		issue1.setChangeDate("2023-11-01T10:00:00");
 		issues.add(issue1);
 
 		JiraIssue issue2 = new JiraIssue();
 		issue2.setNumber("ISSUE-2");
 		issue2.setAggregateTimeOriginalEstimateMinutes(240); // 4 hours
 		issue2.setStatus("Closed");
-		issue2.setChangeDate("2023-11-02 10:00:00");
+		issue2.setChangeDate("2023-11-02T10:00:00");
 		issues.add(issue2);
 
 		return issues;

@@ -406,11 +406,17 @@ public class KPIExcelDataService {
 			kpiColumnConfigDTO =
 					kpiColumnConfigService.getByKpiColumnConfig(
 							projectBasicConfigID, totalKpiElementList.get(0).getKpiId());
+			if (kpiColumnConfigDTO == null) {
+				kpiColumnConfigDTO = new KpiColumnConfigDTO();
+			}
 			kpiColumnConfigDTO.setSaveFlag(true);
 
 		} else {
 			kpiColumnConfigDTO =
 					kpiColumnConfigService.getByKpiColumnConfig(null, totalKpiElementList.get(0).getKpiId());
+			if (kpiColumnConfigDTO == null) {
+				kpiColumnConfigDTO = new KpiColumnConfigDTO();
+			}
 			kpiColumnConfigDTO.setSaveFlag(false);
 		}
 		prepareKpiExcelValidationDataResponse(
@@ -667,6 +673,7 @@ public class KPIExcelDataService {
 					String kpiId = pair.getValue().getKpiList().get(0).getKpiId();
 					if (category.contains(pair.getValue().getKpiList().get(0).getKpiCategory())
 							|| kpiId.equalsIgnoreCase("kpi148")
+							|| kpiId.equalsIgnoreCase("kpi206")
 							|| kpiId.equalsIgnoreCase("kpi207")) {
 						// when request coming from ITERATION/RELEASE/BACKLOG board
 						if (Boolean.TRUE.equals(apiAuth)) {

@@ -83,7 +83,7 @@ public class FlowDistributionSlingshotServiceImplTest {
 		TreeAggregatorDetail treeAggregatorDetail =
 				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-		when(customApiConfig.getFlowKpiMonthCount()).thenReturn(1);
+		when(customApiConfig.getSlingShotFlowKpiMonthCount()).thenReturn(1);
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
 		customHistoryList.get(0).setCreatedDate(DateTime.now());

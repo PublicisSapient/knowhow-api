@@ -36,11 +36,10 @@ public class SlingshotKpisUpdateChangeLog {
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi205")),
 				Update.update(FIELD_X_AXIS_LABEL, "Weeks")
 						.set(FIELD_DEFAULT_ORDER, 3)
+						.set("kpiName", "Flow Velocity")
 						.set(
 								KPI_DEFINITION,
-								"""
-								Number of flow items completed per unit time, segmented by flow item type.
-								"Count of issues where status transitioned to Done within the period, grouped by Flow Item Type custom field."""));
+								"Number of flow items completed per unit time, segmented by flow item type. Count of issues where status transitioned to Done within the period, grouped by Flow Item Type custom field."));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi203")),
 				Update.update(FIELD_X_AXIS_LABEL, "Range")
@@ -54,19 +53,18 @@ public class SlingshotKpisUpdateChangeLog {
 						.set(
 								KPI_DEFINITION,
 								"Elapsed wall-clock time from when work started (entered an active state) to when it reached Done.")
-						.set("kpiWidth", 50));
+						.set("kpiWidth", 50)
+						.set("groupId", 45));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi204")),
-				Update.update(FIELD_DEFAULT_ORDER, 2));
+				Update.update(FIELD_DEFAULT_ORDER, 2).set("groupId", 34));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi206")),
 				Update.update(FIELD_DEFAULT_ORDER, 5)
 						.set(
 								KPI_DEFINITION,
-								"""
-						Number of flow items currently in progress in the value stream (WIP).
-						Too high = thrashing; too low = underutilisation.
-						"Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.."""));
+								"Number of flow items currently in progress in the value stream (WIP). Too high = thrashing; too low = underutilisation. Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.")
+						.set("groupId", 46));
 		bulkOps.updateOne(
 				Query.query(Criteria.where(FIELD_KPI_ID).is("kpi207")),
 				Update.update(FIELD_DEFAULT_ORDER, 6)

@@ -5322,13 +5322,13 @@
   },
   {
     "kpiId": "kpi202",
-    "kpiName": "Cycle Time",
+    "kpiName": "Flow Time",
     "maxValue": "",
     "kpiUnit": "Days",
     "isDeleted": "False",
     "defaultOrder": 1,
     "kpiSource": "Jira",
-    "combinedKpiSource": "Jira/Azure",
+    "combinedKpiSource": "Jira/Azure/Rally",
     "kpiCategory": "Slingshot",
     "groupId": 45,
     "thresholdValue": "",
@@ -5339,10 +5339,9 @@
     "isAdditionalFilterSupport": false,
     "kpiFilter": "dropDown",
     "calculateMaturity": false,
-    "isAggregationStacks": false,
     "aggregationCriteria": "sum",
     "kpiInfo": {
-      "definition": "Cycle time measures the duration of each stage within an issue's complete lifecycle. It is visualized through stacked bar chart by breaking down the time spent in each individual cycle.",
+      "definition": "Elapsed wall-clock time from when work started (entered an active state) to when it reached Done.",
       "details": [
         {
           "type": "link",
@@ -5351,19 +5350,149 @@
             "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi202-Cycle+Time"
           }
         }
-      ],
-      "formula": null
+      ]
     },
     "isPositiveTrend": false,
     "kpiBaseLine": "0",
-    "showTrend": false
+    "showTrend": false,
+    "kpiWidth": 50
   },
   {
-    "kpiId": "Kpi207",
-    "kpiName": "Flow Distribution Slingshot",
+    "kpiId": "kpi203",
+    "kpiName": "Flow Efficiency",
     "kpiUnit": "",
     "isDeleted": "False",
+    "defaultOrder": 4,
+    "kpiCategory": "Slingshot",
+    "kpiSource": "Jira",
+    "groupId": 45,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": "line",
+    "kpiInfo": {
+      "definition": "Ratio of active work time to total flow time. Shows how much of an item's lifetime is spent moving forward versus waiting.",
+      "formula": [
+        {
+          "lhs": "Flow efficiency",
+          "operator": "division",
+          "operands": ["(Active work time)", "(Total lead time) x 100%"]
+        }
+      ]
+    },
+    "xAxisLabel": "Range",
+    "yAxisLabel": "Percentage",
+    "isPositiveTrend": false,
+    "kpiFilter": "dropDown",
+    "showTrend": false,
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": false,
+    "calculateMaturity": false
+  },
+  {
+    "kpiId": "kpi204",
+    "kpiName": "Flow Time Trend",
+    "maxValue": "",
+    "kpiUnit": "Days",
+    "isDeleted": "False",
+    "defaultOrder": 2,
+    "kpiCategory": "Slingshot",
+    "kpiSource": "Jira",
+    "groupId": 34,
+    "thresholdValue": "",
+    "kanban": false,
+    "chartType": "line",
+    "yAxisLabel": "Days",
+    "xAxisLabel": "Range",
+    "isAdditionalFilterSupport": false,
+    "kpiFilter": "dropDown",
+    "calculateMaturity": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "aggregationCriteria": "sum",
+    "kpiInfo": {
+      "definition": "Elapsed wall-clock time from when work started (entered an active state) to when it reached Done.",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi202-Cycle+Time"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kpiId": "kpi205",
+    "kpiName": "Flow Velocity",
+    "isDeleted": "False",
+    "defaultOrder": 3,
+    "kpiCategory": "Slingshot",
+    "kpiUnit": "SP",
+    "chartType": "grouped_column_plus_line",
+    "upperThresholdBG": "white",
+    "lowerThresholdBG": "red",
+    "xAxisLabel": "Weeks",
+    "yAxisLabel": "Count",
+    "showTrend": false,
+    "isPositiveTrend": true,
+    "lineLegend": "Sprint Velocity",
+    "barLegend": "Last 5 Sprints Average",
+    "calculateMaturity": true,
+    "hideOverallFilter": false,
+    "kpiSource": "Jira",
+    "maxValue": "300",
+    "thresholdValue": "40",
+    "kanban": false,
+    "groupId": 45,
+    "kpiInfo": {
+      "definition": "Number of flow items completed per unit time, segmented by flow item type. Count of issues where status transitioned to Done within the period, grouped by Flow Item Type custom field."
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "sum",
+    "isAdditionalFilterSupport": true,
+    "combinedKpiSource": "Jira/Azure/Rally"
+  },
+  {
+    "kpiId": "kpi206",
+    "kpiName": "Flow Load",
+    "isDeleted": "False",
     "defaultOrder": 5,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Flow KPIs",
+    "kpiUnit": "",
+    "chartType": "stacked-area",
+    "xAxisLabel": "Time",
+    "yAxisLabel": "Count",
+    "showTrend": false,
+    "isPositiveTrend": false,
+    "calculateMaturity": false,
+    "hideOverallFilter": false,
+    "kpiSource": "Jira",
+    "kanban": false,
+    "groupId": 46,
+    "kpiInfo": {
+      "definition": "Number of flow items currently in progress in the value stream (WIP). Too high = thrashing; too low = underutilisation. Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.",
+      "details": [
+        {
+          "type": "link",
+          "kpiLinkDetail": {
+            "text": "Detailed Information at",
+            "link": "https://knowhow.tools.publicis.sapient.com/wiki/kpi148-Flow+Load"
+          }
+        }
+      ]
+    },
+    "kpiFilter": "",
+    "aggregationCriteria": "sum",
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally"
+  },
+  {
+    "kpiId": "kpi207",
+    "kpiName": "Flow Distribution",
+    "kpiUnit": "",
+    "isDeleted": "False",
+    "defaultOrder": 6,
     "kpiCategory": "Slingshot",
     "kpiSource": "Jira",
     "combinedKpiSource": "Jira/Azure",
@@ -5372,7 +5501,7 @@
     "kanban": false,
     "chartType": "stacked-area",
     "kpiInfo": {
-      "definition": "Flow Distribution evaluates the amount of each kind of work (issue types) which are open in the backlog over a period of time.",
+      "definition": "Percentage mix of completed work across Features, Defects, Risk, and Tech Debt.",
       "details": [
         {
           "type": "link",

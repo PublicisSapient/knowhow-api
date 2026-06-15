@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.client.model.ReplaceOptions;
+
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -75,10 +77,13 @@ public class FlowEfficiencySlingshotChangeUnit {
 						.append("aggregationCriteria", "average")
 						.append("isAdditionalFilterSupport", false)
 						.append("calculateMaturity", false);
-		mongoTemplate.getCollection(KPI_MASTER).insertOne(kpiDocument);
+		mongoTemplate
+				.getCollection(KPI_MASTER)
+				.replaceOne(new Document(KPI_ID, KPI_203), kpiDocument, new ReplaceOptions().upsert(true));
 
+		Document filter = new Document("basicProjectConfigId", null).append(KPI_ID, KPI_203);
 		Document kpiColumnConfigDocument =
-				new Document()
+				new Document("basicProjectConfigId", null)
 						.append(KPI_ID, KPI_203)
 						.append(
 								"kpiColumnDetails",
@@ -91,7 +96,9 @@ public class FlowEfficiencySlingshotChangeUnit {
 										columnDoc("Total Time", 6),
 										columnDoc("Flow Efficiency", 7)));
 
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS).insertOne(kpiColumnConfigDocument);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS)
+				.replaceOne(filter, kpiColumnConfigDocument, new ReplaceOptions().upsert(true));
 	}
 
 	private Document columnDoc(String name, int orderVal) {
@@ -142,7 +149,22 @@ public class FlowEfficiencySlingshotChangeUnit {
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE)
-				.insertMany(Arrays.asList(waitStatusDocument, closeStatusDocument, thresholdDocument));
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueWaitStateKPI203"),
+						waitStatusDocument,
+						new ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueClosedStateKPI203"),
+						closeStatusDocument,
+						new ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI203"),
+						thresholdDocument,
+						new ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution
