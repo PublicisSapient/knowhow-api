@@ -55,7 +55,7 @@ public class FlowVelocitySlingshotKpiColumnConfigChangeUnit {
 						.append(
 								"kpiColumnDetails",
 								List.of(
-										columnDetail("Sprint Name", 1),
+										columnDetail("Week", 1),
 										columnDetail("Issue ID", 2),
 										columnDetail("Issue Description", 3),
 										columnDetail("Squad", 4),
