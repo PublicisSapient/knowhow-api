@@ -18,10 +18,13 @@
 
 package com.publicissapient.kpidashboard.apis.model;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -551,6 +554,16 @@ public class KPIExcelData {
 	@JsonProperty("ID")
 	private Map<String, String> id;
 
-	@JsonProperty("GroupMap")
+	@JsonIgnore
 	private LinkedHashMap<String, String> groupMap;
+
+	@JsonIgnore
+	public LinkedHashMap<String, String> getGroupMap() {
+		return groupMap;
+	}
+
+	@JsonAnyGetter
+	public Map<String, String> getCycleTimeGroupCategories() {
+		return groupMap != null ? groupMap : Collections.emptyMap();
+	}
 }

@@ -21,6 +21,7 @@ package com.publicissapient.kpidashboard.apis.appsetting.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,7 @@ import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceKanbanR;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraServiceR;
 import com.publicissapient.kpidashboard.apis.jira.service.NonTrendServiceFactory;
 import com.publicissapient.kpidashboard.apis.kpicolumnconfig.service.KpiColumnConfigService;
+import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelValidationDataResponse;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -58,6 +60,7 @@ import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrService;
 import com.publicissapient.kpidashboard.apis.zephyr.service.ZephyrServiceKanban;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.KpiColumnConfigDTO;
+import com.publicissapient.kpidashboard.common.model.application.KpiColumnDetails;
 import com.publicissapient.kpidashboard.common.model.application.KpiMaster;
 import com.publicissapient.kpidashboard.common.model.application.ValidationData;
 import com.publicissapient.kpidashboard.common.repository.application.KpiMasterRepository;
@@ -718,10 +721,45 @@ public class KPIExcelDataService {
 					kpiExcelValidationDataResponse.setMapOfSprintAndData(mapOfSprintAndData);
 					kpiExcelValidationDataResponse.setExcelData(element.getExcelData());
 					kpiExcelValidationDataResponse.setExcelColumns(element.getExcelColumns());
-					kpiExcelValidationDataResponse.setKpiColumnDetails(
-							kpiColumnConfigDTO.getKpiColumnDetails());
+
+					List<KpiColumnDetails> columnDetails =
+							new ArrayList<>(kpiColumnConfigDTO.getKpiColumnDetails());
+					if ("kpi202".equalsIgnoreCase(element.getKpiId())
+							|| "kpi204".equalsIgnoreCase(element.getKpiId())) {
+						columnDetails =
+								buildDynamicCycleTimeColumns(columnDetails, element.getExcelData());
+					}
+					kpiExcelValidationDataResponse.setKpiColumnDetails(columnDetails);
 					kpiExcelValidationDataResponse.setSaveDisplay(kpiColumnConfigDTO.isSaveFlag());
 				});
+	}
+
+	private List<KpiColumnDetails> buildDynamicCycleTimeColumns(
+			List<KpiColumnDetails> staticColumns, List<KPIExcelData> excelData) {
+
+		LinkedHashSet<String> categoryKeys = new LinkedHashSet<>();
+		if (CollectionUtils.isNotEmpty(excelData)) {
+			excelData.stream()
+					.filter(row -> row.getGroupMap() != null)
+					.forEach(row -> categoryKeys.addAll(row.getGroupMap().keySet()));
+		}
+
+		List<KpiColumnDetails> result = new ArrayList<>();
+		int maxOrder = 0;
+		for (KpiColumnDetails col : staticColumns) {
+			if (!"Group Map".equalsIgnoreCase(col.getColumnName())) {
+				result.add(col);
+			}
+			if (col.getOrder() > maxOrder) {
+				maxOrder = col.getOrder();
+			}
+		}
+
+		for (String key : categoryKeys) {
+			result.add(new KpiColumnDetails(key, ++maxOrder, true, true));
+		}
+
+		return result;
 	}
 
 	/**
