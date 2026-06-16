@@ -10,8 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -120,14 +122,14 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 						.getFieldMappingMap()
 						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
-		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
-				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())) {
-			log.warn(
-					"Flow Load Slingshot (kpi206): storyFirstStatusKPI206 and jiraStatusForInProgressKPI206 are not configured"
-							+ " in field mapping for project {}. Only QA statuses {} will be tracked.",
-					leafNode.getProjectFilter().getName(),
-					fieldMapping.getJiraStatusForQaKPI206());
-		}
+//		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
+//				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())) {
+//			log.warn(
+//					"Flow Load Slingshot (kpi206): storyFirstStatusKPI206 and jiraStatusForInProgressKPI206 are not configured"
+//							+ " in field mapping for project {}. Only QA statuses {} will be tracked.",
+//					leafNode.getProjectFilter().getName(),
+//					fieldMapping.getJiraStatusForQaKPI206());
+//		}
 
 		// Iterating Over All issues history's statusUpdationLog and saving start and
 		// end date for each status
@@ -413,27 +415,15 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 	private boolean isStatusValid(FieldMapping fieldMapping, String status) {
 		Map<Long, String> doneStatusMap = getJiraIssueReleaseStatus().getClosedList();
 		List<String> doneStatus = new ArrayList<>();
+		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
 		if (doneStatusMap != null)
 			doneStatus = doneStatusMap.values().stream().map(String::toLowerCase).toList();
-		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
-				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
-				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForQaKPI206())) {
-			return false;
-		}
+		if(CollectionUtils.isEmpty(cycleTimeGroupList)) return false;
+
+		Set<String> validStatuses = cycleTimeGroupList.stream().flatMap(cycleTimeGroup -> cycleTimeGroup.getStatuses().stream()).collect(Collectors.toSet());
 		String statusLower = status.toLowerCase();
-		boolean inProgressMatch =
-				CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
-						&& fieldMapping.getJiraStatusForInProgressKPI206().stream()
-								.anyMatch(s -> s.equalsIgnoreCase(status));
-		boolean qaMatch =
-				CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForQaKPI206())
-						&& fieldMapping.getJiraStatusForQaKPI206().stream()
-								.anyMatch(s -> s.equalsIgnoreCase(status));
 		return !doneStatus.contains(statusLower)
-				&& (org.apache.commons.lang3.StringUtils.equalsIgnoreCase(
-								fieldMapping.getStoryFirstStatusKPI206(), status)
-						|| inProgressMatch
-						|| qaMatch);
+				&& (validStatuses.contains(status));
 	}
 
 	private void populateTrendValueList(
