@@ -554,8 +554,7 @@ public class KPIExcelData {
 	@JsonProperty("ID")
 	private Map<String, String> id;
 
-	@JsonIgnore
-	private LinkedHashMap<String, String> groupMap;
+	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore
 	public LinkedHashMap<String, String> getGroupMap() {

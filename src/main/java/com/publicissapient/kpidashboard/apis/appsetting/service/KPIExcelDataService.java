@@ -19,6 +19,7 @@
 package com.publicissapient.kpidashboard.apis.appsetting.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -723,18 +724,18 @@ public class KPIExcelDataService {
 					kpiExcelValidationDataResponse.setExcelColumns(element.getExcelColumns());
 
 					List<KpiColumnDetails> columnDetails =
-							new ArrayList<>(kpiColumnConfigDTO.getKpiColumnDetails());
-					if ("kpi202".equalsIgnoreCase(element.getKpiId())
-							|| "kpi204".equalsIgnoreCase(element.getKpiId())) {
-						columnDetails =
-								buildDynamicCycleTimeColumns(columnDetails, element.getExcelData());
-					}
+							buildDynamicGroupMapColumns(
+									new ArrayList<>(
+											kpiColumnConfigDTO.getKpiColumnDetails() != null
+													? kpiColumnConfigDTO.getKpiColumnDetails()
+													: Collections.emptyList()),
+									element.getExcelData());
 					kpiExcelValidationDataResponse.setKpiColumnDetails(columnDetails);
 					kpiExcelValidationDataResponse.setSaveDisplay(kpiColumnConfigDTO.isSaveFlag());
 				});
 	}
 
-	private List<KpiColumnDetails> buildDynamicCycleTimeColumns(
+	private List<KpiColumnDetails> buildDynamicGroupMapColumns(
 			List<KpiColumnDetails> staticColumns, List<KPIExcelData> excelData) {
 
 		LinkedHashSet<String> categoryKeys = new LinkedHashSet<>();
@@ -742,6 +743,10 @@ public class KPIExcelDataService {
 			excelData.stream()
 					.filter(row -> row.getGroupMap() != null)
 					.forEach(row -> categoryKeys.addAll(row.getGroupMap().keySet()));
+		}
+
+		if (categoryKeys.isEmpty()) {
+			return staticColumns;
 		}
 
 		List<KpiColumnDetails> result = new ArrayList<>();
