@@ -3,7 +3,6 @@ package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
