@@ -871,9 +871,7 @@ public enum FieldMappingEnum {
 	KPI206(
 			"Flow Load",
 			KPISource.JIRA.name(),
-			Arrays.asList(
-					"jiraIssueTypeNamesKPI206",
-					"jiraIssueStatusGroupByCategoryKPI206"));
+			Arrays.asList("jiraIssueTypeNamesKPI206", "jiraIssueStatusGroupByCategoryKPI206"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;
