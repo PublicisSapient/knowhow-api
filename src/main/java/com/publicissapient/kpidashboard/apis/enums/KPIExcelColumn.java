@@ -134,6 +134,18 @@ public enum KPIExcelColumn {
 					"Story Points",
 					"Original Time Estimate (in hours)",
 					"Time Spent (in hours)")),
+	SPRINT_VELOCITY_SLINGSHOT(
+			"kpi205",
+			Arrays.asList(
+					"Week",
+					"Issue ID",
+					"Issue Description",
+					"Squad",
+					"Issue Type",
+					"Priority",
+					"Story Points",
+					"Original Time Estimate (in hours)",
+					"Time Spent (in hours)")),
 	SPRINT_PREDICTABILITY(
 			"kpi5",
 			Arrays.asList(

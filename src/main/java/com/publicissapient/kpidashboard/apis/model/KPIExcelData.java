@@ -185,6 +185,9 @@ public class KPIExcelData {
 	@JsonProperty("Weeks")
 	private String weeks;
 
+	@JsonProperty("Week")
+	private String weekRange;
+
 	@JsonProperty("Linked Story ID")
 	private Map<String, String> linkedStory;
 
