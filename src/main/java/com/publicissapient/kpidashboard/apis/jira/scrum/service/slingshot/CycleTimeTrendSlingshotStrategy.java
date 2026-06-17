@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
@@ -69,15 +70,19 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 				issueTypesSet.add(history.getStoryType());
 				current = iterator.hasNext() ? iterator.next() : null;
 			}
-			cycleTimeList.add(
-					CycleTimeValidationData.builder()
-							.issueNumber(history.getStoryID())
-							.url(history.getUrl())
-							.issueType(history.getStoryType())
-							.issueDesc(history.getDescription())
-							.sprintName(sprint)
-							.groupMap(cycleTimeByGroup)
-							.build());
+			boolean alreadyAdded =
+					cycleTimeList.stream().anyMatch(c -> history.getStoryID().equals(c.getIssueNumber()));
+			if (!cycleTimeByGroup.isEmpty() && !alreadyAdded) {
+				cycleTimeList.add(
+						CycleTimeValidationData.builder()
+								.issueNumber(history.getStoryID())
+								.url(history.getUrl())
+								.issueType(history.getStoryType())
+								.issueDesc(history.getDescription())
+								.sprintName(sprint)
+								.groupMap(cycleTimeByGroup)
+								.build());
+			}
 		}
 	}
 
@@ -98,7 +103,7 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			} else if (windowStart != null) {
 				if (current.getStatuses().contains(log.getChangedFrom())) windowEnd = log.getUpdatedOn();
 				minsDiff += KpiDataHelper.calWeekMinutes(windowStart, windowEnd);
-				windowStart = null;
+				windowStart = windowEnd = null;
 			}
 		}
 		if (windowStart != null && hasNext) {
@@ -119,8 +124,33 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 
 			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
 			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
-			cycleTimeByGroup.put(current.getLabel(), Math.round((minsDiff / 1440) * 10.0) + " Days");
+			cycleTimeByGroup.put(
+					current.getLabel(), (Math.round((minsDiff / 1440) * 10.0) / 10.0) + " Days");
 		}
+	}
+
+	protected void addMissingIssuesToCycleTimeList(
+			List<JiraIssueCustomHistory> allIssueHistory,
+			List<CycleTimeValidationData> cycleTimeList,
+			FieldMapping fieldMapping,
+			Set<String> issueTypesSet,
+			Set<String> groupMapSet) {
+		Set<String> processedIds =
+				cycleTimeList.stream()
+						.map(CycleTimeValidationData::getIssueNumber)
+						.collect(Collectors.toSet());
+		allIssueHistory.stream()
+				.filter(h -> h != null && !processedIds.contains(h.getStoryID()))
+				.forEach(
+						h ->
+								processHistory(
+										new HashMap<>(),
+										fieldMapping,
+										issueTypesSet,
+										groupMapSet,
+										"",
+										h,
+										cycleTimeList));
 	}
 
 	protected void populateExcelDataObject(

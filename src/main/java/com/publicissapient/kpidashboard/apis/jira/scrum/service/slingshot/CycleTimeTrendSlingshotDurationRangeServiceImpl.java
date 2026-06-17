@@ -90,6 +90,9 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 				groupMapSet,
 				cycleTimeList);
 
+		addMissingIssuesToCycleTimeList(
+				allIssueHistory, cycleTimeList, fieldMapping, issueTypesSet, groupMapSet);
+
 		deduplicateCycleTimeListWithRangeMap(
 				cycleTimeList,
 				rangeAndStatusWiseJiraIssueMap,
@@ -108,7 +111,9 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 								DataCount dataCount = new DataCount();
 								double totalDays =
 										Math.round(
-														(dataList.stream().mapToDouble(Double::doubleValue).sum() / 1440)
+														dataList.stream()
+																		.mapToDouble(d -> Math.round((d / 1440) * 10.0) / 10.0)
+																		.sum()
 																* 10.0)
 												/ 10.0;
 								dataCount.setValue(totalDays);
