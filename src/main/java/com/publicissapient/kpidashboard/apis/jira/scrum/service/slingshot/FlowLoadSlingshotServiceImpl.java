@@ -122,18 +122,6 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 						.getFieldMappingMap()
 						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
-		// if
-		// (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
-		// && CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206()))
-		// {
-		// log.warn(
-		// "Flow Load Slingshot (kpi206): storyFirstStatusKPI206 and
-		// jiraStatusForInProgressKPI206 are not configured"
-		// + " in field mapping for project {}. Only QA statuses {} will be tracked.",
-		// leafNode.getProjectFilter().getName(),
-		// fieldMapping.getJiraStatusForQaKPI206());
-		// }
-
 		// Iterating Over All issues history's statusUpdationLog and saving start and
 		// end date for each status
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
