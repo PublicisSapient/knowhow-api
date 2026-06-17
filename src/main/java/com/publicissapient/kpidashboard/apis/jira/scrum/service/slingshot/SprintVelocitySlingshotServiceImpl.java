@@ -8,7 +8,6 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,6 +21,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -387,7 +387,7 @@ public class SprintVelocitySlingshotServiceImpl
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		populateExcelDataObject(
-				requestTrackerId, excelData, new HashSet<>(allJiraIssue), projectNode, fieldMapping);
+				requestTrackerId, excelData, jiraIssuesByDateRange, projectNode, fieldMapping);
 		Map<String, Integer> avgVelocityCount = new HashMap<>();
 
 		velocityByDateRange.forEach(
@@ -425,7 +425,7 @@ public class SprintVelocitySlingshotServiceImpl
 
 		mapTmp.get(projectNode.getId()).setValue(trendValueList);
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.SPRINT_VELOCITY.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.SPRINT_VELOCITY_SLINGSHOT.getColumns());
 	}
 
 	/**
@@ -463,15 +463,12 @@ public class SprintVelocitySlingshotServiceImpl
 	private void populateExcelDataObject(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
-			Set<JiraIssue> jiraIssueSet,
+			Map<String, Set<JiraIssue>> jiraIssuesByWeek,
 			Node node,
 			FieldMapping fieldMapping) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
-				&& CollectionUtils.isNotEmpty(jiraIssueSet)) {
-			Map<String, JiraIssue> totalSprintStoryMap = new HashMap<>();
-			jiraIssueSet.forEach(issue -> totalSprintStoryMap.putIfAbsent(issue.getNumber(), issue));
-			KPIExcelUtility.populateSprintVelocity(
-					node.getProjectFilter().getName(), totalSprintStoryMap, excelData, fieldMapping);
+				&& MapUtils.isNotEmpty(jiraIssuesByWeek)) {
+			KPIExcelUtility.populateSprintVelocitySlingshot(jiraIssuesByWeek, excelData, fieldMapping);
 		}
 	}
 

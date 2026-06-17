@@ -1,5 +1,7 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFilters;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiFiltersOptions;
@@ -23,6 +26,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,9 +40,12 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 	private static final String OVERALL = "Overall";
 	private static final String HISTORY = "history";
 	private static final String SPRINT_DETAILS = "sprints";
+	private static final String MONTHS = "Months";
 	public static final String X_AXIS_LABEL = "Sprint";
 
 	private final ConfigHelperService configHelperService;
+
+	private final CustomApiConfig customApiConfig;
 
 	@Override
 	public void projectWiseLeafNodeValue(
@@ -71,6 +78,9 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 				issueTypesSet,
 				groupMapSet,
 				cycleTimeList);
+
+		enrichCycleTimeWithRangeMap(
+				cycleTimeList, allIssueHistory, customApiConfig.getFlowEfficiencyXAxisRange());
 
 		Map<String, List<DataCount>> datacountMap = new LinkedHashMap<>();
 
@@ -112,21 +122,76 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_TREND_SLINGSHOT.getColumns());
 	}
 
+	private void enrichCycleTimeWithRangeMap(
+			List<CycleTimeValidationData> cycleTimeList,
+			List<JiraIssueCustomHistory> allIssueHistory,
+			List<String> orderedRanges) {
+
+		Map<String, Set<String>> rangeToIssueIds = new LinkedHashMap<>();
+		for (String range : orderedRanges) {
+			String currentDate = DateUtil.getTodayDate().toString();
+			String startDate;
+			String[] rangeSplit = range.trim().split(" ");
+			if (rangeSplit[2].contains(MONTHS)) {
+				startDate = DateUtil.getTodayDate().minusMonths(Integer.parseInt(rangeSplit[1])).toString();
+			} else {
+				startDate = DateUtil.getTodayDate().minusWeeks(Integer.parseInt(rangeSplit[1])).toString();
+			}
+			LocalDateTime startDateTime =
+					DateUtil.localDateTimeToUTC(LocalDate.parse(startDate).atStartOfDay());
+			LocalDateTime endDateTime =
+					DateUtil.localDateTimeToUTC(LocalDate.parse(currentDate).atTime(23, 59, 59));
+
+			Set<String> issueIdsInRange =
+					allIssueHistory.stream()
+							.filter(
+									history ->
+											history.getStatusUpdationLog() != null
+													&& history.getStatusUpdationLog().stream()
+															.anyMatch(
+																	log ->
+																			log.getUpdatedOn() != null
+																					&& DateUtil.isWithinDateTimeRange(
+																							log.getUpdatedOn(), startDateTime, endDateTime)))
+							.map(JiraIssueCustomHistory::getStoryID)
+							.collect(Collectors.toSet());
+			rangeToIssueIds.put(range, issueIdsInRange);
+		}
+
+		for (CycleTimeValidationData data : cycleTimeList) {
+			if (data.getGroupMap() == null) data.setGroupMap(new LinkedHashMap<>());
+			for (String range : orderedRanges) {
+				data.getGroupMap()
+						.put(
+								range,
+								rangeToIssueIds.getOrDefault(range, Set.of()).contains(data.getIssueNumber())
+										? "Y"
+										: "N");
+			}
+		}
+	}
+
 	private static void initializeRangeMapForProjects(
 			Map<String, List<JiraIssueCustomHistory>> sprintWiseJiraIssuesMap,
 			List<JiraIssueCustomHistory> jiraIssueCustomHistoryList,
 			List<SprintDetails> sprintDetailsList) {
 		Map<String, JiraIssueCustomHistory> historyMap =
 				jiraIssueCustomHistoryList.stream()
-						.collect(Collectors.toMap(JiraIssueCustomHistory::getStoryID, history -> history));
+						.collect(
+								Collectors.toMap(
+										JiraIssueCustomHistory::getStoryID, history -> history, (a, b) -> a));
 		sprintDetailsList.forEach(
-				sprintDetails ->
-						sprintDetails
+				sprint ->
+						sprint
 								.getTotalIssues()
 								.forEach(
-										issue ->
+										issue -> {
+											JiraIssueCustomHistory h = historyMap.get(issue.getNumber());
+											if (h != null) {
 												sprintWiseJiraIssuesMap
-														.computeIfAbsent(sprintDetails.getSprintName(), k -> new ArrayList<>())
-														.add(historyMap.get(issue.getNumber()))));
+														.computeIfAbsent(sprint.getSprintName(), k -> new ArrayList<>())
+														.add(h);
+											}
+										}));
 	}
 }

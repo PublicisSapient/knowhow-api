@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -89,6 +90,11 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 				groupMapSet,
 				cycleTimeList);
 
+		deduplicateCycleTimeListWithRangeMap(
+				cycleTimeList,
+				rangeAndStatusWiseJiraIssueMap,
+				customApiConfig.getFlowEfficiencyXAxisRange());
+
 		Map<String, List<DataCount>> datacountMap = new LinkedHashMap<>();
 
 		filterMap.forEach(
@@ -133,6 +139,40 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 		kpiElement.setLabelXAxis(X_AXIS_LABEL);
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.CYCLE_TIME_TREND_SLINGSHOT.getColumns());
+	}
+
+	private void deduplicateCycleTimeListWithRangeMap(
+			List<CycleTimeValidationData> cycleTimeList,
+			Map<String, List<JiraIssueCustomHistory>> rangeAndStatusWiseJiraIssueMap,
+			List<String> orderedRanges) {
+
+		Map<String, Set<String>> rangeToIssueIds = new LinkedHashMap<>();
+		for (String range : orderedRanges) {
+			List<JiraIssueCustomHistory> historyList =
+					rangeAndStatusWiseJiraIssueMap.getOrDefault(range, List.of());
+			rangeToIssueIds.put(
+					range,
+					historyList.stream().map(JiraIssueCustomHistory::getStoryID).collect(Collectors.toSet()));
+		}
+
+		LinkedHashMap<String, CycleTimeValidationData> deduplicatedMap = new LinkedHashMap<>();
+		for (CycleTimeValidationData data : cycleTimeList) {
+			deduplicatedMap.putIfAbsent(data.getIssueNumber(), data);
+		}
+
+		cycleTimeList.clear();
+		for (CycleTimeValidationData data : deduplicatedMap.values()) {
+			if (data.getGroupMap() == null) data.setGroupMap(new LinkedHashMap<>());
+			for (String range : orderedRanges) {
+				data.getGroupMap()
+						.put(
+								range,
+								rangeToIssueIds.getOrDefault(range, Set.of()).contains(data.getIssueNumber())
+										? "Y"
+										: "N");
+			}
+			cycleTimeList.add(data);
+		}
 	}
 
 	private Map<String, Map<String, Object>> getUniqueProjectMap(ObjectId basicProjectConfigId) {
