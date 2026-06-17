@@ -32,6 +32,7 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
@@ -176,7 +177,57 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		}
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
-		kpiElement.setTrendValueList(trendValueList);
+
+		if (customApiConfig.isSlingshotFlowLoadMultiFilter()
+				&& MapUtils.isNotEmpty(dateWithStatusCount)) {
+			Map<String, Map<String, Integer>> dateWithGroupCount =
+					aggregateByGroup(dateWithStatusCount, fieldMapping);
+			List<DataCount> groupTrendValues = new ArrayList<>();
+			populateTrendValueList(groupTrendValues, dateWithGroupCount);
+
+			List<DataCountGroup> groups = new ArrayList<>();
+			DataCountGroup statusGroup = new DataCountGroup();
+			statusGroup.setFilter("Status");
+			statusGroup.setValue(trendValueList);
+			groups.add(statusGroup);
+			DataCountGroup groupGroup = new DataCountGroup();
+			groupGroup.setFilter("Group");
+			groupGroup.setValue(groupTrendValues);
+			groups.add(groupGroup);
+			kpiElement.setTrendValueList(groups);
+		} else {
+			kpiElement.setTrendValueList(trendValueList);
+		}
+	}
+
+	private Map<String, Map<String, Integer>> aggregateByGroup(
+			Map<String, Map<String, Integer>> dateWithStatusCount, FieldMapping fieldMapping) {
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
+		if (CollectionUtils.isEmpty(cycleTimeGroups)) return new LinkedHashMap<>();
+
+		Map<String, String> statusToGroupLabel = new HashMap<>();
+		for (CycleTimeGroup group : cycleTimeGroups) {
+			for (String status : group.getStatuses()) {
+				statusToGroupLabel.put(status.replace(" ", "-"), group.getLabel());
+			}
+		}
+
+		Map<String, Map<String, Integer>> dateWithGroupCount = new LinkedHashMap<>();
+		dateWithStatusCount.forEach(
+				(date, statusCountMap) -> {
+					Map<String, Integer> groupCountMap = new LinkedHashMap<>();
+					statusCountMap.forEach(
+							(status, count) -> {
+								String groupLabel = statusToGroupLabel.get(status);
+								if (groupLabel != null) {
+									groupCountMap.merge(groupLabel, count, Integer::sum);
+								}
+							});
+					if (!groupCountMap.isEmpty()) {
+						dateWithGroupCount.put(date, groupCountMap);
+					}
+				});
+		return dateWithGroupCount;
 	}
 
 	private Map<String, Map<String, List<String>>> buildDateStatusIdsMap(
