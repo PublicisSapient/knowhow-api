@@ -12,8 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,7 +20,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,8 +59,8 @@ public class SprintVelocitySlingshotServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String VELOCITY = "Velocity";
-	private static final String AVERAGE_VELOCITY = "Average Velocity";
-	private static final String COMMITTED_SCOPE = "Committed Scope";
+	// private static final String AVERAGE_VELOCITY = "Average Velocity";
+	// private static final String COMMITTED_SCOPE = "Committed Scope";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
 	private static final String NON_VELOCITY_ISSUES = "NON_VELOCITY_ISSUES";
 	private static final String WEEKLY = "Weekly";
@@ -230,14 +227,10 @@ public class SprintVelocitySlingshotServiceImpl
 	public Double calculateKPIMetrics(Map<String, Object> techDebtStoryMap) {
 
 		String requestTrackerId = getRequestTrackerId();
-		double sprintVelocity = 0.0d;
 		List<JiraIssue> sprintVelocityList = (List<JiraIssue>) techDebtStoryMap.get(JIRA_ISSUES);
 		log.debug(
 				"[SPRINT-VELOCITY][{}]. Stories Count: {}", requestTrackerId, sprintVelocityList.size());
-		for (JiraIssue jiraIssue : sprintVelocityList) {
-			sprintVelocity = sprintVelocity + Double.parseDouble(jiraIssue.getEstimate());
-		}
-		return sprintVelocity;
+		return (double) sprintVelocityList.size();
 	}
 
 	/**
@@ -342,39 +335,8 @@ public class SprintVelocitySlingshotServiceImpl
 									})
 							.collect(Collectors.toSet());
 
-			double periodSpringVelocity;
-			double periodCommittedScope;
-			if (StringUtils.isNotEmpty(fieldMapping.getEstimationCriteria())
-					&& fieldMapping.getEstimationCriteria().equalsIgnoreCase(CommonConstant.STORY_POINT)) {
-				periodSpringVelocity =
-						issueDetailsSet.stream()
-								.mapToDouble(ji -> Optional.ofNullable(ji.getStoryPoints()).orElse(0.0d))
-								.sum();
-				periodCommittedScope =
-						nonVelocityIssuesSet.stream()
-								.mapToDouble(ji -> Optional.ofNullable(ji.getStoryPoints()).orElse(0.0d))
-								.sum();
-			} else {
-				double totalOriginalEstimate =
-						issueDetailsSet.stream()
-								.filter(
-										jiraIssue ->
-												Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
-								.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes)
-								.sum();
-				double inHours = totalOriginalEstimate / 60;
-				periodSpringVelocity = inHours / fieldMapping.getStoryPointToHourMapping();
-
-				double nonVelocityEstimate =
-						nonVelocityIssuesSet.stream()
-								.filter(
-										jiraIssue ->
-												Objects.nonNull(jiraIssue.getAggregateTimeOriginalEstimateMinutes()))
-								.mapToDouble(JiraIssue::getAggregateTimeOriginalEstimateMinutes)
-								.sum();
-				double nonVelocityHours = nonVelocityEstimate / 60;
-				periodCommittedScope = nonVelocityHours / fieldMapping.getStoryPointToHourMapping();
-			}
+			double periodSpringVelocity = issueDetailsSet.size();
+			double periodCommittedScope = nonVelocityIssuesSet.size();
 
 			String dateLabel = KpiHelperService.getDateRange(periodRange, CommonConstant.WEEK);
 
@@ -412,8 +374,8 @@ public class SprintVelocitySlingshotServiceImpl
 						dataCount.setAggregationValue(roundingOff(committedScope));
 						Map<String, Object> hoverValue = new HashMap<>();
 						hoverValue.put(VELOCITY, roundingOff((Double) dataCount.getValue()));
-						hoverValue.put(AVERAGE_VELOCITY, roundingOff(averageVelocity));
-						hoverValue.put(COMMITTED_SCOPE, roundingOff(committedScope));
+						// hoverValue.put(AVERAGE_VELOCITY, roundingOff(averageVelocity));
+						// hoverValue.put(COMMITTED_SCOPE, roundingOff(committedScope));
 						dataCount.setHoverValue(hoverValue);
 						avgVelocityCount.put(projId, avgVelocityCount.get(projId) + 1);
 					} else {
@@ -534,8 +496,8 @@ public class SprintVelocitySlingshotServiceImpl
 			dc.setAggregationValue(roundingOff(pairCommittedScope));
 			Map<String, Object> hoverValue = new HashMap<>();
 			hoverValue.put(VELOCITY, roundingOff(pairVelocity));
-			hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
-			hoverValue.put(COMMITTED_SCOPE, roundingOff(pairCommittedScope));
+			// hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
+			// hoverValue.put(COMMITTED_SCOPE, roundingOff(pairCommittedScope));
 			dc.setHoverValue(hoverValue);
 			biWeeklyList.add(dc);
 		}
@@ -585,8 +547,8 @@ public class SprintVelocitySlingshotServiceImpl
 					dc.setAggregationValue(roundingOff(monthCommittedScope));
 					Map<String, Object> hoverValue = new HashMap<>();
 					hoverValue.put(VELOCITY, roundingOff(monthVelocity));
-					hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
-					hoverValue.put(COMMITTED_SCOPE, roundingOff(monthCommittedScope));
+					// hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
+					// hoverValue.put(COMMITTED_SCOPE, roundingOff(monthCommittedScope));
 					dc.setHoverValue(hoverValue);
 					monthlyList.add(dc);
 				});
