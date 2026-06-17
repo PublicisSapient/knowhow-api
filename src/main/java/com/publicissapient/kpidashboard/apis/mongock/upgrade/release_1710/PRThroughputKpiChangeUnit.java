@@ -11,7 +11,7 @@ import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
 		id = "pr_throughput_kpi_insert",
-		order = "17119",
+		order = "17123",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
 public class PRThroughputKpiChangeUnit {
