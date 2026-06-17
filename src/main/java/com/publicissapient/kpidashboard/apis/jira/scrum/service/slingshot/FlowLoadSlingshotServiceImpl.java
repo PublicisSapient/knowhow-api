@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -169,6 +170,13 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 			populateTrendValueList(trendValueList, dateWithStatusCount);
 			Map<String, Map<String, List<String>>> dateStatusIdsMap =
 					buildDateStatusIdsMap(jiraIssueCustomHistories, startDate, endDate, fieldMapping);
+			addGroupEntriesTo(dateStatusIdsMap, fieldMapping);
+			dateStatusIdsMap =
+					dateStatusIdsMap.entrySet().stream()
+							.sorted(Map.Entry.comparingByKey())
+							.collect(
+									Collectors.toMap(
+											Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 			populateExcelDataObject(requestTrackerId, excelData, dateStatusIdsMap);
 			log.debug(
 					"FlowLoadServiceImpl -> request id : {} dateWithStatusCount : {}",
@@ -176,7 +184,7 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 					dateWithStatusCount);
 		}
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
+		kpiElement.setExcelColumns(buildDynamicExcelColumns(dateWithStatusCount, fieldMapping));
 
 		if (customApiConfig.isSlingshotFlowLoadMultiFilter()
 				&& MapUtils.isNotEmpty(dateWithStatusCount)) {
@@ -198,6 +206,54 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		} else {
 			kpiElement.setTrendValueList(trendValueList);
 		}
+	}
+
+	private List<String> buildDynamicExcelColumns(
+			Map<String, Map<String, Integer>> dateWithStatusCount, FieldMapping fieldMapping) {
+		List<String> columns = new ArrayList<>(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
+
+		Set<String> statuses =
+				dateWithStatusCount.values().stream()
+						.flatMap(m -> m.keySet().stream())
+						.collect(Collectors.toCollection(TreeSet::new));
+		columns.addAll(statuses);
+
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
+		if (CollectionUtils.isNotEmpty(cycleTimeGroups)) {
+			cycleTimeGroups.stream()
+					.map(CycleTimeGroup::getLabel)
+					.filter(Objects::nonNull)
+					.distinct()
+					.forEach(columns::add);
+		}
+
+		return columns;
+	}
+
+	private void addGroupEntriesTo(
+			Map<String, Map<String, List<String>>> dateStatusIdsMap, FieldMapping fieldMapping) {
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
+		if (CollectionUtils.isEmpty(cycleTimeGroups)) return;
+
+		Map<String, String> statusToGroupLabel = new HashMap<>();
+		for (CycleTimeGroup group : cycleTimeGroups) {
+			for (String status : group.getStatuses()) {
+				statusToGroupLabel.put(status.replace(" ", "-"), group.getLabel());
+			}
+		}
+
+		dateStatusIdsMap.forEach(
+				(date, statusIdsMap) -> {
+					Map<String, List<String>> groupIdsMap = new LinkedHashMap<>();
+					statusIdsMap.forEach(
+							(status, ids) -> {
+								String groupLabel = statusToGroupLabel.get(status);
+								if (groupLabel != null) {
+									groupIdsMap.computeIfAbsent(groupLabel, k -> new ArrayList<>()).addAll(ids);
+								}
+							});
+					statusIdsMap.putAll(groupIdsMap);
+				});
 	}
 
 	private Map<String, Map<String, Integer>> aggregateByGroup(

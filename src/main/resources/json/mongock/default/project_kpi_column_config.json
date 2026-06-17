@@ -3913,36 +3913,6 @@
         "order" : 0,
         "isShown" : true,
         "isDefault" : true
-      },
-      {
-        "columnName" : "In-Analysis",
-        "order" : 1,
-        "isShown" : true,
-        "isDefault" : false
-      },
-      {
-        "columnName" : "In-Testing",
-        "order" : 2,
-        "isShown" : true,
-        "isDefault" : false
-      },
-      {
-        "columnName" : "In-Progress",
-        "order" : 3,
-        "isShown" : true,
-        "isDefault" : false
-      },
-      {
-        "columnName" : "In-Development",
-        "order" : 4,
-        "isShown" : true,
-        "isDefault" : false
-      },
-      {
-        "columnName" : "Open",
-        "order" : 5,
-        "isShown" : true,
-        "isDefault" : false
       }
     ]
   },
