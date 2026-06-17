@@ -79,6 +79,9 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 				groupMapSet,
 				cycleTimeList);
 
+		addMissingIssuesToCycleTimeList(
+				allIssueHistory, cycleTimeList, fieldMapping, issueTypesSet, groupMapSet);
+
 		enrichCycleTimeWithRangeMap(
 				cycleTimeList, allIssueHistory, customApiConfig.getFlowEfficiencyXAxisRange());
 
@@ -93,7 +96,11 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 								hoverMap.put(ISSUE_COUNT, data.size());
 								DataCount dataCount = new DataCount();
 								double totalDays =
-										Math.round((data.stream().mapToDouble(Double::doubleValue).sum() / 1440) * 10.0)
+										Math.round(
+														data.stream()
+																		.mapToDouble(d -> Math.round((d / 1440) * 10.0) / 10.0)
+																		.sum()
+																* 10.0)
 												/ 10.0;
 								dataCount.setValue(totalDays);
 								dataCount.setData(String.valueOf(totalDays));
