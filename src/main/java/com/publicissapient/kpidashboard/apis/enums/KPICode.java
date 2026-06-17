@@ -217,7 +217,6 @@ public enum KPICode {
 	REFINEMENT_REJECTION_RATE("kpi139", KPISource.JIRA.name()),
 	/** Flow Distribution */
 	FLOW_DISTRIBUTION("kpi146", KPISource.JIRA.name()),
-	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", KPISource.JIRA.name()),
 	/** Happiness index Rate */
 	HAPPINESS_INDEX_RATE("kpi149", KPISource.JIRA.name()),
 	/*
@@ -326,7 +325,9 @@ public enum KPICode {
 	FLOW_EFFICIENCY_SLINGSHOT("kpi203", KPISource.JIRA.name()),
 	CYCLE_TIME_TREND_SLINGSHOT("kpi204", KPISource.JIRA.name()),
 	SPRINT_VELOCITY_SLINGSHOT("kpi205", KPISource.JIRA.name()),
-	FLOW_LOAD_SLINGSHOT("kpi206", KPISource.JIRA.name());
+	FLOW_LOAD_SLINGSHOT("kpi206", KPISource.JIRA.name()),
+	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", KPISource.JIRA.name()),
+	PR_THROUGHPUT("kpi208", KPISource.BITBUCKET.name());
 
 	// @formatter:on
 
