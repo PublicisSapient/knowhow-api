@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
 		id = "flow_load_field_mapping_update",
-		order = "17116",
+		order = "17118",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
 @RequiredArgsConstructor
@@ -44,6 +44,7 @@ public class FlowLoadKpiFieldMappingUpdate {
 						.append("sectionOrder", null)
 						.append("mandatory", true)
 						.append("readOnly", null)
+						.append("isRepoToolKpi", true)
 						.append("nodeSpecific", false);
 
 		mongoTemplate.getCollection("field_mapping_structure").insertOne(workflowGroupDoc);

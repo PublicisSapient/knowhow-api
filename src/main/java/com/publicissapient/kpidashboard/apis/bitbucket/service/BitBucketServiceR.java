@@ -143,8 +143,13 @@ public class BitBucketServiceR {
 				}
 
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);
-				kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
-				kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
+				if (kpiRequest.getKpiList().get(0).getKpiCategory().equalsIgnoreCase("Developer")) {
+					kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
+					kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
+				} else {
+					kpiRequest.setXAxisDataPoints(13);
+					kpiRequest.setDuration(CommonConstant.WEEK);
+				}
 				responseList =
 						executeParallelKpiProcessing(kpiRequest, filteredNode, filteredAccountDataList.get(0));
 
