@@ -5431,7 +5431,7 @@
     "defaultOrder": 3,
     "kpiCategory": "Slingshot",
     "kpiSubCategory": "Flow",
-    "kpiUnit": "SP",
+    "kpiUnit": "",
     "chartType": "grouped_column_plus_line",
     "upperThresholdBG": "white",
     "lowerThresholdBG": "red",
