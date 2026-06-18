@@ -68,6 +68,10 @@ public enum KPIExcelColumn {
 			"kpi157",
 			Arrays.asList(
 					"Project", "Repo", "Branch", "Days/Weeks", "Developer", "No Of Commit", "No of Merge")),
+	SCM_PR_THROUGHPUT(
+			"kpi157",
+			Arrays.asList(
+					"Project", "Repo", "Branch", "Days/Weeks", "Developer", "Email/Username", "No of Merge")),
 
 	MEAN_TIME_TO_MERGE(
 			"kpi84",

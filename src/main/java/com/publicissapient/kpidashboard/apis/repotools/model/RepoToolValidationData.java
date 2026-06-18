@@ -43,6 +43,7 @@ public class RepoToolValidationData {
 	private String repoUrl;
 	private String branchName;
 	private String developerName;
+	private String developerEmail;
 	private String date;
 	private long commitCount;
 	private long mrCount;

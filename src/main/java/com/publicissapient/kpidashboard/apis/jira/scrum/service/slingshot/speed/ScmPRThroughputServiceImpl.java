@@ -2,18 +2,16 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
@@ -150,12 +148,27 @@ public class ScmPRThroughputServiceImpl
 
 		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
 		List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
-		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
+		List<Assignee> assigneeList = (List<Assignee>) scmDataMap.get(ASSIGNEE_SET);
 
 		if (CollectionUtils.isEmpty(allCommits)) {
 			log.error("[BITBUCKET-AGGREGATED-VALUE]. No commits found for project {}", projectLeafNode);
 			return;
 		}
+
+		Map<String, String> emailToNameMap =
+				CollectionUtils.emptyIfNull(assigneeList).stream()
+						.filter(a -> CollectionUtils.isNotEmpty(a.getEmail()))
+						.flatMap(
+								a ->
+										a.getEmail().stream()
+												.filter(email -> email != null)
+												.map(email -> Map.entry(email, a.getAssigneeName())))
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
+
+		Map<ObjectId, List<ScmCommits>> commitsByProcessorItem =
+				allCommits.stream()
+						.filter(c -> c.getProcessorItemId() != null)
+						.collect(Collectors.groupingBy(ScmCommits::getProcessorItemId));
 
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
@@ -165,31 +178,39 @@ public class ScmPRThroughputServiceImpl
 					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, duration);
 			String dateLabel = KpiHelperService.getDateRange(periodRange, duration);
 
-			List<ScmCommits> commitsInRange =
-					DeveloperKpiHelper.filterCommitsByCommitTimeStamp(allCommits, periodRange);
-
 			scmTools.forEach(
-					tool ->
-							processToolData(
-									tool,
-									commitsInRange,
-									assignees,
-									dateLabel,
-									projectLeafNode.getProjectFilter().getName(),
-									kpiTrendDataByGroup,
-									validationDataList));
+					tool -> {
+						if (!DeveloperKpiHelper.isValidTool(tool)) {
+							return;
+						}
+						ObjectId processorItemId = tool.getProcessorItemList().get(0).getId();
+						List<ScmCommits> toolCommits =
+								commitsByProcessorItem.getOrDefault(processorItemId, Collections.emptyList());
+						List<ScmCommits> commitsInRange =
+								DeveloperKpiHelper.filterCommitsByCommitTimeStamp(toolCommits, periodRange);
+						processToolData(
+								tool,
+								commitsInRange,
+								emailToNameMap,
+								dateLabel,
+								projectLeafNode.getProjectFilter().getName(),
+								kpiTrendDataByGroup,
+								validationDataList);
+					});
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(duration, currentDate);
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
+		kpiTrendDataByGroup.values().forEach(Collections::reverse);
+		Collections.reverse(validationDataList);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
 
 	private void processToolData(
 			Tool tool,
-			List<ScmCommits> commits,
-			Set<Assignee> assignees,
+			List<ScmCommits> commitsInRange,
+			Map<String, String> emailToNameMap,
 			String dateLabel,
 			String projectName,
 			Map<String, List<DataCount>> kpiTrendDataByGroup,
@@ -202,10 +223,8 @@ public class ScmPRThroughputServiceImpl
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmCommits> commitsForBranch = DeveloperKpiHelper.filterCommitsForBranch(commits, tool);
-
 		List<ScmCommits> mergeCommits =
-				commitsForBranch.stream()
+				commitsInRange.stream()
 						.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit()))
 						.collect(Collectors.toList());
 
@@ -216,18 +235,15 @@ public class ScmPRThroughputServiceImpl
 		Map<String, List<ScmCommits>> userWiseMergeCommits =
 				DeveloperKpiHelper.groupCommitsByUser(mergeCommits);
 
-		Set<String> allUsers = userWiseMergeCommits.keySet();
-
-		allUsers.forEach(
-				userEmail -> {
-					String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
-					List<ScmCommits> userMergeCommits =
-							userWiseMergeCommits.getOrDefault(userEmail, Collections.emptyList());
+		userWiseMergeCommits.forEach(
+				(userEmail, userMergeCommits) -> {
+					String developerName = emailToNameMap.getOrDefault(userEmail, userEmail);
 					long mrCount = userMergeCommits.size();
 					String userKpiGroup = branchName + "#" + developerName;
 					setDataCount(projectName, dateLabel, userKpiGroup, mrCount, kpiTrendDataByGroup);
 					validationDataList.add(
-							createValidationData(projectName, tool, developerName, dateLabel, mrCount));
+							createValidationData(
+									projectName, tool, developerName, userEmail, dateLabel, mrCount));
 				});
 	}
 
@@ -237,9 +253,9 @@ public class ScmPRThroughputServiceImpl
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populateCodeCommit(validationDataList, excelData);
+			KPIExcelUtility.populatePRThroughputExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_CODE_COMMIT.getColumns());
+			kpiElement.setExcelColumns(KPIExcelColumn.SCM_PR_THROUGHPUT.getColumns());
 		}
 	}
 
@@ -276,13 +292,19 @@ public class ScmPRThroughputServiceImpl
 	}
 
 	private RepoToolValidationData createValidationData(
-			String projectName, Tool tool, String developerName, String dateLabel, long mrCount) {
+			String projectName,
+			Tool tool,
+			String developerName,
+			String developerEmail,
+			String dateLabel,
+			long mrCount) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
 		validationData.setRepoUrl(
 				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
+		validationData.setDeveloperEmail(developerEmail);
 		validationData.setDate(dateLabel);
 		validationData.setMrCount(mrCount);
 		return validationData;

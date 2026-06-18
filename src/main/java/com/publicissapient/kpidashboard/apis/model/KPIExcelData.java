@@ -476,6 +476,9 @@ public class KPIExcelData {
 	@JsonProperty("Developer")
 	private String developer;
 
+	@JsonProperty("Email/Username")
+	private String emailUsername;
+
 	@JsonProperty("Merge Request Url")
 	private Map<String, String> mergeRequestUrl;
 
