@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -54,6 +55,7 @@ public class ScmPRThroughputServiceImpl
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
+	private final ScmKpiHelperService scmKpiHelperService;
 
 	/** {@inheritDoc} */
 	@Override
@@ -97,9 +99,16 @@ public class ScmPRThroughputServiceImpl
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
+		List<ScmCommits> scmCommitsList =
+				scmKpiHelperService.getCommitDetails(
+						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId(),
+						DeveloperKpiHelper.getStartAndEndDate(kpiRequest));
+		List<Assignee> assigneeList =
+				scmKpiHelperService.getJiraAssigneeForScmUsers(
+						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
 
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(COMMIT_LIST, getCommitsFromBaseClass());
+		scmDataMap.put(ASSIGNEE_SET, assigneeList);
+		scmDataMap.put(COMMIT_LIST, scmCommitsList);
 
 		return scmDataMap;
 	}
@@ -146,7 +155,8 @@ public class ScmPRThroughputServiceImpl
 			return;
 		}
 
-		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+		Map<String, Object> scmDataMap =
+				fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
 		List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
 		List<Assignee> assigneeList = (List<Assignee>) scmDataMap.get(ASSIGNEE_SET);
 
@@ -226,7 +236,7 @@ public class ScmPRThroughputServiceImpl
 		List<ScmCommits> mergeCommits =
 				commitsInRange.stream()
 						.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit()))
-						.collect(Collectors.toList());
+						.toList();
 
 		long totalMergeRequests = mergeCommits.size();
 

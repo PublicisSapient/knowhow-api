@@ -3,6 +3,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
@@ -25,7 +26,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
-import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketServiceR;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
 import com.publicissapient.kpidashboard.apis.common.service.CommonService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
@@ -58,6 +59,7 @@ public class ScmPRThroughputServiceImplTest {
 	@Mock private CacheService cacheService;
 	@Mock private CommonService commonService;
 	@Mock private CustomApiConfig customApiConfig;
+	@Mock private ScmKpiHelperService scmKpiHelperService;
 
 	private KpiRequest kpiRequest;
 	private List<AccountHierarchyData> accountHierarchyDataList;
@@ -73,13 +75,15 @@ public class ScmPRThroughputServiceImplTest {
 		MockitoAnnotations.openMocks(this);
 
 		// Manually construct with constructor-injected dependencies
-		service = new ScmPRThroughputServiceImpl(configHelperService, kpiHelperService);
+		service =
+				new ScmPRThroughputServiceImpl(configHelperService, kpiHelperService, scmKpiHelperService);
 
 		// Inject @Autowired parent-class fields
 		injectField(service, "cacheService", cacheService);
 		injectField(service, "commonService", commonService);
 		injectField(service, "configHelperService", configHelperService);
 		injectField(service, "customApiConfig", customApiConfig);
+		injectField(service, "scmKpiHelperService", scmKpiHelperService);
 
 		KpiRequestFactory factory = KpiRequestFactory.newInstance();
 		kpiRequest = factory.findKpiRequest("kpi157");
@@ -139,20 +143,12 @@ public class ScmPRThroughputServiceImplTest {
 		}
 	}
 
-	private void setThreadLocalCommits(List<ScmCommits> commits) throws Exception {
-		Field field = BitBucketServiceR.class.getDeclaredField("THREAD_LOCAL_COMMITS");
-		field.setAccessible(true);
-		@SuppressWarnings("unchecked")
-		ThreadLocal<List<ScmCommits>> threadLocal = (ThreadLocal<List<ScmCommits>>) field.get(null);
-		threadLocal.set(commits);
+	private void setThreadLocalCommits(List<ScmCommits> commits) {
+		when(scmKpiHelperService.getCommitDetails(any(), any())).thenReturn(commits);
 	}
 
 	private void setThreadLocalAssignees(List<Assignee> assignees) throws Exception {
-		Field field = BitBucketServiceR.class.getDeclaredField("THREAD_LOCAL_ASSIGNEES");
-		field.setAccessible(true);
-		@SuppressWarnings("unchecked")
-		ThreadLocal<List<Assignee>> threadLocal = (ThreadLocal<List<Assignee>>) field.get(null);
-		threadLocal.set(assignees);
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any())).thenReturn(assignees);
 	}
 
 	private ScmCommits createMergeCommit(String authorEmail, boolean isMerge) {
@@ -202,16 +198,6 @@ public class ScmPRThroughputServiceImplTest {
 		// When no threshold is set, falls back to KpiMaster which returns 0.0 (empty
 		// list)
 		assertNotNull(result);
-	}
-
-	@Test
-	public void testFetchKPIDataFromDb_returnsMap() throws Exception {
-		setThreadLocalCommits(new ArrayList<>());
-		setThreadLocalAssignees(new ArrayList<>());
-		Map<String, Object> result = service.fetchKPIDataFromDb(null, null, null, null);
-		assertNotNull(result);
-		assertNotNull(result.get("commitList"));
-		assertNotNull(result.get("assigneeSet"));
 	}
 
 	// ---- getKpiData tests ----

@@ -339,43 +339,42 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 
 		List<Pair<String, Pair<LocalDate, LocalDate>>> ranges = new ArrayList<>();
 
-		if (statusChangeLog.get(size - 1).getUpdatedOn().toLocalDate().isBefore(startDate)) {
+		if (size == 0) return ranges;
+
+		if (DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
+				.toLocalDate()
+				.isAfter(endDate)) {
+			return ranges;
+		}
+
+		for (int i = 0; i + 1 < size; i++) {
+			JiraHistoryChangeLog changeLog = statusChangeLog.get(i);
+			JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(i + 1);
 			addRangeIfValid(
 					ranges,
 					fieldMapping,
-					statusChangeLog.get(size - 1).getChangedTo(),
+					changeLog.getChangedTo(),
 					startDate,
 					endDate,
-					startDate,
-					endDate);
-		} else if (!DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
-				.toLocalDate()
-				.isAfter(endDate)) {
-			for (int i = 0; i + 1 < size; i++) {
-				JiraHistoryChangeLog changeLog = statusChangeLog.get(i);
-				JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(i + 1);
-				addRangeIfValid(
-						ranges,
-						fieldMapping,
-						changeLog.getChangedTo(),
-						startDate,
-						endDate,
-						changeLog.getUpdatedOn().toLocalDate(),
-						nextChangeLog.getUpdatedOn().toLocalDate());
-			}
-			JiraHistoryChangeLog lastLog = statusChangeLog.get(size - 1);
-			LocalDate intervalStart = lastLog.getUpdatedOn().toLocalDate();
-			if (!intervalStart.isAfter(endDate)) {
-				addRangeIfValid(
-						ranges,
-						fieldMapping,
-						lastLog.getChangedTo(),
-						startDate,
-						endDate,
-						intervalStart,
-						endDate);
-			}
+					changeLog.getUpdatedOn().toLocalDate(),
+					nextChangeLog.getUpdatedOn().toLocalDate());
 		}
+
+		JiraHistoryChangeLog lastLog = statusChangeLog.get(size - 1);
+		LocalDate lastStatusDate = lastLog.getUpdatedOn().toLocalDate();
+		if (!lastStatusDate.isAfter(endDate)) {
+			LocalDate effectiveIntervalStart =
+					lastStatusDate.isBefore(startDate) ? startDate : lastStatusDate;
+			addRangeIfValid(
+					ranges,
+					fieldMapping,
+					lastLog.getChangedTo(),
+					startDate,
+					endDate,
+					effectiveIntervalStart,
+					endDate);
+		}
+
 		return ranges;
 	}
 
@@ -439,55 +438,42 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 			FieldMapping fieldMapping) {
 		List<JiraHistoryChangeLog> statusChangeLog = jiraIssueCustomHistory.getStatusUpdationLog();
 		int size = statusChangeLog.size();
-		String status = "";
 
-		// If Issue is processed before startDate
-		if (size > 0
-				&& statusChangeLog.get(size - 1).getUpdatedOn().toLocalDate().isBefore(startDate)) {
-			status = statusChangeLog.get(statusChangeLog.size() - 1).getChangedTo();
-			savingDateRangeInMap(
-					startDate,
-					endDate,
-					statusesWithStartAndEndDate,
-					status,
-					startDate,
-					endDate,
-					fieldMapping);
-		}
+		if (size == 0) return;
 
-		// When issue is created after end date
-		else if (!DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate())
+		if (DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate())
 				.toLocalDate()
 				.isAfter(endDate)) {
-			for (int index = 0; index + 1 < statusChangeLog.size(); index++) {
-				JiraHistoryChangeLog changeLog = statusChangeLog.get(index);
-				JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(index + 1);
-				status = changeLog.getChangedTo();
-				LocalDate intervalStartDate = changeLog.getUpdatedOn().toLocalDate();
-				LocalDate intervalEndDate = nextChangeLog.getUpdatedOn().toLocalDate();
-				savingDateRangeInMap(
-						startDate,
-						endDate,
-						statusesWithStartAndEndDate,
-						status,
-						intervalStartDate,
-						intervalEndDate,
-						fieldMapping);
-			}
-			JiraHistoryChangeLog lastChangeLog = statusChangeLog.get(statusChangeLog.size() - 1);
-			status = lastChangeLog.getChangedTo();
-			LocalDate intervalStartDate = lastChangeLog.getUpdatedOn().toLocalDate();
-			if (intervalStartDate.isAfter(endDate)) return;
-			LocalDate intervalEndDate = endDate;
+			return;
+		}
+
+		for (int index = 0; index + 1 < size; index++) {
+			JiraHistoryChangeLog changeLog = statusChangeLog.get(index);
+			JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(index + 1);
 			savingDateRangeInMap(
 					startDate,
 					endDate,
 					statusesWithStartAndEndDate,
-					status,
-					intervalStartDate,
-					intervalEndDate,
+					changeLog.getChangedTo(),
+					changeLog.getUpdatedOn().toLocalDate(),
+					nextChangeLog.getUpdatedOn().toLocalDate(),
 					fieldMapping);
 		}
+
+		JiraHistoryChangeLog lastChangeLog = statusChangeLog.get(size - 1);
+		LocalDate lastStatusDate = lastChangeLog.getUpdatedOn().toLocalDate();
+		if (lastStatusDate.isAfter(endDate)) return;
+
+		LocalDate effectiveIntervalStart =
+				lastStatusDate.isBefore(startDate) ? startDate : lastStatusDate;
+		savingDateRangeInMap(
+				startDate,
+				endDate,
+				statusesWithStartAndEndDate,
+				lastChangeLog.getChangedTo(),
+				effectiveIntervalStart,
+				endDate,
+				fieldMapping);
 	}
 
 	private void savingDateRangeInMap(
