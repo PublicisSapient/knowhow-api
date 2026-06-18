@@ -259,7 +259,9 @@ public class BitBucketServiceR {
 				Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		try {
-			loadDataIntoThreadLocal(accountHierarchyData, kpiRequest);
+			if (kpiRequest.getKpiList().get(0).getKpiCategory().equalsIgnoreCase("Developer")) {
+				loadDataIntoThreadLocal(accountHierarchyData, kpiRequest);
+			}
 
 			// Create futures for each KPI element
 			List<CompletableFuture<KpiElement>> futures =

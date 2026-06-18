@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.bitbucket.service.BitBucketKPIService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
@@ -56,6 +56,7 @@ public class ScmPRThroughputServiceImpl
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
+	private final ScmKpiHelperService scmKpiHelperService;
 
 	/** {@inheritDoc} */
 	@Override
@@ -99,9 +100,16 @@ public class ScmPRThroughputServiceImpl
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
+		List<ScmCommits> scmCommitsList =
+				scmKpiHelperService.getCommitDetails(
+						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId(),
+						DeveloperKpiHelper.getStartAndEndDate(kpiRequest));
+		List<Assignee> assigneeList =
+				scmKpiHelperService.getJiraAssigneeForScmUsers(
+						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
 
-		scmDataMap.put(ASSIGNEE_SET, getScmUsersFromBaseClass());
-		scmDataMap.put(COMMIT_LIST, getCommitsFromBaseClass());
+		scmDataMap.put(ASSIGNEE_SET, assigneeList);
+		scmDataMap.put(COMMIT_LIST, scmCommitsList);
 
 		return scmDataMap;
 	}
@@ -148,7 +156,8 @@ public class ScmPRThroughputServiceImpl
 			return;
 		}
 
-		Map<String, Object> scmDataMap = fetchKPIDataFromDb(null, null, null, null);
+		Map<String, Object> scmDataMap =
+				fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
 		List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
 		Set<Assignee> assignees = new HashSet<>((Collection<Assignee>) scmDataMap.get(ASSIGNEE_SET));
 
@@ -207,7 +216,7 @@ public class ScmPRThroughputServiceImpl
 		List<ScmCommits> mergeCommits =
 				commitsForBranch.stream()
 						.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit()))
-						.collect(Collectors.toList());
+						.toList();
 
 		long totalMergeRequests = mergeCommits.size();
 
@@ -237,6 +246,7 @@ public class ScmPRThroughputServiceImpl
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
+			Collections.reverse(validationDataList);
 			KPIExcelUtility.populateCodeCommit(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.REPO_TOOL_CODE_COMMIT.getColumns());
