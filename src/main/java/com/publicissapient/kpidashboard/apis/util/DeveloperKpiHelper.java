@@ -167,8 +167,7 @@ public final class DeveloperKpiHelper {
 				.filter(request -> request.getMergedAt() != null)
 				.filter(
 						request -> {
-							LocalDateTime updatedDateTime =
-									request.getMergedAt();
+							LocalDateTime updatedDateTime = request.getMergedAt();
 							return DateUtil.isWithinDateTimeRange(
 									updatedDateTime, dateRange.getStartDateTime(), dateRange.getEndDateTime());
 						})
