@@ -37,7 +37,7 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class ScmPRThroughputServiceImpl
 
 	private static final String NO_MERGE = "No. of Merge Requests";
 	private static final String ASSIGNEE_SET = "assigneeSet";
-	private static final String COMMIT_LIST = "commitList";
+	private static final String MRS_LIST = "mrsList";
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;
@@ -99,8 +99,8 @@ public class ScmPRThroughputServiceImpl
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
-		List<ScmCommits> scmCommitsList =
-				scmKpiHelperService.getCommitDetails(
+		List<ScmMergeRequests> scmMergeRequests =
+				scmKpiHelperService.getMergeRequests(
 						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId(),
 						DeveloperKpiHelper.getStartAndEndDate(kpiRequest));
 		List<Assignee> assigneeList =
@@ -108,7 +108,7 @@ public class ScmPRThroughputServiceImpl
 						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId());
 
 		scmDataMap.put(ASSIGNEE_SET, assigneeList);
-		scmDataMap.put(COMMIT_LIST, scmCommitsList);
+		scmDataMap.put(MRS_LIST, scmMergeRequests);
 
 		return scmDataMap;
 	}
@@ -157,11 +157,11 @@ public class ScmPRThroughputServiceImpl
 
 		Map<String, Object> scmDataMap =
 				fetchKPIDataFromDb(List.of(projectLeafNode), null, null, kpiRequest);
-		List<ScmCommits> allCommits = (List<ScmCommits>) scmDataMap.get(COMMIT_LIST);
+		List<ScmMergeRequests> allMrs = (List<ScmMergeRequests>) scmDataMap.get(MRS_LIST);
 		List<Assignee> assigneeList = (List<Assignee>) scmDataMap.get(ASSIGNEE_SET);
 
-		if (CollectionUtils.isEmpty(allCommits)) {
-			log.error("[BITBUCKET-AGGREGATED-VALUE]. No commits found for project {}", projectLeafNode);
+		if (CollectionUtils.isEmpty(allMrs)) {
+			log.error("[BITBUCKET-AGGREGATED-VALUE]. No mrs found for project {}", projectLeafNode);
 			return;
 		}
 
@@ -175,10 +175,10 @@ public class ScmPRThroughputServiceImpl
 												.map(email -> Map.entry(email, a.getAssigneeName())))
 						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
 
-		Map<ObjectId, List<ScmCommits>> commitsByProcessorItem =
-				allCommits.stream()
+		Map<ObjectId, List<ScmMergeRequests>> mrsByProcessorItem =
+				allMrs.stream()
 						.filter(c -> c.getProcessorItemId() != null)
-						.collect(Collectors.groupingBy(ScmCommits::getProcessorItemId));
+						.collect(Collectors.groupingBy(ScmMergeRequests::getProcessorItemId));
 
 		Map<String, List<DataCount>> kpiTrendDataByGroup = new LinkedHashMap<>();
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
@@ -194,13 +194,13 @@ public class ScmPRThroughputServiceImpl
 							return;
 						}
 						ObjectId processorItemId = tool.getProcessorItemList().get(0).getId();
-						List<ScmCommits> toolCommits =
-								commitsByProcessorItem.getOrDefault(processorItemId, Collections.emptyList());
-						List<ScmCommits> commitsInRange =
-								DeveloperKpiHelper.filterCommitsByCommitTimeStamp(toolCommits, periodRange);
+						List<ScmMergeRequests> toolMrs =
+								mrsByProcessorItem.getOrDefault(processorItemId, Collections.emptyList());
+						List<ScmMergeRequests> mrsInRange =
+								DeveloperKpiHelper.filterMergeRequestsByUpdateDate(toolMrs, periodRange);
 						processToolData(
 								tool,
-								commitsInRange,
+								mrsInRange,
 								emailToNameMap,
 								dateLabel,
 								projectLeafNode.getProjectFilter().getName(),
@@ -219,7 +219,7 @@ public class ScmPRThroughputServiceImpl
 
 	private void processToolData(
 			Tool tool,
-			List<ScmCommits> commitsInRange,
+			List<ScmMergeRequests> mrsInRange,
 			Map<String, String> emailToNameMap,
 			String dateLabel,
 			String projectName,
@@ -233,22 +233,22 @@ public class ScmPRThroughputServiceImpl
 		String branchName = getBranchSubFilter(tool, projectName);
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
-		List<ScmCommits> mergeCommits =
-				commitsInRange.stream()
-						.filter(commit -> Boolean.TRUE.equals(commit.getIsMergeCommit()))
+		List<ScmMergeRequests> mergeRequests =
+				mrsInRange.stream()
+						.filter(mrs -> mrs.isClosed() && "merged".equalsIgnoreCase(mrs.getState()))
 						.toList();
 
-		long totalMergeRequests = mergeCommits.size();
+		long totalMergeRequests = mergeRequests.size();
 
 		setDataCount(projectName, dateLabel, overallKpiGroup, totalMergeRequests, kpiTrendDataByGroup);
 
-		Map<String, List<ScmCommits>> userWiseMergeCommits =
-				DeveloperKpiHelper.groupCommitsByUser(mergeCommits);
+		Map<String, List<ScmMergeRequests>> userWiseMergeRequest =
+				DeveloperKpiHelper.groupMergeRequestsByUser(mergeRequests);
 
-		userWiseMergeCommits.forEach(
-				(userEmail, userMergeCommits) -> {
+		userWiseMergeRequest.forEach(
+				(userEmail, userMergeRequest) -> {
 					String developerName = emailToNameMap.getOrDefault(userEmail, userEmail);
-					long mrCount = userMergeCommits.size();
+					long mrCount = userMergeRequest.size();
 					String userKpiGroup = branchName + "#" + developerName;
 					setDataCount(projectName, dateLabel, userKpiGroup, mrCount, kpiTrendDataByGroup);
 					validationDataList.add(
