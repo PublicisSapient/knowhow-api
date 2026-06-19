@@ -44,7 +44,7 @@ public class PRThroughputKpiChangeUnit {
 						.append("kpiSubCategory", "Speed")
 						.append("kpiUnit", "MRs")
 						.append("chartType", "line")
-						.append("xAxisLabel", "Days")
+						.append("xAxisLabel", "Weeks")
 						.append("yAxisLabel", "Count")
 						.append("showTrend", true)
 						.append("isPositiveTrend", true)
@@ -70,6 +70,12 @@ public class PRThroughputKpiChangeUnit {
 						.append("forecastModel", "thetaMethod");
 
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
+
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.updateOne(
+						new Document(KPI_ID, "kpi206"),
+						new Document("$set", new Document("kpiFilter", "dropDown")));
 	}
 
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {

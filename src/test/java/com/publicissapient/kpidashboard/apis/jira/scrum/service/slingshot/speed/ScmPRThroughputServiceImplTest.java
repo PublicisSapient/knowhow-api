@@ -46,7 +46,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.generic.ProcessorItem;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
-import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.model.scm.User;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -143,23 +143,24 @@ public class ScmPRThroughputServiceImplTest {
 		}
 	}
 
-	private void setThreadLocalCommits(List<ScmCommits> commits) {
-		when(scmKpiHelperService.getCommitDetails(any(), any())).thenReturn(commits);
+	private void setThreadLocalCommits(List<ScmMergeRequests> commits) {
+		when(scmKpiHelperService.getMergeRequests(any(), any())).thenReturn(commits);
 	}
 
 	private void setThreadLocalAssignees(List<Assignee> assignees) throws Exception {
 		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any())).thenReturn(assignees);
 	}
 
-	private ScmCommits createMergeCommit(String authorEmail, boolean isMerge) {
-		ScmCommits commit = new ScmCommits();
+	private ScmMergeRequests createMergeCommit(String authorEmail, boolean isMerge, String state) {
+		ScmMergeRequests commit = new ScmMergeRequests();
 		commit.setProcessorItemId(processorItemId);
-		commit.setIsMergeCommit(isMerge);
-		commit.setCommitTimestamp(System.currentTimeMillis());
+		commit.setClosed(isMerge);
+		commit.setUpdatedDate(System.currentTimeMillis());
+		commit.setState(state);
 		if (authorEmail != null) {
 			User user = new User();
 			user.setEmail(authorEmail);
-			commit.setCommitAuthor(user);
+			commit.setAuthorId(user);
 		}
 		return commit;
 	}
@@ -204,10 +205,10 @@ public class ScmPRThroughputServiceImplTest {
 
 	@Test
 	public void testGetKpiData_withMergeCommits() throws Exception {
-		List<ScmCommits> commits = new ArrayList<>();
-		commits.add(createMergeCommit("dev@example.com", true));
-		commits.add(createMergeCommit("dev@example.com", false));
-		commits.add(createMergeCommit("other@example.com", true));
+		List<ScmMergeRequests> commits = new ArrayList<>();
+		commits.add(createMergeCommit("dev@example.com", true, "merged"));
+		commits.add(createMergeCommit("dev@example.com", false, "active"));
+		commits.add(createMergeCommit("other@example.com", true, "merged"));
 
 		Set<Assignee> assigneeSet = new HashSet<>();
 		assigneeSet.add(
@@ -274,8 +275,8 @@ public class ScmPRThroughputServiceImplTest {
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn("Excel-Bitbucket-abc123");
 
-		List<ScmCommits> commits = new ArrayList<>();
-		commits.add(createMergeCommit("dev@example.com", true));
+		List<ScmMergeRequests> commits = new ArrayList<>();
+		commits.add(createMergeCommit("dev@example.com", true, "merged"));
 		setThreadLocalCommits(commits);
 		setThreadLocalAssignees(new ArrayList<>());
 
@@ -296,10 +297,11 @@ public class ScmPRThroughputServiceImplTest {
 
 	@Test
 	public void testGetKpiData_commitWithNoAuthor() throws Exception {
-		ScmCommits commit = new ScmCommits();
+		ScmMergeRequests commit = new ScmMergeRequests();
 		commit.setProcessorItemId(processorItemId);
-		commit.setIsMergeCommit(true);
-		commit.setCommitTimestamp(System.currentTimeMillis());
+		commit.setClosed(true);
+		commit.setUpdatedDate(System.currentTimeMillis());
+		commit.setState("merged");
 
 		setThreadLocalCommits(Arrays.asList(commit));
 		setThreadLocalAssignees(new ArrayList<>());
@@ -326,7 +328,7 @@ public class ScmPRThroughputServiceImplTest {
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap()))
 				.thenReturn(Arrays.asList(repoNameTool));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true, "merged")));
 		setThreadLocalAssignees(new ArrayList<>());
 
 		TreeAggregatorDetail detail =
@@ -349,7 +351,7 @@ public class ScmPRThroughputServiceImplTest {
 		plainTool.setProcessorItemList(Arrays.asList(processorItem));
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap())).thenReturn(Arrays.asList(plainTool));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true, "merged")));
 		setThreadLocalAssignees(new ArrayList<>());
 
 		TreeAggregatorDetail detail =
@@ -370,7 +372,7 @@ public class ScmPRThroughputServiceImplTest {
 		Assignee assignee =
 				new Assignee("uid1", "Matched User", new HashSet<>(Arrays.asList("matched@example.com")));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("matched@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("matched@example.com", true, "merged")));
 		setThreadLocalAssignees(Arrays.asList(assignee));
 
 		TreeAggregatorDetail detail =
@@ -394,7 +396,7 @@ public class ScmPRThroughputServiceImplTest {
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap()))
 				.thenReturn(Arrays.asList(invalidTool));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true, "merged")));
 		setThreadLocalAssignees(new ArrayList<>());
 
 		TreeAggregatorDetail detail =
@@ -422,7 +424,7 @@ public class ScmPRThroughputServiceImplTest {
 		t.setProcessorItemList(Arrays.asList(processorItem));
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap())).thenReturn(Arrays.asList(t));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true, "merged")));
 		setThreadLocalAssignees(new ArrayList<>());
 
 		TreeAggregatorDetail detail =
@@ -441,9 +443,9 @@ public class ScmPRThroughputServiceImplTest {
 
 	@Test
 	public void testGetKpiData_multipleMergeCommitsSameUser() throws Exception {
-		List<ScmCommits> commits = new ArrayList<>();
+		List<ScmMergeRequests> commits = new ArrayList<>();
 		for (int i = 0; i < 3; i++) {
-			commits.add(createMergeCommit("dev@example.com", true));
+			commits.add(createMergeCommit("dev@example.com", true, "merged"));
 		}
 		setThreadLocalCommits(commits);
 		setThreadLocalAssignees(new ArrayList<>());
@@ -465,9 +467,9 @@ public class ScmPRThroughputServiceImplTest {
 	@Test
 	public void testGetKpiData_multipleDataPoints() throws Exception {
 		kpiRequest.setXAxisDataPoints(3);
-		List<ScmCommits> commits = new ArrayList<>();
-		commits.add(createMergeCommit("dev1@example.com", true));
-		commits.add(createMergeCommit("dev2@example.com", true));
+		List<ScmMergeRequests> commits = new ArrayList<>();
+		commits.add(createMergeCommit("dev1@example.com", true, "merged"));
+		commits.add(createMergeCommit("dev2@example.com", true, "merged"));
 		setThreadLocalCommits(commits);
 		setThreadLocalAssignees(new ArrayList<>());
 
@@ -486,10 +488,10 @@ public class ScmPRThroughputServiceImplTest {
 
 	@Test
 	public void testGetKpiData_nonMergeCommitsFiltered() throws Exception {
-		List<ScmCommits> commits = new ArrayList<>();
-		commits.add(createMergeCommit("dev@example.com", false));
-		commits.add(createMergeCommit("dev@example.com", false));
-		commits.add(createMergeCommit("dev@example.com", false));
+		List<ScmMergeRequests> commits = new ArrayList<>();
+		commits.add(createMergeCommit("dev@example.com", false, ""));
+		commits.add(createMergeCommit("dev@example.com", false, ""));
+		commits.add(createMergeCommit("dev@example.com", false, ""));
 		setThreadLocalCommits(commits);
 		setThreadLocalAssignees(new ArrayList<>());
 
@@ -508,11 +510,11 @@ public class ScmPRThroughputServiceImplTest {
 
 	@Test
 	public void testGetKpiData_mixedMergeAndNonMergeCommits() throws Exception {
-		List<ScmCommits> commits = new ArrayList<>();
-		commits.add(createMergeCommit("dev1@example.com", true));
-		commits.add(createMergeCommit("dev1@example.com", false));
-		commits.add(createMergeCommit("dev2@example.com", true));
-		commits.add(createMergeCommit("dev2@example.com", false));
+		List<ScmMergeRequests> commits = new ArrayList<>();
+		commits.add(createMergeCommit("dev1@example.com", true, "merged"));
+		commits.add(createMergeCommit("dev1@example.com", false, ""));
+		commits.add(createMergeCommit("dev2@example.com", true, "merged"));
+		commits.add(createMergeCommit("dev2@example.com", false, ""));
 
 		Set<Assignee> assigneeSet = new HashSet<>();
 		assigneeSet.add(
@@ -537,36 +539,10 @@ public class ScmPRThroughputServiceImplTest {
 	}
 
 	@Test
-	public void testGetKpiData_nullIsMergeCommit() throws Exception {
-		ScmCommits commit = new ScmCommits();
-		commit.setProcessorItemId(processorItemId);
-		commit.setIsMergeCommit(null);
-		commit.setCommitTimestamp(System.currentTimeMillis());
-		User user = new User();
-		user.setEmail("dev@example.com");
-		commit.setCommitAuthor(user);
-
-		setThreadLocalCommits(Arrays.asList(commit));
-		setThreadLocalAssignees(new ArrayList<>());
-
-		TreeAggregatorDetail detail =
-				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
-						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
-
-		KpiElement kpiElement =
-				service.getKpiData(
-						kpiRequest,
-						kpiRequest.getKpiList().get(0),
-						detail.getMapOfListOfProjectNodes().get("project").get(0));
-
-		assertNotNull(kpiElement);
-	}
-
-	@Test
 	public void testGetKpiData_sameWeekMultipleCalls() throws Exception {
-		List<ScmCommits> commits = new ArrayList<>();
-		commits.add(createMergeCommit("dev@example.com", true));
-		commits.add(createMergeCommit("dev@example.com", true));
+		List<ScmMergeRequests> commits = new ArrayList<>();
+		commits.add(createMergeCommit("dev@example.com", true, "merged"));
+		commits.add(createMergeCommit("dev@example.com", true, "merged"));
 		setThreadLocalCommits(commits);
 		setThreadLocalAssignees(new ArrayList<>());
 
@@ -592,7 +568,7 @@ public class ScmPRThroughputServiceImplTest {
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap()))
 				.thenReturn(Arrays.asList(nullBranchTool));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true, "merged")));
 		setThreadLocalAssignees(new ArrayList<>());
 
 		TreeAggregatorDetail detail =
@@ -616,7 +592,7 @@ public class ScmPRThroughputServiceImplTest {
 		when(kpiHelperService.populateSCMToolsRepoList(anyMap()))
 				.thenReturn(Arrays.asList(invalidTool));
 
-		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true)));
+		setThreadLocalCommits(Arrays.asList(createMergeCommit("dev@example.com", true, "merged")));
 		setThreadLocalAssignees(new ArrayList<>());
 
 		TreeAggregatorDetail detail =
