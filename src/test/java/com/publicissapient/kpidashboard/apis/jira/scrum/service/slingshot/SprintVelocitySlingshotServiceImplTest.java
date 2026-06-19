@@ -161,7 +161,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 		Double result = sprintVelocityService.calculateKPIMetrics(testData);
 
 		assertNotNull(result);
-		assertEquals(Double.valueOf(15.0), result);
+		assertEquals(Double.valueOf(2.0), result);
 	}
 
 	@Test

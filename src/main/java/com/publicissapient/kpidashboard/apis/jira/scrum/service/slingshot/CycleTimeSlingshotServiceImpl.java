@@ -125,7 +125,7 @@ public class CycleTimeSlingshotServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI202(), KPICode.CYCLE_TIME_TREND_SLINGSHOT.getKpiId());
+				fieldMapping.getThresholdValueKPI202(), KPICode.CYCLE_TIME_SLINGSHOT.getKpiId());
 	}
 
 	private void projectWiseLeafNodeValue(
