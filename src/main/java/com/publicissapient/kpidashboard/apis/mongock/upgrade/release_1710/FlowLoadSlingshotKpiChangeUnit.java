@@ -170,14 +170,7 @@ public class FlowLoadSlingshotKpiChangeUnit {
 	private void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
 		MongoCollection<Document> collection = mongoTemplate.getCollection("kpi_column_configs");
 
-		List<Document> columns =
-				Arrays.asList(
-						createColumn("Date", 0, true),
-						createColumn("In-Analysis", 1, false),
-						createColumn("In-Testing", 2, false),
-						createColumn("In-Progress", 3, false),
-						createColumn("In-Development", 4, false),
-						createColumn("Open", 5, false));
+		List<Document> columns = Arrays.asList(createColumn("Date", 0, true));
 
 		Document filter = new Document("basicProjectConfigId", null).append(KPI_ID, KPI_206);
 		Document kpiColumnConfig =
