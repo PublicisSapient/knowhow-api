@@ -361,6 +361,11 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private boolean slingshotSprintVelocityMultiGranularity;
 
+	@Value("${slingshotFlowLoadMultiFilter:false}")
+	@Getter
+	@Setter
+	private boolean slingshotFlowLoadMultiFilter;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}

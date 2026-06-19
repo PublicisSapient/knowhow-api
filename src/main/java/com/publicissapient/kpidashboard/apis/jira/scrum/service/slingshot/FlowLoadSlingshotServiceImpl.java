@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -31,7 +33,9 @@ import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -120,15 +124,6 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 						.getFieldMappingMap()
 						.get(leafNode.getProjectFilter().getBasicProjectConfigId());
 
-		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
-				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())) {
-			log.warn(
-					"Flow Load Slingshot (kpi206): storyFirstStatusKPI206 and jiraStatusForInProgressKPI206 are not configured"
-							+ " in field mapping for project {}. Only QA statuses {} will be tracked.",
-					leafNode.getProjectFilter().getName(),
-					fieldMapping.getJiraStatusForQaKPI206());
-		}
-
 		// Iterating Over All issues history's statusUpdationLog and saving start and
 		// end date for each status
 		if (CollectionUtils.isNotEmpty(jiraIssueCustomHistories)) {
@@ -175,6 +170,13 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 			populateTrendValueList(trendValueList, dateWithStatusCount);
 			Map<String, Map<String, List<String>>> dateStatusIdsMap =
 					buildDateStatusIdsMap(jiraIssueCustomHistories, startDate, endDate, fieldMapping);
+			addGroupEntriesTo(dateStatusIdsMap, fieldMapping);
+			dateStatusIdsMap =
+					dateStatusIdsMap.entrySet().stream()
+							.sorted(Map.Entry.comparingByKey())
+							.collect(
+									Collectors.toMap(
+											Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 			populateExcelDataObject(requestTrackerId, excelData, dateStatusIdsMap);
 			log.debug(
 					"FlowLoadServiceImpl -> request id : {} dateWithStatusCount : {}",
@@ -182,8 +184,106 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 					dateWithStatusCount);
 		}
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
-		kpiElement.setTrendValueList(trendValueList);
+		kpiElement.setExcelColumns(buildDynamicExcelColumns(dateWithStatusCount, fieldMapping));
+
+		if (customApiConfig.isSlingshotFlowLoadMultiFilter()
+				&& MapUtils.isNotEmpty(dateWithStatusCount)) {
+			Map<String, Map<String, Integer>> dateWithGroupCount =
+					aggregateByGroup(dateWithStatusCount, fieldMapping);
+			List<DataCount> groupTrendValues = new ArrayList<>();
+			populateTrendValueList(groupTrendValues, dateWithGroupCount);
+
+			List<DataCountGroup> groups = new ArrayList<>();
+			DataCountGroup statusGroup = new DataCountGroup();
+			statusGroup.setFilter("Status");
+			statusGroup.setValue(trendValueList);
+			groups.add(statusGroup);
+			DataCountGroup groupGroup = new DataCountGroup();
+			groupGroup.setFilter("Group");
+			groupGroup.setValue(groupTrendValues);
+			groups.add(groupGroup);
+			kpiElement.setTrendValueList(groups);
+		} else {
+			kpiElement.setTrendValueList(trendValueList);
+		}
+	}
+
+	private List<String> buildDynamicExcelColumns(
+			Map<String, Map<String, Integer>> dateWithStatusCount, FieldMapping fieldMapping) {
+		List<String> columns = new ArrayList<>(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
+
+		Set<String> statuses =
+				dateWithStatusCount.values().stream()
+						.flatMap(m -> m.keySet().stream())
+						.collect(Collectors.toCollection(TreeSet::new));
+		columns.addAll(statuses);
+
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
+		if (CollectionUtils.isNotEmpty(cycleTimeGroups)) {
+			cycleTimeGroups.stream()
+					.map(CycleTimeGroup::getLabel)
+					.filter(Objects::nonNull)
+					.distinct()
+					.forEach(columns::add);
+		}
+
+		return columns;
+	}
+
+	private void addGroupEntriesTo(
+			Map<String, Map<String, List<String>>> dateStatusIdsMap, FieldMapping fieldMapping) {
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
+		if (CollectionUtils.isEmpty(cycleTimeGroups)) return;
+
+		Map<String, String> statusToGroupLabel = new HashMap<>();
+		for (CycleTimeGroup group : cycleTimeGroups) {
+			for (String status : group.getStatuses()) {
+				statusToGroupLabel.put(status.replace(" ", "-"), group.getLabel());
+			}
+		}
+
+		dateStatusIdsMap.forEach(
+				(date, statusIdsMap) -> {
+					Map<String, List<String>> groupIdsMap = new LinkedHashMap<>();
+					statusIdsMap.forEach(
+							(status, ids) -> {
+								String groupLabel = statusToGroupLabel.get(status);
+								if (groupLabel != null) {
+									groupIdsMap.computeIfAbsent(groupLabel, k -> new ArrayList<>()).addAll(ids);
+								}
+							});
+					statusIdsMap.putAll(groupIdsMap);
+				});
+	}
+
+	private Map<String, Map<String, Integer>> aggregateByGroup(
+			Map<String, Map<String, Integer>> dateWithStatusCount, FieldMapping fieldMapping) {
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
+		if (CollectionUtils.isEmpty(cycleTimeGroups)) return new LinkedHashMap<>();
+
+		Map<String, String> statusToGroupLabel = new HashMap<>();
+		for (CycleTimeGroup group : cycleTimeGroups) {
+			for (String status : group.getStatuses()) {
+				statusToGroupLabel.put(status.replace(" ", "-"), group.getLabel());
+			}
+		}
+
+		Map<String, Map<String, Integer>> dateWithGroupCount = new LinkedHashMap<>();
+		dateWithStatusCount.forEach(
+				(date, statusCountMap) -> {
+					Map<String, Integer> groupCountMap = new LinkedHashMap<>();
+					statusCountMap.forEach(
+							(status, count) -> {
+								String groupLabel = statusToGroupLabel.get(status);
+								if (groupLabel != null) {
+									groupCountMap.merge(groupLabel, count, Integer::sum);
+								}
+							});
+					if (!groupCountMap.isEmpty()) {
+						dateWithGroupCount.put(date, groupCountMap);
+					}
+				});
+		return dateWithGroupCount;
 	}
 
 	private Map<String, Map<String, List<String>>> buildDateStatusIdsMap(
@@ -239,43 +339,42 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 
 		List<Pair<String, Pair<LocalDate, LocalDate>>> ranges = new ArrayList<>();
 
-		if (statusChangeLog.get(size - 1).getUpdatedOn().toLocalDate().isBefore(startDate)) {
+		if (size == 0) return ranges;
+
+		if (DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
+				.toLocalDate()
+				.isAfter(endDate)) {
+			return ranges;
+		}
+
+		for (int i = 0; i + 1 < size; i++) {
+			JiraHistoryChangeLog changeLog = statusChangeLog.get(i);
+			JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(i + 1);
 			addRangeIfValid(
 					ranges,
 					fieldMapping,
-					statusChangeLog.get(size - 1).getChangedTo(),
+					changeLog.getChangedTo(),
 					startDate,
 					endDate,
-					startDate,
-					endDate);
-		} else if (!DateUtil.convertJodaDateTimeToLocalDateTime(issue.getCreatedDate())
-				.toLocalDate()
-				.isAfter(endDate)) {
-			for (int i = 0; i + 1 < size; i++) {
-				JiraHistoryChangeLog changeLog = statusChangeLog.get(i);
-				JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(i + 1);
-				addRangeIfValid(
-						ranges,
-						fieldMapping,
-						changeLog.getChangedTo(),
-						startDate,
-						endDate,
-						changeLog.getUpdatedOn().toLocalDate(),
-						nextChangeLog.getUpdatedOn().toLocalDate());
-			}
-			JiraHistoryChangeLog lastLog = statusChangeLog.get(size - 1);
-			LocalDate intervalStart = lastLog.getUpdatedOn().toLocalDate();
-			if (!intervalStart.isAfter(endDate)) {
-				addRangeIfValid(
-						ranges,
-						fieldMapping,
-						lastLog.getChangedTo(),
-						startDate,
-						endDate,
-						intervalStart,
-						endDate);
-			}
+					changeLog.getUpdatedOn().toLocalDate(),
+					nextChangeLog.getUpdatedOn().toLocalDate());
 		}
+
+		JiraHistoryChangeLog lastLog = statusChangeLog.get(size - 1);
+		LocalDate lastStatusDate = lastLog.getUpdatedOn().toLocalDate();
+		if (!lastStatusDate.isAfter(endDate)) {
+			LocalDate effectiveIntervalStart =
+					lastStatusDate.isBefore(startDate) ? startDate : lastStatusDate;
+			addRangeIfValid(
+					ranges,
+					fieldMapping,
+					lastLog.getChangedTo(),
+					startDate,
+					endDate,
+					effectiveIntervalStart,
+					endDate);
+		}
+
 		return ranges;
 	}
 
@@ -339,55 +438,42 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 			FieldMapping fieldMapping) {
 		List<JiraHistoryChangeLog> statusChangeLog = jiraIssueCustomHistory.getStatusUpdationLog();
 		int size = statusChangeLog.size();
-		String status = "";
 
-		// If Issue is processed before startDate
-		if (size > 0
-				&& statusChangeLog.get(size - 1).getUpdatedOn().toLocalDate().isBefore(startDate)) {
-			status = statusChangeLog.get(statusChangeLog.size() - 1).getChangedTo();
-			savingDateRangeInMap(
-					startDate,
-					endDate,
-					statusesWithStartAndEndDate,
-					status,
-					startDate,
-					endDate,
-					fieldMapping);
-		}
+		if (size == 0) return;
 
-		// When issue is created after end date
-		else if (!DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate())
+		if (DateUtil.convertJodaDateTimeToLocalDateTime(jiraIssueCustomHistory.getCreatedDate())
 				.toLocalDate()
 				.isAfter(endDate)) {
-			for (int index = 0; index + 1 < statusChangeLog.size(); index++) {
-				JiraHistoryChangeLog changeLog = statusChangeLog.get(index);
-				JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(index + 1);
-				status = changeLog.getChangedTo();
-				LocalDate intervalStartDate = changeLog.getUpdatedOn().toLocalDate();
-				LocalDate intervalEndDate = nextChangeLog.getUpdatedOn().toLocalDate();
-				savingDateRangeInMap(
-						startDate,
-						endDate,
-						statusesWithStartAndEndDate,
-						status,
-						intervalStartDate,
-						intervalEndDate,
-						fieldMapping);
-			}
-			JiraHistoryChangeLog lastChangeLog = statusChangeLog.get(statusChangeLog.size() - 1);
-			status = lastChangeLog.getChangedTo();
-			LocalDate intervalStartDate = lastChangeLog.getUpdatedOn().toLocalDate();
-			if (intervalStartDate.isAfter(endDate)) return;
-			LocalDate intervalEndDate = endDate;
+			return;
+		}
+
+		for (int index = 0; index + 1 < size; index++) {
+			JiraHistoryChangeLog changeLog = statusChangeLog.get(index);
+			JiraHistoryChangeLog nextChangeLog = statusChangeLog.get(index + 1);
 			savingDateRangeInMap(
 					startDate,
 					endDate,
 					statusesWithStartAndEndDate,
-					status,
-					intervalStartDate,
-					intervalEndDate,
+					changeLog.getChangedTo(),
+					changeLog.getUpdatedOn().toLocalDate(),
+					nextChangeLog.getUpdatedOn().toLocalDate(),
 					fieldMapping);
 		}
+
+		JiraHistoryChangeLog lastChangeLog = statusChangeLog.get(size - 1);
+		LocalDate lastStatusDate = lastChangeLog.getUpdatedOn().toLocalDate();
+		if (lastStatusDate.isAfter(endDate)) return;
+
+		LocalDate effectiveIntervalStart =
+				lastStatusDate.isBefore(startDate) ? startDate : lastStatusDate;
+		savingDateRangeInMap(
+				startDate,
+				endDate,
+				statusesWithStartAndEndDate,
+				lastChangeLog.getChangedTo(),
+				effectiveIntervalStart,
+				endDate,
+				fieldMapping);
 	}
 
 	private void savingDateRangeInMap(
@@ -413,27 +499,18 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 	private boolean isStatusValid(FieldMapping fieldMapping, String status) {
 		Map<Long, String> doneStatusMap = getJiraIssueReleaseStatus().getClosedList();
 		List<String> doneStatus = new ArrayList<>();
+		List<CycleTimeGroup> cycleTimeGroupList =
+				fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
 		if (doneStatusMap != null)
 			doneStatus = doneStatusMap.values().stream().map(String::toLowerCase).toList();
-		if (org.apache.commons.lang3.StringUtils.isEmpty(fieldMapping.getStoryFirstStatusKPI206())
-				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
-				&& CollectionUtils.isEmpty(fieldMapping.getJiraStatusForQaKPI206())) {
-			return false;
-		}
+		if (CollectionUtils.isEmpty(cycleTimeGroupList)) return false;
+
+		Set<String> validStatuses =
+				cycleTimeGroupList.stream()
+						.flatMap(cycleTimeGroup -> cycleTimeGroup.getStatuses().stream())
+						.collect(Collectors.toSet());
 		String statusLower = status.toLowerCase();
-		boolean inProgressMatch =
-				CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForInProgressKPI206())
-						&& fieldMapping.getJiraStatusForInProgressKPI206().stream()
-								.anyMatch(s -> s.equalsIgnoreCase(status));
-		boolean qaMatch =
-				CollectionUtils.isNotEmpty(fieldMapping.getJiraStatusForQaKPI206())
-						&& fieldMapping.getJiraStatusForQaKPI206().stream()
-								.anyMatch(s -> s.equalsIgnoreCase(status));
-		return !doneStatus.contains(statusLower)
-				&& (org.apache.commons.lang3.StringUtils.equalsIgnoreCase(
-								fieldMapping.getStoryFirstStatusKPI206(), status)
-						|| inProgressMatch
-						|| qaMatch);
+		return !doneStatus.contains(statusLower) && (validStatuses.contains(status));
 	}
 
 	private void populateTrendValueList(

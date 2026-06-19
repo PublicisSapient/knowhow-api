@@ -82,6 +82,7 @@ public class BitBucketServiceR {
 	private List<ScmCommits> scmCommitsList = new ArrayList<>();
 	private List<ScmMergeRequests> scmMergeRequestList = new ArrayList<>();
 	private List<Assignee> assigneeList = new ArrayList<>();
+	private static final String DEVELOPER_BOARD = "Developer";
 
 	private static final ThreadLocal<List<ScmCommits>> THREAD_LOCAL_COMMITS =
 			ThreadLocal.withInitial(ArrayList::new);
@@ -143,8 +144,13 @@ public class BitBucketServiceR {
 				}
 
 				Node filteredNode = getFilteredNodes(kpiRequest, filteredAccountDataList);
-				kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
-				kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
+				if (kpiRequest.getKpiList().get(0).getKpiCategory().equalsIgnoreCase(DEVELOPER_BOARD)) {
+					kpiRequest.setXAxisDataPoints(Integer.parseInt(kpiRequest.getIds()[0]));
+					kpiRequest.setDuration(kpiRequest.getSelectedMap().get(CommonConstant.DATE).get(0));
+				} else {
+					kpiRequest.setXAxisDataPoints(13);
+					kpiRequest.setDuration(CommonConstant.WEEK);
+				}
 				responseList =
 						executeParallelKpiProcessing(kpiRequest, filteredNode, filteredAccountDataList.get(0));
 
@@ -254,7 +260,9 @@ public class BitBucketServiceR {
 				Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 		try {
-			loadDataIntoThreadLocal(accountHierarchyData, kpiRequest);
+			if (kpiRequest.getKpiList().get(0).getKpiCategory().equalsIgnoreCase(DEVELOPER_BOARD)) {
+				loadDataIntoThreadLocal(accountHierarchyData, kpiRequest);
+			}
 
 			// Create futures for each KPI element
 			List<CompletableFuture<KpiElement>> futures =
