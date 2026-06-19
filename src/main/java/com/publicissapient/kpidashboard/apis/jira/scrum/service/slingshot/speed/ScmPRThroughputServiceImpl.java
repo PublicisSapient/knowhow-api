@@ -295,9 +295,7 @@ public class ScmPRThroughputServiceImpl
 								});
 
 		dataCount.setValue(((Number) dataCount.getValue()).longValue() + mrCount);
-
 		Map<String, Object> hoverValues = new HashMap<>();
-		hoverValues.put(NO_MERGE, dataCount.getLineValue());
 		dataCount.setHoverValue(hoverValues);
 	}
 
