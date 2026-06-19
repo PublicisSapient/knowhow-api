@@ -161,6 +161,20 @@ public final class DeveloperKpiHelper {
 				.toList();
 	}
 
+	public static List<ScmMergeRequests> filterMergeRequestsByMergedDate(
+			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
+		return mergeRequests.stream()
+				.filter(request -> request.getMergedAt() != null)
+				.filter(
+						request -> {
+							LocalDateTime updatedDateTime =
+									request.getMergedAt();
+							return DateUtil.isWithinDateTimeRange(
+									updatedDateTime, dateRange.getStartDateTime(), dateRange.getEndDateTime());
+						})
+				.toList();
+	}
+
 	/**
 	 * Retrieves SCM tools configured for a specific project. Looks up tools by project configuration
 	 * ID.

@@ -197,7 +197,7 @@ public class ScmPRThroughputServiceImpl
 						List<ScmMergeRequests> toolMrs =
 								mrsByProcessorItem.getOrDefault(processorItemId, Collections.emptyList());
 						List<ScmMergeRequests> mrsInRange =
-								DeveloperKpiHelper.filterMergeRequestsByUpdateDate(toolMrs, periodRange);
+								DeveloperKpiHelper.filterMergeRequestsByMergedDate(toolMrs, periodRange);
 						processToolData(
 								tool,
 								mrsInRange,

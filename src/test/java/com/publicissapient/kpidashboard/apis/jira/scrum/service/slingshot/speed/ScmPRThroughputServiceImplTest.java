@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -155,7 +156,7 @@ public class ScmPRThroughputServiceImplTest {
 		ScmMergeRequests commit = new ScmMergeRequests();
 		commit.setProcessorItemId(processorItemId);
 		commit.setClosed(isMerge);
-		commit.setUpdatedDate(System.currentTimeMillis());
+		commit.setMergedAt(LocalDateTime.now());
 		commit.setState(state);
 		if (authorEmail != null) {
 			User user = new User();
@@ -300,7 +301,7 @@ public class ScmPRThroughputServiceImplTest {
 		ScmMergeRequests commit = new ScmMergeRequests();
 		commit.setProcessorItemId(processorItemId);
 		commit.setClosed(true);
-		commit.setUpdatedDate(System.currentTimeMillis());
+		commit.setMergedAt(LocalDateTime.now());
 		commit.setState("merged");
 
 		setThreadLocalCommits(Arrays.asList(commit));
