@@ -197,7 +197,7 @@ public class ScmPRThroughputServiceImpl
 						List<ScmMergeRequests> toolMrs =
 								mrsByProcessorItem.getOrDefault(processorItemId, Collections.emptyList());
 						List<ScmMergeRequests> mrsInRange =
-								DeveloperKpiHelper.filterMergeRequestsByUpdateDate(toolMrs, periodRange);
+								DeveloperKpiHelper.filterMergeRequestsByMergedDate(toolMrs, periodRange);
 						processToolData(
 								tool,
 								mrsInRange,
@@ -295,9 +295,7 @@ public class ScmPRThroughputServiceImpl
 								});
 
 		dataCount.setValue(((Number) dataCount.getValue()).longValue() + mrCount);
-
 		Map<String, Object> hoverValues = new HashMap<>();
-		hoverValues.put(NO_MERGE, dataCount.getLineValue());
 		dataCount.setHoverValue(hoverValues);
 	}
 
