@@ -223,8 +223,9 @@ public class CycleTimeSlingshotServiceImpl
 			Map<String, List<DataValue>> cycleMap) {
 		List<DataValue> dataValueList = new ArrayList<>();
 		LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
-		Iterator<CycleTimeGroup> iterator =
-				fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
+		cycleTimeGroups.forEach(g -> cycleTimeByGroup.put(g.getLabel(), ""));
+		Iterator<CycleTimeGroup> iterator = cycleTimeGroups.iterator();
 		CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
 		while (current != null) {
 			double minsDiff =
