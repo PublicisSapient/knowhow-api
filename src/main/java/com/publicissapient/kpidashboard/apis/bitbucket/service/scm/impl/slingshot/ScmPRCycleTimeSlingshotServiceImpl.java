@@ -63,15 +63,15 @@ public class ScmPRCycleTimeSlingshotServiceImpl
 				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
-			Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-			calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_CYCLE_TIME_SLINGSHOT);
+		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
+		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_CYCLE_TIME_SLINGSHOT);
 
-			Map<String, List<DataCount>> trendValuesMap =
-					getTrendValuesMap(
-							kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_CYCLE_TIME_SLINGSHOT);
-			kpiElement.setTrendValueList(
-					DeveloperKpiHelper.prepareDataCountGroups(
-							trendValuesMap, KPICode.PR_CYCLE_TIME_SLINGSHOT.getKpiId()));
+		Map<String, List<DataCount>> trendValuesMap =
+				getTrendValuesMap(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PR_CYCLE_TIME_SLINGSHOT);
+		kpiElement.setTrendValueList(
+				DeveloperKpiHelper.prepareDataCountGroups(
+						trendValuesMap, KPICode.PR_CYCLE_TIME_SLINGSHOT.getKpiId()));
 
 		return kpiElement;
 	}

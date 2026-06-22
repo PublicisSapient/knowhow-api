@@ -185,7 +185,8 @@ public class PRCycleTimeTrendKpiServiceImpl
 
 	private long countMergedPRs(List<ScmMergeRequests> mergeRequests) {
 		return mergeRequests.stream()
-				.filter(mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
+				.filter(
+						mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
 				.count();
 	}
 
