@@ -1185,7 +1185,8 @@ public enum KPIExcelColumn {
 					"Size (In Story Points)",
 					"Wait Time",
 					"Total Time",
-					"Flow Efficiency"));
+					"Flow Efficiency",
+					"Group Map"));
 
 	// @formatter:on
 
