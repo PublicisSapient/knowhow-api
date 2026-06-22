@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
 		id = "pr_cycle_time_change_unit",
-		order = "17124",
+		order = "17127",
 		author = "aksshriv1",
 		systemVersion = "17.1.0")
 @RequiredArgsConstructor
@@ -23,17 +23,8 @@ public class PRCycleTimeSlingShotChangeunit {
 	private static final String KPI_MASTER = "kpi_master";
 	private static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
 
-	private static final String FIELD_NAME = "fieldName";
-	private static final String FIELD_LABEL = "fieldLabel";
-	private static final String FIELD_TYPE = "fieldType";
-	private static final String FIELD_CATEGORY = "fieldCategory";
-	private static final String SECTION = "section";
-	private static final String PROCESSOR_COMMON = "processorCommon";
-	private static final String TOOLTIP = "tooltip";
 	private static final String DEFINITION = "definition";
-	private static final String MANDATORY = "mandatory";
 	private static final String CLASS = "_class";
-	private static final String CHIPS = "chips";
 	private static final String KEY_BASIC_PROJECT_CONFIG_ID = "basicProjectConfigId";
 	private static final String KEY_KPI_COLUMN_DETAILS = "kpiColumnDetails";
 	private static final String KPI_EXCEL_COLUMN_CONFIG = "kpi_column_configs";
