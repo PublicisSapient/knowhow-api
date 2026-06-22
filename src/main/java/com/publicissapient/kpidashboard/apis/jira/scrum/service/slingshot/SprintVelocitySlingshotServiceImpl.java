@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -40,7 +41,6 @@ import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
 import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
-import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
@@ -305,9 +305,19 @@ public class SprintVelocitySlingshotServiceImpl
 					}
 				});
 
+		LocalDateTime periodStartDate =
+				resolveEffectivePeriodStart(fieldMapping.getWeeklyDataStartDateKPI205());
+		boolean useReferenceAlignment = periodStartDate != null;
+		if (!useReferenceAlignment) {
+			periodStartDate = LocalDateTime.now();
+		}
+
 		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
-					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(endDate, CommonConstant.WEEK);
+					useReferenceAlignment
+							? buildReferencedPeriodRange(periodStartDate)
+							: KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+									periodStartDate, CommonConstant.WEEK);
 
 			Set<JiraIssue> issueDetailsSet =
 					allJiraIssue.stream()
@@ -356,7 +366,7 @@ public class SprintVelocitySlingshotServiceImpl
 			velocityStoryPointsByDateRange.put(dateLabel, periodStoryPointsVelocity);
 			committedScopeStoryPointsByDateRange.put(dateLabel, periodStoryPointsCommittedScope);
 
-			endDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, endDate);
+			periodStartDate = periodStartDate.minusWeeks(1);
 		}
 
 		List<KPIExcelData> excelData = new ArrayList<>();
@@ -398,6 +408,9 @@ public class SprintVelocitySlingshotServiceImpl
 						subfilterValues.put("storyPointsLineValue", roundingOff(avgStoryPointsVelocity));
 						subfilterValues.put(
 								"storyPointsAggregationValue", roundingOff(committedScopeStoryPoints));
+						Map<String, Object> storyPointsHoverValue = new HashMap<>();
+						storyPointsHoverValue.put(VELOCITY, roundingOff(storyPointsVelocity));
+						subfilterValues.put("hoverValue", storyPointsHoverValue);
 						dataCount.setSubfilterValues(subfilterValues);
 						avgVelocityCount.put(projId, avgVelocityCount.get(projId) + 1);
 					} else {
@@ -465,6 +478,50 @@ public class SprintVelocitySlingshotServiceImpl
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
 				fieldMapping.getThresholdValueKPI205(), KPICode.SPRINT_VELOCITY.getKpiId());
+	}
+
+	/**
+	 * Resolves the effective period start date for the flow velocity KPI, aligned to the configured
+	 * reference date. If the reference date is valid, this method finds the next 7-day-cycle boundary
+	 * after the current date anchored to that reference. Returns {@code null} if the reference date
+	 * is absent or unparseable, indicating the caller should fall back to the default Mon–Sun
+	 * alignment.
+	 */
+	private LocalDateTime resolveEffectivePeriodStart(String weeklyDataStartDate) {
+		if (weeklyDataStartDate == null || weeklyDataStartDate.isBlank()) {
+			return null;
+		}
+		try {
+			LocalDate referenceDate =
+					LocalDate.parse(weeklyDataStartDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			LocalDate today = LocalDate.now();
+			long daysDiff = ChronoUnit.DAYS.between(referenceDate, today);
+			long weeksDiff = Math.max(0, Math.floorDiv(daysDiff, 7));
+			LocalDate boundary = referenceDate.plusWeeks(weeksDiff);
+			return boundary.atStartOfDay();
+		} catch (Exception e) {
+			log.warn(
+					"Invalid weeklyDataStartDateKPI205 value '{}'. Falling back to default Mon-Sun week alignment.",
+					weeklyDataStartDate);
+			return null;
+		}
+	}
+
+	/**
+	 * Builds a {@link CustomDateRange} for a 7-day period starting exactly on {@code periodStart}.
+	 * The period spans from the start of {@code periodStart} day to the end of the 6th day after it,
+	 * forming a complete 7-day cycle aligned to the configured reference date.
+	 */
+	private CustomDateRange buildReferencedPeriodRange(LocalDateTime periodStart) {
+		LocalDateTime start = periodStart.toLocalDate().atStartOfDay();
+		LocalDateTime end =
+				start.plusDays(6).withHour(23).withMinute(59).withSecond(59).withNano(999_999_999);
+		CustomDateRange range = new CustomDateRange();
+		range.setStartDateTime(start);
+		range.setEndDateTime(end);
+		range.setStartDate(start.toLocalDate());
+		range.setEndDate(end.toLocalDate());
+		return range;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -554,6 +611,9 @@ public class SprintVelocitySlingshotServiceImpl
 			subfilterValues.put("storyPoints", roundingOff(pairSP));
 			subfilterValues.put("storyPointsLineValue", roundingOff(avgSPLineValue));
 			subfilterValues.put("storyPointsAggregationValue", roundingOff(pairSPCommitted));
+			Map<String, Object> storyPointsHoverValue = new HashMap<>();
+			storyPointsHoverValue.put(VELOCITY, roundingOff(pairSP));
+			subfilterValues.put("hoverValue", storyPointsHoverValue);
 			dc.setSubfilterValues(subfilterValues);
 			biWeeklyList.add(dc);
 		}
@@ -641,6 +701,9 @@ public class SprintVelocitySlingshotServiceImpl
 					subfilterValues.put("storyPoints", roundingOff(monthSP));
 					subfilterValues.put("storyPointsLineValue", roundingOff(avgSPLineValue));
 					subfilterValues.put("storyPointsAggregationValue", roundingOff(monthSPCommitted));
+					Map<String, Object> storyPointsHoverValue = new HashMap<>();
+					storyPointsHoverValue.put(VELOCITY, roundingOff(monthSP));
+					subfilterValues.put("hoverValue", storyPointsHoverValue);
 					dc.setSubfilterValues(subfilterValues);
 					monthlyList.add(dc);
 				});
