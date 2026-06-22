@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -40,6 +41,8 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIHelperUtil;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -273,6 +276,49 @@ public class SprintVelocitySlingshotServiceImplTest {
 
 		assertNotNull(result);
 		assertNotNull(result.getTrendValueList());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testGetKpiDataContainsStoryPointSubfilterValues() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createMockJiraIssuesWithStoryPoints());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+
+		List<DataCount> trendValues;
+		Object trendValueList = result.getTrendValueList();
+		if (trendValueList instanceof List<?> list
+				&& !list.isEmpty()
+				&& list.get(0) instanceof DataCountGroup) {
+			trendValues = ((DataCountGroup) list.get(0)).getValue();
+		} else {
+			trendValues = (List<DataCount>) trendValueList;
+		}
+
+		assertNotNull(trendValues);
+		trendValues.stream()
+				.filter(dc -> dc.getSubfilterValues() != null)
+				.forEach(
+						dc -> {
+							assertTrue(dc.getSubfilterValues().containsKey("storyPoints"));
+							assertTrue(dc.getSubfilterValues().containsKey("storyPointsLineValue"));
+							assertTrue(dc.getSubfilterValues().containsKey("storyPointsAggregationValue"));
+						});
 	}
 
 	private List<JiraIssue> createMockJiraIssues() {
