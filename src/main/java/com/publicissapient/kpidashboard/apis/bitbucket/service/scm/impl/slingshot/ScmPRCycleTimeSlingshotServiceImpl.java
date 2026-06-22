@@ -171,7 +171,7 @@ public class ScmPRCycleTimeSlingshotServiceImpl
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populateMeanTimeMergeExcelData(validationDataList, excelData);
+			KPIExcelUtility.populatePRCycleTimeExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.PR_CYCLE_TIME_SLINGSHOT.getColumns());
 		}

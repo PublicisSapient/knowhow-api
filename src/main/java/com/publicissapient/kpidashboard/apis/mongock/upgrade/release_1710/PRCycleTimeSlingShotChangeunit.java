@@ -104,7 +104,7 @@ public class PRCycleTimeSlingShotChangeunit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Total Time Spent (In Hours)")
+												.append(COLUMN_NAME, "Time Spent (in hours)")
 												.append(ORDER, 9)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));

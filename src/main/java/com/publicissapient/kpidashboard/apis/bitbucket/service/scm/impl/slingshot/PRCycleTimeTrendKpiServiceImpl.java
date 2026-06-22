@@ -171,7 +171,7 @@ public class PRCycleTimeTrendKpiServiceImpl
 						? mergeRequest.getFirstCommitDate()
 						: DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(startTime, mergeRequest.getMergedAt());
-		validationData.setMeanTimeToMerge(
+		validationData.setTotalTimeSpent(
 				KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * MILLIS_PER_SECOND));
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
 

@@ -107,7 +107,7 @@ public enum KPIExcelColumn {
 					"Merge Request Url",
 					"PR Raised Time",
 					"PR Merged Time",
-					"Total Time Spent (In Hours")),
+					"Time Spent (in hours)")),
 	AVERAGE_RESOLUTION_TIME(
 			"kpi83",
 			Arrays.asList(

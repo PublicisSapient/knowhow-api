@@ -1706,6 +1706,30 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populatePRCycleTimeExcelData(
+			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
+		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
+			repoToolValidationDataList.forEach(
+					repoToolValidationData -> {
+						KPIExcelData excelData = new KPIExcelData();
+						excelData.setProject(repoToolValidationData.getProjectName());
+						excelData.setRepo(repoToolValidationData.getRepoUrl());
+						excelData.setBranch(repoToolValidationData.getBranchName());
+						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+						excelData.setDaysWeeks(repoToolValidationData.getDate());
+						excelData.setTotalTimeSpent(repoToolValidationData.getTotalTimeSpent().toString());
+						excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
+						excelData.setPrMergedTime(repoToolValidationData.getPrActivityTime());
+						Map<String, String> mergeUrl = new HashMap<>();
+						mergeUrl.put(
+								repoToolValidationData.getMergeRequestUrl(),
+								repoToolValidationData.getMergeRequestUrl());
+						excelData.setMergeRequestUrl(mergeUrl);
+						kpiExcelData.add(excelData);
+					});
+		}
+	}
+
 	public static void populateRevertRateExcelData(
 			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
 
