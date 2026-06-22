@@ -113,14 +113,15 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 		if (minsDiff > 0) {
 
 			Map<String, List<Double>> overallMap =
-					filterMap.computeIfAbsent(OVERALL + "#" + history.getStoryType(), k -> new HashMap<>());
+					filterMap.computeIfAbsent(
+							OVERALL + "#" + history.getStoryType(), k -> new LinkedHashMap<>());
 
 			overallMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
 			filterMap.put(OVERALL + "#" + history.getStoryType(), overallMap);
 
 			Map<String, List<Double>> cycleTimeByfilterMap =
 					filterMap.computeIfAbsent(
-							current.getLabel() + "#" + history.getStoryType(), k -> new HashMap<>());
+							current.getLabel() + "#" + history.getStoryType(), k -> new LinkedHashMap<>());
 
 			cycleTimeByfilterMap.computeIfAbsent(range, k -> new ArrayList<>()).add(minsDiff);
 			filterMap.put(current.getLabel() + "#" + history.getStoryType(), cycleTimeByfilterMap);
