@@ -96,6 +96,18 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Merged Time",
 					"Mean Time To Merge (In Hours)")),
+	PR_CYCLE_TIME_SLINGSHOT(
+			"kpi209",
+			Arrays.asList(
+					"Project",
+					"Repo",
+					"Branch",
+					"Days/Weeks",
+					"Developer",
+					"Merge Request Url",
+					"PR Raised Time",
+					"PR Merged Time",
+					"Time Spent (in hours)")),
 	AVERAGE_RESOLUTION_TIME(
 			"kpi83",
 			Arrays.asList(
