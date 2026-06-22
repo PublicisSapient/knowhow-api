@@ -2448,7 +2448,7 @@ public class KPIExcelUtility {
 				kpiExcelData.setDate(
 						DateUtil.tranformUTCLocalTimeToZFormat(
 								LocalDateTime.parse(date + DateUtil.ZERO_TIME_FORMAT)));
-				Map<String, String> typeFormattedMap = new HashMap<>();
+				Map<String, String> typeFormattedMap = new LinkedHashMap<>();
 				typeIdsMap.forEach((type, ids) -> typeFormattedMap.put(type, formatIssueIds(ids)));
 				kpiExcelData.setCount(typeFormattedMap);
 				excelData.add(kpiExcelData);
@@ -2800,6 +2800,31 @@ public class KPIExcelUtility {
 					kpiExcelData.setWaitTime(waitTimeList.get(i.get()));
 					kpiExcelData.setTotalTime(totalTimeList.get(i.get()));
 					kpiExcelData.setFlowEfficiency(value.longValue());
+					excelDataList.add(kpiExcelData);
+					i.set(i.get() + 1);
+				});
+	}
+
+	public static void populateFlowEfficiency(
+			LinkedHashMap<JiraIssueCustomHistory, Double> flowEfficiency,
+			List<String> waitTimeList,
+			List<String> totalTimeList,
+			List<KPIExcelData> excelDataList,
+			Map<String, LinkedHashMap<String, String>> issueGroupMap) {
+		AtomicInteger i = new AtomicInteger();
+		flowEfficiency.forEach(
+				(issue, value) -> {
+					KPIExcelData kpiExcelData = new KPIExcelData();
+					Map<String, String> url = new HashMap<>();
+					url.put(issue.getStoryID(), checkEmptyURL(issue));
+					kpiExcelData.setIssueID(url);
+					kpiExcelData.setIssueType(issue.getStoryType());
+					kpiExcelData.setIssueDesc(issue.getDescription());
+					kpiExcelData.setSizeInStoryPoints(issue.getEstimate());
+					kpiExcelData.setWaitTime(waitTimeList.get(i.get()));
+					kpiExcelData.setTotalTime(totalTimeList.get(i.get()));
+					kpiExcelData.setFlowEfficiency(value.longValue());
+					kpiExcelData.setGroupMap(issueGroupMap.get(issue.getStoryID()));
 					excelDataList.add(kpiExcelData);
 					i.set(i.get() + 1);
 				});

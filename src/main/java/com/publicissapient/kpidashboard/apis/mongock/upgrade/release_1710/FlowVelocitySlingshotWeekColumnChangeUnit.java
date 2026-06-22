@@ -55,9 +55,9 @@ public class FlowVelocitySlingshotWeekColumnChangeUnit {
 								List.of(
 										columnDetail("Week", 1),
 										columnDetail("Issue ID", 2),
-										columnDetail("Issue Description", 3),
-										columnDetail("Squad", 4),
-										columnDetail("Issue Type", 5),
+										columnDetail("Issue Type", 3),
+										columnDetail("Issue Description", 4),
+										columnDetail("Squad", 5),
 										columnDetail("Priority", 6),
 										columnDetail("Story Points", 7),
 										columnDetail("Original Time Estimate (in hours)", 8),
@@ -78,11 +78,11 @@ public class FlowVelocitySlingshotWeekColumnChangeUnit {
 						.append(
 								"kpiColumnDetails",
 								List.of(
-										columnDetail("Sprint Name", 1),
+										columnDetail("Week", 1),
 										columnDetail("Issue ID", 2),
-										columnDetail("Issue Description", 3),
-										columnDetail("Squad", 4),
-										columnDetail("Issue Type", 5),
+										columnDetail("Issue Type", 3),
+										columnDetail("Issue Description", 4),
+										columnDetail("Squad", 5),
 										columnDetail("Priority", 6),
 										columnDetail("Story Points", 7),
 										columnDetail("Original Time Estimate (in hours)", 8),

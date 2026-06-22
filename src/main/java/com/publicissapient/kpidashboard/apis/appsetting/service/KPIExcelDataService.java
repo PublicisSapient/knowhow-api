@@ -745,15 +745,24 @@ public class KPIExcelDataService {
 					.forEach(row -> categoryKeys.addAll(row.getGroupMap().keySet()));
 		}
 
-		if (categoryKeys.isEmpty()) {
+		LinkedHashSet<String> countKeys = new LinkedHashSet<>();
+		if (CollectionUtils.isNotEmpty(excelData)) {
+			excelData.stream()
+					.filter(row -> row.getCount() != null)
+					.forEach(row -> countKeys.addAll(row.getCount().keySet()));
+		}
+
+		if (categoryKeys.isEmpty() && countKeys.isEmpty()) {
 			return staticColumns;
 		}
 
 		List<KpiColumnDetails> result = new ArrayList<>();
 		int maxOrder = 0;
+		Set<String> existingNames = new HashSet<>();
 		for (KpiColumnDetails col : staticColumns) {
 			if (!"Group Map".equalsIgnoreCase(col.getColumnName())) {
 				result.add(col);
+				existingNames.add(col.getColumnName());
 			}
 			if (col.getOrder() > maxOrder) {
 				maxOrder = col.getOrder();
@@ -762,6 +771,12 @@ public class KPIExcelDataService {
 
 		for (String key : categoryKeys) {
 			result.add(new KpiColumnDetails(key, ++maxOrder, true, true));
+		}
+
+		for (String key : countKeys) {
+			if (!existingNames.contains(key)) {
+				result.add(new KpiColumnDetails(key, ++maxOrder, true, true));
+			}
 		}
 
 		return result;
