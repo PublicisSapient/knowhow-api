@@ -52,8 +52,7 @@ public class BitBucketKPIServiceFactory {
 			throws ApplicationException {
 		BitBucketKPIService<?, ?, ?> service = BIT_BUCKET_SERVICE_CACHE.get(type);
 		if (service == null) {
-			throw new ApplicationException(
-					BitBucketKPIServiceFactory.class, "Bitbucket KPI Service Factory not initalized");
+			throw new ApplicationException(BitBucketKPIServiceFactory.class, "type", type);
 		}
 		return service;
 	}

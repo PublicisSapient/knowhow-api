@@ -569,10 +569,7 @@ public enum FieldMappingEnum {
 			"Mean Time To Merge (Developer) ",
 			KPISource.BITBUCKET.name(),
 			Arrays.asList("thresholdValueKPI158")),
-	KPI209(
-			"PR Cycle Time",
-			KPISource.BITBUCKET.name(),
-			Arrays.asList("thresholdValueKPI209")),
+	KPI209("PR Cycle Time", KPISource.BITBUCKET.name(), Arrays.asList("thresholdValueKPI209")),
 
 	KPI160(
 			"Pickup Time (Developer) ",
