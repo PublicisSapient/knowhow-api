@@ -63,7 +63,6 @@ public class ScmPRCycleTimeSlingshotServiceImpl
 				kpiRequest.getRequestTrackerId(),
 				projectNode);
 
-		if ("line".equalsIgnoreCase(kpiElement.getChartType())) {
 			Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 			calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.PR_CYCLE_TIME_SLINGSHOT);
 
@@ -73,9 +72,7 @@ public class ScmPRCycleTimeSlingshotServiceImpl
 			kpiElement.setTrendValueList(
 					DeveloperKpiHelper.prepareDataCountGroups(
 							trendValuesMap, KPICode.PR_CYCLE_TIME_SLINGSHOT.getKpiId()));
-		} else {
-			kpiElement.setTrendValueList(nodeMap.get(projectNode.getId()).getValue());
-		}
+
 		return kpiElement;
 	}
 
@@ -152,9 +149,8 @@ public class ScmPRCycleTimeSlingshotServiceImpl
 		}
 
 		List<RepoToolValidationData> validationDataList = new ArrayList<>();
-		String chartType = kpiElement.getChartType() != null ? kpiElement.getChartType() : "";
 		KpiCalculationStrategy<?> strategy =
-				kpiStrategyRegistry.getStrategy(KPICode.PR_CYCLE_TIME_SLINGSHOT, chartType);
+				kpiStrategyRegistry.getStrategy(KPICode.PR_CYCLE_TIME_SLINGSHOT, "line");
 		Object kpiTrendDataByGroup =
 				strategy.calculateKpi(
 						kpiRequest,
