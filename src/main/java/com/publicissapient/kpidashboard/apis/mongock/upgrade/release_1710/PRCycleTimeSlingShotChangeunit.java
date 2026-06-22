@@ -46,7 +46,6 @@ public class PRCycleTimeSlingShotChangeunit {
 	}
 
 	private void insertExcelColumnConfig() {
-		Document filter = new Document(KEY_BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, KPI_209);
 
 		Document kpiColumnConfig =
 				new Document(KEY_BASIC_PROJECT_CONFIG_ID, null)
@@ -162,7 +161,7 @@ public class PRCycleTimeSlingShotChangeunit {
 								"tooltip",
 								new Document()
 										.append(
-												"definition",
+												DEFINITION,
 												"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"))
 						.append("fieldDisplayOrder", 1)
 						.append("sectionOrder", 6)
