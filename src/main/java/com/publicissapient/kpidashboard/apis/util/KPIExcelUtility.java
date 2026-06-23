@@ -1553,6 +1553,7 @@ public class KPIExcelUtility {
 						excelData.setRepo(repoToolValidationData.getRepoUrl());
 						excelData.setBranch(repoToolValidationData.getBranchName());
 						excelData.setAuthor(repoToolValidationData.getDeveloperName());
+						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
 						if (repoToolValidationData.getPickupTime() != null) {
 							excelData.setPickupTime(

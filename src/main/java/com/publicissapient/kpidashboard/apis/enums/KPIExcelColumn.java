@@ -1185,7 +1185,20 @@ public enum KPIExcelColumn {
 					"Size (In Story Points)",
 					"Wait Time",
 					"Total Time",
-					"Flow Efficiency"));
+					"Flow Efficiency")),
+	TIME_TO_FIRST_REVIEW(
+			"kpi160",
+			Arrays.asList(
+					"Project",
+					"Repo",
+					"Branch",
+					"Days/Weeks",
+					"Author",
+					"Merge Request Url",
+					"PR Raised Time",
+					"PR Review Time",
+					"PR Status",
+					"Pickup Time (In Hours)")),;
 
 	// @formatter:on
 
