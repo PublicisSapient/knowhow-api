@@ -75,6 +75,19 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			boolean alreadyAdded =
 					cycleTimeList.stream().anyMatch(c -> history.getStoryID().equals(c.getIssueNumber()));
 			if (hasData && !alreadyAdded) {
+				double totalDays =
+						cycleTimeByGroup.values().stream()
+								.filter(v -> v.endsWith(" Days"))
+								.mapToDouble(
+										v -> {
+											try {
+												return Double.parseDouble(v.replace(" Days", "").trim());
+											} catch (NumberFormatException e) {
+												return 0;
+											}
+										})
+								.sum();
+				String totalFlowTime = (Math.round(totalDays * 10.0) / 10.0) + " Days";
 				cycleTimeList.add(
 						CycleTimeValidationData.builder()
 								.issueNumber(history.getStoryID())
@@ -83,6 +96,7 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 								.issueDesc(history.getDescription())
 								.sprintName(sprint)
 								.groupMap(cycleTimeByGroup)
+								.totalFlowTime(totalFlowTime)
 								.build());
 			}
 		}

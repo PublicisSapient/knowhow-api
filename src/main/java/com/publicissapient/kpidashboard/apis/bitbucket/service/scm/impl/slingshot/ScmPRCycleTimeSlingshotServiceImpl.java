@@ -29,6 +29,7 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.repotools.model.RepoToolValidationData;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
@@ -55,6 +56,8 @@ public class ScmPRCycleTimeSlingshotServiceImpl
 	@Override
 	public KpiElement getKpiData(KpiRequest kpiRequest, KpiElement kpiElement, Node projectNode)
 			throws ApplicationException {
+		kpiRequest.setXAxisDataPoints(12);
+		kpiRequest.setDuration(CommonConstant.WEEK);
 		Map<String, Node> nodeMap = Map.of(projectNode.getId(), projectNode);
 		calculateProjectKpiTrendData(kpiElement, nodeMap, projectNode, kpiRequest);
 

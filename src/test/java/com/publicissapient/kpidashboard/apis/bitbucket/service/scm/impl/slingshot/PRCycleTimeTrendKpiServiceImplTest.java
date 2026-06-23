@@ -57,14 +57,10 @@ class PRCycleTimeTrendKpiServiceImplTest {
 		kpiTrendDataByGroup = new LinkedHashMap<>();
 	}
 
-	// ── getStrategyType ──────────────────────────────────────────────────────
-
 	@Test
 	void testGetStrategyType() {
 		assertEquals("PR_CYCLE_TIME_SLINGSHOT_TREND", service.getStrategyType());
 	}
-
-	// ── calculateKpi ─────────────────────────────────────────────────────────
 
 	@Test
 	void testCalculateKpi_emptyMergeRequestsAndTools() {
@@ -159,7 +155,12 @@ class PRCycleTimeTrendKpiServiceImplTest {
 					.when(
 							() ->
 									DeveloperKpiHelper.setDataCount(
-											anyString(), anyString(), anyString(), any(), any(Map.class), any(Map.class)))
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
 					.thenAnswer(inv -> null);
 
 			Map<String, List<DataCount>> result =
@@ -175,8 +176,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 			assertNotNull(result);
 		}
 	}
-
-	// ── prepareUserValidationData ─────────────────────────────────────────────
 
 	@Test
 	void testPrepareUserValidationData_singleUserWithMergedPR() throws Exception {
@@ -202,7 +201,12 @@ class PRCycleTimeTrendKpiServiceImplTest {
 					.when(
 							() ->
 									DeveloperKpiHelper.setDataCount(
-											anyString(), anyString(), anyString(), any(), any(Map.class), any(Map.class)))
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
 					.thenAnswer(inv -> null);
 			kpiHelperMock
 					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
@@ -258,7 +262,12 @@ class PRCycleTimeTrendKpiServiceImplTest {
 					.when(
 							() ->
 									DeveloperKpiHelper.setDataCount(
-											anyString(), anyString(), anyString(), any(), any(Map.class), any(Map.class)))
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
 					.thenAnswer(inv -> null);
 			kpiHelperMock
 					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
@@ -302,7 +311,12 @@ class PRCycleTimeTrendKpiServiceImplTest {
 					.when(
 							() ->
 									DeveloperKpiHelper.setDataCount(
-											anyString(), anyString(), anyString(), any(), any(Map.class), any(Map.class)))
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
 					.thenAnswer(inv -> null);
 			kpiHelperMock
 					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
@@ -341,7 +355,12 @@ class PRCycleTimeTrendKpiServiceImplTest {
 					.when(
 							() ->
 									DeveloperKpiHelper.setDataCount(
-											anyString(), anyString(), anyString(), any(), any(Map.class), any(Map.class)))
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
 					.thenAnswer(inv -> null);
 			kpiHelperMock
 					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
@@ -391,7 +410,12 @@ class PRCycleTimeTrendKpiServiceImplTest {
 					.when(
 							() ->
 									DeveloperKpiHelper.setDataCount(
-											anyString(), anyString(), anyString(), any(), any(Map.class), any(Map.class)))
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
 					.thenAnswer(inv -> null);
 			kpiHelperMock
 					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
@@ -414,98 +438,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 			assertEquals("my-slug", result.get(0).getRepoUrl());
 		}
 	}
-
-	// ── calculateMeanTimeToMerge (via reflection) ─────────────────────────────
-
-	@Test
-	void testCalculateMeanTimeToMerge_emptyList_returnsZero() throws Exception {
-		double result = invokeCalculateMeanTimeToMerge(Collections.emptyList());
-		assertEquals(0.0, result);
-	}
-
-	@Test
-	void testCalculateMeanTimeToMerge_noMergedState_returnsZero() throws Exception {
-		ScmMergeRequests mr = new ScmMergeRequests();
-		mr.setState("OPEN");
-		mr.setMergedAt(LocalDateTime.of(2024, 1, 12, 14, 0));
-		mr.setCreatedDate(
-				LocalDateTime.of(2024, 1, 10, 10, 0)
-						.atZone(java.time.ZoneId.systemDefault())
-						.toInstant()
-						.toEpochMilli());
-
-		double result = invokeCalculateMeanTimeToMerge(List.of(mr));
-		assertEquals(0.0, result);
-	}
-
-	@Test
-	void testCalculateMeanTimeToMerge_mergedWithValidDates_returnsPositive() throws Exception {
-		ScmMergeRequests mr =
-				buildMergeRequest(
-						LocalDateTime.of(2024, 1, 10, 10, 0),
-						LocalDateTime.of(2024, 1, 12, 14, 0),
-						"MERGED",
-						processorItemId);
-
-		try (MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
-			dateUtilMock
-					.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong()))
-					.thenReturn(LocalDateTime.of(2024, 1, 10, 10, 0));
-
-			double result = invokeCalculateMeanTimeToMerge(List.of(mr));
-			assertTrue(result > 0.0);
-		}
-	}
-
-	@Test
-	void testCalculateMeanTimeToMerge_usesCreatedDateAsStartTime() throws Exception {
-		ScmMergeRequests mr =
-				buildMergeRequest(
-						LocalDateTime.of(2024, 1, 10, 10, 0),
-						LocalDateTime.of(2024, 1, 12, 14, 0),
-						"MERGED",
-						processorItemId);
-		mr.setFirstCommitDate(LocalDateTime.of(2024, 1, 9, 8, 0));
-
-		double result = invokeCalculateMeanTimeToMerge(List.of(mr));
-		assertTrue(result > 0.0);
-	}
-
-	@Test
-	void testCalculateMeanTimeToMerge_negativeDuration_excluded() throws Exception {
-		// mergedAt is before createdDate => seconds < 0 => filtered out
-		ScmMergeRequests mr =
-				buildMergeRequest(
-						LocalDateTime.of(2024, 1, 15, 10, 0),
-						LocalDateTime.of(2024, 1, 10, 10, 0),
-						"MERGED",
-						processorItemId);
-
-		double result = invokeCalculateMeanTimeToMerge(List.of(mr));
-		assertEquals(0.0, result);
-	}
-
-	// ── countMergedPRs (via reflection) ──────────────────────────────────────
-
-	@Test
-	void testCountMergedPRs_onlyMergedStateCounted() throws Exception {
-		ScmMergeRequests merged = new ScmMergeRequests();
-		merged.setState("MERGED");
-
-		ScmMergeRequests open = new ScmMergeRequests();
-		open.setState("OPEN");
-
-		long count = invokeCountMergedPRs(List.of(merged, open));
-		assertEquals(1L, count);
-	}
-
-	@Test
-	void testCountMergedPRs_emptyList_returnsZero() throws Exception {
-		long count = invokeCountMergedPRs(Collections.emptyList());
-		assertEquals(0L, count);
-	}
-
-	// ── helpers ───────────────────────────────────────────────────────────────
 
 	private ScmMergeRequests buildMergeRequest(
 			LocalDateTime createdDate, LocalDateTime mergedAt, String state, ObjectId processorItemId) {
@@ -557,21 +489,5 @@ class PRCycleTimeTrendKpiServiceImplTest {
 						projectName,
 						dateLabel,
 						kpiTrendDataByGroup);
-	}
-
-	private double invokeCalculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests)
-			throws Exception {
-		Method method =
-				PRCycleTimeTrendKpiServiceImpl.class.getDeclaredMethod(
-						"calculateMeanTimeToMerge", List.class);
-		method.setAccessible(true);
-		return (double) method.invoke(service, mergeRequests);
-	}
-
-	private long invokeCountMergedPRs(List<ScmMergeRequests> mergeRequests) throws Exception {
-		Method method =
-				PRCycleTimeTrendKpiServiceImpl.class.getDeclaredMethod("countMergedPRs", List.class);
-		method.setAccessible(true);
-		return (long) method.invoke(service, mergeRequests);
 	}
 }

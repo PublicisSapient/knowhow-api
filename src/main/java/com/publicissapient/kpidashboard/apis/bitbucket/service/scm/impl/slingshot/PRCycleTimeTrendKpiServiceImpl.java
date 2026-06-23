@@ -70,11 +70,14 @@ public class PRCycleTimeTrendKpiServiceImpl
 
 	private List<ScmMergeRequests> filterMergedRequestsByDateRange(
 			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
-		LocalDateTime start = dateRange.getStartDate().atStartOfDay();
-		LocalDateTime end = dateRange.getEndDate().atTime(23, 59, 59);
 		return mergeRequests.stream()
 				.filter(request -> request.getMergedAt() != null)
-				.filter(request -> DateUtil.isWithinDateTimeRange(request.getMergedAt(), start, end))
+				.filter(
+						request ->
+								DateUtil.isWithinDateTimeRange(
+										request.getMergedAt(),
+										dateRange.getStartDateTime(),
+										dateRange.getEndDateTime()))
 				.toList();
 	}
 
@@ -94,16 +97,14 @@ public class PRCycleTimeTrendKpiServiceImpl
 		List<ScmMergeRequests> mergeRequestsForBranch =
 				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		double meanTimeToMergeSeconds = calculateMeanTimeToMerge(mergeRequestsForBranch);
-		long meanTimeToMergeHours =
-				KpiHelperService.convertMilliSecondsToHours(meanTimeToMergeSeconds * MILLIS_PER_SECOND);
+		long sumTimeToMergeHours = calculateSumTimeToMerge(mergeRequestsForBranch);
 		long mergedPrCount = countMergedPRs(mergeRequestsForBranch);
 
 		DeveloperKpiHelper.setDataCount(
 				projectName,
 				dateLabel,
 				branchName + "#" + Constant.AGGREGATED_VALUE,
-				meanTimeToMergeHours,
+				sumTimeToMergeHours,
 				Map.of("No. of PRs", mergedPrCount),
 				kpiTrendDataByGroup);
 
@@ -129,22 +130,24 @@ public class PRCycleTimeTrendKpiServiceImpl
 							List<ScmMergeRequests> userMergeRequests = entry.getValue();
 							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 
-							double userAverageSeconds = calculateMeanTimeToMerge(userMergeRequests);
-							Long userAverageHrs =
-									KpiHelperService.convertMilliSecondsToHours(
-											userAverageSeconds * MILLIS_PER_SECOND);
+							Long userSumHrs = calculateSumTimeToMerge(userMergeRequests);
 							long userMergedPrCount = countMergedPRs(userMergeRequests);
 
 							DeveloperKpiHelper.setDataCount(
 									projectName,
 									dateLabel,
 									branchName + "#" + developerName,
-									userAverageHrs,
+									userSumHrs,
 									Map.of("No. of PRs", userMergedPrCount),
 									kpiTrendDataByGroup);
 
 							return userMergeRequests.stream()
-									.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
+									.filter(mr -> mr.getMergedAt() != null)
+									.filter(
+											mr ->
+													ScmMergeRequests.MergeRequestState.MERGED
+															.name()
+															.equalsIgnoreCase(mr.getState()))
 									.map(
 											mr ->
 													createValidationData(
@@ -193,31 +196,24 @@ public class PRCycleTimeTrendKpiServiceImpl
 				.count();
 	}
 
-	private double calculateMeanTimeToMerge(List<ScmMergeRequests> mergeRequests) {
+	private long calculateSumTimeToMerge(List<ScmMergeRequests> mergeRequests) {
 		if (CollectionUtils.isEmpty(mergeRequests)) {
-			return 0.0;
+			return 0L;
 		}
-		List<Long> timeToMergeList =
-				mergeRequests.stream()
-						.filter(mr -> mr.getMergedAt() != null)
-						.filter(
-								mr ->
-										ScmMergeRequests.MergeRequestState.MERGED
-												.name()
-												.equalsIgnoreCase(mr.getState()))
-						.filter(mr -> mr.getCreatedDate() != null)
-						.map(
-								mr -> {
-									LocalDateTime startTime =
-											DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
-									return ChronoUnit.SECONDS.between(startTime, mr.getMergedAt());
-								})
-						.filter(seconds -> seconds > 0)
-						.toList();
-
-		return CollectionUtils.isEmpty(timeToMergeList)
-				? 0.0
-				: timeToMergeList.stream().mapToLong(Long::longValue).average().orElse(0.0);
+		return mergeRequests.stream()
+				.filter(mr -> mr.getMergedAt() != null)
+				.filter(
+						mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
+				.filter(mr -> mr.getCreatedDate() != null)
+				.mapToLong(
+						mr -> {
+							LocalDateTime startTime = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+							long seconds = ChronoUnit.SECONDS.between(startTime, mr.getMergedAt());
+							if (seconds <= 0) return 0L;
+							return KpiHelperService.convertMilliSecondsToHours(
+									seconds * (double) MILLIS_PER_SECOND);
+						})
+				.sum();
 	}
 
 	@Override

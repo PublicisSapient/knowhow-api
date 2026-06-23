@@ -5335,7 +5335,7 @@
     "thresholdValue": "",
     "kanban": false,
     "chartType": "stacked-bar-chart",
-    "yAxisLabel": "",
+    "yAxisLabel": "Days",
     "xAxisLabel": "",
     "isAdditionalFilterSupport": false,
     "kpiFilter": "dropDown",
@@ -5517,8 +5517,8 @@
         }
       ]
     },
-    "xaxisLabel": "Time",
-    "yaxisLabel": "Count",
+    "xAxisLabel": "Time",
+    "yAxisLabel": "Count",
     "isPositiveTrend": false,
     "kpiFilter": "",
     "showTrend": false,
@@ -5582,6 +5582,7 @@
     "aggregationCriteria" : "average",
     "isAdditionalFilterSupport" : false,
     "isRepoToolKpi" : true,
-    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab"
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "forecastModel" : "thetaMethod"
   }
 ]
