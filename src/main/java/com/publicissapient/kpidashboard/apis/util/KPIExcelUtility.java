@@ -1191,7 +1191,14 @@ public class KPIExcelUtility {
 			excelData.setIssueDesc(cycleTime.getIssueDesc());
 			excelData.setIssueType(cycleTime.getIssueType());
 			excelData.setSprintName(cycleTime.getSprintName());
-			excelData.setGroupMap(cycleTime.getGroupMap());
+			LinkedHashMap<String, String> groupMapWithTotal = new LinkedHashMap<>();
+			if (cycleTime.getGroupMap() != null) {
+				groupMapWithTotal.putAll(cycleTime.getGroupMap());
+			}
+			if (cycleTime.getTotalFlowTime() != null) {
+				groupMapWithTotal.put("Total Flow Time", cycleTime.getTotalFlowTime());
+			}
+			excelData.setGroupMap(groupMapWithTotal);
 			excelDataList.add(excelData);
 		}
 	}

@@ -58,7 +58,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SprintVelocitySlingshotServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
-	private static final String VELOCITY = "Velocity";
+	private static final String COUNT = "Count: ";
+	private static final String STORY_POINTS = "Story Points: ";
 	// private static final String AVERAGE_VELOCITY = "Average Velocity";
 	// private static final String COMMITTED_SCOPE = "Committed Scope";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
@@ -399,7 +400,7 @@ public class SprintVelocitySlingshotServiceImpl
 						dataCount.setLineValue(roundingOff(averageVelocity));
 						dataCount.setAggregationValue(roundingOff(committedScope));
 						Map<String, Object> hoverValue = new HashMap<>();
-						hoverValue.put(VELOCITY, roundingOff((Double) dataCount.getValue()));
+						hoverValue.put(COUNT, roundingOff((Double) dataCount.getValue()));
 						// hoverValue.put(AVERAGE_VELOCITY, roundingOff(averageVelocity));
 						// hoverValue.put(COMMITTED_SCOPE, roundingOff(committedScope));
 						dataCount.setHoverValue(hoverValue);
@@ -409,7 +410,7 @@ public class SprintVelocitySlingshotServiceImpl
 						subfilterValues.put(
 								"storyPointsAggregationValue", roundingOff(committedScopeStoryPoints));
 						Map<String, Object> storyPointsHoverValue = new HashMap<>();
-						storyPointsHoverValue.put(VELOCITY, roundingOff(storyPointsVelocity));
+						storyPointsHoverValue.put(STORY_POINTS, roundingOff(storyPointsVelocity));
 						subfilterValues.put("hoverValue", storyPointsHoverValue);
 						dataCount.setSubfilterValues(subfilterValues);
 						avgVelocityCount.put(projId, avgVelocityCount.get(projId) + 1);
@@ -574,7 +575,7 @@ public class SprintVelocitySlingshotServiceImpl
 			dc.setLineValue(roundingOff(avgLineValue));
 			dc.setAggregationValue(roundingOff(pairCommittedScope));
 			Map<String, Object> hoverValue = new HashMap<>();
-			hoverValue.put(VELOCITY, roundingOff(pairVelocity));
+			hoverValue.put(COUNT, roundingOff(pairVelocity));
 			// hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
 			// hoverValue.put(COMMITTED_SCOPE, roundingOff(pairCommittedScope));
 			dc.setHoverValue(hoverValue);
@@ -612,7 +613,7 @@ public class SprintVelocitySlingshotServiceImpl
 			subfilterValues.put("storyPointsLineValue", roundingOff(avgSPLineValue));
 			subfilterValues.put("storyPointsAggregationValue", roundingOff(pairSPCommitted));
 			Map<String, Object> storyPointsHoverValue = new HashMap<>();
-			storyPointsHoverValue.put(VELOCITY, roundingOff(pairSP));
+			storyPointsHoverValue.put(STORY_POINTS, roundingOff(pairSP));
 			subfilterValues.put("hoverValue", storyPointsHoverValue);
 			dc.setSubfilterValues(subfilterValues);
 			biWeeklyList.add(dc);
@@ -693,7 +694,7 @@ public class SprintVelocitySlingshotServiceImpl
 					dc.setLineValue(roundingOff(avgLineValue));
 					dc.setAggregationValue(roundingOff(monthCommittedScope));
 					Map<String, Object> hoverValue = new HashMap<>();
-					hoverValue.put(VELOCITY, roundingOff(monthVelocity));
+					hoverValue.put(COUNT, roundingOff(monthVelocity));
 					// hoverValue.put(AVERAGE_VELOCITY, roundingOff(avgLineValue));
 					// hoverValue.put(COMMITTED_SCOPE, roundingOff(monthCommittedScope));
 					dc.setHoverValue(hoverValue);
@@ -702,7 +703,7 @@ public class SprintVelocitySlingshotServiceImpl
 					subfilterValues.put("storyPointsLineValue", roundingOff(avgSPLineValue));
 					subfilterValues.put("storyPointsAggregationValue", roundingOff(monthSPCommitted));
 					Map<String, Object> storyPointsHoverValue = new HashMap<>();
-					storyPointsHoverValue.put(VELOCITY, roundingOff(monthSP));
+					storyPointsHoverValue.put(STORY_POINTS, roundingOff(monthSP));
 					subfilterValues.put("hoverValue", storyPointsHoverValue);
 					dc.setSubfilterValues(subfilterValues);
 					monthlyList.add(dc);

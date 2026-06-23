@@ -243,6 +243,13 @@ public class CycleTimeSlingshotServiceImpl
 			current = iterator.hasNext() ? iterator.next() : null;
 		}
 		if (CollectionUtils.isNotEmpty(dataValueList)) {
+			double totalDays =
+					dataValueList.stream()
+							.mapToDouble(
+									dv ->
+											dv.getValue() instanceof Number ? ((Number) dv.getValue()).doubleValue() : 0)
+							.sum();
+			String totalFlowTime = (Math.round(totalDays * 10.0) / 10.0) + " Days";
 			cycleTimeList.add(
 					CycleTimeValidationData.builder()
 							.issueNumber(history.getStoryID())
@@ -250,6 +257,7 @@ public class CycleTimeSlingshotServiceImpl
 							.issueType(history.getStoryType())
 							.issueDesc(history.getDescription())
 							.groupMap(cycleTimeByGroup)
+							.totalFlowTime(totalFlowTime)
 							.build());
 			cycleMap.put(history.getStoryID() + "#" + history.getStoryType(), dataValueList);
 		}
