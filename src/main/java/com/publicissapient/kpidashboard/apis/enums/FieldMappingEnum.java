@@ -868,7 +868,8 @@ public enum FieldMappingEnum {
 			Arrays.asList(
 					"jiraIterationCompletionStatusKPI205",
 					"jiraIterationIssueTypeKPI205",
-					"thresholdValueKPI205")),
+					"thresholdValueKPI205",
+					"weeklyDataStartDateKPI205")),
 	KPI206(
 			"Flow Load",
 			KPISource.JIRA.name(),

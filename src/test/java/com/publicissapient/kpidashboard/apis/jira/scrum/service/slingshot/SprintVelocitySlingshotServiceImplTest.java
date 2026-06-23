@@ -321,6 +321,78 @@ public class SprintVelocitySlingshotServiceImplTest {
 						});
 	}
 
+	@Test
+	public void testGetKpiDataWithPastReferenceDate() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205(
+				java.time.LocalDate.now()
+						.minusDays(10)
+						.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createMockJiraIssues());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+	}
+
+	@Test
+	public void testGetKpiDataWithFutureReferenceDate() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205(
+				java.time.LocalDate.now()
+						.plusDays(5)
+						.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createMockJiraIssues());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+	}
+
+	@Test
+	public void testGetKpiDataWithInvalidReferenceDate() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205("not-a-date");
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createMockJiraIssues());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+	}
+
 	private List<JiraIssue> createMockJiraIssues() {
 		List<JiraIssue> issues = new ArrayList<>();
 
