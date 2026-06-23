@@ -166,10 +166,12 @@ public class FlowEfficiencySlingshotServiceImpl
 				waitTimeList,
 				totalTimeList,
 				fieldMapping);
+		Map<String, LinkedHashMap<String, String>> issueGroupMap =
+				buildIssueGroupMap(rangeAndStatusWiseJiraIssueMap, rangeList);
 		LinkedHashMap<String, List<DataCount>> dataCountMap =
 				setDataCountMap(rangeAndStatusWiseJiraIssueMap, flowEfficiencyMap, leafNode, issueTypesSet);
 		populateExcelDataObject(
-				requestTrackerId, excelData, flowEfficiencyMap, waitTimeList, totalTimeList);
+				requestTrackerId, excelData, flowEfficiencyMap, waitTimeList, totalTimeList, issueGroupMap);
 		if (leafNode != null) leafNode.setValue(dataCountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =
@@ -437,18 +439,56 @@ public class FlowEfficiencySlingshotServiceImpl
 	 * @param flowEfficiencyMap map of flow efficiency by jira issue
 	 * @param waitTimeList wait time list
 	 * @param totalTimeList total time list
+	 * @param issueGroupMap map of issue id to range-based Y/N group map
 	 */
 	private void populateExcelDataObject(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
 			LinkedHashMap<JiraIssueCustomHistory, Double> flowEfficiencyMap,
 			List<String> waitTimeList,
-			List<String> totalTimeList) {
+			List<String> totalTimeList,
+			Map<String, LinkedHashMap<String, String>> issueGroupMap) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateFlowEfficiency(
-					flowEfficiencyMap, waitTimeList, totalTimeList, excelData);
+					flowEfficiencyMap, waitTimeList, totalTimeList, excelData, issueGroupMap);
 		}
+	}
+
+	private Map<String, LinkedHashMap<String, String>> buildIssueGroupMap(
+			Map<String, Map<String, List<JiraIssueCustomHistory>>> rangeAndStatusWiseJiraIssueMap,
+			List<String> orderedRanges) {
+		Map<String, Set<String>> rangeToIssueIds = new LinkedHashMap<>();
+		for (String range : orderedRanges) {
+			rangeToIssueIds.put(
+					range,
+					rangeAndStatusWiseJiraIssueMap.getOrDefault(range, Map.of()).values().stream()
+							.flatMap(List::stream)
+							.map(JiraIssueCustomHistory::getStoryID)
+							.collect(Collectors.toSet()));
+		}
+		Map<String, LinkedHashMap<String, String>> issueGroupMap = new LinkedHashMap<>();
+		rangeAndStatusWiseJiraIssueMap.values().stream()
+				.flatMap(typeMap -> typeMap.values().stream())
+				.flatMap(List::stream)
+				.forEach(
+						issue ->
+								issueGroupMap.computeIfAbsent(
+										issue.getStoryID(),
+										k -> {
+											LinkedHashMap<String, String> groupMap = new LinkedHashMap<>();
+											for (String range : orderedRanges) {
+												groupMap.put(
+														range,
+														rangeToIssueIds
+																		.getOrDefault(range, Set.of())
+																		.contains(issue.getStoryID())
+																? "Y"
+																: "N");
+											}
+											return groupMap;
+										}));
+		return issueGroupMap;
 	}
 
 	@Override

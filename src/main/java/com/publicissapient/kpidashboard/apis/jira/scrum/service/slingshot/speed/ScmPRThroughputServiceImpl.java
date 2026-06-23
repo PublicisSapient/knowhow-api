@@ -212,7 +212,6 @@ public class ScmPRThroughputServiceImpl
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
-		kpiTrendDataByGroup.values().forEach(Collections::reverse);
 		Collections.reverse(validationDataList);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}

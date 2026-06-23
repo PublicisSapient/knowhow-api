@@ -212,20 +212,20 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 			Map<String, Map<String, Integer>> dateWithStatusCount, FieldMapping fieldMapping) {
 		List<String> columns = new ArrayList<>(KPIExcelColumn.FLOW_LOAD_SLINGSHOT.getColumns());
 
-		Set<String> statuses =
-				dateWithStatusCount.values().stream()
-						.flatMap(m -> m.keySet().stream())
-						.collect(Collectors.toCollection(TreeSet::new));
-		columns.addAll(statuses);
-
 		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
 		if (CollectionUtils.isNotEmpty(cycleTimeGroups)) {
 			cycleTimeGroups.stream()
 					.map(CycleTimeGroup::getLabel)
 					.filter(Objects::nonNull)
 					.distinct()
-					.forEach(columns::add);
+					.forEach(label -> columns.add("Group - " + label));
 		}
+
+		Set<String> statuses =
+				dateWithStatusCount.values().stream()
+						.flatMap(m -> m.keySet().stream())
+						.collect(Collectors.toCollection(TreeSet::new));
+		columns.addAll(statuses);
 
 		return columns;
 	}
@@ -235,24 +235,22 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI206();
 		if (CollectionUtils.isEmpty(cycleTimeGroups)) return;
 
-		Map<String, String> statusToGroupLabel = new HashMap<>();
-		for (CycleTimeGroup group : cycleTimeGroups) {
-			for (String status : group.getStatuses()) {
-				statusToGroupLabel.put(status.replace(" ", "-"), group.getLabel());
-			}
-		}
-
 		dateStatusIdsMap.forEach(
 				(date, statusIdsMap) -> {
-					Map<String, List<String>> groupIdsMap = new LinkedHashMap<>();
-					statusIdsMap.forEach(
-							(status, ids) -> {
-								String groupLabel = statusToGroupLabel.get(status);
-								if (groupLabel != null) {
-									groupIdsMap.computeIfAbsent(groupLabel, k -> new ArrayList<>()).addAll(ids);
-								}
-							});
-					statusIdsMap.putAll(groupIdsMap);
+					Map<String, List<String>> newMap = new LinkedHashMap<>();
+					for (CycleTimeGroup group : cycleTimeGroups) {
+						List<String> groupIds = new ArrayList<>();
+						for (String status : group.getStatuses()) {
+							List<String> ids = statusIdsMap.get(status.replace(" ", "-"));
+							if (ids != null) {
+								groupIds.addAll(ids);
+							}
+						}
+						newMap.put("Group - " + group.getLabel(), groupIds);
+					}
+					newMap.putAll(statusIdsMap);
+					statusIdsMap.clear();
+					statusIdsMap.putAll(newMap);
 				});
 	}
 
@@ -295,7 +293,7 @@ public class FlowLoadSlingshotServiceImpl extends JiraBacklogKPIService<Double, 
 		Map<String, Map<String, List<String>>> dateStatusIdsMap = new HashMap<>();
 		LocalDate current = startDate;
 		while (!current.isAfter(endDate)) {
-			dateStatusIdsMap.put(current.toString(), new HashMap<>());
+			dateStatusIdsMap.put(current.toString(), new LinkedHashMap<>());
 			current = current.plusDays(1);
 		}
 

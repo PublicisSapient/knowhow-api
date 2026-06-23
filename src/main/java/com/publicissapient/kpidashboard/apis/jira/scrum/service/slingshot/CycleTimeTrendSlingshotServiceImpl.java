@@ -5,6 +5,7 @@ import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HI
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -174,8 +175,15 @@ public class CycleTimeTrendSlingshotServiceImpl
 
 					List<SprintDetails> sprintDetailsList =
 							sprintDetailsService.getSprintDetailsByIds(sprintIdList);
+					List<SprintDetails> sortedSprintList =
+							sprintDetailsList.stream()
+									.sorted(
+											Comparator.comparing(
+													SprintDetails::getStartDate,
+													Comparator.nullsLast(Comparator.naturalOrder())))
+									.toList();
 					List<SprintDetails> limitedSprintList =
-							sprintDetailsList.stream().skip(Math.max(0, sprintDetailsList.size() - 15)).toList();
+							sortedSprintList.stream().skip(Math.max(0, sortedSprintList.size() - 15)).toList();
 					resultListMap.put(HISTORY, filteredProjectHistory);
 					resultListMap.put("sprints", limitedSprintList);
 				});

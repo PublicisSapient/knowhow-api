@@ -569,6 +569,7 @@ public enum FieldMappingEnum {
 			"Mean Time To Merge (Developer) ",
 			KPISource.BITBUCKET.name(),
 			Arrays.asList("thresholdValueKPI158")),
+	KPI209("PR Cycle Time", KPISource.BITBUCKET.name(), Arrays.asList("thresholdValueKPI209")),
 
 	KPI160(
 			"Pickup Time (Developer) ",
@@ -867,7 +868,8 @@ public enum FieldMappingEnum {
 			Arrays.asList(
 					"jiraIterationCompletionStatusKPI205",
 					"jiraIterationIssueTypeKPI205",
-					"thresholdValueKPI205")),
+					"thresholdValueKPI205",
+					"weeklyDataStartDateKPI205")),
 	KPI206(
 			"Flow Load",
 			KPISource.JIRA.name(),

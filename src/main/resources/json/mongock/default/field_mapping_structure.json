@@ -3452,6 +3452,19 @@
     "mandatory": false
   },
   {
+    "fieldName": "weeklyDataStartDateKPI205",
+    "fieldLabel": "Weekly cycle Reference Start Date",
+    "fieldType": "text",
+    "processorCommon": false,
+    "fieldDisplayOrder": 2,
+    "sectionOrder": 7,
+    "section": "Custom Fields Mapping",
+    "tooltip": {
+      "definition": "Reference date used to align weekly data point boundaries for Flow Velocity. Enter a date in yyyy-MM-dd format (e.g. 2026-06-17). The system will compute 7-day cycle boundaries anchored to this date, always starting the first data point from the next boundary after the current date. If left blank or invalid, the default Monday-based week boundary is used."
+    },
+    "mandatory": false
+  },
+  {
     "fieldName": "jiraIssueTypeNamesKPI206",
     "fieldLabel": "Issue types to be included",
     "fieldType": "chips",

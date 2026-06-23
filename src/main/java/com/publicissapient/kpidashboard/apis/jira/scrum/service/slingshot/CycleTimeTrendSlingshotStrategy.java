@@ -60,9 +60,10 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			JiraIssueCustomHistory history,
 			List<CycleTimeValidationData> cycleTimeList) {
 		if (history != null) {
+			List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
 			LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
-			Iterator<CycleTimeGroup> iterator =
-					fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+			cycleTimeGroups.forEach(g -> cycleTimeByGroup.put(g.getLabel(), ""));
+			Iterator<CycleTimeGroup> iterator = cycleTimeGroups.iterator();
 			CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
 			while (current != null) {
 				setCycleTime(current, history, filterMap, sprint, iterator.hasNext(), cycleTimeByGroup);
@@ -70,9 +71,10 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 				issueTypesSet.add(history.getStoryType());
 				current = iterator.hasNext() ? iterator.next() : null;
 			}
+			boolean hasData = cycleTimeByGroup.values().stream().anyMatch(v -> !v.isEmpty());
 			boolean alreadyAdded =
 					cycleTimeList.stream().anyMatch(c -> history.getStoryID().equals(c.getIssueNumber()));
-			if (!cycleTimeByGroup.isEmpty() && !alreadyAdded) {
+			if (hasData && !alreadyAdded) {
 				cycleTimeList.add(
 						CycleTimeValidationData.builder()
 								.issueNumber(history.getStoryID())
