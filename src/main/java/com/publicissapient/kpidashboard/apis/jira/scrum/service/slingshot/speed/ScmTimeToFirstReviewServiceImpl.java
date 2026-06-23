@@ -171,7 +171,6 @@ public class ScmTimeToFirstReviewServiceImpl extends BitBucketKPIService<Long, L
                 new HashSet<>(assigneeList),
                 projectLeafNode.getProjectFilter().getName());
         mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
-//        kpiTrendDataByGroup.values().forEach(Collections::reverse);
         Collections.reverse(validationDataList);
         populateExcelData(requestTrackerId, validationDataList, kpiElement);
     }
