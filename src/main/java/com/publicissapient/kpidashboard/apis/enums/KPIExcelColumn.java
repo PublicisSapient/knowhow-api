@@ -1211,7 +1211,8 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Review Time",
 					"PR Status",
-					"Pickup Time (In Hours)")),;
+					"Pickup Time (In Hours)")),
+	;
 
 	// @formatter:on
 

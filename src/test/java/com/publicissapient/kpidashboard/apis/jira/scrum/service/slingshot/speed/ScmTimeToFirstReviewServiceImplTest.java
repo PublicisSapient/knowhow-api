@@ -76,18 +76,30 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new ScmTimeToFirstReviewServiceImpl(configHelperService, kpiHelperService, scmKpiHelperService);
+		service =
+				new ScmTimeToFirstReviewServiceImpl(
+						configHelperService, kpiHelperService, scmKpiHelperService);
 
 		// Inject parent class fields via reflection
 		Class<?> parentClass = ToolsKPIService.class;
-		ReflectionTestUtils.setField(service, parentClass, "cacheService", cacheService, CacheService.class);
-		ReflectionTestUtils.setField(service, parentClass, "commonService", commonService, CommonService.class);
-		ReflectionTestUtils.setField(service, parentClass, "configHelperService", configHelperService, ConfigHelperService.class);
-		ReflectionTestUtils.setField(service, parentClass, "customApiConfig", customApiConfig, CustomApiConfig.class);
+		ReflectionTestUtils.setField(
+				service, parentClass, "cacheService", cacheService, CacheService.class);
+		ReflectionTestUtils.setField(
+				service, parentClass, "commonService", commonService, CommonService.class);
+		ReflectionTestUtils.setField(
+				service,
+				parentClass,
+				"configHelperService",
+				configHelperService,
+				ConfigHelperService.class);
+		ReflectionTestUtils.setField(
+				service, parentClass, "customApiConfig", customApiConfig, CustomApiConfig.class);
 
 		Class<?> bitbucketParentClass = BitBucketKPIService.class;
-		ReflectionTestUtils.setField(service, bitbucketParentClass, "cacheService", cacheService, CacheService.class);
-		ReflectionTestUtils.setField(service, bitbucketParentClass, "commonService", commonService, CommonService.class);
+		ReflectionTestUtils.setField(
+				service, bitbucketParentClass, "cacheService", cacheService, CacheService.class);
+		ReflectionTestUtils.setField(
+				service, bitbucketParentClass, "commonService", commonService, CommonService.class);
 
 		// Common mock setup
 		Map<String, String> aggregationCriteria = new HashMap<>();
@@ -113,7 +125,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 		kpiRequest = new KpiRequest();
 		kpiRequest.setLabel("PROJECT");
-		kpiRequest.setIds(new String[]{"project1"});
+		kpiRequest.setIds(new String[] {"project1"});
 		kpiRequest.setSelectedMap(new HashMap<>());
 		kpiRequest.setXAxisDataPoints(2);
 		kpiRequest.setDuration("WEEK");
@@ -146,7 +158,8 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 	@Test
 	void testCalculateKpiValue_nonEmptyList() {
-		Long result = service.calculateKpiValue(List.of(10L, 20L), KPICode.TIME_TO_FIRST_REVIEW.getKpiId());
+		Long result =
+				service.calculateKpiValue(List.of(10L, 20L), KPICode.TIME_TO_FIRST_REVIEW.getKpiId());
 		assertNotNull(result);
 	}
 
@@ -196,9 +209,11 @@ class ScmTimeToFirstReviewServiceImplTest {
 		Assignee assignee = new Assignee("u1", "User One", Collections.emptySet());
 
 		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any())).thenReturn(List.of(mr));
-		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenReturn(List.of(assignee));
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class)))
+				.thenReturn(List.of(assignee));
 
-		Map<String, Object> result = service.fetchKPIDataFromDb(List.of(projectNode), null, null, kpiRequest);
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(List.of(projectNode), null, null, kpiRequest);
 
 		assertNotNull(result);
 		assertTrue(result.containsKey("assigneeSet"));
@@ -209,10 +224,13 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 	@Test
 	void testFetchKPIDataFromDb_emptyResults() {
-		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any())).thenReturn(Collections.emptyList());
-		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class))).thenReturn(Collections.emptyList());
+		when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any()))
+				.thenReturn(Collections.emptyList());
+		when(scmKpiHelperService.getJiraAssigneeForScmUsers(any(ObjectId.class)))
+				.thenReturn(Collections.emptyList());
 
-		Map<String, Object> result = service.fetchKPIDataFromDb(List.of(projectNode), null, null, kpiRequest);
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(List.of(projectNode), null, null, kpiRequest);
 
 		assertTrue(((List<?>) result.get("mrsList")).isEmpty());
 		assertTrue(((List<?>) result.get("assigneeSet")).isEmpty());
@@ -270,9 +288,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
 			setupDeveloperKpiHelperMocks(devHelperMock);
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -286,14 +302,19 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
 					.thenReturn(LocalDateTime.now().minusWeeks(1));
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.prepareDataCountGroups(
-							ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
+					.when(
+							() ->
+									DeveloperKpiHelper.prepareDataCountGroups(
+											ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
 					.thenReturn(List.of());
 
 			when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any()))
@@ -315,12 +336,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 		ScmMergeRequests mr = createMergeRequest("dev@example.com", 3);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
-			 MockedStatic<KPIExcelUtility> excelMock = mockStatic(KPIExcelUtility.class)) {
+				MockedStatic<KPIExcelUtility> excelMock = mockStatic(KPIExcelUtility.class)) {
 
 			setupDeveloperKpiHelperMocks(devHelperMock);
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -334,14 +353,19 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
 					.thenReturn(LocalDateTime.now().minusWeeks(1));
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.prepareDataCountGroups(
-							ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
+					.when(
+							() ->
+									DeveloperKpiHelper.prepareDataCountGroups(
+											ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
 					.thenReturn(List.of());
 			excelMock
 					.when(() -> KPIExcelUtility.populatePickupTimeExcelData(any(), any()))
@@ -368,15 +392,15 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
 			setupDeveloperKpiHelperMocks(devHelperMock);
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(false);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(false);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
 					.thenReturn(LocalDateTime.now().minusWeeks(1));
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.prepareDataCountGroups(
-							ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
+					.when(
+							() ->
+									DeveloperKpiHelper.prepareDataCountGroups(
+											ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
 					.thenReturn(List.of());
 
 			when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any()))
@@ -398,9 +422,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		ScmMergeRequests mr = createMergeRequest("dev@example.com", 4);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -414,7 +436,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -426,8 +451,9 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
 		}
@@ -436,9 +462,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 	@Test
 	void testCalculateKpi_emptyMergeRequests() {
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -449,7 +473,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(anyList()))
 					.thenReturn(Collections.emptyMap());
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -461,8 +488,14 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, Collections.emptyList(), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							Collections.emptyList(),
+							List.of(tool),
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 			assertTrue(validationDataList.isEmpty());
@@ -474,9 +507,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		ScmMergeRequests mr = createMergeRequest("dev@example.com", 2);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -490,7 +521,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -502,8 +536,9 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
 		}
@@ -514,9 +549,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		ScmMergeRequests mr = createMergeRequest("dev@example.com", 2);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(false);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(false);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
 					.thenReturn(LocalDateTime.now().minusWeeks(1));
@@ -527,8 +560,9 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
 			assertTrue(result.isEmpty());
@@ -547,9 +581,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		tool2.setProcessorItemList(List.of(pi2));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -563,7 +595,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -575,8 +610,14 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(tool, tool2), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							List.of(mr),
+							List.of(tool, tool2),
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -591,9 +632,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		assignees.add(assignee);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -607,7 +646,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -618,8 +660,9 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
 		}
@@ -631,9 +674,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		ScmMergeRequests mr2 = createMergeRequest("dev2@example.com", 4);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -647,7 +688,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenAnswer(inv -> inv.getArgument(0));
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -659,8 +703,14 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr1, mr2), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							List.of(mr1, mr2),
+							List.of(tool),
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -675,9 +725,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		mr.setCreatedDate(toMillis(LocalDateTime.now().minusHours(5)));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -688,7 +736,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(anyList()))
 					.thenReturn(Collections.emptyMap());
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -700,8 +751,9 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
 		}
@@ -717,9 +769,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		repoNameTool.setProcessorItemList(List.of(processorItem));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("develop -> my-repo -> TestProject");
@@ -733,7 +783,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -745,8 +798,14 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr), List.of(repoNameTool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							List.of(mr),
+							List.of(repoNameTool),
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -758,9 +817,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 		ScmMergeRequests mr2 = createMergeRequest("dev@example.com", 6);
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
-			devHelperMock
-					.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class)))
-					.thenReturn(true);
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
 					.thenReturn("main -> test-repo -> TestProject");
@@ -774,7 +831,10 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
 					.thenReturn("Dev User");
 			devHelperMock
-					.when(() -> DeveloperKpiHelper.setDataCount(anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
 					.thenAnswer(inv -> null);
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
@@ -786,8 +846,14 @@ class ScmTimeToFirstReviewServiceImplTest {
 			List<RepoToolValidationData> validationDataList = new ArrayList<>();
 			Set<Assignee> assignees = new HashSet<>();
 
-			Map<String, List<DataCount>> result = service.calculateKpi(
-					kpiRequest, List.of(mr1, mr2), List.of(tool), validationDataList, assignees, "TestProject");
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest,
+							List.of(mr1, mr2),
+							List.of(tool),
+							validationDataList,
+							assignees,
+							"TestProject");
 
 			assertNotNull(result);
 		}
@@ -795,7 +861,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 
 	private void stubTrackerId(String trackerId) {
 		when(cacheService.getFromApplicationCache(
-				Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.BITBUCKET.name()))
 				.thenReturn(trackerId);
 	}
 
@@ -831,4 +897,3 @@ class ScmTimeToFirstReviewServiceImplTest {
 		return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 	}
 }
-
