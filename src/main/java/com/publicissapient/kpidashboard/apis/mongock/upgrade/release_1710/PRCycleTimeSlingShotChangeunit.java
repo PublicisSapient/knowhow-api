@@ -5,6 +5,8 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import com.mongodb.client.model.ReplaceOptions;
+
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -22,9 +24,10 @@ public class PRCycleTimeSlingShotChangeunit {
 	private static final String KPI_209 = "kpi209";
 	private static final String KPI_MASTER = "kpi_master";
 	private static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
+	private static final String FIELD_NAME = "fieldName";
+	private static final String THRESHOLD_VALUE_KPI209 = "thresholdValueKPI209";
 
 	private static final String DEFINITION = "definition";
-	private static final String CLASS = "_class";
 	private static final String KEY_BASIC_PROJECT_CONFIG_ID = "basicProjectConfigId";
 	private static final String KEY_KPI_COLUMN_DETAILS = "kpiColumnDetails";
 	private static final String KPI_EXCEL_COLUMN_CONFIG = "kpi_column_configs";
@@ -32,9 +35,6 @@ public class PRCycleTimeSlingShotChangeunit {
 	private static final String ORDER = "order";
 	private static final String IS_SHOWN = "isShown";
 	private static final String IS_DEFAULT = "isDefault";
-
-	private static final String TOOLTIP_CLASS =
-			"com.publicissapient.kpidashboard.apis.mongock.FieldMappingStructureForMongock$MappingToolTip";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -47,59 +47,44 @@ public class PRCycleTimeSlingShotChangeunit {
 
 	private void insertExcelColumnConfig() {
 
+		Document filter = new Document(KEY_BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, KPI_209);
+
 		Document kpiColumnConfig =
 				new Document(KEY_BASIC_PROJECT_CONFIG_ID, null)
 						.append(KPI_ID, KPI_209)
 						.append(
 								KEY_KPI_COLUMN_DETAILS,
 								List.of(
-										new Document()
-												.append(COLUMN_NAME, "Project")
-												.append(ORDER, 1)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Repo")
-												.append(ORDER, 2)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Branch")
-												.append(ORDER, 3)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Days/Weeks")
-												.append(ORDER, 4)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Developer")
-												.append(ORDER, 5)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Merge Request Url")
-												.append(ORDER, 6)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "PR Raised Time")
-												.append(ORDER, 7)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "PR Merged Time")
-												.append(ORDER, 8)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Time Spent (in hours)")
-												.append(ORDER, 9)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true)));
+										columnDetail("Days/Weeks", 1),
+										columnDetail("Project", 2),
+										columnDetail("Repo", 3),
+										columnDetail("Branch", 4),
+										columnDetail("Developer", 5),
+										optionalColumnDetail("Email/Username", 6),
+										columnDetail("Merge Request Url", 7),
+										columnDetail("PR Raised Time", 8),
+										columnDetail("PR Merged Time", 9),
+										columnDetail("Time Spent (in hours)", 10)));
 
-		mongoTemplate.getCollection(KPI_EXCEL_COLUMN_CONFIG).insertOne(kpiColumnConfig);
+		mongoTemplate
+				.getCollection(KPI_EXCEL_COLUMN_CONFIG)
+				.replaceOne(filter, kpiColumnConfig, new ReplaceOptions().upsert(true));
+	}
+
+	private Document columnDetail(String name, int order) {
+		return new Document()
+				.append(COLUMN_NAME, name)
+				.append(ORDER, order)
+				.append(IS_SHOWN, true)
+				.append(IS_DEFAULT, true);
+	}
+
+	private Document optionalColumnDetail(String name, int order) {
+		return new Document()
+				.append(COLUMN_NAME, name)
+				.append(ORDER, order)
+				.append(IS_SHOWN, false)
+				.append(IS_DEFAULT, false);
 	}
 
 	private void insertPRCycleTimeKPI() {
@@ -135,9 +120,10 @@ public class PRCycleTimeSlingShotChangeunit {
 																						"link",
 																						"https://psknowhow.atlassian.net/wiki/spaces/PSKNOWHOW/pages/70713477/Developer+Mean+time+to+Merge"))))
 										.append(
-												CLASS, "com.publicissapient.kpidashboard.common.model.application.KpiInfo"))
-						.append("xaxisLabel", "Week")
-						.append("yaxisLabel", "Time Spent")
+												"_class",
+												"com.publicissapient.kpidashboard.common.model.application.KpiInfo"))
+						.append("xAxisLabel", "Weeks")
+						.append("yAxisLabel", "Hours")
 						.append("isPositiveTrend", true)
 						.append("kpiFilter", "dropDown")
 						.append("showTrend", false)
@@ -145,14 +131,16 @@ public class PRCycleTimeSlingShotChangeunit {
 						.append("isAdditionalFilterSupport", false)
 						.append("calculateMaturity", false);
 
-		mongoTemplate.getCollection(KPI_MASTER).insertOne(kpiDocument);
+		mongoTemplate
+				.getCollection(KPI_MASTER)
+				.replaceOne(new Document(KPI_ID, KPI_209), kpiDocument, new ReplaceOptions().upsert(true));
 	}
 
 	private void insertFieldMappingStructure() {
 
 		Document fieldMapping =
 				new Document()
-						.append("fieldName", "thresholdValueKPI209")
+						.append(FIELD_NAME, THRESHOLD_VALUE_KPI209)
 						.append("fieldLabel", "Target KPI Value")
 						.append("fieldType", "number")
 						.append("section", "Project Level Threshold")
@@ -168,7 +156,12 @@ public class PRCycleTimeSlingShotChangeunit {
 						.append("mandatory", false)
 						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE).insertOne(fieldMapping);
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE)
+				.replaceOne(
+						new Document(FIELD_NAME, THRESHOLD_VALUE_KPI209),
+						fieldMapping,
+						new ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution
@@ -177,6 +170,6 @@ public class PRCycleTimeSlingShotChangeunit {
 		mongoTemplate.getCollection(KPI_EXCEL_COLUMN_CONFIG).deleteOne(new Document(KPI_ID, KPI_209));
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE)
-				.deleteOne(new Document("fieldName", "thresholdValueKPI209"));
+				.deleteOne(new Document(FIELD_NAME, THRESHOLD_VALUE_KPI209));
 	}
 }

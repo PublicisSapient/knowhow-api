@@ -5556,5 +5556,32 @@
     "isRepoToolKpi" : true,
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi209",
+    "kpiName" : "PR Cycle Time",
+    "isDeleted" : "False",
+    "defaultOrder" : 2,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "Hours",
+    "chartType" : "line",
+    "xaxisLabel" : "Weeks",
+    "yaxisLabel" : "Hours",
+    "showTrend" : false,
+    "isPositiveTrend" : true,
+    "calculateMaturity" : false,
+    "kpiSource" : "BitBucket",
+    "thresholdValue" : 50,
+    "kanban" : false,
+    "groupId" : 7,
+    "kpiInfo" : {
+      "definition" : "Time from PR opened to merged."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isAdditionalFilterSupport" : false,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab"
   }
 ]
