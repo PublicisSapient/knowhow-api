@@ -1691,42 +1691,76 @@ public class KPIExcelUtility {
 			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
 
 		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
-			repoToolValidationDataList.forEach(
-					repoToolValidationData -> {
-						KPIExcelData excelData = new KPIExcelData();
-						excelData.setProject(repoToolValidationData.getProjectName());
-						excelData.setRepo(repoToolValidationData.getRepoUrl());
-						excelData.setBranch(repoToolValidationData.getBranchName());
-						excelData.setDaysWeeks(repoToolValidationData.getDate());
-						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
-						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
-						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
-						kpiExcelData.add(excelData);
-					});
+			repoToolValidationDataList.stream()
+					.sorted(
+							Comparator.comparing(
+									(RepoToolValidationData r) -> parseDateLabel(r.getDate()),
+									Comparator.nullsLast(Comparator.naturalOrder())))
+					.forEach(
+							repoToolValidationData -> {
+								KPIExcelData excelData = new KPIExcelData();
+								excelData.setProject(repoToolValidationData.getProjectName());
+								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setBranch(repoToolValidationData.getBranchName());
+								excelData.setDaysWeeks(repoToolValidationData.getDate());
+								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
+								if (CollectionUtils.isNotEmpty(repoToolValidationData.getMergeRequestUrls())) {
+									Map<String, String> mergeUrls = new HashMap<>();
+									repoToolValidationData
+											.getMergeRequestUrls()
+											.forEach(url -> mergeUrls.put(url, url));
+									excelData.setMergeRequestUrl(mergeUrls);
+								}
+								excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+								kpiExcelData.add(excelData);
+							});
 		}
 	}
 
 	public static void populatePRCycleTimeExcelData(
 			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
 		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
-			repoToolValidationDataList.forEach(
-					repoToolValidationData -> {
-						KPIExcelData excelData = new KPIExcelData();
-						excelData.setProject(repoToolValidationData.getProjectName());
-						excelData.setRepo(repoToolValidationData.getRepoUrl());
-						excelData.setBranch(repoToolValidationData.getBranchName());
-						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
-						excelData.setDaysWeeks(repoToolValidationData.getDate());
-						excelData.setTotalTimeSpent(repoToolValidationData.getTotalTimeSpent().toString());
-						excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
-						excelData.setPrMergedTime(repoToolValidationData.getPrActivityTime());
-						Map<String, String> mergeUrl = new HashMap<>();
-						mergeUrl.put(
-								repoToolValidationData.getMergeRequestUrl(),
-								repoToolValidationData.getMergeRequestUrl());
-						excelData.setMergeRequestUrl(mergeUrl);
-						kpiExcelData.add(excelData);
-					});
+			repoToolValidationDataList.stream()
+					.sorted(
+							Comparator.comparing(
+									(RepoToolValidationData r) -> parseDateLabel(r.getDate()),
+									Comparator.nullsLast(Comparator.naturalOrder())))
+					.forEach(
+							repoToolValidationData -> {
+								KPIExcelData excelData = new KPIExcelData();
+								excelData.setProject(repoToolValidationData.getProjectName());
+								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setBranch(repoToolValidationData.getBranchName());
+								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
+								excelData.setDaysWeeks(repoToolValidationData.getDate());
+								excelData.setTotalTimeSpent(repoToolValidationData.getTotalTimeSpent().toString());
+								excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
+								excelData.setPrMergedTime(repoToolValidationData.getPrActivityTime());
+								Map<String, String> mergeUrl = new HashMap<>();
+								mergeUrl.put(
+										repoToolValidationData.getMergeRequestUrl(),
+										repoToolValidationData.getMergeRequestUrl());
+								excelData.setMergeRequestUrl(mergeUrl);
+								kpiExcelData.add(excelData);
+							});
+		}
+	}
+
+	private static LocalDate parseDateLabel(String dateLabel) {
+		if (dateLabel == null) {
+			return null;
+		}
+		try {
+			String startDate = dateLabel.contains(" to ") ? dateLabel.split(" to ")[0] : dateLabel;
+			if (startDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
+				return LocalDate.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE);
+			}
+			return LocalDate.parse(
+					startDate, DateTimeFormatter.ofPattern("dd-MMM-yyyy", java.util.Locale.ENGLISH));
+		} catch (Exception e) {
+			return null;
 		}
 	}
 

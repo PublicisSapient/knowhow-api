@@ -145,7 +145,10 @@ public class PRCycleTimeTrendKpiServiceImpl
 
 							return userMergeRequests.stream()
 									.filter(mr -> mr.getCreatedDate() != null && mr.getMergedAt() != null)
-									.map(mr -> createValidationData(projectName, tool, developerName, dateLabel, mr))
+									.map(
+											mr ->
+													createValidationData(
+															projectName, tool, developerName, userEmail, dateLabel, mr))
 									.toList();
 						})
 				.flatMap(List::stream)
@@ -156,6 +159,7 @@ public class PRCycleTimeTrendKpiServiceImpl
 			String projectName,
 			Tool tool,
 			String developerName,
+			String developerEmail,
 			String dateLabel,
 			ScmMergeRequests mergeRequest) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
@@ -164,12 +168,10 @@ public class PRCycleTimeTrendKpiServiceImpl
 		validationData.setRepoUrl(
 				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
+		validationData.setDeveloperEmail(developerEmail);
 		validationData.setDate(dateLabel);
 
-		LocalDateTime startTime =
-				mergeRequest.getFirstCommitDate() != null
-						? mergeRequest.getFirstCommitDate()
-						: DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
+		LocalDateTime startTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(startTime, mergeRequest.getMergedAt());
 		validationData.setTotalTimeSpent(
 				KpiHelperService.convertMilliSecondsToHours(
@@ -203,13 +205,11 @@ public class PRCycleTimeTrendKpiServiceImpl
 										ScmMergeRequests.MergeRequestState.MERGED
 												.name()
 												.equalsIgnoreCase(mr.getState()))
-						.filter(mr -> mr.getFirstCommitDate() != null || mr.getCreatedDate() != null)
+						.filter(mr -> mr.getCreatedDate() != null)
 						.map(
 								mr -> {
 									LocalDateTime startTime =
-											mr.getFirstCommitDate() != null
-													? mr.getFirstCommitDate()
-													: DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
+											DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
 									return ChronoUnit.SECONDS.between(startTime, mr.getMergedAt());
 								})
 						.filter(seconds -> seconds > 0)
