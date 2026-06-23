@@ -352,6 +352,9 @@ class PRCycleTimeTrendKpiServiceImplTest {
 			dateUtilMock
 					.when(() -> DateUtil.tranformUTCLocalTimeToZFormat(any(LocalDateTime.class)))
 					.thenReturn("2024-01-09T08:00:00Z");
+			dateUtilMock
+					.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong()))
+					.thenReturn(LocalDateTime.of(2024, 1, 10, 10, 0));
 
 			List<RepoToolValidationData> result =
 					invokePrepareUserValidationData("TestProject", "2024-01-08 to 2024-01-14");
@@ -455,7 +458,7 @@ class PRCycleTimeTrendKpiServiceImplTest {
 	}
 
 	@Test
-	void testCalculateMeanTimeToMerge_firstCommitDateUsedOverCreatedDate() throws Exception {
+	void testCalculateMeanTimeToMerge_usesCreatedDateAsStartTime() throws Exception {
 		ScmMergeRequests mr =
 				buildMergeRequest(
 						LocalDateTime.of(2024, 1, 10, 10, 0),
@@ -470,11 +473,13 @@ class PRCycleTimeTrendKpiServiceImplTest {
 
 	@Test
 	void testCalculateMeanTimeToMerge_negativeDuration_excluded() throws Exception {
-		// mergedAt is before startTime => seconds < 0 => filtered out
-		ScmMergeRequests mr = new ScmMergeRequests();
-		mr.setState("MERGED");
-		mr.setFirstCommitDate(LocalDateTime.of(2024, 1, 15, 10, 0));
-		mr.setMergedAt(LocalDateTime.of(2024, 1, 10, 10, 0));
+		// mergedAt is before createdDate => seconds < 0 => filtered out
+		ScmMergeRequests mr =
+				buildMergeRequest(
+						LocalDateTime.of(2024, 1, 15, 10, 0),
+						LocalDateTime.of(2024, 1, 10, 10, 0),
+						"MERGED",
+						processorItemId);
 
 		double result = invokeCalculateMeanTimeToMerge(List.of(mr));
 		assertEquals(0.0, result);

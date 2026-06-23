@@ -71,7 +71,14 @@ public enum KPIExcelColumn {
 	SCM_PR_THROUGHPUT(
 			"kpi157",
 			Arrays.asList(
-					"Project", "Repo", "Branch", "Days/Weeks", "Developer", "Email/Username", "No of Merge")),
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"No of Merge")),
 
 	MEAN_TIME_TO_MERGE(
 			"kpi84",
@@ -99,11 +106,12 @@ public enum KPIExcelColumn {
 	PR_CYCLE_TIME_SLINGSHOT(
 			"kpi209",
 			Arrays.asList(
+					"Days/Weeks",
 					"Project",
 					"Repo",
 					"Branch",
-					"Days/Weeks",
 					"Developer",
+					"Email/Username",
 					"Merge Request Url",
 					"PR Raised Time",
 					"PR Merged Time",
