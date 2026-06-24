@@ -88,12 +88,20 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 										})
 								.sum();
 				String totalFlowTime = (Math.round(totalDays * 10.0) / 10.0) + " Days";
+				String currentStatus =
+						history.getStatusUpdationLog().isEmpty()
+								? ""
+								: history
+										.getStatusUpdationLog()
+										.get(history.getStatusUpdationLog().size() - 1)
+										.getChangedTo();
 				cycleTimeList.add(
 						CycleTimeValidationData.builder()
 								.issueNumber(history.getStoryID())
 								.url(history.getUrl())
 								.issueType(history.getStoryType())
 								.issueDesc(history.getDescription())
+								.status(currentStatus)
 								.sprintName(sprint)
 								.groupMap(cycleTimeByGroup)
 								.totalFlowTime(totalFlowTime)

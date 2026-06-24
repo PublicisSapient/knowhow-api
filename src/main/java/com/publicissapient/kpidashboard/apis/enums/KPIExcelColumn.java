@@ -168,6 +168,7 @@ public enum KPIExcelColumn {
 					"Squad",
 					"Priority",
 					"Story Points",
+					"Status",
 					"Original Time Estimate (in hours)",
 					"Time Spent (in hours)")),
 	SPRINT_PREDICTABILITY(
@@ -1192,10 +1193,12 @@ public enum KPIExcelColumn {
 			"kpi197", Arrays.asList("Project Name", "Test Case ID", "Test Case Type", "Execution Time")),
 
 	CYCLE_TIME_SLINGSHOT(
-			"kpi202", Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Group Map")),
+			"kpi202",
+			Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Status", "Group Map")),
 	CYCLE_TIME_TREND_SLINGSHOT(
 			"kpi204",
-			Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Sprint Name", "Group Map")),
+			Arrays.asList(
+					"Issue ID", "Issue Type", "Issue Description", "Sprint Name", "Status", "Group Map")),
 	FLOW_EFFICIENCY_SLINGSHOT(
 			"kpi203",
 			Arrays.asList(
@@ -1203,6 +1206,7 @@ public enum KPIExcelColumn {
 					"Issue Type",
 					"Issue Description",
 					"Size (In Story Points)",
+					"Status",
 					"Wait Time",
 					"Total Time",
 					"Flow Efficiency",
