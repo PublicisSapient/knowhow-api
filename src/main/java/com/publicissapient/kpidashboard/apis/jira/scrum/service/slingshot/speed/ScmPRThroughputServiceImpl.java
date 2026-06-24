@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ScmPRThroughputServiceImpl
 		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
-	private static final String NO_MERGE = "No. of Merge Requests";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MRS_LIST = "mrsList";
 
@@ -123,7 +122,7 @@ public class ScmPRThroughputServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI157(), KPICode.PR_THROUGHPUT.getKpiId());
+				fieldMapping.getThresholdValueKPI208(), KPICode.PR_THROUGHPUT.getKpiId());
 	}
 
 	/**

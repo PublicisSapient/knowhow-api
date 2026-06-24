@@ -410,8 +410,8 @@ public class ScmTimeToFirstReviewServiceImpl
 
 		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
 		LocalDateTime pickUpDateTimeUTC = DateUtil.localDateTimeToUTC(pickUpDateTime);
-		validationData.setPrRaisedTime(String.valueOf(createdDateTimeUTC));
-		validationData.setPrActivityTime(String.valueOf(pickUpDateTimeUTC));
+		validationData.setPrRaisedTime(DateUtil.tranformUTCLocalTimeToZFormat(createdDateTimeUTC));
+		validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(pickUpDateTimeUTC));
 		validationData.setPrStatus(mergeRequest.getState());
 		return validationData;
 	}
