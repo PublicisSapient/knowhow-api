@@ -557,6 +557,9 @@ public class KPIExcelData {
 	@JsonProperty("ID")
 	private Map<String, String> id;
 
+	@JsonProperty("Time to First Review (In Hours)")
+	private String timeToFirstReview;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

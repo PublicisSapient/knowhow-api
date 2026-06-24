@@ -174,7 +174,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 	@Test
 	void testCalculateThresholdValue_withValue() {
 		FieldMapping fieldMapping = new FieldMapping();
-		fieldMapping.setThresholdValueKPI157("5");
+		fieldMapping.setThresholdValueKPI210("5");
 		Double result = service.calculateThresholdValue(fieldMapping);
 		assertNotNull(result);
 		assertEquals(5.0, result);
@@ -183,7 +183,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 	@Test
 	void testCalculateThresholdValue_nullValue_fallsBackToKpiMaster() {
 		FieldMapping fieldMapping = new FieldMapping();
-		fieldMapping.setThresholdValueKPI157(null);
+		fieldMapping.setThresholdValueKPI210(null);
 
 		KpiMaster kpiMaster = new KpiMaster();
 		kpiMaster.setKpiId(KPICode.TIME_TO_FIRST_REVIEW.getKpiId());
@@ -368,7 +368,7 @@ class ScmTimeToFirstReviewServiceImplTest {
 											ArgumentMatchers.<Map<String, List<DataCount>>>any(), anyString()))
 					.thenReturn(List.of());
 			excelMock
-					.when(() -> KPIExcelUtility.populatePickupTimeExcelData(any(), any()))
+					.when(() -> KPIExcelUtility.populateTimeToFirstReviewExcelData(any(), any()))
 					.thenAnswer(inv -> null);
 
 			when(scmKpiHelperService.getMergeRequests(any(ObjectId.class), any()))
@@ -756,6 +756,51 @@ class ScmTimeToFirstReviewServiceImplTest {
 							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
+		}
+	}
+
+	@Test
+	void testCalculateKpi_mergeRequestWithNullCreatedDateFiltered() {
+		// MR without createdDate should be filtered out so chart count matches explore
+		// count
+		ScmMergeRequests mr = new ScmMergeRequests();
+		mr.setProcessorItemId(processorItemId);
+		mr.setCreatedDate(null);
+		mr.setPickedForReviewOn(toMillis(LocalDateTime.now().minusHours(1)));
+
+		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
+					.thenReturn("main -> test-repo -> TestProject");
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(anyList(), any(Tool.class)))
+					.thenReturn(Collections.emptyList());
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(anyList()))
+					.thenReturn(Collections.emptyMap());
+			devHelperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.thenAnswer(inv -> null);
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
+					.thenReturn(LocalDateTime.now().minusWeeks(1));
+
+			kpiRequest.setXAxisDataPoints(1);
+			kpiRequest.setDuration("WEEK");
+
+			List<RepoToolValidationData> validationDataList = new ArrayList<>();
+			Set<Assignee> assignees = new HashSet<>();
+
+			Map<String, List<DataCount>> result =
+					service.calculateKpi(
+							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+
+			assertNotNull(result);
+			assertTrue(validationDataList.isEmpty());
 		}
 	}
 

@@ -45,9 +45,9 @@ public class TimeToFirstReviewChangeUnit {
 						.append("kpiUnit", "Hours")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Weeks")
-						.append("yAxisLabel", "Count (Hours)")
+						.append("yAxisLabel", "Hours")
 						.append("showTrend", true)
-						.append("isPositiveTrend", true)
+						.append("isPositiveTrend", false)
 						.append("calculateMaturity", false)
 						.append("hideOverallFilter", true)
 						.append("kpiSource", "BitBucket")
@@ -81,22 +81,22 @@ public class TimeToFirstReviewChangeUnit {
 								"kpiColumnDetails",
 								Arrays.asList(
 										new Document()
-												.append(COLUMN_NAME, "Project")
+												.append(COLUMN_NAME, "Days/Weeks")
 												.append(ORDER, 1)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Repo")
+												.append(COLUMN_NAME, "Project")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Branch")
+												.append(COLUMN_NAME, "Repo")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Days/Weeks")
+												.append(COLUMN_NAME, "Branch")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
@@ -106,28 +106,28 @@ public class TimeToFirstReviewChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
+												.append(COLUMN_NAME, "Email/Username")
+												.append(ORDER, 6)
+												.append(IS_SHOWN, false)
+												.append(IS_DEFAULT, false),
+										new Document()
 												.append(COLUMN_NAME, "Merge Request Url")
 												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
 												.append(COLUMN_NAME, "PR Raised Time")
-												.append(ORDER, 7)
+												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
 												.append(COLUMN_NAME, "PR Review Time")
-												.append(ORDER, 7)
+												.append(ORDER, 9)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "PR Status")
-												.append(ORDER, 7)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Pickup Time (In Hours)")
-												.append(ORDER, 7)
+												.append(COLUMN_NAME, "Time to First Review (In Hours)")
+												.append(ORDER, 10)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
