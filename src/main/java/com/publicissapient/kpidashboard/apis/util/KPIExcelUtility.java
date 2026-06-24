@@ -1013,6 +1013,7 @@ public class KPIExcelUtility {
 					KPIExcelData excelData = new KPIExcelData();
 					setSpeedKPIExcelData(null, jiraIssue, fieldMapping, excelData);
 					excelData.setWeekRange(weekRange);
+					excelData.setStatus(jiraIssue.getStatus());
 					setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 					kpiExcelData.add(excelData);
 				}
@@ -1189,6 +1190,7 @@ public class KPIExcelUtility {
 			storyId.put(cycleTime.getIssueNumber(), cycleTime.getUrl());
 			excelData.setIssueID(storyId);
 			excelData.setIssueDesc(cycleTime.getIssueDesc());
+			excelData.setStatus(cycleTime.getStatus());
 			excelData.setIssueType(cycleTime.getIssueType());
 			excelData.setSprintName(cycleTime.getSprintName());
 			LinkedHashMap<String, String> groupMapWithTotal = new LinkedHashMap<>();
@@ -2874,6 +2876,14 @@ public class KPIExcelUtility {
 					kpiExcelData.setIssueType(issue.getStoryType());
 					kpiExcelData.setIssueDesc(issue.getDescription());
 					kpiExcelData.setSizeInStoryPoints(issue.getEstimate());
+					String currentStatus =
+							issue.getStatusUpdationLog().isEmpty()
+									? ""
+									: issue
+											.getStatusUpdationLog()
+											.get(issue.getStatusUpdationLog().size() - 1)
+											.getChangedTo();
+					kpiExcelData.setStatus(currentStatus);
 					kpiExcelData.setWaitTime(waitTimeList.get(i.get()));
 					kpiExcelData.setTotalTime(totalTimeList.get(i.get()));
 					kpiExcelData.setFlowEfficiency(value.longValue());
@@ -2898,6 +2908,14 @@ public class KPIExcelUtility {
 					kpiExcelData.setIssueType(issue.getStoryType());
 					kpiExcelData.setIssueDesc(issue.getDescription());
 					kpiExcelData.setSizeInStoryPoints(issue.getEstimate());
+					String currentStatus =
+							issue.getStatusUpdationLog().isEmpty()
+									? ""
+									: issue
+											.getStatusUpdationLog()
+											.get(issue.getStatusUpdationLog().size() - 1)
+											.getChangedTo();
+					kpiExcelData.setStatus(currentStatus);
 					kpiExcelData.setWaitTime(waitTimeList.get(i.get()));
 					kpiExcelData.setTotalTime(totalTimeList.get(i.get()));
 					kpiExcelData.setFlowEfficiency(value.longValue());
