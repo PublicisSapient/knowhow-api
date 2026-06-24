@@ -1756,6 +1756,41 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populateTimeToFirstReviewExcelData(
+			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
+		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
+			repoToolValidationDataList.stream()
+					.sorted(
+							Comparator.comparing(
+									(RepoToolValidationData r) -> parseDateLabel(r.getDate()),
+									Comparator.nullsLast(Comparator.naturalOrder())))
+					.forEach(
+							repoToolValidationData -> {
+								KPIExcelData excelData = new KPIExcelData();
+								excelData.setDaysWeeks(repoToolValidationData.getDate());
+								excelData.setProject(repoToolValidationData.getProjectName());
+								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setBranch(repoToolValidationData.getBranchName());
+								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
+								if (repoToolValidationData.getMergeRequestUrl() != null) {
+									Map<String, String> mergeUrl = new HashMap<>();
+									mergeUrl.put(
+											repoToolValidationData.getMergeRequestUrl(),
+											repoToolValidationData.getMergeRequestUrl());
+									excelData.setMergeRequestUrl(mergeUrl);
+								}
+								excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
+								excelData.setPrReviewTime(repoToolValidationData.getPrActivityTime());
+								if (repoToolValidationData.getPickupTime() != null) {
+									excelData.setTimeToFirstReview(
+											String.format("%.2f", repoToolValidationData.getPickupTime()));
+								}
+								kpiExcelData.add(excelData);
+							});
+		}
+	}
+
 	private static LocalDate parseDateLabel(String dateLabel) {
 		if (dateLabel == null) {
 			return null;

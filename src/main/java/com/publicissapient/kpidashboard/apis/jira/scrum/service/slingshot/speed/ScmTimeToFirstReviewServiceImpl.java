@@ -1,6 +1,5 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -126,7 +125,7 @@ public class ScmTimeToFirstReviewServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI157(), KPICode.TIME_TO_FIRST_REVIEW.getKpiId());
+				fieldMapping.getThresholdValueKPI210(), KPICode.TIME_TO_FIRST_REVIEW.getKpiId());
 	}
 
 	/**
@@ -184,7 +183,7 @@ public class ScmTimeToFirstReviewServiceImpl
 			KpiElement kpiElement) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData = new ArrayList<>();
-			KPIExcelUtility.populatePickupTimeExcelData(validationDataList, excelData);
+			KPIExcelUtility.populateTimeToFirstReviewExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
 			kpiElement.setExcelColumns(KPIExcelColumn.TIME_TO_FIRST_REVIEW.getColumns());
 		}
@@ -236,7 +235,8 @@ public class ScmTimeToFirstReviewServiceImpl
 	private List<ScmMergeRequests> filterPickedRequestsByDateRange(
 			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
 		return mergeRequests.stream()
-				.filter(request -> request.getPickedForReviewOn() != null)
+				.filter(
+						request -> request.getPickedForReviewOn() != null && request.getCreatedDate() != null)
 				.filter(
 						request ->
 								DateUtil.isWithinDateTimeRange(
@@ -273,7 +273,8 @@ public class ScmTimeToFirstReviewServiceImpl
 		List<ScmMergeRequests> matchingRequests =
 				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		long averagePickUpTime = calculateAveragePickupTime(matchingRequests);
+		long totalPickUpTime =
+				matchingRequests.stream().mapToLong(this::calculatePickupTimeHours).sum();
 		long totalMergeRequests = matchingRequests.size();
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
@@ -281,7 +282,7 @@ public class ScmTimeToFirstReviewServiceImpl
 				projectName,
 				dateLabel,
 				overallKpiGroup,
-				averagePickUpTime,
+				totalPickUpTime,
 				Map.of(MR_COUNT, totalMergeRequests),
 				kpiTrendDataByGroup);
 
@@ -302,7 +303,7 @@ public class ScmTimeToFirstReviewServiceImpl
 		List<Long> pickUpTimes = mergeRequests.stream().map(this::calculatePickupTimeHours).toList();
 		return pickUpTimes.isEmpty()
 				? 0
-				: (long) pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+				: Math.round(pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0));
 	}
 
 	/**
@@ -316,7 +317,8 @@ public class ScmTimeToFirstReviewServiceImpl
 				DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
 		LocalDateTime createdDate =
 				DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
-		return Duration.between(createdDate, pickedForReviewOn).toHours();
+		long seconds = ChronoUnit.SECONDS.between(createdDate, pickedForReviewOn);
+		return KpiHelperService.convertMilliSecondsToHours(seconds * MILLIS_PER_SECOND);
 	}
 
 	/**
@@ -345,8 +347,7 @@ public class ScmTimeToFirstReviewServiceImpl
 							List<ScmMergeRequests> userMergeRequests = entry.getValue();
 							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 
-							long totalPickUpTime =
-									userMergeRequests.stream().mapToLong(this::calculatePickupTimeHours).sum();
+							long avgPickUpTime = calculateAveragePickupTime(userMergeRequests);
 							long userMrCount = userMergeRequests.size();
 
 							String userKpiGroup = branchName + "#" + developerName;
@@ -354,13 +355,16 @@ public class ScmTimeToFirstReviewServiceImpl
 									projectName,
 									dateLabel,
 									userKpiGroup,
-									totalPickUpTime,
+									avgPickUpTime,
 									Map.of(MR_COUNT, userMrCount),
 									kpiTrendDataByGroup);
 
 							return userMergeRequests.stream()
 									.filter(mr -> mr.getCreatedDate() != null && mr.getPickedForReviewOn() != null)
-									.map(mr -> createValidationData(projectName, tool, developerName, dateLabel, mr))
+									.map(
+											mr ->
+													createValidationData(
+															projectName, tool, developerName, userEmail, dateLabel, mr))
 									.toList();
 						})
 				.flatMap(List::stream)
@@ -373,6 +377,7 @@ public class ScmTimeToFirstReviewServiceImpl
 	 * @param projectName name of the project
 	 * @param tool the SCM tool
 	 * @param developerName name of the developer
+	 * @param userEmail email of the developer
 	 * @param dateLabel label for the time period
 	 * @param mergeRequest the merge request
 	 * @return populated validation data object
@@ -381,6 +386,7 @@ public class ScmTimeToFirstReviewServiceImpl
 			String projectName,
 			Tool tool,
 			String developerName,
+			String userEmail,
 			String dateLabel,
 			ScmMergeRequests mergeRequest) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
@@ -389,6 +395,7 @@ public class ScmTimeToFirstReviewServiceImpl
 		validationData.setRepoUrl(
 				tool.getRepositoryName() != null ? tool.getRepositoryName() : tool.getRepoSlug());
 		validationData.setDeveloperName(developerName);
+		validationData.setDeveloperEmail(userEmail);
 		validationData.setDate(dateLabel);
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
 

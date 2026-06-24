@@ -3437,6 +3437,19 @@
     "mandatory": false
   },
   {
+    "fieldName": "thresholdValueKPI210",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "processorCommon": false,
+    "fieldDisplayOrder": 1,
+    "sectionOrder": 6,
+    "section": "Project Level Threshold",
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "mandatory": false
+  },
+  {
     "fieldName": "jiraIterationCompletionStatusKPI205",
     "fieldLabel": "Status to identify completed issues",
     "fieldType": "chips",

@@ -1208,18 +1208,18 @@ public enum KPIExcelColumn {
 					"Flow Efficiency",
 					"Group Map")),
 	TIME_TO_FIRST_REVIEW(
-			"kpi160",
+			"kpi210",
 			Arrays.asList(
+					"Days/Weeks",
 					"Project",
 					"Repo",
 					"Branch",
-					"Days/Weeks",
-					"Author",
+					"Developer",
+					"Email/Username",
 					"Merge Request Url",
 					"PR Raised Time",
 					"PR Review Time",
-					"PR Status",
-					"Pickup Time (In Hours)")),
+					"Time to First Review (In Hours)")),
 	;
 
 	// @formatter:on

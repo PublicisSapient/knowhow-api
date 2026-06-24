@@ -5584,5 +5584,36 @@
     "isRepoToolKpi" : true,
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi210",
+    "kpiName" : "Time to First Review",
+    "isDeleted" : "False",
+    "defaultOrder" : 3,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "Hours",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Hours",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "kpiSource" : "BitBucket",
+    "maxValue" : 15,
+    "thresholdValue" : 55.0,
+    "kanban" : false,
+    "groupId" : 6,
+    "kpiInfo" : {
+      "definition" : "Time from PR ready-for-review to first reviewer comment or approval."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "forecastModel" : "thetaMethod"
   }
 ]
