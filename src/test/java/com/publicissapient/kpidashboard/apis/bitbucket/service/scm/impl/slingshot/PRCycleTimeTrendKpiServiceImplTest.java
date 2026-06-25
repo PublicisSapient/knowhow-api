@@ -148,9 +148,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(any()))
 					.thenReturn(Collections.emptyMap());
-			kpiHelperMock
-					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
-					.thenReturn(48L);
 			devHelperMock
 					.when(
 							() ->
@@ -188,7 +185,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 		userWiseMergeRequests.put("user1@test.com", List.of(mr));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
-				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class);
 				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			devHelperMock
@@ -208,9 +204,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 											any(Map.class),
 											any(Map.class)))
 					.thenAnswer(inv -> null);
-			kpiHelperMock
-					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
-					.thenReturn(48L);
 			dateUtilMock
 					.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong()))
 					.thenReturn(LocalDateTime.of(2024, 1, 10, 10, 0));
@@ -249,7 +242,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 		userWiseMergeRequests.put("user2@test.com", List.of(mr2));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
-				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class);
 				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			devHelperMock
@@ -269,9 +261,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 											any(Map.class),
 											any(Map.class)))
 					.thenAnswer(inv -> null);
-			kpiHelperMock
-					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
-					.thenReturn(48L);
 			dateUtilMock
 					.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong()))
 					.thenReturn(LocalDateTime.of(2024, 1, 10, 10, 0));
@@ -298,8 +287,7 @@ class PRCycleTimeTrendKpiServiceImplTest {
 		mr.setState("MERGED");
 		userWiseMergeRequests.put("user1@test.com", List.of(mr));
 
-		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
-				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class)) {
+		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
 
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
@@ -318,9 +306,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 											any(Map.class),
 											any(Map.class)))
 					.thenAnswer(inv -> null);
-			kpiHelperMock
-					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
-					.thenReturn(0L);
 
 			List<RepoToolValidationData> result =
 					invokePrepareUserValidationData("TestProject", "2024-01-08 to 2024-01-14");
@@ -342,7 +327,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 		userWiseMergeRequests.put("user1@test.com", List.of(mr));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
-				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class);
 				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			devHelperMock
@@ -362,9 +346,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 											any(Map.class),
 											any(Map.class)))
 					.thenAnswer(inv -> null);
-			kpiHelperMock
-					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
-					.thenReturn(76L);
 			dateUtilMock
 					.when(() -> DateUtil.localDateTimeToUTC(any(LocalDateTime.class)))
 					.thenReturn(LocalDateTime.of(2024, 1, 12, 14, 0));
@@ -397,7 +378,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 		userWiseMergeRequests.put("user1@test.com", List.of(mr));
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
-				MockedStatic<KpiHelperService> kpiHelperMock = mockStatic(KpiHelperService.class);
 				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
 
 			devHelperMock
@@ -417,9 +397,6 @@ class PRCycleTimeTrendKpiServiceImplTest {
 											any(Map.class),
 											any(Map.class)))
 					.thenAnswer(inv -> null);
-			kpiHelperMock
-					.when(() -> KpiHelperService.convertMilliSecondsToHours(anyDouble()))
-					.thenReturn(48L);
 			dateUtilMock
 					.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong()))
 					.thenReturn(LocalDateTime.of(2024, 1, 10, 10, 0));
@@ -436,6 +413,52 @@ class PRCycleTimeTrendKpiServiceImplTest {
 			assertNotNull(result);
 			assertEquals(1, result.size());
 			assertEquals("my-slug", result.get(0).getRepoUrl());
+		}
+	}
+
+	@Test
+	void testPrepareUserValidationData_subHourMergeTimePreservesDecimalPrecision() throws Exception {
+		LocalDateTime created = LocalDateTime.of(2024, 1, 10, 10, 0);
+		LocalDateTime merged = LocalDateTime.of(2024, 1, 10, 10, 28);
+		ScmMergeRequests mr = buildMergeRequest(created, merged, "MERGED", processorItemId);
+		userWiseMergeRequests.put("user1@test.com", List.of(mr));
+
+		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class);
+				MockedStatic<DateUtil> dateUtilMock = mockStatic(DateUtil.class)) {
+
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
+					.thenReturn("main");
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), any(Set.class)))
+					.thenReturn("User One");
+			devHelperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(),
+											anyString(),
+											anyString(),
+											any(Number.class),
+											any(Map.class),
+											any(Map.class)))
+					.thenAnswer(inv -> null);
+			dateUtilMock.when(() -> DateUtil.convertMillisToLocalDateTime(anyLong())).thenReturn(created);
+			dateUtilMock
+					.when(() -> DateUtil.localDateTimeToUTC(any(LocalDateTime.class)))
+					.thenReturn(merged);
+			dateUtilMock
+					.when(() -> DateUtil.tranformUTCLocalTimeToZFormat(any(LocalDateTime.class)))
+					.thenReturn("2024-01-10T10:28:00Z");
+
+			List<RepoToolValidationData> result =
+					invokePrepareUserValidationData("TestProject", "2024-01-08 to 2024-01-14");
+
+			assertNotNull(result);
+			assertEquals(1, result.size());
+			double totalTimeSpent = result.get(0).getTotalTimeSpent();
+			assertTrue(totalTimeSpent > 0.0, "Sub-hour merge time must be > 0.0 hours");
+			assertTrue(totalTimeSpent < 1.0, "28-minute merge time must be < 1.0 hours");
 		}
 	}
 

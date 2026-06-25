@@ -51,7 +51,6 @@ public class ScmTimeToFirstReviewServiceImpl
 		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
 	private static final String MR_COUNT = "No of PRs";
-	private static final double MILLIS_PER_SECOND = 1000.0;
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MRS_LIST = "mrsList";
 
@@ -235,12 +234,11 @@ public class ScmTimeToFirstReviewServiceImpl
 	private List<ScmMergeRequests> filterPickedRequestsByDateRange(
 			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
 		return mergeRequests.stream()
-				.filter(
-						request -> request.getPickedForReviewOn() != null && request.getCreatedDate() != null)
+				.filter(request -> request.getCreatedDate() != null)
 				.filter(
 						request ->
 								DateUtil.isWithinDateTimeRange(
-										DateUtil.convertMillisToLocalDateTime(request.getPickedForReviewOn()),
+										DateUtil.convertMillisToLocalDateTime(request.getCreatedDate()),
 										dateRange.getStartDateTime(),
 										dateRange.getEndDateTime()))
 				.toList();
@@ -273,8 +271,8 @@ public class ScmTimeToFirstReviewServiceImpl
 		List<ScmMergeRequests> matchingRequests =
 				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		long totalPickUpTime =
-				matchingRequests.stream().mapToLong(this::calculatePickupTimeHours).sum();
+		double totalPickUpTime =
+				matchingRequests.stream().mapToDouble(this::calculatePickupTimeHours).sum();
 		long totalMergeRequests = matchingRequests.size();
 
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
@@ -299,26 +297,26 @@ public class ScmTimeToFirstReviewServiceImpl
 	 * @param mergeRequests list of merge requests
 	 * @return average pickup time in hours
 	 */
-	private long calculateAveragePickupTime(List<ScmMergeRequests> mergeRequests) {
-		List<Long> pickUpTimes = mergeRequests.stream().map(this::calculatePickupTimeHours).toList();
-		return pickUpTimes.isEmpty()
-				? 0
-				: Math.round(pickUpTimes.stream().mapToLong(Long::longValue).average().orElse(0));
+	private double calculateAveragePickupTime(List<ScmMergeRequests> mergeRequests) {
+		return mergeRequests.stream().mapToDouble(this::calculatePickupTimeHours).average().orElse(0);
 	}
 
 	/**
 	 * Calculates pickup time in hours for a single merge request.
 	 *
 	 * @param mergeRequest the merge request
-	 * @return pickup time in hours
+	 * @return pickup time in fractional hours (e.g. 0.5 = 30 minutes)
 	 */
-	private long calculatePickupTimeHours(ScmMergeRequests mergeRequest) {
+	private double calculatePickupTimeHours(ScmMergeRequests mergeRequest) {
+		if (mergeRequest.getPickedForReviewOn() == null) {
+			return 0;
+		}
 		LocalDateTime pickedForReviewOn =
 				DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
 		LocalDateTime createdDate =
 				DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		long seconds = ChronoUnit.SECONDS.between(createdDate, pickedForReviewOn);
-		return KpiHelperService.convertMilliSecondsToHours(seconds * MILLIS_PER_SECOND);
+		return seconds / 3600.0;
 	}
 
 	/**
@@ -347,7 +345,7 @@ public class ScmTimeToFirstReviewServiceImpl
 							List<ScmMergeRequests> userMergeRequests = entry.getValue();
 							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 
-							long avgPickUpTime = calculateAveragePickupTime(userMergeRequests);
+							double avgPickUpTime = calculateAveragePickupTime(userMergeRequests);
 							long userMrCount = userMergeRequests.size();
 
 							String userKpiGroup = branchName + "#" + developerName;
@@ -360,7 +358,7 @@ public class ScmTimeToFirstReviewServiceImpl
 									kpiTrendDataByGroup);
 
 							return userMergeRequests.stream()
-									.filter(mr -> mr.getCreatedDate() != null && mr.getPickedForReviewOn() != null)
+									.filter(mr -> mr.getCreatedDate() != null)
 									.map(
 											mr ->
 													createValidationData(
@@ -402,16 +400,21 @@ public class ScmTimeToFirstReviewServiceImpl
 		LocalDateTime createdDateTime =
 				DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		LocalDateTime pickUpDateTime =
-				DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn());
-		long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, pickUpDateTime);
-		validationData.setPickupTime(
-				(double)
-						KpiHelperService.convertMilliSecondsToHours(timeToMergeSeconds * MILLIS_PER_SECOND));
+				mergeRequest.getPickedForReviewOn() != null
+						? DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn())
+						: null;
+
+		if (pickUpDateTime != null) {
+			long timeToMergeSeconds = ChronoUnit.SECONDS.between(createdDateTime, pickUpDateTime);
+			validationData.setPickupTime(timeToMergeSeconds / 3600.0);
+			LocalDateTime pickUpDateTimeUTC = DateUtil.localDateTimeToUTC(pickUpDateTime);
+			validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(pickUpDateTimeUTC));
+		} else {
+			validationData.setPickupTime(0.0);
+		}
 
 		LocalDateTime createdDateTimeUTC = DateUtil.localDateTimeToUTC(createdDateTime);
-		LocalDateTime pickUpDateTimeUTC = DateUtil.localDateTimeToUTC(pickUpDateTime);
 		validationData.setPrRaisedTime(DateUtil.tranformUTCLocalTimeToZFormat(createdDateTimeUTC));
-		validationData.setPrActivityTime(DateUtil.tranformUTCLocalTimeToZFormat(pickUpDateTimeUTC));
 		validationData.setPrStatus(mergeRequest.getState());
 		return validationData;
 	}
