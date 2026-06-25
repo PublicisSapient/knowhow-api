@@ -176,6 +176,7 @@ public class PRCycleTimeTrendKpiServiceImpl
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(startTime, mergeRequest.getMergedAt());
 		validationData.setTotalTimeSpent(timeToMergeSeconds / 3600.0);
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
+		validationData.setPrStatus(mergeRequest.getState());
 
 		LocalDateTime startTimeUTC = DateUtil.localDateTimeToUTC(startTime);
 		LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());

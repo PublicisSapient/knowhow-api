@@ -1571,6 +1571,7 @@ public class KPIExcelUtility {
 						}
 						excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setPrStatus(repoToolValidationData.getPrStatus());
 						Map<String, String> mergeUrl = new HashMap<>();
 						mergeUrl.put(
 								repoToolValidationData.getMergeRequestUrl(),
@@ -1671,6 +1672,7 @@ public class KPIExcelUtility {
 						excelData.setAuthor(repoToolValidationData.getDeveloperName());
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setPrStatus(repoToolValidationData.getPrStatus());
 						excelData.setDefectPRs(repoToolValidationData.getKpiPRs());
 						excelData.setDefectRate(String.format("%.2f", repoToolValidationData.getDefectRate()));
 						kpiExcelData.add(excelData);
@@ -1692,6 +1694,7 @@ public class KPIExcelUtility {
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
 						excelData.setNumberOfCommit(String.valueOf(repoToolValidationData.getCommitCount()));
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setPrStatus(repoToolValidationData.getPrStatus());
 						kpiExcelData.add(excelData);
 					});
 		}
@@ -1723,6 +1726,7 @@ public class KPIExcelUtility {
 									excelData.setMergeRequestUrl(mergeUrls);
 								}
 								excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+								excelData.setPrStatus(repoToolValidationData.getPrStatus());
 								kpiExcelData.add(excelData);
 							});
 		}
@@ -1745,7 +1749,8 @@ public class KPIExcelUtility {
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 								excelData.setDaysWeeks(repoToolValidationData.getDate());
-								excelData.setTotalTimeSpent(repoToolValidationData.getTotalTimeSpent().toString());
+								excelData.setTotalTimeSpent(
+										String.format("%.2f", repoToolValidationData.getTotalTimeSpent()));
 								excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
 								excelData.setPrMergedTime(repoToolValidationData.getPrActivityTime());
 								Map<String, String> mergeUrl = new HashMap<>();
@@ -1753,6 +1758,7 @@ public class KPIExcelUtility {
 										repoToolValidationData.getMergeRequestUrl(),
 										repoToolValidationData.getMergeRequestUrl());
 								excelData.setMergeRequestUrl(mergeUrl);
+								excelData.setPrStatus(repoToolValidationData.getPrStatus());
 								kpiExcelData.add(excelData);
 							});
 		}
@@ -1784,6 +1790,7 @@ public class KPIExcelUtility {
 								}
 								excelData.setPrRaisedTime(repoToolValidationData.getPrRaisedTime());
 								excelData.setPrReviewTime(repoToolValidationData.getPrActivityTime());
+								excelData.setPrStatus(repoToolValidationData.getPrStatus());
 								if (repoToolValidationData.getPickupTime() != null) {
 									excelData.setTimeToFirstReview(
 											String.format("%.2f", repoToolValidationData.getPickupTime()));
@@ -1823,6 +1830,7 @@ public class KPIExcelUtility {
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
 						excelData.setRevertRate(roundingOff(repoToolValidationData.getRevertRate()));
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setPrStatus(repoToolValidationData.getPrStatus());
 						excelData.setRevertPrs(repoToolValidationData.getKpiPRs());
 						kpiExcelData.add(excelData);
 					});
