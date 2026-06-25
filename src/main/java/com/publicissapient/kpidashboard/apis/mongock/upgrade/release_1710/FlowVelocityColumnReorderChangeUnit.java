@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.client.model.ReplaceOptions;
 
@@ -31,12 +29,12 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
-		id = "flow_velocity_slingshot_kpi_column_config",
-		order = "17115",
+		id = "flow_velocity_column_reorder",
+		order = "17126",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
 @RequiredArgsConstructor
-public class FlowVelocitySlingshotKpiColumnConfigChangeUnit {
+public class FlowVelocityColumnReorderChangeUnit {
 
 	private static final String KPI_ID = "kpiId";
 	private static final String KPI_205 = "kpi205";
@@ -72,9 +70,27 @@ public class FlowVelocitySlingshotKpiColumnConfigChangeUnit {
 
 	@RollbackExecution
 	public void rollback() {
-		mongoTemplate.remove(
-				new Query(Criteria.where(KPI_ID).is(KPI_205).and(BASIC_PROJECT_CONFIG_ID).isNull()),
-				KPI_COLUMN_CONFIGS);
+		Document filter = new Document(BASIC_PROJECT_CONFIG_ID, null).append(KPI_ID, KPI_205);
+
+		Document replacement =
+				new Document(BASIC_PROJECT_CONFIG_ID, null)
+						.append(KPI_ID, KPI_205)
+						.append(
+								"kpiColumnDetails",
+								List.of(
+										columnDetail("Week", 1),
+										columnDetail("Issue ID", 2),
+										columnDetail("Issue Description", 3),
+										columnDetail("Squad", 4),
+										columnDetail("Issue Type", 5),
+										columnDetail("Priority", 6),
+										columnDetail("Story Points", 7),
+										columnDetail("Original Time Estimate (in hours)", 8),
+										columnDetail("Time Spent (in hours)", 9)));
+
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS)
+				.replaceOne(filter, replacement, new ReplaceOptions().upsert(true));
 	}
 
 	private Document columnDetail(String name, int order) {

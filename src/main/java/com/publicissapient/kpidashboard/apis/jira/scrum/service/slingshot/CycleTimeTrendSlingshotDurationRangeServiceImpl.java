@@ -165,9 +165,27 @@ public class CycleTimeTrendSlingshotDurationRangeServiceImpl
 			deduplicatedMap.putIfAbsent(data.getIssueNumber(), data);
 		}
 
+		Set<String> rangeSet = new LinkedHashSet<>(orderedRanges);
+
+		Set<String> allCycleTimeKeys = new LinkedHashSet<>();
+		for (CycleTimeValidationData data : deduplicatedMap.values()) {
+			if (data.getGroupMap() != null) {
+				data.getGroupMap().keySet().stream()
+						.filter(k -> !rangeSet.contains(k))
+						.forEach(allCycleTimeKeys::add);
+			}
+		}
+
 		cycleTimeList.clear();
 		for (CycleTimeValidationData data : deduplicatedMap.values()) {
 			if (data.getGroupMap() == null) data.setGroupMap(new LinkedHashMap<>());
+			LinkedHashMap<String, String> oldGroupMap = new LinkedHashMap<>(data.getGroupMap());
+			data.getGroupMap().clear();
+			for (String key : allCycleTimeKeys) {
+				if (!rangeSet.contains(key)) {
+					data.getGroupMap().put(key, oldGroupMap.getOrDefault(key, ""));
+				}
+			}
 			for (String range : orderedRanges) {
 				data.getGroupMap()
 						.put(

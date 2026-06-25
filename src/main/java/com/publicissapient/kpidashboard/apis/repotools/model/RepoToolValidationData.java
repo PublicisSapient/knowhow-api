@@ -48,6 +48,7 @@ public class RepoToolValidationData {
 	private long commitCount;
 	private long mrCount;
 	private Long meanTimeToMerge;
+	private Long totalTimeSpent;
 	private long prSize;
 	private Double pickupTime;
 	private Double reworkRate;
@@ -55,6 +56,7 @@ public class RepoToolValidationData {
 	private Double pRSuccessRate;
 	private Double prDeclineRate;
 	private String mergeRequestUrl;
+	private List<String> mergeRequestUrls;
 	private Double innovationRate;
 	private double defectRate;
 	private long addedLines;
