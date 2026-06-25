@@ -359,12 +359,12 @@ public final class KpiDataHelper {
 			while (monday.getDayOfWeek() != DayOfWeek.MONDAY) {
 				monday = monday.minusDays(1);
 			}
-			startDate = monday;
+			startDate = monday.toLocalDate().atStartOfDay();
 			LocalDateTime sunday = date;
 			while (sunday.getDayOfWeek() != DayOfWeek.SUNDAY) {
 				sunday = sunday.plusDays(1);
 			}
-			endDate = sunday;
+			endDate = sunday.toLocalDate().atTime(23, 59, 59, 999_999_999);
 		} else if (period.equalsIgnoreCase(CommonConstant.MONTH)) {
 			YearMonth month = YearMonth.from(date);
 			startDate = month.atDay(1).atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();

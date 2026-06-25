@@ -200,9 +200,18 @@ public class FlowDistributionSlingshotServiceImpl
 					"FlowDistributionServiceImpl -> request id : {} dateWiseCountMap : {}",
 					requestTrackerId,
 					cumulativeAddedCountMap);
+
+			List<String> dynamicColumns =
+					new ArrayList<>(KPIExcelColumn.FLOW_DISTRIBUTION_SLINGSHOT.getColumns());
+			groupByDateAndTypeIds.values().stream()
+					.flatMap(m -> m.keySet().stream())
+					.distinct()
+					.forEach(dynamicColumns::add);
+			kpiElement.setExcelColumns(dynamicColumns);
+		} else {
+			kpiElement.setExcelColumns(KPIExcelColumn.FLOW_DISTRIBUTION_SLINGSHOT.getColumns());
 		}
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.FLOW_DISTRIBUTION_SLINGSHOT.getColumns());
 		kpiElement.setTrendValueList(trendValueList);
 	}
 

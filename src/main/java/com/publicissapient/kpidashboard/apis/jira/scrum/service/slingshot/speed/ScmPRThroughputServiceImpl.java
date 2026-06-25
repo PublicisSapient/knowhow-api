@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ScmPRThroughputServiceImpl
 		extends BitBucketKPIService<Long, List<Object>, Map<String, Object>> {
 
-	private static final String NO_MERGE = "No. of Merge Requests";
 	private static final String ASSIGNEE_SET = "assigneeSet";
 	private static final String MRS_LIST = "mrsList";
 
@@ -123,7 +122,7 @@ public class ScmPRThroughputServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI157(), KPICode.PR_THROUGHPUT.getKpiId());
+				fieldMapping.getThresholdValueKPI208(), KPICode.PR_THROUGHPUT.getKpiId());
 	}
 
 	/**
@@ -212,7 +211,6 @@ public class ScmPRThroughputServiceImpl
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(kpiTrendDataByGroup);
-		kpiTrendDataByGroup.values().forEach(Collections::reverse);
 		Collections.reverse(validationDataList);
 		populateExcelData(requestTrackerId, validationDataList, kpiElement);
 	}
@@ -251,9 +249,14 @@ public class ScmPRThroughputServiceImpl
 					long mrCount = userMergeRequest.size();
 					String userKpiGroup = branchName + "#" + developerName;
 					setDataCount(projectName, dateLabel, userKpiGroup, mrCount, kpiTrendDataByGroup);
+					List<String> mrUrls =
+							userMergeRequest.stream()
+									.map(ScmMergeRequests::getMergeRequestUrl)
+									.filter(java.util.Objects::nonNull)
+									.toList();
 					validationDataList.add(
 							createValidationData(
-									projectName, tool, developerName, userEmail, dateLabel, mrCount));
+									projectName, tool, developerName, userEmail, dateLabel, mrCount, mrUrls));
 				});
 	}
 
@@ -305,7 +308,8 @@ public class ScmPRThroughputServiceImpl
 			String developerName,
 			String developerEmail,
 			String dateLabel,
-			long mrCount) {
+			long mrCount,
+			List<String> mergeRequestUrls) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
@@ -315,6 +319,7 @@ public class ScmPRThroughputServiceImpl
 		validationData.setDeveloperEmail(developerEmail);
 		validationData.setDate(dateLabel);
 		validationData.setMrCount(mrCount);
+		validationData.setMergeRequestUrls(mergeRequestUrls);
 		return validationData;
 	}
 }

@@ -327,7 +327,9 @@ public enum KPICode {
 	SPRINT_VELOCITY_SLINGSHOT("kpi205", KPISource.JIRA.name()),
 	FLOW_LOAD_SLINGSHOT("kpi206", KPISource.JIRA.name()),
 	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", KPISource.JIRA.name()),
-	PR_THROUGHPUT("kpi208", KPISource.BITBUCKET.name());
+	PR_THROUGHPUT("kpi208", KPISource.BITBUCKET.name()),
+	PR_CYCLE_TIME_SLINGSHOT("kpi209", KPISource.BITBUCKET.name()),
+	TIME_TO_FIRST_REVIEW("kpi210", KPISource.BITBUCKET.name());
 
 	// @formatter:on
 

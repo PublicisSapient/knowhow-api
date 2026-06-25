@@ -223,8 +223,9 @@ public class CycleTimeSlingshotServiceImpl
 			Map<String, List<DataValue>> cycleMap) {
 		List<DataValue> dataValueList = new ArrayList<>();
 		LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
-		Iterator<CycleTimeGroup> iterator =
-				fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+		List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
+		cycleTimeGroups.forEach(g -> cycleTimeByGroup.put(g.getLabel(), ""));
+		Iterator<CycleTimeGroup> iterator = cycleTimeGroups.iterator();
 		CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
 		while (current != null) {
 			double minsDiff =
@@ -242,13 +243,29 @@ public class CycleTimeSlingshotServiceImpl
 			current = iterator.hasNext() ? iterator.next() : null;
 		}
 		if (CollectionUtils.isNotEmpty(dataValueList)) {
+			double totalDays =
+					dataValueList.stream()
+							.mapToDouble(
+									dv ->
+											dv.getValue() instanceof Number ? ((Number) dv.getValue()).doubleValue() : 0)
+							.sum();
+			String totalFlowTime = (Math.round(totalDays * 10.0) / 10.0) + " Days";
+			String currentStatus =
+					history.getStatusUpdationLog().isEmpty()
+							? ""
+							: history
+									.getStatusUpdationLog()
+									.get(history.getStatusUpdationLog().size() - 1)
+									.getChangedTo();
 			cycleTimeList.add(
 					CycleTimeValidationData.builder()
 							.issueNumber(history.getStoryID())
 							.url(history.getUrl())
 							.issueType(history.getStoryType())
 							.issueDesc(history.getDescription())
+							.status(currentStatus)
 							.groupMap(cycleTimeByGroup)
+							.totalFlowTime(totalFlowTime)
 							.build());
 			cycleMap.put(history.getStoryID() + "#" + history.getStoryType(), dataValueList);
 		}

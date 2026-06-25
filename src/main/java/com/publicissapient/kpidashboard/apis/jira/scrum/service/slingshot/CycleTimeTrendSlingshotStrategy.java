@@ -60,9 +60,10 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 			JiraIssueCustomHistory history,
 			List<CycleTimeValidationData> cycleTimeList) {
 		if (history != null) {
+			List<CycleTimeGroup> cycleTimeGroups = fieldMapping.getJiraIssueStatusGroupByCategoryKPI202();
 			LinkedHashMap<String, String> cycleTimeByGroup = new LinkedHashMap<>();
-			Iterator<CycleTimeGroup> iterator =
-					fieldMapping.getJiraIssueStatusGroupByCategoryKPI202().iterator();
+			cycleTimeGroups.forEach(g -> cycleTimeByGroup.put(g.getLabel(), ""));
+			Iterator<CycleTimeGroup> iterator = cycleTimeGroups.iterator();
 			CycleTimeGroup current = iterator.hasNext() ? iterator.next() : null;
 			while (current != null) {
 				setCycleTime(current, history, filterMap, sprint, iterator.hasNext(), cycleTimeByGroup);
@@ -70,17 +71,40 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 				issueTypesSet.add(history.getStoryType());
 				current = iterator.hasNext() ? iterator.next() : null;
 			}
+			boolean hasData = cycleTimeByGroup.values().stream().anyMatch(v -> !v.isEmpty());
 			boolean alreadyAdded =
 					cycleTimeList.stream().anyMatch(c -> history.getStoryID().equals(c.getIssueNumber()));
-			if (!cycleTimeByGroup.isEmpty() && !alreadyAdded) {
+			if (hasData && !alreadyAdded) {
+				double totalDays =
+						cycleTimeByGroup.values().stream()
+								.filter(v -> v.endsWith(" Days"))
+								.mapToDouble(
+										v -> {
+											try {
+												return Double.parseDouble(v.replace(" Days", "").trim());
+											} catch (NumberFormatException e) {
+												return 0;
+											}
+										})
+								.sum();
+				String totalFlowTime = (Math.round(totalDays * 10.0) / 10.0) + " Days";
+				String currentStatus =
+						history.getStatusUpdationLog().isEmpty()
+								? ""
+								: history
+										.getStatusUpdationLog()
+										.get(history.getStatusUpdationLog().size() - 1)
+										.getChangedTo();
 				cycleTimeList.add(
 						CycleTimeValidationData.builder()
 								.issueNumber(history.getStoryID())
 								.url(history.getUrl())
 								.issueType(history.getStoryType())
 								.issueDesc(history.getDescription())
+								.status(currentStatus)
 								.sprintName(sprint)
 								.groupMap(cycleTimeByGroup)
+								.totalFlowTime(totalFlowTime)
 								.build());
 			}
 		}

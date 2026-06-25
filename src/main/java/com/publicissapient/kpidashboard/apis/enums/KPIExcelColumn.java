@@ -71,7 +71,14 @@ public enum KPIExcelColumn {
 	SCM_PR_THROUGHPUT(
 			"kpi157",
 			Arrays.asList(
-					"Project", "Repo", "Branch", "Days/Weeks", "Developer", "Email/Username", "No of Merge")),
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"No of Merge")),
 
 	MEAN_TIME_TO_MERGE(
 			"kpi84",
@@ -96,6 +103,19 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Merged Time",
 					"Mean Time To Merge (In Hours)")),
+	PR_CYCLE_TIME_SLINGSHOT(
+			"kpi209",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"PR Raised Time",
+					"PR Merged Time",
+					"Time Spent (in hours)")),
 	AVERAGE_RESOLUTION_TIME(
 			"kpi83",
 			Arrays.asList(
@@ -143,11 +163,12 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Week",
 					"Issue ID",
+					"Issue Type",
 					"Issue Description",
 					"Squad",
-					"Issue Type",
 					"Priority",
 					"Story Points",
+					"Status",
 					"Original Time Estimate (in hours)",
 					"Time Spent (in hours)")),
 	SPRINT_PREDICTABILITY(
@@ -1172,10 +1193,12 @@ public enum KPIExcelColumn {
 			"kpi197", Arrays.asList("Project Name", "Test Case ID", "Test Case Type", "Execution Time")),
 
 	CYCLE_TIME_SLINGSHOT(
-			"kpi202", Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Group Map")),
+			"kpi202",
+			Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Status", "Group Map")),
 	CYCLE_TIME_TREND_SLINGSHOT(
 			"kpi204",
-			Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Sprint Name", "Group Map")),
+			Arrays.asList(
+					"Issue ID", "Issue Type", "Issue Description", "Sprint Name", "Status", "Group Map")),
 	FLOW_EFFICIENCY_SLINGSHOT(
 			"kpi203",
 			Arrays.asList(
@@ -1183,9 +1206,25 @@ public enum KPIExcelColumn {
 					"Issue Type",
 					"Issue Description",
 					"Size (In Story Points)",
+					"Status",
 					"Wait Time",
 					"Total Time",
-					"Flow Efficiency"));
+					"Flow Efficiency",
+					"Group Map")),
+	TIME_TO_FIRST_REVIEW(
+			"kpi210",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"PR Raised Time",
+					"PR Review Time",
+					"Time to First Review (In Hours)")),
+	;
 
 	// @formatter:on
 
