@@ -717,12 +717,16 @@ class ScmTimeToFirstReviewServiceImplTest {
 	}
 
 	@Test
-	void testCalculateKpi_mergeRequestWithNullPickedForReviewFiltered() {
-		// MR without pickedForReviewOn should be filtered out in date range filtering
+	void testCalculateKpi_mergeRequestWithNullPickedForReviewIncluded() {
 		ScmMergeRequests mr = new ScmMergeRequests();
 		mr.setProcessorItemId(processorItemId);
 		mr.setPickedForReviewOn(null);
 		mr.setCreatedDate(toMillis(LocalDateTime.now().minusHours(5)));
+
+		User user = new User();
+		user.setEmail("dev@example.com");
+		mr.setAuthorId(user);
+		mr.setMergeRequestUrl("https://example.com/pr/1");
 
 		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
 			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
@@ -731,10 +735,13 @@ class ScmTimeToFirstReviewServiceImplTest {
 					.thenReturn("main -> test-repo -> TestProject");
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(anyList(), any(Tool.class)))
-					.thenReturn(Collections.emptyList());
+					.thenReturn(List.of(mr));
 			devHelperMock
 					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(anyList()))
-					.thenReturn(Collections.emptyMap());
+					.thenReturn(Map.of("dev@example.com", List.of(mr)));
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
+					.thenReturn("Dev User");
 			devHelperMock
 					.when(
 							() ->
@@ -756,6 +763,63 @@ class ScmTimeToFirstReviewServiceImplTest {
 							kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
 
 			assertNotNull(result);
+			assertFalse(validationDataList.isEmpty());
+			assertEquals(0.0, validationDataList.get(0).getPickupTime());
+			assertNull(validationDataList.get(0).getPrActivityTime());
+		}
+	}
+
+	@Test
+	void testCalculateKpi_subHourPickupTimePreservesDecimalPrecision() {
+		LocalDateTime created = LocalDateTime.now().minusMinutes(6);
+		LocalDateTime pickedTime = created.plusMinutes(5).plusSeconds(30);
+
+		ScmMergeRequests mr = new ScmMergeRequests();
+		mr.setProcessorItemId(processorItemId);
+		mr.setCreatedDate(toMillis(created));
+		mr.setPickedForReviewOn(toMillis(pickedTime));
+		mr.setMergeRequestUrl("https://example.com/pr/99");
+		User user = new User();
+		user.setEmail("dev@example.com");
+		mr.setAuthorId(user);
+
+		try (MockedStatic<DeveloperKpiHelper> devHelperMock = mockStatic(DeveloperKpiHelper.class)) {
+			devHelperMock.when(() -> DeveloperKpiHelper.isValidTool(any(Tool.class))).thenReturn(true);
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getBranchSubFilter(any(Tool.class), anyString()))
+					.thenReturn("main -> test-repo -> TestProject");
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.filterMergeRequestsForBranch(anyList(), any(Tool.class)))
+					.thenReturn(List.of(mr));
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.groupMergeRequestsByUser(anyList()))
+					.thenReturn(Map.of("dev@example.com", List.of(mr)));
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getDeveloperName(anyString(), anySet()))
+					.thenReturn("Dev User");
+			devHelperMock
+					.when(
+							() ->
+									DeveloperKpiHelper.setDataCount(
+											anyString(), anyString(), anyString(), any(Number.class), anyMap(), anyMap()))
+					.thenAnswer(inv -> null);
+			devHelperMock
+					.when(() -> DeveloperKpiHelper.getNextRangeDate(anyString(), any(LocalDateTime.class)))
+					.thenReturn(LocalDateTime.now().minusWeeks(1));
+
+			kpiRequest.setXAxisDataPoints(1);
+			kpiRequest.setDuration("WEEK");
+
+			List<RepoToolValidationData> validationDataList = new ArrayList<>();
+			Set<Assignee> assignees = new HashSet<>();
+
+			service.calculateKpi(
+					kpiRequest, List.of(mr), List.of(tool), validationDataList, assignees, "TestProject");
+
+			assertFalse(validationDataList.isEmpty());
+			double pickupHours = validationDataList.get(0).getPickupTime();
+			assertTrue(pickupHours > 0.0, "Sub-hour pickup time must not be rounded to zero");
+			assertTrue(pickupHours < 1.0, "Pickup time must be less than 1 hour");
 		}
 	}
 

@@ -320,6 +320,7 @@ public class ScmPRThroughputServiceImpl
 		validationData.setDate(dateLabel);
 		validationData.setMrCount(mrCount);
 		validationData.setMergeRequestUrls(mergeRequestUrls);
+		validationData.setPrStatus("MERGED");
 		return validationData;
 	}
 }

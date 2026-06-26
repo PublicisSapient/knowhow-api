@@ -29,8 +29,6 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 public class PRCycleTimeTrendKpiServiceImpl
 		extends AbstractKpiCalculationStrategy<Map<String, List<DataCount>>> {
 
-	private static final long MILLIS_PER_SECOND = 1000L;
-
 	@Override
 	public Map<String, List<DataCount>> calculateKpi(
 			KpiRequest kpiRequest,
@@ -97,7 +95,7 @@ public class PRCycleTimeTrendKpiServiceImpl
 		List<ScmMergeRequests> mergeRequestsForBranch =
 				DeveloperKpiHelper.filterMergeRequestsForBranch(mergeRequests, tool);
 
-		long sumTimeToMergeHours = calculateSumTimeToMerge(mergeRequestsForBranch);
+		double sumTimeToMergeHours = calculateSumTimeToMerge(mergeRequestsForBranch);
 		long mergedPrCount = countMergedPRs(mergeRequestsForBranch);
 
 		DeveloperKpiHelper.setDataCount(
@@ -130,7 +128,7 @@ public class PRCycleTimeTrendKpiServiceImpl
 							List<ScmMergeRequests> userMergeRequests = entry.getValue();
 							String developerName = DeveloperKpiHelper.getDeveloperName(userEmail, assignees);
 
-							Long userSumHrs = calculateSumTimeToMerge(userMergeRequests);
+							double userSumHrs = calculateSumTimeToMerge(userMergeRequests);
 							long userMergedPrCount = countMergedPRs(userMergeRequests);
 
 							DeveloperKpiHelper.setDataCount(
@@ -176,10 +174,9 @@ public class PRCycleTimeTrendKpiServiceImpl
 
 		LocalDateTime startTime = DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		long timeToMergeSeconds = ChronoUnit.SECONDS.between(startTime, mergeRequest.getMergedAt());
-		validationData.setTotalTimeSpent(
-				KpiHelperService.convertMilliSecondsToHours(
-						timeToMergeSeconds * (double) MILLIS_PER_SECOND));
+		validationData.setTotalTimeSpent(timeToMergeSeconds / 3600.0);
 		validationData.setMergeRequestUrl(mergeRequest.getMergeRequestUrl());
+		validationData.setPrStatus(mergeRequest.getState());
 
 		LocalDateTime startTimeUTC = DateUtil.localDateTimeToUTC(startTime);
 		LocalDateTime mergedAtUTC = DateUtil.localDateTimeToUTC(mergeRequest.getMergedAt());
@@ -196,22 +193,20 @@ public class PRCycleTimeTrendKpiServiceImpl
 				.count();
 	}
 
-	private long calculateSumTimeToMerge(List<ScmMergeRequests> mergeRequests) {
+	private double calculateSumTimeToMerge(List<ScmMergeRequests> mergeRequests) {
 		if (CollectionUtils.isEmpty(mergeRequests)) {
-			return 0L;
+			return 0.0;
 		}
 		return mergeRequests.stream()
 				.filter(mr -> mr.getMergedAt() != null)
 				.filter(
 						mr -> ScmMergeRequests.MergeRequestState.MERGED.name().equalsIgnoreCase(mr.getState()))
 				.filter(mr -> mr.getCreatedDate() != null)
-				.mapToLong(
+				.mapToDouble(
 						mr -> {
 							LocalDateTime startTime = DateUtil.convertMillisToLocalDateTime(mr.getCreatedDate());
 							long seconds = ChronoUnit.SECONDS.between(startTime, mr.getMergedAt());
-							if (seconds <= 0) return 0L;
-							return KpiHelperService.convertMilliSecondsToHours(
-									seconds * (double) MILLIS_PER_SECOND);
+							return seconds > 0 ? seconds / 3600.0 : 0.0;
 						})
 				.sum();
 	}

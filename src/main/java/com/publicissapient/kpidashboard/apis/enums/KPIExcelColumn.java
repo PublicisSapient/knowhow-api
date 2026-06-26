@@ -78,6 +78,7 @@ public enum KPIExcelColumn {
 					"Developer",
 					"Email/Username",
 					"Merge Request Url",
+					"State",
 					"No of Merge")),
 
 	MEAN_TIME_TO_MERGE(
@@ -113,6 +114,7 @@ public enum KPIExcelColumn {
 					"Developer",
 					"Email/Username",
 					"Merge Request Url",
+					"State",
 					"PR Raised Time",
 					"PR Merged Time",
 					"Time Spent (in hours)")),
@@ -939,7 +941,7 @@ public enum KPIExcelColumn {
 					"Merge Request Url",
 					"PR Raised Time",
 					"PR Review Time",
-					"PR Status",
+					"State",
 					"Pickup Time (In Hours)")),
 
 	PR_SIZE_OVERTIME(
@@ -1221,6 +1223,7 @@ public enum KPIExcelColumn {
 					"Developer",
 					"Email/Username",
 					"Merge Request Url",
+					"State",
 					"PR Raised Time",
 					"PR Review Time",
 					"Time to First Review (In Hours)")),
