@@ -42,7 +42,7 @@ public class PRThroughputKpiChangeUnit {
 						.append("defaultOrder", 1)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Speed")
-						.append("kpiUnit", "MRs")
+						.append("kpiUnit", "PRs")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Weeks")
 						.append("yAxisLabel", "Count")

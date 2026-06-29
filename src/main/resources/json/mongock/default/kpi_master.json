@@ -5533,7 +5533,7 @@
     "defaultOrder" : 1,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Speed",
-    "kpiUnit" : "MRs",
+    "kpiUnit" : "PRs",
     "chartType" : "line",
     "xAxisLabel" : "Weeks",
     "yAxisLabel" : "Count",
