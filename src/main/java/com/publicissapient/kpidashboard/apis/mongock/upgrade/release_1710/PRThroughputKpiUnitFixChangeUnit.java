@@ -43,13 +43,15 @@ public class PRThroughputKpiUnitFixChangeUnit {
 	public void execute() {
 		mongoTemplate
 				.getCollection(KPI_MASTER)
-				.updateOne(new Document(KPI_ID, KPI_208), new Document("$set", new Document(KPI_UNIT, "PRs")));
+				.updateOne(
+						new Document(KPI_ID, KPI_208), new Document("$set", new Document(KPI_UNIT, "PRs")));
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		mongoTemplate
 				.getCollection(KPI_MASTER)
-				.updateOne(new Document(KPI_ID, KPI_208), new Document("$set", new Document(KPI_UNIT, "MRs")));
+				.updateOne(
+						new Document(KPI_ID, KPI_208), new Document("$set", new Document(KPI_UNIT, "MRs")));
 	}
 }
