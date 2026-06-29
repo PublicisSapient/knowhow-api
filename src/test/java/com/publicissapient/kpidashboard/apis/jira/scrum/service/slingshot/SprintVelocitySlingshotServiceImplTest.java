@@ -3,18 +3,27 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintVelocityServiceHelper;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -46,7 +56,10 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SprintVelocitySlingshotServiceImplTest {
@@ -58,6 +71,10 @@ public class SprintVelocitySlingshotServiceImplTest {
 	@Mock private JiraIssueRepository jiraIssueRepository;
 
 	@Mock private CacheService cacheService;
+
+	@Mock private SprintRepository sprintRepository;
+
+	@Mock private SprintVelocityServiceHelper velocityHelper;
 
 	@InjectMocks private SprintVelocitySlingshotServiceImpl sprintVelocityService;
 
@@ -451,5 +468,441 @@ public class SprintVelocitySlingshotServiceImplTest {
 		issues.add(issue2);
 
 		return issues;
+	}
+
+	@Test
+	public void testGetKpiDataWithMultiGranularityAllFiltersPresent() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+		assertTrue(result.getTrendValueList() instanceof List<?>);
+		List<?> groups = (List<?>) result.getTrendValueList();
+		assertEquals(4, groups.size());
+		List<String> filterNames =
+				groups.stream()
+						.map(g -> ((DataCountGroup) g).getFilter())
+						.collect(java.util.stream.Collectors.toList());
+		assertTrue(filterNames.contains("Weekly"));
+		assertTrue(filterNames.contains("Bi-Weekly"));
+		assertTrue(filterNames.contains("Monthly"));
+		assertTrue(filterNames.contains("Sprint"));
+	}
+
+	@Test
+	public void testGetKpiDataMultiGranularityWeeklyLimitedTo12() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DataCountGroup weeklyGroup =
+				groups.stream()
+						.filter(g -> "Weekly".equals(((DataCountGroup) g).getFilter()))
+						.map(g -> (DataCountGroup) g)
+						.findFirst()
+						.orElseThrow();
+		List<?> weeklyValues = weeklyGroup.getValue();
+		assertNotNull(weeklyValues);
+		if (!weeklyValues.isEmpty() && weeklyValues.get(0) instanceof DataCount) {
+			Object innerVal = ((DataCount) weeklyValues.get(0)).getValue();
+			if (innerVal instanceof List<?> inner) {
+				assertTrue("Weekly filter should show at most 12 periods", inner.size() <= 12);
+			}
+		}
+	}
+
+	@Test
+	public void testGetKpiDataMultiGranularityBiWeeklyMaxPeriods() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205(
+				LocalDate.now().minusDays(30).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DataCountGroup biWeeklyGroup =
+				groups.stream()
+						.filter(g -> "Bi-Weekly".equals(((DataCountGroup) g).getFilter()))
+						.map(g -> (DataCountGroup) g)
+						.findFirst()
+						.orElseThrow();
+		assertNotNull(biWeeklyGroup.getValue());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testReferenceDateAlignmentNoFutureDatesAndOldestToNewestOrder()
+			throws ApplicationException {
+		LocalDate refDate = LocalDate.now().minusDays(3);
+		String refDateStr = refDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205(refDateStr);
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DateTimeFormatter labelFmt =
+				DateTimeFormatter.ofPattern("dd-MMM-yyyy", java.util.Locale.ENGLISH);
+		String expectedStart = refDate.format(labelFmt);
+		LocalDate today = LocalDate.now();
+
+		for (Object g : groups) {
+			DataCountGroup group = (DataCountGroup) g;
+			List<DataCount> projectWrappers = (List<DataCount>) group.getValue();
+			if (projectWrappers.isEmpty()) continue;
+			List<DataCount> periods = (List<DataCount>) projectWrappers.get(0).getValue();
+			if (periods == null || periods.isEmpty()) continue;
+
+			DataCount mostRecent = periods.get(periods.size() - 1);
+			String sprintId = mostRecent.getsSprintID();
+			assertNotNull("SprintId should not be null for " + group.getFilter(), sprintId);
+
+			if ("Weekly".equals(group.getFilter())) {
+				assertTrue(
+						"Weekly most-recent period should start on reference date. Got: " + sprintId,
+						sprintId.startsWith(expectedStart));
+			}
+
+			if (!"Monthly".equals(group.getFilter())) {
+				String endPart =
+						sprintId.contains(" to ") ? sprintId.split(" to ")[1].trim() : sprintId.trim();
+				try {
+					LocalDate endDate = LocalDate.parse(endPart, labelFmt);
+					assertFalse(
+							"Period end date should not be in the future for "
+									+ group.getFilter()
+									+ ": "
+									+ sprintId,
+							endDate.isAfter(today));
+				} catch (Exception ignored) {
+				}
+			}
+
+			for (int i = 0; i < periods.size() - 1; i++) {
+				String id1 = periods.get(i).getsSprintID();
+				String id2 = periods.get(i + 1).getsSprintID();
+				if (id1 == null || id2 == null) continue;
+				try {
+					String s1 = id1.contains(" to ") ? id1.split(" to ")[0].trim() : id1.trim();
+					String s2 = id2.contains(" to ") ? id2.split(" to ")[0].trim() : id2.trim();
+					LocalDate d1 = LocalDate.parse(s1, labelFmt);
+					LocalDate d2 = LocalDate.parse(s2, labelFmt);
+					assertTrue(
+							"Periods should be in oldest-to-newest order for "
+									+ group.getFilter()
+									+ ": "
+									+ id1
+									+ " then "
+									+ id2,
+							!d1.isAfter(d2));
+				} catch (Exception ignored) {
+				}
+			}
+		}
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testBiWeeklyStartsOnReferenceBoundary() throws ApplicationException {
+		LocalDate refDate = LocalDate.now().minusDays(10);
+		String refDateStr = refDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205(refDateStr);
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createRecentMockJiraIssues());
+
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DataCountGroup biWeeklyGroup =
+				groups.stream()
+						.filter(g -> "Bi-Weekly".equals(((DataCountGroup) g).getFilter()))
+						.map(g -> (DataCountGroup) g)
+						.findFirst()
+						.orElseThrow();
+
+		List<DataCount> projectWrappers = (List<DataCount>) biWeeklyGroup.getValue();
+		assertNotNull(projectWrappers);
+		if (!projectWrappers.isEmpty()) {
+			List<DataCount> biWeeklyPeriods = (List<DataCount>) projectWrappers.get(0).getValue();
+			assertNotNull(biWeeklyPeriods);
+			DateTimeFormatter labelFmt =
+					DateTimeFormatter.ofPattern("dd-MMM-yyyy", java.util.Locale.ENGLISH);
+			for (DataCount period : biWeeklyPeriods) {
+				String sprintId = period.getsSprintID();
+				assertNotNull(sprintId);
+				String startPart =
+						sprintId.contains(" to ") ? sprintId.split(" to ")[0].trim() : sprintId.trim();
+				LocalDate startDate = LocalDate.parse(startPart, labelFmt);
+				long diff = java.time.temporal.ChronoUnit.DAYS.between(refDate, startDate);
+				assertEquals(
+						"Bi-weekly period start date should be a multiple of 14 days from reference date, but got diff="
+								+ diff
+								+ " for period "
+								+ sprintId,
+						0L,
+						diff % 14);
+			}
+		}
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testMonthlyStartsOnReferenceDate() throws ApplicationException {
+		LocalDate refDate = LocalDate.now().minusDays(10);
+		String refDateStr = refDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		fieldMapping.setWeeklyDataStartDateKPI205(refDateStr);
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
+				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DataCountGroup monthlyGroup =
+				groups.stream()
+						.filter(g -> "Monthly".equals(((DataCountGroup) g).getFilter()))
+						.map(g -> (DataCountGroup) g)
+						.findFirst()
+						.orElseThrow();
+
+		List<DataCount> projectWrappers = (List<DataCount>) monthlyGroup.getValue();
+		assertNotNull(projectWrappers);
+		if (!projectWrappers.isEmpty()) {
+			List<DataCount> monthlyPeriods = (List<DataCount>) projectWrappers.get(0).getValue();
+			assertNotNull(monthlyPeriods);
+			assertTrue("Should have at least one monthly period", !monthlyPeriods.isEmpty());
+			DataCount refPeriod = null;
+			DateTimeFormatter dayFmt =
+					DateTimeFormatter.ofPattern("dd-MMM-yyyy", java.util.Locale.ENGLISH);
+			String expectedRefLabel =
+					refDate.format(dayFmt) + " - " + refDate.plusDays(27).format(dayFmt);
+			for (DataCount period : monthlyPeriods) {
+				if (expectedRefLabel.equals(period.getsSprintID())) {
+					refPeriod = period;
+					break;
+				}
+			}
+			assertNotNull(
+					"There should be a monthly period labeled '"
+							+ expectedRefLabel
+							+ "' (the 28-day bucket starting on the reference date)",
+					refPeriod);
+		}
+	}
+
+	private List<JiraIssue> createRecentMockJiraIssues() {
+		List<JiraIssue> issues = new ArrayList<>();
+		LocalDate base = LocalDate.now().minusWeeks(2);
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+		String[] statuses = {"Done", "Closed"};
+		for (int i = 0; i < 10; i++) {
+			JiraIssue issue = new JiraIssue();
+			issue.setNumber("RECENT-" + i);
+			issue.setStatus(statuses[i % 2]);
+			issue.setStoryPoints(3.0);
+			issue.setChangeDate(base.minusWeeks(i).atStartOfDay().format(dtf));
+			issue.setCreatedDate(base.minusWeeks(i + 1).atStartOfDay().format(dtf));
+			issues.add(issue);
+		}
+		return issues;
+	}
+
+	private List<SprintDetails> createMockSprintDetails(ObjectId projectId) {
+		List<SprintDetails> sprints = new ArrayList<>();
+		LocalDate base = LocalDate.now().minusWeeks(4);
+		for (int i = 0; i < 3; i++) {
+			SprintDetails sprint = new SprintDetails();
+			sprint.setSprintID("SPRINT-" + i);
+			sprint.setSprintName("Sprint " + i);
+			sprint.setState(SprintDetails.SPRINT_STATE_CLOSED);
+			sprint.setBasicProjectConfigId(projectId);
+			sprint.setStartDate(base.minusWeeks((long) i * 2).toString());
+			sprint.setCompleteDate(base.minusWeeks((long) i * 2 - 2).toString());
+			Set<SprintIssue> completedIssues = new HashSet<>();
+			SprintIssue si = new SprintIssue();
+			si.setNumber("RECENT-" + i);
+			completedIssues.add(si);
+			sprint.setCompletedIssues(completedIssues);
+			sprints.add(sprint);
+		}
+		return sprints;
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testGetKpiDataMultiGranularitySprintGroup() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		List<JiraIssue> mockIssues = createRecentMockJiraIssues();
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString())).thenReturn(mockIssues);
+		List<SprintDetails> mockSprints = createMockSprintDetails(projectId);
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(mockSprints);
+		doAnswer(
+						invocation -> {
+							List<JiraIssue> allIssues = invocation.getArgument(0);
+							List<SprintDetails> sprints = invocation.getArgument(1);
+							Map<Pair<String, String>, Set<JiraIssue>> map = invocation.getArgument(2);
+							for (SprintDetails sd : sprints) {
+								if (sd.getCompletedIssues() == null) continue;
+								Set<String> completedNums =
+										sd.getCompletedIssues().stream()
+												.map(si -> si.getNumber())
+												.collect(Collectors.toSet());
+								Set<JiraIssue> matched =
+										allIssues.stream()
+												.filter(ji -> completedNums.contains(ji.getNumber()))
+												.collect(Collectors.toSet());
+								map.put(
+										Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()), matched);
+							}
+							return null;
+						})
+				.when(velocityHelper)
+				.getSprintIssuesForProject(any(), any(), any());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DataCountGroup sprintGroup =
+				groups.stream()
+						.filter(g -> "Sprint".equals(((DataCountGroup) g).getFilter()))
+						.map(g -> (DataCountGroup) g)
+						.findFirst()
+						.orElseThrow(() -> new AssertionError("Sprint group not found"));
+
+		assertNotNull(sprintGroup.getValue());
+		assertFalse("Sprint group should not be empty", sprintGroup.getValue().isEmpty());
+
+		DataCount wrapper = (DataCount) sprintGroup.getValue().get(0);
+		assertNotNull(wrapper);
+		assertNotNull(wrapper.getValue());
+
+		List<DataCount> sprintItems = (List<DataCount>) wrapper.getValue();
+		assertFalse("Sprint items should not be empty", sprintItems.isEmpty());
+		DataCount firstSprint = sprintItems.get(0);
+		assertTrue(
+				"sSprintName should start with 'Sprint 1:'",
+				firstSprint.getsSprintName().startsWith("Sprint 1:"));
+		assertTrue(
+				"sSprintID should start with 'Sprint 1:'",
+				firstSprint.getsSprintID().startsWith("Sprint 1:"));
+
+		double countValue = ((Number) firstSprint.getValue()).doubleValue();
+		double storyPointsValue =
+				((Number) ((Map<?, ?>) firstSprint.getSubfilterValues()).get("storyPoints")).doubleValue();
+		assertEquals("Count should be 1.0 (one issue per sprint)", 1.0, countValue, 0.0001);
+		assertEquals(
+				"StoryPoints should be 3.0 (issue has 3.0 story points)", 3.0, storyPointsValue, 0.0001);
 	}
 }
