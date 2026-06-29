@@ -7,7 +7,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -15,9 +17,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +43,7 @@ import com.publicissapient.kpidashboard.apis.data.KpiRequestFactory;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintVelocityServiceHelper;
 import com.publicissapient.kpidashboard.apis.model.AccountHierarchyData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -49,7 +56,10 @@ import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SprintVelocitySlingshotServiceImplTest {
@@ -61,6 +71,10 @@ public class SprintVelocitySlingshotServiceImplTest {
 	@Mock private JiraIssueRepository jiraIssueRepository;
 
 	@Mock private CacheService cacheService;
+
+	@Mock private SprintRepository sprintRepository;
+
+	@Mock private SprintVelocityServiceHelper velocityHelper;
 
 	@InjectMocks private SprintVelocitySlingshotServiceImpl sprintVelocityService;
 
@@ -468,6 +482,9 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
 				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
 
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
@@ -479,7 +496,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 		assertNotNull(result.getTrendValueList());
 		assertTrue(result.getTrendValueList() instanceof List<?>);
 		List<?> groups = (List<?>) result.getTrendValueList();
-		assertEquals(3, groups.size());
+		assertEquals(4, groups.size());
 		List<String> filterNames =
 				groups.stream()
 						.map(g -> ((DataCountGroup) g).getFilter())
@@ -487,6 +504,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 		assertTrue(filterNames.contains("Weekly"));
 		assertTrue(filterNames.contains("Bi-Weekly"));
 		assertTrue(filterNames.contains("Monthly"));
+		assertTrue(filterNames.contains("Sprint"));
 	}
 
 	@Test
@@ -501,6 +519,9 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
 				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
 
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
@@ -539,6 +560,9 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
 				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
 
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
@@ -574,6 +598,9 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
 				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
 
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
@@ -659,6 +686,10 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
 				.thenReturn(createRecentMockJiraIssues());
 
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
+
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
 
@@ -714,6 +745,9 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByBasicProjectConfigId(anyString()))
 				.thenReturn(createRecentMockJiraIssues());
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(new ArrayList<>());
 
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
@@ -769,5 +803,106 @@ public class SprintVelocitySlingshotServiceImplTest {
 			issues.add(issue);
 		}
 		return issues;
+	}
+
+	private List<SprintDetails> createMockSprintDetails(ObjectId projectId) {
+		List<SprintDetails> sprints = new ArrayList<>();
+		LocalDate base = LocalDate.now().minusWeeks(4);
+		for (int i = 0; i < 3; i++) {
+			SprintDetails sprint = new SprintDetails();
+			sprint.setSprintID("SPRINT-" + i);
+			sprint.setSprintName("Sprint " + i);
+			sprint.setState(SprintDetails.SPRINT_STATE_CLOSED);
+			sprint.setBasicProjectConfigId(projectId);
+			sprint.setStartDate(base.minusWeeks((long) i * 2).toString());
+			sprint.setCompleteDate(base.minusWeeks((long) i * 2 - 2).toString());
+			Set<SprintIssue> completedIssues = new HashSet<>();
+			SprintIssue si = new SprintIssue();
+			si.setNumber("RECENT-" + i);
+			completedIssues.add(si);
+			sprint.setCompletedIssues(completedIssues);
+			sprints.add(sprint);
+		}
+		return sprints;
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testGetKpiDataMultiGranularitySprintGroup() throws ApplicationException {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraTicketClosedStatus(Arrays.asList("Done", "Closed"));
+		ObjectId projectId = new ObjectId("6335363749794a18e8a4479b");
+		fieldMappingMap.put(projectId, fieldMapping);
+
+		when(customApiConfig.isSlingshotSprintVelocityMultiGranularity()).thenReturn(true);
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fieldMapping);
+		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
+		List<JiraIssue> mockIssues = createRecentMockJiraIssues();
+		when(jiraIssueRepository.findByBasicProjectConfigId(anyString())).thenReturn(mockIssues);
+		List<SprintDetails> mockSprints = createMockSprintDetails(projectId);
+		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						any(), anyList()))
+				.thenReturn(mockSprints);
+		doAnswer(
+						invocation -> {
+							List<JiraIssue> allIssues = invocation.getArgument(0);
+							List<SprintDetails> sprints = invocation.getArgument(1);
+							Map<Pair<String, String>, Set<JiraIssue>> map = invocation.getArgument(2);
+							for (SprintDetails sd : sprints) {
+								if (sd.getCompletedIssues() == null) continue;
+								Set<String> completedNums =
+										sd.getCompletedIssues().stream()
+												.map(si -> si.getNumber())
+												.collect(Collectors.toSet());
+								Set<JiraIssue> matched =
+										allIssues.stream()
+												.filter(ji -> completedNums.contains(ji.getNumber()))
+												.collect(Collectors.toSet());
+								map.put(
+										Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()), matched);
+							}
+							return null;
+						})
+				.when(velocityHelper)
+				.getSprintIssuesForProject(any(), any(), any());
+
+		KpiElement kpiElement = new KpiElement();
+		kpiElement.setKpiId("kpi205");
+
+		KpiElement result =
+				sprintVelocityService.getKpiData(kpiRequest, kpiElement, treeAggregatorDetail);
+
+		assertNotNull(result);
+		List<?> groups = (List<?>) result.getTrendValueList();
+		DataCountGroup sprintGroup =
+				groups.stream()
+						.filter(g -> "Sprint".equals(((DataCountGroup) g).getFilter()))
+						.map(g -> (DataCountGroup) g)
+						.findFirst()
+						.orElseThrow(() -> new AssertionError("Sprint group not found"));
+
+		assertNotNull(sprintGroup.getValue());
+		assertFalse("Sprint group should not be empty", sprintGroup.getValue().isEmpty());
+
+		DataCount wrapper = (DataCount) sprintGroup.getValue().get(0);
+		assertNotNull(wrapper);
+		assertNotNull(wrapper.getValue());
+
+		List<DataCount> sprintItems = (List<DataCount>) wrapper.getValue();
+		assertFalse("Sprint items should not be empty", sprintItems.isEmpty());
+		DataCount firstSprint = sprintItems.get(0);
+		assertTrue(
+				"sSprintName should start with 'Sprint 1:'",
+				firstSprint.getsSprintName().startsWith("Sprint 1:"));
+		assertTrue(
+				"sSprintID should start with 'Sprint 1:'",
+				firstSprint.getsSprintID().startsWith("Sprint 1:"));
+
+		double countValue = ((Number) firstSprint.getValue()).doubleValue();
+		double storyPointsValue =
+				((Number) ((Map<?, ?>) firstSprint.getSubfilterValues()).get("storyPoints")).doubleValue();
+		assertEquals("Count should be 1.0 (one issue per sprint)", 1.0, countValue, 0.0001);
+		assertEquals(
+				"StoryPoints should be 3.0 (issue has 3.0 story points)", 3.0, storyPointsValue, 0.0001);
 	}
 }
