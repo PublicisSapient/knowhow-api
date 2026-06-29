@@ -163,10 +163,11 @@ public enum KPIExcelColumn {
 	SPRINT_VELOCITY_SLINGSHOT(
 			"kpi205",
 			Arrays.asList(
-					"Week",
+					"Days/Weeks",
 					"Issue ID",
 					"Issue Type",
 					"Issue Description",
+					"Sprint Name",
 					"Squad",
 					"Priority",
 					"Story Points",

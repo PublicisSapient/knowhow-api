@@ -1008,11 +1008,11 @@ public class KPIExcelUtility {
 			for (int i = 0; i < sortedEntries.size(); i++) {
 				String weekLabel = sortedEntries.get(i).getKey();
 				Set<JiraIssue> issueSet = sortedEntries.get(i).getValue();
-				String weekRange = (i + 1) + " (" + weekLabel + ")";
 				for (JiraIssue jiraIssue : issueSet) {
 					KPIExcelData excelData = new KPIExcelData();
-					setSpeedKPIExcelData(null, jiraIssue, fieldMapping, excelData);
-					excelData.setWeekRange(weekRange);
+					setSpeedKPIExcelData(jiraIssue.getSprintName(), jiraIssue, fieldMapping, excelData);
+					excelData.setDaysWeeks(weekLabel);
+					excelData.setIssueStatus(null);
 					excelData.setStatus(jiraIssue.getStatus());
 					setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 					kpiExcelData.add(excelData);
