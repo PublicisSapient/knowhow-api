@@ -876,7 +876,8 @@ public enum FieldMappingEnum {
 			Arrays.asList("jiraIssueTypeNamesKPI206", "jiraIssueStatusGroupByCategoryKPI206")),
 
 	KPI208("PR Throughput", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI208")),
-	KPI210("Time To First Review", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI210"));
+	KPI210("Time To First Review", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI210")),
+	KPI211("PR Size Distribution", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI211"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

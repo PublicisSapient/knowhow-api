@@ -1594,11 +1594,12 @@ public class KPIExcelUtility {
 									.forEach(
 											pr -> {
 												KPIExcelData excelData = new KPIExcelData();
+												excelData.setDaysWeeks(repoToolValidationData.getDate());
 												excelData.setProject(repoToolValidationData.getProjectName());
 												excelData.setRepo(repoToolValidationData.getRepoUrl());
 												excelData.setBranch(repoToolValidationData.getBranchName());
-												excelData.setAuthor(repoToolValidationData.getDeveloperName());
-												excelData.setDaysWeeks(repoToolValidationData.getDate());
+												excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+												excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 												excelData.setMergeRequestUrl(
 														Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
 												try {
@@ -1610,11 +1611,12 @@ public class KPIExcelUtility {
 											});
 						} else {
 							KPIExcelData excelData = new KPIExcelData();
+							excelData.setDaysWeeks(repoToolValidationData.getDate());
 							excelData.setProject(repoToolValidationData.getProjectName());
 							excelData.setRepo(repoToolValidationData.getRepoUrl());
 							excelData.setBranch(repoToolValidationData.getBranchName());
-							excelData.setAuthor(repoToolValidationData.getDeveloperName());
-							excelData.setDaysWeeks(repoToolValidationData.getDate());
+							excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+							excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 							excelData.setMergeRequestUrl(Collections.emptyMap());
 							excelData.setTotalLineChanges(0L);
 							kpiExcelData.add(excelData);

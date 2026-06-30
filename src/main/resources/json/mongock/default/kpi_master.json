@@ -5615,5 +5615,33 @@
     "isRepoToolKpi" : true,
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi211",
+    "kpiName" : "PR Size Distribution",
+    "isDeleted" : "False",
+    "defaultOrder" : 4,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "Lines",
+    "chartType" : "scatter",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Count (Lines Changed)",
+    "showTrend" : false,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "kpiSource" : "BitBucket",
+    "kanban" : false,
+    "groupId" : 6,
+    "kpiInfo" : {
+      "definition" : "Distribution of merged PR sizes (lines changed)."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isAdditionalFilterSupport" : false,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "forecastModel" : "thetaMethod"
   }
 ]
