@@ -1228,6 +1228,17 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Review Time",
 					"Time to First Review (In Hours)")),
+	SCM_PR_SIZE_DISTRIBUTION(
+			"kpi211",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"Total Lines Changed")),
 	;
 
 	// @formatter:on
