@@ -17,6 +17,8 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -322,15 +324,27 @@ public final class DeveloperKpiHelper {
 				updatedDataCount.setValue(
 						((Number) updatedDataCount.getValue()).longValue() + value.longValue());
 			} else if (value instanceof Double) {
-				updatedDataCount.setValue(
-						((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
+				double rounded =
+						BigDecimal.valueOf(
+										((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue())
+								.setScale(2, RoundingMode.HALF_UP)
+								.doubleValue();
+				updatedDataCount.setValue(rounded);
+				updatedDataCount.setData(String.valueOf(rounded));
 			}
 		} else {
 			DataCount newDataCount = new DataCount();
-			newDataCount.setData(String.valueOf(value));
+			if (value instanceof Double) {
+				double rounded =
+						BigDecimal.valueOf(value.doubleValue()).setScale(2, RoundingMode.HALF_UP).doubleValue();
+				newDataCount.setData(String.valueOf(rounded));
+				newDataCount.setValue(rounded);
+			} else {
+				newDataCount.setData(String.valueOf(value));
+				newDataCount.setValue(value);
+			}
 			newDataCount.setSProjectName(projectName);
 			newDataCount.setDate(dateLabel);
-			newDataCount.setValue(value);
 			newDataCount.setKpiGroup(kpiGroup);
 			newDataCount.setHoverValue(hoverValue);
 			dataCounts.add(newDataCount);
@@ -393,7 +407,8 @@ public final class DeveloperKpiHelper {
 
 	/**
 	 * Computes PR count per size bucket from a list of PullRequestsValue. Buckets: Small (<50),
-	 * Medium (50-200), Large (200-500), Extra Large (500+).
+	 * Medium (50-200), Large (200-500), Extra Large (500+). Each bucket's DataValue also carries a
+	 * hoverValue map of PR label → line count, keeping it in sync with bubblePoints.
 	 *
 	 * @param pullRequestsValues list of PR values with size as string
 	 * @return ordered list of DataValue, one entry per bucket
@@ -405,6 +420,12 @@ public final class DeveloperKpiHelper {
 		counts.put(BUCKET_LARGE, 0L);
 		counts.put(BUCKET_EXTRA_LARGE, 0L);
 
+		Map<String, Map<String, Object>> bucketHoverValues = new LinkedHashMap<>();
+		bucketHoverValues.put(BUCKET_SMALL, new LinkedHashMap<>());
+		bucketHoverValues.put(BUCKET_MEDIUM, new LinkedHashMap<>());
+		bucketHoverValues.put(BUCKET_LARGE, new LinkedHashMap<>());
+		bucketHoverValues.put(BUCKET_EXTRA_LARGE, new LinkedHashMap<>());
+
 		for (PullRequestsValue pr : pullRequestsValues) {
 			long lines;
 			try {
@@ -412,14 +433,19 @@ public final class DeveloperKpiHelper {
 			} catch (NumberFormatException e) {
 				lines = 0L;
 			}
+			String bucket;
 			if (lines < 50) {
-				counts.merge(BUCKET_SMALL, 1L, Long::sum);
+				bucket = BUCKET_SMALL;
 			} else if (lines < 200) {
-				counts.merge(BUCKET_MEDIUM, 1L, Long::sum);
+				bucket = BUCKET_MEDIUM;
 			} else if (lines < 500) {
-				counts.merge(BUCKET_LARGE, 1L, Long::sum);
+				bucket = BUCKET_LARGE;
 			} else {
-				counts.merge(BUCKET_EXTRA_LARGE, 1L, Long::sum);
+				bucket = BUCKET_EXTRA_LARGE;
+			}
+			counts.merge(bucket, 1L, Long::sum);
+			if (pr.getLabel() != null) {
+				bucketHoverValues.get(bucket).put("PR-" + pr.getLabel(), lines);
 			}
 		}
 
@@ -430,6 +456,7 @@ public final class DeveloperKpiHelper {
 										.name(e.getKey())
 										.value(e.getValue())
 										.data(String.valueOf(e.getValue()))
+										.hoverValue(bucketHoverValues.get(e.getKey()))
 										.build())
 				.collect(Collectors.toList());
 	}
